@@ -336,7 +336,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisions the Gateway API resource, but does nothing externally useful without `application_domains` set (see §2.E). |
 | `application_domains` | `[]` | Empty by default — set this to get a working external hostname while `service_type = ClusterIP`. |
-| `reserve_static_ip` | `true` | Ties into the App_GKE default `<reserved-ip>.nip.io` hostname only when `service_type = LoadBalancer`; behaviour when combined with the default `ClusterIP` is not explicitly documented by the Foundation. <!-- TODO: confirm whether reserve_static_ip provisions/attaches an address when service_type stays ClusterIP with enable_custom_domain=true --> |
+| `reserve_static_ip` | `true` | Ties into the App_GKE default `<reserved-ip>.nip.io` hostname only when `service_type = LoadBalancer`; behaviour when combined with the default `ClusterIP` is not explicitly documented by the Foundation. {/* TODO: confirm whether reserve_static_ip provisions/attaches an address when service_type stays ClusterIP with enable_custom_domain=true */} |
 
 All other inputs follow standard [App_GKE](App_GKE.md) behaviour.
 

@@ -242,7 +242,7 @@ checks and alert policies.
   `SELF_HOSTED = "true"` enables Maybe's self-host UI, which lets the first
   visitor register the initial admin account through the web UI — there is
   no auto-generated admin password secret to retrieve.
-  <!-- TODO: verify whether a first-run invite/registration lock exists after the first admin is created -->
+  {/* TODO: verify whether a first-run invite/registration lock exists after the first admin is created */}
 - **`SECRET_KEY_BASE` is immutable in practice.** It is generated once by
   `MaybeFinance_Common` and shared by the web and Sidekiq processes. Rotating
   it after first boot invalidates existing sessions and makes
@@ -297,7 +297,7 @@ and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -513,5 +513,6 @@ For the foundation behaviour referenced throughout — service identity,
 scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Maybe-specific application configuration
-shared with the GKE variant lives in the `MaybeFinance_Common` module (its
-own `docs/modules/MaybeFinance_Common.md` guide has not been published yet).
+shared with the GKE variant lives in the `MaybeFinance_Common` module — see
+**[MaybeFinance_Common](MaybeFinance_Common.md)** for secrets, DB bootstrap,
+entrypoint behavior, health probes, and storage.

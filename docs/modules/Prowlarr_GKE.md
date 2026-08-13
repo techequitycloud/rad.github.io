@@ -43,7 +43,7 @@ services:
 | Object storage | a block PVC (default), or Cloud Storage | `stateful_pvc_enabled = true` by default — a real block PVC mounted at `/config`; a `storage` GCS bucket exists but is unused as a mount unless the PVC is disabled |
 | Cache & queue | none | Prowlarr has no Redis or queue dependency (`enable_redis` hardcoded `false`) |
 | Secrets | Secret Manager | **None generated** — Prowlarr has no built-in admin account and no encryption key to protect |
-| Ingress | Cloud Load Balancing | External LoadBalancer by default (`service_type = "LoadBalancer"`); optional custom domain + managed certificate |
+| Ingress | Cloud Load Balancing | External LoadBalancer once `service_type = "LoadBalancer"` is set; optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
 
@@ -65,11 +65,9 @@ services:
 - **Single instance, non-negotiable.** `min_instance_count = 1` and
   `max_instance_count = 1` — the embedded SQLite database is a single
   writer.
-- **`service_type` already defaults to `"LoadBalancer"`.** Unlike the generic
-  App_GKE foundation default (`"ClusterIP"`, written with internal/database
-  workloads in mind), this module overrides it to `"LoadBalancer"` since
-  Prowlarr has a real web UI operators need to reach — no manual override
-  needed at deploy time.
+- **`service_type` needs an explicit override.** The variable's inherited
+  Foundation default is `"ClusterIP"`; Prowlarr has a real web UI operators
+  need to reach, so set `service_type = "LoadBalancer"` at deploy time.
 - **No default login.** There is no generated secret and no built-in admin
   account — configure authentication (if wanted) from the web UI's
   **Settings → General → Security** after first deploy.
@@ -225,7 +223,7 @@ input is inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | This module overrides the App_GKE foundation's `ClusterIP` default (written with internal/database-style workloads in mind) since Prowlarr has a real web UI that needs external reachability. |
+| `service_type` | `ClusterIP` | **Override to `LoadBalancer`.** The inherited default is written with internal/database-style workloads in mind; Prowlarr has a real web UI that needs external reachability. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true` (the default) — no need to set both. |
 
 ### Group 7 — StatefulSet
@@ -242,8 +240,8 @@ input is inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `/ping` | The probes actually applied to the Pod (forwarded through `Prowlarr_Common`). Confirmed live: `200 {"status":"OK"}`, unauthenticated. |
-| `startup_probe_config` / `health_check_config` | HTTP `/ping` | **Inert for the Pod spec** — `App_GKE` always prefers the per-app `startup_probe`/`liveness_probe` above when a module supplies one, so these top-level variables (forwarded separately to the foundation) never reach the Pod spec even though their default path is now correctly `/ping`. |
-| `uptime_check_config` | `{ enabled = false, path = "/ping" }` | **Not inert** — unlike the two above, this variable is applied as-is. Disabled by default; the path already correctly defaults to `/ping`. |
+| `startup_probe_config` / `health_check_config` | HTTP `/api/health` (stale) | **Inert for Prowlarr** — `App_GKE` always prefers the per-app `startup_probe`/`liveness_probe` above when a module supplies one, so these top-level variables never reach the Pod spec despite their stale-looking default. |
+| `uptime_check_config` | `{ enabled = false, path = "/api/health" }` | **Not inert.** Disabled by default, but if you enable the Cloud Monitoring uptime check, override `path = "/ping"` — this variable is applied as-is, unlike the two above. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -291,12 +289,12 @@ or unsafe default worth knowing before you deploy.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `service_type` | `LoadBalancer` (the module default) | Low | Already correct out of the box; only relevant if you manually override it to `ClusterIP` or `NodePort`, which makes the web UI unreachable from outside the cluster. |
+| `service_type` | `LoadBalancer` | High | The inherited default is `ClusterIP` — Prowlarr's web UI is unreachable from outside the cluster until this is set explicitly. |
 | Deploying on Cloud Run | Don't — use `Prowlarr_GKE` (the only supported variant) | Critical | The image's s6-overlay init process cannot exec inside Cloud Run's gVisor sandbox — confirmed via 3 diagnostic deploys, all failing identically with zero container output. There is no configuration fix; a `Prowlarr_CloudRun` module was built, tested, and removed for exactly this reason. |
 | `stateful_pvc_enabled` | `true` (the default) | High | Disabling it falls back to a GCS FUSE mount at `/config`, which does not reliably support the POSIX file locking Prowlarr's WAL-mode SQLite database needs — this catalogue has a documented history of GCS FUSE corrupting other WAL-mode SQLite apps. |
 | `stateful_pvc_storage_class` | Leave at `standard` (HDD) | Low–Medium | Switching to `standard-rwo`/`premium-rwo` (SSD) draws from the far tighter `SSD_TOTAL_GB` quota for no real benefit — Prowlarr's config-file I/O pattern doesn't need SSD IOPS. |
 | `max_instance_count` | Leave at `1` | Critical | The embedded SQLite database is a single writer; raising this risks database corruption. |
-| `uptime_check_config.path` | `/ping` (already the default) | Low | Already correct out of the box; only relevant if you manually override `path` to something else — unlike `startup_probe`/`liveness_probe`, this one is *not* overridden elsewhere, so an uptime check enabled with a wrong path will fail. |
+| `uptime_check_config.path` | Override to `/ping` if enabling uptime checks | Medium | The variable's default `path` is a stale `/api/health` left over from this module's clone source — unlike `startup_probe`/`liveness_probe`, this one is *not* overridden elsewhere, so an uptime check enabled with the default path will fail against a path that doesn't exist. |
 | Authentication | Enable it from the web UI's Settings → General → Security after first deploy | High | Prowlarr ships with no built-in admin account and no generated secret — an internet-reachable, unauthenticated instance is exposed by default until you configure it. |
 
 ---

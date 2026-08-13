@@ -25,7 +25,7 @@ VPC Service Controls, backups, and the deployment lifecycle — refer to the
 
 ## 1. Overview
 
-SparkyFitness runs as **two prebuilt containers in a single multi-container Cloud Run
+SparkyFitness runs as **two containers in a single multi-container Cloud Run
 service** — a real platform constraint, not a stylistic choice. The upstream frontend
 image's nginx config hardcodes a plain `http://` reverse-proxy target
 (`proxy_pass http://${SPARKY_FITNESS_SERVER_HOST}:${SPARKY_FITNESS_SERVER_PORT}`),
@@ -55,8 +55,12 @@ which cannot reach a *separate* Cloud Run service's HTTPS-only public URL. So:
   resource for it.
 - **No separate migrate job.** Unlike many apps in this catalogue, SparkyFitness's
   backend runs its own database migrations on every container start.
-- **Both images are prebuilt** — `container_image_source = "prebuilt"` for the whole
-  module; no Cloud Build step runs for the application itself.
+- **The frontend image is prebuilt** — `container_image_source = "prebuilt"`, so the
+  Foundation builds nothing. The **backend sidecar is built by this module itself**
+  (`null_resource.build_backend_sidecar` submits a Cloud Build of
+  `SparkyFitness_Common/scripts/Dockerfile` and pushes
+  `sparkyfitness-backend:<content-hash>` to the discovered Artifact Registry repo),
+  because Cloud Run sidecars get no build pipeline from the Foundation.
 - **Scale-to-zero by default** (`cpu_always_allocated = false`, `min_instance_count = 0`)
   — a plain request/response app with no background scheduler.
 - **Health probes are real, not guessed.** `GET /api/health` on port 3010 is confirmed
@@ -167,12 +171,14 @@ container name — filter on `resource.labels.container_name="backend"` to isola
   2FA (it locks them out); `SPARKY_FITNESS_API_ENCRYPTION_KEY` must never change
   after external data sources are connected (it invalidates the encrypted
   credentials).
-- **Cloud SQL TLS caveat (verify on first live deploy).** The backend sidecar's
-  `SPARKY_FITNESS_DB_HOST` always resolves to the raw Cloud SQL private IP on Cloud
-  Run (this Foundation's `additional_containers`/`inherit_app_env` mechanism always
-  uses the raw IP, regardless of `enable_cloudsql_volume`). Confirm the backend's
-  Postgres client (`pg`/node-postgres) connects successfully against that IP — if
-  the Cloud SQL instance enforces SSL, this may need a follow-up fix.
+- **Cloud SQL TLS.** The backend sidecar's `SPARKY_FITNESS_DB_HOST` always resolves
+  to the raw Cloud SQL private IP on Cloud Run (this Foundation's
+  `additional_containers`/`inherit_app_env` mechanism always uses the raw IP,
+  regardless of `enable_cloudsql_volume`), and Cloud SQL rejects that connection
+  unencrypted. Upstream's `pg` pools set no `ssl` option and the app has no env-var
+  toggle, so the backend image is a thin custom build that patches all three
+  `pg.Pool` constructors to enable SSL for any non-loopback host (see
+  [SparkyFitness_Common](SparkyFitness_Common.md) §4).
 - **Inspect job execution:**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
@@ -202,7 +208,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `min_instance_count` / `max_instance_count` | `0` / `2` | Instance scaling bounds. |
 | `container_port` | `3010` | Backend's listening port inside its sidecar. |
 | `cpu_always_allocated` | `false` | Request-based billing — no background work needed at steady state. |
-| `enable_cloudsql_volume` | `true` | See the TLS caveat in §3 — the backend sidecar always gets the raw private IP regardless of this flag on Cloud Run. |
+| `enable_cloudsql_volume` | `true` | See the Cloud SQL TLS note in §3 — the backend sidecar always gets the raw private IP regardless of this flag on Cloud Run. |
 
 ### Group 5 — SparkyFitness Application Config
 
@@ -278,7 +284,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; changing recreates the DB and destroys all data. |
 | `application_version` | Use upstream's exact tag (`v0.17.3`) | High | A bare `0.17.3` (no `v` prefix) does not exist upstream — pull fails. |
 | `admin_email` | Set only after the account exists | Medium | Setting it before signup has no effect — it elevates an existing account, never creates one. |
-| `enable_cloudsql_volume` | Verify TLS during first live deploy | High | The Cloud Run backend sidecar always receives the raw Cloud SQL private IP (not the socket) — confirm the backend's Postgres client connects successfully. |
+| `enable_cloudsql_volume` | leave at `true` | High | The Cloud Run backend sidecar always receives the raw Cloud SQL private IP (not the socket) regardless of this flag; the SSL-patched backend image is what makes that connection work. |
 | `disable_signup` | `true` after first admin | Medium | Leaving signup open lets anyone with the URL create an account. |
 | `smtp_enabled` | Set ALL smtp_* fields together | Medium | A partially-configured SMTP block can leave password-reset email non-functional. |
 

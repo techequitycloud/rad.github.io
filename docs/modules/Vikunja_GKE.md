@@ -229,7 +229,7 @@ this module — `explicit_secret_values` and `scripts_dir`. `credit_cost` defaul
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `region` | `us-central1` | Region for the workload and regional resources. |
 
 ### Group 2 — Deployment Environment

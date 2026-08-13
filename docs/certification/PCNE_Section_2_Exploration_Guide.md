@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 
 > 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 Section 2 moves from design to `gcloud compute networks ...` muscle memory: creating VPCs, subnets, firewall rules, routes, and VPC-native GKE clusters. Deploy the **VPC Foundation** profile (Services_GCP + App_CloudRun) for 2.1–2.2 and add the **GKE Network Lab** profile for 2.4. Add the **Locked-Down Perimeter** profile if you want live VPC-SC resources. Modules exercised: `Services_GCP`, `App_GKE`, `App_Common`.
 
 ---
@@ -192,7 +191,7 @@ A: Star when branch VPCs should reach only the center (shared services) and *not
 | VPC-native | alias-IP clusters with named secondary ranges per cluster |
 | Dataplane V2 | enabled on all Services_GCP clusters; the inline cluster enables it only when `enable_network_segmentation = true` |
 | Control-plane access | Public endpoint; inline cluster adds master authorized networks with Google public CIDR access enabled and an explicit `0.0.0.0/0` block (auth still enforced by credentials) |
-| NetworkPolicy | `enable_network_segmentation` (default `false`) creates a namespace-wide policy: ingress from same namespace + LB health-check ranges + `35.235.240.0/20`; egress limited to DNS (53), HTTPS incl. `199.36.153.4/30` and `199.36.153.8/30`, Cloud SQL proxy loopback and `3307 → 10.0.0.0/8`, metadata `169.254.169.254:80`, NFS 2049 |
+| NetworkPolicy | `enable_network_segmentation` (default `false`) creates a namespace-wide policy: ingress from same namespace + LB health-check ranges + `35.235.240.0/20`, plus `0.0.0.0/0` on the container port whenever `service_type` is `LoadBalancer` or `NodePort` (an L4 NLB preserves the client IP, so real traffic matches no Google range); egress limited to DNS (53), HTTPS incl. `199.36.153.4/30` and `199.36.153.8/30`, Cloud SQL proxy loopback and `3307 → 10.0.0.0/8`, metadata `169.254.169.254:80`, NFS 2049 |
 | Service exposure | `service_type` default `LoadBalancer` with annotation `networking.gke.io/load-balancer-type: External`, `session_affinity` default `ClientIP` |
 | DNS | Cluster default kube-dns/Cloud DNS per GKE defaults — the modules configure nothing DNS-specific |
 

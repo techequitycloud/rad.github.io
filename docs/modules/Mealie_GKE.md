@@ -31,7 +31,7 @@ together a small, focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | FastAPI pod, 1 vCPU / 512 MiB by default |
 | Database | Cloud SQL for PostgreSQL 15 | Mealie reads discrete `POSTGRES_*` env vars, not a constructed DSN |
-| Object storage | Cloud Storage | A `data` bucket is created for recipe images, but not auto-mounted |
+| Object storage | Cloud Storage | A `data` bucket is created for recipe images and auto-mounted at `/app/data` |
 | Cache & queue | none | Mealie has no Redis or queue dependency |
 | Secrets | Secret Manager | Database password only — Mealie has no env-configurable admin credential |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -50,9 +50,9 @@ together a small, focused set of Google Cloud services:
   after first deploy and complete the forced password reset.
 - **`workload_type = "Deployment"`, not `StatefulSet`.** Mealie keeps no local
   state beyond what's already in Cloud SQL — no PVC, no NFS mount required.
-- **Recipe images are not persisted by default.** A GCS bucket is created but
-  not auto-mounted — add a `gcs_volumes` entry if uploaded recipe images need
-  to survive a pod restart.
+- **Recipe images are persisted by default.** `Mealie_Common` declares a
+  `gcs_volumes` entry mounting the `data` GCS bucket at `/app/data`, so
+  uploaded recipe images survive a pod restart.
 
 ---
 
@@ -158,8 +158,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `data` bucket | Created but not auto-mounted. |
-| `stateful_pvc_enabled` | `false` | Not used — Mealie is stateless at the pod level. |
+| `storage_buckets` | one `data` bucket | Created and auto-mounted at `/app/data`. |
+| `stateful_pvc_enabled` | `null` (auto, disabled) | Not used — Mealie is stateless at the pod level. |
 
 ### Group 12 (16) — Database Backend
 
@@ -201,7 +201,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `container_image_source` | `prebuilt` (default) | High | `"custom"` triggers an unnecessary Cloud Build with no Dockerfile in this module. |
 | Default admin credential (`changeme@example.com` / `MyPassword`) | Log in and change it immediately after first deploy | **Critical** | This is a fixed, publicly documented upstream default — not a generated secret — as soon as the DB initialises, anyone who knows Mealie's default credential can log in until you complete the forced first-login password reset. |
-| `gcs_volumes` for recipe images | Add explicitly if needed | Medium | Without it, uploaded recipe images live on the pod's ephemeral filesystem and do not survive a restart. |
+| `gcs_volumes` for recipe images | Leave empty (use the module's own `/app/data` mount) | Medium | `Mealie_Common` already mounts the `data` bucket at `/app/data`. Supplying a non-empty `gcs_volumes` list replaces that mount entirely — if the replacement does not also cover `/app/data`, uploaded recipe images fall back to the pod's ephemeral filesystem and do not survive a restart. |
 | `db_*_env_var_name` variables | Leave at their Mealie-specific defaults | Critical | Changing/clearing these breaks Mealie's Postgres connection — it reads `POSTGRES_*`, not `DB_*`. |
 
 ---

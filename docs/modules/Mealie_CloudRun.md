@@ -32,7 +32,7 @@ wires together a small, focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | FastAPI service, 1 vCPU / 512 MiB by default, scale-to-zero |
 | Database | Cloud SQL for PostgreSQL 15 | Mealie reads discrete `POSTGRES_*` env vars, not a constructed DSN |
-| Object storage | Cloud Storage | A `data` bucket is created for recipe images, but not auto-mounted |
+| Object storage | Cloud Storage | A `data` bucket is created for recipe images and auto-mounted at `/app/data` |
 | Cache & queue | none | Mealie has no Redis or queue dependency |
 | Secrets | Secret Manager | Database password only — Mealie has no env-configurable admin credential |
 | Ingress | Cloud Run URL | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -56,10 +56,10 @@ wires together a small, focused set of Google Cloud services:
   password and, ideally, the admin email — Mealie forces a password reset on
   first login, which is the real security boundary here, not secrecy of the
   initial credential.
-- **Recipe images are not persisted by default.** A GCS bucket is created but
-  not auto-mounted at Mealie's `/app/data` path — add a `gcs_volumes` entry if
-  uploaded recipe images need to survive a revision restart. Recipe *text*
-  data is unaffected (stored in PostgreSQL).
+- **Recipe images are persisted by default.** `Mealie_Common` declares a
+  `gcs_volumes` entry mounting the `data` GCS bucket at Mealie's `/app/data`
+  path, so uploaded recipe images survive a revision restart. Recipe *text*
+  data is unaffected either way (stored in PostgreSQL).
 - **Request-based billing by default.** `cpu_always_allocated = false`,
   `min_instance_count = 0` — Mealie's URL-import scraping runs synchronously
   within the triggering request, not as a background job.
@@ -101,8 +101,8 @@ application database and user.
 
 ### C. Cloud Storage
 
-A `data` bucket is provisioned automatically for recipe images, but is **not**
-mounted into the container by default — see the Pitfalls table.
+A `data` bucket is provisioned automatically for recipe images, and is mounted
+into the container at `/app/data` by default.
 
 - **CLI:**
   ```bash
@@ -180,8 +180,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `data` bucket | Created but not auto-mounted — add `gcs_volumes` to persist recipe images. |
-| `gcs_volumes` | `[]` | Add an entry mounted at `/app/data` for persistent recipe image storage. |
+| `storage_buckets` | one `data` bucket | Created and auto-mounted at `/app/data` for recipe images. |
+| `gcs_volumes` | `[]` | Empty means "use `Mealie_Common`'s own `/app/data` mount"; a non-empty list replaces it. |
 
 ### Group 12 — Database Backend
 
@@ -224,7 +224,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `container_image_source` | `prebuilt` (default) | High | `"custom"` triggers an unnecessary Cloud Build with no Dockerfile in this module — the build fails. |
 | Default admin credential (`changeme@example.com` / `MyPassword`) | Log in and change it immediately after first deploy | **Critical** | This is a fixed, publicly documented upstream default — not a generated secret — as soon as the DB initialises, anyone who knows Mealie's default credential can log in until you complete the forced first-login password reset. |
-| `gcs_volumes` for recipe images | Add explicitly if needed | Medium | Without it, uploaded recipe images live on Cloud Run's ephemeral filesystem and do not survive a revision restart — recipe text is unaffected. |
+| `gcs_volumes` for recipe images | Leave empty (use the module's own `/app/data` mount) | Medium | `Mealie_Common` already mounts the `data` bucket at `/app/data`. Supplying a non-empty `gcs_volumes` list replaces that mount entirely — if the replacement does not also cover `/app/data`, uploaded recipe images fall back to Cloud Run's ephemeral filesystem and do not survive a revision restart. Recipe text is unaffected. |
 | `db_*_env_var_name` variables | Leave at their Mealie-specific defaults | Critical | Changing/clearing these breaks Mealie's Postgres connection entirely — it reads `POSTGRES_*`, not `DB_*`. |
 
 ---

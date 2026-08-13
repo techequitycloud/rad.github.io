@@ -251,7 +251,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | **Functionally unused** — mounted at `/var/lib/wallabag`, but Wallabag's image writes nothing there. Safe to disable. |
+| `enable_nfs` | `false` | **Functionally unused** — mounted at `/var/lib/wallabag`, but Wallabag's image writes nothing there. Safe to disable. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

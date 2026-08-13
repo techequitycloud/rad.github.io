@@ -50,9 +50,11 @@ Google Cloud services:
 - **The signing key must persist.** Regenerating it breaks federation and invalidates
   all device sessions, so the data directory is backed by persistent NFS storage
   (`enable_nfs = true` by default). For per-pod durability a StatefulSet PVC can be used.
-- **`server_name` is immutable.** It is the domain in every user ID (`@user:server_name`)
-  and in federation. The default (`matrix.local`) is a placeholder — override it with
-  your real domain **before** production.
+- **`server_name` is fixed at `matrix.local`.** It is the domain in every user ID
+  (`@user:server_name`) and in federation. `Synapse_GKE` does not expose a
+  `server_name` input — the value always comes from `Synapse_Common`'s default, so a
+  production deployment needing a real domain currently requires overriding the Common
+  module directly. It is immutable after first boot.
 - **The container port and all probes must be 8008.** Synapse's client + federation
   listener is set to `8008` in the generated config; the container port and the
   Kubernetes startup/liveness/readiness probes must all target `8008` or the pod never
@@ -64,9 +66,11 @@ Google Cloud services:
   pod.
 - **Redis is not used.** Synapse runs a single main process backed entirely by
   PostgreSQL.
-- **Admin users are created out-of-band.** Open self-service registration is off by
-  default; create users with `register_new_matrix_user` and the registration shared
-  secret in Secret Manager.
+- **The first admin user is created for you.** Open self-service registration is off by
+  default, but the `create-admin` init job registers the `admin` account via
+  `register_new_matrix_user` using the registration shared secret and the generated
+  superuser password (both in Secret Manager). Further users are created the same way,
+  out-of-band.
 
 ---
 
@@ -194,9 +198,10 @@ Monitoring. Optional uptime checks and alert policies are available.
   wiring PostgreSQL (via the `127.0.0.1` Auth Proxy sidecar) and the `0.0.0.0:8008`
   listener, then execs Synapse. The signing key is generated only once — keep `/data` on
   a persistent volume (NFS by default, or a StatefulSet PVC).
-- **`server_name` is immutable after first boot.** Set your real domain before the first
-  deploy. Changing it later invalidates every user ID, device session, and federation
-  relationship.
+- **`server_name` is immutable after first boot.** `Synapse_GKE` does not expose a
+  `server_name` input (it always uses the `Synapse_Common` default `matrix.local`);
+  changing the underlying value later invalidates every user ID, device session, and
+  federation relationship.
 - **Container port and probes must be 8008.** The Deployment container port and the
   startup/liveness/readiness probes all target `8008`; a mismatch means the probe hits a
   dead port and the pod never becomes Ready.
@@ -208,10 +213,19 @@ Monitoring. Optional uptime checks and alert policies are available.
     -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
   curl -s "http://${EXTERNAL_IP}/_matrix/client/versions"
   ```
-- **Create the first admin user** with the Matrix registration tool from inside a pod:
+- **The `create-admin` job registers the first admin user.** It runs after `db-init`,
+  polls `http://<service-name>/health` (the Service listens on port 80 regardless of
+  the container's 8008), then runs `register_new_matrix_user -u admin -a` with the
+  registration shared secret and the generated superuser password. It is safe to
+  re-run ("User ID already taken" is tolerated). Read the password with:
+  ```bash
+  gcloud secrets versions access latest \
+    --secret=secret-<prefix>-synapse-superuser-password --project "$PROJECT"
+  ```
+- **Create further users** with the same tool from inside a pod:
   ```bash
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- \
-    register_new_matrix_user -c /data/homeserver.yaml -u admin -a http://localhost:8008
+    register_new_matrix_user -c /data/homeserver.yaml -u alice -a http://localhost:8008
   ```
 
 ---
@@ -233,7 +247,7 @@ specific to or notable for Synapse are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -310,7 +324,7 @@ specific to or notable for Synapse are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job (C-collation database + role). |
+| `initialization_jobs` | `[]` | Leave empty to use the built-in jobs: `db-init` (C-collation database + role) and `create-admin` (registers the `admin` superuser). |
 | `cron_jobs` | `[]` | Scheduled Kubernetes CronJobs. |
 | `additional_services` | `[]` | Sidecar or helper services deployed alongside Synapse. |
 
@@ -451,14 +465,14 @@ and explore the running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `server_name` | Real domain, set once | Critical | Immutable after first boot — changing it invalidates every user ID, device session, and federation relationship. |
+| `server_name` (fixed `matrix.local`) | Not exposed as a `Synapse_GKE` input | Critical | Real federation and durable user IDs need a custom domain; this module has no `server_name` variable, so production use currently requires overriding `Synapse_Common` directly. Changing the underlying value after first boot invalidates every user ID, device session, and federation relationship. |
 | Signing key persistence (`enable_nfs` / StatefulSet PVC) | persistent | Critical | If the data directory is not persistent, a pod restart regenerates the signing key, breaking federation and invalidating all device sessions. |
 | Database collation (`db-init`) | `C` (automatic) | Critical | Synapse refuses to start against any non-`C` collation; do not bypass the `db-init` job. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `container_port` / probe port | `8008` | High | Probes on any other port hit a dead port and the pod never becomes Ready even though Synapse is healthy. |
 | Probe path | `/` (default) or `/health` | High | Pointing a probe at an authenticated Matrix API path returns 401/403 and the pod never becomes Ready. |
-| `memory_limit` | `4Gi` (≥ 2 GiB) | High | Below 2 GiB Synapse OOMs under real room/federation load. |
+| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | High | Below 2 GiB Synapse OOMs under real room/federation load. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; keeping 1 ensures the homeserver is always reachable for federation. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, a client's requests scatter across pods, disrupting long-lived sync connections. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity; disabling it is blocked by a plan-time validation guard. |

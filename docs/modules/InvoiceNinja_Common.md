@@ -32,7 +32,7 @@ Layer 1: App_Common (networking, database, storage, secrets, IAM)
 **Key characteristics**:
 - One of the few modules in the ecosystem that uses **MySQL 8.0** instead of PostgreSQL. Invoice Ninja's Laravel application only supports MySQL.
 - **Auto-generates the `APP_KEY` secret** — a base64-encoded 32-byte random Laravel encryption key, stored in Secret Manager as `base64:<value>`. This is generated once on first apply and is not regenerated on subsequent applies.
-- Defines **three initialisation jobs** (`db-init`, `artisan-migrate`, and `admin-create`) that run sequentially on deployment.
+- Defines **two initialisation jobs** (`db-init` and `artisan-migrate`) that run sequentially on deployment.
 - Configures **snappdf PDF generation** with Chromium bundled in the `invoiceninja/invoiceninja:5` container.
 - Injects `TRUSTED_PROXIES=*` to correctly handle Cloud Run and GKE reverse proxy headers in Laravel.
 
@@ -60,7 +60,7 @@ The application configuration object passed to the platform module via `applicat
 | `container_resources` | CPU: `2000m`, Memory: `2Gi` — Chromium PDF generation requires significant resources |
 | `environment_variables` | Passed through from `var.environment_variables` merged with Invoice Ninja-specific defaults (see §4) |
 | `secret_environment_variables` | Contains `APP_KEY` reference plus any additional secrets from `var.secret_environment_variables` |
-| `initialization_jobs` | Default `db-init` + `artisan-migrate` + `admin-create` jobs or custom override (see §5) |
+| `initialization_jobs` | Default `db-init` + `artisan-migrate` jobs or custom override (see §5) |
 | `startup_probe` | HTTP `GET /`, 90s initial delay, 10s timeout, 15s period, 30 failure threshold |
 | `liveness_probe` | HTTP `GET /`, 120s initial delay, 10s timeout, 30s period, 3 failure threshold |
 
@@ -102,7 +102,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `display_name` | `string` | `"Invoice Ninja"` | Human-readable application name. |
 | `description` | `string` | `"Invoice Ninja open-source invoicing platform"` | Description passed to init job definitions. |
 | `application_version` | `string` | `"5"` | Invoice Ninja Docker image tag. Increment to deploy a new release. |
-| `tenant_deployment_id` | `string` | `"demo"` | Deployment identifier appended to resource names. |
+| `tenant_id` | `string` | `"demo"` | Deployment identifier appended to resource names. |
 | `region` | `string` | `"us-central1"` | GCP region for the storage bucket location. |
 | `db_name` | `string` | `"invoiceninja"` | MySQL database name. **Do not change after initial deployment.** |
 | `db_user` | `string` | `"invoiceninja"` | MySQL application user. |
@@ -115,7 +115,7 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `initialization_jobs` | `list(object)` | `[]` | Custom init jobs. Empty triggers the default `db-init` + `artisan-migrate` pair. |
 | `startup_probe` | `object` | see §6 | Startup health probe configuration. |
 | `liveness_probe` | `object` | see §6 | Liveness health probe configuration. |
-| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Passed to the `admin-create` initialisation job as `IN_ADMIN_EMAIL`, used to create the first Invoice Ninja admin account via `php artisan ninja:create-account`. Invoice Ninja has no self-service signup, so this job is the only way to obtain the initial login. |
+| `invoiceninja_admin_email` | `string` | `"admin@example.com"` | Declared and forwarded by both wrappers, but **not currently referenced** in `InvoiceNinja_Common`'s `local.config` — has no effect on the deployed environment. Invoice Ninja's first admin account is created through its own in-app `/setup` wizard instead. |
 | `mail_from_name` | `string` | `"Invoice Ninja"` | Display name for outgoing emails. |
 | `mail_from_address` | `string` | `"ninja@example.com"` | Sender email address for outgoing emails. |
 
@@ -147,6 +147,13 @@ The absolute path to the module directory, used by wrapper modules to locate the
 | `MAIL_FROM_ADDRESS` | `var.mail_from_address` | Sender email address for outgoing emails. |
 
 The `APP_KEY` secret reference is injected via `secret_environment_variables` (not `environment_variables`) — it is resolved at runtime by Cloud Run or Kubernetes from Secret Manager.
+
+**Runtime auto-detection in `scripts/entrypoint.sh`.** Baked into the image as `/usr/local/bin/platform-entrypoint.sh` (see `scripts/Dockerfile`), this entrypoint runs on every container start — on **both** `InvoiceNinja_CloudRun` and `InvoiceNinja_GKE`, since both build from the same `InvoiceNinja_Common` scripts — and performs additional mapping beyond the table above:
+
+- Maps the platform-injected `CLOUDRUN_SERVICE_URL` / `GKE_SERVICE_URL` onto `APP_URL` when `APP_URL` is not already set.
+- **`REQUIRE_HTTPS` auto-detection.** Invoice Ninja forces an HTTPS redirect on `/` whenever `REQUIRE_HTTPS` is true (its own default). The entrypoint branches on the resolved `APP_URL`'s scheme: `https://*` leaves `REQUIRE_HTTPS` at its secure default (`true`, via `${REQUIRE_HTTPS:-true}`), while `http://*` sets `REQUIRE_HTTPS="${REQUIRE_HTTPS:-false}"`. An explicit user-supplied `REQUIRE_HTTPS` env var always wins over either branch. This exists specifically because **GKE** serves Invoice Ninja over a bare HTTP LoadBalancer IP with no TLS terminator — without the auto-detection, the forced redirect sends `/` to a `https://<ip>/` listener that does not exist, so the landing page fails to load even though `/login` and `/dashboard` (reached directly) work fine over HTTP. (Cloud Run always resolves `APP_URL` to `https://`, so this branch is a no-op there; `InvoiceNinja_CloudRun/main.tf` separately hardcodes `REQUIRE_HTTPS = "false"` in its own environment-variable merge regardless, since Cloud Run terminates TLS in front of the container.)
+- Maps `DB_NAME`/`DB_USER` (platform convention) onto Invoice Ninja's expected `DB_DATABASE`/`DB_USERNAME`, and when `DB_HOST` is a Cloud SQL Unix socket path, sets `DB_SOCKET` to that path and points `DB_HOST` at `127.0.0.1` for PDO.
+- Wires `QUEUE_CONNECTION`/`CACHE_DRIVER`/`SESSION_DRIVER` to `redis` when `REDIS_HOST` is present.
 
 ---
 
@@ -185,23 +192,9 @@ Two jobs are provisioned by default when `initialization_jobs = []`:
 | Timeout | 600s, 1 retry |
 | CPU / Memory | `1000m` / `1Gi` |
 
-`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables. On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. **There is no `--seed` flag** — the job does not seed demo/reference data.
+`artisan-migrate` runs Laravel's database migration system. On first deployment it creates all Invoice Ninja tables. On subsequent deployments it applies any new migrations introduced by Invoice Ninja version upgrades. The `--force` flag suppresses the interactive confirmation prompt in production mode. **There is no `--seed` flag** — the job does not seed demo/reference data; Invoice Ninja's own first-run `/setup` wizard handles initial account creation.
 
-### Job 3: `admin-create`
-
-| Field | Value |
-|---|---|
-| Image | `null` — defaults to the application's own container image |
-| Script | `scripts/admin-create.sh`, which runs `php artisan ninja:create-account --email=<IN_ADMIN_EMAIL> --password=<IN_ADMIN_PASSWORD>` |
-| `execute_on_apply` | `true` |
-| `depends_on_jobs` | `["artisan-migrate"]` |
-| Timeout | 300s, 1 retry |
-| CPU / Memory | `1000m` / `1Gi` |
-| Env / Secret | `IN_ADMIN_EMAIL` (`var.invoiceninja_admin_email`) / `IN_ADMIN_PASSWORD` (auto-generated, Secret Manager) |
-
-Invoice Ninja has **no self-service signup** and no other way to obtain the initial login, so `admin-create` is the mechanism that creates the first admin account. It is idempotent: `php artisan ninja:create-account` has no `--ignore-if-exists` flag and errors with a raw `SQLSTATE[23000]` unique-constraint violation when re-run against an email that already has an account, so the script specifically tolerates that one error shape as "already exists — skipping" and fails loudly on any other error.
-
-Override `initialization_jobs` with a non-empty list to replace all three default jobs with custom jobs. When `initialization_jobs` is non-empty, `InvoiceNinja Common` does not inject any of the default jobs.
+Override `initialization_jobs` with a non-empty list to replace both default jobs with custom jobs. When `initialization_jobs` is non-empty, `InvoiceNinja Common` does not inject either default job.
 
 ---
 

@@ -194,7 +194,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -223,6 +223,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `container_port` | `80` | Vaultwarden's Rocket HTTP port. Must match `ROCKET_PORT`. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for Unix socket connections. Required. |
 | `execution_environment` | `gen2` | Gen2 is required for Unix socket support. Do not change. |
+| `cpu_always_allocated` | `false` | Vaultwarden serves on request by default (request-based billing). Flip to `true` only if you enable Vaultwarden's WebSocket push-notification server — throttled CPU between requests otherwise breaks the persistent WS connection clients poll on. |
 | `timeout_seconds` | `300` | Maximum request duration in seconds (0–3600). |
 | `traffic_split` | `[]` | Split traffic across revisions for staged rollouts. |
 | `max_revisions_to_retain` | `7` | How many old revisions to keep for rollback. |
@@ -378,6 +379,7 @@ running resources.
 | `container_port` | `80` | High | Must match `ROCKET_PORT`; a mismatch means Cloud Run health checks fail and all requests time out. |
 | `execution_environment` | `gen2` | High | Gen1 does not support the Unix socket path used by the Cloud SQL Auth Proxy, causing database connection failures at startup. |
 | `min_instance_count` | `1` | High | Scale-to-zero makes a password manager unavailable for 5–15 s on cold start; Bitwarden clients show connection errors. |
+| `cpu_always_allocated` | `false` unless WS push enabled | Medium | Leaving `false` while the WebSocket push-notification server is enabled throttles CPU between requests and breaks the persistent WS connection; flip to `true` in that case. |
 | `enable_cloud_armor` | enable for production | Medium | Without Cloud Armor, the Vaultwarden login endpoint is open to brute-force attacks from the internet. |
 | `enable_cdn` | `false` or with cache controls | Medium | Caching authenticated API responses leaks vault data across users. |
 | `backup_retention_days` | `30` (raise for prod) | Medium | A password manager without adequate retention means credential loss on database failure. |

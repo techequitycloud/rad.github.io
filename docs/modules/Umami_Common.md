@@ -55,7 +55,7 @@ The application configuration object passed to the platform module via `applicat
 | `database_type` | `"POSTGRES_15"` — Umami requires PostgreSQL |
 | `db_name` | Database name (default: `"umami"`) |
 | `db_user` | Database user (default: `"umami"`) |
-| `enable_cloudsql_volume` | Whether to mount the Cloud SQL Auth Proxy sidecar (default: `true`) |
+| `enable_cloudsql_volume` | Whether to mount the Cloud SQL instance as a Unix socket volume (default: `true`) — native socket integration on Cloud Run, `cloud-sql-proxy` sidecar on GKE |
 | `cloudsql_volume_mount_path` | `"/cloudsql"` |
 | `container_resources` | CPU: `1000m`, Memory: `512Mi` — Umami is lightweight |
 | `min_instance_count` | `var.min_instance_count` (default `1`) |
@@ -105,7 +105,7 @@ The secret is created with `replication { auto {} }` (automatic multi-region rep
 | `application_version` | `string` | `"postgresql-latest"` | Umami image tag. Must be a `postgresql-` prefixed tag. |
 | `display_name` | `string` | `"Umami"` | Human-readable display name. |
 | `description` | `string` | `"Umami - Privacy-focused web analytics"` | Application description. |
-| `tenant_deployment_id` | `string` | `"demo"` | Unique identifier for the deployment environment. Used in secret IDs. |
+| `tenant_id` | `string` | `"demo"` | Unique identifier for the deployment environment. Used in secret IDs. |
 | `resource_labels` | `map(string)` | `{}` | Common labels to apply to all resources. |
 | `db_name` | `string` | `"umami"` | PostgreSQL database name. |
 | `db_user` | `string` | `"umami"` | PostgreSQL application user. |
@@ -122,7 +122,7 @@ The secret is created with `replication { auto {} }` (automatic multi-region rep
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `enable_cloudsql_volume` | `bool` | `true` | Mount Cloud SQL Auth Proxy sidecar socket. |
+| `enable_cloudsql_volume` | `bool` | `true` | Mount the Cloud SQL instance's Unix socket (native integration on Cloud Run; `cloud-sql-proxy` sidecar on GKE). |
 | `region` | `string` | `"us-central1"` | GCP region (used as bucket location if storage were provisioned). |
 
 ---
@@ -155,7 +155,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 | Timeout | 600s, 1 retry |
 
 `create-db-and-user.sh` behaviour:
-1. Connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket or TCP as appropriate.
+1. Connects to Cloud SQL PostgreSQL via the mounted Unix socket (`-h <socket-dir>`, using `psql`'s native socket-directory support — no Auth Proxy sidecar on Cloud Run).
 2. Creates the `umami` database user with the password from Secret Manager.
 3. Creates the `umami` database if it does not exist.
 4. Grants the `umami` user full privileges on the database.
@@ -177,7 +177,7 @@ Wraps the official `ghcr.io/umami-software/umami:<version>` image:
 ### Entrypoint
 The custom entrypoint runs before the Umami process to:
 
-1. **Construct `DATABASE_URL`**: Assembles the PostgreSQL connection string from `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` — the standard variables injected by the platform's `App_CloudRun` / `App_GKE` modules. When `DB_HOST` is a Unix socket path (starts with `/`), the entrypoint resolves it to TCP `127.0.0.1` (the Cloud SQL Auth Proxy also listens on localhost), because socket paths cannot appear in a `postgresql://` URL. The password is URL-encoded so special characters in the generated secret do not break Prisma's URL parser.
+1. **Construct `DATABASE_URL`**: Assembles the PostgreSQL connection string from `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` — the standard variables injected by the platform's `App_CloudRun` / `App_GKE` modules. When `DB_HOST` is a Unix socket path (starts with `/`), the entrypoint unconditionally resolves it to TCP `127.0.0.1`, because socket paths cannot appear in a `postgresql://` URL. **This substitution is only correct on GKE**, where a real `cloud-sql-proxy` sidecar listens on TCP `127.0.0.1:5432`. Cloud Run's Cloud SQL integration (`enable_cloudsql_volume=true`) is the *native* socket mount (`run.googleapis.com/cloudsql-instances`) — there is no Auth Proxy sidecar and no TCP localhost listener on Cloud Run — so on that platform the substitution yields `ECONNREFUSED 127.0.0.1:5432` and a startup-probe failure. The password is URL-encoded so special characters in the generated secret do not break Prisma's URL parser.
 
 2. **Set `DATABASE_URL`**: Exports the assembled connection string as `DATABASE_URL` for Umami's Prisma ORM.
 
@@ -193,7 +193,7 @@ Umami uses the `DATABASE_URL` environment variable for all database connectivity
 
 | Platform env var | Role |
 |---|---|
-| `DB_HOST` | PostgreSQL host (socket path when using Auth Proxy) |
+| `DB_HOST` | PostgreSQL host (a Unix socket directory when `enable_cloudsql_volume=true` — the *native* Cloud Run socket integration on Cloud Run, or the `cloud-sql-proxy` sidecar's socket on GKE) |
 | `DB_USER` | PostgreSQL application username |
 | `DB_PASSWORD` | PostgreSQL application password (from Secret Manager) |
 | `DB_NAME` | PostgreSQL database name |
@@ -205,11 +205,13 @@ The custom entrypoint assembles these into `DATABASE_URL` using the format:
 postgresql://DB_USER:DB_PASSWORD@DB_HOST:DB_PORT/DB_NAME
 ```
 
-When `DB_HOST` is a Unix socket path (Cloud SQL Auth Proxy, the default), the entrypoint substitutes `127.0.0.1` as the host — the Auth Proxy also listens on TCP localhost — so the URL stays parseable:
+When `DB_HOST` is a Unix socket path (the default, via `enable_cloudsql_volume=true`), the entrypoint unconditionally substitutes `127.0.0.1` as the host, so the URL stays parseable:
 
 ```
 postgresql://DB_USER:DB_PASSWORD@127.0.0.1:5432/DB_NAME
 ```
+
+**This substitution is only valid on GKE.** There, a real `cloud-sql-proxy` sidecar listens on TCP `127.0.0.1:5432` in addition to its Unix socket, so redirecting to loopback works. On **Cloud Run**, the Cloud SQL socket is the *native* `run.googleapis.com/cloudsql-instances` integration — there is no Auth Proxy sidecar and no TCP `127.0.0.1` listener at all — so the same substitution instead produces `ECONNREFUSED 127.0.0.1:5432` and the container fails its startup probe. Do not treat "the Auth Proxy also listens on TCP localhost" as a platform-universal fact when reusing or modifying this entrypoint; verify the actual injected `DB_HOST`/`DB_IP` on the deployed revision before assuming.
 
 This is why `container_image_source = "custom"` is the recommended default — the `"prebuilt"` mode using the official Umami image requires manually providing a fully-formed `DATABASE_URL` in `environment_variables`.
 
@@ -221,7 +223,7 @@ This is why `container_image_source = "custom"` is the recommended default — t
 |---|---|---|
 | `min_instance_count` | `0` (scale-to-zero supported) | `1` (always at least one pod running) |
 | `max_instance_count` | `3` (Cloud Run default) | `10` (GKE HPA default) |
-| `DB_HOST` | Cloud SQL Auth Proxy socket path (`/cloudsql/...`) | Cloud SQL private IP or Auth Proxy sidecar socket |
+| `DB_HOST` | Native Cloud Run Cloud SQL socket path (`/cloudsql/...`, no Auth Proxy sidecar) | Cloud SQL private IP or `cloud-sql-proxy` sidecar socket |
 | Health probe registration | Cloud Run startup/liveness probe configuration | Kubernetes probe spec via `App GKE` |
 | Uptime checks | Disabled by default (`uptime_check_config.enabled = false`) | Disabled by default (`uptime_check_config.enabled = false`) |
 | Redis | Not used (`enable_redis = false`) | Not used (the mirrored `enable_redis` declaration defaults `true` but is not forwarded to the Foundation) |
@@ -240,7 +242,7 @@ module "umami_app" {
   project_id           = var.project_id
   application_name     = var.application_name
   application_version  = var.application_version
-  tenant_deployment_id = var.tenant_deployment_id
+  tenant_id = var.tenant_id
   db_name              = var.application_database_name
   db_user              = var.application_database_user
   cpu_limit            = var.cpu_limit

@@ -27,7 +27,7 @@ the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Container image | Thin custom build **FROM `espocrm/espocrm`** (Apache) wrapped with `cloud-entrypoint.sh`; built via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** (`database_type = "MYSQL_8_0"`) as the engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** data bucket (`espocrm-data`) | `storage_buckets` output |
+| Object storage | Declares the **Cloud Storage** data bucket (name suffix `espocrm-data`, i.e. `gcs-espocrm<tenant-prefix>-espocrm-data`) | `storage_buckets` output |
 | Core settings | Sets EspoCRM's baseline environment: DB platform, admin username, site URL, port `80`, optional Redis object cache | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup (TCP `/`) and liveness (HTTP `/`) probes | §Observability in the platform guides |
 
@@ -157,10 +157,11 @@ the probes target `/`:
 
 ## 7. Object storage
 
-A dedicated **Cloud Storage** data bucket (`espocrm-data`, `force_destroy = true`) is
+A dedicated **Cloud Storage** data bucket (name suffix `espocrm-data`, i.e.
+`gcs-espocrm<tenant-prefix>-espocrm-data`, `force_destroy = true`) is
 declared here and provisioned by the foundation, which also grants the workload service
 account access. On GKE the platform additionally mounts a shared **NFS** volume at
-`/var/lib/espocrm` for EspoCRM's uploaded attachments and runtime data. List the bucket
+`/var/www/html/data` for EspoCRM's uploaded attachments and runtime data. List the bucket
 with:
 
 ```bash

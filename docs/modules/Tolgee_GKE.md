@@ -141,7 +141,13 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 By default the workload is exposed through an external Cloud Load Balancing IP
 (`service_type = LoadBalancer`). A custom domain with a Google-managed certificate can be
-enabled, and a static IP can be reserved so the address survives redeploys.
+enabled, and `reserve_static_ip` defaults to **`true`** — this is a required default, not
+an optional nicety: `App_GKE` computes the `GKE_SERVICE_URL` injected into the container
+from the *reserved* static IP, but falls back to the unreachable cluster-internal
+`*.svc.cluster.local` hostname when no static IP is reserved and the ephemeral
+LoadBalancer IP isn't yet known at the moment Terraform renders the Deployment's env
+vars. Tolgee is one of the modules fixed by this default during the fleet-wide GKE
+verification campaign (see [Configuration Variables → Group 19](#group-19--custom-domain-static-ip--networking)).
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -253,6 +259,17 @@ specific to or notable for Tolgee are listed; every other input is inherited fro
 |---|---|---|
 | `application_database_name` | `tolgee` | PostgreSQL database name. Immutable after first deploy. |
 | `application_database_user` | `tolgee` | Application database user. Immutable after first deploy. |
+
+### Group 19 — Custom Domain, Static IP & Networking
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_custom_domain` | `true` | Provisions a Kubernetes Ingress with a Google-managed certificate for custom hostnames. |
+| `application_domains` | `[]` | Hostnames served by the Ingress. |
+| `reserve_static_ip` | `true` | **Load-bearing default, not merely "can be reserved."** `App_GKE` computes the injected `GKE_SERVICE_URL` (and any self-referencing URL Tolgee bakes into config at boot) from the *reserved* static IP; with `reserve_static_ip = false`, Terraform falls back to the cluster-internal `*.svc.cluster.local` hostname if the ephemeral LoadBalancer IP isn't yet known when the Deployment's env vars render — a real, reproducible race, not a theoretical edge case. Tolgee is one of the modules fixed by flipping this to `true` during the fleet-wide GKE verification campaign; leaving it `false` risks the service pointing at an address unreachable from outside the cluster. |
+| `static_ip_name` | `""` | Name for the reserved static IP. Leave empty to auto-generate. |
+| `network_tags` | `["nfsserver"]` | Node/pod network tags; `nfsserver` is required when `enable_nfs = true`. |
+| `gateway_backend_stage` | `"dev"` | Cloud Deploy stage whose Service the Gateway HTTPRoute targets (ignored when `enable_cloud_deploy = false`). |
 
 All other inputs follow standard [App_GKE](App_GKE.md) behaviour.
 

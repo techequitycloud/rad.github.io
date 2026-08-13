@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -98,13 +100,13 @@ export REGION="us-central1"          # the region you deploy into
    curl -s "http://$EXTERNAL_IP/api/status"   # expect HTTP 200 with a JSON body
    ```
 
-2. **Set `site_url` before the admin account can be bootstrapped.** Unlike the
-   Cloud Run variant, GKE does not auto-compute a predicted URL — the
-   `admin-bootstrap` job targets `site_url` verbatim, and if it was left empty at
-   first deploy it defaults to an unreachable `http://localhost:8080` inside the
-   job's own pod. Now that the external IP is known, set `site_url =
-   "http://<EXTERNAL_IP>"` (or your custom domain) on the deployment and apply
-   **Update**. The `admin-bootstrap` job's pod retries automatically (up to 20
+2. **Set `site_url` once the external IP is known.** The `admin-bootstrap` job
+   targets `site_url` when it is set; when it is left empty the job's script falls
+   back to the platform-injected `GKE_SERVICE_URL` (the reserved static IP), and
+   only to an unreachable `http://localhost:8080` if neither is available. Set
+   `site_url` anyway so invite/email links and CORS use the real address: set
+   `site_url = "http://<EXTERNAL_IP>"` (or your custom domain) on the deployment and
+   apply **Update**. The `admin-bootstrap` job's pod retries automatically (up to 20
    attempts, 15 seconds apart) once the target is reachable — no separate manual
    trigger is needed on GKE.
 
@@ -191,7 +193,7 @@ platform-level diagnostics and do not change with Infisical releases.
   Cloud SQL Auth Proxy sidecar container is running (`enable_cloudsql_volume =
   true`).
 - **`admin-bootstrap` never creates an account:** check the job's pod logs — the
-  most common cause is `site_url` left empty or pointing at an unreachable
+  most common cause is `site_url` pointing at an unreachable
   address (see Task 2).
   ```bash
   kubectl logs -n "$NAMESPACE" job/"${SERVICE}-admin-bootstrap"
@@ -229,7 +231,7 @@ registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module provisions the GKE workload, Cloud SQL (PostgreSQL 15), secrets, builds the custom image, and runs `db-init` |
-| 2 — Access & verify | Manual | Health check passes; set `site_url` to the external IP so `admin-bootstrap` can succeed, then log in with the generated admin password |
+| 2 — Access & verify | Manual | Health check passes; set `site_url` to the external IP, then log in with the generated admin password |
 | 3 — Operate | Manual | Inspect pods, scale, update version, manage secrets/jobs, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review GKE/Cloud SQL metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose pod, database, init-job, build, and IAM issues |

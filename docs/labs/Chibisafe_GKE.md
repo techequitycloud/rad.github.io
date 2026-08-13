@@ -33,8 +33,8 @@ By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
 - Connect to the GKE cluster and access the running workload.
-- Recognise and work around a known health-probe default-path issue on first
-  access.
+- Understand why the health probes target `/api/health` instead of `/`, and
+  which probe variables actually control the deployed pod.
 - Perform day-2 operations — inspect the StatefulSet, manage the optional
   admin secret, and understand the storage/scaling constraints.
 - Observe the workload with Cloud Logging and Cloud Monitoring.
@@ -43,9 +43,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE
-  Autopilot cluster, Artifact Registry, and shared service accounts this
-  module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -107,32 +109,32 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get pods,svc,statefulset,pvc -n "$NS"
    ```
 
-2. **Known issue — health probe default path.** `Chibisafe_GKE`'s
-   `health_check_config` and `startup_probe_config` variables (Group 10) both
-   default to path **`/`** — but the chibisafe-server backend serves all
-   routes under an `/api` prefix and has **no root route** (`GET /` returns a
-   non-200/404). The CloudRun variant of this module already corrects this
-   (it defaults to `/api/health`), but that fix has **not** been propagated to
-   `Chibisafe_GKE`'s variable defaults — this is a confirmed, currently
-   unfixed latent bug. Left at the default, the pod's startup/liveness probes
-   never succeed, so the pod sits in a perpetual not-Ready / crash-restart
-   state even though the chibisafe-server process inside it is actually
-   running fine. Check for the symptom:
+2. **Health probe path — fixed, but know the layout.** `Chibisafe_GKE`'s
+   `startup_probe`/`liveness_probe` variables (Group 10) default to
+   **`/api/health`**, matching the CloudRun variant, because the
+   chibisafe-server backend serves all routes under an `/api` prefix and has
+   **no root route** (`GET /` returns 404). A fresh deploy on a current module
+   version should reach `Ready` without any override. Two things to know:
+   - This *was* a latent bug — an earlier version of `Chibisafe_GKE` left
+     `startup_probe`/`liveness_probe` at the inherited `/` default and pods
+     sat in a perpetual not-Ready / crash-restart loop. It has since been
+     fixed at the variable-default level; you should not need a workaround.
+   - `health_check_config`/`startup_probe_config` (also in Group 10) still
+     default to `/` and always will — they are declared for foundation
+     mirroring only and are **never forwarded** to `App_GKE`. Overriding them
+     has **no effect** on the deployed probe; the variables that actually
+     matter are `startup_probe`/`liveness_probe`.
+
+   If you still see the symptom below on a fresh deploy, treat it as a real
+   regression rather than the historical known issue — check the pod's actual
+   `startup_probe`/`liveness_probe` values with `kubectl describe`:
 
    ```bash
    kubectl describe pod -n "$NS" <pod-name>
    # Events will show: Readiness probe failed / Liveness probe failed:
    # HTTP probe failed with statuscode: 404 (or similar non-200)
-   ```
-
-   **Workaround:** override both `health_check_config.path` and
-   `startup_probe_config.path` to `/api/health` in the RAD platform's Group 10
-   inputs, then apply via **Update** to roll a new pod with the corrected
-   probe:
-
-   ```bash
-   # After overriding health_check_config / startup_probe_config to /api/health and updating:
-   kubectl get pods -n "$NS"   # confirm the pod reaches Ready
+   # -> compare against the pod spec's actual probe path:
+   kubectl get pod -n "$NS" <pod-name> -o jsonpath='{.spec.containers[0].livenessProbe.httpGet.path}'
    ```
 
 3. Once the pod is `Ready`, find the workload's external address. With the
@@ -235,15 +237,17 @@ export REGION="us-central1"           # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Chibisafe releases.
 
-- **Pod stuck not-Ready / crash-restart loop (KNOWN ISSUE):** if
-  `kubectl describe pod` shows startup/liveness probe failures against path
-  `/`, this is the confirmed `Chibisafe_GKE` default-path bug described in
-  Task 2 — the backend has no root route. Override `health_check_config.path`
-  and `startup_probe_config.path` to `/api/health` and re-apply; do **not**
-  assume the container itself is broken.
+- **Pod stuck not-Ready / crash-restart loop:** `startup_probe`/`liveness_probe`
+  default to `/api/health` (see Task 2), so this should not occur on a fresh
+  deploy. If `kubectl describe pod` shows probe failures against path `/`,
+  something has overridden `startup_probe`/`liveness_probe` back to the root
+  route — check `environment_variables`/probe overrides in your deployment
+  config; do **not** bother overriding `health_check_config`/
+  `startup_probe_config`, they are inert and never reach the pod spec.
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events section shows probe failures
   kubectl logs -n "$NS" <pod> --previous       # confirm the process actually started
+  kubectl get pod -n "$NS" <pod> -o jsonpath='{.spec.containers[0].livenessProbe.httpGet.path}'
   ```
 - **PVC stuck `Pending` / `Quota 'SSD_TOTAL_GB' exceeded`:** the default
   `standard-rwo` StorageClass is SSD-backed and draws a tight regional quota.
@@ -261,7 +265,7 @@ platform-level diagnostics and do not change with Chibisafe releases.
   node service account can pull it.
 
 See the Configuration Guide's *Configuration Pitfalls* section for
-setting-specific gotchas (including the health-probe default-path issue above,
+setting-specific gotchas (including the health-probe variable layout above,
 the SSD quota trade-off, and the inert `enable_redis` / `container_port`
 variables).
 
@@ -282,8 +286,8 @@ Artifact Registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds the custom image and deploys a StatefulSet with a 20Gi block PVC at `/data`, an unmounted GCS bucket, and an optional admin secret — no Cloud SQL |
-| 2 — Access & verify | Manual | Connect to the cluster; work around the known `/` health-probe default-path bug (override to `/api/health`); confirm the pod reaches Ready |
+| 2 — Access & verify | Manual | Connect to the cluster; confirm the `/api/health` startup/liveness probes (fixed default) let the pod reach Ready |
 | 3 — Operate | Manual | Inspect the StatefulSet/PVC, update version, manage the admin secret, inspect SQLite/uploads/logs on the PVC; never scale past 1 replica |
 | 4 — Observe | Manual | Query Cloud Logging; review pod/PVC metrics and optional uptime check |
-| 5 — Troubleshoot | Manual | Diagnose the probe-path bug, PVC/SSD quota, Gateway/certificate, and image-pull issues |
+| 5 — Troubleshoot | Manual | Diagnose probe-path regressions, PVC/SSD quota, Gateway/certificate, and image-pull issues |
 | 6 — Tear down | Automated | Delete (Trash) removes the StatefulSet, PVC, bucket, and optional secret |

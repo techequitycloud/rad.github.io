@@ -4,8 +4,8 @@ description: "Map every Professional Cloud Developer (PCD) exam domain to hands-
 ---
 
 # Professional Cloud Developer (PCD) Certification Lab Map
-> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
+> 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
 The Professional Cloud Developer certification validates your ability to design, build, test, deploy, and integrate scalable applications on Google Cloud — with a strong emphasis on Cloud Run, GKE, Cloud Build, Artifact Registry, Cloud Deploy, runtime secrets, service authentication, and observability. The RAD platform's four foundation modules (`Services_GCP`, `App_CloudRun`, `App_GKE`, `App_Common`) give you a live lab for exactly these skills: `Services_GCP` provisions the shared platform (VPC, Cloud SQL, Redis, GKE Autopilot, Artifact Registry, Binary Authorization, Workload Identity Federation), `App_CloudRun` and `App_GKE` are full-featured deployment engines for Cloud Run v2 services and Kubernetes workloads, and `App_Common` supplies the shared submodules they both use (secrets and rotation, Cloud Build container builds, Cloud Deploy pipelines, IAM, storage, monitoring). Application wrapper modules (Django, Wordpress, etc.) exist on the platform but everything in these guides uses the foundation modules directly.
 
@@ -112,7 +112,7 @@ The build pipeline is the strongest coverage in the repo: every deployment runs 
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 2.1 Local dev environment, emulators, Cloud Code/Shell/Workstations | 📘 | nearest: per-tenant isolated deployments via `tenant_deployment_id` | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#21-setting-up-your-development-environment) |
+| 2.1 Local dev environment, emulators, Cloud Code/Shell/Workstations | 📘 | nearest: per-tenant isolated deployments via `tenant_id` | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#21-setting-up-your-development-environment) |
 | 2.2 Cloud Build container builds | ✅ | `container_image_source = "custom"`, `container_build_config` | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
 | 2.2 Artifact Registry, image lifecycle, mirroring | ✅ | `max_images_to_retain`, `image_retention_days`, `delete_untagged_images`, Crane digest-aware mirroring | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
 | 2.2 CI triggers, Kaniko, attestation | ✅ | `enable_cicd_trigger`, `cicd_trigger_config`, Kaniko v1.23.2, pipeline image signing | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |

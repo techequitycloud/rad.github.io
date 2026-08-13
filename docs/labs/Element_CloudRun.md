@@ -38,8 +38,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -113,11 +115,14 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
    ```
 
-2. **Scale** by changing the min/max instance inputs and clicking **Update** on the
-   deployment details page — the module owns the service spec, so scaling is a
+2. **Scale the ceiling** by changing `max_instance_count` and clicking **Update** on
+   the deployment details page — the module owns the service spec, so scaling is a
    configuration change, not a manual `gcloud` edit (a manual edit would be reverted
-   on the next apply). Element is stateless, so scaling is unconstrained; leaving
-   `min_instance_count = 0` keeps it free at idle.
+   on the next apply). **`min_instance_count` is not a usable lever for this module:**
+   `element.tf` hardcodes it to `0` in both the Foundation module call and the config
+   override, so `var.min_instance_count` is never forwarded to the deployed service —
+   raising it via the platform has no effect. Element is stateless, so this is by
+   design: the static SPA is always free at idle regardless of what the input shows.
 
 3. **Re-point the homeserver** by changing `homeserver_url` / `homeserver_name` in the
    RAD platform and clicking **Update** — the entrypoint rewrites `config.json` on the

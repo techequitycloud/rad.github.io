@@ -35,8 +35,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -53,7 +56,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Docuseal (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Docuseal (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Docuseal_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -90,18 +93,15 @@ export REGION="us-central1"          # the region you deploy into
    connected to PostgreSQL. If you receive a non-200 response, wait 30 seconds
    and retry — the database migration runs on first boot.
 
-2. Retrieve the admin credentials from Secret Manager and sign in at `$SERVICE_URL`:
+2. Sign in at `$SERVICE_URL`. Docuseal has **no default credentials** — on first access
+   it presents a setup screen where you create the initial administrator account
+   (email + password) yourself. There is no admin credential to retrieve from Secret
+   Manager; the only secret Docuseal_Common generates is the Rails
+   `SECRET_KEY_BASE` used to sign sessions, not an account password:
 
    ```bash
-   gcloud secrets list --project="$PROJECT" --filter="name~docuseal AND name~password"
-   ADMIN_SECRET=$(gcloud secrets list --project="$PROJECT" \
-     --filter="name~docuseal AND name~password" --format="value(name)" --limit=1)
-   gcloud secrets versions access latest --secret="$ADMIN_SECRET" --project="$PROJECT"
+   gcloud secrets list --project="$PROJECT" --filter="name~docuseal AND name~secret-key-base"
    ```
-
-   The admin email is configured via the `DOCUSEAL_ADMIN_EMAIL` environment variable
-   set at deploy time. On first access Docuseal may also present a setup wizard to
-   configure the initial account if the credential was not pre-seeded.
 
 ---
 
@@ -195,7 +195,7 @@ separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL (PostgreSQL 15), secrets, builds the image, and runs DB init |
-| 2 — Access & verify | Manual | Health check passes; sign in with admin credentials from Secret Manager |
+| 2 — Access & verify | Manual | Health check passes; complete the setup screen to create the initial administrator account (no default credentials) |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/storage, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose revision, database, init-job, build, and IAM issues |

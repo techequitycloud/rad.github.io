@@ -34,8 +34,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -53,7 +56,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **LobeChat (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **LobeChat (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/LobeChat_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -92,7 +95,7 @@ export REGION="us-central1"           # the region you deploy into
 
    Expect HTTP **200**. The response body is the LobeChat Next.js chat UI.
 
-2. **Open the application** — navigate to the service endpoint in your browser. LobeChat is a stateless application; no credentials are required to access the UI. AI provider API keys (OpenAI, Anthropic, etc.) are supplied via environment variable inputs at deploy time and are stored in Secret Manager — you configure which providers to enable in the Configuration Guide inputs. Confirm the chat interface loads and the configured AI provider(s) appear in the model selector.
+2. **Open the application** — navigate to the service endpoint in your browser. LobeChat is a stateless application; no credentials are required to access the UI. In the default client-stored mode, AI provider API keys (OpenAI, Anthropic, etc.) are supplied by each user directly in the browser — LobeChat generates no secrets, and the module ships no "select which providers to enable" input. An operator can optionally inject server-side provider keys via the generic `secret_environment_variables` map (Configuration Guide, Group 5) to pre-configure a provider for all users. Confirm the chat interface loads and, if you added your own provider key in the UI, that provider appears in the model selector.
 
 ---
 
@@ -145,11 +148,16 @@ export REGION="us-central1"           # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with LobeChat releases.
 
-- **Pod not Ready / CrashLoopBackOff:** inspect events and logs. Check that all required AI provider API key secrets are correctly populated in the Kubernetes secret.
+- **Pod not Ready / CrashLoopBackOff:** inspect events and logs.
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events section shows scheduling/probe/mount errors
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
+  A common, specific cause: LobeChat's Next.js SSR process (plus its `pdfjs-dist`/canvas
+  rendering deps) OOMs under 512Mi memory — the `--previous` logs show `FATAL ERROR:
+  Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of
+  memory`. `container_resources.memory_limit` defaults to `1Gi`, which is the floor for a
+  stable boot; if it was lowered, raise it back to at least `1Gi`.
 - **Pending pod / resource constraints:** check `kubectl describe pod` events for
   Autopilot resource or quota issues.
 - **Image pull errors:** confirm the image exists in Artifact Registry and the node

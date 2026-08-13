@@ -90,17 +90,36 @@ The instance, database, and user names are in the platform deployment outputs.
 comes up correctly on first boot:
 
 - **`SERVER_PORT = 3001`** — AnythingLLM's native HTTP port. Must match `container_port`.
-- **`STORAGE_DIR = /app/server/storage`** — the directory where AnythingLLM stores all
-  workspace documents, vector indices, and conversation attachments. Map a persistent
-  volume (StatefulSet PVC, NFS, or GCS Fuse) here to prevent data loss on restart.
+- **`STORAGE_DIR = /app/server/storage`** — `AnythingLLM_Common`'s own default for the
+  directory where AnythingLLM stores all workspace documents, vector indices, and
+  conversation attachments. **Both calling platform modules override this value**, not via
+  `environment_variables` but via their own `module_env_vars`, to the NFS mount path
+  (`nfs_mount_path`, default `/mnt/nfs`) whenever `enable_nfs = true` — which is the
+  default on both `AnythingLLM_CloudRun` and `AnythingLLM_GKE`. So a deployment's actual
+  `STORAGE_DIR` is the NFS path unless `enable_nfs` is explicitly set to `false`; this
+  keeps AnythingLLM's LanceDB vector index off ephemeral disk, where it would otherwise be
+  silently wiped on every cold start / pod restart / redeploy.
 - **`UID = 1000` / `GID = 1000`** — container user and group IDs. The `fsGroup = 1000`
   default in the GKE StatefulSet configuration matches these IDs so the volume is
   writable on attach.
 - **`GOOGLE_CLOUD_STORAGE_BUCKET_NAME`** — set automatically from the provisioned
   `anythingllm-docs` bucket so AnythingLLM can use GCS as a document storage backend.
 
-Do not override these four variables via `environment_variables` in the platform module —
-they are set here and merged before forwarding to the foundation.
+Do not override `SERVER_PORT`, `UID`, or `GID` via `environment_variables` in the platform
+module — they are set here and merged before forwarding to the foundation. `STORAGE_DIR` is
+the one exception: it IS overridden, by the platform modules' own `module_env_vars`, not by
+`environment_variables`, whenever `enable_nfs = true` (see above).
+
+### Collector process (file uploads)
+
+`anythingllm-entrypoint.sh` starts AnythingLLM's separate **collector** process — which
+handles file uploads (PDF/HTML/docx via `POST /api/v1/document/upload`) — with
+`( cd /app/collector && exec node index.js )`. The collector resolves its `hotdir` (where
+the server drops an uploaded file for parsing) relative to its own working directory, so it
+must start from `/app/collector`, matching upstream's `docker-entrypoint.sh`. Starting it
+from `/app/server` (the CWD left by the preceding Prisma migration steps) makes every file
+upload fail `ENOENT: .../collector/hotdir/<file>` even though the service reports healthy —
+raw-text uploads (`/document/raw-text`) go through the server directly and are unaffected.
 
 ---
 

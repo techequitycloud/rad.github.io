@@ -38,8 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** authenticated: `gcloud auth login`,
   `gcloud auth application-default login`.
@@ -114,11 +117,15 @@ export NAMESPACE="<namespace>"       # from the deployment Outputs
    kubectl logs -n "$NAMESPACE" deploy/element --tail=100
    ```
 
-2. **Scale** by changing the min/max instance inputs and clicking **Update** — the
+2. **Scale the ceiling** by changing `max_instance_count` and clicking **Update** — the
    module owns the workload spec, so scaling is a configuration change, not a manual
-   `kubectl scale` (a manual edit would be reverted on the next apply). Element is
-   stateless with no session affinity, so replicas are freely interchangeable; GKE
-   keeps a minimum of 1.
+   `kubectl scale` (a manual edit would be reverted on the next apply). **`min_instance_count`
+   is fixed at 1, not just floored at 1:** `element.tf` hardcodes the deployed value to
+   the literal `1` in the config merge, discarding whatever `var.min_instance_count` was
+   set to — so raising it to 2 or 3 via the platform has no effect on the actual replica
+   count. Element is stateless with no session affinity, so replicas are freely
+   interchangeable; only `max_instance_count` (forwarded via `var.max_instance_count`) is
+   genuinely adjustable.
 
 3. **Re-point the homeserver** by changing `homeserver_url` / `homeserver_name` in the
    RAD platform and clicking **Update** — the entrypoint rewrites `config.json` on the

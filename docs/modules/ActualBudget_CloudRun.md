@@ -23,16 +23,16 @@ ActualBudget runs as a single Node.js container on Cloud Run v2. Because it mana
 | Database | None | ActualBudget keeps budget data in SQLite files — `database_type = "NONE"`, no Cloud SQL |
 | Persistent data | Cloud Storage (GCS FUSE) | A dedicated `storage` bucket mounted at `/data` holds the SQLite budget files and user files |
 | Container image | Artifact Registry + Cloud Build | Thin-wrapper build of `actualbudget/actual-server`, mirrored into your registry |
-| Secrets | Secret Manager | Optional — a pre-provisioned API token (`enable_api_key`), off by default |
-| Ingress | Cloud Run URL / Cloud Load Balancing | **Defaults to `internal`** — flip to `all` or front with a load balancer for browser access |
+| Secrets | Secret Manager | An API token (`enable_api_key`), **on by default** and required whenever `ingress_settings = "all"` |
+| Ingress | Cloud Run URL / Cloud Load Balancing | **Defaults to `all`** (public) — needed to reach the web UI directly; switch to `internal` for VPC-only access |
 
 **Sensible defaults worth knowing up front:**
 
 - **No external database.** ActualBudget persists everything as SQLite files under `/data`; there is no Cloud SQL instance, no `db-init` job, no Redis (`enable_redis = false`), and no Cloud SQL Auth Proxy sidecar.
 - **A `storage` GCS bucket is provisioned automatically** by `ActualBudget_Common` and mounted at `/data` via GCS FUSE (`enable_gcs_storage_volume = true`). `ACTUAL_SERVER_FILES = /data/server-files` and `ACTUAL_USER_FILES = /data/user-files` point both persistence subtrees at that mount so nothing lands on ephemeral container disk.
 - **Single instance by design.** `min_instance_count = 1` and `max_instance_count = 1` — the server serves one shared set of SQLite files from one volume; running multiple replicas risks write conflicts.
-- **Ingress defaults to `internal`.** The service is not reachable from the public internet until you set `ingress_settings = "all"` (or add a load balancer) — a deliberately private default for a personal-finance workload.
-- **No generated secrets by default.** The server password is set interactively on the first-run onboarding screen. The only optional secret is a 32-character API token (`enable_api_key = true`) injected as `ACTUAL_TOKEN`.
+- **Ingress defaults to `all` (public), paired with a mandatory API key.** `ingress_settings = "all"` is the module default — needed to reach the web UI directly — and `validation.tf` enforces a plan-time precondition (`ingress_settings != "all" || enable_api_key`) that rejects public ingress unless `enable_api_key` is also `true`. Since `enable_api_key` also defaults to `true`, pure defaults pass validation and deploy publicly reachable with API-token protection already provisioned. Switch to `ingress_settings = "internal"` for VPC-only access instead.
+- **API key on by default.** The server password is still set interactively on the first-run onboarding screen, but `enable_api_key = true` (the module default) additionally provisions a 32-character API token (`ACTUAL_TOKEN`) in Secret Manager — required by the ingress precondition above whenever `ingress_settings = "all"`.
 - **Version pinning.** The Dockerfile reads an app-specific `ACTUALBUDGET_VERSION` build ARG; `application_version = "latest"` pins the build to `25.7.1`.
 - **Health probes target `/`** — the server answers its root path with HTTP 200 as soon as it is listening, no authentication required.
 - **Best suited to single-user / light use on Cloud Run.** SQLite over GCS FUSE does not tolerate heavy concurrent writes; for durable production storage prefer the ActualBudget_GKE variant with a block PVC.
@@ -82,9 +82,9 @@ See [App_CloudRun](App_CloudRun.md) for GCS Fuse mount behaviour and CMEK.
   gcloud builds list --project "$PROJECT" --region "$REGION" --limit 5
   ```
 
-### D. Secret Manager — optional API token
+### D. Secret Manager — API token
 
-By default no secrets are created. When `enable_api_key = true`, a 32-character random token is generated, stored in Secret Manager as `secret-<prefix>-<app>-api-key`, and injected into the service as the `ACTUAL_TOKEN` secret environment variable — useful for automations that must call the server before the UI is configured.
+`enable_api_key = true` is the module default: a 32-character random token is generated, stored in Secret Manager as `secret-<prefix>-<app>-api-key`, and injected into the service as the `ACTUAL_TOKEN` secret environment variable — useful for automations that must call the server before the UI is configured, and required by `validation.tf` whenever `ingress_settings = "all"` (also the default).
 
 - **Console:** Security → Secret Manager.
 - **CLI:**
@@ -97,7 +97,7 @@ See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 
 ### E. Networking & ingress
 
-The service defaults to `ingress_settings = "internal"`, so only traffic from inside the project's VPC can reach it. For browser access, either set `ingress_settings = "all"` (the run.app URL becomes publicly reachable), or use `internal-and-cloud-load-balancing` with a custom domain, Cloud CDN, Cloud Armor, and optionally IAP in front.
+The service defaults to `ingress_settings = "all"`, so the `run.app` URL is publicly reachable out of the box (needed to reach the web UI directly) — paired with the mandatory `enable_api_key = true` default (see §2.D). For VPC-only access, set `ingress_settings = "internal"`; for a custom domain, Cloud CDN, Cloud Armor, and optionally IAP in front, use `internal-and-cloud-load-balancing`.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -111,7 +111,7 @@ See [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging & Monitoring
 
-Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring. An uptime check can be enabled via `uptime_check_config` (off by default — it requires a publicly reachable endpoint, which the `internal` ingress default does not provide).
+Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring. An uptime check can be enabled via `uptime_check_config` (off by default; it requires a publicly reachable endpoint — satisfied out of the box by the `ingress_settings = "all"` default, but not if you switch to `internal`).
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -124,7 +124,7 @@ Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring
 ## 3. ActualBudget Application Behaviour
 
 - **No initialization job.** There is no database to bootstrap; the server creates its SQLite files under `/data` on first boot. Custom `initialization_jobs` are accepted for data loading or migration tasks but none is provided by default.
-- **First-run setup.** On first access the web UI shows an onboarding screen where you set the **server password** — there are no pre-seeded credentials to retrieve. Do this immediately after making the service reachable; until a password is set, anyone who can reach the URL can claim the server.
+- **First-run setup.** On first access the web UI shows an onboarding screen where you set the **server password** — there are no pre-seeded credentials to retrieve. Do this immediately after deploy; the service is publicly reachable by default (`ingress_settings = "all"`), and until a password is set, anyone who can reach the URL can claim the server.
 - **Data layout.** `ACTUAL_SERVER_FILES = /data/server-files` (server metadata and the account database) and `ACTUAL_USER_FILES = /data/user-files` (the per-budget sync data). Both live on the GCS FUSE mount, so budget data survives restarts and redeploys.
 - **Local-first sync model.** Clients (web, desktop, mobile) keep a full local copy of the budget and use the server only to synchronise encrypted changes between devices — brief server unavailability does not block working in a client.
 - **Single-writer constraint.** The server assumes exclusive access to its SQLite files. Keep `max_instance_count = 1`; a plan-time validation enforces `min_instance_count <= max_instance_count`.
@@ -136,7 +136,7 @@ Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring
     --filter="metadata.name~actualbudget" --format="value(metadata.name)" --limit=1)
   SERVICE_URL=$(gcloud run services describe "$SERVICE" \
     --project "$PROJECT" --region "$REGION" --format="value(status.url)")
-  curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/"   # expect 200 (403/404 while ingress=internal)
+  curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/"   # expect 200 with the default ingress=all (403/404 if switched to internal)
   ```
 
 ---
@@ -156,7 +156,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -167,7 +167,7 @@ All other inputs follow standard App_CloudRun behaviour.
 |---|---|---|
 | `application_name` | `actualbudget` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Image version tag; `latest` builds the pinned `25.7.1`. Increment to trigger a new build and revision. |
-| `enable_api_key` | `false` | Generate a 32-char API token in Secret Manager and inject it as `ACTUAL_TOKEN`. Recommended when the service is reachable outside the VPC. |
+| `enable_api_key` | `true` | Generate a 32-char API token in Secret Manager and inject it as `ACTUAL_TOKEN`. Required whenever `ingress_settings = "all"` (the module default) — `validation.tf` rejects public ingress without it. |
 
 All other inputs follow standard App_CloudRun behaviour.
 
@@ -189,7 +189,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | Private by default. Set `all` for public browser access, or `internal-and-cloud-load-balancing` behind an HTTPS load balancer. |
+| `ingress_settings` | `all` | Public by default (needed to reach the web UI directly); `validation.tf` requires `enable_api_key = true` when this is `all`. Set `internal` for VPC-only access, or `internal-and-cloud-load-balancing` behind an HTTPS load balancer. |
 | `enable_iap` | `false` | Add Google-identity authentication in front of the UI (load-balancer path). |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -255,7 +255,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `actualbudget_url` | The service's `run.app` URL. Reachable only from inside the VPC while `ingress_settings = "internal"`. |
+| `actualbudget_url` | The service's `run.app` URL. Publicly reachable by default (`ingress_settings = "all"`); restricted to the VPC when `ingress_settings = "internal"`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -287,11 +287,12 @@ The module ships plan-time validation for the most damaging misconfigurations (f
 | Storage bucket contents | never delete manually | Critical | `/data` on the GCS bucket is the only copy of the budget databases; deleting the bucket erases all budgets. |
 | `container_port` | `5006` | Critical | actual-server's native port; mismatching it causes all health probes to fail. |
 | `execution_environment` | `gen2` | High | GCS FUSE volume mounts require gen2; gen1 leaves `/data` unmounted and data on ephemeral disk. |
-| `ingress_settings` | `internal` until hardened | High | Flipping to `all` before setting the server password exposes an unclaimed server publicly. |
+| `ingress_settings` = `"all"` (the default) | set the server password immediately after deploy | Critical | The service is publicly reachable by default; an unclaimed server can be claimed by anyone who reaches the URL first. Set `internal` instead if public access isn't needed. |
+| `ingress_settings = "all"` with `enable_api_key = false` | not a valid combination | Critical | `validation.tf` enforces `ingress_settings != "all" \|\| enable_api_key` at plan time — this combination fails the plan outright rather than deploying insecurely. Both default to values that already satisfy the precondition (`all` + `true`), so pure defaults deploy cleanly; only an explicit override to `enable_api_key = false` while leaving ingress at `all` triggers the failure. |
 | Heavy multi-user write load | move to ActualBudget_GKE (block PVC) | High | SQLite does not tolerate GCS FUSE under heavy concurrent write; Cloud Run suits single-user / light use. |
-| `enable_api_key` | `true` for automation on a public endpoint | Medium | Without `ACTUAL_TOKEN`, programmatic API access relies solely on the server password. |
+| `enable_api_key` | `true` (the default) | Medium | Without `ACTUAL_TOKEN`, programmatic API access relies solely on the server password. Also required by the ingress precondition above whenever `ingress_settings = "all"`. |
 | `min_instance_count` | `1` (or `0` to save cost) | Medium | `0` adds a cold start to the first request after idle; data is safe either way (state is on GCS). |
-| `uptime_check_config` | enable once public | Low | While ingress is `internal` the check cannot reach the service and will always fail. |
+| `uptime_check_config` | enable while ingress is public | Low | If `ingress_settings` is switched to `internal`, the check cannot reach the service and will always fail. |
 
 ---
 

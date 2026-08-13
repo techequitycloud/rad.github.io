@@ -200,6 +200,11 @@ Monitoring, with optional uptime checks and alert policies.
   curl -s "$(gcloud run services describe <service-name> --region "$REGION" \
     --format='value(status.url)')/_matrix/client/versions"
   ```
+- **The `create-admin` job self-skips here.** `Synapse_Common` also ships a
+  `create-admin` job that registers the initial superuser via
+  `register_new_matrix_user`, but it exits 0 without doing anything when
+  `internal_service_url` is empty — and only `Synapse_GKE` wires that value, so on
+  Cloud Run the admin account is still yours to create.
 - **Create the first admin user** with the Matrix registration tool, using the shared
   secret from Secret Manager:
   ```bash
@@ -230,7 +235,7 @@ specific to or notable for Synapse are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -239,7 +244,7 @@ specific to or notable for Synapse are listed; every other input is inherited fr
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `synapse` | Base name for resources. Do not change after first deploy. |
-| `display_name` | `Synapse` | Human-readable name shown in the Console. |
+| `display_name` | `Synapse Helpdesk` | Human-readable name shown in the Console. The packaged default is boilerplate carried over from a helpdesk-app template — override it. |
 | `description` | _(set)_ | Service description. |
 | `application_version` | `latest` | Synapse image tag; pin to a specific release (e.g. `v1.119.0`) in production. |
 
@@ -332,7 +337,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job (C-collation database + role). |
+| `initialization_jobs` | `[]` | Leave empty to use the built-in jobs: `db-init` (C-collation database + role) and `create-admin` (self-skips on Cloud Run — see §3). |
 | `cron_jobs` | `[]` | Scheduled Cloud Scheduler + Cloud Run Jobs. |
 
 ### Group 14 — Observability & Health

@@ -36,13 +36,23 @@ guides ([Vaultwarden_GKE](Vaultwarden_GKE.md),
 
 ## 2. Database engine detection and bootstrap
 
-`Vaultwarden_Common` supports **both PostgreSQL 15 (default) and MySQL 8.0**. The
-engine is detected from the `database_type` variable passed by the platform module:
+`Vaultwarden_Common`'s **`db-init` bootstrap job** supports both PostgreSQL 15
+(default) and MySQL 8.0 — the engine is detected from the `database_type` variable
+passed by the platform module:
 
-| `database_type` | Init job image | DB URL scheme |
+| `database_type` | Init job image | `db-init.sh` `DB_ENGINE` |
 |---|---|---|
-| `POSTGRES_15` (or any non-MySQL value) | `postgres:15-alpine` | `postgresql://` |
-| `MYSQL_8_0` (or any value starting with `MYSQL`) | `mysql:8.0-debian` | `mysql://` |
+| `POSTGRES_15` (or any non-MySQL value) | `postgres:15-alpine` | `postgres` |
+| `MYSQL_8_0` (or any value starting with `MYSQL`) | `mysql:8.0-debian` | `mysql` |
+
+**This detection covers the bootstrap job only.** The runtime `entrypoint.sh` that
+assembles Vaultwarden's `DATABASE_URL` from the injected `DB_HOST`/`DB_USER`/
+`DB_PASSWORD`/`DB_NAME` has no `DB_ENGINE`/MySQL branch — it unconditionally builds a
+`postgresql://` URL regardless of `database_type`. Setting `database_type =
+"MYSQL_8_0"` bootstraps a MySQL database and user correctly, but the running
+Vaultwarden container then attempts a Postgres-scheme connection against that MySQL
+host and fails to connect. `POSTGRES_15` is the only engine that works end-to-end
+today.
 
 On the first deployment the `db-init` job runs automatically and idempotently:
 

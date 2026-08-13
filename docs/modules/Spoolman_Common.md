@@ -120,10 +120,9 @@ The default probes target `/api/health` — a public, unauthenticated endpoint
 that returns a 200/OK JSON status once the server is fully initialised and
 connected to PostgreSQL.
 
-- **Cloud Run** uses HTTP probes targeting `/api/health`: a 10-second initial
-  delay on the startup probe, 30 seconds on the liveness probe.
-- **GKE** targets the same path with a 10-second startup-probe initial delay
-  and a 15-second liveness-probe initial delay.
+- **Cloud Run** uses HTTP probes targeting `/api/health` with a 10-second
+  initial delay.
+- **GKE** uses the same HTTP probe target and timing.
 
 ---
 

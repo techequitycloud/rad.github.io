@@ -30,8 +30,8 @@ Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Node.js pods, 1 vCPU / 1 GiB by default, horizontally autoscaled |
-| Database | Cloud SQL for PostgreSQL 15 | Default engine; MySQL 8.0 also supported |
-| Object storage | Cloud Storage | A dedicated uploads bucket for file attachments |
+| Database | Cloud SQL for PostgreSQL 15 | Default engine; MySQL 8.0 also supported via `database_type` |
+| Object storage | Cloud Storage | Provisioned, but not wired to NocoDB's attachment storage (see below) |
 | Cache (optional) | Redis | Disabled by default; required when running multiple replicas |
 | Secrets | Secret Manager | Auto-generated JWT secret (`NC_AUTH_JWT_SECRET`) and database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -44,8 +44,9 @@ Google Cloud services:
   Auth Proxy sidecar is enabled by default in the GKE variant (`enable_cloudsql_volume
   = true`), but NocoDB's internal URL constructor requires a TCP host — the private IP
   is used, not the Unix socket path.
-- **NFS is disabled by default.** NocoDB stores file attachments in Cloud Storage, not
-  on a shared filesystem.
+- **NFS is disabled by default.** NocoDB has no shared-filesystem dependency, but
+  it also has no working Cloud Storage attachment backend out of the box (see
+  §2C) — attachments use local/ephemeral pod disk unless configured manually.
 - **Redis is disabled by default.** A single replica runs without Redis; enable it
   before scaling beyond one pod.
 - **The JWT secret is generated automatically** and stored in Secret Manager. Do not
@@ -106,17 +107,24 @@ password are all surfaced in the [Outputs](#5-outputs). For the connection model
 automated backups, and password rotation, see
 [App_GKE](App_GKE.md).
 
-### C. Cloud Storage — file uploads
+### C. Cloud Storage — provisioned, not wired to attachments
 
-NocoDB stores file attachments in a dedicated **Cloud Storage** bucket. The bucket
-name is injected into the container as `GCS_BUCKET_NAME` automatically. The
-workload service account is granted access via Workload Identity.
+The `storage_buckets` variable provisions a GCS bucket (default `name_suffix =
+"data"`) and a `GCS_BUCKET_NAME` value is injected into the container as an env
+var. However, `NocoDB_Common`'s entrypoint script never reads `GCS_BUCKET_NAME`
+(or the GKE-only `GCS_BASE_URL`), and the injected bucket name does not match the
+name of any bucket the foundation actually creates. NocoDB therefore does **not**
+automatically store attachments in Cloud Storage — uploaded files are written to
+local/ephemeral pod disk and are lost on pod restart. To persist attachments in
+GCS, configure NocoDB's own S3-compatible storage settings manually (via its admin
+UI or `environment_variables`) pointed at a bucket the workload service account
+can access.
 
-- **Console:** Cloud Storage → Buckets → select the uploads bucket.
+- **Console:** Cloud Storage → Buckets → select the provisioned bucket.
 - **CLI:**
   ```bash
   gcloud storage buckets list --project "$PROJECT"
-  gcloud storage ls gs://<uploads-bucket>/      # bucket name is in the Outputs
+  gcloud storage ls gs://<bucket-name>/      # bucket name is in the Outputs
   ```
 
 See [App_GKE](App_GKE.md) for CMEK and additional bucket options.
@@ -191,9 +199,10 @@ available.
 - **JWT secret.** `NC_AUTH_JWT_SECRET` is generated automatically and stored in
   Secret Manager. Do not rotate it after the first deploy; all existing sessions and
   API tokens are immediately invalidated if the secret changes.
-- **GCS uploads.** The uploads bucket name (`GCS_BUCKET_NAME`) is injected
-  automatically. NocoDB stores all file attachments there; the Service Account is
-  granted object-level access via Workload Identity.
+- **GCS uploads are not automatic.** A `GCS_BUCKET_NAME` env var is injected, but
+  the entrypoint script never reads it and the value does not match any bucket the
+  foundation creates. Attachments use local/ephemeral pod disk unless the operator
+  manually configures NocoDB's own S3-compatible storage settings.
 - **NC_DB_* environment variables.** The custom Dockerfile in `NocoDB_Common` maps
   the standard `DB_*` connection variables (injected by the foundation) to the
   `NC_DB_*` names NocoDB expects. When `container_image_source = "prebuilt"` the
@@ -224,7 +233,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -313,15 +322,15 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS is not required for NocoDB — files go to Cloud Storage. |
+| `enable_nfs` | `false` | NFS is not required for NocoDB. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path if NFS is enabled. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the uploads bucket. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets. |
+| `create_cloud_storage` | `true` | Provision the GCS buckets defined in `storage_buckets`. Not wired to NocoDB attachments — see §2C. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -412,7 +421,7 @@ locate and explore the running resources.
 | `database_user` | Application database user. |
 | `database_password_secret` | Secret Manager secret holding the DB password. |
 | `database_host` / `database_port` | DB endpoint (private IP) / port. |
-| `storage_buckets` | Created Cloud Storage buckets (includes the uploads bucket). |
+| `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
 | `monitoring_enabled` / `monitoring_notification_channels` | Monitoring status and channels. |

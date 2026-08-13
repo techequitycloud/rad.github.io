@@ -32,7 +32,7 @@ deployment wires together a focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Phoenix pods, horizontally autoscaled; bills for requested CPU/memory |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Azimutt does not support MySQL or other engines |
-| File storage | Cloud Filestore (NFS) | `enable_nfs = true` by default — Azimutt attachment storage survives pod restarts |
+| File storage | Cloud Filestore (NFS) | `enable_nfs = true` by default, but Azimutt still writes uploads to its own ephemeral working directory rather than this mount (see below) |
 | Object storage | Cloud Storage | A bucket is provisioned (available for an S3-compatible file adapter) |
 | Secrets | Secret Manager | Auto-generated Phoenix `SECRET_KEY_BASE`; database password |
 | Image build | Cloud Build + Artifact Registry | Thin wrapper FROM `ghcr.io/azimuttapp/azimutt`, mirrored into Artifact Registry |
@@ -50,8 +50,10 @@ deployment wires together a focused set of Google Cloud services:
 - **`container_port` and probes must be 4000.** On GKE the platform does **not**
   auto-inject `PORT`, so the entrypoint defaults `PORT=4000`; the Service port and
   probes must match or the pod never becomes Ready even though the app is healthy.
-- **NFS is enabled by default** (`enable_nfs = true`) for Azimutt attachment storage,
-  so uploads survive pod restarts and rescheduling.
+- **NFS is enabled by default** (`enable_nfs = true`), but it is not currently wired
+  to Azimutt's storage path — `FILE_STORAGE_ADAPTER` stays `local`, so uploads still
+  land on the pod's ephemeral disk rather than the NFS mount. Project data itself
+  (schemas, diagrams, layouts, users) lives in Postgres and is unaffected.
 - **`SECRET_KEY_BASE` is generated automatically** and stored in Secret Manager.
   Rotating it after first boot signs out every active session; only rotate in a
   maintenance window.
@@ -113,10 +115,13 @@ The instance name, database, user, and password secret are all surfaced in the
 
 ### C. Cloud Filestore (NFS) & Cloud Storage
 
-NFS is **enabled by default** (`enable_nfs = true`) so Azimutt's attachment storage
-persists across pod restarts and rescheduling; it is mounted at `nfs_mount_path`. A
-**Cloud Storage** bucket is also provisioned (available if you switch Azimutt to an
-S3-compatible file adapter). Project data itself lives in Postgres.
+NFS is **enabled by default** (`enable_nfs = true`) and mounted at `nfs_mount_path`,
+but it is not currently wired to Azimutt's storage path — with the default
+`FILE_STORAGE_ADAPTER = local`, Azimutt still writes uploads to its own ephemeral
+working directory rather than this mount. A **Cloud Storage** bucket is also
+provisioned (available if you switch Azimutt to an S3-compatible file adapter).
+Project data itself (schemas, diagrams, layouts, users) lives in Postgres and is
+unaffected either way.
 
 - **Console:** Filestore → Instances; Cloud Storage → Buckets.
 - **CLI:**
@@ -240,7 +245,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -251,7 +256,7 @@ All other inputs follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `azimutt` | Base name for resources. Do not change after first deploy. |
-| `display_name` | `Azimutt` | Human-readable display name. Note: this variable is not currently referenced by this GKE module. |
+| `display_name` | `Azimutt` | Human-readable name shown in the platform UI. |
 | `application_version` | `latest` | Azimutt image tag; `latest` maps to the `main` tag. Pin to a release in production. |
 
 All other inputs follow standard App_GKE behaviour.
@@ -317,7 +322,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Provisions Cloud Filestore for Azimutt attachment storage (on by default). |
+| `enable_nfs` | `true` | Provisions Cloud Filestore (on by default), but it is not currently wired to Azimutt's storage path — uploads still go to ephemeral pod disk. |
 | `nfs_mount_path` | `/opt/azimutt/storage` | Mount path inside the container. |
 
 All other inputs follow standard App_GKE behaviour.
@@ -394,7 +399,7 @@ locate and explore the running resources.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/role and orphans all Azimutt data. |
 | `container_port` | `4000` | Critical | The entrypoint defaults `PORT=4000` on GKE; a mismatched Service port or probe port hits a dead port and the pod never becomes Ready. |
 | `enable_cloudsql_volume` | `true` | Critical | The Auth Proxy sidecar provides the `127.0.0.1` DB connection; disabling it leaves Azimutt with no database and blocks the `db-init` bootstrap. |
-| `enable_nfs` | `true` | High | Disabling it puts Azimutt attachments on ephemeral pod disk — they are lost on restart/reschedule. |
+| `enable_nfs` | `true` | Low | Provisions Filestore, but has no effect on Azimutt itself — `FILE_STORAGE_ADAPTER` is never pointed at the NFS mount, so uploads still land on the pod's ephemeral disk regardless of this setting (project data itself is safe in Postgres). |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
 | `application_version` | Pin a release | High | `latest` maps to the rolling `main` tag; an unexpected upstream change can break a redeploy. |
 | `session_affinity` | `ClientIP` | Medium | Without stickiness, UI sessions bounce between pods. |

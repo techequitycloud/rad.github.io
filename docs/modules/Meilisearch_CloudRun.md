@@ -34,7 +34,7 @@ wires together a focused set of Google Cloud services:
 | Database | None | Meilisearch is self-contained — no Cloud SQL, no external database |
 | Cache & queue | None | Meilisearch has no Redis or queue dependency |
 | Secrets | Secret Manager | Auto-generated `MEILI_MASTER_KEY` (the search admin credential) |
-| Ingress | Cloud Run URL / Cloud Load Balancing | Internal VPC URL by default; optional external HTTPS load balancer + custom domain |
+| Ingress | Cloud Run URL / Cloud Load Balancing | Public Cloud Run URL by default (`ingress_settings = "all"`); optional external HTTPS load balancer + custom domain, or restrict to `"internal"` for VPC-only access |
 
 **Sensible defaults worth knowing up front:**
 
@@ -45,10 +45,11 @@ wires together a focused set of Google Cloud services:
   (`MEILI_ENV = production`), which refuses to start without a ≥16-byte
   `MEILI_MASTER_KEY`. The module generates a 32-character key and stores it in
   Secret Manager (`enable_api_key = true`).
-- **Internal ingress by default.** `ingress_settings = "internal"` keeps the search
-  API on the VPC. Exposing it publicly (`ingress_settings = "all"`) is blocked at
-  plan time unless `enable_api_key = true`, so an unauthenticated Meilisearch can
-  never be published by accident.
+- **Public ingress by default.** `ingress_settings = "all"` exposes the search API
+  on the public Cloud Run URL. This is only permitted because `enable_api_key =
+  true` is also the default (plan time blocks `ingress_settings = "all"` without
+  it), so an unauthenticated Meilisearch can never be published by accident. Set
+  `ingress_settings = "internal"` to restrict access to the VPC instead.
 - **Single instance.** `min_instance_count = 1` and `max_instance_count = 1`.
   Meilisearch is a single-writer store backed by one storage path; multiple
   instances writing the same path corrupt the index. Keep one instance warm to
@@ -119,10 +120,11 @@ See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 
 ### D. Networking & ingress
 
-The service is reachable on its internal VPC URL by default (`ingress_settings =
-"internal"`), which keeps the search API off the public internet. An external HTTPS
-load balancer with a custom domain, Cloud CDN, and Cloud Armor can be layered on;
-publishing publicly requires the master key to be enabled.
+The service is reachable on its public Cloud Run URL by default (`ingress_settings
+= "all"`), guarded by the master key (`enable_api_key = true`) that ships enabled
+by default. An external HTTPS load balancer with a custom domain, Cloud CDN, and
+Cloud Armor can be layered on; set `ingress_settings = "internal"` to keep the
+search API off the public internet and VPC-only instead.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -203,7 +205,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -237,7 +239,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `internal` | `internal` (VPC-only, recommended). `all` (public) requires `enable_api_key = true`. |
+| `ingress_settings` | `all` | `all` (public, default; requires `enable_api_key = true`). `internal` restricts to VPC-only access. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in in front of the service. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
@@ -329,7 +331,8 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `meilisearch_url` | Internal VPC URL for the Meilisearch REST API (port 7700). |
+| `service_url` | URL of the Cloud Run service. |
+| `meilisearch_url` | URL for the Meilisearch REST API (port 7700). Only reachable by services within the same VPC when `ingress_settings` is `internal`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |

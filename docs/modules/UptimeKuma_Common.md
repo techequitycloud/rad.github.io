@@ -15,7 +15,7 @@ For the infrastructure that actually provisions and runs Uptime Kuma, see the pl
 
 | Area | Provided by UptimeKuma_Common | Where it surfaces |
 |---|---|---|
-| Container image | Custom-builds a thin wrapper `FROM louislam/uptime-kuma` (tag `1`, the v1 stable line) via Cloud Build that patches the hardcoded SQLite `WAL` journal mode to `DELETE` — required because the NFS-backed `/app/data` volume doesn't reliably support WAL's shared-memory locking (observed as `SQLITE_CORRUPT`) — with Artifact Registry mirroring enabled | `container_image` output of the platform deployment |
+| Container image | Builds a thin **custom** image `FROM louislam/uptime-kuma:<tag>` (tag `1`, the v1 stable line) via Cloud Build, patching SQLite's hardcoded journal mode for NFS safety (see §2), with Artifact Registry mirroring enabled | `container_image` output of the platform deployment |
 | Database engine | Fixes **`database_type = "NONE"`** — Uptime Kuma v1 uses an embedded SQLite database under `/app/data`; no Cloud SQL, no Auth Proxy | §Database in the platform guide |
 | Secrets | Exposes an **empty `secret_ids` map** — no application secrets exist; admin credentials live in the SQLite database | `secret_ids` output |
 | Object storage | Exposes an **empty `storage_buckets` list** — persistence comes from the Foundation's NFS volume, not GCS | `storage_buckets` output |
@@ -25,11 +25,11 @@ For the infrastructure that actually provisions and runs Uptime Kuma, see the pl
 
 ---
 
-## 2. Container image
+## 2. Container image — custom build patches SQLite for NFS safety
 
-`UptimeKuma_Common` sets `image_source = "custom"` and builds a thin wrapper `FROM louislam/uptime-kuma:<version>` via Cloud Build (`container_build_config.enabled = true`) rather than deploying the official image unchanged. The Dockerfile source-patches the hardcoded `PRAGMA journal_mode = WAL` in `server/database.js` to `DELETE`: WAL requires shared-memory byte-range locking between the SQLite file and its `-wal` sidecar, which the NFS-backed `/app/data` volume this app uses for durability does not reliably provide — observed as `SQLITE_CORRUPT`. `enable_image_mirroring = true` additionally copies the built image into the project's Artifact Registry so production pulls never depend on Docker Hub availability or rate limits.
+`UptimeKuma_Common` sets `image_source = "custom"` and a real `container_build_config` (`enabled = true`, `dockerfile_path = "Dockerfile"`, `context_path = "."`) pointing at `UptimeKuma_Common/scripts/Dockerfile`. That Dockerfile is a thin layer `FROM louislam/uptime-kuma:${APPLICATION_VERSION}` that source-patches one line: Uptime Kuma unconditionally sets `PRAGMA journal_mode = WAL` on every boot (hardcoded in `server/database.js`, not configurable via env var). WAL relies on shared-memory byte-range locking between the DB file and its `-wal` sidecar, which the NFS-backed `/app/data` volume this app uses for durability does not reliably provide — this combination has produced observed `SQLITE_CORRUPT` errors. The build patches the PRAGMA to `DELETE` mode instead, which only needs standard whole-file locking that NFS handles correctly (at the cost of an fsync per commit — an acceptable trade for a low-write monitoring app). The base image's own `ENTRYPOINT`/`CMD` are otherwise unchanged. `enable_image_mirroring = true` then pushes the built image into the project's Artifact Registry so production pulls never depend on Docker Hub availability or rate limits.
 
-The default `application_version` is `1` — the v1 stable line, which stores all state in embedded SQLite. Inspect the mirrored image:
+The default `application_version` is `1` — the v1 stable line, which stores all state in embedded SQLite. Inspect the built/mirrored image:
 
 ```bash
 gcloud artifacts repositories list --project "$PROJECT" --location "$REGION"

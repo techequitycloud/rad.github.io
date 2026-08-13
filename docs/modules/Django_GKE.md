@@ -246,7 +246,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -471,7 +471,7 @@ locate and explore the running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `database_type` | `POSTGRES` or `POSTGRES_15` | Critical | Django requires PostgreSQL; MySQL or `NONE` will fail the `db-init` job. |
-| `application_name` / `tenant_deployment_id` | set once | Critical | Embedded in resource names; changing recreates all named resources and destroys data. |
+| `application_name` / `tenant_id` | set once | Critical | Embedded in resource names; changing recreates all named resources and destroys data. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`) | Critical | Bare integers are bytes and block all pod scheduling. |
 | `startup_probe` `failure_threshold` | ≥ 30 with migrations | Critical | Too low: Kubernetes kills the pod before migrations finish, causing a restart loop. |

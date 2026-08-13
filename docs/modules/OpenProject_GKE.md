@@ -147,8 +147,14 @@ The database password secret name is in the [Outputs](#5-outputs). See
 By default the workload is exposed through an external Cloud Load Balancing IP
 (`service_type = LoadBalancer`). A custom domain with a Google-managed certificate can
 be enabled, and a static IP can be reserved so the address survives redeploys.
-OpenProject builds absolute URLs from `OPENPROJECT_HOST__NAME` and
-`OPENPROJECT_HTTPS = true`.
+OpenProject builds absolute URLs from `OPENPROJECT_HOST__NAME` and `OPENPROJECT_HTTPS`,
+where `OPENPROJECT_HTTPS` is **not** hardcoded on GKE — `main.tf` sets
+`https_enabled = var.enable_custom_domain`, so it is only `true` once a custom
+domain + managed certificate is configured. With no custom domain, the raw
+LoadBalancer IP is plain HTTP only; forcing HTTPS in that state would force-redirect
+every request to an `https://` address that never responds (a silent, total outage).
+This is the opposite of `OpenProject_CloudRun`, which always passes `https_enabled = true`
+because a Cloud Run `*.run.app` URL is always HTTPS.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -220,7 +226,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -239,7 +245,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `min_instance_count` | `1` | Minimum replicas (GKE has no scale-to-zero). |
 | `max_instance_count` | `5` | Maximum replicas (HPA upper bound). |
-| `container_port` | `8080` | Puma's own default bind port — this module runs Puma directly via `docker/prod/web`, bypassing the all-in-one image's Apache proxy on port 80. |
+| `container_port` | `8080` | Puma's own default bind port; the module runs `./docker/prod/web` (Puma directly), bypassing the all-in-one image's Apache proxy on port 80. |
 | `container_resources` | `2000m` / `4Gi` | CPU/memory limits and requests. Rails needs headroom for migrations and workers. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback connection). |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |

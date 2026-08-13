@@ -224,7 +224,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -285,7 +285,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `liveness_probe` | Mautic login path | HTTP probe against Mautic's login page (200 when ready). |
+| `startup_probe` / `liveness_probe` | Overridden to HTTP `/healthz` | The module overrides both probes away from Mautic's login page: `/index.php/s/login` returns HTTP 500 (installer redirect) until the database is configured, so kube-probes instead hit the static `/healthz` file, which returns 200 regardless of application state. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 

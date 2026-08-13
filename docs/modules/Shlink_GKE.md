@@ -63,7 +63,7 @@ PostgreSQL — there is no filesystem persistence to manage.
   most custom-build modules in this repository, `application_version` is
   **not** wired into the image tag via a build ARG (`container_build_config`
   keeps `build_args = {}`). Changing `application_version` has no effect on
-  which image is built. <!-- TODO: verify this is intentional and not a gap --> Pin a specific release by editing the
+  which image is built. {/* TODO: verify this is intentional and not a gap */} Pin a specific release by editing the
   Common module's `Dockerfile` `FROM` line directly.
 - **Scales 1→3 pods by default** (`min_instance_count = 1`,
   `max_instance_count = 3`). Shlink is stateless per-request against
@@ -180,7 +180,7 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
   The job is safe to re-run (`execute_on_apply = true`). It authenticates as
   `postgres` using the same secret as the app's own `DB_PASSWORD`
   (`ROOT_PASSWORD` and `DB_PASSWORD` both reference
-  `database_password_secret`). <!-- TODO: verify ROOT_PASSWORD vs DB_PASSWORD sharing the same secret is intentional -->
+  `database_password_secret`). {/* TODO: verify ROOT_PASSWORD vs DB_PASSWORD sharing the same secret is intentional */}
 - **Database migrations run at boot, no separate migrate job.** The official
   `shlinkio/shlink` image runs its own schema migrations on container start
   against the empty database created by `db-init`; there is no
@@ -214,7 +214,7 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
 - **Optional visit geolocation.** Shlink can resolve visitor geolocation via
   a MaxMind GeoLite2 database if a `GEOLITE_LICENSE_KEY` is supplied; it is
   not set by this module — add it via `environment_variables` if geolocation
-  is desired. <!-- TODO: verify exact env var name and download behaviour against the running image -->
+  is desired. {/* TODO: verify exact env var name and download behaviour against the running image */}
 - **Inspect the init job and running config:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"

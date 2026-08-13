@@ -15,7 +15,7 @@ description: "Hands-on lab: deploy the App CloudRun application-hosting module i
 
 The lab focuses on operating the **Cloud Run module and the Google Cloud platform**, not on the workload running inside the container. For the complete list of provisioned services and every configuration input (organised by group), see the [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun) — this lab deliberately does not duplicate that detail so it stays accurate over time.
 
-> **This lab deploys onto a `Services_GCP` foundation.** Use the **same `tenant_deployment_id`** as your `Services_GCP` deployment so `App CloudRun` auto-discovers and binds to the shared VPC, Cloud SQL instance, NFS server, and Artifact Registry instead of provisioning its own inline copies. (Standalone deployment — with `require_services_gcp_module = false` — is supported, but the point of this lab is to exercise the foundation.)
+> **This lab deploys onto a `Services_GCP` foundation.** Use the **same `tenant_id`** as your `Services_GCP` deployment so `App CloudRun` auto-discovers and binds to the shared VPC, Cloud SQL instance, NFS server, and Artifact Registry instead of provisioning its own inline copies. (Standalone deployment — with `require_services_gcp_module = false` — is supported, but the point of this lab is to exercise the foundation.)
 
 > **Inputs are validated at plan time.** The module rejects invalid values and invalid feature combinations — a read-replica with no primary, IAP with no authorized users, a `gen1` runtime with NFS, a `mount_nfs` job with `enable_nfs = false`, a `prebuilt` image source with no image — *before* anything is created, with a clear error naming the variable. You will see a fast, explicit failure rather than a half-built deployment. The [Configuration Guide's *Configuration Pitfalls*](https://docs.radmodules.dev/docs/modules/App_CloudRun) table marks which combinations are caught this way.
 
@@ -32,8 +32,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -52,15 +55,15 @@ export REGION="us-central1"          # the region you deploy into
 
 ### Step 1.0 — Choose your lab configuration
 
-Pick a path based on how much of the module you want to exercise. Both bind to your `Services_GCP` foundation via a matching `tenant_deployment_id`.
+Pick a path based on how much of the module you want to exercise. Both bind to your `Services_GCP` foundation via a matching `tenant_id`.
 
-**Path A — Minimal (fastest).** Defaults: a Cloud Run service backed by PostgreSQL (the shared Cloud SQL), the shared NFS, and an init job. Set only `project_id` and `tenant_deployment_id`. Enough to walk Tasks 2–6.
+**Path A — Minimal (fastest).** Defaults: a Cloud Run service backed by PostgreSQL (the shared Cloud SQL), the shared NFS, and an init job. Set only `project_id` and `tenant_id`. Enough to walk Tasks 2–6.
 
 **Path B — Full-Feature (recommended for this lab).** Exercises the breadth of the engine so every verification step has something to confirm. Suggested inputs (everything else default):
 
 ```hcl
 project_id           = "<your-project-id>"
-tenant_deployment_id = "demo"          # MUST match your Services_GCP deployment
+tenant_id = "demo"          # MUST match your Services_GCP deployment
 
 application_name     = "labapp"
 application_version  = "1.0.0"
@@ -95,7 +98,7 @@ iap_authorized_users = ["user:<your-email>"]
 
 ### Step 1.1 — Deploy
 
-1. Click **Modules** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_deployment_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **App (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id` and `tenant_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.

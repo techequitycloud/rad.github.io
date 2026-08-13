@@ -217,7 +217,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -299,7 +299,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the generic `data` GCS bucket. Not read or written by Wallabag. |
-| `enable_nfs` | `true` | **Functionally unused** — mounted at `/var/lib/wallabag`, but Wallabag's image writes nothing there. Safe to disable. |
+| `enable_nfs` | `false` | **Functionally unused** — mounted at `/var/lib/wallabag`, but Wallabag's image writes nothing there. Safe to disable. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). Empty by default — nothing is mounted. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

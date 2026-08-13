@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,7 +57,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Twenty (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Twenty (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Twenty_CloudRun)
    documents every input by group, with defaults. Note that `SERVER_URL` and
@@ -63,9 +66,10 @@ export REGION="us-central1"          # the region you deploy into
 
 2. The platform provisions the Cloud Run service, a Cloud SQL (PostgreSQL 15) database
    with its Secret Manager secrets, optional Redis/GCS storage, builds the container
-   image, and runs two one-shot initialisation jobs (`db-init` followed by
-   `twenty-migrate`). First deploys take roughly **20–35 minutes** (Cloud SQL creation
-   dominates).
+   image, and runs three one-shot initialisation jobs in sequence (`db-init`, then
+   `twenty-migrate`, then `twenty-verify` — a guard job that fails the deploy if the
+   schema ends up empty). First deploys take roughly **20–35 minutes** (Cloud SQL
+   creation dominates).
 
 3. When it completes, discover the resources with name-agnostic filters (so the
    commands keep working regardless of the deployment suffix):
@@ -122,7 +126,7 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~twenty"
-   gcloud run jobs list --project="$PROJECT" --region="$REGION"   # db-init, twenty-migrate, backup jobs
+   gcloud run jobs list --project="$PROJECT" --region="$REGION"   # db-init, twenty-migrate, twenty-verify, backup jobs
    ```
 
 5. **Open a database session** for inspection or maintenance:
@@ -165,8 +169,9 @@ platform-level diagnostics and do not change with Twenty releases.
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
-  DB password secret exists, `enable_cloudsql_volume` is `true`, and both initialisation
-  jobs completed successfully.
+  DB password secret exists, `enable_cloudsql_volume` is `true`, and all three
+  initialisation jobs (`db-init`, `twenty-migrate`, `twenty-verify`) completed
+  successfully.
 - **Initialisation job failed:** list executions and read the failed one's logs:
   ```bash
   gcloud run jobs list --project="$PROJECT" --region="$REGION" --filter="metadata.name~twenty"
@@ -174,6 +179,20 @@ platform-level diagnostics and do not change with Twenty releases.
     --project="$PROJECT" --region="$REGION"
   gcloud run jobs executions list --job="${SERVICE}-twenty-migrate" \
     --project="$PROJECT" --region="$REGION"
+  gcloud run jobs executions list --job="${SERVICE}-twenty-verify" \
+    --project="$PROJECT" --region="$REGION"
+  ```
+- **"Unable to Reach Back-end" in the UI on an otherwise healthy service (Twenty-specific):**
+  an init-job failure does NOT fail the module apply on its own, so a raced or failed
+  `twenty-migrate` on a fresh tenant can leave the service Ready and serving against an
+  **empty** database — every backend query then dies with
+  `relation "core.keyValuePair" does not exist`. This is the exact failure mode the
+  `twenty-verify` guard job exists to catch (it fails the apply loudly if the `core`
+  schema has no tables). If you still hit this — e.g. the guard was bypassed via a
+  custom `initialization_jobs` override — check the `twenty-migrate` execution logs for
+  a Cloud SQL race on a just-provisioned instance, then re-run the job manually:
+  ```bash
+  gcloud run jobs execute "${SERVICE}-twenty-migrate" --project="$PROJECT" --region="$REGION" --wait
   ```
 - **Redis connection failure:** Twenty v0.4+ requires Redis. If `enable_redis = true`
   and the service fails to start, confirm `redis_host` is set or `enable_nfs = true`.
@@ -198,9 +217,9 @@ are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL, secrets, and runs db-init + twenty-migrate |
+| 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL, secrets, and runs db-init + twenty-migrate + twenty-verify |
 | 2 — Access & verify | Manual | Health check passes; create workspace via browser |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/backups, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose revision, database, init-job, Redis, build, and IAM issues |
+| 5 — Troubleshoot | Manual | Diagnose revision, database, init-job (including the empty-DB guard), Redis, build, and IAM issues |
 | 6 — Tear down | Automated | Delete (Trash) removes all module resources |

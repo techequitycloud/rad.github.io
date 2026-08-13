@@ -72,6 +72,33 @@ wires together a focused set of Google Cloud services:
   `"inherited"` so the required `allUsers:objectViewer` grant can apply (the
   same fix already proven on the Cloud Run variant — see
   [PeerTube_CloudRun](PeerTube_CloudRun.md) §3).
+- **On a RAD-managed self-serve project, a project-level org-policy override
+  is applied first, then waited on.** RAD-managed projects inherit a folder
+  org policy enforcing `constraints/storage.publicAccessPrevention`, which
+  overrides the bucket-level setting above and reintroduces the same `412`.
+  When `is_self_serve_project = true` (server-injected — never set it by
+  hand; it is `false` for an ordinary bring-your-own project, where this
+  whole mechanism is a no-op), the module overrides that constraint at the
+  **project** level via the guardrails-admin provider. The override is tied
+  to this module's own state, so destroying the deployment reverts the
+  project to the folder's enforced-by-default posture.
+  **The override needs ~90s to propagate before the bucket grant will
+  succeed.** Terraform reports the org-policy write as complete in 0s, but
+  GCP's enforcement lags: the very next apply step still hit the same `412`,
+  even after the provider's own built-in IAM retry/backoff (~30s, `Too many
+  conflicts`) was exhausted. A `time_sleep.wait_for_org_policy_propagation`
+  of 90s sits between the two, and the bucket grant depends on the wait
+  rather than on the override directly — so an apply on a self-serve project
+  is ~90s slower by design. Confirmed live 2026-08-06 on the Cloud Run
+  variant, which provisions its buckets through the same Foundation path.
+- **Sharp edge: the override is project-scoped, so two PeerTube variants in
+  one project collide.** `storage.publicAccessPrevention` has no
+  bucket-scoped variant once enforced at a higher level. If the same project
+  ever runs both `PeerTube_GKE` and `PeerTube_CloudRun`, each module's state
+  independently manages the *same* project-level policy object, and
+  destroying either removes it out from under the other. `solutions.yaml`
+  only ever selects one PeerTube variant per solution, so this is rare in
+  practice and is not solved in the module.
 - **`host` (the ActivityPub federation domain) is immutable after first real
   use.** Left empty by default so the entrypoint derives it from App_GKE's
   own predicted service URL — works out of the box on a fresh deploy. Set a

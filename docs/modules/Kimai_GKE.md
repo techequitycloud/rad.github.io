@@ -256,7 +256,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | `container_port` | `8001` | Kimai's `:apache` image variant listens on 8001, confirmed via local testing and live deployment. |
 | `cpu_limit` / `memory_limit` | `1000m` / `2Gi` | Per-pod resource limits. |
 | `php_memory_limit` | `512M` | PHP `memory_limit` (the vendor entrypoint reads the lowercase `memory_limit` env var directly). |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar on `127.0.0.1`. **Keep `true` on GKE** — the wrapper's `DB_IP` alias depends on it. |
+| `enable_cloudsql_volume` | `false` | Cloud SQL Auth Proxy sidecar on `127.0.0.1`. **Keep `true` on GKE** — the wrapper's `DB_IP` alias depends on it. |
 
 ### Group 6 — GKE Backend & Cluster
 
@@ -276,7 +276,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | **Functionally unused** — mounted at `/var/lib/kimai`, but Kimai's real persistent storage is the GCS-FUSE-mounted `storage` bucket at `/opt/kimai/var/data`. Safe to disable. |
+| `enable_nfs` | `false` | **Functionally unused** — mounted at `/var/lib/kimai`, but Kimai's real persistent storage is the GCS-FUSE-mounted `storage` bucket at `/opt/kimai/var/data`. Safe to disable. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

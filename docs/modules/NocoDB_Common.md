@@ -25,10 +25,10 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | JWT credential | Generates `NC_AUTH_JWT_SECRET` and stores it in **Secret Manager** | Injected at runtime; retrieve via Secret Manager |
 | Container image | Pins the official `nocodb/nocodb` image and the custom Dockerfile | `container_image` output of the platform deployment |
-| Database engine | Defaults to **Cloud SQL for PostgreSQL 15** (MySQL 8.0 also supported) | §Database in the platform guides |
+| Database engine | Defaults to **Cloud SQL for PostgreSQL 15**; `NocoDB_Common` itself hardcodes `POSTGRES_15` | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy `db-init` job that creates the database and user | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** uploads bucket | `storage_buckets` output |
-| Core settings | NC_DB_* env var mapping, container port 8080, GCS bucket injection | Application behaviour in the platform guides |
+| Object storage | Declares a **Cloud Storage** bucket (not wired to NocoDB's attachment storage) | `storage_buckets` output |
+| Core settings | NC_DB_* env var mapping, container port 8080, `GCS_BUCKET_NAME` injection (not consumed by the entrypoint) | Application behaviour in the platform guides |
 | Health checks | Default startup/liveness probe pointing at `/api/v1/health` | §Observability in the platform guides |
 
 ---
@@ -57,9 +57,14 @@ See [App_Common](App_Common.md) for the shared secret and Workload Identity mode
 
 ## 3. Database engine and bootstrap
 
-NocoDB defaults to **PostgreSQL 15**. MySQL 8.0 is also supported; set
-`database_type` in the platform module before first deploy. On the first deployment
-a one-shot `db-init` job connects to Cloud SQL and idempotently:
+NocoDB defaults to **PostgreSQL 15** — `NocoDB_Common/main.tf` hardcodes
+`database_type = "POSTGRES_15"` in the config it returns. **This is only
+overridable on `NocoDB_GKE`**, whose `nocodb.tf` merges `var.database_type` back
+into the module config when set, so `MYSQL_8_0` works there. `NocoDB_CloudRun`'s
+`nocodb.tf` is missing the equivalent override, so on Cloud Run the platform
+module's `database_type` variable is silently ignored and Postgres 15 is always
+provisioned regardless of what the operator sets. On the first deployment a
+one-shot `db-init` job connects to Cloud SQL and idempotently:
 
 1. creates the NocoDB database (if absent),
 2. creates the application user with the generated password,
@@ -116,12 +121,25 @@ parse the connection URL.
 
 ---
 
-## 6. Object storage — file uploads
+## 6. Object storage — provisioned, not wired to attachments
 
-A dedicated **Cloud Storage** uploads bucket is declared here and provisioned by the
-foundation, which also grants the workload service account access. The bucket name
-is injected into the container as `GCS_BUCKET_NAME` so NocoDB can store file
-attachments directly in GCS. List it with:
+A **Cloud Storage** bucket (`storage_buckets`, default `name_suffix = "data"`) is
+declared here and provisioned by the foundation, which also grants the workload
+service account access. Both `NocoDB_CloudRun` and `NocoDB_GKE` compute a
+`GCS_BUCKET_NAME` value and inject it into the container, but this does **not**
+give NocoDB working GCS-backed attachment storage:
+
+- `NocoDB_Common/scripts/nocodb-entrypoint.sh` never reads `GCS_BUCKET_NAME` (or
+  any other S3/GCS variable) — NocoDB has no attachment-storage backend configured
+  by this module and falls back to local/ephemeral container disk.
+- Independently, the `GCS_BUCKET_NAME` string each variant computes in its
+  `nocodb.tf` does not match the name of any bucket the foundation actually
+  creates, so even a future entrypoint fix would need the bucket-name computation
+  corrected first.
+
+To persist attachments in GCS, configure NocoDB's own S3-compatible storage
+settings manually (via its admin UI or `environment_variables`) pointed at a bucket
+the service account can access. List the provisioned bucket with:
 
 ```bash
 gcloud storage buckets list --project "$PROJECT" --filter="name~uploads"

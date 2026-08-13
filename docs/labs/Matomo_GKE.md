@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Filestore NFS, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL,
+  Filestore NFS, and shared service accounts this module depends on). You do not
+  need to deploy this yourself first — the platform automatically detects
+  whether it already exists in the target project and provisions it before this
+  module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -57,7 +59,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Matomo (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Matomo (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Matomo_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -97,8 +99,9 @@ export REGION="us-central1"           # the region you deploy into
 2. Confirm the service is healthy. Matomo's health path is `/`, which returns HTTP
    200 — or **302 to the installer on a fresh deploy** — once Apache and PHP are
    running. The startup probe allows a generous window (TCP on `/`, 30s initial
-   delay, 15s period, 20 failure threshold) for the image entrypoint to populate
-   the empty NFS-mounted document root from `/usr/src/matomo` on first boot:
+   delay, 15s period, 40 failure threshold, ~10.5min total) for the image
+   entrypoint to populate the empty NFS-mounted document root from
+   `/usr/src/matomo` on first boot:
 
    ```bash
    curl -s -o /dev/null -w "%{http_code}\n" "http://${EXTERNAL_IP}/"
@@ -206,13 +209,30 @@ Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Matomo releases.
 
 - **Pod not Ready / CrashLoopBackOff:** inspect events and logs. The startup probe
-  is TCP on `/` with a 20-failure threshold to cover the first-boot copy of the
-  application into the empty NFS volume; the liveness probe is HTTP `GET /` with a
-  300s initial delay (a 200 or 302-to-installer response counts as healthy).
+  is TCP on `/` with a 40-failure threshold (~10.5min) to cover the first-boot copy
+  of the application into the empty NFS volume; the liveness probe is HTTP `GET /`
+  with a 300s initial delay (a 200 or 302-to-installer response counts as healthy).
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events section shows scheduling/probe/mount errors
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
+- **Permanently corrupted document root after a startup-probe timeout:** the
+  image entrypoint `tar`-extracts `/usr/src/matomo` into the NFS-mounted
+  document root **as root**, then `chown -R`s it only after extraction
+  completes. If the startup probe's failure threshold was ever lowered below
+  the module default (40, ~10.5min) and the pod was SIGKILLed mid-extraction,
+  the NFS volume is left with a partially copied, partially root-owned tree.
+  This does **not** self-heal on restart — the entrypoint skips re-populating
+  the document root once it finds `matomo.php` already present — and shows up
+  as persistent `composer`/`vendor` "not installed" errors even though the pod
+  reports `Ready`. Recover manually:
+  ```bash
+  kubectl exec -n "$NS" deploy/<service-name> -- \
+    rm -rf /var/www/html/* /var/www/html/.[!.]*
+  kubectl delete pod -n "$NS" <pod>
+  ```
+  then wait through the full startup-probe window again for the entrypoint to
+  re-populate the volume cleanly.
 - **Database connection errors:** Matomo reaches Cloud SQL through the **Cloud SQL
   Auth Proxy sidecar on `127.0.0.1:3306`** (`enable_cloudsql_volume = true` is
   required on GKE). Confirm the MySQL 8.0 instance is `RUNNABLE`, the DB password

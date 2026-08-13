@@ -122,7 +122,7 @@ If uploads bucket provisioning is desired, configure `storage_buckets` in the wr
 |---|---|---|---|
 | `project_id` | `string` | — | GCP project ID. **Required.** Used to create the admin password secret. |
 | `resource_prefix` | `string` | — | Prefix for Secret Manager secret names. **Required.** Typically `app<listmonk><tenant><id>`. |
-| `tenant_deployment_id` | `string` | `"demo"` | Deployment environment identifier. |
+| `tenant_id` | `string` | `"demo"` | Deployment environment identifier. |
 | `region` | `string` | `"us-central1"` | GCP region for resource deployment. |
 | `labels` | `map(string)` | `{}` | Labels applied to created resources (secrets). |
 | `gcs_volumes` | `list(object)` | `[]` | GCS Fuse volume mounts (name, bucket_name, mount_path, readonly, mount_options). |
@@ -165,7 +165,7 @@ One `db-init` job runs by default (when `initialization_jobs = []`):
 6. Verifies the application user can connect to the database.
 7. Signals Cloud SQL Proxy shutdown after completion.
 
-**Listmonk handles schema installation itself.** The `db-init` job only creates the database and user — it does not run SQL migrations. On first startup, Listmonk detects a fresh database and automatically runs `--install` to create tables, indexes, seed data, and the admin user defined by `admin_username` / `LISTMONK_app__admin_password`.
+**Listmonk handles schema installation itself.** The `db-init` job only creates the database and user — it does not run SQL migrations. On first startup, Listmonk detects a fresh database and automatically runs `--install` to create tables, indexes, seed data, and the admin user defined by `LISTMONK_ADMIN_USER` (hardcoded to `"admin"`, independent of the `admin_username` variable — see §5's note above) / `LISTMONK_ADMIN_PASSWORD`.
 
 Override `initialization_jobs` with a non-empty list to replace this default with custom jobs. Each custom job must specify at least one of `command`, `args`, or `script_path`.
 
@@ -268,7 +268,7 @@ module "listmonk_app" {
 
   project_id           = var.project_id
   resource_prefix      = local.resource_prefix
-  tenant_deployment_id = var.tenant_deployment_id
+  tenant_id = var.tenant_id
   region               = var.region
   labels               = var.resource_labels
 

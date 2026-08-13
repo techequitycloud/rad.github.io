@@ -193,12 +193,13 @@ Monitoring, with optional uptime checks and alert policies.
   gcloud secrets versions access latest --secret=<admin_password_secret_id output>
   ```
 
-- **Health endpoint.** GoAlert v6.1.0's `/health` endpoint sits behind session
-  auth and returns 403 ("invalid session") rather than the plain 200 documented
-  upstream, so an HTTP probe against it never passes. This module's startup and
-  liveness probes therefore default to a **TCP** port check instead of an HTTP
+- **Health endpoint.** `/health` is GoAlert's documented public, unauthenticated
+  endpoint (200 once the app lifecycle leaves the "Starting" state). This module's
+  startup and liveness probes default to a **TCP** port check rather than an HTTP
   path check — Kubernetes supports `tcpSocket` for both probe types (unlike Cloud
-  Run, which forbids a TCP liveness probe).
+  Run, which forbids a TCP liveness probe) — and both proved correct on live
+  verification (HTTP 200 on `/health` with real "listening and serving HTTP" log
+  lines).
 
 - **Inspect job execution:**
   ```bash
@@ -225,7 +226,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `gke`) from any co-deployed `GoAlert_CloudRun` (`cr`) to avoid a naming collision. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `gke`) from any co-deployed `GoAlert_CloudRun` (`cr`) to avoid a naming collision. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

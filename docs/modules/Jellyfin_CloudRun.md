@@ -161,10 +161,17 @@ libraries prefer the GKE variant with block or NFS storage.
 
 Jellyfin requires **no mandatory cryptographic secrets** — there is no encryption
 key, JWT, or master password to manage. When `enable_api_key = true`, the module
-generates a 32-character random value, stores it in Secret Manager as
-`secret-<prefix>-<app>-api-key`, and injects it so external callers can authenticate
-programmatically. In day-to-day use, API keys are created and revoked in-app under
-**Dashboard → API Keys**; primary auth remains the wizard admin account.
+generates a 32-character random value and stores it in Secret Manager as
+`secret-<prefix>-<app>-api-key`. **Known bug:** `Jellyfin_Common`'s `secret_ids`
+output maps this value to the env-var key `QDRANT__SERVICE__API_KEY` — a
+copy-paste leftover from the Qdrant_Common module the Jellyfin module was cloned
+from — and `Jellyfin_CloudRun` forwards it unchanged via `module_secret_env_vars`.
+Jellyfin has no mechanism to read an API key from any environment variable (its
+Dockerfile is an unmodified thin wrapper with no custom entrypoint to consume
+one), so today `enable_api_key = true` only creates an orphaned Secret Manager
+secret — it does **not** let external callers authenticate. The only way to get a
+usable API key is in-app under **Dashboard → API Keys**; primary auth remains the
+wizard admin account.
 
 - **Console:** Security → Secret Manager.
 - **CLI:**
@@ -257,7 +264,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -430,7 +437,7 @@ running resources.
 | `memory_limit` | `1Gi` (raise for large libraries) | High | Too little memory OOM-kills the server while scanning or transcoding a large library. |
 | `cpu_limit` | `1000m` (raise for transcoding) | High | Live transcoding on Cloud Run (no GPU) saturates CPU; prefer direct-play. |
 | Heavy transcoding / many streams | Use [Jellyfin_GKE](Jellyfin_GKE.md) | High | GCS FUSE latency and Cloud Run request timeouts make Cloud Run a poor fit for busy streaming. |
-| `enable_api_key` | `true` when publicly reachable | Medium | Without it, the API surface relies solely on session auth once ingress is opened. |
+| `enable_api_key` | Leave `false`; not currently functional | Medium | The generated secret is injected as `QDRANT__SERVICE__API_KEY` (a Qdrant_Common copy-paste leftover) — Jellyfin never reads it, so it only creates an orphaned Secret Manager secret. Create API keys in-app under Dashboard → API Keys instead. |
 | `ingress_settings` | `internal` unless public | Medium | `all` exposes the media server to the internet — pair with IAP or Cloud Armor. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short to recover an older library snapshot. |
 | First-run wizard | Complete immediately | Medium | An un-configured server has no admin; anyone who reaches it can claim the admin account. |

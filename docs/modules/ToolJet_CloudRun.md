@@ -239,7 +239,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -261,6 +261,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `container_image_source` | `custom` | ToolJet ships as a thin custom build on `tooljet/tooljet-ce`. |
 | `cpu_limit` | `2000m` | CPU per instance; 2 vCPU recommended. |
 | `memory_limit` | `4Gi` | Memory per instance. |
+| `container_resources` | `null` | Structured `{ cpu_limit, memory_limit, cpu_request, mem_request }` object; when set, overrides `cpu_limit`/`memory_limit`. |
 | `min_instance_count` | `1` | Keeps the in-process worker warm; do not set `0` unless the worker is externalised. |
 | `max_instance_count` | `5` | Autoscaling upper bound. |
 | `cpu_always_allocated` | `true` | Required — ToolJet's background worker runs without an inbound request. |
@@ -285,6 +286,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `environment_variables` | `{}` | Extra non-secret settings. Do not set `SECRET_KEY_BASE`, `LOCKBOX_MASTER_KEY`, `PGRST_JWT_SECRET`, or `PG_*` here. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. |
+| `explicit_secret_values` | `{}` | Raw sensitive values written directly into Secret Manager during deployment, for values known at plan time. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 | `secret_rotation_period` | `2592000s` | Secret Manager rotation notification frequency. |
 

@@ -45,8 +45,8 @@ services:
 - **Fully stateless — no data is stored server-side.** Drawings persist in each
   browser's local storage and are exported/imported as `.excalidraw` files. Redeploys,
   scale-to-zero, and revision changes lose **no** server data because there is none.
-- **Scale-to-zero by default.** `min_instance_count` defaults to `0`; there is no
-  background work to keep an instance warm, so idle deployments cost nothing. Cold
+- **Scale-to-zero is forced on.** The wrapper pins `min_instance_count = 0`; there is
+  no background work to keep an instance warm, so idle deployments cost nothing. Cold
   starts are fast (nginx serving a static bundle) — typically sub-second.
 - **Request-based billing by default.** `cpu_always_allocated = false`: CPU is billed
   only while a request is being served, appropriate for a static file server with no
@@ -189,7 +189,7 @@ specific to or notable for Excalidraw are listed; every other input is inherited
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `excalidraw` | Base name for resources. Do not change after first deploy. |
-| `application_version` | `latest` | Excalidraw image tag; resolves to a pinned known-good tag when `latest`. Pin a specific release in production. |
+| `application_version` | `latest` | Excalidraw image tag. Unlike some sibling modules, `latest` does **not** resolve to a pinned known-good tag — `Excalidraw_Common`'s `pinned_excalidraw_version` local is itself `"latest"`, so the build tracks Docker Hub's rolling `excalidraw/excalidraw:latest` tag. Pin a specific release (e.g. `v1.11.86`) in production. |
 | `homeserver_url` / `homeserver_name` | `""` | **Vestigial** Element carry-over — ignored by the Excalidraw SPA. Leave blank. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -204,7 +204,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | `memory_limit` | `512Mi` | Memory per instance. Gen2 imposes a 512 MiB floor; the static bundle uses far less. |
 | `cpu_always_allocated` | `false` | Request-based billing — correct for a static server with no background work. |
 | `container_port` | `80` | nginx listener port; baked into the image — do not change. |
-| `min_instance_count` | `0` | Defaults to scale-to-zero — no warm instance needed. |
+| `min_instance_count` | `0` | Forced to `0` by the wrapper — scale-to-zero, no warm instance needed. |
 | `max_instance_count` | `3` | Cost/concurrency ceiling. |
 | `enable_image_mirroring` | `true` | Mirror the Excalidraw image into Artifact Registry. |
 

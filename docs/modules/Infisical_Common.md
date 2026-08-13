@@ -91,7 +91,9 @@ engines are not supported. Two initialization jobs run in sequence:
    every apply and is safe to re-run.
 2. **`admin-bootstrap`** — a one-shot job using `infisical/cli:latest`, depending
    on `db-init`. It runs `infisical bootstrap --ignore-if-bootstrapped` against
-   the running server's HTTP API (`INFISICAL_API_URL`, derived from `site_url`)
+   the running server's HTTP API (`INFISICAL_API_URL`, set from `site_url`, and
+   when that is empty resolved at runtime from the platform-injected
+   `GKE_SERVICE_URL`/`CLOUDRUN_SERVICE_URL`, with localhost only as a last resort)
    to create the first super-admin account, organization, and instance-admin
    machine identity — avoiding the "open until the first visitor claims it"
    web-UI signup window. `execute_on_apply = false`: on **Cloud Run**, init jobs

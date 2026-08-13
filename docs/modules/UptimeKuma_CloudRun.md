@@ -21,7 +21,7 @@ Uptime Kuma runs as a Node.js container on Cloud Run v2. It is one of the simple
 |---|---|---|
 | Compute | Cloud Run v2 | Node.js service, 1 vCPU / 512 MiB by default, **CPU always allocated** |
 | Persistent state | Filestore (NFS) | Embedded SQLite database and uploads under `/app/data` (gen2 required) |
-| Container image | Artifact Registry | The official `louislam/uptime-kuma` image is mirrored in (prebuilt, no Cloud Build) |
+| Container image | Artifact Registry | Custom Cloud Build (`container_image_source = "custom"`) — a thin layer `FROM louislam/uptime-kuma` that patches the SQLite journal mode for NFS safety (see below) |
 | Database | — | None — Uptime Kuma v1 uses embedded SQLite; `database_type = "NONE"` |
 | Cache | — | None — Redis is not required (`enable_redis = false`) |
 | Secrets | Secret Manager | No application secrets (`secret_ids = {}`); admin credentials live in SQLite |
@@ -34,7 +34,7 @@ Uptime Kuma runs as a Node.js container on Cloud Run v2. It is one of the simple
 - **No external database.** `database_type = "NONE"`, `enable_cloudsql_volume = false`, and there is no `db-init` job. Uptime Kuma creates its embedded SQLite schema automatically on first boot.
 - **NFS persistence is mandatory.** `enable_nfs = true` with `nfs_mount_path = "/app/data"` mounts a Filestore (NFS) volume holding the SQLite database and uploads, so monitors and history survive restarts and revisions. Requires the gen2 execution environment.
 - **Single-writer SQLite.** SQLite over NFS relies on file locking; run a **single instance** in production (`max_instance_count = 1`). The module default is `max_instance_count = 3` for burst headroom on the dashboard — lower it for production.
-- **Prebuilt image.** `container_image_source = "prebuilt"` deploys the official `louislam/uptime-kuma:1` image directly; `enable_image_mirroring = true` copies it into Artifact Registry to avoid Docker Hub rate limits.
+- **Custom build patches SQLite for NFS safety.** `container_image_source = "custom"` is the default — do not change it to `"prebuilt"`. Uptime Kuma unconditionally sets `PRAGMA journal_mode = WAL` on every boot (hardcoded in `server/database.js`, not configurable via env var); WAL relies on shared-memory byte-range locking between the DB file and its `-wal` sidecar, which the NFS-backed `/app/data` volume does not reliably provide and has produced observed `SQLITE_CORRUPT` errors. The Cloud Build step (`UptimeKuma_Common/scripts/Dockerfile`) source-patches that PRAGMA to `DELETE` mode, which only needs standard whole-file locking that NFS handles correctly. `enable_image_mirroring = true` additionally pushes the built image through Artifact Registry to avoid Docker Hub rate limits.
 - **No application secrets** — there is nothing to inject from Secret Manager. The admin account is created interactively on first access.
 
 ---
@@ -73,7 +73,7 @@ See [App_CloudRun](App_CloudRun.md) for the NFS mount model and CMEK.
 
 ### C. Artifact Registry — the mirrored image
 
-With `enable_image_mirroring = true` (the default) the official `louislam/uptime-kuma` image is copied into the project's Artifact Registry before deployment, insulating deploys from Docker Hub rate limits and outages. There is no Cloud Build step — the image is prebuilt upstream.
+With `container_image_source = "custom"` (the default) a Cloud Build step builds a thin custom image `FROM louislam/uptime-kuma`, applying a source patch that changes the hardcoded SQLite `journal_mode` from `WAL` to `DELETE` — WAL's shared-memory locking is unsafe on the NFS-backed `/app/data` volume (see [Overview](#1-overview)). With `enable_image_mirroring = true` (the default), the built image is then pushed to the project's Artifact Registry, insulating deploys from Docker Hub rate limits and outages.
 
 - **Console:** Artifact Registry → Repositories.
 - **CLI:**
@@ -143,7 +143,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -161,12 +161,12 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `container_image_source` | `prebuilt` | Deploys the official image directly — no Cloud Build. |
+| `container_image_source` | `custom` | Builds a thin custom image via Cloud Build that patches SQLite's hardcoded `journal_mode` from `WAL` to `DELETE` for NFS safety (see Overview). Keep `custom`. |
 | `container_image` | `louislam/uptime-kuma` | Official upstream image, mirrored into Artifact Registry. |
 | `enable_image_mirroring` | `true` | Copy the image into Artifact Registry to avoid Docker Hub rate limits. |
 | `cpu_limit` / `memory_limit` | `1000m` / `512Mi` | Ample for dozens of monitors; raise memory for very large monitor counts. |
 | `min_instance_count` | `0` | **Set to `1` for 24/7 monitoring** — while scaled to zero, no checks run. |
-| `max_instance_count` | `3` | **Set to `1` for production** — SQLite is single-writer (see Pitfalls). |
+| `max_instance_count` | `1` | **Keep at `1`** — SQLite is single-writer, so a second instance corrupts the database (see Pitfalls). |
 | `cpu_always_allocated` | `true` | **Keep `true`.** The in-process check scheduler needs CPU between requests; request-based billing throttles it to ~0 and checks stall. |
 | `container_port` | `3001` | Uptime Kuma's native port. |
 | `execution_environment` | `gen2` | Required for the NFS mount. |
@@ -284,6 +284,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `vpc_egress_setting` | per target scope | Medium | `PRIVATE_RANGES_ONLY` routes only private-range probes through the VPC; set `ALL_TRAFFIC` if monitor probes to external targets need VPC/NAT egress. |
 | `enable_iap` / `ingress_settings` | IAP or `internal` for private dashboards | Medium | The dashboard (and setup page, on first deploy) is otherwise publicly reachable at the `run.app` URL. Complete first-run admin setup immediately after deploy. |
 | `enable_image_mirroring` | `true` (default) | Low | Direct pulls from Docker Hub can hit rate limits and break deploys. |
+| `container_image_source` | `custom` (default) | Critical | Setting `"prebuilt"` skips the Cloud Build step and deploys the unpatched upstream image — Uptime Kuma then writes SQLite in WAL mode over NFS, which has produced observed `SQLITE_CORRUPT` database corruption. |
 
 ---
 

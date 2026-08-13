@@ -75,8 +75,8 @@ image. The deployment wires together a focused set of Google Cloud services:
   by default injects `REDIS_HOST`/`REDIS_PORT` into the pod, but nothing in
   this module edits Matomo's `config.ini.php` `[Cache]` backend — using Redis
   as Matomo's object cache still requires manual post-deploy configuration.
-  <!-- TODO: verify whether the official Matomo image or a plugin auto-detects
-  REDIS_HOST; not confirmed from this repo's sources. -->
+  {/* TODO: verify whether the official Matomo image or a plugin auto-detects
+  REDIS_HOST; not confirmed from this repo's sources. */}
 
 ---
 
@@ -220,13 +220,15 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
   before starting the new one, avoiding two pods deadlocking on the shared
   NFS volume and DB locks.
 - **Health probes.** Startup probe is **TCP** on `/` with a generous
-  30s initial delay, 15s period, and a 40-attempt failure threshold (~10.5
-  minutes total) — giving the image entrypoint time to populate the
-  NFS-mounted document root from `/usr/src/matomo` and reach the database on
-  first boot; a lower threshold risked a startup-probe kill mid-extraction
-  leaving a partially copied, root-owned tree on the NFS volume. Liveness probe is
-  **HTTP** `GET /` with a 300s initial delay (200/302 to the installer counts
-  as healthy).
+  30s initial delay, 15s period, and a 40-attempt failure threshold (~10.5min
+  total) — giving the image entrypoint time to populate the NFS-mounted
+  document root from `/usr/src/matomo` and reach the database on first boot.
+  The threshold was raised from 20 (~5.5min) after a confirmed failure mode:
+  the extraction is not always finished within 5.5 minutes on the NFS-mounted
+  document root, and a startup-probe SIGKILL mid-extraction leaves a
+  partially copied, root-owned tree that does not self-heal on restart (see
+  Configuration Pitfalls). Liveness probe is **HTTP** `GET /` with a 300s
+  initial delay (200/302 to the installer counts as healthy).
 - **Inspect the init job and running config:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -285,7 +287,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | TCP `/`, 30s delay, 15s period, 40 failures | Matomo-specific override with a generous threshold for first-boot NFS population + DB connection. |
+| `startup_probe` | TCP `/`, 30s delay, 15s period, 40 failures (~10.5min) | Matomo-specific override with a generous threshold for first-boot NFS population + DB connection. |
 | `liveness_probe` | HTTP `/`, 300s delay, 60s period, 3 failures | Confirms Apache/PHP is serving (200/302 to the installer counts as healthy). |
 
 ### Group 13 — Filesystem (NFS)
@@ -383,6 +385,7 @@ to locate and explore the running resources.
 | `enable_redis` | `true`, with a real cache backend configured post-deploy | Medium | The env vars alone do not configure Matomo's `[Cache]` backend — leaving Redis "enabled" with no reachable service (e.g. blank `redis_host` and no co-hosted Redis) can surface connection errors without an actual caching benefit. |
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS and any bookmarked/embedded tracking URLs. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention of historical analytics backups. |
+| `startup_probe.failure_threshold` | `40` (~10.5min) | Critical | The image entrypoint `tar`-populates the NFS-mounted document root from `/usr/src/matomo` as root, `chown -R`ing only after extraction completes; a too-tight threshold SIGKILLs the container mid-copy, leaving a permanently corrupted, partially root-owned document root (composer/vendor "not installed" errors) that does **not** self-heal on restart — recovery requires manually clearing `/var/www/html` on the NFS volume and letting the entrypoint re-populate it. |
 
 ---
 

@@ -254,7 +254,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -265,6 +265,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_name` | `moodle` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Moodle LMS` | Friendly name shown in the Console. |
 | `application_description` | `Moodle Learning Management System on GKE Autopilot` | Workload description annotation. |
+| `description` | `Moodle LMS - Online learning and course management platform` | Forwarded to `Moodle_Common` as its `description` input; distinct from `application_description` above. |
 | `application_version` | `4.5.1` | Container image version tag; increment to roll out a new version. |
 
 ### Group 4 — Runtime & Scaling

@@ -46,10 +46,12 @@ Google Cloud services:
   infrastructure and uses the PostgreSQL database directly.
 - **File attachments default to ephemeral local storage.** Enable `enable_gcs_storage`
   for persistent object storage using GCS.
-- **Two init jobs run before the server starts.** `db-init` creates the database and
-  user; `twenty-migrate` runs TypeORM schema migrations. Database migrations are
-  disabled in the main container (`DISABLE_DB_MIGRATIONS=true`) to keep cold starts
-  fast after the first boot.
+- **Three init jobs run before the server starts.** `db-init` creates the database and
+  user; `twenty-migrate` runs TypeORM schema migrations; `twenty-verify` is a guard job
+  that fails the apply if the `core` schema has no tables, catching a raced/failed
+  migration loudly instead of shipping a healthy pod against an empty database.
+  Database migrations are disabled in the main container
+  (`DISABLE_DB_MIGRATIONS=true`) to keep cold starts fast after the first boot.
 - **`SERVER_URL` and `FRONT_BASE_URL` must be set manually.** Without them, API links,
   CORS, and email invitations are broken.
 - The **APP_SECRET / ENCRYPTION_KEY** is generated automatically and stored in Secret
@@ -87,8 +89,10 @@ See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type
 Twenty stores all application data (contacts, pipelines, custom objects) in a managed
 Cloud SQL for PostgreSQL 15 instance. Pods reach it privately through the **Cloud SQL
 Auth Proxy** sidecar over a Unix socket, so no public IP is exposed. On first deploy
-two initialization Jobs run: `db-init` creates the database and user, and
-`twenty-migrate` runs schema migrations using Twenty's own entrypoint.
+three initialization Jobs run in sequence: `db-init` creates the database and user,
+`twenty-migrate` runs schema migrations using Twenty's own entrypoint, and
+`twenty-verify` guards against an empty schema by failing the apply if migrations
+did not actually create any tables.
 
 - **Console:** SQL → select the instance for connections, backups, flags, and metrics.
 - **CLI:**
@@ -187,19 +191,30 @@ Monitoring. Optional uptime checks and alert policies are available.
 
 ## 3. Twenty Application Behaviour
 
-- **First-deploy database setup.** Two initialization Jobs run sequentially before
+- **First-deploy database setup.** Three initialization Jobs run sequentially before
   the application starts:
   1. `db-init` — connects to Cloud SQL via the Auth Proxy Unix socket, creates the
      PostgreSQL database and user, grants privileges, and installs the `uuid-ossp`
      extension. It is idempotent and safe to re-run.
   2. `twenty-migrate` — runs Twenty's own entrypoint (`twenty-entrypoint.sh`) with
      `DISABLE_DB_MIGRATIONS=false`, executing TypeORM schema migrations and registering
-     background cron jobs.
+     background cron jobs. `max_retries = 3` because a fresh tenant's Cloud SQL
+     instance can still be settling when this job races in.
+  3. `twenty-verify` — depends on `twenty-migrate` completing and **fails the apply**
+     if the `core` schema has no tables. This exists because an init-job failure does
+     NOT fail the module apply on its own — without this guard, a raced or failed
+     `twenty-migrate` could silently leave the app running against an EMPTY database
+     (every backend query then dies with `relation "core.keyValuePair" does not
+     exist"`, and the UI shows "Unable to Reach Back-end"). This is also one of two
+     modules (with `CalDiy_GKE`) that surfaced a 3-tier `depends_on_jobs` ordering fix
+     in `App_GKE` — a job depending on another dependent job (not just a base-tier job
+     like `db-init`) could previously race and finish before its prerequisite.
   Inspect them after deploy:
   ```bash
   kubectl get jobs -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp
   kubectl logs -n "$NAMESPACE" job/db-init
   kubectl logs -n "$NAMESPACE" job/twenty-migrate
+  kubectl logs -n "$NAMESPACE" job/twenty-verify
   ```
 - **Migrations disabled on normal boot.** The main container runs with
   `DISABLE_DB_MIGRATIONS=true` so migrations only run via the `twenty-migrate` job.
@@ -245,7 +260,7 @@ specific to or notable for Twenty are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -337,7 +352,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` and `twenty-migrate` jobs. |
+| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init`, `twenty-migrate`, and `twenty-verify` jobs. |
 | `cron_jobs` | `[]` | Additional recurring Kubernetes CronJobs. |
 
 ### Group 14 — Observability & Health
@@ -386,7 +401,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `false` | Provision Ingress for custom hostnames + managed certificate. |
+| `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. Must match `SERVER_URL`. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 

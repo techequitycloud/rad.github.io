@@ -28,7 +28,7 @@ Formbricks is an open-source survey and experience management platform. It allow
 | Variable | Group | Type | Default | Description |
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'formbricks'` | Base resource name. Do not change after initial deployment. |
@@ -39,7 +39,7 @@ Formbricks is an open-source survey and experience management platform. It allow
 
 **Wrapper architecture:** `Formbricks CloudRun` calls `Formbricks Common` to build an `application_config` object containing Formbricks-specific environment variables, auto-generated secrets, S3/GCS storage wiring, probe configuration, and the `db-init` job definition. `module_storage_buckets` carries the `uploads` bucket provisioned by `Formbricks Common`. `scripts_dir` is resolved to the `Formbricks_Common/scripts` directory at apply time.
 
-**Webapp URL note:** After the first deployment, the `webapp_url` variable must be set to the actual Cloud Run service URL or custom domain. Until then, NextAuth.js defaults to `localhost:3000` — OAuth callbacks and email links will reference localhost. Update `webapp_url` and redeploy to fix authentication flows.
+**Webapp URL note:** When `webapp_url` is left empty, `main.tf` computes a deterministic Cloud Run service URL (`https://<service>-<project-number>.<region>.run.app`) and passes it to `Formbricks Common` as `WEBAPP_URL`/`NEXTAUTH_URL` — Formbricks never actually falls back to the image's `localhost:3000` default on Cloud Run (Cloud Run does not interpolate `$(VAR)` references, so the URL is computed as a plain string). Set `webapp_url` explicitly only to point OAuth callbacks and email links at a custom domain instead of the predicted `run.app` URL.
 
 ---
 
@@ -95,6 +95,7 @@ Formbricks is a Next.js application that performs Prisma database migrations on 
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
 | `min_instance_count` | 4 | `0` | Minimum running instances. Set to `1` to eliminate cold starts. |
 | `max_instance_count` | 4 | `1` | Maximum concurrent instances. Increase for higher-traffic deployments. |
+| `cpu_always_allocated` | 4 | `false` | Request-based billing by default: Formbricks serves surveys/dashboard on request, and its response pipeline (notification emails, webhooks, integrations) only runs after a survey response. Set `true` if you run live surveys that need real-time notifications/webhooks delivered without waiting for the next request to wake the instance. |
 
 **Differences from `App CloudRun` defaults:**
 
@@ -550,7 +551,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |
-| `tenant_deployment_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'formbricks'` | Base resource name. Do not change after initial deployment. |
@@ -563,7 +564,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `container_image` | 4 | `""` | Container image URI. Leave empty for Cloud Build to manage. |
 | `container_build_config` | 4 | `{ enabled = true }` | Cloud Build configuration: Dockerfile path, context, build args. |
 | `cpu_limit` | 4 | `'1000m'` | CPU per instance. Upgrade to `'2000m'` for production. |
-| `memory_limit` | 4 | `'2Gi'` | Memory per instance. Minimum 512 Mi. |
+| `memory_limit` | 4 | `'2Gi'` | Memory per instance. Formbricks (Next.js 16) requires a minimum of 2Gi — 512Mi causes OOM crashes at startup. |
 | `container_port` | 4 | `3000` | Formbricks native port. Do not change. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for NFS mounts. |
 | `timeout_seconds` | 4 | `300` | Max request duration. |
@@ -574,6 +575,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `traffic_split` | 4 | `[]` | Canary/blue-green traffic allocation. |
 | `min_instance_count` | 4 | `0` | Minimum running instances. Set to `1` for production. |
 | `max_instance_count` | 4 | `1` | Maximum concurrent instances. Increase for higher traffic. |
+| `cpu_always_allocated` | 4 | `false` | Request-based billing by default (Formbricks serves surveys/dashboard on request; the response pipeline — notification emails, webhooks, integrations — only runs after a survey response). Set `true` for live surveys needing real-time notifications/webhooks without waiting for the next request. |
 | `max_revisions_to_retain` | 4 | `7` | Maximum Cloud Run revisions to keep. |
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
 | `service_labels` | 4 | `{}` | Labels applied to the Cloud Run service. |
@@ -638,7 +640,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `liveness_probe` | 14 | `{ path="/api/v2/health", initial_delay_seconds=15, failure_threshold=3 }` | Liveness probe. |
 | `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | App_CloudRun-level service startup probe. |
 | `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | App_CloudRun-level service liveness probe. |
-| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check. |
+| `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 21 | `true` | Redis for Formbricks caching and rate limiting. |
 | `redis_host` | 21 | `""` | Redis hostname/IP. Defaults to NFS server IP when empty. |
@@ -681,7 +683,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
 | `project_id` | _(required)_ | **Critical** | No default — deployment fails immediately. |
-| `webapp_url` | Set after first deploy | **High** | Leaving `webapp_url` empty after first deploy causes NextAuth.js to generate OAuth redirect URIs and email links pointing to `localhost:3000`. Authentication flows will fail for any user not running a local server. Set this to the Cloud Run URL or custom domain and redeploy. |
+| `webapp_url` | `""` (auto-computed) | **Medium** | When left empty, `main.tf` computes a deterministic Cloud Run service URL and injects it as `WEBAPP_URL`/`NEXTAUTH_URL` — Formbricks does not actually fall back to `localhost:3000` on this platform. Set `webapp_url` explicitly to point OAuth redirect URIs and email links at a custom domain instead of the predicted `run.app` URL. |
 | `db_name` | `"formbricks"` | **Critical** | Immutable after first deployment — changing this causes the database to be recreated, destroying all survey definitions, responses, and user data. |
 | `db_user` | `"formbricks"` | **Critical** | Immutable after first deployment — changing this recreates the PostgreSQL user and invalidates all stored credentials. |
 | `enable_redis` | `true` | **High** | Redis is enabled by default. When `redis_host = ""` the module falls back to the NFS server IP. If `enable_nfs = false` and `redis_host` is also empty, Formbricks cannot initialise its caching layer and will fail at startup. |
@@ -689,6 +691,7 @@ All user-configurable variables exposed by `Formbricks CloudRun`, sorted by UI g
 | `enable_nfs` | `true` | **High** | Without NFS, uploaded survey assets and file attachments are stored on the ephemeral container filesystem. All uploads are lost on every new Cloud Run revision. Multiple instances will serve inconsistent file content. |
 | `memory_limit` | `"2Gi"` | **High** | Formbricks's Next.js runtime and Prisma ORM require significant heap. Reducing below `512Mi` causes OOM crashes under normal survey traffic. `2Gi` is the recommended minimum for production. |
 | `min_instance_count` | `0` | **Medium** | Scale-to-zero causes cold starts of 15–20 seconds. Users visiting a survey immediately after an idle period will experience this delay. Set to `1` for any production survey with SLA requirements. |
+| `cpu_always_allocated` | `false` | **Medium** | Request-based billing by default — the response pipeline (notification emails, webhooks, integrations) only runs while an instance is serving a request. If you run live surveys that need real-time notifications/webhooks delivered without waiting for the next request to wake the instance, set `true` (instance-based billing, higher cost). |
 | `smtp_host` | `'smtp.gmail.com'` (placeholder) | **High** | Defaults to a placeholder hostname so Formbricks's env validation has a complete SMTP block; without real `smtp_user`/`smtp_password` credentials, email delivery still fails. Configure a real SMTP provider before inviting team members. |
 | `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Formbricks admin panel is accessible from the public internet protected only by Formbricks's own authentication. Enable for any production deployment. |
 | `backup_retention_days` | `7` | **Medium** | Seven days is insufficient for active survey deployments. Increase to 30+ days for any production Formbricks instance collecting valuable survey responses. |

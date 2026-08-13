@@ -38,7 +38,7 @@ Deployments/Services**, exactly matching the vendor's own docker-compose model:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot (2 Deployments) | Backend (main, 1 vCPU/1Gi default) + frontend (`additional_services`, 0.5 vCPU/512Mi) |
+| Compute | GKE Autopilot (2 Deployments) | Backend (main, 2 vCPU/2Gi default) + frontend (`additional_services`, 0.5 vCPU/512Mi) |
 | Database | Cloud SQL for PostgreSQL 15 | Required — no other engine is supported |
 | Secrets | Secret Manager → K8s Secret | Auto-generated `SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `SPARKY_FITNESS_APP_DB_PASSWORD`; database password |
 | Ingress | Reserved external LoadBalancer IP (frontend) | Deterministic across redeploys — known at plan time |
@@ -59,7 +59,11 @@ Deployments/Services**, exactly matching the vendor's own docker-compose model:
 - **A static IP is always reserved for the frontend LoadBalancer** so the
   browser-reachable URL (used for `SPARKY_FITNESS_FRONTEND_URL` CORS checks) is known
   at plan time and never changes across redeploys.
-- **Both images are prebuilt** — no Cloud Build step for the application itself.
+- **The frontend image is prebuilt; the backend is a thin custom build.** The
+  backend inherits `SparkyFitness_Common`'s `image_source = "custom"` (a Dockerfile
+  patching its `pg.Pool` constructors for Cloud SQL SSL), so a Cloud Build step runs
+  for it; `container_image_source` is deliberately left unset here so that config
+  flows through.
 
 ---
 
@@ -172,8 +176,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `cpu_limit` / `memory_limit` | `1000m` / `1Gi` | Resource limits for the **backend** (main app). |
-| `min_instance_count` / `max_instance_count` | `0` / `2` | Replica scaling bounds. |
+| `cpu_limit` / `memory_limit` | `2000m` / `2Gi` | Resource limits for the **backend** (main app). |
+| `min_instance_count` / `max_instance_count` | `1` / `3` | Replica scaling bounds. |
 | `container_port` | `3010` | Backend's listening port. |
 
 ### Group 5 — SparkyFitness Application Config
@@ -217,7 +221,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | SparkyFitness does not use Redis; left available as a generic Foundation capability. |
+| `enable_redis` | `true` | SparkyFitness does not natively use Redis; the Foundation's generic Redis wiring is deliberately left enabled as a capability for future backend versions. Set it to `false` to avoid provisioning a cache nothing reads. |
 
 ---
 

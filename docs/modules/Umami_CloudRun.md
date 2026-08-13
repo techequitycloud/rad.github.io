@@ -30,7 +30,7 @@ Umami is a privacy-focused, lightweight, open-source web analytics platform — 
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
 | `region` | 1 | `string` | `'us-central1'` | GCP region for all resources. |
-| `tenant_deployment_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'umami'` | Base resource name. Do not change after initial deployment. |
@@ -48,15 +48,15 @@ Umami is a privacy-focused, lightweight, open-source web analytics platform — 
 
 ## 2. IAM & Access Control
 
-`Umami_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun](App_CloudRun.md#2-iam--access-control).
+`Umami_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun](./App_CloudRun.md#2-iam--access-control).
 
 **Auto-generated application secret:** `Umami Common` generates `APP_SECRET` at apply time using `random_password` (32 characters, no special characters). It is written to Secret Manager and injected into the Cloud Run container as the `APP_SECRET` environment variable. Plaintext is never stored in Terraform state after initial apply.
 
-**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket (since `enable_cloudsql_volume = true` by default), using `DB_HOST` (the socket path under `/cloudsql`), `DB_USER`, and `DB_PASSWORD` (from Secret Manager).
+**Database initialisation identity:** The `db-init` Cloud Run Job runs under the Cloud Run SA. It connects to Cloud SQL PostgreSQL via the native Cloud Run Cloud SQL socket integration (`run.googleapis.com/cloudsql-instances`, since `enable_cloudsql_volume = true` by default), using `DB_HOST` (the socket path under `/cloudsql`), `DB_USER`, and `DB_PASSWORD` (from Secret Manager). Cloud Run has no Auth Proxy sidecar — that mechanism only exists on GKE.
 
 **30-second secret propagation delay:** `Umami Common` inserts a propagation wait after creating secrets. The `secret_propagation_delay` variable (default 30 seconds) controls how long dependent resources wait after secret creation before proceeding.
 
-For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun](App_CloudRun.md#2-iam--access-control).
+For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun](./App_CloudRun.md#2-iam--access-control).
 
 ---
 
@@ -84,7 +84,7 @@ Umami is a lightweight Next.js application with modest resource requirements. `U
 | `container_port` | 4 | `3000` | Umami's native HTTP port. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 recommended for performance. |
 | `timeout_seconds` | 4 | `300` | Max request duration. |
-| `enable_cloudsql_volume` | 4 | `true` | Default `true` — Umami connects via Unix socket. |
+| `enable_cloudsql_volume` | 4 | `true` | Default `true` — Umami connects via the native Cloud Run Cloud SQL Unix socket integration (no Auth Proxy sidecar on Cloud Run — see Section 3.D). |
 | `cpu_always_allocated` | 4 | `false` | Request-based billing — CPU is billed only while serving a request. Set `true` to allocate CPU at all times (instance-based billing). |
 | `traffic_split` | 4 | `[]` | Percentage-based canary/blue-green traffic allocation. |
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
@@ -132,7 +132,7 @@ Umami requires **PostgreSQL 15**. The module provisions a Cloud SQL PostgreSQL 1
 
 ### D. Networking
 
-Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enable_cloudsql_volume = true` is the default, the Auth Proxy sidecar handles the Cloud SQL connection via Unix socket.
+Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enable_cloudsql_volume = true` is the default, the *native* Cloud Run Cloud SQL integration (`run.googleapis.com/cloudsql-instances` annotation) mounts a Unix socket at `/cloudsql/<proj:region:inst>` and injects `DB_HOST` as that socket directory. **There is no Auth Proxy sidecar and no `127.0.0.1:5432` TCP listener on Cloud Run** — that mechanism exists only on GKE, where a real `cloud-sql-proxy` sidecar listens on loopback. The `Umami_Common` entrypoint (`scripts/umami-entrypoint.sh`, shared with `Umami_GKE`) resolves a socket-path `DB_HOST` to `127.0.0.1` before assembling `DATABASE_URL` — a mapping that is only valid on GKE. On Cloud Run this yields `ECONNREFUSED 127.0.0.1:5432` and a startup-probe failure. See the Configuration Pitfalls table below.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -143,7 +143,7 @@ Cloud Run uses Direct VPC Egress to reach Cloud SQL's internal IP. Because `enab
 
 A `db-init` Cloud Run Job is automatically provisioned by `Umami Common` when `initialization_jobs` is left as the default empty list (`[]`). It uses a PostgreSQL client image and executes `Umami_Common/scripts/db-init.sh`, which performs the following idempotent operations:
 
-1. Connects to Cloud SQL PostgreSQL via the Auth Proxy Unix socket.
+1. Connects to Cloud SQL PostgreSQL via the native Cloud Run Cloud SQL Unix socket integration (no Auth Proxy sidecar on Cloud Run — see Section 3.D).
 2. Creates the `umami` database user with the password from Secret Manager.
 3. Creates the `umami` database if it does not exist.
 4. Grants the `umami` user full privileges on the database.
@@ -217,7 +217,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer backed by a Serve
 
 Setting `ingress_settings = 'internal-and-cloud-load-balancing'` forces all Umami traffic through the LB, preventing direct `*.run.app` URL access.
 
-See [App_CloudRun](App_CloudRun.md#a-https-load-balancer) for full architecture details.
+See [App_CloudRun](./App_CloudRun.md#a-https-load-balancer) for full architecture details.
 
 ### B. Cloud CDN
 
@@ -351,7 +351,7 @@ When `enable_backup_import = true`, a dedicated Cloud Run Job restores an existi
 After a successful deployment, explore the Umami installation in the GCP Console:
 
 **Cloud Run service:**
-Navigate to **Cloud Run** in the GCP Console. Find the service named `app<application_name><tenant_deployment_id><deployment_id>` (e.g., `appumamidemoxyz`). Click the service to view:
+Navigate to **Cloud Run** in the GCP Console. Find the service named `app<application_name><tenant_id><deployment_id>` (e.g., `appumamidemoxyz`). Click the service to view:
 - The service URL — use this to access the Umami dashboard.
 - **Revisions** tab — lists all deployed revisions with traffic percentages.
 - **Logs** tab — streams container logs including Umami startup and request logs.
@@ -473,7 +473,7 @@ The following behaviours are applied automatically by `Umami CloudRun` regardles
 | **No Redis required** | `enable_redis = false` default | Umami uses only PostgreSQL for all data storage. Redis is not required. |
 | **Scripts directory** | `scripts_dir = abspath("${module.umami_app.path}/scripts")` | Initialization scripts are sourced from `Umami Common`, not from the deployment directory. |
 
-**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun](App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
+**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun](./App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
 
 ---
 
@@ -484,7 +484,7 @@ All user-configurable variables exposed by `Umami CloudRun`, sorted by UI group 
 | `resource_creator_identity` | 0 | (platform SA) | Service account used by Terraform to manage resources. |
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for all resources. |
-| `tenant_deployment_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'umami'` | Base resource name. Do not change after initial deployment. |
@@ -505,8 +505,8 @@ All user-configurable variables exposed by `Umami CloudRun`, sorted by UI group 
 | `execution_environment` | 4 | `'gen2'` | Cloud Run execution environment generation. |
 | `timeout_seconds` | 4 | `300` | Max request duration. |
 | `cpu_always_allocated` | 4 | `false` | Request-based billing by default. Set `true` to allocate CPU at all times. |
-| `enable_cloudsql_volume` | 4 | `true` | Mount Cloud SQL Auth Proxy Unix socket. |
-| `cloudsql_volume_mount_path` | 4 | `'/cloudsql'` | Container path for Auth Proxy socket. |
+| `enable_cloudsql_volume` | 4 | `true` | Mount the Cloud SQL instance via the native Cloud Run socket integration (no Auth Proxy sidecar on Cloud Run). |
+| `cloudsql_volume_mount_path` | 4 | `'/cloudsql'` | Container path for the Cloud SQL Unix socket. |
 | `traffic_split` | 4 | `[]` | Canary/blue-green traffic allocation. |
 | `max_revisions_to_retain` | 4 | `7` | Maximum Cloud Run revisions to keep. |
 | `service_annotations` | 4 | `{}` | Advanced Cloud Run annotations. |
@@ -622,6 +622,7 @@ All user-configurable variables exposed by `Umami CloudRun`, sorted by UI group 
 | `enable_backup_import` | `false` | **Critical** | Requires a valid backup file to be accessible at `backup_file`. Enabling with an invalid path causes the restore Cloud Run job to fail during apply. |
 | `backup_retention_days` | `7` | **Medium** | Seven days is minimal for production analytics. Losing analytics history has direct business impact. Increase to 30+ days for any long-term analytics deployment. |
 | `secret_propagation_delay` | `30` | **Low** | Occasionally insufficient in multi-region setups. Increase to 60–90s if secret-read errors are observed during apply. |
+| `enable_cloudsql_volume` | `true` | **Critical** | On Cloud Run this mounts the *native* Cloud SQL socket integration — there is no Auth Proxy sidecar and no `127.0.0.1:5432` TCP listener (that only exists on GKE). The shared `Umami_Common` entrypoint (`umami-entrypoint.sh`) unconditionally resolves a socket-path `DB_HOST` to `127.0.0.1` before building `DATABASE_URL`, which is only valid on GKE — on Cloud Run this produces `ECONNREFUSED 127.0.0.1:5432` in the revision logs and the startup probe fails. If Umami won't boot, check the deployed revision's injected `DB_HOST`/`DB_IP` (`gcloud run revisions describe … --format=json`) rather than assuming the loopback substitution works. |
 | `vpc_sc_dry_run` | `true` | **Medium** | VPC-SC dry run logs violations but does not block them. After verifying no false positives in Cloud Logging, switch to `false` for actual enforcement. Leaving as `true` permanently provides no security benefit. |
 
 ---

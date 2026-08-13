@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 2 
 
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This section maps to the RAD platform's build machinery: the platform's Cloud Build container builds, the Cloud Build CI trigger (present in both App_CloudRun and App_GKE), Artifact Registry management, and image mirroring. Deploy the **Delivery pipeline** profile from the [Lab Map](PCD_Certification_Guide.md). Local development tooling (2.1) and test authoring (2.3) are mostly study-only — honest pointers are given.
 
 ---
@@ -22,13 +21,13 @@ This section maps to the RAD platform's build machinery: the platform's Cloud Bu
 
 **How RAD implements it** — Not directly: the foundation modules run server-side and assume the portal performs the deploy. The nearest adjacent capabilities are real and useful, though:
 
-- **Isolated per-developer environments.** `tenant_deployment_id` feeds the deterministic naming scheme (`app<name><tenant><8-hex-hash>`), so each developer can deploy a complete, non-colliding copy of the same application into a shared project — the cloud-native answer to "works on my machine".
+- **Isolated per-developer environments.** `tenant_id` feeds the deterministic naming scheme (`app<name><tenant><8-hex-hash>`), so each developer can deploy a complete, non-colliding copy of the same application into a shared project — the cloud-native answer to "works on my machine".
 - **Database tooling image.** The platform builds a psql/mysql client image into Artifact Registry, which the modules' jobs use; you can run the same image locally for parity.
 - **Local DB access pattern.** Cloud SQL has private IP only, so the local equivalent of the deployed setup is running the Cloud SQL Auth Proxy yourself from a machine with VPC access (or via IAP tunneling) — the same binary the GKE module runs as a sidecar.
 
 **Try it**
 
-1. Deploy a second copy of `App_CloudRun` with a different `tenant_deployment_id` and confirm both stacks coexist:
+1. Deploy a second copy of `App_CloudRun` with a different `tenant_id` and confirm both stacks coexist:
 
    ```bash
    gcloud run services list --region=us-central1
@@ -179,7 +178,7 @@ A: `delete_untagged_images = true` removes dangling layers, `image_retention_day
 <details>
 <summary>Q1: Integration tests need a real Postgres but must not touch production data. How would you structure this with the RAD stack?</summary>
 
-A: Deploy a separate tenant (`tenant_deployment_id = "ci"`) so the pipeline gets its own isolated Cloud SQL database and service, run integration tests against that stage from a Cloud Build step, and tear down or reuse it per run. Unit tests stay on emulators/mocks; only the integration layer touches the real (isolated) database.
+A: Deploy a separate tenant (`tenant_id = "ci"`) so the pipeline gets its own isolated Cloud SQL database and service, run integration tests against that stage from a Cloud Build step, and tear down or reuse it per run. Unit tests stay on emulators/mocks; only the integration layer touches the real (isolated) database.
 </details>
 
 <details>

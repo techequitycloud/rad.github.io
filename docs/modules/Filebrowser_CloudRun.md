@@ -48,10 +48,10 @@ small set of Google Cloud services:
   one instance risks database corruption. Keep `max = 1`.
 - **Default login is `admin` / `admin`.** Filebrowser seeds this credential on first
   boot. Change it in the web UI immediately after deploy.
-- **Ingress defaults to `all`.** The service is publicly reachable out of the box —
-  combined with the seeded `admin`/`admin` login, change the default credential
-  immediately or restrict access first (`ingress_settings = "internal"`, IAP, or the
-  HTTPS load balancer with Cloud Armor).
+- **Ingress defaults to `all` (public).** The service is reachable from the public
+  internet out of the box. To restrict it, set `ingress_settings = "internal"`
+  (VPC-only) or `internal-and-cloud-load-balancing`, or front it with the HTTPS load
+  balancer (`enable_cloud_armor = true` + `application_domains`).
 - **No Redis, no init job.** `enable_redis = false` and no `db-init` job runs; the
   app is ready as soon as the container starts.
 - **Container port 80.** Filebrowser serves plain HTTP/1.1 on port 80
@@ -122,7 +122,7 @@ See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 ### D. Networking & ingress
 
 The service's ingress defaults to **`all`** — reachable from the public internet out
-of the box. To restrict it to the VPC, set `ingress_settings = "internal"`, or layer
+of the box. To restrict it, set `ingress_settings = "internal"` (VPC-only), or layer
 an external HTTPS load balancer with a custom domain, Cloud CDN, and Cloud Armor.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
@@ -221,7 +221,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `all` | **Default is public.** Set `internal` for VPC-only access or `internal-and-cloud-load-balancing` behind a Load Balancer. |
+| `ingress_settings` | `all` | **Default is public.** Set `internal` to restrict to VPC-only access, or `internal-and-cloud-load-balancing` behind a Load Balancer. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in in front of Filebrowser. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
@@ -292,7 +292,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `filebrowser_url` | URL of the Filebrowser web UI (port 80). Publicly reachable by default (`ingress_settings = all`); VPC-internal only if set to `internal`. |
+| `filebrowser_url` | URL of the Filebrowser web UI (port 80). VPC-internal when `ingress_settings = internal`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -322,7 +322,7 @@ running resources.
 | `/database` GCS bucket | Never delete | Critical | The embedded SQLite DB lives here; deleting the bucket destroys all users, settings, and share links. |
 | `admin` / `admin` (seeded login) | Change on first login | Critical | Leaving the default credential lets anyone who can reach the service take full control. |
 | `max_instance_count` | `1` | High | >1 puts concurrent writers on SQLite over GCS FUSE, corrupting the database. |
-| `ingress_settings` | `all` (default) or `internal` to restrict | High | Default `all` exposes the service — including the well-known seeded `admin`/`admin` login — to the public internet; set `internal` or pair with IAP/Cloud Armor if that's not intended. |
+| `ingress_settings` | `all` (or `internal` to restrict) | High | Default `all` exposes the service to the public internet — pair with IAP or Cloud Armor if that's not desired; set `internal` for VPC-only access. |
 | `container_port` | `80` | High | Filebrowser listens on 80; a different port makes the startup probe fail and the revision never becomes Ready. |
 | `startup_probe` / `liveness_probe` path | `/health` | High | Pointing probes at an authenticated path returns 401/403 and the revision never goes Ready. |
 | `enable_cloudsql_volume` | `false` | Medium | Filebrowser has no Cloud SQL; enabling adds a useless Auth Proxy sidecar. |

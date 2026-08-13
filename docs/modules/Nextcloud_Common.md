@@ -151,8 +151,8 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~nc-data"
 
 | File | Purpose |
 |---|---|
-| `Dockerfile` | Custom Nextcloud image extending `nextcloud:<version>-apache`. Accepts `APP_VERSION`, `PHP_MEMORY_LIMIT`, `UPLOAD_MAX_FILESIZE`, and `POST_MAX_SIZE` as Docker `ARG` values baked at build time. |
-| `entrypoint.sh` | Entrypoint wrapper: symlinks `config/` to NFS, sets `NEXTCLOUD_DATA_DIR`, and resolves `OVERWRITEHOST`/`OVERWRITECLIURL` from the service URL at runtime. |
+| `Dockerfile` | Custom Nextcloud image extending `nextcloud:<version>-apache`. Accepts `APP_VERSION`, `NEXTCLOUD_VERSION`, `PHP_MEMORY_LIMIT`, `UPLOAD_MAX_FILESIZE`, and `POST_MAX_SIZE` as Docker `ARG` values baked at build time. The base image tag comes from `NEXTCLOUD_VERSION`, not `APP_VERSION` — the Foundation force-injects `APP_VERSION = application_version` (often `"latest"`, and `nextcloud:latest-apache` does not exist), so the Dockerfile derives its own `NEXTCLOUD_VERSION` arg (`"latest"` mapped to `"stable"`) for the `FROM` tag. |
+| `entrypoint.sh` | Entrypoint wrapper: sets `NEXTCLOUD_DATA_DIR` to the NFS mount for user file data, and resolves `OVERWRITEHOST`/`OVERWRITECLIURL` from the service URL at runtime. `config.php` is not symlinked to or stored on NFS — it is reconstructed locally from Secret Manager secrets on every start (see the "Post-install config secrets" row in §1). |
 | `db-init.sh` | Idempotent MySQL setup script — creates the database with `utf8mb4`, creates the user with `mysql_native_password`, grants privileges, and verifies connectivity. |
 | `post-install-config-secrets.sh` | Post-installation hook: reads `instanceid`, `passwordsalt`, and `secret` from Nextcloud's `config.php` after `occ maintenance:install` and writes them to Secret Manager. |
 

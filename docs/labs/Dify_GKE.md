@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, Filestore NFS, and shared service accounts
-  this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, Filestore NFS, and shared service accounts this module depends on).
+  You do not need to deploy this yourself first — the platform automatically
+  detects whether it already exists in the target project and provisions it
+  before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -57,7 +59,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Dify (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Dify (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Dify_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -97,10 +99,13 @@ export REGION="us-central1"           # the region you deploy into
 
 2. Dify does not store a pre-generated admin password in Secret Manager. On the first
    visit the application displays a **setup wizard** where you create the admin account.
-   Open the web frontend address in a browser and complete the setup:
+   The web frontend is a separate `<service>-web` LoadBalancer Service with its own
+   external IP. Open it in a browser and complete the setup:
 
    ```bash
-   echo "http://${EXTERNAL_IP}"
+   WEB_IP=$(kubectl get svc -n "$NS" \
+     -o jsonpath='{.items[?(@.metadata.labels.component=="web")].status.loadBalancer.ingress[0].ip}')
+   echo "http://${WEB_IP}"
    ```
 
    Enter your admin email and a password when prompted. After completing setup, the Dify
@@ -201,6 +206,15 @@ platform-level diagnostics and do not change with Dify releases.
   or quota issues, and confirm the LoadBalancer Service has an assigned IP.
 - **Image pull errors:** confirm the image exists in Artifact Registry and the node
   service account can pull it.
+- **Page loads but every browser call fails with `net::ERR_NAME_NOT_RESOLVED`:** this is
+  invisible to `kubectl` health checks — the pod is `Ready`, the Service has an external IP,
+  and the frontend renders normally, but every in-browser call to the API (open DevTools →
+  Network/Console) fails to resolve a hostname. Cause: the web frontend's `CONSOLE_API_URL`/
+  `APP_API_URL` resolve via the `$(GKE_SERVICE_URL)` sentinel, which falls back to the
+  unreachable internal `*.svc.cluster.local` DNS name when `reserve_static_ip = false` or
+  `service_type` was overridden away from `LoadBalancer`. Fix: confirm
+  `reserve_static_ip = true` and `service_type = LoadBalancer` in `deploy.tfvars`, then
+  redeploy so the frontend is built against the real external IP.
 
 See the Configuration Guide's *Configuration Pitfalls* section for setting-specific
 gotchas.

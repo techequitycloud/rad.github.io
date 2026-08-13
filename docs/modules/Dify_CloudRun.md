@@ -33,7 +33,7 @@ Cloud services:
 | Database | Cloud SQL for PostgreSQL 15 | Required — pgvector extension enabled for vector storage |
 | Vector store | pgvector (in-database) | Reuses the Cloud SQL instance; no separate vector database needed |
 | Shared files | Filestore (NFS) | Provides the default Redis host (NFS server VM co-hosts Redis) |
-| Object storage | Cloud Storage | A dedicated `dify-storage` bucket for uploaded files and assets |
+| Object storage | Cloud Storage | A dedicated `storage` bucket (`gcs-dify<tenant-prefix>-storage`) for uploaded files and assets |
 | Cache & task queue | Redis | Required for Celery broker/backend and SSE/WebSocket LLM streaming |
 | Secrets | Secret Manager | Auto-generated SECRET_KEY and database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, optional external HTTPS load balancer + custom domain |
@@ -106,7 +106,7 @@ rotation.
 
 A **Filestore (NFS)** share is mounted into the service. The NFS server VM also runs the Redis
 process used as the Celery broker when no external Redis host is configured. A dedicated **Cloud
-Storage** bucket (`dify-storage`) is provisioned for uploaded files and assets; Dify's
+Storage** bucket (`gcs-dify<tenant-prefix>-storage`) is provisioned for uploaded files and assets; Dify's
 `google-storage` driver accesses it via the Cloud Run service identity — no service account key
 file is needed.
 
@@ -115,7 +115,7 @@ file is needed.
   ```bash
   gcloud filestore instances list --project "$PROJECT"
   gcloud storage buckets list --project "$PROJECT"
-  gcloud storage ls gs://<dify-storage-bucket>/
+  gcloud storage ls gs://<storage-bucket>/
   ```
 
 See [App_CloudRun](App_CloudRun.md) for the NFS mount, GCS Fuse, and CMEK.
@@ -196,7 +196,8 @@ with optional uptime checks and alert policies.
   container — they share the CPU and memory allocation. Size accordingly: 2 vCPU and 4 GiB is
   the recommended minimum.
 - **Web frontend.** A `langgenius/dify-web` Cloud Run service is deployed automatically and wired
-  to the API service URL via `$(CLOUDRUN_SERVICE_URL)`. Access Dify through the `web_url` output.
+  to the API service's computed (predicted) Cloud Run URL via `CONSOLE_API_URL`/`APP_API_URL`.
+  Access Dify through the `web_url` output.
 - **LLM provider API keys.** Provider keys (OpenAI, Anthropic, etc.) are configured per-workspace
   via the Dify web console and stored in the application database. Use
   `secret_environment_variables` only for environment-level configuration that cannot be set in
@@ -227,7 +228,7 @@ to or notable for Dify are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -249,6 +250,7 @@ to or notable for Dify are listed; every other input is inherited from
 | `memory_limit` | `4Gi` | Memory per instance; 4 GiB recommended for LLM workflow caching and document processing. |
 | `min_instance_count` | `0` | Minimum instances (scale-to-zero). Set ≥ 1 so the Celery worker maintains its Redis broker connection. |
 | `max_instance_count` | `3` | Maximum instances. Acts as a cost ceiling. |
+| `cpu_always_allocated` | `false` | Cost-first cold-start default (request-based billing, paired with `min_instance_count=0`): CPU is billed only while serving a request. Trade-off — Celery async pipelines (dataset embedding, scheduled/batch jobs) stop while scaled to zero; interactive chat and apps still work on-request. Set `true` together with `min_instance_count >= 1` to restore continuous operation. |
 | `container_port` | `5001` | Dify API server listens on port 5001. |
 | `execution_environment` | `gen2` | **Required** — gen2 is needed for NFS mounts and GCS Fuse. |
 | `timeout_seconds` | `300` | Max request duration. Increase to `3600` for long-running LLM workflows. |
@@ -309,7 +311,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume; also provides the default Redis host. Requires gen2. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
-| `create_cloud_storage` / `storage_buckets` / `gcs_volumes` | _(set)_ | Additional buckets / GCS Fuse mounts. The `dify-storage` bucket is always provisioned. |
+| `create_cloud_storage` / `storage_buckets` / `gcs_volumes` | _(set)_ | Additional buckets / GCS Fuse mounts. The `storage` bucket (`gcs-dify<tenant-prefix>-storage`) is always provisioned. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
 ### Group 12 — Database Backend
@@ -406,7 +408,7 @@ running resources.
 | `redis_host` | correct host | High | Incorrect host produces a malformed Celery broker URL; all async tasks queue indefinitely. |
 | `database_type` | `POSTGRES_15` | High | Dify requires PostgreSQL; any other engine fails startup. |
 | `memory_limit` | `4Gi` | High | Too little memory causes OOM kills during document ingestion or LLM workflow caching. |
-| `min_instance_count` | `1` | High | Scale-to-zero causes cold starts and abandons in-flight Celery tasks. |
+| `min_instance_count` + `cpu_always_allocated` | ship `0` / `false` (cost-first); set `1`+ / `true` for continuous Celery | High | The shipped defaults are a deliberate cost-first choice, not an oversight: scale-to-zero abandons in-flight Celery tasks (dataset embedding, scheduled/batch jobs) while the service is idle. Interactive chat and apps still work on-request. Override both settings together to restore continuous background processing. |
 | `timeout_seconds` | `300` (raise for workflows) | High | Multi-step workflows and RAG indexing can exceed 300 s; increase to `3600` for complex deployments. |
 | `execution_environment` | `gen2` | High | gen1 does not support NFS mounts or GCS Fuse. |
 | `WEB_API_CORS_ALLOW_ORIGINS` | restrict in production | High | Default `"*"` allows cross-origin requests from any domain. |

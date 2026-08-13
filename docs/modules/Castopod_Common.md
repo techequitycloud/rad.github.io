@@ -84,9 +84,19 @@ runs using `mysql:8.0-debian` and idempotently:
    `quitquitquit` admin endpoint).
 
 The job is marked `execute_on_apply = true` and is safe to re-run. **There is no
-separate migration job** — the `castopod/castopod` image runs the CodeIgniter 4
-schema migrations automatically on container start, so the schema is created on first
-boot once `db-init` has provisioned the database and user.
+separate migration job — but that is because the platform wrapper entrypoint runs the
+migration explicitly, not because the base image does it automatically.** The
+`castopod/castopod` image (built on `serversideup/php`) has no CodeIgniter migration
+hook of its own — its only built-in automatic migration behaviour is Laravel-specific
+(`php artisan migrate`, gated behind `AUTORUN_ENABLED`, which defaults to `false`), and
+it would not know how to run CI4's `spark migrate` even if enabled. Instead,
+`Castopod_Common/scripts/entrypoint.sh` (see §4) explicitly runs `php spark migrate
+--all` — idempotent, safe on every boot — once `.env`/DB connectivity is in place, so
+the schema (`cp_settings`, `cp_users`, etc.) is created on first boot after `db-init`
+has provisioned the database and user. A regression that removes this explicit call
+(e.g. assuming the image migrates on its own) reproduces as every request 500ing with
+`Table '...' doesn't exist`, even though `db-init` succeeded — check `entrypoint.sh`
+first, not the base image, when debugging that symptom.
 
 Inspect the database directly with:
 
@@ -105,8 +115,10 @@ default `latest` is pinned to the current stable release, `1.15.5`, for reproduc
 builds). The base tag is fed via the app-specific `CASTOPOD_VERSION` build ARG — **not**
 the generic `APP_VERSION`, which the foundation would otherwise clobber to `latest` and
 win the `build_args` merge. The image grafts a small platform wrapper entrypoint
-(`entrypoint.sh`) that runs before delegating to the upstream FrankenPHP/Caddy
-entrypoint (which runs migrations and serves HTTP on `:8080`):
+(`entrypoint.sh`) that writes the CI4 database config, explicitly runs CodeIgniter's
+`spark migrate --all` (see §3 — the upstream image does not do this on its own), and
+only then delegates to the upstream FrankenPHP/Caddy entrypoint, which serves HTTP on
+`:8080`:
 
 - **Materialises the CI4-native database config into Castopod's `.env` file.** Castopod
   is CodeIgniter 4 and reads its default connection from the framework-native,
@@ -123,6 +135,9 @@ entrypoint (which runs migrations and serves HTTP on `:8080`):
 - **Derives `CP_BASEURL`.** Castopod requires its public base URL. When not explicitly
   set, the entrypoint derives it from the foundation-injected `GKE_SERVICE_URL` or
   `CLOUDRUN_SERVICE_URL` and writes it as `app.baseURL` in `.env`.
+- **Explicitly runs CodeIgniter migrations** (`php spark migrate --all`) once `.env`/DB
+  connectivity is in place — see §3 for why this must be explicit rather than assumed
+  automatic.
 - **Discovers and delegates to the upstream entrypoint**, exec'ing the FrankenPHP/Caddy
   server (`frankenphp run --config /etc/frankenphp/Caddyfile`).
 

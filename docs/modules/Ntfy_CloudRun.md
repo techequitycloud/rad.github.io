@@ -207,7 +207,7 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `application_name` | `ntfy` | Base name for the service, registry repo, and secrets. Do not change after first deploy. |
 | `application_display_name` | `Ntfy` | Human-readable name shown in the Console. |
 | `application_version` | `latest` | Image version tag; `latest` maps to a pinned `v2.11.0` base. Pin an explicit `v2.x.y` in production. |

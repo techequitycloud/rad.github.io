@@ -230,7 +230,7 @@ is inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Not used — Healthchecks needs no shared filesystem. |
+| `enable_nfs` | `true` | Inherited default. Healthchecks needs no shared filesystem, so set it to `false` when deploying. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Generic Foundation default; unused by the application itself. |
 
 ### Group 12 — Database

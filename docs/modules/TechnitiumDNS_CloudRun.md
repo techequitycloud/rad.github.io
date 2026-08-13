@@ -182,7 +182,7 @@ notable for TechnitiumDNS are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `application_name` | `technitiumdns` | Base name for the service, registry repo, and secrets. Do not change after first deploy. |
 | `application_display_name` | `TechnitiumDNS` | Human-readable name shown in the Console. |
 | `application_version` | `latest` | TechnitiumDNS image version tag (e.g. `latest`, `13.5.1`). |
@@ -193,7 +193,7 @@ notable for TechnitiumDNS are listed; every other input is inherited from
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision supporting infrastructure only. |
 | `container_image_source` | `prebuilt` | Deploys the official image as-is; `custom` accepted for forward-compatibility but no Dockerfile ships. |
-| `cpu_limit` | `500m` | CPU per instance. |
+| `cpu_limit` | `"1000m"` | CPU per instance. |
 | `memory_limit` | `512Mi` | Memory per instance (gen2 floor is 512Mi). |
 | `min_instance_count` | `0` | Scales to zero when idle. |
 | `max_instance_count` | `1` | Maximum instances. |

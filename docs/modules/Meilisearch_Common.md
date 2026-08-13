@@ -82,9 +82,13 @@ Durability comes entirely from the mounted storage volume at `/meili_data`
 
 1. **Cloud Run** and **GKE without a PVC** mount the `storage` Cloud Storage bucket
    at `/meili_data` via **GCS FUSE** (`enable_gcs_storage_volume = true`).
-2. **GKE with `stateful_pvc_enabled = true`** mounts a Persistent Disk PVC at
-   `/meili_data` instead; the Common layer sets `enable_gcs_storage_volume = false`
-   so the two do not double-mount the same path.
+2. **GKE with `stateful_pvc_enabled = true`** mounts a Persistent Disk PVC instead;
+   the Common layer sets `enable_gcs_storage_volume = false` so the two do not
+   double-mount. The PVC only backs `/meili_data` if `Meilisearch_GKE`'s
+   `stateful_pvc_mount_path` is explicitly overridden to `/meili_data` — its default
+   is `/meilisearch/storage`, a different path than the fixed `MEILI_DB_PATH`, so at
+   default settings the PVC does not receive the index data (see
+   [Meilisearch_GKE](Meilisearch_GKE.md) Configuration Pitfalls).
 
 The bucket is declared here (suffix `storage`, `STANDARD` class,
 `public_access_prevention = enforced`, `force_destroy = true`) and provisioned by the
@@ -123,8 +127,11 @@ FROM getmeili/meilisearch:${MEILI_VERSION}
 `Meilisearch_Common` establishes the baseline Meilisearch environment so the
 application comes up correctly on first boot:
 
-- **Data path** — `MEILI_DB_PATH = "/meili_data"`, aligned with the GCS FUSE / PVC
-  mount point so indexes persist across restarts and redeploys.
+- **Data path** — `MEILI_DB_PATH = "/meili_data"`, aligned with the GCS FUSE mount
+  point (Cloud Run, and GKE without a PVC) so indexes persist across restarts and
+  redeploys. On GKE with `stateful_pvc_enabled = true`, this only aligns with the
+  PVC if `stateful_pvc_mount_path` is explicitly set to `/meili_data` — its default
+  is a different path (`/meilisearch/storage`).
 - **Listen address** — `MEILI_HTTP_ADDR = "0.0.0.0:7700"`, so Cloud Run and the GKE
   Service can reach the engine on port 7700.
 - **Environment** — `MEILI_ENV = "production"`. This makes `MEILI_MASTER_KEY`

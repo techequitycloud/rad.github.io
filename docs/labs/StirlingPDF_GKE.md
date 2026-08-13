@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,7 +59,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Stirling-PDF (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Stirling-PDF (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/StirlingPDF_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -127,8 +130,11 @@ export REGION="us-central1"           # the region you deploy into
 
 4. **Gate access.** The default instance is open. To make it private, set
    `enable_login = true` (Stirling-PDF's built-in auth) and/or enable IAP on the
-   Ingress, then **Update**. For a public instance, enable Cloud Armor and
-   Redis-backed rate limiting (`enable_redis = true`) to throttle abuse.
+   Ingress, then **Update**. For a public instance, enable Cloud Armor
+   (`enable_cloud_armor = true`) to throttle abuse. Leave `enable_redis` alone —
+   it only makes the foundation inject unused `REDIS_*` env vars into the pod;
+   Stirling-PDF never reads them, so it does not implement rate limiting or bot
+   detection.
 
 5. **Tune for large documents** by raising `container_resources.memory_limit` and
    `timeout_seconds`, and cap uploads with `SYSTEM_MAXFILESIZE` via

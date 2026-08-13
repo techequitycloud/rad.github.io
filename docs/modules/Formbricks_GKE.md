@@ -83,7 +83,7 @@ Platform/UI metadata read by the RAD platform for the catalogue listing, depende
 | `credit_cost` | `150` | Platform credits consumed per deployment. |
 | `require_credit_purchases` | `false` | Enforce a credit balance check before deployment. |
 | `enable_purge` | `true` | Permit full resource deletion on destroy. |
-| `public_access` | `true` | List this module in the public catalogue. |
+| `public_access` | `false` | List this module in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected. Set `false` for standalone deployment with inline prerequisites. |
 | `shared_users` | `[]` | Users granted access regardless of `public_access`. |
 | `technical_support_users` | `[]` | Users the platform routes support requests to. |
@@ -104,7 +104,7 @@ Identical to `App_GKE`.
 |---|---|---|
 | `project_id` | — | GCP project ID. **Required.** |
 | `region` | `"us-central1"` | GCP region for resource deployment. Used as fallback for VPC discovery and as the storage bucket location for the `uploads` bucket. |
-| `tenant_deployment_id` | `"demo"` | Short suffix appended to all resource names. |
+| `tenant_id` | `"demo"` | Short suffix appended to all resource names. |
 | `support_users` | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all provisioned resources. |
 
@@ -156,7 +156,7 @@ Identical to `App_GKE` — no Formbricks-specific defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Target GKE cluster name. Leave empty for auto-discovery. |
-| `namespace_name` | `""` | Kubernetes namespace. Leave empty to auto-generate from `application_name` + `tenant_deployment_id`. |
+| `namespace_name` | `""` | Kubernetes namespace. Leave empty to auto-generate from `application_name` + `tenant_id`. |
 | `workload_type` | `"Deployment"` | `"Deployment"` or `"StatefulSet"`. |
 | `service_type` | `"LoadBalancer"` | `"LoadBalancer"`, `"ClusterIP"`, or `"NodePort"`. |
 | `configure_service_mesh` | `false` | Enables Istio/Anthos Service Mesh sidecar injection for the namespace. |

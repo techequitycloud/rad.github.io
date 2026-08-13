@@ -228,7 +228,7 @@ specific to or notable for Cyclos are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -254,7 +254,7 @@ specific to or notable for Cyclos are listed; every other input is inherited fro
 | `min_instance_count` | `1` | Minimum replicas. Keep ≥ 1 to avoid slow JVM cold starts. |
 | `max_instance_count` | `1` | Maximum replicas. Keep `1` unless Hazelcast clustering is configured. |
 | `container_port` | `8080` | Cyclos/Tomcat listens on port 8080. |
-| `enable_cloudsql_volume` | `false` | Cloud SQL Auth Proxy sidecar. Cyclos defaults to direct TCP — enable only if verified needed. |
+| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar. Cyclos defaults to direct TCP — enable only if verified needed. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
 
 ### Group 5 — Environment Variables & Secrets

@@ -125,6 +125,24 @@ and Redis, leaving only RabbitMQ internal on localhost:
 The image is Ubuntu-based and ships `bash`, so a `#!/bin/bash` entrypoint execs
 cleanly (no busybox graft is needed).
 
+- **Build-time patch to the upstream readiness gate (Cloud Run-specific)** — the
+  Dockerfile also `sed -i` patches `/app/ds/run-document-server.sh` itself, not just
+  `cloud-entrypoint.sh`. On Cloud Run, `DB_HOST` is a Cloud SQL Auth Proxy Unix-socket
+  **directory** (`/cloudsql/<instance>`) — the actual DB connection accepts this fine
+  (node-postgres/psql both treat a directory path as a valid host), but the upstream
+  script has its own separate preflight readiness gate, `waiting_for_connection()`,
+  which unconditionally runs `nc -z "$DB_HOST" "$DB_PORT"`. `nc` cannot resolve a
+  filesystem path as a TCP host, so without the patch this loops forever — repeating
+  `Waiting for connection to the /cloudsql/... host on port 5432` in the logs — and the
+  container never becomes Ready. The Dockerfile's `sed -i` rewrites the gate to
+  short-circuit successfully when `$1` is an existing directory (the socket mount);
+  real TCP hosts (GKE's `127.0.0.1` proxy sidecar, or any hostname/IP) still go through
+  the original `nc` check unchanged, so GKE is unaffected. A `grep -q` assertion
+  immediately after the `sed` fails the Cloud Build loudly if a future
+  `ONLYOFFICE_VERSION` bump changes the upstream script's wording — if that ever
+  happens, the fix is to update the `sed` pattern in
+  `modules/OnlyOffice_Common/scripts/Dockerfile` to match the new wording.
+
 ---
 
 ## 5. Core application settings

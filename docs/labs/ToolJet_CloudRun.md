@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -170,8 +173,8 @@ platform-level diagnostics and do not change with ToolJet releases.
 
 - **Revision unhealthy / service won't serve:** inspect the latest revision and its
   logs for startup errors, and confirm env vars and secrets resolved. The startup
-  probe targets `/api/health` with a wide budget (30 × 15 s) to absorb first-boot
-  migrations.
+  probe targets `/` by default (override `startup_probe.path` to `/api/health` if
+  preferred) with a wide budget (30 × 15 s) to absorb first-boot migrations.
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100

@@ -31,17 +31,15 @@ focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Haskell pods, 1 vCPU / 512 MiB by default, horizontally autoscaled |
-| Database | Cloud SQL for PostgreSQL | Required — Hasura's metadata catalog and default data source both live in Postgres |
+| Database | Cloud SQL for PostgreSQL 15 | Required — Hasura's metadata catalog and default data source both live in Postgres |
 | Object storage | None | Hasura is stateless; no bucket is provisioned |
 | Secrets | Secret Manager | Auto-generated `HASURA_GRAPHQL_ADMIN_SECRET`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
 
-- **PostgreSQL is mandatory.** `database_type` defaults to the generic
-  `POSTGRES` (Hasura keeps its own metadata catalog in Postgres); this
-  resolves to the foundation's current default Cloud SQL Postgres version on
-  a fresh instance rather than a hardcoded version.
+- **PostgreSQL 15 is mandatory.** The database engine is fixed by the shared
+  application layer; Hasura keeps its own metadata catalog in Postgres.
 - **The admin secret gates everything sensitive.** `HASURA_GRAPHQL_ADMIN_SECRET` is
   generated automatically, stored in Secret Manager, and materialised into the
   namespace via the Secret Store CSI driver. It protects the `/console` UI and the
@@ -88,10 +86,10 @@ and maximum replica counts.
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type are
 managed.
 
-### B. Cloud SQL for PostgreSQL
+### B. Cloud SQL for PostgreSQL 15
 
 Hasura stores its metadata catalog (tracked tables, relationships, permissions, event
-triggers) **and** your application data in a managed Cloud SQL for PostgreSQL
+triggers) **and** your application data in a managed Cloud SQL for PostgreSQL 15
 instance. Pods reach it privately through the **Cloud SQL Auth Proxy** sidecar over
 loopback; no public IP is exposed. On first deploy an initialization Job creates the
 application database and user; Hasura installs its metadata schema on first boot.
@@ -203,7 +201,7 @@ specific to or notable for Hasura are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix; a `-gke` suffix is appended internally so the CloudRun and GKE variants never collide. |
+| `tenant_id` | `demo` | Short suffix; a `-gke` suffix is appended internally so the CloudRun and GKE variants never collide. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -212,6 +210,8 @@ specific to or notable for Hasura are listed; every other input is inherited fro
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `hasura` | Base name for resources. Do not change after first deploy. |
+| `application_display_name` | `Hasura` | Human-readable name shown in the Console. |
+| `application_description` | `Hasura GraphQL Engine on GKE Autopilot` | Service description. |
 | `application_version` | `v2.36.0` | Hasura image tag; `latest` is remapped to a pinned v2.x tag at build time. |
 | `application_database_name` | `hasura` | PostgreSQL database name. Immutable after first deploy. |
 | `application_database_user` | `hasura` | Application database user. Immutable after first deploy. |

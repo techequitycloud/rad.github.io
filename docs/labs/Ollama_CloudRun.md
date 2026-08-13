@@ -36,8 +36,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact Registry, and
-  shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,7 +56,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Ollama (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Ollama (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Ollama_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -143,8 +145,8 @@ unauthenticated within the VPC by design.
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request count,
    request latency (P50/P95/P99), instance count (scaling behaviour), and CPU / memory
    utilisation. Memory utilisation stays elevated while model weights are loaded in memory.
-   The module also provisions an **uptime check**; confirm it is green under
-   Monitoring → Uptime checks, and review Alerting → Policies.
+   The module also provisions an **uptime check** (when enabled); confirm it is green
+   under Monitoring → Uptime checks, and review Alerting → Policies.
 
 ---
 

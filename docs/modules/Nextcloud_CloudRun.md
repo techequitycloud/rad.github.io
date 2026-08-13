@@ -105,11 +105,12 @@ connection model, backups, and password rotation.
 
 ### C. Filestore (NFS) and Cloud Storage
 
-Nextcloud data is written to a **Filestore (NFS)** share mounted into every instance.
-`entrypoint.sh` symlinks `/var/www/html/config` → `/mnt/nfs/nextcloud-config` and
-sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all instances share the same
-`config.php` and user files. A **Cloud Storage** `nc-data` bucket is also provisioned
-per deployment.
+Nextcloud user file data is written to a **Filestore (NFS)** share mounted into every
+instance. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all
+instances share the same user files. `config.php` is **not** stored on NFS — it is
+reconstructed locally on every instance from Secret Manager secrets (see §3
+"Post-install config secrets" below). A **Cloud Storage** `nc-data` bucket is also
+provisioned per deployment.
 
 - **Console:** Filestore → Instances; Cloud Storage → Buckets.
 - **CLI:**
@@ -229,7 +230,7 @@ specific to or notable for Nextcloud are listed; every other input is inherited 
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

@@ -24,14 +24,16 @@ By the end of this lab you will be able to:
 - Explain why this module has no Cloud SQL instance and no Secret Manager entries, and why all durable state lives on a single Filestore (NFS) share.
 - Perform day-2 operations — inspect the workload, understand why it must stay at a single replica, update the version, and check the NFS-backed data.
 - Observe the workload with Cloud Logging and Cloud Monitoring.
-- Diagnose and resolve the most common deployment and runtime issues, including the known SQLite-over-NFS limitation.
+- Diagnose and resolve the most common deployment and runtime issues, including the SQLite-over-NFS journal-mode fix this module ships by default.
 - Tear the deployment down cleanly.
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Filestore/NFS networking, Artifact Registry, and shared service accounts
-  this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Filestore/NFS
+  networking, Artifact Registry, and shared service accounts this module depends
+  on). You do not need to deploy this yourself first — the platform
+  automatically detects whether it already exists in the target project and
+  provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -49,7 +51,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **UptimeKuma (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **UptimeKuma (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/UptimeKuma_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -58,12 +60,16 @@ export REGION="us-central1"           # the region you deploy into
    Cloud SQL instance (`database_type = "NONE"`), creates no Secret Manager entries,
    and runs no database-initialisation job — Uptime Kuma stores everything in an
    embedded SQLite database that it creates itself on first boot. The platform
-   mounts a Filestore (NFS) share at the fixed container path `/app/data` and
-   mirrors the official `louislam/uptime-kuma` image into Artifact Registry
-   (`enable_image_mirroring = true`). Because there is no database to provision,
-   this deploy is dominated by Autopilot node scheduling and the NFS mount rather
-   than by Cloud SQL creation — expect it to complete noticeably faster than
-   database-backed GKE modules.
+   mounts a Filestore (NFS) share at the fixed container path `/app/data`. Because
+   `container_image_source = "custom"` (the default), a Cloud Build step first
+   builds a thin image `FROM louislam/uptime-kuma` that patches the hardcoded SQLite
+   `journal_mode` from `WAL` to `DELETE` — WAL's shared-memory locking is unsafe on
+   the NFS-backed `/app/data` volume this app uses (see Task 3.5) — and the built
+   image is then mirrored into Artifact Registry (`enable_image_mirroring = true`).
+   Because there is no database to provision, this deploy is dominated by the Cloud
+   Build step, Autopilot node scheduling, and the NFS mount rather than by Cloud SQL
+   creation — expect it to complete noticeably faster than database-backed GKE
+   modules, but not as fast as a truly prebuilt-image module.
 
 3. Connect to the cluster and discover the namespace with name-agnostic filters:
 
@@ -160,19 +166,20 @@ export REGION="us-central1"           # the region you deploy into
    Export a backup from the Uptime Kuma UI (Settings → Backup) periodically, in
    addition to any Filestore snapshot policy.
 
-   **Known limitation — SQLite over NFS.** Uptime Kuma's embedded SQLite database
-   defaults to WAL (write-ahead log) journal mode, which relies on shared
-   memory-mapped file locking. NFS does not reliably support that locking model,
-   so `SQLITE_CORRUPT` errors can surface **even when the Filestore/NFS mount
-   itself is correctly configured** — this is a limitation of running SQLite's WAL
-   mode over NFS, not a sign of NFS misconfiguration, and it is not fully resolved
-   by keeping the replica count at 1. If you rely on long-term monitor history,
-   treat the UI export/backup step above as load-bearing rather than optional. The
-   practical workarounds if you hit corruption are to switch Uptime Kuma to
-   `DELETE` journal mode (trades some write performance for NFS-safe locking) or
-   to restore from the most recent backup / reset the database file and let
-   Uptime Kuma recreate its schema (losing monitor history since the last
-   backup).
+   **SQLite over NFS — fixed by the module's custom build.** Uptime Kuma
+   unconditionally sets `PRAGMA journal_mode = WAL` on every boot (hardcoded in
+   `server/database.js`, not configurable via env var). WAL relies on
+   shared-memory byte-range locking between the DB file and its `-wal` sidecar,
+   which NFS does not reliably provide — this combination previously produced
+   observed `SQLITE_CORRUPT` errors **even when the Filestore/NFS mount itself
+   was correctly configured**. This module now defaults
+   `container_image_source = "custom"` (see Task 1.2), which builds a thin image
+   `FROM louislam/uptime-kuma` that source-patches the PRAGMA to `DELETE` mode —
+   DELETE only needs standard whole-file locking, which NFS handles correctly.
+   Do not override `container_image_source` to `"prebuilt"`: that skips the patch
+   and re-exposes the WAL/NFS corruption risk. The UI export/backup step above is
+   still good practice for disaster recovery, but is no longer compensating for a
+   known corruption risk under normal operation.
 
 ---
 
@@ -216,14 +223,18 @@ platform-level diagnostics and do not change with Uptime Kuma releases.
   kubectl get pvc -n "$NS"
   kubectl describe pod -n "$NS" <pod>          # look for mount errors in Events
   ```
-- **"database is corrupted" / SQLITE_CORRUPT in logs:** see the Task 3 note above
-  — this is a known limitation of SQLite's default WAL journal mode running over
-  NFS, and can occur independently of whether the NFS mount is correctly
-  configured. It is not necessarily fixed by re-checking the Filestore setup.
-  Restore from the most recent Uptime Kuma backup, or delete the SQLite file
-  under `/app/data` and let Uptime Kuma recreate its schema on next boot
-  (monitor history is lost back to the last backup). Switching to `DELETE`
-  journal mode inside the container reduces the risk going forward.
+- **"database is corrupted" / SQLITE_CORRUPT in logs:** see the Task 3.5 note
+  above. This module's custom build already patches SQLite's journal mode from
+  `WAL` to `DELETE`, so first confirm `container_image_source = "custom"` was
+  actually applied — check `gcloud builds list --project="$PROJECT"` for the
+  build and `kubectl exec -n "$NS" deploy/<name> -- grep journal_mode
+  /app/server/database.js` to confirm the deployed image has `DELETE`, not
+  `WAL`. If it shows `"prebuilt"` in `deploy.tfvars` or the grep still shows
+  `WAL`, that is the root cause — fix `container_image_source` and redeploy. If
+  the patch is confirmed applied and corruption still occurs, restore from the
+  most recent Uptime Kuma backup, or delete the SQLite file under `/app/data`
+  and let Uptime Kuma recreate its schema on next boot (monitor history is lost
+  back to the last backup).
 - **Monitors show gaps in history:** confirm the pod has not been restarting
   (`kubectl get pods -n "$NS"` restart count) and that only one replica is
   running — `max_instance_count` above `1` risks lock contention on the shared
@@ -231,10 +242,14 @@ platform-level diagnostics and do not change with Uptime Kuma releases.
 - **No external IP:** check `kubectl describe pod` events for resource or quota
   issues, and confirm the LoadBalancer Service has an assigned IP
   (`kubectl get svc -n "$NS"`).
-- **Image pull errors:** this module deploys the prebuilt, mirrored
-  `louislam/uptime-kuma` image — confirm the mirrored copy exists in Artifact
-  Registry and the node service account can pull it; there is no Cloud Build
-  step to debug since the image is not custom-built.
+- **Image pull errors / stale image:** this module builds a custom image via
+  Cloud Build (`container_image_source = "custom"`, the default) and pushes it
+  to Artifact Registry — confirm the build succeeded
+  (`gcloud builds list --project="$PROJECT"`), the image exists in Artifact
+  Registry, and the node service account can pull it. If the build never runs,
+  check `deploy.tfvars` for a `container_image_source` override to `"prebuilt"`
+  — that silently skips the build and deploys the unpatched upstream image
+  (see Task 3.5).
 - **Update seems to cause downtime:** expected — see the `Recreate` strategy
   note in Task 3.3. This is a deliberate trade-off to avoid two pods writing the
   SQLite file at once, not a stuck rollout.
@@ -260,7 +275,7 @@ networking, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module deploys the GKE workload with a Filestore NFS mount at `/app/data` and mirrors the prebuilt image — no Cloud SQL, secrets, or init jobs |
+| 1 — Deploy | Automated | Module deploys the GKE workload with a Filestore NFS mount at `/app/data` and builds/mirrors a custom image patched for NFS-safe SQLite — no Cloud SQL, secrets, or init jobs |
 | 2 — Access & verify | Manual | Connect to the cluster; health check passes; create the initial admin account on the first-run setup page |
 | 3 — Operate | Manual | Inspect workload, keep replica count at 1, update version (Recreate strategy), verify and back up NFS-backed SQLite state |
 | 4 — Observe | Manual | Query Cloud Logging; review pod restarts and CPU/memory; optionally monitor the monitor |

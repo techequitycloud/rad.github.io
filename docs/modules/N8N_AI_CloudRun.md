@@ -261,7 +261,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -288,6 +288,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 | `execution_environment` | `gen2` | Required for NFS mounts. Keep as `gen2`. |
 | `timeout_seconds` | `300` | Max request duration; increase for long AI inference workflows. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for socket connections. |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Filesystem path where the Cloud SQL Auth Proxy Unix socket is mounted. Only used when `enable_cloudsql_volume = true`. |
 | `traffic_split` | `[]` | Split traffic across revisions for safe rollouts. |
 | `max_revisions_to_retain` | `7` | Older revisions to keep in Artifact Registry. |
 

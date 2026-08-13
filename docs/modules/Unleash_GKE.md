@@ -193,7 +193,7 @@ specific to or notable for Unleash are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -389,7 +389,7 @@ locate and explore the running resources.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all flag data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_file` fails the import job. |
 | `startup_probe_config` / `health_check_config` path | `/health` | High | Pointing a probe at `/api/admin/*` returns 401/403 and the pod never becomes Ready. |
-| `min_instance_count` | `1` | High | Setting `0` is accepted at plan time but the HPA's `minReplicas` is silently clamped back to 1 (GKE has no scale-to-zero here). Keeping 1 keeps the API reachable. |
+| `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. Keeping 1 keeps the API reachable. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity; disabling it is blocked by a plan-time validation guard. |
 | `session_affinity` | `None` | Low | Unleash is stateless; stickiness is unnecessary and adds no value. |
 | `enable_iap` | only when no SDK traffic | High | IAP blocks all unauthenticated requests, including token-authenticated SDK/CI calls to the Unleash API. |

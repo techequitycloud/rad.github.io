@@ -35,7 +35,7 @@ Google Cloud services:
 | Database | None (embedded SQLite) | `database_type = NONE`; no Cloud SQL is provisioned |
 | Cache & queue | None | Filebrowser uses no Redis |
 | Secrets | Secret Manager | No app secrets generated; users live in the SQLite DB |
-| Ingress | Cloud Load Balancing | `LoadBalancer` Service by default; custom domain + managed certificate available |
+| Ingress | Cloud Load Balancing | `ClusterIP` Service by default; custom domain + managed certificate available |
 
 **Sensible defaults worth knowing up front:**
 
@@ -125,10 +125,10 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 ### D. Networking & ingress
 
-By default the Service is `LoadBalancer`, with `enable_custom_domain = true` and
+By default the Service is `ClusterIP`, with `enable_custom_domain = true` and
 `reserve_static_ip = true` so an Ingress with a Google-managed certificate can serve
-a supplied hostname on a stable IP. The workload is also reachable in-cluster at
-`http://<service>.<namespace>.svc.cluster.local` regardless of the Service type.
+a supplied hostname on a stable IP. Without a custom domain the workload is reachable
+in-cluster at `http://<service>.<namespace>.svc.cluster.local`.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -220,7 +220,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
+| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; front with an Ingress via `enable_custom_domain`. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`, else `Deployment`. |
 | `session_affinity` | `None` | Single replica, so sticky routing is unnecessary. |
 
@@ -269,7 +269,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Filebrowser uses no Redis; the App_GKE default of `true` is overridden to `false`. |
+| `enable_redis` | `true` | Inherited from App_GKE and **not** overridden by this module. Filebrowser uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
 
 ### Group 16 — Database Backend
 
@@ -352,7 +352,7 @@ locate and explore the running resources.
 | `container_port` | `80` | High | Filebrowser listens on 80; a different port makes the startup probe fail and the pod never becomes Ready. |
 | `startup_probe` / `liveness_probe` path | `/health` | High | Pointing probes at an authenticated path returns 401/403 and the pod never goes Ready. |
 | `enable_cloudsql_volume` | `false` | Medium | Filebrowser has no Cloud SQL; enabling adds a useless Auth Proxy sidecar. |
-| `enable_redis` | `false` | Medium | Filebrowser has no Redis; the App_GKE default `true` is overridden — leaving it on wires an unused dependency. |
+| `enable_redis` | `true` | Medium | Filebrowser has no Redis, but the App_GKE default of `true` is inherited unchanged — set it to `false` explicitly, or an unused dependency is wired in. |
 | `enable_iap` | credentials required | High | Enabling IAP without `iap_oauth_client_id`/`secret` silently exposes the service unauthenticated (blocked by a plan-time guard). |
 | `application_version` | pin in production | Medium | `latest` resolves to a pinned `v2.32.0` at build time; pin explicitly to control upgrades. |
 

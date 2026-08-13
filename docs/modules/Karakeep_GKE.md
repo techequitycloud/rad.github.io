@@ -170,8 +170,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Required — Karakeep's SQLite database and assets live here. |
-| `nfs_mount_path` | `/data` | Karakeep's `DATA_DIR` default. |
-| `stateful_pvc_enabled` | `false` | Not used — Karakeep uses NFS, not a block PVC. |
+| `nfs_mount_path` | `"/app/data"` | The module sets `DATA_DIR` to this path. The Cloud Run variant uses `/data` instead — both work, since `DATA_DIR` always follows the mount. |
+| `stateful_pvc_enabled` | `null` | Unset, so `App_GKE`'s own resolution logic applies (no PVC). Karakeep uses NFS, not a block PVC. |
 
 ### Group 12 — Database Backend
 

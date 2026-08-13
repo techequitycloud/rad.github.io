@@ -202,11 +202,8 @@ Monitoring. Optional uptime checks and alert policies are available.
   invalidates all active user sessions. Only rotate during a planned maintenance
   window.
 - **Webhook endpoints require an external IP.** The default `service_type = LoadBalancer`
-  exposes an external IP for incoming webhook calls, but `AP_FRONTEND_URL` and
-  `AP_WEBHOOK_URL_PREFIX` are auto-injected to the predicted **internal**
-  `*.svc.cluster.local` DNS name (unknown external IP at plan time) — not reachable
-  from outside the cluster. Override both to the external URL after the LoadBalancer
-  IP (or custom domain) is assigned:
+  exposes an external IP for incoming webhook calls. Set `AP_FRONTEND_URL` and
+  `AP_WEBHOOK_URL_PREFIX` to the external URL after the LoadBalancer IP is assigned:
   ```bash
   kubectl patch deploy <service-name> -n "$NAMESPACE" \
     -p '{"spec":{"template":{"spec":{"containers":[{"name":"activepieces","env":[
@@ -242,7 +239,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -251,7 +248,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `application_name` | `activepieces` | Base name for resources. Do not change after first deploy. |
-| `application_version` | `latest` | Activepieces image version tag; pin to a specific release (e.g. `0.20.0`) in production. |
+| `application_version` | `latest` | Deployment-tracking tag for the built image. **Does not pin the upstream release**: `Activepieces_Common`'s Dockerfile always builds `FROM activepieces/activepieces:latest` with no version ARG, so changing this value only relabels the pushed Artifact Registry tag. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -295,6 +292,19 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `stateful_headless_service` | `true` | Create a headless Service for stable pod DNS names. |
 | `stateful_pod_management_policy` | `OrderedReady` | Pod creation order: `OrderedReady` or `Parallel`. |
 | `stateful_update_strategy` | `RollingUpdate` | Update strategy: `RollingUpdate` or `OnDelete`. |
+
+### Group 8 — Resource Quota
+
+| Variable | Default | Description |
+|---|---|---|
+| `enable_resource_quota` | `false` | Create a Kubernetes ResourceQuota in the application namespace. **Declared but not forwarded** in `main.tf` — has no effect on this module's deployment. |
+| `quota_cpu_requests` | `""` | Total CPU requests allowed across all pods in the namespace. Not forwarded — no effect. |
+| `quota_cpu_limits` | `""` | Total CPU limits allowed across all pods in the namespace. Not forwarded — no effect. |
+| `quota_memory_requests` | `""` | Total memory requests allowed; requires a binary suffix (e.g. `4Gi`, `8192Mi`) per convention. Not forwarded — no effect. |
+| `quota_memory_limits` | `""` | Total memory limits allowed; requires a binary suffix. Not forwarded — no effect. |
+| `quota_max_pods` | `""` | Maximum number of pods allowed in the namespace. Not forwarded — no effect. |
+| `quota_max_services` | `""` | Maximum number of Kubernetes Services allowed in the namespace. Not forwarded — no effect. |
+| `quota_max_pvcs` | `""` | Maximum number of PersistentVolumeClaims allowed. Not forwarded — no effect. |
 
 ### Group 9 — Reliability Policies
 
@@ -466,7 +476,7 @@ locate and explore the running resources.
 | `AP_JWT_SECRET` (auto-generated) | Only rotate in a maintenance window | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login for everyone. |
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | Override to the external LoadBalancer URL | Critical | Auto-injected to the internal `*.svc.cluster.local` DNS name by default (not externally reachable) — leaving it as-is breaks all webhook integrations and OAuth callbacks. |
+| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | External LoadBalancer URL | Critical | Incorrect URL breaks all webhook integrations and OAuth callbacks. |
 | `max_instance_count` | `1` unless Redis enabled | High | Scaling beyond 1 in memory queue mode splits the job queue across pods, causing duplicate executions and lost runs. |
 | `enable_redis` | `true` before scaling | High | Without Redis, each pod maintains its own in-memory queue — inconsistent execution with more than 1 replica. |
 | `redis_host` | `""` (NFS) or explicit | High | When Redis is on but NFS is off and no host is set, the Redis connection string is blank and the app fails to start. |

@@ -151,7 +151,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted access and monitoring alerts. |
 
 All other inputs follow standard App_CloudRun behaviour.

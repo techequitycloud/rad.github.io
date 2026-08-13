@@ -132,6 +132,20 @@ set `service_type = LoadBalancer`, or enable a custom domain (`enable_custom_dom
 `true` by default) with a Google-managed certificate via the Gateway API. A static IP
 is reserved by default (`reserve_static_ip = true`) so the address survives redeploys.
 
+> **Known open item.** CLAUDE.md's fleet-wide GKE verification campaign
+> (2026-07-16) found and fixed a recurring copy-paste bug where `service_type`
+> defaulted to `ClusterIP` on apps with a real UI — the correct default for any
+> app with a UI is `LoadBalancer` (`ClusterIP` is only correct for genuinely
+> internal apps like Qdrant, PhpMyAdmin, or Temporal's gRPC frontend). CodeServer
+> is a browser IDE, not one of those internal-by-design apps, and session memory
+> (`gke-service-type-fleet-wide-copy-paste-bug`) records it as left on the
+> pending/unfixed list as of that same campaign — so treat the `ClusterIP`
+> default here as an outstanding issue, not a deliberate secure-by-default
+> choice. The default `enable_custom_domain = true` Gateway route still exposes
+> the app externally even with a `ClusterIP` Service, which is why this has not
+> been a hard blocker in practice, but it means the *raw* Service is not
+> reachable without going through the Gateway.
+
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
   ```bash
@@ -200,7 +214,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -231,7 +245,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `service_type` | `ClusterIP` | In-cluster by default. Set `LoadBalancer` for external browser access. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true`; otherwise `Deployment`. |
 | `session_affinity` | `None` | Sticky routing is unnecessary for a single-replica editor. |
-| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_deployment_id` when empty. |
+| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_id` when empty. |
 | `termination_grace_period_seconds` | `60` | Allow code-server to flush in-flight writes before SIGKILL. |
 
 ### Group 7 — StatefulSet

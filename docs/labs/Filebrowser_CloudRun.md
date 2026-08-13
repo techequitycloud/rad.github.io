@@ -38,8 +38,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -60,9 +62,9 @@ export REGION="us-central1"          # the region you deploy into
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Filebrowser_CloudRun)
    documents every input by group, with defaults. Note that **ingress defaults to
-   `internal`** — decide up front whether you need `ingress_settings = "all"` for
-   public access. Review the estimated cost (if credits are enabled) and click
-   **Deploy**, which opens the deployment status page with real-time logs.
+   `all`** (public) — decide up front whether you need `ingress_settings = "internal"`
+   to restrict access to the VPC. Review the estimated cost (if credits are enabled)
+   and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the Cloud Run service, a Cloud Storage bucket mounted
    at `/database` via GCS FUSE (holding the embedded SQLite database), and builds
@@ -93,10 +95,11 @@ export REGION="us-central1"          # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/health"   # expect 200
    ```
 
-2. If `ingress_settings` is still `internal` (the default), the URL above is only
-   reachable from inside the VPC — curl it from a Cloud Shell/VM on the same
-   network, or temporarily set `ingress_settings = "all"` in the RAD platform and
-   apply via **Update** to reach it from your workstation.
+2. `ingress_settings` defaults to `all` (public), so the URL above should already be
+   reachable from your workstation. If it was changed to `internal`, the service is
+   only reachable from inside the VPC — curl it from a Cloud Shell/VM on the same
+   network, or set `ingress_settings = "all"` in the RAD platform and apply via
+   **Update** to reach it from your workstation again.
 
 3. Open `$SERVICE_URL` in a browser and log in with the seeded default credential
    **`admin` / `admin`**. Immediately change the password (and ideally the
@@ -172,7 +175,8 @@ platform-level diagnostics and do not change with Filebrowser releases.
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Service unreachable from your workstation:** check `ingress_settings` — the
-  default is `internal` (VPC-only), which is expected behaviour, not a fault.
+  default is `all` (public); if it has been changed to `internal` (VPC-only), that
+  is expected behaviour, not a fault.
 - **GCS FUSE mount / state not persisting:** confirm `execution_environment = gen2`
   (required for the `/database` GCS FUSE mount) and that the `/database` bucket
   still exists.

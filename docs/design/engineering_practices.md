@@ -136,9 +136,9 @@ Reliability is defined, measured, and engineered — not hoped for.
 
 | Tier | Availability | Latency (p99) | Error budget (30d) |
 |---|---|---|---|
-| Production (critical) | 99.9% | &lt; 2 s | 43 min |
-| Production (standard) | 99.5% | &lt; 5 s | 3.6 hr |
-| Non-production | 99.0% | &lt; 10 s | 7.2 hr |
+| Production (critical) | 99.9% | < 2 s | 43 min |
+| Production (standard) | 99.5% | < 5 s | 3.6 hr |
+| Non-production | 99.0% | < 10 s | 7.2 hr |
 
 - **Error-budget policy.** When a budget is materially consumed, non-critical feature
   delivery pauses in favour of reliability work — making the reliability-versus-velocity

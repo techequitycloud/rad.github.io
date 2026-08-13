@@ -127,8 +127,8 @@ therefore:
    no `db-init` job — there is nothing to bootstrap,
 2. Declares no module-managed GCS buckets (`storage_buckets = []`),
 3. Relies on the platform variants to mount the **shared platform NFS directly at
-   `/opt/data`** (`enable_nfs = true`, `nfs_mount_path = "/opt/data"`, both
-   enforced by variant-level plan-time validations).
+   `/opt/data`** — `enable_nfs = true` is enforced by a variant-level plan-time
+   validation, and `nfs_mount_path` defaults to `/opt/data`.
 
 Two hard rules follow from SQLite's semantics:
 

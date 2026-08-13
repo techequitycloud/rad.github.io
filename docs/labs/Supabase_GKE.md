@@ -43,9 +43,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -63,15 +65,16 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Supabase (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Supabase (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Supabase_GKE)
-   documents every input by group, with defaults. Note that `supabase_db_password`
-   is required; there is no default. Click **Deploy**.
+   documents every input by group, with defaults. Click **Deploy**.
 
 2. The platform deploys the Kong gateway workload into the GKE Autopilot cluster,
-   provisions a Cloud SQL (PostgreSQL 15) database with pgvector support, creates
-   six Secret Manager secrets (JWT secret, anon key, service role key, and others),
+   deploys the Supabase backend services — including an **in-namespace
+   `supabase/postgres` database** (the module forces the foundation's
+   `database_type` to `NONE`, so no Cloud SQL instance is provisioned for it) —
+   creates six Secret Manager secrets (JWT secret, anon key, service role key, and others),
    provisions a Cloud Storage bucket for file uploads, builds the container image,
    and runs a one-shot database-initialisation job. First deploys take roughly
    **20–35 minutes** (Cloud SQL creation dominates).
@@ -106,11 +109,14 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get svc -n "$NS" --watch
    ```
 
-2. Confirm the Kong gateway is healthy:
+2. Confirm the Kong gateway is routing requests. `kong.yml` is a DB-less
+   declarative config with no `/health` route (only `/rest/v1`, `/auth/v1`,
+   `/realtime/v1`, `/storage/v1`, `/pg`, and `/` for Studio), so a request to
+   `/health` returns 404 — use the Studio root route instead:
 
    ```bash
-   curl -s -o /dev/null -w "%{http_code}" "http://${EXTERNAL_IP}:8000/health"
-   # expect 200
+   curl -s -o /dev/null -w "%{http_code}" "http://${EXTERNAL_IP}:8000/"
+   # expect 200 (Studio dashboard, no auth required on this route)
    ```
 
 3. Retrieve the JWT signing secret from Secret Manager. The anon key and service role
@@ -170,14 +176,16 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get secrets -n "$NS"
    gcloud secrets list --project="$PROJECT" --filter="name~supabase"
    kubectl get jobs -n "$NS"          # db-init and any additional jobs
-   gcloud storage buckets list --project="$PROJECT"   # supabase-storage bucket
+   gcloud storage buckets list --project="$PROJECT"   # gcs-<app><tenant-prefix>-storage bucket
    ```
 
-5. **Open a database session** for inspection or maintenance:
+5. **Open a database session** for inspection or maintenance. The database is the
+   in-namespace `supabase/postgres` Deployment (`<service-name>-postgres`), not
+   Cloud SQL, so connect through the pod:
 
    ```bash
-   INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
-   gcloud sql connect "$INSTANCE" --user=supabase_admin --project="$PROJECT"
+   kubectl exec -n "$NS" -it deploy/<service-name>-postgres -- \
+     psql -U supabase_admin -d postgres
    ```
 
 ---
@@ -194,9 +202,12 @@ export REGION="us-central1"           # the region you deploy into
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Monitoring** — open the GKE / Kubernetes dashboards and review pod CPU and memory
-   utilisation, restart counts, and request metrics. The module also provisions an
-   **uptime check** targeting the Kong `/health` endpoint (when enabled); review
-   Monitoring → Uptime checks and Alerting → Policies.
+   utilisation, restart counts, and request metrics. `uptime_check_config` is
+   disabled by default (`enabled = false`), and its default `path` is `/health` —
+   `kong.yml` defines no such route, so enabling the uptime check without also
+   overriding `path` (e.g. to `/`, the Studio route) will produce a permanently
+   failing check. If you enable it, review Monitoring → Uptime checks and
+   Alerting → Policies to confirm it is actually passing.
 
 ---
 
@@ -213,13 +224,13 @@ platform-level diagnostics and do not change with Supabase releases.
 - **Kong startup failure (401 on all requests):** the anon key or service role key
   secrets still contain placeholder values. Replace them with valid signed JWTs
   (see Task 2, step 3) and restart the deployment.
-- **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
-  DB password secret materialised into the namespace, and the `db-init` job completed
-  successfully.
+- **Database connection errors:** confirm the in-namespace `<service-name>-postgres`
+  pod is `Running`, and that the `db-init` job (which sets the passwords on the
+  Supabase service login roles) completed successfully.
 - **Initialisation job failed:** inspect the job and its pod logs:
   ```bash
   kubectl get jobs -n "$NS"
-  kubectl logs -n "$NS" job/db-init
+  kubectl logs -n "$NS" job/<service-name>-db-init
   ```
 - **Pending pod / no external IP:** check `kubectl describe pod` events for resource
   or quota issues, and confirm the LoadBalancer Service has an assigned IP.
@@ -227,8 +238,8 @@ platform-level diagnostics and do not change with Supabase releases.
   mirroring is always enabled) and the node service account can pull it.
 
 See the Configuration Guide's *Configuration Pitfalls* section for setting-specific
-gotchas, including the mandatory `supabase_db_password`, the immutability of the JWT
-secret set, and the binary-unit requirement for memory quota values.
+gotchas, including the immutability of the JWT secret set and the binary-unit
+requirement for memory quota values.
 
 ---
 
@@ -245,7 +256,7 @@ shared Cloud SQL, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module deploys Kong gateway, Cloud SQL (PostgreSQL 15 + pgvector), secrets, storage bucket, and runs DB init |
+| 1 — Deploy | Automated | Module deploys Kong gateway, the in-namespace `supabase/postgres` database, secrets, storage bucket, and runs DB init |
 | 2 — Access & verify | Manual | Connect to the cluster; health check passes; JWT placeholders replaced with signed keys |
 | 3 — Operate | Manual | Inspect workload, scale, update version, manage secrets/storage/jobs, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |

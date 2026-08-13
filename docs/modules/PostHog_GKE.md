@@ -330,7 +330,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -348,7 +348,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `4000m` | Bumped from a generic 2000m default after live-verified startup-probe timeouts (~95% CPU saturation during first boot). |
-| `memory_limit` | `8Gi` | Bumped after live-verified OOM kills at both 4Gi and 6Gi during first boot. |
+| `memory_limit` | `"16Gi"` | Bumped after live-verified OOM kills at 4Gi, 6Gi and 8Gi during first boot — the image registers 90+ Django sub-apps at startup. |
 | `container_port` | `8000` | The Django/gunicorn server's native port. |
 | `min_instance_count` | `1` | Minimum replicas. |
 | `max_instance_count` | `1` | **Hard-capped at 1, validated at plan time** — co-located Celery beat scheduler. |

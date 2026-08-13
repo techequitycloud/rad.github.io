@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 5 
 
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 Managing implementation means making other teams successful: providing paved paths, guardrails, and programmatic access patterns. The RAD platform is itself the exhibit — a four-tier Terraform/OpenTofu architecture that development teams consume through a portal, with validations that fail bad configurations at plan time and registry hygiene baked in. Deploy any profile from the [Lab Map](PCA_Certification_Guide.md); the **Security and delivery** profile makes the most artifacts visible. Modules exercised: all four, with emphasis on the platform's shared scripts and plan-time validations.
 
 ---
@@ -22,7 +21,7 @@ Managing implementation means making other teams successful: providing paved pat
 
 **How RAD implements it** — Three advisory patterns are observable in the code:
 
-*Paved path with guardrails.* The foundation modules expose a curated variable surface and reject misconfigurations at plan time — App_GKE carries 37 preconditions (min ≤ max instances, IAP completeness, PVC requirements, CDN/Armor prerequisites, name-length limits ≤ 55 chars, `gateway_backend_stage` must exist). Teams get expressive power; the platform team gets enforced invariants. This is "advising through tooling," and it is how the exam expects standards to scale beyond documentation.
+*Paved path with guardrails.* The foundation modules expose a curated variable surface and reject misconfigurations at plan time — App_GKE carries 32 preconditions (min ≤ max instances, IAP completeness, PVC requirements, CDN/Armor prerequisites, name-length limits ≤ 55 chars, `gateway_backend_stage` must exist). Teams get expressive power; the platform team gets enforced invariants. This is "advising through tooling," and it is how the exam expects standards to scale beyond documentation.
 
 *Artifact policy.* Artifact Registry is auto-discovered or created (`shared-repo-{prefix}`), with cleanup policies — `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), `image_retention_days` (default `30`) — and optional CMEK (`enable_artifact_registry_cmek`) and vulnerability scanning. Third-party dependencies are not pulled from the internet at runtime: required images (e.g. the Cloud SQL Auth Proxy) are copied into AR using Crane with **digest comparison** — an existing tag is overwritten when its digest no longer matches the source, so a stale or tampered mirror is never silently used.
 

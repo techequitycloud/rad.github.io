@@ -94,8 +94,8 @@ by default, mirrored into Artifact Registry (`enable_image_mirroring = true`).
 DokuWiki needs a **durable data directory** at `/storage` that survives container
 restarts. The two platform variants back it differently:
 
-- **Cloud Run** — `DokuWiki_Common` declares a single `dokuwiki-data` **Cloud Storage**
-  bucket and mounts it at `/storage` via **gcsfuse** (`implicit-dirs`,
+- **Cloud Run** — `DokuWiki_Common` declares a single **Cloud Storage** data bucket
+  and mounts it at `/storage` as the gcs_volume named `dokuwiki-data` via **gcsfuse** (`implicit-dirs`,
   `stat-cache-ttl=60s`, `type-cache-ttl=60s`). The bucket name matches the bucket the
   Foundation actually creates: `gcs-${application_name}${tenant_resource_prefix}-data`
   (app-scoped). List it with:

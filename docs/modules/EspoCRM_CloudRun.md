@@ -30,7 +30,7 @@ focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Apache/PHP service, 1 vCPU / 2 GiB by default, serverless autoscaling; scale-to-zero supported |
 | Database | Cloud SQL for MySQL 8.0 | Required — EspoCRM does not support PostgreSQL; connected over private-IP TCP |
-| Object storage | Cloud Storage + Filestore (NFS) | A dedicated `espocrm-data` GCS bucket is provisioned but **not mounted** by default; a shared NFS volume is mounted at `/var/www/html/data` for uploads (`enable_nfs = true` by default) |
+| Object storage | Cloud Storage + Filestore (NFS) | A dedicated `gcs-espocrm<tenant-prefix>-espocrm-data` GCS bucket is provisioned but **not mounted** by default; a shared NFS volume is mounted at `/var/www/html/data` for uploads (`enable_nfs = true` by default) |
 | Cache | Redis (optional) | Optional object cache; disabled by default |
 | Secrets | Secret Manager | Auto-generated `ESPOCRM_ADMIN_PASSWORD`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -55,7 +55,7 @@ focused set of Google Cloud services:
 - **NFS is enabled by default.** `enable_nfs = true` mounts a shared Filestore volume at
   `/var/www/html/data`, so EspoCRM's uploaded attachments and runtime data persist across
   container restarts and are shared across instances — unlike a bare Cloud Run
-  deployment with only ephemeral disk. The auto-provisioned `espocrm-data` GCS bucket is
+  deployment with only ephemeral disk. The auto-provisioned `gcs-espocrm<tenant-prefix>-espocrm-data` GCS bucket is
   **not** mounted anywhere by default.
 - **Single instance by default.** `max_instance_count = 1` — Cloud Run has no built-in
   session affinity, so keep the service single-instance unless you have verified
@@ -112,7 +112,7 @@ rotation.
 
 ### C. Cloud Storage & NFS
 
-A dedicated **Cloud Storage** bucket (`espocrm-data`) is provisioned automatically, but
+A dedicated **Cloud Storage** bucket (`gcs-espocrm<tenant-prefix>-espocrm-data`) is provisioned automatically, but
 it is **not mounted** anywhere by default (`gcs_volumes` defaults to `[]`). The actual
 persistent store for EspoCRM's uploaded attachments and runtime data is a shared **NFS
 (Filestore)** volume, mounted at `/var/www/html/data` because `enable_nfs = true` by
@@ -220,7 +220,7 @@ values at startup — a quick way to confirm the DB host and site URL the contai
   has a 300-second initial delay).
 - **Uploads persist on NFS.** With `enable_nfs = true` (default), EspoCRM's attachments
   and runtime data live under the shared `/var/www/html/data` Filestore mount, surviving
-  container restarts and shared across instances. The `espocrm-data` GCS bucket is
+  container restarts and shared across instances. The `gcs-espocrm<tenant-prefix>-espocrm-data` GCS bucket is
   provisioned but not mounted by default.
 - **Inspect job execution:**
   ```bash
@@ -274,11 +274,11 @@ specific to or notable for EspoCRM are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Creates the `espocrm-data` bucket. Not mounted anywhere unless you add a matching `gcs_volumes` entry. |
+| `create_cloud_storage` | `true` | Creates the `gcs-espocrm<tenant-prefix>-espocrm-data` bucket. Not mounted anywhere unless you add a matching `gcs_volumes` entry. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Bucket definitions provisioned when `create_cloud_storage` is true. |
 | `enable_nfs` | `true` | Mounts a shared Filestore volume for EspoCRM's uploaded attachments and runtime data — persists across restarts by default. |
 | `nfs_mount_path` | `/var/www/html/data` | Container mount path for the NFS volume. |
-| `gcs_volumes` | `[]` | No GCS Fuse mount by default; the `espocrm-data` bucket stays unmounted unless you add an entry here. |
+| `gcs_volumes` | `[]` | No GCS Fuse mount by default; the `gcs-espocrm<tenant-prefix>-espocrm-data` bucket stays unmounted unless you add an entry here. |
 
 ### Group 12 — Database Backend
 

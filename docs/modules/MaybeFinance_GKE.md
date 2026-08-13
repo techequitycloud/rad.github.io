@@ -236,7 +236,7 @@ alert policies are available.
   `SELF_HOSTED = "true"` enables Maybe's self-host UI, which lets the first
   visitor register the initial admin account through the web UI — unlike
   some other modules in this repo, there is no auto-generated admin password
-  secret to retrieve. <!-- TODO: verify whether a first-run invite/registration lock exists after the first admin is created -->
+  secret to retrieve. {/* TODO: verify whether a first-run invite/registration lock exists after the first admin is created */}
 - **`SECRET_KEY_BASE` is immutable in practice.** It is generated once by
   `MaybeFinance_Common` and shared by the web and Sidekiq processes.
   Rotating it after first boot invalidates existing sessions and makes
@@ -401,7 +401,7 @@ to locate and explore the running resources.
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar on `127.0.0.1:5432` is required for DB connectivity on GKE. |
 | `enable_nfs` | `true` (unless `redis_host` is set explicitly) | High | If left `false` with `redis_host` empty, the plan-time guard fails; if disabled after a working deploy with an explicit `redis_host`, uploaded attachments become ephemeral. |
 | `redis_host` | `""` (use NFS IP) or a real, reachable host | High | An unreachable Redis host makes `REDIS_URL` resolve but fail to connect — Sidekiq starts but jobs never process; the entrypoint only skips Sidekiq when `REDIS_URL` is entirely empty. |
-| `container_resources.memory_limit` | `4Gi` (default) | High | The combined Rails + Sidekiq process is memory-hungry under import/sync workloads; shrinking it risks OOM. <!-- TODO: verify the exact minimum safe memory floor --> |
+| `container_resources.memory_limit` | `4Gi` (default) | High | The combined Rails + Sidekiq process is memory-hungry under import/sync workloads; shrinking it risks OOM. {/* TODO: verify the exact minimum safe memory floor */} |
 | `session_affinity` | `ClientIP` | High | Without stickiness, requests bounce between pods and can disrupt authenticated sessions. |
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS and any configured custom domain. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
@@ -412,5 +412,6 @@ For the foundation behaviour referenced throughout — IAM and Workload
 Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Maybe-specific application configuration shared
-with the Cloud Run variant lives in the `MaybeFinance_Common` module (its own
-`docs/modules/MaybeFinance_Common.md` guide has not been published yet).
+with the Cloud Run variant lives in the `MaybeFinance_Common` module — see
+**[MaybeFinance_Common](MaybeFinance_Common.md)** for secrets, DB bootstrap,
+entrypoint behavior, health probes, and storage.

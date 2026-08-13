@@ -251,7 +251,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -263,7 +263,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_display_name` | `Chibisafe` | Human-readable name shown in the Console. |
 | `description` | _(set)_ | Service description. |
 | `application_version` | `latest` | `chibisafe/chibisafe-server` image tag; `latest` is pinned to `v6.5.5` at build time via the app-specific `CHIBISAFE_VERSION` build arg. |
-| `enable_api_key` | `false` | Generates a random 24-char value in Secret Manager, injected as `ADMIN_PASSWORD`, seeding the first-run admin credential instead of the upstream default. |
+| `enable_api_key` | `true` | Generates a random 24-char value in Secret Manager, injected as `ADMIN_PASSWORD`, seeding the first-run admin credential instead of the upstream default. |
 
 ### Group 4 — Runtime & Scaling
 

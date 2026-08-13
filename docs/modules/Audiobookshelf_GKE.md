@@ -154,8 +154,8 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 |---|---|---|
 | `application_name` | `audiobookshelf` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | `ghcr.io/advplyr/audiobookshelf` image tag used as the custom-build base; `latest` resolves to the pinned `2.17.0` via the app-specific `AUDIOBOOKSHELF_VERSION` build ARG. |
-| `application_display_name` | `Audiobookshelf Vector Database` | Human-readable display name. <!-- TODO: confirm whether this default string is intentional; it reads as leftover copy from a different (vector-database) module template rather than an audiobook/podcast server. --> |
-| `description` | `Audiobookshelf Vector Database — high-performance similarity search for AI applications` | Workload description. <!-- TODO: same leftover-template concern as application_display_name — this text does not describe Audiobookshelf's actual audiobook/podcast server function. --> |
+| `application_display_name` | `Audiobookshelf Vector Database` | Human-readable display name. {/* TODO: confirm whether this default string is intentional; it reads as leftover copy from a different (vector-database) module template rather than an audiobook/podcast server. */} |
+| `description` | `Audiobookshelf Vector Database — high-performance similarity search for AI applications` | Workload description. {/* TODO: same leftover-template concern as application_display_name — this text does not describe Audiobookshelf's actual audiobook/podcast server function. */} |
 
 ### Group 4 — Runtime & Scaling
 

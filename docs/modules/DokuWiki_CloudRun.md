@@ -31,7 +31,7 @@ together a deliberately small set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | PHP/Apache service on port 8080, 1 vCPU / 512 MiB by default; scale-to-zero supported |
 | Database | **None** | DokuWiki is a flat-file wiki — `database_type = "NONE"`, no Cloud SQL provisioned |
-| Persistent storage | Cloud Storage (gcsfuse) | A `dokuwiki-data` bucket mounted at `/storage` holds *all* wiki state |
+| Persistent storage | Cloud Storage (gcsfuse) | A `gcs-dokuwiki<tenant-prefix>-data` bucket mounted at `/storage` holds *all* wiki state |
 | Cache & queue | **None** | No Redis; DokuWiki has no queue/worker model |
 | Secrets | **None** | No runtime secrets — the admin account is created via `/install.php` |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -39,18 +39,17 @@ together a deliberately small set of Google Cloud services:
 **Sensible defaults worth knowing up front:**
 
 - **No database.** DokuWiki stores everything in the `/storage` flat-file directory.
-  `DokuWiki_Common` hardcodes `database_type = "NONE"` in the config it assembles;
-  the `database_type` variable declared on `DokuWiki_CloudRun` itself is never
-  forwarded to it, so changing that variable has no effect either way.
+  `database_type` is fixed to `"NONE"`; a plan-time validation guard rejects any
+  other value (it would provision an unused Cloud SQL instance and incur cost).
 - **All state lives in one Cloud Storage bucket.** `/storage` is a **gcsfuse** mount
-  of the auto-provisioned `dokuwiki-data` bucket. Deleting or repointing that bucket
+  of the auto-provisioned `gcs-dokuwiki<tenant-prefix>-data` bucket. Deleting or repointing that bucket
   loses the entire wiki. `force_destroy` is enabled, so a module destroy removes it.
 - **Persistence caveat on gcsfuse.** DokuWiki relies on file locking for concurrent
   edits; gcsfuse is eventually-consistent object storage, not a POSIX filesystem.
   This is fine for a low-concurrency wiki, but heavy simultaneous editing is better
   served by the [GKE variant](DokuWiki_GKE.md), which uses a block PVC.
 - **Scale-to-zero is always in effect** (`min_instance_count` is hardcoded to `0` in
-  `main.tf`, regardless of the variable's value). Cold starts add a few seconds to the
+  `dokuwiki.tf`, regardless of the variable's value). Cold starts add a few seconds to the
   first request after idle. Because there is no shared lock coordinator, keep
   `max_instance_count` conservative — concurrent writers across instances can race on
   the same gcsfuse-backed files.
@@ -90,20 +89,18 @@ and traffic splitting.
 
 ### B. Database — not used
 
-DokuWiki does **not** use a database. `DokuWiki_Common` hardcodes `database_type =
-"NONE"` regardless of the `database_type` variable's value — that variable is never
-forwarded to `DokuWiki_Common` or `App_CloudRun`'s applied config, so setting it has
-no effect. No Cloud SQL instance is created and no `db-init` job runs. If you are
-looking for where the wiki content lives, it is the Cloud Storage bucket in §C, not a
-database.
+DokuWiki does **not** use a database. `database_type = "NONE"`, no Cloud SQL instance
+is created, and no `db-init` job runs. The plan-time guard in the module rejects any
+non-`NONE` `database_type`. If you are looking for where the wiki content lives, it is
+the Cloud Storage bucket in §C, not a database.
 
 ### C. Cloud Storage — the `/storage` data volume
 
-A single **Cloud Storage** bucket (`dokuwiki-data`) is provisioned automatically and
+A single **Cloud Storage** bucket (`gcs-dokuwiki<tenant-prefix>-data`) is provisioned automatically and
 mounted at `/storage` inside the container via **gcsfuse**. This bucket holds *all*
 DokuWiki state: pages, media, plugins, users, ACLs, and configuration.
 
-- **Console:** Cloud Storage → Buckets → the `dokuwiki-data` bucket.
+- **Console:** Cloud Storage → Buckets → the `gcs-dokuwiki<tenant-prefix>-data` bucket.
 - **CLI:**
   ```bash
   gcloud storage buckets list --project "$PROJECT" --filter="name~dokuwiki"
@@ -171,7 +168,7 @@ flow to Cloud Monitoring, with optional uptime checks and alert policies.
   wiki title, and choose the ACL policy. This is written into `/storage`. **Remove or
   block `install.php` afterwards** — anyone reaching it before you complete setup can
   claim the admin account.
-- **All state is on `/storage`.** Losing or repointing the `dokuwiki-data` bucket
+- **All state is on `/storage`.** Losing or repointing the `gcs-dokuwiki<tenant-prefix>-data` bucket
   loses the wiki. Because the bucket is `force_destroy = true`, a module destroy
   deletes it — back up the bucket before tearing down if you need to keep content.
 - **No auto-migrations.** Upgrading `application_version` ships a newer DokuWiki
@@ -211,7 +208,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `1000m` | CPU per instance. Gen2 with always-on CPU requires ≥ 1 vCPU; DokuWiki is lightweight. |
 | `memory_limit` | `512Mi` | Memory per instance; DokuWiki needs ≥ 256 MiB, 512 MiB recommended. |
-| `min_instance_count` | `0` | Hardcoded to `0` in `main.tf` regardless of this variable's value — DokuWiki always scales to zero. |
+| `min_instance_count` | `0` | Hardcoded to `0` in `dokuwiki.tf` regardless of this variable's value — DokuWiki always scales to zero. |
 | `max_instance_count` | `3` | Cost ceiling. Keep modest — concurrent writers across instances race on the shared gcsfuse files. |
 | `cpu_always_allocated` | `false` | Request-based billing — DokuWiki does no in-process background work. |
 | `execution_environment` | `gen2` | Gen2 required for gcsfuse volume mounts. |
@@ -231,7 +228,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Create the `dokuwiki-data` bucket backing `/storage`. |
+| `create_cloud_storage` | `true` | Create the `gcs-dokuwiki<tenant-prefix>-data` bucket backing `/storage`. |
 | `gcs_volumes` | _(default set by Common)_ | The `/storage` gcsfuse mount. Leave as-is unless supplying a custom volume. |
 | `enable_nfs` | `false` | DokuWiki is stateless-at-the-container-level; NFS not required. |
 
@@ -239,7 +236,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `NONE` | Inert — `DokuWiki_Common` hardcodes `database_type = "NONE"` regardless of this variable; it is never forwarded, so setting it has no effect. |
+| `database_type` | `NONE` | **Must remain `NONE`.** A plan-time guard rejects any other value. |
 
 _All other inputs follow standard [App_CloudRun](App_CloudRun.md) behaviour._
 
@@ -257,7 +254,7 @@ running resources.
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
-| `storage_buckets` | Created Cloud Storage buckets (includes `dokuwiki-data`). |
+| `storage_buckets` | Created Cloud Storage buckets (includes `gcs-dokuwiki<tenant-prefix>-data`). |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, regions. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Monitoring status, channels, uptime checks. |
@@ -276,18 +273,18 @@ running resources.
 > Risk: **Critical** (data loss / outage / security) — **High** (service degraded) —
 > **Medium** (cost or partial degradation) — **Low** (minor).
 
-> **Inherited plan-time validation.** This module passes its configuration through the [App_CloudRun](App_CloudRun.md) foundation engine, which validates values *and combinations* at plan time — IAP with no authorized identities, a `gen1` runtime with GCS Fuse mounts, an out-of-range `backup_retention_days`. Invalid configuration fails the **plan** with a clear, named error before any resource is created, so most mistakes below are caught up front rather than at apply or runtime.
+> **Inherited plan-time validation.** This module passes its configuration through the [App_CloudRun](App_CloudRun.md) foundation engine, which validates values *and combinations* at plan time — IAP with no authorized identities, a `gen1` runtime with GCS Fuse mounts, an out-of-range `backup_retention_days`, and (module-specific) a non-`NONE` `database_type`. Invalid configuration fails the **plan** with a clear, named error before any resource is created, so most mistakes below are caught up front rather than at apply or runtime.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `dokuwiki-data` bucket | Never delete/repoint after first deploy | Critical | The bucket *is* the wiki — deleting or repointing it loses all pages, media, and users. `force_destroy = true` means a module destroy removes it; back it up first. |
-| `database_type` | leave at default | Low | Inert — `DokuWiki_Common` always hardcodes `NONE`; this variable is never forwarded, so changing it provisions nothing and has no effect. |
+| `gcs-dokuwiki<tenant-prefix>-data` bucket | Never delete/repoint after first deploy | Critical | The bucket *is* the wiki — deleting or repointing it loses all pages, media, and users. `force_destroy = true` means a module destroy removes it; back it up first. |
+| `database_type` | `NONE` | Critical | Any other value fails the plan-time guard; if bypassed it provisions an unused Cloud SQL instance and cost. |
 | `install.php` after setup | Remove / block once admin exists | High | Anyone who reaches `/install.php` before you finish setup can claim the admin account. |
 | `execution_environment` | `gen2` | High | `gen1` cannot mount the gcsfuse `/storage` volume — the container has nowhere to persist wiki data. |
 | `max_instance_count` | Keep modest (e.g. `3`) | High | High concurrency across instances races on the same gcsfuse-backed files; DokuWiki's file locks are only eventually consistent on object storage. |
 | `ingress_settings` | `all` (or IAP) | High | Left public with sign-up/ACLs misconfigured, anyone can edit; lock down via ACLs in the wiki and/or IAP. |
 | `memory_limit` | `512Mi` | Medium | Below 256 MiB the PHP/Apache process can OOM under load. |
-| `min_instance_count` | N/A — hardcoded to `0` | Low | `main.tf` always forces `min_instance_count = 0`; setting this variable to `1` has no effect. Scale-to-zero adds a few seconds of cold-start latency on the first request after idle. |
+| `min_instance_count` | N/A — hardcoded to `0` | Low | `dokuwiki.tf` always forces `min_instance_count = 0`; setting this variable to `1` has no effect. Scale-to-zero adds a few seconds of cold-start latency on the first request after idle. |
 | `application_version` | Pin a dated release | Low | `latest` resolves to a pinned tag at build time, but pinning explicitly makes upgrades deliberate. |
 
 ---

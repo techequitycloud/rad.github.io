@@ -31,16 +31,19 @@ By the end of this lab you will be able to:
 - Deploy the module from the RAD platform and locate the resources it provisions.
 - Connect to the GKE cluster and complete the first-run ClassicPress installer.
 - Perform day-2 operations — inspect, scale, update, and manage secrets and storage.
-- Understand how the StatefulSet PVC provides the persistence Cloud Run lacks.
+- Understand how the StatefulSet PVC and the NFS `wp-content` mount together
+  provide persistence on GKE.
 - Observe the workload with Cloud Logging and Cloud Monitoring.
 - Diagnose and resolve the most common deployment and runtime issues.
 - Tear the deployment down cleanly.
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -58,7 +61,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **ClassicPress (GKE)**
+1. Click **Deploy** in the RAD platform top navigation, open **ClassicPress (GKE)**
    from the **Platform Modules** list to start configuration, set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/ClassicPress_GKE)
@@ -160,21 +163,24 @@ export REGION="us-central1"           # the region you deploy into
    gcloud sql connect "$INSTANCE" --user=classicpress --project="$PROJECT"
    ```
 
-6. **Why this variant does not hit the Cloud Run media-persistence bug.** The
-   `ClassicPress_Common` Dockerfile and `entrypoint.sh` never reference any NFS or
-   Foundation-level mount path — that fact is identical on both platforms. On
-   **Cloud Run**, the confirmed bug is that `/var/www/html` (where the upstream
-   entrypoint writes `wp-config.php` and copies the whole application, including
-   `wp-content/uploads`) sits on ephemeral, per-instance storage with no volume
-   covering it, so scale-to-zero cold starts lose uploaded media and admin-installed
-   plugins/themes. On **GKE**, the *Application module* (not the Common layer)
-   separately sets `stateful_pvc_enabled = true` with
-   `stateful_pvc_mount_path = /var/www/html` — the exact directory the entrypoint
-   populates — so the install (code, plugins, themes, and uploads) persists across
-   pod restarts and rescheduling by construction. `enable_nfs = true` is still the
-   default here too, mounting Filestore at `/var/lib/classicpress`, a path this layer
-   still never uses — treat it as spare, currently-unused shared storage, not the
-   thing making persistence work.
+6. **How this variant persists uploads, plugins, and themes.** On **GKE**, the
+   *Application module* (not the Common layer) sets `stateful_pvc_enabled = true`
+   with `stateful_pvc_mount_path = /var/www/html` — the exact directory the upstream
+   entrypoint writes `wp-config.php` into and copies the whole application onto — so
+   the entire install (code, plugins, themes, and uploads) persists across pod
+   restarts and rescheduling on a per-pod block PVC. `enable_nfs = true` is also the
+   default here, mounting Filestore at `/var/www/html/wp-content` — a subdirectory
+   of the PVC mount above. ClassicPress (a WordPress fork) reads/writes uploaded
+   media, plugins, and themes under `wp-content`, and the upstream entrypoint's
+   first-boot copy logic explicitly skips an existing `wp-content` directory, so
+   this NFS mount is a genuine, confirmed persistence path for that data too — not
+   spare/unused storage. On a single-replica StatefulSet the PVC alone already
+   covers persistence; NFS additionally provides a *shared* (not per-pod) copy of
+   `wp-content`, which matters if `stateful_pvc_enabled` is ever disabled or the
+   workload is scaled to multiple replicas. **Cloud Run** (no per-instance block
+   volume) relies on this same NFS mount at `/var/www/html/wp-content` as its
+   primary persistence mechanism for uploads/plugins/themes — see the
+   [ClassicPress_CloudRun lab](https://docs.radmodules.dev/docs/labs/ClassicPress_CloudRun).
 
 ---
 
@@ -257,7 +263,7 @@ removed here.
 |---|---|---|
 | 1 — Deploy | Automated | Module deploys the GKE StatefulSet + PVC, Cloud SQL (MySQL 8.0), Filestore, secrets, storage bucket, and runs `db-init` |
 | 2 — Access & verify | Manual | Connect to the cluster; reachability check passes; complete the first-run installer to create the admin account |
-| 3 — Operate | Manual | Inspect the StatefulSet/PVC, scale, update version, manage secrets/storage, DB access; understand why the PVC avoids the Cloud Run persistence bug |
+| 3 — Operate | Manual | Inspect the StatefulSet/PVC, scale, update version, manage secrets/storage, DB access; understand how the PVC and NFS `wp-content` mount together provide persistence |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and PVC usage |
 | 5 — Troubleshoot | Manual | Diagnose pod, database, init-job, scheduling, and image-pull issues |
 | 6 — Tear down | Automated | Delete (Trash) removes all module resources |

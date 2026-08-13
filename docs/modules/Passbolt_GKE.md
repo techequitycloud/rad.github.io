@@ -76,9 +76,9 @@ wires together a focused set of Google Cloud services:
   the GKE LoadBalancer terminates TLS at the edge and forwards plain HTTP to
   the pod, this static override makes Passbolt generate `https://` URLs
   correctly in emails and absolute links.
-- **`enable_cloudsql_volume` defaults to `true` here** — matching both
-  `Passbolt_Common`'s own default and `Passbolt_CloudRun`'s top-level
-  variable, which also defaults `true`.
+- **`enable_cloudsql_volume` defaults to `true` here** — matching
+  `Passbolt_Common`'s own default, and the opposite of `Passbolt_CloudRun`,
+  whose top-level variable defaults `false`.
 - **No first-visit web setup wizard.** The only way an admin account exists is
   via the `admin-bootstrap` init job, which prints a one-time setup URL to its
   pod logs (surfaced in Cloud Logging) for the operator to open in a
@@ -271,7 +271,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `gke`) from any co-deployed `Passbolt_CloudRun` (`cr`) to avoid a naming collision. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `gke`) from any co-deployed `Passbolt_CloudRun` (`cr`) to avoid a naming collision. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

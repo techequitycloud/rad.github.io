@@ -43,11 +43,15 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE
-  Autopilot cluster, Artifact Registry, and shared service accounts) **with
-  `create_network_filesystem = true`** — Hermes stores its entire identity on the
-  shared NFS share, so the NFS server VM is **required** and must be `RUNNING`
-  before you deploy:
+- **Services_GCP**, with the NFS server VM (`create_network_filesystem = true`)
+  — provides the VPC, GKE Autopilot cluster, Artifact Registry, and shared
+  service accounts, and Hermes stores its entire identity on the shared NFS
+  share, so the NFS server VM is **required**. You do not need to deploy or
+  configure this yourself first: `create_network_filesystem` is on by default
+  for every automated deployment, so the platform's auto-provisioned
+  Services_GCP already satisfies this. If you deploy Services_GCP manually
+  instead, do not turn this off. To confirm the NFS server VM is `RUNNING`
+  after deploy:
   ```bash
   gcloud compute instances list --project="$PROJECT" \
     --filter="name~nfs" --format="table(name,zone,status)"
@@ -71,7 +75,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Hermes (GKE)**
+1. Click **Deploy** in the RAD platform top navigation, open **Hermes (GKE)**
    from the **Platform Modules** list to start configuration, set `project_id`,
    and paste your `anthropic_api_key`. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Hermes_GKE)

@@ -11,7 +11,8 @@ description: "Hands-on lab: deploy DokuWiki on Cloud Run in your own Google Clou
 
 **Estimated time:** 45–90 minutes
 
-A simple, file-based wiki platform requiring no database, storing pages on NFS. This lab
+A simple, file-based wiki platform requiring no database, storing pages in a Cloud
+Storage bucket mounted via gcsfuse. This lab
 takes you through the full operational lifecycle of the **DokuWiki on Cloud Run** module
 on Google Cloud: deploy it, access and verify it, run it day-to-day, observe it,
 diagnose common problems, and tear it down.
@@ -28,15 +29,17 @@ By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
 - Access and verify the running service.
-- Perform day-2 operations — inspect, scale, update, and manage secrets and storage.
+- Perform day-2 operations — inspect, scale, update, and manage storage.
 - Observe the service with Cloud Logging and Cloud Monitoring.
 - Diagnose and resolve the most common deployment and runtime issues.
 - Tear the deployment down cleanly.
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Filestore NFS,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -53,15 +56,15 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **DokuWiki (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **DokuWiki (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/DokuWiki_CloudRun)
-   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Submit**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
-2. The platform provisions the Cloud Run service, a Filestore NFS share for wiki pages
-   and attachments, and builds the container image. DokuWiki requires no database —
-   all content is stored as plain files on the NFS share. First deploys take roughly
-   **25–45 minutes** (Filestore creation dominates).
+2. The platform provisions the Cloud Run service, a Cloud Storage bucket (mounted at
+   `/storage` via gcsfuse) for wiki pages and attachments, and builds the container
+   image. DokuWiki requires no database — all content is stored as plain files on the
+   gcsfuse-mounted bucket.
 
 3. When it completes, discover the resources with name-agnostic filters (so the
    commands keep working regardless of the deployment suffix):
@@ -88,7 +91,7 @@ export REGION="us-central1"          # the region you deploy into
 
    DokuWiki's root path returns HTTP 200 with the main wiki page (or the install
    wizard on first visit). If you receive a non-200, wait 30 seconds and retry —
-   the NFS share may still be initialising.
+   the gcsfuse-mounted storage bucket may still be initialising.
 
 2. Open `$SERVICE_URL` in a browser. On first access DokuWiki presents the
    **Install Wizard** at `$SERVICE_URL/install.php`. Complete the wizard to set the
@@ -110,16 +113,16 @@ export REGION="us-central1"          # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page —
    the module owns the service spec, so scaling is a configuration change, not a
    manual `gcloud` edit (a manual edit would be reverted on the next apply). DokuWiki
-   uses file-based locking on the NFS share, so multiple concurrent instances are
-   supported but write conflicts are possible at high concurrency.
+   uses file-based locking on the gcsfuse-mounted bucket, so multiple concurrent
+   instances are supported but write conflicts are possible at high concurrency.
 
 3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a new revision rolls out.
 
-4. **Manage secrets and storage:**
+4. **Manage storage** (DokuWiki creates no Secret Manager secrets — the admin
+   account is created interactively via `/install.php`):
 
    ```bash
-   gcloud secrets list --project="$PROJECT" --filter="name~dokuwiki"
-   gcloud filestore instances list --project="$PROJECT" --location="$REGION"
+   gcloud storage buckets list --project="$PROJECT" --filter="name~dokuwiki"
    ```
 
 ---
@@ -148,15 +151,17 @@ Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with DokuWiki releases.
 
 - **Revision unhealthy / service won't serve:** inspect the latest revision and its
-  logs for startup errors, and confirm the NFS volume mount succeeded.
+  logs for startup errors, and confirm the gcsfuse volume mount succeeded.
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-- **NFS mount errors:** confirm the Filestore instance is `READY` and
-  `execution_environment = "gen2"` is set (NFS volume mounts require Gen2).
+- **gcsfuse mount errors:** confirm the module's data bucket
+  (`gcs-dokuwiki<tenant-prefix>-data`, mounted as the `dokuwiki-data` volume) exists and
+  `execution_environment = "gen2"` is set (GCS Fuse volume mounts require Gen2).
 - **Install wizard reappears after setup:** confirm the wizard completed and the
-  `install.php` file was removed from the NFS share. If not, re-run the wizard.
+  `install.php` file was removed from the `/storage` bucket. If not, re-run the
+  wizard.
 - **Image build failed:** review Cloud Build history for the failed build's log.
 - **403 / permission errors:** verify the runtime service account's IAM roles.
 
@@ -168,9 +173,9 @@ gotchas.
 ## Task 6 — Tear down [Automated]
 
 On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service,
-Filestore NFS share, Secret Manager secrets, and Artifact Registry images. Resources
-owned by **Services_GCP** (the VPC, registry) are managed separately and are not
-removed here.
+the Cloud Storage bucket backing `/storage`, and Artifact Registry images (DokuWiki
+creates no Secret Manager secrets). Resources owned by **Services_GCP** (the VPC,
+registry) are managed separately and are not removed here.
 
 ---
 
@@ -178,9 +183,9 @@ removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, Filestore NFS, secrets, and builds the image |
+| 1 — Deploy | Automated | Module provisions Cloud Run, a Cloud Storage bucket (gcsfuse), and builds the image |
 | 2 — Access & verify | Manual | Health check passes; complete the DokuWiki install wizard in the browser |
-| 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/storage |
+| 3 — Operate | Manual | Inspect revisions, scale, update version, manage storage |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose revision, NFS mount, install wizard, build, and IAM issues |
+| 5 — Troubleshoot | Manual | Diagnose revision, gcsfuse mount, install wizard, build, and IAM issues |
 | 6 — Tear down | Automated | Delete (Trash) removes all module resources |

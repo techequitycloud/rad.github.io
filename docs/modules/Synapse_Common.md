@@ -24,10 +24,10 @@ the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Area | Provided by Synapse_Common | Where it surfaces |
 |---|---|---|
-| Cryptographic secrets | Generates a stable `registration_shared_secret` (injected as `REGISTRATION_SHARED_SECRET`, and again as `SECRET_KEY` via the `secret_ids` output) and a superuser password, both stored in **Secret Manager** | Injected automatically; retrieve via Secret Manager (see below) |
+| Cryptographic secrets | Generates a stable `registration_shared_secret` (injected as `REGISTRATION_SHARED_SECRET` via the `secret_ids` output) and a superuser password, both stored in **Secret Manager** | Injected automatically; retrieve via Secret Manager (see below) |
 | Container image | Wraps the official `matrixdotorg/synapse` image with a cloud entrypoint that generates `homeserver.yaml` + a persistent signing key and wires the platform PostgreSQL; builds via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
-| Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database with the **mandatory `C` collation** and the application role | `initialization_jobs` output |
+| Database bootstrap | Defines the first-deploy jobs: `db-init` (creates the database with the **mandatory `C` collation** and the application role) and `create-admin` (registers the initial superuser) | `initialization_jobs` output |
 | Object storage | Declares the **Cloud Storage** data bucket | `storage_buckets` output |
 | Core settings | Sets the baseline Synapse environment: `server_name`, HTTP listener port (`8008`), data directory, stats reporting, registration | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness/readiness probes targeting `/health` | §Observability in the platform guides |
@@ -40,18 +40,21 @@ Two secrets are generated automatically and stored in Secret Manager — they ar
 set in plain text:
 
 - **`registration_shared_secret`** — a stable random string injected as the
-  `REGISTRATION_SHARED_SECRET` secret env (and, redundantly, as `SECRET_KEY` via the
-  `secret_ids` output on both `Synapse_CloudRun` and `Synapse_GKE`) and written into a
+  `REGISTRATION_SHARED_SECRET` secret env (the sole key in the `secret_ids` output
+  that both `Synapse_CloudRun` and `Synapse_GKE` forward) and written into a
   `conf.d` snippet at boot. It authorises out-of-band admin/user creation with the
   `register_new_matrix_user` tool (open self-service registration is **off** by
   default). Rotating it after first boot invalidates any registration script that
   hard-codes the old value.
 - **Superuser password** — a secret is generated and stored in Secret Manager
-  (`secret-<prefix>-synapse-superuser-password`), but **it is not currently wired to
-  any user-creation step** — no init job or entrypoint logic reads it, so it does not
-  by itself give the instance an owner account. Create the first admin account
-  out-of-band with `register_new_matrix_user` (using the `registration_shared_secret`
-  above) or by temporarily enabling open registration.
+  (`secret-<prefix>-synapse-superuser-password`) and consumed by the `create-admin`
+  init job, which runs `register_new_matrix_user` (bundled in the Synapse image) with
+  the `registration_shared_secret` to register the admin account (username `admin`).
+  The job first polls `/health`, and tolerates a re-run ("User ID already taken" is
+  not a failure). It **skips itself (exit 0) when `internal_service_url` is empty** —
+  only `Synapse_GKE` wires that value, so on Cloud Run no admin is registered and you
+  must create the first account out-of-band with `register_new_matrix_user` (using the
+  `registration_shared_secret` above) or by temporarily enabling open registration.
 
 The database password is generated and managed separately by the foundation; its
 secret name is reported in the platform deployment outputs (`database_password_secret`).

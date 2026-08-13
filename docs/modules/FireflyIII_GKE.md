@@ -216,7 +216,7 @@ specific to or notable for Firefly III are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -319,7 +319,7 @@ specific to or notable for Firefly III are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `null` | Falls back to the Common module's fixed `POSTGRES_15` when unset. |
+| `database_type` | `"POSTGRES_15"` | Set explicitly, matching the engine `FireflyIII_Common` fixes for this app. |
 | `application_database_name` | `fireflyiii` | Database name, injected as `DB_DATABASE`. Immutable after first deploy. |
 | `application_database_user` | `fireflyiii` | Application user, injected as `DB_USERNAME`. Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length (16–64). |

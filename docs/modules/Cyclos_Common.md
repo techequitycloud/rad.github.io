@@ -79,18 +79,18 @@ platform module.
 
 ## 4. GCS file storage
 
-A dedicated **Cloud Storage** bucket (`<resource_prefix>-cyclos-storage`) is declared here
-and provisioned by the foundation. The bucket stores all Cyclos uploaded files, profile
+A dedicated **Cloud Storage** bucket is declared here with the `storage` suffix; the
+foundation names and provisions it. The bucket stores all Cyclos uploaded files, profile
 photos, and transaction attachments. Two environment variables are injected automatically:
 
 - `cyclos.storedFileContentManager` → `gcs`
-- `cyclos.storedFileContentManager.bucketName` → `<resource_prefix>-cyclos-storage`
+- `cyclos.storedFileContentManager.bucketName` → `gcs-<application_name><resource_prefix>-storage`, matching the Foundation's own `gcs-${service_name}-${name_suffix}` naming
 
 NFS is disabled for the Cyclos container — GCS is the only supported file backend for
 containerised Cyclos deployments.
 
 ```bash
-gcloud storage buckets list --project "$PROJECT" --filter="name:cyclos-storage"
+gcloud storage buckets list --project "$PROJECT" --filter="name:cyclos"
 ```
 
 ---
@@ -114,8 +114,9 @@ Platform-specific adjustments handled here:
 
 - **Cloud Run** — `DB_HOST` is overridden to the Cloud SQL private IP for direct TCP
   connection (`enable_cloudsql_volume = false` by default).
-- **GKE** — `DB_HOST` defaults to the Cloud SQL private IP via direct TCP; the Auth Proxy
-  socket path is available if `enable_cloudsql_volume = true`.
+- **GKE** — `DB_HOST` defaults to the Cloud SQL private IP via direct TCP.
+  `enable_cloudsql_volume` defaults to `true` on GKE and is required there; the Auth Proxy
+  sidecar is additive and does not change how Cyclos connects.
 
 ---
 

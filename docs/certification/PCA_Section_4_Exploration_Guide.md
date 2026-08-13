@@ -9,7 +9,6 @@ description: "Prepare for the PCA exam Section 4 — analyzing and optimizing te
 
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This section is about *process* architecture: software delivery lifecycle, testing and release strategy, and the organizational controls (approvals, cost governance, decision-making) wrapped around them. The deployable half lives in `App_CloudRun`'s CI/CD surface and the platform's Cloud Deploy layer; the people half — SRE culture, stakeholder management, post-mortems — must be studied from the SRE books and Architecture Framework. Deploy the **Security and delivery** profile from the [Lab Map](PCA_Certification_Guide.md) with `enable_cicd_trigger = true` and `enable_cloud_deploy = true`.
 
 ---

@@ -242,7 +242,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -253,6 +253,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_name` | `tooljet` | Base name for resources (and namespace stem). Do not change after first deploy. |
 | `application_display_name` | `ToolJet` | Human-readable name shown in the Console. |
 | `application_version` | `latest` | `tooljet/tooljet-ce` image tag; pin to a specific release in production. |
+| `application_database_name` | `tooljet` | Metadata database name. Immutable after first deploy. |
+| `application_database_user` | `tooljet` | Application database user (shared by both databases). |
 
 ### Group 4 — Runtime & Scaling
 
@@ -283,6 +285,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
 | `workload_type` | `null` (auto) | `Deployment` or `StatefulSet`; resolves to `Deployment` when unset. |
 | `session_affinity` | `ClientIP` | Sticky routing required for the multiplayer WebSocket editor. |
+| `network_tags` | `["nfsserver"]` | Node/pod network tags; `nfsserver` is required when `enable_nfs = true`. |
 | `termination_grace_period_seconds` | `60` | Seconds to wait after SIGTERM before SIGKILL. |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
 
@@ -356,8 +359,6 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_database_name` | `tooljet` | Metadata database name. Immutable after first deploy. |
-| `application_database_user` | `tooljet` | Application database user (shared by both databases). |
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before rolling-restarting pods. |
@@ -383,7 +384,6 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | `enable_custom_domain` | `true` | Provision Ingress + managed certificate (defaults to a `nip.io` host). |
 | `application_domains` | `[]` | Additional hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
-| `network_tags` | `["nfsserver"]` | Node/pod network tags; `nfsserver` is required when `enable_nfs = true`. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 

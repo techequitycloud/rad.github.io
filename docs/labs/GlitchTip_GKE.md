@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot cluster,
-  Cloud SQL, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **kubectl** installed.
@@ -166,7 +169,8 @@ Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with GlitchTip releases.
 
 - **Pods not Ready / CrashLoopBackOff:** describe the pod and read its logs. The startup
-  probe targets `/_health/` and allows several minutes on first boot while migrations run.
+  probe targets `/` (the module's default `startup_probe` path) and allows several minutes
+  on first boot while migrations run.
   ```bash
   kubectl describe pod -n "$NAMESPACE" <pod>
   kubectl logs -n "$NAMESPACE" <pod> --previous

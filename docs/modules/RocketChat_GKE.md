@@ -33,7 +33,7 @@ the same pod. The deployment wires together a focused set of Google Cloud servic
 | Datastore | Embedded MongoDB 6.0 replica set | Baked into the image — no Cloud SQL. Single-node replica set (`rs0`) over `127.0.0.1` |
 | Persistence | Persistent Disk PVC (block storage) | The MongoDB data directory `/data/db` is on a `ReadWriteOnce` PVC — required for WiredTiger |
 | Secrets | Secret Manager | Optional API token (`enable_api_key`) |
-| Ingress | ClusterIP / Cloud Load Balancing | Internal by default; optional custom domain + managed certificate + Gateway |
+| Ingress | LoadBalancer / Cloud Load Balancing | External by default (public-facing chat app); optional custom domain + managed certificate + Gateway |
 
 **Sensible defaults worth knowing up front:**
 
@@ -54,8 +54,9 @@ the same pod. The deployment wires together a focused set of Google Cloud servic
 - **Port 3000.** Rocket.Chat listens on port 3000; the entrypoint sets `PORT=3000`.
 - **Health on `/api/info`.** Startup, liveness, and uptime checks target `/api/info`,
   which returns 200 only once the server and its replica set are ready.
-- **ClusterIP by default.** The Service is internal; expose it with a custom domain +
-  Gateway (and optional IAP) to reach the UI from a browser.
+- **LoadBalancer by default.** Rocket.Chat is a public-facing chat app, so the Service
+  gets an external IP out of the box; a custom domain + Gateway (and optional IAP) is
+  available for a stable hostname and managed certificate.
 - **First run is a 4-step setup wizard.** No admin is pre-seeded — the first browser
   visit walks through creating the admin account and organization.
 
@@ -143,9 +144,10 @@ and stores its own keys in MongoDB during first-run setup.
 
 ### F. Networking & ingress
 
-By default the workload is a **ClusterIP** Service (internal). To reach the UI from a
-browser, enable a custom domain with a Google-managed certificate (Gateway API) and,
-optionally, IAP. A static IP can be reserved so the address survives redeploys.
+By default the workload is a **LoadBalancer** Service (external IP), reachable from a
+browser without further configuration. For a stable hostname and managed TLS, enable
+a custom domain with a Google-managed certificate (Gateway API) and, optionally, IAP.
+A static IP is reserved by default so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -212,7 +214,7 @@ specific to or notable for Rocket.Chat are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use `gke` to run alongside a Cloud Run variant. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use `gke` to run alongside a Cloud Run variant. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -251,7 +253,7 @@ specific to or notable for Rocket.Chat are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; front with a Gateway for external access. |
+| `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; external by default since Rocket.Chat is a public-facing chat app. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` when `stateful_pvc_enabled = true` (required). |
 | `session_affinity` | `None` | Set `ClientIP` for stable WebSocket routing behind a load balancer. |
 | `termination_grace_period_seconds` | `60` | Seconds after SIGTERM before SIGKILL — allow MongoDB to flush and shut down cleanly. |

@@ -57,9 +57,10 @@ deployment wires together a focused set of Google Cloud services:
   need — the recommended configuration for a media server.
 - **The container listens on port 8096.** Emby's web/API port is set by
   Emby_Common. The web UI and first-run setup wizard are served at `/web` (and
-  `/`). Emby has no `/health` endpoint (confirmed `404`), but `/System/Ping` is
-  a real unauthenticated health endpoint (returns `200` with body `Emby Server`)
-  — both probes default to an **HTTP** check on that path.
+  `/`). Unlike Jellyfin, Emby has **no confirmed, documented unauthenticated HTTP
+  health endpoint** — a live container test found `/health` returns `404` while
+  `/` responds `302` to the setup wizard — so both probes default to a **TCP**
+  check on port 8096 instead of an assumed HTTP path.
 - **There are no default credentials.** On first access the setup wizard creates the
   administrator account and adds media libraries. Nothing is usable until then.
 - **Single replica.** `min_instance_count = 1` / `max_instance_count = 1` — one
@@ -244,11 +245,11 @@ Optional uptime checks and alert policies are available.
   and reaches Emby Server's real startup logic.
 - **fsGroup for a group-writable PVC.** Emby runs as UID 1000 / GID 2000;
   `stateful_fs_group = 3000` ensures the PVC is group-writable.
-- **`/System/Ping` is the health path.** Startup and liveness probes both use an
-  **HTTP** check against `/System/Ping` on port 8096, which returns `200` as soon
-  as Emby is listening. A live test confirmed `/health` returns `404` (no such
-  endpoint) — `/System/Ping` is the real unauthenticated health endpoint, unlike
-  Jellyfin which documents a working `/health`.
+- **No dedicated health path — TCP probes.** Startup and liveness probes both use a
+  **TCP** check against port 8096, which passes as soon as Emby's listener binds.
+  A live test confirmed `/health` returns `404` (no such endpoint) while `/`
+  responds `302` to the setup wizard — ruling out an HTTP path as the probe target,
+  unlike Jellyfin which documents a working `/health`.
 - **Transcoding is CPU-heavy and GPU-less.** Autopilot pods have no GPU, so prefer
   direct-play clients. Size `cpu_limit` up for live transcoding and `memory_limit`
   up for large libraries.
@@ -272,7 +273,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -316,7 +317,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed; defaults external since Emby is interactive/client-facing. |
 | `workload_type` | `null` → `StatefulSet` | Resolves to StatefulSet when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Session affinity mode for the Service. |
-| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_deployment_id` when empty. |
+| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_id` when empty. |
 | `network_tags` | `["nfsserver"]` | `nfsserver` is required when `enable_nfs = true`. |
 | `termination_grace_period_seconds` | `60` | Seconds after SIGTERM before SIGKILL — allows in-flight writes to flush. |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
@@ -353,10 +354,10 @@ memory values, if used elsewhere, must carry binary unit suffixes (`4Gi`, `8192M
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/System/Ping`, 15s delay | Startup probe; Emby has no `/health` endpoint but `/System/Ping` responds `200`. |
-| `liveness_probe` | HTTP `/System/Ping`, 30s delay | Liveness probe. |
-| `startup_probe_config` | `{ enabled = true, path = "/System/Ping" }` | App_GKE-level infrastructure startup probe. |
-| `health_check_config` | `{ enabled = true, path = "/System/Ping" }` | App_GKE-level liveness probe. |
+| `startup_probe` | TCP 8096, 15s delay | Startup probe; TCP since Emby has no confirmed health path. |
+| `liveness_probe` | TCP 8096, 30s delay | Liveness probe. |
+| `startup_probe_config` | `{ enabled = true }` | App_GKE-level infrastructure startup probe. |
+| `health_check_config` | `{ enabled = true }` | App_GKE-level liveness probe. |
 | `uptime_check_config` | `{ enabled=false }` | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
@@ -504,7 +505,7 @@ locate and explore the running resources.
 | `cpu_limit` | `1000m` (raise for transcoding) | High | Live transcoding (no GPU) saturates CPU; prefer direct-play clients. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
-| `startup_probe`/`liveness_probe` path | `/System/Ping` (default) | High | An assumed `/health` path 404s on Emby (verified live) — use the confirmed `/System/Ping` endpoint instead. |
+| `startup_probe`/`liveness_probe` type | `TCP` (default) | High | An assumed HTTP `/health` path 404s on Emby (verified live) — an HTTP probe here would never pass. |
 | `service_type` | `LoadBalancer` (default) unless intentionally internal | Medium | An unjustified `ClusterIP` override leaves an interactive media server unreachable from a browser. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict the single pod during maintenance, interrupting streams. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short to recover an older library snapshot. |

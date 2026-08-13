@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE
-  Autopilot cluster, Artifact Registry, and shared service accounts this
-  module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -58,17 +60,21 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Netdata
+1. Click **Deploy** in the RAD platform top navigation, open **Netdata
    (GKE)** from the **Platform Modules** list to start configuration, set
    `project_id`, and review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Netdata_GKE)
    documents every input by group, with defaults. Note that `service_type`
-   defaults to `ClusterIP` (internal-only) and `enable_admin_password`
-   defaults to `false` — the opposite exposure default from the Cloud Run
-   variant of this module — so out of the box the workload is **not**
-   reachable outside the cluster. Review the estimated cost (if credits are
-   enabled) and click **Deploy**, which opens the deployment status page with
-   real-time logs.
+   defaults to `LoadBalancer` (external access) and `enable_admin_password`
+   defaults to `false` — so out of the box the workload is reachable from
+   outside the cluster via an external IP, and Netdata's dashboard has **no
+   built-in login**. Unlike the Cloud Run variant (which has a plan-time
+   guardrail forcing `enable_admin_password = true` whenever it is publicly
+   ingressed), `Netdata_GKE` has no equivalent guard, so set
+   `service_type = ClusterIP` to stay internal-only, or enable
+   `enable_admin_password` plus a reverse proxy/IAP before exposing it.
+   Review the estimated cost (if credits are enabled) and click **Deploy**,
+   which opens the deployment status page with real-time logs.
 
 2. The platform builds a thin custom image (`FROM netdata/netdata:<pinned
    version>`), pushes it to Artifact Registry, and deploys the workload into
@@ -105,33 +111,31 @@ export REGION="us-central1"           # the region you deploy into
 
 2. Confirm the service is healthy. Netdata exposes an info endpoint that
    responds only once the agent has initialised. Because `service_type`
-   defaults to `ClusterIP`, reach it via `kubectl exec` or a port-forward
-   rather than an external IP:
-
-   ```bash
-   POD=$(kubectl get pods -n "$NS" -o jsonpath='{.items[0].metadata.name}')
-   kubectl exec -n "$NS" "$POD" -- wget -qO- http://127.0.0.1:19999/api/v1/info
-
-   # or, to browse the dashboard from your machine:
-   kubectl port-forward -n "$NS" svc/"$(kubectl get svc -n "$NS" -o jsonpath='{.items[0].metadata.name}')" 19999:19999
-   # then open http://127.0.0.1:19999
-   ```
-
-3. Netdata has **no first-run wizard and no admin-account creation step** —
-   the dashboard is fully functional as soon as the pod is Ready. If you set
-   `service_type = LoadBalancer` (or configured a custom domain) to expose it
-   externally, remember the dashboard itself has **no built-in
-   authentication**:
+   defaults to `LoadBalancer`, you can reach it directly via the external IP;
+   `kubectl exec` or a port-forward also work and are useful if you changed
+   `service_type` to `ClusterIP`:
 
    ```bash
    kubectl get svc -n "$NS"
    EXTERNAL_IP=$(kubectl get svc -n "$NS" \
      -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
    echo "External IP: $EXTERNAL_IP"
+   curl "http://${EXTERNAL_IP}:19999/api/v1/info"
+
+   # or, from inside the cluster / when service_type = ClusterIP:
+   POD=$(kubectl get pods -n "$NS" -o jsonpath='{.items[0].metadata.name}')
+   kubectl exec -n "$NS" "$POD" -- wget -qO- http://127.0.0.1:19999/api/v1/info
+   kubectl port-forward -n "$NS" svc/"$(kubectl get svc -n "$NS" -o jsonpath='{.items[0].metadata.name}')" 19999:19999
+   # then open http://127.0.0.1:19999
    ```
-   If exposed externally, enable `enable_admin_password` and layer an
-   authenticating reverse proxy or IAP in front — the generated secret does
-   not gate Netdata's own dashboard by itself.
+
+3. Netdata has **no first-run wizard and no admin-account creation step** —
+   the dashboard is fully functional as soon as the pod is Ready. Since the
+   default `service_type = LoadBalancer` already exposes it externally,
+   remember the dashboard itself has **no built-in authentication**: enable
+   `enable_admin_password` and layer an authenticating reverse proxy or IAP
+   in front — the generated secret does not gate Netdata's own dashboard by
+   itself.
 
 ---
 
@@ -214,10 +218,12 @@ platform-level diagnostics and do not change with Netdata releases.
   block-device-safe for Netdata's dbengine files and can corrupt the metrics
   database — this is a deliberate design constraint, not a transient bug.
 - **Dashboard unexpectedly public:** re-check `service_type` and any
-  `application_domains` configuration — the module default (`ClusterIP`) is
-  internal-only, so external reachability only happens if you explicitly
-  changed it. If you did, and the dashboard is exposed with no auth layer,
-  enable `enable_admin_password` plus a reverse proxy or IAP.
+  `application_domains` configuration — the module default (`LoadBalancer`)
+  is already externally reachable out of the box, with no built-in
+  authentication and no plan-time guard forcing `enable_admin_password`. Set
+  `service_type = ClusterIP` to go internal-only, or enable
+  `enable_admin_password` plus a reverse proxy or IAP if it must stay
+  public.
 - **Image pull / build errors:** confirm the image exists in Artifact
   Registry and the node service account can pull it; check Cloud Build
   history if `application_version` was pinned to a nonexistent upstream tag.
@@ -243,7 +249,7 @@ are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds a pinned custom image and deploys a StatefulSet with a 20Gi SSD PVC — no database, no init job |
-| 2 — Access & verify | Manual | Connect to the cluster; health check passes; dashboard is immediately usable (no admin setup); default `ClusterIP` keeps it internal |
+| 2 — Access & verify | Manual | Connect to the cluster; health check passes; dashboard is immediately usable (no admin setup); default `LoadBalancer` exposes it externally with no built-in auth |
 | 3 — Operate | Manual | Inspect workload, keep single-replica scale, update version, manage secrets/storage, watch SSD quota |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and optional uptime check |
 | 5 — Troubleshoot | Manual | Diagnose pod, PVC/quota, persistence-mode, and image issues |

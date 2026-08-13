@@ -36,9 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** authenticated: `gcloud auth login`,
   `gcloud auth application-default login`.
@@ -95,10 +97,10 @@ export NAMESPACE="<workload-namespace>"   # from the deployment Outputs
      ]}]}}}}'
    ```
 
-2. Confirm the workload is healthy via the unauthenticated `/health` endpoint:
+2. Confirm the workload is healthy via the unauthenticated `/status` endpoint:
 
    ```bash
-   curl -s -o /dev/null -w "%{http_code}\n" "http://$EXTERNAL_IP/health"   # expect 200
+   curl -s -o /dev/null -w "%{http_code}\n" "http://$EXTERNAL_IP/status"   # expect 200
    ```
 
 3. Open the URL in a browser. Firefly III shows the **`/register`** page — the **first
@@ -166,7 +168,7 @@ platform-level diagnostics and do not change with Firefly III releases.
 
 - **Pod not Ready / CrashLoopBackOff:** inspect the pod and logs for startup errors and
   confirm secrets/env resolved. The startup probe is TCP on port 8080; the liveness
-  probe targets `/health`.
+  probe targets `/status`.
   ```bash
   kubectl describe pod -n "$NAMESPACE" -l app="$SVC"
   kubectl logs -n "$NAMESPACE" deploy/"$SVC" --previous --tail=100
@@ -202,7 +204,7 @@ shared Cloud SQL, registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module provisions the GKE workload, Cloud SQL (PostgreSQL 15), secrets, uploads bucket, NFS, and runs DB init |
-| 2 — Access & verify | Manual | Set `APP_URL`; `/health` returns 200; create the owner account at `/register` |
+| 2 — Access & verify | Manual | Set `APP_URL`; `/status` returns 200; create the owner account at `/register` |
 | 3 — Operate | Manual | Inspect pods, scale, update version, wire cron, manage secrets/backups, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose pod, database, init-job, URL, cron, and NFS issues |

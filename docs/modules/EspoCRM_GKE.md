@@ -29,7 +29,7 @@ Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Apache/PHP pods, 1 vCPU / 2 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for MySQL 8.0 | Required — EspoCRM does not support PostgreSQL; reached via the Auth Proxy sidecar |
-| Object storage | Cloud Storage + NFS (Filestore) | `espocrm-data` bucket; shared NFS mounted at `/var/www/html/data` for uploads |
+| Object storage | Cloud Storage + NFS (Filestore) | `gcs-espocrm<tenant-prefix>-espocrm-data` bucket; shared NFS mounted at `/var/www/html/data` for uploads |
 | Cache | Redis (optional) | Optional object cache; disabled by default |
 | Secrets | Secret Manager | Auto-generated `ESPOCRM_ADMIN_PASSWORD`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -107,7 +107,7 @@ and password rotation, see [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage & NFS
 
-A dedicated **Cloud Storage** bucket (`espocrm-data`) is provisioned automatically, and a
+A dedicated **Cloud Storage** bucket (`gcs-espocrm<tenant-prefix>-espocrm-data`) is provisioned automatically, and a
 shared **NFS (Filestore)** volume is mounted at `/var/www/html/data` for EspoCRM's uploaded
 attachments and runtime data. The workload service account is granted access to the bucket.
 
@@ -278,7 +278,7 @@ specific to or notable for EspoCRM are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `null` variable default → effectively `MYSQL_8_0` (EspoCRM_Common always sets `MYSQL_8_0` in its `config` output; this variant's own `database_type` variable only overrides it when explicitly set to a non-null value) | Cloud SQL engine. EspoCRM requires MySQL — do not select PostgreSQL. |
+| `database_type` | `MYSQL_8_0` (EspoCRM_Common also sets `MYSQL_8_0` in its `config` output) | Cloud SQL engine. EspoCRM requires MySQL — do not select PostgreSQL. |
 | `application_database_name` | `espocrm` | MySQL database name. Immutable after first deploy. |
 | `application_database_user` | `espocrm` | Application database user. Password auto-generated in Secret Manager. |
 

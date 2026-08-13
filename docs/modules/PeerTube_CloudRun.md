@@ -252,6 +252,32 @@ Cloud Monitoring, with optional uptime checks and alert policies.
   `public_access_prevention = "inherited"` on the `videos` bucket
   specifically (not the `data` bucket) to fix this — confirmed live
   2026-07-22.
+- **On a RAD-managed self-serve project, a project-level org-policy override
+  is applied first, then waited on.** RAD-managed projects inherit a folder
+  org policy enforcing `constraints/storage.publicAccessPrevention`, which
+  overrides the bucket-level setting above and reintroduces the same `412`.
+  When `is_self_serve_project = true` (server-injected — never set it by
+  hand; it is `false` for an ordinary bring-your-own project, where this
+  whole mechanism is a no-op), the module overrides that constraint at the
+  **project** level via the guardrails-admin provider. The override is tied
+  to this module's own state, so destroying the deployment reverts the
+  project to the folder's enforced-by-default posture.
+  **The override needs ~90s to propagate before the bucket grant will
+  succeed.** Terraform reports the org-policy write as complete in 0s, but
+  GCP's enforcement lags: the very next apply step still hit the same `412`,
+  even after the provider's own built-in IAM retry/backoff (~30s, `Too many
+  conflicts`) was exhausted. A `time_sleep.wait_for_org_policy_propagation`
+  of 90s sits between the two, and the bucket grant depends on the wait
+  rather than on the override directly — so an apply on a self-serve project
+  is ~90s slower by design. Confirmed live 2026-08-06.
+- **Sharp edge: the override is project-scoped, so two PeerTube variants in
+  one project collide.** `storage.publicAccessPrevention` has no
+  bucket-scoped variant once enforced at a higher level. If the same project
+  ever runs both `PeerTube_CloudRun` and `PeerTube_GKE`, each module's state
+  independently manages the *same* project-level policy object, and
+  destroying either removes it out from under the other. `solutions.yaml`
+  only ever selects one PeerTube variant per solution, so this is rare in
+  practice and is not solved in the module.
 - **Upload ACLs are intentionally left unset.** GCS's S3 XML-interop under
   Uniform Bucket-Level Access does not honor per-object ACLs set via an S3
   client (the same limitation PeerTube's own docs describe for Backblaze B2),
@@ -291,7 +317,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

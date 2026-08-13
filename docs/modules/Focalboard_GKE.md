@@ -218,6 +218,19 @@ Monitoring. Optional uptime checks and alert policies are available
   loopback host (the GKE proxy sidecar, `127.0.0.1`) uses `sslmode=disable`; any
   other real IP uses `sslmode=require`. On GKE this always resolves to the loopback,
   plaintext-to-the-sidecar case.
+- **The `DB_PASSWORD` this DSN carries is a dedicated alnum-only secret, not
+  `database_password_secret`.** The Foundation's standard fleet-wide DB password
+  (charset `_%@`) can contain a `%` that crashes Focalboard's Go postgres driver —
+  its `url.Parse`-based DSN validation gate and its actual `lib/pq` connector
+  disagree on percent-decoding, so no single encoding of that password satisfies
+  both. `Focalboard_Common` generates a separate password
+  (`secret-<resource_prefix>-focalboard-safe-db-password`), overrides the
+  SERVICE's `DB_PASSWORD` with it, and passes it to `db-init` as
+  `FOCALBOARD_SAFE_DB_PASSWORD`, which is what the Postgres role's password is
+  actually set to. This is identical to the Cloud Run behaviour since `db-init.sh`
+  is shared via `Focalboard_Common`. The `database_password_secret` output (§5)
+  reports the fleet-wide secret name, which does not authenticate against this
+  role.
 - **Attachment storage path.** `FOCALBOARD_FILESPATH` is set to `data_dir`, which
   the GKE variant wires to `stateful_pvc_mount_path` (default `/data`) — the same
   path the per-pod block PVC is mounted at. The Dockerfile pre-creates `/data` with
@@ -330,7 +343,7 @@ locate and explore the running resources.
 | `service_url` | URL to reach Focalboard. |
 | `database_instance_name` | Cloud SQL instance name. |
 | `database_name` / `database_user` | Application database name / user. |
-| `database_password_secret` | Secret Manager secret holding the DB password. |
+| `database_password_secret` | Secret Manager secret holding the standard fleet-wide DB password — **not** the credential Focalboard's Postgres role authenticates with (see [Section 3](#3-focalboard-application-behaviour)); use `secret-<resource_prefix>-focalboard-safe-db-password` instead. |
 | `database_host` / `database_port` | DB endpoint (`127.0.0.1` via the Auth Proxy) / port. |
 | `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
@@ -368,6 +381,7 @@ locate and explore the running resources.
 | `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Draws the tight `SSD_TOTAL_GB` quota (Qwiklabs ≈ 500 GB); a campaign of stateful modules can exhaust it. Override to `standard` (HDD `pd-standard`) if IOPS aren't needed. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are treated as bytes and block all pod scheduling in the namespace. |
 | `FOCALBOARD_ADMIN_PASSWORD` (auto-generated) | Retrieve before first login | Medium | Not confirmed to bootstrap a login on its own (see [Section 3](#3-focalboard-application-behaviour)) — the practical first-run step may instead be registering the first user through the UI. |
+| `database_password_secret` output | Don't use it to connect | High | Reports the fleet-wide `DB_PASSWORD` secret, which does not authenticate against Focalboard's Postgres role. Retrieve `secret-<resource_prefix>-focalboard-safe-db-password` for a working credential. |
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS and any bookmarked URL. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

@@ -265,7 +265,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -297,6 +297,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 |---|---|---|
 | `environment_variables` | SMTP placeholders | Non-sensitive settings. Core n8n vars are injected automatically; do not set `N8N_PORT`, `DB_TYPE`, `DB_POSTGRESDB_*`, `N8N_ENCRYPTION_KEY`, `WEBHOOK_URL`, `QDRANT_URL`, or `OLLAMA_HOST`. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. Use for external AI provider API keys. |
+| `secret_rotation_period` | `2592000s` | Secret Manager rotation notification frequency (30 days). Configures a Pub/Sub notification when rotation is due. |
 
 ### Group 6 — GKE Backend & Cluster
 
@@ -308,6 +309,7 @@ specific to or notable for n8n AI are listed; every other input is inherited fro
 | `network_tags` | `['nfsserver']` | Required for NFS connectivity firewall rules. |
 | `gke_cluster_name` | `""` | Leave empty for auto-discovery. |
 | `namespace_name` | `""` | Leave empty to auto-generate. |
+| `prereq_subnet_cidr_override` | `""` | Override for the inline VPC primary subnet CIDR. Empty derives a unique /24 per deployment from the random deployment ID; set to the previously-applied value on existing deployments to avoid resource replacement. |
 
 ### Group 7 — StatefulSet
 
@@ -364,6 +366,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for workflow data and default Redis host discovery. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_volume_name` | `nfs-data-volume` | Volume name for the NFS mount. Override when mounting a second NFS share alongside the first. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -391,6 +394,8 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | `db_user` | `n8n_user` | Application user. **Immutable after first deploy.** |
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
+| `enable_mysql_plugins` | `false` | Enable automatic installation of MySQL plugins. Only applicable to MySQL databases; `N8N_AI_Common` fixes `database_type` to PostgreSQL 15, so this is inert for n8n's own database. |
+| `mysql_plugins` | `[]` | List of MySQL plugins to install (e.g. `validate_password`, `audit_log`). Only applicable to MySQL databases. |
 
 ### Group 17 — Backup & Maintenance
 

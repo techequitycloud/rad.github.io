@@ -20,7 +20,7 @@ The lab focuses on operating the **Cloud Run module and the Google Cloud platfor
 By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
-- Access the editor through its default `internal` ingress, retrieve the generated password, and verify the service.
+- Access the editor through its default public (`all`) ingress, retrieve the generated password, and verify the service.
 - Perform day-2 operations — inspect revisions, manage the GCS-backed workspace, and update the version.
 - Understand why the module is pinned to a single instance and how scaling changes are made safely.
 - Observe the service with Cloud Logging and Cloud Monitoring.
@@ -29,8 +29,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -47,7 +49,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **code-server (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **code-server (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/CodeServer_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -77,18 +79,20 @@ export REGION="us-central1"          # the region you deploy into
 ## Task 2 — Access & verify [Manual]
 
 1. **Mind the ingress mode first.** The module defaults to
-   `ingress_settings = "internal"` — the editor is only reachable from inside the
-   VPC, and a `curl` from your laptop returns **404** (the ingress policy working,
-   not a failure). Check the current mode:
+   `ingress_settings = "all"` — the editor is publicly reachable out of the box,
+   gated by the auto-generated `PASSWORD` secret (see step 3). Check the current
+   mode:
 
    ```bash
    gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
      --format="value(metadata.annotations['run.googleapis.com/ingress'])"
    ```
 
-   For browser access from outside the VPC, set `ingress_settings = "all"` via
-   **Update** on the deployment details page — and **keep `enable_password = true`**
-   whenever you do (a public, unauthenticated IDE includes a public terminal).
+   To restrict access to the VPC instead, set `ingress_settings = "internal"` via
+   **Update** on the deployment details page — a `curl` from outside the VPC will
+   then return **404** (the ingress policy working, not a failure). Whenever ingress
+   is `all`, **keep `enable_password = true`** (a public, unauthenticated IDE
+   includes a public terminal).
 
 2. Once reachable, confirm the service is healthy. code-server's unauthenticated
    health path is `/healthz` (note: **not** `/health`, which returns 401 when a
@@ -171,9 +175,10 @@ export REGION="us-central1"          # the region you deploy into
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count (should sit flat at 1), and
    CPU / memory utilisation — language servers and extensions are the usual memory
-   drivers. The module's **uptime check** requires a publicly reachable endpoint;
-   with the default `internal` ingress, Monitoring → Uptime checks may legitimately
-   be empty.
+   drivers. The module's **uptime check** is disabled by default
+   (`uptime_check_config.enabled = false`) and additionally requires a publicly
+   reachable endpoint, so Monitoring → Uptime checks may legitimately be empty even
+   though ingress defaults to `all`.
 
 ---
 
@@ -182,8 +187,9 @@ export REGION="us-central1"          # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with code-server releases.
 
-- **URL returns 404 from your machine:** almost always the default `internal`
-  ingress, not an outage. Check the ingress annotation (Task 2) before reading logs.
+- **URL returns 404 from your machine:** if `ingress_settings` was changed to
+  `internal`, this is expected — not an outage. Check the ingress annotation
+  (Task 2) before reading logs.
 - **Revision never becomes Ready:** check the probe paths. Probes must target the
   unauthenticated `/healthz`; pointing them at `/health` while a password is set
   returns 401 and the revision fails readiness even though the app booted fine:
@@ -220,7 +226,7 @@ On the **Deployments** page, open the deployment and click the **Trash** icon (*
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds the image and provisions Cloud Run + the GCS workspace bucket + the `PASSWORD` secret (no DB, no Redis) |
-| 2 — Access & verify | Manual | Understand `internal` ingress; `/healthz` passes; retrieve the password and log in; verify workspace persistence |
+| 2 — Access & verify | Manual | Understand the default public (`all`) ingress; `/healthz` passes; retrieve the password and log in; verify workspace persistence |
 | 3 — Operate | Manual | Inspect revisions, keep single-instance scaling, update version, back up the workspace bucket |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics; understand when the uptime check exists |
 | 5 — Troubleshoot | Manual | Diagnose ingress, probe-path, password, workspace, memory, build, and IAM issues |

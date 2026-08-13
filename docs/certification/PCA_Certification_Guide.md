@@ -4,8 +4,8 @@ description: "Map every Professional Cloud Architect (PCA) exam domain to hands-
 ---
 
 # Professional Cloud Architect (PCA) Certification Lab Map
-> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
+> 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
 The Professional Cloud Architect certification validates your ability to design, plan, and manage secure, scalable, highly available cloud solutions — and to justify the trade-offs behind every design choice. The RAD platform's four foundation modules give you a live laboratory for exactly those trade-offs: `Services_GCP` (the shared platform layer — VPC, Cloud SQL, Redis, Filestore, GKE, CMEK, VPC-SC), `App_CloudRun` and `App_GKE` (two deployment engines for the *same* containerized workload, embodying the serverless-vs-orchestrated decision the PCA exam returns to again and again), and `App_Common` (shared layers implementing discovery, secrets, IAM, storage, and CI/CD patterns). Every toggle in your deployment portal is a design decision you can deploy, inspect in the GCP console, and reverse.
 
@@ -140,7 +140,7 @@ The platform *is* an implementation-management exhibit: a four-tier IaC architec
 
 ## Section 6: Ensuring solution and operations excellence (~12.5% of the exam)
 
-Day-2 operations: deployments with `support_users`, `alert_policies`, or an enabled uptime check ship a monitoring dashboard and email alert channels; Cloud SQL and the NFS VM get CPU/memory/disk alert policies by default (email notification is opt-in). Releases can be canaried with `traffic_split` and promoted through Cloud Deploy. Publicly reachable deployments with `uptime_check_config.enabled = true` also get a synthetic uptime check and alert policy (provisioned by the platform's monitoring layer); support processes and chaos engineering are concept-only.
+Day-2 operations: every deployment ships a monitoring dashboard and email alert channels; Cloud SQL and the NFS VM get CPU/memory/disk alerts; releases can be canaried with `traffic_split` and promoted through Cloud Deploy. Publicly reachable deployments also get a synthetic uptime check and alert policy via `uptime_check_config` (provisioned by the platform's monitoring layer); support processes and chaos engineering are concept-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|

@@ -29,7 +29,7 @@ platform guides ([Passbolt_GKE](Passbolt_GKE.md),
 | Database bootstrap | Defines a 2-stage initialization job chain — `db-init` → `admin-bootstrap` | `initialization_jobs` output |
 | Cryptographic state | Two purpose-built GCS volumes (`storage` at `/etc/passbolt/gpg`, `jwt` at `/etc/passbolt/jwt`) holding the vendor-self-generated GPG server keypair and JWT keypair | `storage_buckets` output |
 | Secrets | **None.** Passbolt has no Terraform-generated secret of its own — `secret_ids`/`secret_values` are always empty `{}` | §Secrets below |
-| HTTPS URL generation | Injects `HTTPS = "on"`/`"off"` derived from whether a real TLS edge actually exists (`enable_custom_domain`) so Passbolt's `bootstrap.php` generates the correct URL scheme | `config.environment_variables` |
+| HTTPS URL generation | Statically injects `HTTPS = "on"` so Passbolt's `bootstrap.php` generates `https://` URLs despite edge-terminated TLS | `config.environment_variables` |
 | Health checks | Supplies the default startup/liveness probe targeting `GET /healthcheck/status.json` | §Observability in the platform guides |
 
 ---
@@ -181,22 +181,15 @@ declared `USER`.
 
    su -c '/usr/share/php/passbolt/bin/cake passbolt register_user \
      -u "<admin_email>" -f "<admin_first_name>" -l "<admin_last_name>" -r admin' \
-     -s /bin/bash www-data   # "already in use" on redeploy is tolerated as success
+     -s /bin/bash www-data
    ```
 
    Every step is confirmed against the real vendor `/passbolt/entrypoint.sh`
-   source, not guessed. `gpg_gen_key`/`install()` no-op once the keys and
-   schema already exist from a prior run, but `register_user` itself has no
-   upsert/idempotent mode — confirmed live: it fails with `"The username is
-   already in use."` on any redeploy against a database that already has this
-   admin (e.g. an unrelated env-var change forcing a container recreate). The
-   job therefore captures its output and exit code and tolerates an
-   "already in use" failure as success, rather than failing the whole job
-   (and thus the apply) on every subsequent redeploy. Crucially,
-   `register_user` is run **without** the `-q`/quiet flag, so on a genuine
-   first run the one-time setup URL
-   (`https://<host>/setup/start/<user-id>/<token>`) is printed to stdout and
-   lands in Cloud Logging.
+   source, not guessed. The job is idempotent — `gpg_gen_key`/`install()`
+   no-op once the keys and schema already exist from a prior run. Crucially,
+   `register_user` is run **without** the `-q`/quiet flag, so the one-time
+   setup URL (`https://<host>/setup/start/<user-id>/<token>`) is printed to
+   stdout and lands in Cloud Logging.
 
 ---
 
@@ -228,7 +221,7 @@ Static config set in `config.environment_variables`:
 
 | Name | Value |
 |---|---|
-| `HTTPS` | `var.enable_custom_domain ? "on" : "off"` — derived from whether a real TLS edge actually exists. Cloud Run always terminates TLS on its `*.run.app` URL, so the Cloud Run variant leaves this at its default `true` (`HTTPS = "on"`); GKE's plain LoadBalancer Service has no TLS anywhere in the chain unless `enable_custom_domain = true` (the Gateway/managed-cert path), so the GKE variant forwards its own `enable_custom_domain` value through. |
+| `HTTPS` | `"on"` — always set. See §Overview in the platform guides for why. |
 | `APP_FULL_BASE_URL` | `var.service_url`, only when non-empty. |
 
 ---

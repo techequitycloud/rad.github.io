@@ -35,7 +35,7 @@ database, no persistent storage, and no secrets to manage:
 | Compute | Cloud Run v2 | Java service, 1 vCPU / 2 GiB by default, serverless autoscaling; scale-to-zero enabled |
 | Container image | Artifact Registry | Official `stirlingtools/stirling-pdf` image, mirrored in by default |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
-| Rate limiting (optional) | Redis | Off by default; enable only to throttle abuse on a public instance |
+| Redis (inert) | Redis | Off by default. `enable_redis` only makes the Foundation inject `REDIS_*` env vars — Stirling-PDF never reads them, so this provides no rate limiting or bot detection |
 | Observability | Cloud Logging / Cloud Monitoring | Container logs, metrics, optional uptime check and alerts |
 
 **Sensible defaults worth knowing up front:**
@@ -115,18 +115,20 @@ be layered on; ingress settings and VPC egress control connectivity.
 
 See [App_CloudRun](App_CloudRun.md).
 
-### D. Redis (optional rate limiting)
+### D. Redis (inert — enable_redis has no application effect)
 
-Redis is **disabled by default**. Stirling-PDF uses it only for rate limiting and
-bot detection on public-facing instances (`enable_redis = true`). When `redis_host`
-is left empty and `enable_nfs` is true, the NFS server VM's IP is used as the Redis
-endpoint.
+Redis is **disabled by default** (`enable_redis = false`). Setting `enable_redis =
+true` only makes the `App_CloudRun` foundation inject `REDIS_HOST`/`REDIS_PORT`/
+`REDIS_AUTH` env vars into the container — Stirling-PDF **never reads them**.
+`stirlingpdf.tf`'s own comment confirms "no DB or Redis", and neither
+`StirlingPDF_Common` nor this module maps those env vars into any
+Stirling-PDF-recognized setting. Enabling Redis does **not** implement rate
+limiting or bot detection for this application; there is no supported way to add
+that behaviour to Stirling-PDF through this module. Use `enable_cloud_armor` for
+actual abuse mitigation on a public instance.
 
-- **Console:** Memorystore → Redis (if using a managed instance).
-- **CLI:**
+- **CLI (to confirm the env vars are present but unused):**
   ```bash
-  redis-cli -h <redis-host> ping
-  # Confirm the env injected into the running revision:
   gcloud run services describe <service-name> --region "$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
   ```
@@ -201,7 +203,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -301,14 +303,14 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `uptime_check_config` | `{ enabled=false, path="/api/v1/info/status" }` | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
-### Group 21 — Redis (optional rate limiting)
+### Group 21 — Redis (inert Foundation passthrough)
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Enable Redis-backed rate limiting / bot detection for public instances. |
-| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server IP (requires `enable_nfs = true`). |
-| `redis_port` | `6379` | Redis port. |
-| `redis_auth` | `""` | Optional Redis auth password (sensitive). |
+| `enable_redis` | `false` | Inert for Stirling-PDF: only makes `App_CloudRun` inject `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` env vars, which the application never reads. No rate limiting or bot detection results from enabling this. |
+| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server IP. Unused by Stirling-PDF regardless of value. |
+| `redis_port` | `6379` | Redis port. Unused by Stirling-PDF regardless of value. |
+| `redis_auth` | `""` | Optional Redis auth password (sensitive). Unused by Stirling-PDF regardless of value. |
 
 ### Group 22 — VPC Service Controls & Audit Logging
 
@@ -360,7 +362,7 @@ running resources.
 | `timeout_seconds` | `60`, raise for big files | High | Large OCR/conversion jobs exceeding the timeout return 504 mid-operation. |
 | `startup_probe` window | Keep the ~70s default | Medium | Shortening the initial delay / failure threshold marks the revision unhealthy before LibreOffice finishes warming up. |
 | `enable_cloud_armor` | Enable for public instances | Medium | A public toolkit without a WAF is exposed to abuse and automated scanning. |
-| `enable_redis` | Enable on public instances | Medium | Without it there is no rate limiting / bot detection to throttle abusive traffic. |
+| `enable_redis` | Leave `false` — it is inert for this application | Low | Enabling it only adds unused `REDIS_*` env vars to the revision; Stirling-PDF never reads them, so it provides **no** rate limiting or bot detection. Use `enable_cloud_armor` instead for actual abuse mitigation. |
 | `min_instance_count` | `0` (fixed) | Low | Scale-to-zero adds a few seconds of JVM warm-up on the first request after idle. The module hardcodes `min_instance_count = 0` — the variable is not forwarded, so it cannot be raised to `1` to eliminate cold starts. |
 | `SYSTEM_MAXFILESIZE` (via `environment_variables`) | Set a sane cap | Low | Unbounded uploads let a single large file consume the instance's memory. |
 

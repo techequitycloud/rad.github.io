@@ -21,7 +21,7 @@ Most configuration options in `InvoiceNinja GKE` map directly to the same option
 
 The following configuration areas are provided by the underlying `App_GKE` module.
 
-| Configuration Area | Invoice Ninja-Specific Notes |
+| Configuration Area | Ghost-Specific Notes |
 |---|---|
 | Project & Identity | Identical to `App_GKE`. |
 | Application Identity | Invoice Ninja-specific defaults for `application_name`, `application_display_name`, and `application_version`; see [Group 3: Application Identity](#group-3-application-identity). |
@@ -75,7 +75,7 @@ Identical to `App_GKE`.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `"demo"` | Short suffix appended to all resource names. |
+| `tenant_id` | `"demo"` | Short suffix appended to all resource names. |
 | `support_users` | `[]` | Email addresses for monitoring alerts and IAM access. |
 | `resource_labels` | `{}` | Labels applied to all provisioned resources. |
 
@@ -210,7 +210,7 @@ Available variables: `enable_pod_disruption_budget` (default `true`), `pdb_min_a
 | `service_type` | `"LoadBalancer"` | Exposes Invoice Ninja via a GKE external load balancer. |
 | `workload_type` | `null` | Defaults to `Deployment`. Setting `stateful_pvc_enabled = true` automatically resolves to `StatefulSet`. |
 | `session_affinity` | `"ClientIP"` | **Required for Invoice Ninja.** PHP sessions are stored per-pod. Without `"ClientIP"`, admin users are logged out on requests that route to a different replica. |
-| `namespace_name` | `""` | Auto-generated from `application_name` and `tenant_deployment_id` when empty. |
+| `namespace_name` | `""` | Auto-generated from `application_name` and `tenant_id` when empty. |
 | `gke_cluster_name` | `""` | Leave empty to auto-discover a Services_GCP-managed cluster. |
 | `deployment_timeout` | `1800` | 30-minute rollout timeout. Invoice Ninja may need extended time on large-database initial migrations. |
 | `enable_network_segmentation` | `false` | Set `true` to create Kubernetes NetworkPolicy resources limiting inter-pod traffic. |

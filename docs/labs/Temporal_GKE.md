@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL for PostgreSQL, Artifact Registry, and shared service accounts
-  this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL for
+  PostgreSQL, Artifact Registry, and shared service accounts this module depends
+  on). You do not need to deploy this yourself first — the platform
+  automatically detects whether it already exists in the target project and
+  provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -57,14 +59,15 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Temporal (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Temporal (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Temporal_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions two
    Cloud SQL (PostgreSQL) databases (primary persistence and visibility) with their
-   Secret Manager secret, builds the container image, and starts the Temporal
+   Secret Manager secret, mirrors the prebuilt `temporalio/auto-setup` image into
+   Artifact Registry (no custom build runs), and starts the Temporal
    all-in-one server (which handles schema initialisation automatically on first
    start). First deploys take roughly **10–20 minutes** (Autopilot node provisioning
    and schema initialisation dominate).
@@ -99,13 +102,16 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get pods -n "$NS" -o wide
    ```
 
-2. If the optional Web UI companion service was enabled, port-forward to it and
-   open `http://localhost:8080` in your browser:
+2. The Temporal Web UI (`temporalio/ui`) is deployed automatically by default
+   (`deploy_temporal_ui = true`) as a companion service named `<service-name>-ui`.
+   Port-forward to it and open `http://localhost:8080` in your browser:
 
    ```bash
-   WEB_SVC=$(kubectl get svc -n "$NS" -o name | grep -i web | head -1 | cut -d/ -f2)
-   kubectl port-forward svc/"$WEB_SVC" 8080:8080 -n "$NS"
+   UI_SVC=$(kubectl get svc -n "$NS" -o name | grep -i ui | head -1 | cut -d/ -f2)
+   kubectl port-forward svc/"$UI_SVC" 8080:8080 -n "$NS"
    ```
+
+   Set `deploy_temporal_ui = false` before deploying if you don't want the Web UI.
 
 3. Verify the Temporal cluster is healthy from inside the admin-tools pod (if
    deployed as a companion service):
@@ -133,7 +139,7 @@ export REGION="us-central1"           # the region you deploy into
    the module owns the workload spec, so scaling is a configuration change, not a
    manual `kubectl scale` (a manual edit would be reverted on the next apply).
 
-3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a rolling update replaces the pods. Review the
+3. **Update the application version** by changing the version input via **Update** on the deployment details page; the new prebuilt image tag is mirrored and a rolling update replaces the pods. Review the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Temporal_GKE) for
    schema migration behaviour before upgrading.
 
@@ -151,7 +157,7 @@ export REGION="us-central1"           # the region you deploy into
    INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
    DB_USER=$(gcloud secrets list --project="$PROJECT" \
      --filter="name~temporal-temporal-db-password" --format="value(name)" --limit=1 \
-     | sed 's/.*secret-//;s/-temporal-db-password//')
+     | sed 's/.*secret-//;s/-temporal-temporal-db-password//')
    gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
    ```
 

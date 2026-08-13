@@ -66,9 +66,22 @@ gcloud secrets versions access latest \
   --secret="secret-<resource_prefix>-focalboard-admin-password" --project "$PROJECT"
 ```
 
-The database password is generated and managed separately by the foundation; its
-secret name is reported in the platform deployment outputs (`database_password_secret`).
-See [App_Common](App_Common.md) for the shared secret and Workload Identity model.
+**The database password is NOT the fleet-wide `database_password_secret`.** The
+Foundation's standard shared DB password (charset `override_special = "_%@"`) can
+contain a literal `%`, which crashes Focalboard's Go postgres driver: its
+`url.Parse`-based DSN validation gate and its actual `lib/pq` connector disagree on
+whether `%` is percent-decoded, so no single encoding of that password satisfies both.
+`Focalboard_Common` sidesteps this by generating a **second, dedicated, alnum-only
+password** —
+`secret-<resource_prefix>-focalboard-safe-db-password` — and overriding the main
+SERVICE's `DB_PASSWORD` with it via the `secret_ids` output; the `db-init` job
+receives the same secret under its own env var, `FOCALBOARD_SAFE_DB_PASSWORD`, and
+uses it (not `DB_PASSWORD`) to set the Postgres role's actual password. The platform's
+`database_password_secret` output still reports the fleet-wide secret name, but that
+secret does **not** authenticate against Focalboard's Postgres role — retrieve
+`secret-<resource_prefix>-focalboard-safe-db-password` instead when the real DB
+credential is needed. See [App_Common](App_Common.md) for the shared secret and
+Workload Identity model. (Verified fix, live-tested 2026-07-14.)
 
 ---
 
@@ -81,8 +94,11 @@ idempotently:
 1. Resolves the Cloud SQL host — a Unix-socket directory on Cloud Run or `127.0.0.1`
    (Auth Proxy sidecar) on GKE, falling back to the private IP (`DB_IP`) if needed,
 2. Waits for PostgreSQL to be reachable,
-3. Creates (or updates) the application role with `LOGIN CREATEDB` and the generated
-   password,
+3. Creates (or updates) the application role with `LOGIN CREATEDB` and the password
+   from `FOCALBOARD_SAFE_DB_PASSWORD` — a dedicated, alnum-only secret
+   (`secret-<resource_prefix>-focalboard-safe-db-password`) distinct from the
+   standard fleet-wide `DB_PASSWORD`/`database_password_secret`; see
+   [Section 2](#2-app-secret-in-secret-manager) for why,
 4. Creates the application database if it does not exist (owned by `postgres`, since
    Cloud SQL's `postgres` cannot `SET ROLE` to the application role),
 5. Grants all privileges on the database and the `public` schema, and reassigns the

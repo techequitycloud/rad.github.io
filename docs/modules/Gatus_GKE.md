@@ -71,7 +71,7 @@ dependency of its own:
 - **The health endpoint is `/health`**, which returns HTTP 200 as soon as the server
   binds its port.
 - **To run alongside `Gatus_CloudRun` on the same tenant**, set
-  `tenant_deployment_id = "gke"` (and `"cr"` on the Cloud Run variant) — see the
+  `tenant_id = "gke"` (and `"cr"` on the Cloud Run variant) — see the
   recommendation in `config/deploy.tfvars`. This avoids a naming collision on shared
   secret names, GCS bucket names, and rotation topics.
 - **Access control, if any, is configured in `config.yaml`.** Gatus ships with an
@@ -227,7 +227,7 @@ from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix; set `"gke"` to coexist with a `Gatus_CloudRun` deployment on the same tenant (see `config/deploy.tfvars`). |
+| `tenant_id` | `demo` | Short suffix; set `"gke"` to coexist with a `Gatus_CloudRun` deployment on the same tenant (see `config/deploy.tfvars`). |
 | `application_name` | `gatus` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Image version tag; `latest` maps to a pinned `v5.36.0` base. Pin `v5.x.y` in production. |
 

@@ -66,9 +66,14 @@ a focused set of Google Cloud services:
   Google-managed certificate — no DNS setup required to reach Castopod over HTTPS.
 - **`CP_ANALYTICS_SALT` is generated automatically** and stored in Secret Manager. It
   anonymises podcast listener analytics and must stay stable after first boot.
-- **No separate migration job.** The `castopod/castopod` image runs the CodeIgniter 4
-  schema migrations automatically on every container start, so the schema is created
-  on first boot once the `db-init` job has provisioned the database and user.
+- **No separate migration job — but migrations are not automatic in the base image
+  either.** The `castopod/castopod` image (built on `serversideup/php`) has no
+  CodeIgniter migration hook of its own; its only built-in automatic migration
+  behaviour is Laravel-specific (`php artisan migrate`, gated behind
+  `AUTORUN_ENABLED`, default `false`). The platform wrapper entrypoint
+  (`Castopod_Common/scripts/entrypoint.sh`) explicitly runs `php spark migrate --all`
+  on every container start, so the schema is created on first boot once the `db-init`
+  job has provisioned the database and user.
 - **First-run setup is manual.** After deploy, open the service URL and complete
   Castopod's web install wizard to create the first super-admin account and configure
   the instance/podcast defaults.
@@ -211,11 +216,19 @@ Monitoring. Optional uptime checks and alert policies are available.
   application database, user, and grants, verifies the app user can connect, then
   shuts down the proxy sidecar. The job is safe to re-run (`execute_on_apply = true`,
   `max_retries = 3`).
-- **Migrations run on container start (no separate migration job).** The
-  `castopod/castopod` image runs the CodeIgniter 4 schema migrations automatically on
-  every startup, so the schema is created on first boot once `db-init` has provisioned
-  the database and user, and upgrading `application_version` applies schema changes
-  without a separate job.
+- **Migrations run on container start (no separate migration job) — via the platform
+  entrypoint, not the base image.** The `castopod/castopod` image (built on
+  `serversideup/php`) has no CodeIgniter migration hook of its own; its only automatic
+  migration behaviour is Laravel-specific (`php artisan migrate`, gated behind
+  `AUTORUN_ENABLED`, default `false`) and would not run CI4's `spark migrate` even if
+  enabled. The platform wrapper entrypoint (`Castopod_Common/scripts/entrypoint.sh`)
+  explicitly runs `php spark migrate --all` — idempotent, safe on every boot — once
+  `.env`/DB connectivity is written, so the schema is created on first boot once
+  `db-init` has provisioned the database and user, and upgrading `application_version`
+  applies schema changes on the next start, without a separate job. If this explicit
+  call is ever removed, every request 500s with `Table '...' doesn't exist` even
+  though `db-init` succeeded — check `entrypoint.sh` first when debugging that
+  symptom.
 - **Database config lives in `.env`, materialised at container start.** Castopod
   (CodeIgniter 4) reads its default connection from framework-native, dot-notated keys
   (`database.default.hostname|database|username|password|port|DBDriver|DBPrefix`) that

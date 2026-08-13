@@ -28,8 +28,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -46,7 +49,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Ghost (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Ghost (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Ghost_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -104,9 +107,14 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
    ```
 
-2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page —
-   the module owns the service spec, so scaling is a configuration change, not a
-   manual `gcloud` edit (a manual edit would be reverted on the next apply).
+2. **Scale** — normally this is a configuration change (the module owns the service spec, so a
+   manual `gcloud` edit would be reverted on the next apply) via the min/max instance inputs and
+   **Update** on the deployment details page. **Known bug:** `Ghost_CloudRun/main.tf` currently
+   hardcodes `min_instance_count = 0` and `max_instance_count = 5` in the `ghost_module` local,
+   silently overriding whatever `min_instance_count`/`max_instance_count` you set (there's a
+   `TODO` in `main.tf` describing this exact bug) — changing those inputs and clicking Update
+   currently has **no effect** on the deployed service's scaling limits until that hardcoded
+   override is removed from the module source.
 
 3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a new revision rolls out.
 

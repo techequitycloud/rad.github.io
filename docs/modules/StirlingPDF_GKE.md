@@ -35,7 +35,7 @@ persistent storage, and no secrets to manage:
 | Compute | GKE Autopilot | Java pods, 1 vCPU / 2 GiB by default, horizontally autoscaled |
 | Container image | Artifact Registry | Official `stirlingtools/stirling-pdf` image, mirrored in by default |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
-| Rate limiting (optional) | Redis | Off by default; enable only to throttle abuse on a public instance |
+| Redis (inert) | Redis | Off by default. `enable_redis` only makes the Foundation inject `REDIS_*` env vars — Stirling-PDF never reads them, so this provides no rate limiting or bot detection |
 | Observability | Cloud Logging / Cloud Monitoring | Pod logs, metrics, optional uptime check and alerts |
 
 **Sensible defaults worth knowing up front:**
@@ -51,8 +51,9 @@ persistent storage, and no secrets to manage:
   (`SECURITY_ENABLELOGIN=false`) ships an open instance. Enable it and front the
   workload with IAP or Cloud Armor for a private deployment.
 - **Minimum 1 replica.** GKE does not support scale-to-zero; `min_instance_count = 1`
-  keeps the toolkit reachable. Because there is no shared state, scaling out is safe
-  without Redis.
+  keeps the toolkit reachable. Because there is no shared state, scaling out to
+  `max_instance_count > 1` needs no coordination mechanism at all — Redis or
+  otherwise.
 - **2 GiB memory floor.** The JVM plus LibreOffice needs at least `2Gi`; raise
   `container_resources.memory_limit` for heavy OCR / conversion workloads.
 - **External LoadBalancer with a stable IP.** `service_type = "LoadBalancer"`,
@@ -118,17 +119,19 @@ reserved by default so the address survives redeploys.
 
 See [App_GKE](App_GKE.md) for custom domains, Cloud CDN, and static IP details.
 
-### D. Redis (optional rate limiting)
+### D. Redis (inert — enable_redis has no application effect)
 
-Redis is **disabled by default**. Stirling-PDF uses it only for rate limiting and
-bot detection on public-facing instances (`enable_redis = true`). When `redis_host`
-is left empty and `enable_nfs` is true, the NFS server VM's IP is used as the
-endpoint.
+Redis is **disabled by default** (`enable_redis = false`). Setting `enable_redis =
+true` only makes the `App_GKE` foundation inject `REDIS_HOST`/`REDIS_PORT`/
+`REDIS_AUTH` env vars into the pod — Stirling-PDF **never reads them**.
+`stirlingpdf.tf`'s own comment confirms "no DB or Redis", and neither
+`StirlingPDF_Common` nor this module maps those env vars into any
+Stirling-PDF-recognized setting. Enabling Redis does **not** implement rate
+limiting or bot detection for this application. Use `enable_cloud_armor` for
+actual abuse mitigation on a public instance.
 
-- **Console:** Memorystore → Redis (if using a managed instance).
-- **CLI:**
+- **CLI (to confirm the env vars are present but unused):**
   ```bash
-  redis-cli -h <redis-host> ping
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- env | grep -i redis
   ```
 
@@ -174,8 +177,9 @@ Optional uptime checks and alert policies are available.
   instance. Set `enable_login = true` to require Stirling-PDF's built-in
   authentication; combine with IAP for defence in depth.
 - **Safe to scale out.** With no shared state, `max_instance_count > 1` needs no
-  Redis for correctness — Redis is only for rate limiting. The HPA scales replicas
-  by CPU/memory load.
+  coordination mechanism at all. `enable_redis` is unrelated to this — it is an
+  inert Foundation passthrough Stirling-PDF never reads (see §2.D). The HPA scales
+  replicas by CPU/memory load.
 - **Version upgrades are image-tag bumps.** Changing `application_version` triggers a
   rolling update with no migration step; the default RollingUpdate strategy is fine
   because the app is stateless.
@@ -203,7 +207,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -307,14 +311,14 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | `max_images_to_retain` | `7` | Maximum recent Artifact Registry images to keep. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
-### Group 15 — Redis (optional rate limiting)
+### Group 15 — Redis (inert Foundation passthrough)
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Enable Redis-backed rate limiting / bot detection for public instances. |
-| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server IP (requires `enable_nfs = true`). |
-| `redis_port` | `6379` | Redis port. |
-| `redis_auth` | `""` | Optional Redis auth password (sensitive). |
+| `enable_redis` | `false` | Inert for Stirling-PDF: only makes `App_GKE` inject `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` env vars, which the application never reads. No rate limiting or bot detection results from enabling this. |
+| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server's internal IP. Unused by Stirling-PDF regardless of value. |
+| `redis_port` | `6379` | Redis port. Unused by Stirling-PDF regardless of value. |
+| `redis_auth` | `""` | Optional Redis auth password (sensitive). Unused by Stirling-PDF regardless of value. |
 
 ### Group 16 — Database Backend
 
@@ -401,7 +405,7 @@ locate and explore the running resources.
 | `container_resources.memory_limit` | `2Gi` | High | Below ~2Gi the JVM + LibreOffice OOM-kills during conversions. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `timeout_seconds` | `60`, raise for big files | High | Large OCR/conversion jobs exceeding the timeout return 504 mid-operation. |
-| `min_instance_count` | `1` | Medium | Setting `0` is accepted at plan time but silently coerced to `1` in the HPA's `minReplicas` — GKE does not scale this workload to zero regardless of the configured value. |
+| `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects `0`. |
 | `startup_probe` window | Keep the ~5 minute default | Medium | Shortening it marks pods unhealthy before LibreOffice finishes warming up, wedging the rollout. |
 | `enable_cloud_armor` | Enable for public instances | Medium | A public toolkit without a WAF is exposed to abuse and scanning. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict all pods simultaneously during maintenance. |

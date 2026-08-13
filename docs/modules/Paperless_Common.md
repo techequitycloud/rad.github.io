@@ -256,7 +256,7 @@ The `paperless-media` GCS bucket is the primary persistence layer for all proces
 | Field | Value |
 |---|---|
 | `name` | `"paperless-media"` |
-| `bucket_name` | Auto-provisioned `gcs-paperless<tenant-resource-prefix>-media` bucket (the bucket name the foundation actually creates — app-scoped, tenant-prefixed) |
+| `bucket_name` | Auto-provisioned `gcs-paperless&lt;tenant-resource-prefix&gt;-media` bucket (the bucket name the foundation actually creates — app-scoped, tenant-prefixed) |
 | `mount_path` | `"/usr/src/paperless/media"` |
 | `readonly` | `false` |
 | `mount_options` | `["implicit-dirs", "stat-cache-ttl=60s", "type-cache-ttl=60s", "uid=1000", "gid=1000", "file-mode=0664", "dir-mode=0775"]` — the uid/gid options make the mount writable by the non-root Paperless-ngx user on GKE's GCS Fuse CSI driver |
@@ -352,7 +352,7 @@ Navigate to **Security → Secret Manager**. Filter by the deployment prefix. Th
 For each secret, the **Versions** tab shows all historical versions. `Paperless Common` creates a single version on the first apply. Secret Manager retains all versions until explicitly disabled or destroyed.
 
 **Cloud Storage — Media Bucket**
-Navigate to **Cloud Storage → Buckets → `gcs-paperless<tenant-resource-prefix>-media`**. This bucket holds all Paperless-ngx persistent document data. Key directories to inspect:
+Navigate to **Cloud Storage → Buckets → gcs-paperless&lt;tenant-resource-prefix&gt;-media**. This bucket holds all Paperless-ngx persistent document data. Key directories to inspect:
 - `documents/originals/` — Original uploaded files, organised by year/month/day.
 - `documents/thumbnails/` — JPEG thumbnail previews for the web UI.
 - `documents/archive/` — OCR-processed searchable PDFs (if archive mode is enabled in Paperless-ngx settings).
@@ -360,7 +360,7 @@ Navigate to **Cloud Storage → Buckets → `gcs-paperless<tenant-resource-prefi
 The bucket's **Permissions** tab shows that the Cloud Run service account has `roles/storage.objectAdmin` on this bucket, granted by `App_CloudRun`.
 
 **Cloud SQL — Database Verification**
-Navigate to **SQL → Instances → `<instance-name>` → Databases**. The `paperless` database created by `db-init` is listed here. Click the database name to see its character set and collation (`UTF8` / `en_US.UTF-8` for PostgreSQL 15).
+Navigate to **SQL → Instances → &lt;instance-name&gt; → Databases**. The `paperless` database created by `db-init` is listed here. Click the database name to see its character set and collation (`UTF8` / `en_US.UTF-8` for PostgreSQL 15).
 
 ---
 

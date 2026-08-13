@@ -27,7 +27,7 @@ and the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md
 | Container image | References the official `ghcr.io/mealie-recipes/mealie` image directly — no custom build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15**; sets `DB_ENGINE=postgres` explicitly | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Declares a `data` GCS bucket (recipe images) — not auto-mounted | `storage_buckets` output |
+| Object storage | Declares a `data` GCS bucket (recipe images) and mounts it at `/app/data` via `gcs_volumes` | `storage_buckets` output |
 | Health checks | Supplies the default startup/liveness probe targeting `/api/app/about` | §Observability in the platform guides |
 
 ---
@@ -129,11 +129,12 @@ info endpoint, which responds only once the server is fully initialised.
 ## 7. Object storage
 
 A `data` GCS bucket is declared here and provisioned by the foundation, for
-recipe image storage — but it is **not** automatically mounted into the
-container. Operators who need uploaded recipe images to persist across
-revisions/restarts must add a `gcs_volumes` entry (at the Application Module
-level) mounted at Mealie's `/app/data` path. Recipe *text* data is unaffected
-either way — it's stored in PostgreSQL.
+recipe image storage, and this module also declares a `gcs_volumes` entry that
+mounts it (as `gcs-<application_name><tenant-prefix>-data`) at Mealie's
+`/app/data` path — so uploaded recipe images persist across
+revisions/restarts by default. An operator-supplied `gcs_volumes` list (at the
+Application Module level) takes precedence when non-empty. Recipe *text* data is
+unaffected either way — it's stored in PostgreSQL.
 
 ```bash
 gcloud storage buckets list --project "$PROJECT" --filter="name~mealie"

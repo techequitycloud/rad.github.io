@@ -242,7 +242,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `cr`) from any co-deployed `Passbolt_GKE` (`gke`) to avoid a naming collision. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `cr`) from any co-deployed `Passbolt_GKE` (`gke`) to avoid a naming collision. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -269,7 +269,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `max_instance_count` | `1` | Single instance by default. |
 | `container_port` | `80` | Passbolt (Apache) listens here. |
 | `execution_environment` | `gen2` | Required execution environment. |
-| `enable_cloudsql_volume` | `false` | **Asymmetric with `Passbolt_GKE`'s default of `true`.** Set `true` for socket-based MySQL connections — Passbolt's `DATASOURCES_DEFAULT_HOST` accepts the socket directory directly. |
+| `enable_cloudsql_volume` | `true` | **Asymmetric with `Passbolt_GKE`'s default of `true`.** Set `true` for socket-based MySQL connections — Passbolt's `DATASOURCES_DEFAULT_HOST` accepts the socket directory directly. |
 | `cloudsql_volume_mount_path` | `/cloudsql` | Container path for the Auth Proxy socket. |
 | `container_protocol` | `http1` | `"http1"` or `"h2c"`. |
 | `enable_image_mirroring` | `true` | Mirrors the Passbolt image into Artifact Registry. |

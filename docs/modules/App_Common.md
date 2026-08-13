@@ -28,7 +28,7 @@ App Common does not deploy independently. On behalf of each application deployme
 | Container Images | Artifact Registry, Cloud Build | Image registry discovery and Kaniko image builds |
 | IAM | IAM (service-account role bindings) | Least-privilege workload and Cloud Build bindings |
 | Secrets | Secret Manager, Pub/Sub | Password generation, validation, and rotation notifications |
-| Monitoring | Cloud Monitoring | Alert policies, notification channels, and dashboards |
+| Monitoring | Cloud Monitoring | Alert policies, notification channels, uptime checks, and dashboards |
 | CI/CD *(optional)* | Cloud Build (v2 GitHub), Cloud Deploy | GitHub connections and multi-stage delivery pipelines |
 | Security *(optional)* | Binary Authorization, Container Analysis, VPC Service Controls | Image attestation and API perimeters |
 | Encryption *(optional)* | Cloud KMS | CMEK keyring and CryptoKeys for GCS and Artifact Registry |
@@ -71,7 +71,7 @@ gcloud compute firewall-rules list \
 
 App Common discovers the Cloud SQL instance that Services GCP provisioned for the project. It reads the instance's connection name, internal IP address, and database engine version, then generates a secure random database password and stores it in Secret Manager. It also provisions the application's specific database and database user on the shared instance, so each application gets its own isolated credentials while sharing the underlying Cloud SQL infrastructure.
 
-The database password secret follows the naming convention `secret-INSTANCE_NAME-RESOURCE_PREFIX`. Application workloads retrieve this secret at runtime through Secret Manager rather than receiving it as a plain environment variable.
+The database password secret follows the naming convention `secret-INSTANCE_NAME-SERVICE_NAME`, where `SERVICE_NAME` is the app-scoped identifier `{application_name}{tenant_id}{hash}` — so each application on a tenant gets its own distinct secret. Application workloads retrieve this secret at runtime through Secret Manager rather than receiving it as a plain environment variable.
 
 ### Exploring in GCP
 
@@ -103,7 +103,7 @@ gcloud sql users list \
 
 ### Cloud Storage Buckets
 
-App Common provisions one or more GCS buckets for application use. Public access prevention is enforced by default; versioning and uniform bucket-level access are configurable per bucket (`versioning_enabled`, `uniform_bucket_level_access`) but not enabled by default — set them per bucket definition where needed. Lifecycle rules are applied to automatically transition or delete objects based on age and version conditions, keeping storage costs predictable. A dedicated backup bucket is also created for each application with a configurable retention period, and always has uniform bucket-level access and public access prevention enforced.
+App Common provisions one or more GCS buckets for application use. Buckets are created with versioning, uniform bucket-level access, and public access prevention enabled by default. Lifecycle rules are applied to automatically transition or delete objects based on age and version conditions, keeping storage costs predictable. A dedicated backup bucket is also created for each application with a configurable retention period.
 
 When CMEK encryption is enabled (see the CMEK section below), all buckets are encrypted with a customer-managed KMS key.
 
@@ -205,7 +205,7 @@ gcloud builds list \
 
 App Common sets up the IAM bindings needed for each application's service account to operate with least-privilege access. Specifically, it grants the workload service account:
 
-- **Secret Manager** — `roles/secretmanager.secretAccessor` on the database password secret and any additional secrets the application declares.
+- **Secret Manager** — `roles/secretmanager.secretAccessor` on the database password secret and any additional secrets the application declares. Secrets the workload itself writes back to (for example a post-install hook that stores a generated value) additionally receive `roles/secretmanager.secretVersionManager`.
 - **Cloud Storage** — `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader` on each of the application's GCS buckets.
 
 When CI/CD is enabled, App Common also grants the Cloud Build service account the appropriate deployment role (`roles/run.developer` or `roles/container.developer`) and the ability to act as the workload service account.
@@ -268,20 +268,22 @@ gcloud secrets versions access latest \
 
 When automatic password rotation is enabled for an application, App Common deploys a rotation architecture built on three components:
 
-1. **Cloud Run Job** (`pw-rotator`) — executes the rotation: generates a new password, updates the Cloud SQL user, adds the new secret version, waits for propagation, then disables the old version. This zero-downtime approach ensures running workloads are never disrupted.
-2. **Cloud Run Service** (`rot-dispatch`) — a lightweight scale-to-zero dispatcher that bridges the Eventarc trigger to the rotation job.
-3. **Eventarc trigger** — fires the dispatcher whenever Secret Manager emits a rotation notification on the Pub/Sub topic.
+1. **Cloud Run Job** (`SERVICE_NAME-pw-rotator`) — executes the rotation: generates a new password, updates the Cloud SQL user, adds the new secret version, waits for propagation, then disables the old version. This zero-downtime approach ensures running workloads are never disrupted.
+2. **Cloud Run Service** (`SERVICE_NAME-rot-dispatch`) — a lightweight scale-to-zero dispatcher that bridges the Eventarc trigger to the rotation job.
+3. **Eventarc trigger** (`SERVICE_NAME-pw-rot-trigger`) — fires the dispatcher whenever Secret Manager emits a rotation notification on the Pub/Sub topic.
+
+All three resources are app-scoped: they are prefixed with the deployment's `SERVICE_NAME`, so each application on a tenant rotates its own credentials independently.
 
 ### Exploring in GCP
 
-Console: **Cloud Run** — look for `pw-rotator` (Job) and `rot-dispatch` (Service) in the application's region. **Eventarc** → **Triggers** to see the rotation trigger.
+Console: **Cloud Run** — look for `SERVICE_NAME-pw-rotator` (Job) and `SERVICE_NAME-rot-dispatch` (Service) in the application's region. **Eventarc** → **Triggers** to see the rotation trigger.
 
 ```bash
 # List Cloud Run Jobs in the project
 gcloud run jobs list --project=PROJECT_ID --region=REGION
 
 # Show details of the rotation job
-gcloud run jobs describe pw-rotator \
+gcloud run jobs describe SERVICE_NAME-pw-rotator \
   --project=PROJECT_ID \
   --region=REGION
 
@@ -303,6 +305,10 @@ App Common creates Cloud Monitoring alert policies for each application. By defa
 - A **memory utilization alert** — fires when memory usage exceeds 90% for 60 seconds.
 
 Both alerts notify the email addresses designated as support users for the deployment and re-notify every 30 minutes while the condition persists. Applications can also define additional custom alert policies with their own filters, thresholds, and aggregation periods.
+
+### Uptime Checks
+
+When the application endpoint is publicly reachable, App Common also provisions a Cloud Monitoring **uptime check** (`SERVICE_NAME-uptime-check`) that probes the configured path over HTTP(S) from multiple global locations, along with a matching **check-failure alert (created only when `support_users` is non-empty)** (`SERVICE_NAME-uptime-check-alert`) that fires when the endpoint has been unreachable for 5 minutes. The check's path, timeout, and interval are configurable; the foundation module decides whether the endpoint is publicly reachable and skips the check when it is not.
 
 ### Exploring in GCP
 

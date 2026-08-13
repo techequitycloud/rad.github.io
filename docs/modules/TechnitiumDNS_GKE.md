@@ -60,7 +60,7 @@ set of Google Cloud services — TechnitiumDNS has no database or cache dependen
 - **The health endpoint is `/`**, the console's unauthenticated root page, which returns HTTP 200 with
   the full console HTML as soon as the server binds its port.
 - **The GKE variant runs on its own tenant namespace.** Give `TechnitiumDNS_GKE` a distinct
-  `tenant_deployment_id` (e.g. `"gke"`) if deployed alongside `TechnitiumDNS_CloudRun` on the same
+  `tenant_id` (e.g. `"gke"`) if deployed alongside `TechnitiumDNS_CloudRun` on the same
   tenant, to avoid a naming collision.
 - **One auto-generated secret.** `DNS_SERVER_ADMIN_PASSWORD` bootstraps the initial `admin` account on
   the very first boot only; later restarts ignore it.
@@ -198,7 +198,7 @@ standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix; use a distinct value (e.g. `"gke"`) alongside the CloudRun variant on the same tenant. |
+| `tenant_id` | `demo` | Short suffix; use a distinct value (e.g. `"gke"`) alongside the CloudRun variant on the same tenant. |
 | `application_name` | `technitiumdns` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | TechnitiumDNS image version tag (e.g. `latest`, `13.5.1`). |
 

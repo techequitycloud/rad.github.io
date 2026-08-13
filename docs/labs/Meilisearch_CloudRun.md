@@ -38,8 +38,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -83,10 +85,11 @@ export REGION="us-central1"          # the region you deploy into
    echo "URL:     $SERVICE_URL"
    ```
 
-> **Ingress note:** the module defaults to `ingress_settings = "internal"`, so the
-> service URL is reachable only from inside the VPC. Run the `curl` commands below
-> from a VM/Cloud Shell on the same VPC, or set `ingress_settings = "all"` (which
-> requires `enable_api_key = true`, the default) to reach it from your workstation.
+> **Ingress note:** the module defaults to `ingress_settings = "all"` (public
+> internet), guarded by the master key (`enable_api_key = true`, also the
+> default), so the `curl` commands below work directly from your workstation. Set
+> `ingress_settings = "internal"` if you want to restrict the service to VPC-only
+> access instead (then run these commands from a VM/Cloud Shell on the same VPC).
 
 ---
 
@@ -250,8 +253,10 @@ platform-level diagnostics and do not change with Meilisearch releases.
   same index name.
 - **`Image not found` / build failed:** review Cloud Build history for the failed
   build's log.
-- **Cannot reach the URL from your laptop:** the default `ingress_settings = "internal"`
-  restricts access to the VPC — use Cloud Shell/a VM on the VPC, or switch to `"all"`.
+- **Cannot reach the URL from your laptop:** confirm `ingress_settings` — the module
+  default is `"all"` (public), but if it has been switched to `"internal"`, access
+  is restricted to the VPC; use Cloud Shell/a VM on the VPC instead, or switch back
+  to `"all"`.
 - **403 / permission errors:** verify the runtime service account's IAM roles
   (Secret Manager accessor, Storage object admin on the bucket).
 

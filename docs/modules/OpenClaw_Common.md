@@ -129,15 +129,34 @@ gcloud storage ls gs://<prefix>-storage/
 Every container startup runs the following sequence before handing off to the gateway
 process:
 
-1. **Directory setup.** Creates `/data/workspace`, `/data/agents/main/agent`, and
-   `$OPENCLAW_STATE_DIR` if absent.
+1. **Directory setup.** Creates `$OPENCLAW_STATE_DIR`, `/data/workspace`, and the agent dir
+   (`$OPENCLAW_AGENT_DIR`, default `$OPENCLAW_STATE_DIR/agents/main/agent`) if absent — the
+   GCS Fuse mount starts empty on first run.
 2. **Config regeneration.** Writes a fresh `openclaw.json` to `$OPENCLAW_STATE_DIR`. This
    ensures Terraform-managed environment variables always win over stale values previously
-   persisted on the GCS volume.
+   persisted on the GCS volume. Builds the Telegram `channels` block, the agent model and
+   identity, the `approvals.exec.enabled` flag (from `OPENCLAW_EXEC_APPROVALS`, default
+   `true`), and `skills.load.extraDirs`.
 3. **Skills repository sync (optional).** When `SKILLS_REPO_URL` is set, performs a shallow
-   clone or update into `/data/workspace/skill-library`. Sync failures are non-fatal — the
-   gateway starts even if the clone fails.
-4. **Gateway startup.** Runs `node dist/index.js gateway --bind lan --port ${PORT:-8080}
+   clone or update into a local directory under `$OPENCLAW_STATE_DIR/skill-library` — kept off
+   the GCS Fuse volume because git's `link()` calls are unimplemented under GCSFuse and would
+   corrupt the clone. `SKILLS_REPO_SUBDIR` confines `skills.load.extraDirs` to a subdirectory
+   of the cloned repo, so a general-purpose repo can host OpenClaw skills without unrelated
+   files leaking into the agent. Sync failures are non-fatal — the gateway starts even if the
+   clone fails.
+4. **DeepSeek provider plugin install (optional).** When `DEEPSEEK_API_KEY` is set, installs
+   `@openclaw/deepseek-provider` (`node dist/index.js plugins install @openclaw/deepseek-provider`,
+   run from `/app`) so `OPENCLAW_AGENT_MODEL=deepseek/deepseek-v4-flash` resolves at agent-turn
+   time — OpenClaw's embedded-agent runtime only resolves built-in providers plus installed
+   plugins, not ad-hoc `models.providers` config entries. The plugin's base URL is fixed at
+   `api.deepseek.com` and cannot be routed through LiteLLM. Idempotent; a failed install is
+   non-fatal (falls back to a built-in model).
+5. **Skills `bin/` on PATH.** Prepends the optional `bin/` directory of both the cloned skills
+   repo and `OPENCLAW_SKILLS_BAKED_DIR` (default `/opt/openclaw-skills` — skills baked directly
+   into the image, loaded in addition to any cloned repo, needing no runtime git clone or
+   token) to `PATH`, so a skill's exec helper (e.g. `agent-bridge`, which posts to n8n
+   agent-core approval webhooks) is invocable by name via OpenClaw's `exec` tool.
+6. **Gateway startup.** Runs `node dist/index.js gateway --bind lan --port ${PORT:-8080}
    --allow-unconfigured`. The `--bind lan` flag is required for Cloud Run — the runtime maps
    the external port to the container's LAN interface.
 

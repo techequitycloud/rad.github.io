@@ -206,8 +206,8 @@ Keycloak serves a public landing page at `/`, which is what
   `KC_DB=postgres`, health, and metrics) and `kc.sh start --optimized` at
   container start; Keycloak's own bootstrap process creates/migrates the
   schema against the empty database created by `db-init`.
-  <!-- TODO: verify exact first-boot schema-creation duration under load; the
-  startup probe budget below allows up to ~330s. -->
+  {/* TODO: verify exact first-boot schema-creation duration under load; the
+  startup probe budget below allows up to ~330s. */}
 - **Bootstrap admin account.** `entrypoint.sh` execs `kc.sh start --optimized`
   with `KC_BOOTSTRAP_ADMIN_USERNAME=admin` and the generated
   `KC_BOOTSTRAP_ADMIN_PASSWORD` secret. Log in at `<service-url>/admin`,
@@ -229,13 +229,13 @@ Keycloak serves a public landing page at `/`, which is what
 - **Horizontal scaling / clustering caveat.** `Keycloak_GKE`'s wiring comment
   states Keycloak "persists all state in PostgreSQL, so horizontal scaling is
   safe (cluster nodes form a shared cache via the default infinispan)".
-  <!-- TODO: verify — `KC_CACHE` is not explicitly set to `ha`/kubernetes-ping
+  {/* TODO: verify — `KC_CACHE` is not explicitly set to `ha`/kubernetes-ping
   anywhere in Keycloak_Common's environment or the custom build args, and
   Keycloak's default Infinispan cache stack outside an explicit HA/Kubernetes
   configuration is local (per-pod), which would NOT replicate session/login
   state across replicas. Confirm the actual cache stack in the deployed
   image before relying on `max_instance_count > 1` for session continuity in
-  production. -->
+  production. */}
 - **Verify the running configuration:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"

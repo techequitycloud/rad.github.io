@@ -28,7 +28,7 @@ Mattermost is an open-source, self-hostable team messaging and collaboration pla
 | Variable | Group | Type | Default | Description |
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 1 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 1 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 1 | `list(string)` | `[]` | Email recipients for IAM access and monitoring alerts. |
 | `resource_labels` | 1 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'mattermost'` | Base resource name. Do not change after initial deployment. |
@@ -310,12 +310,12 @@ Mattermost performs schema migrations on first startup. The startup probe allows
 |---|---|---|---|
 | `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, period_seconds=15, failure_threshold=30 }` | Startup probe. Container receives no traffic until this succeeds. |
 | `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=60, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
-| `startup_probe_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | Service-level startup probe. |
-| `health_check_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | Service-level liveness probe. |
+| `startup_probe_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | **Inert for Mattermost.** `App_CloudRun` only wires this into its own internal, unused `cloudrunapp` sample/fallback preset (`cloudrunapp.tf`) — it never reaches the deployed Mattermost service. |
+| `health_check_config` | 14 | `{ enabled=true, path="/", initial_delay_seconds=60 }` | **Inert for Mattermost**, same as `startup_probe_config` above. |
 | `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). When enabled, alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
-**Note on probe path:** The `startup_probe` and `liveness_probe` default to `path = "/"` in the Cloud Run module. The GKE variant uses `/api/v4/system/ping`. For more precise health signalling in Cloud Run, override the path to `/api/v4/system/ping`.
+**Note on probe path:** The actual deployed probes come solely from `startup_probe`/`liveness_probe` (forwarded to `Mattermost_Common`, then into `App_CloudRun`'s `local.selected_module.startup_probe`/`.liveness_probe`) — these default to `path = "/"` in the Cloud Run module, whereas the GKE variant defaults to `/api/v4/system/ping`. For more precise health signalling in Cloud Run, override `startup_probe`/`liveness_probe`'s `path` to `/api/v4/system/ping`. `startup_probe_config`/`health_check_config` are a separate, inert variable pair (see table above) — overriding them has no effect on Mattermost's deployed probes, so don't bother.
 
 ### D. Auto Password Rotation
 
@@ -601,7 +601,7 @@ All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI g
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |
-| `tenant_deployment_id` | 1 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 1 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 1 | `[]` | Email addresses for IAM access and monitoring alerts. |
 | `resource_labels` | 1 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'mattermost'` | Base resource name. Do not change after deployment. |
@@ -682,8 +682,8 @@ All user-configurable variables exposed by `Mattermost CloudRun`, sorted by UI g
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
 | `startup_probe` | 14 | `{ path="/", initial_delay_seconds=60, failure_threshold=30 }` | Startup probe. |
 | `liveness_probe` | 14 | `{ path="/", initial_delay_seconds=60, failure_threshold=3 }` | Liveness probe. |
-| `startup_probe_config` | 14 | `{ enabled=true, path="/" }` | Service-level startup probe. |
-| `health_check_config` | 14 | `{ enabled=true, path="/" }` | Service-level liveness probe. |
+| `startup_probe_config` | 14 | `{ enabled=true, path="/" }` | Inert for Mattermost — see §C. Use `startup_probe` instead. |
+| `health_check_config` | 14 | `{ enabled=true, path="/" }` | Inert for Mattermost — see §C. Use `liveness_probe` instead. |
 | `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `site_url` | 20 | `""` | Public URL for Mattermost. Sets `MM_SERVICESETTINGS_SITEURL`. |

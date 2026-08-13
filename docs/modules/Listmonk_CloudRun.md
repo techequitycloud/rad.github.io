@@ -28,7 +28,7 @@ Listmonk is a high-performance, self-hosted newsletter and mailing list manager 
 | Variable | Group | Type | Default | Description |
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'listmonk'` | Base resource name. Do not change after initial deployment. |
@@ -47,7 +47,7 @@ Listmonk is a high-performance, self-hosted newsletter and mailing list manager 
 `Listmonk_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in `App_CloudRun`.
 
 **Application secrets:** `Listmonk Common` auto-generates one application-level secret:
-- `LISTMONK_app__admin_password` — the Listmonk admin user password, stored in Secret Manager and injected at runtime.
+- `LISTMONK_ADMIN_PASSWORD` — the Listmonk admin user password, stored in Secret Manager and injected at runtime (the deprecated double-underscore `LISTMONK_app__admin_password` config-style name was removed — `__` is not a valid k8s Secret key).
 
 The database password is stored in a separate secret (`database_password_secret`) provisioned automatically by `App CloudRun`. Neither value is written to Terraform state.
 
@@ -150,7 +150,7 @@ A `db-init` Cloud Run Job is automatically provisioned by `Listmonk Common` when
 3. Creates the `listmonk` database if it does not exist.
 4. Grants the `listmonk` user full privileges on the database.
 
-Listmonk itself runs `--install` on first boot to populate the schema and create the admin user using `LISTMONK_app__admin_username` and `LISTMONK_app__admin_password` from the environment.
+Listmonk itself runs `--install` on first boot to populate the schema and create the admin user using `LISTMONK_ADMIN_USER` (hardcoded to `"admin"` in `main.tf`) and `LISTMONK_ADMIN_PASSWORD` from the environment — the older, double-underscore `LISTMONK_app__admin_username`/`LISTMONK_app__admin_password` config-style names were removed (v6-deprecated; `__` is not a valid k8s Secret key).
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -204,7 +204,7 @@ When `enable_vpc_sc = true`, all GCP API calls from this module are bound within
 
 Listmonk application secrets are stored in Secret Manager and injected natively by Cloud Run at revision start — plaintext is never written to Terraform state.
 
-`Listmonk Common` auto-generates `LISTMONK_app__admin_password`. The database password (`LISTMONK_db__password`) is provisioned automatically by `App CloudRun`. Additional secrets can be added via `secret_environment_variables`.
+`Listmonk Common` auto-generates the admin password secret, injected into the container as `LISTMONK_ADMIN_PASSWORD`. The database password (`LISTMONK_db__password`) is provisioned automatically by `App CloudRun`. Additional secrets can be added via `secret_environment_variables`.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
@@ -369,7 +369,7 @@ Navigate to **Cloud Run** in the console and select the `listmonk` service (name
 **Secret Manager**
 
 Navigate to **Secret Manager** and filter by the deployment name. Two secrets are relevant:
-- `app<listmonk><tenant><id>-admin-password` or similar — the `LISTMONK_app__admin_password` secret. Click **View secret versions** to confirm a version exists. **Do not click View secret value** in production.
+- `app<listmonk><tenant><id>-admin-password` or similar — the secret backing the `LISTMONK_ADMIN_PASSWORD` container env var. Click **View secret versions** to confirm a version exists. **Do not click View secret value** in production.
 - `app<listmonk><tenant><id>-db-password` — the PostgreSQL password secret. Used by both the Cloud Run service and the `db-init` job.
 
 Select either secret and review the **Replication** tab to confirm the secret is replicated to the deployment region.
@@ -472,7 +472,7 @@ gcloud secrets list \
   --format="table(name,replication.automatic,createTime)"
 
 # Check secret versions for the admin password
-gcloud secrets versions list LISTMONK_app__admin_password_SECRET_NAME \
+gcloud secrets versions list LISTMONK_ADMIN_PASSWORD_SECRET_NAME \
   --project=PROJECT_ID \
   --format="table(name,state,createTime)"
 
@@ -564,7 +564,7 @@ The following behaviours are applied automatically by `Listmonk CloudRun` regard
 | Behaviour | Detail |
 |---|---|
 | **PostgreSQL 15 required** | `database_type = "POSTGRES_15"` default. Listmonk does not support MySQL or other engines. |
-| **Admin password auto-generated** | `LISTMONK_app__admin_password` is generated by `Listmonk Common` and stored in Secret Manager. Never stored in state. |
+| **Admin password auto-generated** | Generated by `Listmonk Common` and injected into the container as `LISTMONK_ADMIN_PASSWORD` (single underscore; the deprecated `LISTMONK_app__admin_password` config-style name was removed). Stored in Secret Manager, never in state. |
 | **DB password env var pre-set** | `db_password_env_var_name = "LISTMONK_db__password"` is pre-configured so `App CloudRun` injects the database password under the correct name for Listmonk's config. |
 | **GCS Fuse upload path** | `LISTMONK_upload__provider=filesystem` and `LISTMONK_upload__filesystem__upload_path=/listmonk/uploads` are injected automatically. Mount a GCS bucket at `/listmonk/uploads` via `gcs_volumes` for persistent uploads. |
 | **Default db-init job** | Supplied by `Listmonk Common` when `initialization_jobs = []`. PostgreSQL database and user are created automatically. |
@@ -582,14 +582,14 @@ All user-configurable variables exposed by `Listmonk CloudRun`, sorted by UI gro
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for all resources. |
-| `tenant_deployment_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'listmonk'` | Base resource name. Do not change after initial deployment. |
 | `display_name` | 3 | `'Listmonk'` | Human-readable name. |
 | `description` | 3 | (Listmonk description) | Service description. |
 | `application_version` | 3 | `'latest'` | Listmonk container image tag. |
-| `admin_username` | 3 | `'listmonk'` | Initial admin username created on first boot. Can be changed via the UI after deployment. |
+| `admin_username` | 3 | `'listmonk'` | Declared but currently unused by `main.tf` — the seeded admin username is hardcoded to `"admin"` via `LISTMONK_ADMIN_USER`, regardless of this variable's value. |
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment. |
 | `cpu_limit` | 4 | `'1000m'` | CPU per instance. |
 | `memory_limit` | 4 | `'512Mi'` | Memory per instance. |

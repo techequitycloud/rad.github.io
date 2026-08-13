@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Redis/NFS, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Redis/NFS, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -55,31 +58,28 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Paperless-ngx (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Paperless-ngx (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Paperless_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
-2. The platform provisions two Cloud Run services (a web service and a background
-   worker/consumer service), a Cloud SQL (PostgreSQL) database with its Secret Manager
-   secrets, a GCS Fuse media bucket, Redis connectivity, builds the container image,
-   and runs a one-shot database-initialisation job. First deploys take roughly
-   **20–35 minutes** (Cloud SQL creation dominates).
+2. The platform provisions a **single** Cloud Run service (the webserver, Celery
+   worker, and Celery beat scheduler all run as sibling processes inside one
+   container, supervised by `supervisord`), a Cloud SQL (PostgreSQL) database with
+   its Secret Manager secrets, a GCS Fuse media bucket, Redis connectivity, builds
+   the container image, and runs a one-shot database-initialisation job. First
+   deploys take roughly **20–35 minutes** (Cloud SQL creation dominates).
 
-3. When it completes, discover the resources with name-agnostic filters:
+3. When it completes, discover the resource with a name-agnostic filter:
 
    ```bash
    SERVICE=$(gcloud run services list --project="$PROJECT" --region="$REGION" \
-     --filter="metadata.name~paperless AND NOT metadata.name~worker" \
+     --filter="metadata.name~paperless" \
      --format="value(metadata.name)" --limit=1)
    SERVICE_URL=$(gcloud run services describe "$SERVICE" \
      --project="$PROJECT" --region="$REGION" --format="value(status.url)")
-   WORKER_SERVICE=$(gcloud run services list --project="$PROJECT" --region="$REGION" \
-     --filter="metadata.name~paperless AND metadata.name~worker" \
-     --format="value(metadata.name)" --limit=1)
-   echo "Web service: $SERVICE"
-   echo "URL:         $SERVICE_URL"
-   echo "Worker:      $WORKER_SERVICE"
+   echo "Service: $SERVICE"
+   echo "URL:     $SERVICE_URL"
    ```
 
 ---
@@ -92,7 +92,7 @@ export REGION="us-central1"          # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL"   # expect 200
    ```
 
-2. Confirm both Cloud Run services are ready:
+2. Confirm the Cloud Run service is ready:
 
    ```bash
    gcloud run services list --project="$PROJECT" --region="$REGION" \
@@ -114,20 +114,19 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 3 — Operate & keep it running (Day-2) [Manual]
 
-1. **Inspect the services and their revisions** (each deploy creates an immutable
+1. **Inspect the service and its revisions** (each deploy creates an immutable
    revision; traffic shifts to the newest healthy one):
 
    ```bash
    gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION"
    gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
-   gcloud run services describe "$WORKER_SERVICE" --project="$PROJECT" --region="$REGION"
    ```
 
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page —
    the module owns the service spec, so scaling is a configuration change, not a
    manual `gcloud` edit (a manual edit would be reverted on the next apply).
 
-3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a new revision rolls out on both services.
+3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a new revision rolls out on the service.
 
 4. **Manage secrets and backups:**
 
@@ -151,16 +150,16 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
-   gcloud run services logs read "$WORKER_SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Logs Explorer filter for the web service:
+   Logs Explorer filter for the service:
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
-   Logs Explorer filter for the worker service:
-   `resource.type="cloud_run_revision" AND resource.labels.service_name="<worker-service>"`.
+   The webserver, Celery worker, and Celery beat processes all log to the same
+   container stdout/stderr (via `supervisord`), so worker/OCR/consumption activity
+   appears in this same log stream — there is no separate worker service to query.
 
-2. **Monitoring** — open the Cloud Run dashboard for each service and review request
+2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count (scaling behaviour), and CPU
    / memory utilisation. The module also provisions an **uptime check**; confirm it
    is green under Monitoring → Uptime checks, and review Alerting → Policies.
@@ -172,17 +171,23 @@ export REGION="us-central1"          # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Paperless-ngx releases.
 
-- **Web service revision unhealthy / service won't serve:** inspect the latest revision
+- **Service revision unhealthy / service won't serve:** inspect the latest revision
   and its logs for startup errors. The health probe targets `/` (port 8000); a failed
   probe means the gunicorn server or database connection did not come up in time.
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-- **Worker service not processing documents:** inspect the worker service revisions
-  and its logs for Celery or Redis connection errors.
+- **Documents not being processed (consumer/OCR):** the Celery worker and beat
+  scheduler run as sibling processes in the same container as the webserver
+  (via `supervisord`), so check the same service's logs for Celery or Redis
+  connection errors — there is no separate worker service to inspect. Also
+  confirm `min_instance_count >= 1` and `cpu_always_allocated = true`; under the
+  cost-first default (`min_instance_count = 0`, `cpu_always_allocated = false`)
+  the consumer only runs while an instance is warm and CPU is being throttled
+  between requests.
   ```bash
-  gcloud run services logs read "$WORKER_SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
+  gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
   DB password secret exists, and the database-initialisation job completed.
@@ -201,7 +206,7 @@ gotchas.
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — both Cloud Run services,
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service,
 Cloud SQL database, Secret Manager secrets, GCS buckets (including the media bucket),
 and Artifact Registry images. Resources owned by **Services_GCP** (the VPC, shared
 Cloud SQL, Redis/NFS, registry) are managed separately and are not removed here.
@@ -212,9 +217,9 @@ Cloud SQL, Redis/NFS, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run web + worker services, Cloud SQL, GCS media bucket, secrets, and runs DB init |
-| 2 — Access & verify | Manual | Both services healthy; admin credential retrieved; sign in confirmed |
+| 1 — Deploy | Automated | Module provisions a single Cloud Run service (webserver + Celery worker + beat via supervisord), Cloud SQL, GCS media bucket, secrets, and runs DB init |
+| 2 — Access & verify | Manual | Service healthy; admin credential retrieved; sign in confirmed |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/backups, DB access |
-| 4 — Observe | Manual | Query Cloud Logging for both services; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose web/worker revision, database, init-job, build, and IAM issues |
+| 4 — Observe | Manual | Query Cloud Logging for the service; review Cloud Monitoring metrics and uptime check |
+| 5 — Troubleshoot | Manual | Diagnose service revision, consumer/OCR, database, init-job, build, and IAM issues |
 | 6 — Tear down | Automated | Delete (Trash) removes all module resources |

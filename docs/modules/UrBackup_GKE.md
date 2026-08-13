@@ -210,7 +210,7 @@ group-by-group input reference.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the workload and regional resources. |
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 
 ### Group 3 — Application Identity
 
@@ -236,7 +236,7 @@ group-by-group input reference.
 |---|---|---|
 | `service_type` | `ClusterIP` | For the Foundation-managed Service ONLY (single port 55414) — see §2D. |
 | `workload_type` | `null` | Auto-resolves to `StatefulSet` since `stateful_pvc_enabled = true`. |
-| `namespace_name` | `""` (auto) | Auto-generated from `application_name` + `tenant_deployment_id`. |
+| `namespace_name` | `""` (auto) | Auto-generated from `application_name` + `tenant_id`. |
 
 ### Group 7 — StatefulSet / Persistent Storage
 

@@ -65,7 +65,7 @@ that image to compose the connection strings Plane expects (`DATABASE_URL`,
 - **RabbitMQ credentials are static, in-code defaults** (`plane` /
   `plane` / vhost `plane`), not Secret-Manager-backed, and RabbitMQ storage
   is ephemeral (no PVC/NFS attached) — a pod restart drops queued jobs.
-  <!-- TODO: verify whether this is an accepted risk or a hardening gap -->
+  {/* TODO: verify whether this is an accepted risk or a hardening gap */}
 - **Redis is NFS-VM-hosted by default**, exactly like other RAD apps that
   set `enable_redis = true` with no `redis_host` — the NFS server co-hosts
   Redis and its IP is injected via the `$(NFS_SERVER_IP)` runtime
@@ -272,17 +272,17 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
 - **No separate first-run admin bootstrap job.** Plane's own signup/login
   flow creates the first workspace owner interactively through the web UI
   on first visit; there is no auto-generated admin credential documented in
-  source. <!-- TODO: verify whether Plane AIO ships any auto-provisioned admin account -->
+  source. {/* TODO: verify whether Plane AIO ships any auto-provisioned admin account */}
 - **Health path.** Both startup and liveness probes default to **HTTP**
   `GET /health` (startup: 30s initial delay, 10s timeout, 10s period, 30
   failures allowed — i.e. up to 5 minutes for first boot; liveness: 30s
   initial delay, 10s timeout, 30s period, 3 failures), configured via the
   `startup_probe`/`liveness_probe` variables consumed by `Plane_Common`.
-  <!-- TODO: verify /health is served without auth on the AIO image's Caddy proxy -->
+  {/* TODO: verify /health is served without auth on the AIO image's Caddy proxy */}
 - **Scaling.** `min_instance_count = 1`, `max_instance_count = 3` by
   default — HPA can add replicas, but since Celery worker/beat run
   in-process inside every pod, scaling beyond 1 also multiplies scheduled
-  Celery beat ticks. <!-- TODO: verify whether beat is singleton-guarded across replicas -->
+  Celery beat ticks. {/* TODO: verify whether beat is singleton-guarded across replicas */}
 - **Inspect the init job and composed connection strings:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -371,11 +371,11 @@ standard behaviour and defaults.
 | `redis_host` | `""` → NFS server IP | Leave blank to use the shared NFS/Redis VM. |
 | `redis_port` | `6379` | Standard Redis port. |
 
-<!-- TODO: verify — the Redis variables above and the Cloud Armor variables
+{/* TODO: verify — the Redis variables above and the Cloud Armor variables
 (enable_cloud_armor, admin_ip_ranges, cloud_armor_policy_name, enable_cdn)
 both carry UIMeta group=21 with overlapping order numbers in
 Plane_GKE/variables.tf; this looks like an unresolved group-numbering
-collision rather than an intentional shared group. -->
+collision rather than an intentional shared group. */}
 
 All other inputs follow standard [App_GKE](App_GKE.md) behaviour.
 

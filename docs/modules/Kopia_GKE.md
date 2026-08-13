@@ -229,7 +229,7 @@ group-by-group input reference.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use `gke` to run alongside a Cloud Run variant of a different app on the same tenant. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use `gke` to run alongside a Cloud Run variant of a different app on the same tenant. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 
 ### Group 3 — Application Identity

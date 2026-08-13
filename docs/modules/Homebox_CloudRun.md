@@ -33,7 +33,7 @@ The deployment wires together a small, focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Go/Echo service, 1 vCPU / 512 MiB by default, scale-to-zero |
 | Database | Cloud SQL for PostgreSQL 15 | Homebox reads discrete `HBOX_DATABASE_*` env vars, not a constructed DSN |
-| Object storage | Cloud Storage | A `data` bucket is created for item photos/attachments, but not auto-mounted |
+| Object storage | Cloud Storage | A `data` bucket is created for item photos/attachments and auto-mounted at `/data` |
 | Cache & queue | none | Homebox has no Redis or queue dependency |
 | Secrets | Secret Manager | Database password plus `HBOX_AUTH_API_KEY_PEPPER` (a real, app-consumed secret) |
 | Ingress | Cloud Run URL | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -53,10 +53,10 @@ The deployment wires together a small, focused set of Google Cloud services:
   initial admin user. There is no default-credential security risk, but
   operators should set `HBOX_OPTIONS_ALLOW_REGISTRATION=false` afterward to
   close public signups — see the [Common guide](Homebox_Common.md) for detail.
-- **Item photos are not persisted by default.** A GCS bucket is created but
-  not auto-mounted at Homebox's `/data` path — add a `gcs_volumes` entry if
-  uploaded item photos and attachments need to survive a revision restart.
-  Item *metadata* is unaffected (stored in PostgreSQL).
+- **Item photos are persisted by default.** `Homebox_Common` declares a
+  `gcs_volumes` entry mounting the `data` GCS bucket at Homebox's `/data`
+  path, so uploaded item photos and attachments survive a revision restart.
+  Item *metadata* is unaffected either way (stored in PostgreSQL).
 - **Request-based billing by default.** `cpu_always_allocated = false`,
   `min_instance_count = 0` — Homebox is a plain request/response app with no
   background scheduler or queue worker.
@@ -99,7 +99,7 @@ application database and user.
 ### C. Cloud Storage
 
 A `data` bucket is provisioned automatically for item photos and attachments,
-but is **not** mounted into the container by default — see the Pitfalls table.
+and is mounted into the container at `/data` by default.
 
 - **CLI:**
   ```bash
@@ -179,8 +179,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `data` bucket | Created but not auto-mounted — add `gcs_volumes` to persist item photos. |
-| `gcs_volumes` | `[]` | Add an entry mounted at `/data` for persistent item photo/attachment storage. |
+| `storage_buckets` | one `data` bucket | Created and auto-mounted at `/data` for item photos. |
+| `gcs_volumes` | `[]` | Empty means "use `Homebox_Common`'s own `/data` mount"; a non-empty list replaces it. |
 
 ### Group 12 — Database Backend
 
@@ -223,7 +223,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `container_image_source` | `prebuilt` (default) | High | `"custom"` triggers an unnecessary Cloud Build with no Dockerfile in this module — the build fails. |
 | First registration | Complete promptly after deploy | **Medium** | The first person to register on a fresh, publicly reachable instance becomes the admin — until you register and set `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, anyone who discovers the URL can claim the admin account. |
-| `gcs_volumes` for item photos | Add explicitly before real use | **High** | Without it, uploaded item photos and attachments live on Cloud Run's ephemeral filesystem and do not survive a revision restart — this is a bigger deal for Homebox than for apps where images are optional, since photo attachments are core to a home-inventory workflow. Item metadata is unaffected. |
+| `gcs_volumes` for item photos | Leave empty (use the module's own `/data` mount) | **High** | `Homebox_Common` already mounts the `data` bucket at `/data`. Supplying a non-empty `gcs_volumes` list replaces that mount entirely — if the replacement does not also cover `/data`, uploaded item photos and attachments fall back to Cloud Run's ephemeral filesystem and do not survive a revision restart. Item metadata is unaffected. |
 | `db_*_env_var_name` variables | Leave at their Homebox-specific defaults | Critical | Changing/clearing these breaks Homebox's Postgres connection entirely — it reads `HBOX_DATABASE_*`, not `DB_*`. |
 
 ---

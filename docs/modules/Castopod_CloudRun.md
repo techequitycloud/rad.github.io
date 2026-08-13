@@ -58,8 +58,11 @@ The deployment wires together a focused set of Google Cloud services:
 - **The base URL is derived automatically.** The entrypoint sets `CP_BASEURL` from the
   runtime `CLOUDRUN_SERVICE_URL`, so podcast feed and media URLs reflect the real
   service address.
-- **CodeIgniter migrations run on container start** — there is no separate migrate job;
-  the schema is created on first boot after the `db-init` job provisions the DB and user.
+- **CodeIgniter migrations run on container start** — there is no separate migrate job,
+  because the platform wrapper entrypoint (`Castopod_Common/scripts/entrypoint.sh`)
+  explicitly runs `php spark migrate --all` on every boot; the base `castopod/castopod`
+  image does **not** do this automatically. The schema is created on first boot after
+  the `db-init` job provisions the DB and user (see §3 below).
 
 ---
 
@@ -188,10 +191,18 @@ Monitoring, with optional uptime checks and alert policies.
   `mysql:8.0-debian`. It connects through the Cloud SQL Auth Proxy socket (or private-IP
   TCP fallback) and idempotently creates the application database and user, grants
   privileges, and verifies the app user can connect. The job is safe to re-run.
-- **Migrations run on container start.** The `castopod/castopod` image runs the
-  CodeIgniter 4 schema migrations automatically on every startup, so the schema is
-  created on first boot and upgrading the application version applies schema changes
-  without a separate migration job.
+- **Migrations run on container start — via the platform entrypoint, not the base
+  image.** The `castopod/castopod` image (built on `serversideup/php`) has no
+  CodeIgniter migration hook of its own; its only automatic migration behaviour is
+  Laravel-specific (`php artisan migrate`, gated behind `AUTORUN_ENABLED`, default
+  `false`) and would not run CI4's `spark migrate` even if enabled. The platform
+  wrapper entrypoint (`Castopod_Common/scripts/entrypoint.sh`) explicitly runs `php
+  spark migrate --all` — idempotent, safe on every boot — once `.env`/DB connectivity
+  is written, so the schema is created on first boot and upgrading the application
+  version applies schema changes on the next start, without a separate migration job.
+  If this explicit call is ever removed, every request 500s with
+  `Table '...' doesn't exist` even though `db-init` succeeded — check `entrypoint.sh`
+  first when debugging that symptom.
 - **Database config lives in `.env`, injected at runtime.** The entrypoint writes
   `database.default.hostname|database|username|password|port` and `app.baseURL` into
   Castopod's `.env` from the foundation-injected `DB_*` and `CLOUDRUN_SERVICE_URL`
@@ -235,7 +246,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 
 All other inputs follow standard App_CloudRun behaviour.
 

@@ -95,9 +95,14 @@ These two paths share no common ancestor other than `/var/www/html` itself (the
 PHP application root), so they cannot be consolidated into a single mount without
 shadowing the app's own code — each gets its own bucket.
 
-- **Cloud Run** always mounts both buckets as **GCS FUSE** volumes
-  (`enable_gcs_db_volume = true`, `enable_gcs_uploads_volume = true`). This is
-  safe specifically because `max_instance_count = 1` keeps it single-writer.
+- **Cloud Run** mounts only the `uploads` bucket as a **GCS FUSE** volume
+  (`enable_gcs_uploads_volume = true`) — plain whole-file writes with no locking
+  requirement. The database directory is served from **NFS** instead
+  (`enable_nfs = true`, `nfs_mount_path = "/var/www/html/db"`, with
+  `enable_gcs_db_volume = false`): GCS FUSE cannot provide the POSIX advisory
+  locks SQLite needs, and every page load fails with
+  `SQLite3::query(): Unable to execute statement: database is locked` when the
+  database is placed on a GCS volume.
 - **GKE** mounts the `db` bucket as GCS FUSE **unless** a StatefulSet block PVC is
   used at the same path (`stateful_pvc_enabled = true`, the recommended default),
   in which case Common sets `enable_gcs_db_volume = false` to avoid a double-mount

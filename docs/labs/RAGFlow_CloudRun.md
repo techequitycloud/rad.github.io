@@ -38,8 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - **Elasticsearch_GKE deployed** and its `elasticsearch_endpoint` output available —
   this is a hard deployment prerequisite; the plan is rejected if `elasticsearch_hosts`
   is empty when `deploy_application = true`.
@@ -116,8 +119,13 @@ export REGION="us-central1"          # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page —
    the module owns the service spec, so scaling is a configuration change, not a
    manual `gcloud` edit (a manual edit would be reverted on the next apply). Note
-   that `min_instance_count` is hard-capped at 1; scale-to-zero is not supported
-   because RAGFlow loads embedding models at startup.
+   that `min_instance_count` defaults to `0` with `cpu_always_allocated = false`
+   (cost-first cold-start): the service scales to zero when idle and the background
+   document task-executor only runs while an instance is warm, so ingestion/parsing
+   of newly uploaded documents is on-demand rather than continuous; querying/chat
+   still works on-request. Set `cpu_always_allocated = true` and `min_instance_count
+   >= 1` for continuous background processing (also avoids the 2–3 minute cold start
+   from embedding model loading).
 
 3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image builds and a new revision rolls out.
 

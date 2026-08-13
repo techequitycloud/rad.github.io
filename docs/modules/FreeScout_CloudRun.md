@@ -34,7 +34,7 @@ set of Google Cloud services:
 | Compute | Cloud Run v2 | PHP container on port 80, 1 vCPU / 2 GiB by default, serverless autoscaling; scale-to-zero supported |
 | Database | Cloud SQL for MySQL 8.0 | Required — FreeScout does not support PostgreSQL or other engines |
 | Persistent files | Cloud Filestore (NFS) | Enabled by default; mounted at `/var/lib/freescout` for attachments and runtime data |
-| Object storage | Cloud Storage | An uploads bucket (`freescout-uploads`) provisioned automatically |
+| Object storage | Cloud Storage | An uploads bucket (`gcs-freescout<tenant-prefix>-freescout-uploads`) provisioned automatically |
 | Cache (optional) | Redis | Optional object cache; disabled by default |
 | Secrets | Secret Manager | Auto-generated Laravel `APP_KEY` and first-run `ADMIN_PASS`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -129,7 +129,7 @@ See [App_CloudRun](App_CloudRun.md) for the shared-NFS discovery model.
 
 ### D. Cloud Storage
 
-A dedicated **Cloud Storage** uploads bucket (`freescout-uploads`) is provisioned
+A dedicated **Cloud Storage** uploads bucket (`gcs-freescout<tenant-prefix>-freescout-uploads`) is provisioned
 automatically. Additional buckets can be declared via `storage_buckets`.
 
 - **Console:** Cloud Storage → Buckets.

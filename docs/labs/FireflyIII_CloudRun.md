@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -82,11 +85,11 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. Confirm the service is healthy. Firefly III exposes an unauthenticated `/health`
+1. Confirm the service is healthy. Firefly III exposes an unauthenticated `/status`
    endpoint that returns 200 once the app is up and connected to PostgreSQL:
 
    ```bash
-   curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/health"   # expect 200
+   curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/status"   # expect 200
    ```
 
 2. Open `$SERVICE_URL` in a browser. On first visit Firefly III shows the **`/register`**
@@ -206,7 +209,7 @@ registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL (PostgreSQL 15), secrets, uploads bucket, NFS, and runs DB init |
-| 2 — Access & verify | Manual | `/health` returns 200; create the owner account at `/register` |
+| 2 — Access & verify | Manual | `/status` returns 200; create the owner account at `/register` |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, wire cron, manage secrets/backups, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
 | 5 — Troubleshoot | Manual | Diagnose revision, database, init-job, cron, NFS, and IAM issues |

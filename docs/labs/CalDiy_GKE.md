@@ -36,9 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,7 +58,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Cal.diy (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Cal.diy (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/CalDiy_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -170,9 +172,10 @@ platform-level diagnostics and do not change with Cal.diy releases.
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Startup probe failures on `/api/auth/session`:** Cal.diy runs Prisma migrations
-  and an app-store seed before it can serve requests. The startup probe allows 5
-  minutes by default; confirm `startup_probe.failure_threshold` has not been reduced
-  below the default. Also confirm `memory_limit` is at least `2Gi` — OOM kills before
+  and an app-store seed before it can serve requests. The startup probe allows 3
+  minutes by default (60 s initial delay + 12 × 10 s); confirm
+  `startup_probe.failure_threshold` has not been reduced below the default. Also
+  confirm `container_resources.memory_limit` is at least `2Gi` — OOM kills before
   migrations complete.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
   DB password secret materialised into the namespace, and all three init jobs

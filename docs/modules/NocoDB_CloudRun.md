@@ -30,22 +30,25 @@ a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Node.js service, 1 vCPU / 1 GiB by default, request-based autoscaling |
-| Database | Cloud SQL for PostgreSQL 15 | Default engine; MySQL 8.0 also supported |
-| Object storage | Cloud Storage | A dedicated uploads bucket for file attachments |
+| Database | Cloud SQL for PostgreSQL 15 | `database_type` has no effect on Cloud Run — Postgres 15 is always provisioned |
+| Object storage | Cloud Storage | Provisioned, but not wired to NocoDB's attachment storage (see below) |
 | Cache (optional) | Redis | Disabled by default; required when running multiple instances |
 | Secrets | Secret Manager | Auto-generated JWT secret (`NC_AUTH_JWT_SECRET`) and database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, optional external HTTPS load balancer + custom domain |
 
 **Sensible defaults worth knowing up front:**
 
-- **PostgreSQL 15 is the default.** MySQL 8.0 is also supported; set `database_type`
-  before first deploy.
+- **PostgreSQL 15 only, on Cloud Run.** The `database_type` variable is defined but
+  never forwarded to `NocoDB_Common` (which hardcodes `POSTGRES_15`), so setting it
+  has no effect here — Postgres 15 is provisioned regardless of the value. MySQL
+  8.0 is supported on `NocoDB_GKE`, where the equivalent override is wired.
 - **NocoDB connects via private IP TCP, not the Auth Proxy socket.** The Cloud SQL
   Auth Proxy sidecar is **disabled** by default (`enable_cloudsql_volume = false`)
   because NocoDB's internal URL constructor rejects Unix socket paths. The private
   IP is used directly.
-- **NFS is disabled by default.** NocoDB stores file attachments in Cloud Storage;
-  a shared filesystem is not required.
+- **NFS is disabled by default.** NocoDB has no shared-filesystem dependency, but
+  it also has no working Cloud Storage attachment backend out of the box (see
+  §2C) — attachments use local/ephemeral container disk unless configured manually.
 - **Redis is disabled by default.** A single instance runs without Redis; enable it
   before scaling beyond one instance.
 - **`cpu_always_allocated = false` by default.** Request-based billing; NocoDB's
@@ -105,17 +108,24 @@ The instance name, database, user, and password secret are in the
 [Outputs](#5-outputs). See [App_CloudRun](App_CloudRun.md) for the
 connection model, backups, and password rotation.
 
-### C. Cloud Storage — file uploads
+### C. Cloud Storage — provisioned, not wired to attachments
 
-NocoDB stores file attachments in a dedicated **Cloud Storage** bucket. The bucket
-name is injected into the service as `GCS_BUCKET_NAME` automatically. The Cloud Run
-service account is granted access by the foundation.
+The `storage_buckets` variable provisions a GCS bucket (default `name_suffix =
+"data"`) and a `GCS_BUCKET_NAME` value is injected into the service as an env var.
+However, `NocoDB_Common`'s entrypoint script never reads `GCS_BUCKET_NAME` (or any
+other S3/GCS variable), and the injected value does not match the name of any
+bucket the foundation actually creates. NocoDB therefore does **not** automatically
+store attachments in Cloud Storage — uploaded files are written to local/ephemeral
+container disk and are lost on restart or cold start. To persist attachments in
+GCS, configure NocoDB's own S3-compatible storage settings manually (via its admin
+UI or `environment_variables`) pointed at a bucket the Cloud Run service account
+can access.
 
-- **Console:** Cloud Storage → Buckets → select the uploads bucket.
+- **Console:** Cloud Storage → Buckets → select the provisioned bucket.
 - **CLI:**
   ```bash
   gcloud storage buckets list --project "$PROJECT"
-  gcloud storage ls gs://<uploads-bucket>/      # bucket name is in the Outputs
+  gcloud storage ls gs://<bucket-name>/      # bucket name is in the Outputs
   ```
 
 See [App_CloudRun](App_CloudRun.md) for GCS Fuse, CMEK, and additional
@@ -185,8 +195,10 @@ Monitoring, with optional uptime checks against `/api/v1/health` and alert polic
 - **JWT secret.** `NC_AUTH_JWT_SECRET` is generated automatically and stored in
   Secret Manager. Do not rotate it after the first deploy; all existing sessions and
   API tokens are immediately invalidated if the secret changes.
-- **GCS uploads.** The uploads bucket name (`GCS_BUCKET_NAME`) is injected
-  automatically. NocoDB stores all file attachments there.
+- **GCS uploads are not automatic.** A `GCS_BUCKET_NAME` env var is injected, but
+  the entrypoint script never reads it and the value does not match any bucket the
+  foundation creates. Attachments use local/ephemeral container disk unless the
+  operator manually configures NocoDB's own S3-compatible storage settings.
 - **NC_DB_* environment variables.** The custom Dockerfile in `NocoDB_Common` maps
   the standard `DB_*` connection variables (injected by the foundation) to the
   `NC_DB_*` names NocoDB expects. When `container_image_source = "prebuilt"` the
@@ -221,7 +233,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -303,8 +315,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the uploads bucket. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS buckets. |
+| `create_cloud_storage` | `true` | Provision the GCS buckets defined in `storage_buckets`. Not wired to NocoDB attachments — see §2C. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | GCS buckets to provision. |
 | `enable_nfs` | `false` | NFS is not required for NocoDB. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path if NFS is enabled. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts. |
@@ -314,7 +326,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | Default PostgreSQL 15; `MYSQL_8_0` also supported. Set before first deploy. |
+| `database_type` | `POSTGRES_15` | Not wired through on Cloud Run — `NocoDB_Common` hardcodes `POSTGRES_15` regardless of this value; use `NocoDB_GKE` for `MYSQL_8_0`. |
 | `application_database_name` | `nocodb` | Database name. Immutable after first deploy. |
 | `application_database_user` | `nocodb` | Application user. Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length (16–64). |
@@ -377,7 +389,7 @@ running resources.
 | `database_name` / `database_user` | Application database name / user. |
 | `database_password_secret` | Secret Manager secret holding the DB password. |
 | `database_host` / `database_port` | DB endpoint (private IP) / port. |
-| `storage_buckets` | Created Cloud Storage buckets (includes the uploads bucket). |
+| `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, regions. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Monitoring status, channels, uptime checks. |

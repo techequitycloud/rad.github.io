@@ -215,7 +215,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -332,7 +332,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_redis` | `false` | Enable Redis for session caching (optional for Wiki.js). |
-| `redis_host` | `""` | Redis endpoint — required when `enable_redis = true`. |
+| `redis_host` | `""` | Redis endpoint. Required when `enable_redis = true` **unless** `enable_nfs = true` or an NFS server is otherwise discoverable, in which case the NFS server IP is used as the default Redis host. `enable_nfs` defaults to `true` for this module, so `redis_host` is not actually required in the default configuration. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
 

@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -72,8 +74,9 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    (`SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`,
    `SPARKY_FITNESS_APP_DB_PASSWORD`, and the database password), and runs a one-shot
    `db-init` job. First deploys take roughly **20–30 minutes** (Cloud SQL and cluster
-   provisioning dominate). Both container images are prebuilt — no application build
-   step runs.
+   provisioning dominate). The frontend image is prebuilt; the backend image is built
+   by Cloud Build from `SparkyFitness_Common/scripts/Dockerfile` (a thin SSL-patched
+   wrapper).
 
 3. When it completes, discover the resources with name-agnostic filters:
 
@@ -185,7 +188,7 @@ platform-level diagnostics and do not change with SparkyFitness releases.
 - **`db-init` job failed:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
-  kubectl logs -n "$NAMESPACE" job/db-init
+  kubectl logs -n "$NAMESPACE" job/<service-name>-db-init
   ```
 - **Frontend LoadBalancer has no external IP:** the reserved static IP
   (`google_compute_address`) may be exhausted against the project's global

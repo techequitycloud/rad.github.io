@@ -21,7 +21,7 @@ Windmill runs as a combined server+worker container on Cloud Run v2. The deploym
 |---|---|---|
 | Compute | Cloud Run v2 | Combined server+worker service, 2 vCPU / 2 GiB by default, request-based autoscaling |
 | Database | Cloud SQL for PostgreSQL 16 | Required — Windmill requires PostgreSQL 16 or later |
-| Object storage | Cloud Storage | A `windmill-data` bucket for workflow outputs and artefacts |
+| Object storage | Cloud Storage | A `data` bucket (`gcs-<app><tenant-prefix>-data`) for workflow outputs and artefacts |
 | Secrets | Secret Manager | Auto-generated database password and SMTP placeholder secret |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, optional external HTTPS load balancer + custom domain |
 
@@ -35,6 +35,7 @@ Windmill runs as a combined server+worker container on Cloud Run v2. The deploym
 - **Redis is disabled by default.** Windmill operates without Redis for single-instance deployments. Enable Redis for distributed queue behaviour with multiple instances.
 - **An SMTP placeholder secret is provisioned automatically.** Replace the `{prefix}-smtp-password` value in Secret Manager before enabling email notifications.
 - **`min_instance_count` defaults to `0`** (scale-to-zero). Set it to `1` to keep an instance warm so webhook triggers and scheduled flows do not require a cold start.
+- **`cpu_always_allocated` defaults to `false`** — Windmill is one of 12 apps deliberately flipped to cold-start billing in the 2026-07-09 cost-first pass (request-based, paired with `min_instance_count=0`). Scheduled flows and queued executions defer until a request wakes the worker; externalise schedules with Cloud Scheduler, or set `cpu_always_allocated = true` and `min_instance_count >= 1` to restore continuous/always-on operation.
 
 ---
 
@@ -72,7 +73,7 @@ The instance name, database, user, and password secret are in the [Outputs](#5-o
 
 ### C. Cloud Storage
 
-A dedicated **Cloud Storage** bucket (`windmill-data`) is provisioned for workflow outputs, artefacts, and script dependencies. The workload service account is granted access automatically.
+A dedicated **Cloud Storage** bucket (name suffix `data`, i.e. `gcs-<app><tenant-prefix>-data`) is provisioned for workflow outputs, artefacts, and script dependencies. The workload service account is granted access automatically.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -156,7 +157,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -236,7 +237,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see [App_CloudR
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the `windmill-data` bucket and any additional buckets. |
+| `create_cloud_storage` | `true` | Provision the `data` bucket and any additional buckets. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
 | `enable_nfs` | `false` | NFS is disabled by default — Windmill does not require shared file storage. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts via the Cloud Run storage volume feature. |
@@ -330,7 +331,8 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `cpu_limit` | `2000m` | High | Combined mode runs 3 workers in-process; insufficient CPU throttles all script execution. Each worker needs ~500m. |
 | `memory_limit` | `2Gi` | High | Windmill workers execute arbitrary user scripts; OOM kills mid-execution produce silent failures in the UI. |
-| `min_instance_count` | `1` | High | `0` enables scale-to-zero; scheduled flows will be missed and webhooks return 503 until an instance is ready. |
+| `min_instance_count` | `0` (default, scale-to-zero) | Medium | Raise to `1` to keep an instance warm and avoid cold starts for webhooks/scheduled flows; increases baseline cost. |
+| `cpu_always_allocated` | `false` (default, cost-first cold-start) | Medium | Scheduled jobs/queued executions defer until a request wakes the worker; externalise with Cloud Scheduler, or set `true` + `min_instance_count >= 1` for continuous operation. |
 | `service_url` / `BASE_URL` | Cloud Run URL or custom domain | High | Empty or incorrect value breaks OAuth callbacks, webhook endpoints, and Windmill UI deep-links. |
 | `execution_environment` | `gen2` | High | Gen1 does not support GCS Fuse mounts; required when `gcs_volumes` is used. |
 | `enable_vpc_sc` | `false` unless needed | High | Requires explicit `organization_id`; without it VPC-SC is silently skipped, giving a false sense of perimeter security. |

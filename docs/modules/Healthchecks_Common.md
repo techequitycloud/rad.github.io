@@ -81,15 +81,10 @@ On the first deployment, two initialization jobs run:
    this catalog runs its own proven `db-init.sh`.
 2. **`admin-bootstrap`** (the Healthchecks image itself, `depends_on_jobs =
    ["db-init"]`) — runs `manage.py migrate --noinput`, then `manage.py
-   createsuperuser --email <admin_email> --password <admin_password>` with the
+   createsuperuser --noinput --username admin --email <admin_email>` with the
    password sourced from the `ADMIN_PASSWORD` secret, guarded with `|| true` so
    a re-run (which fails because the user already exists) does not fail the
-   job. Note this is **not** Django's stock `createsuperuser` — Healthchecks
-   ships its own custom command that only accepts `--email`/`--password` (no
-   `--noinput`, `--username`, or `DJANGO_SUPERUSER_*` env vars); an earlier
-   version of this job used the stock Django invocation, which always failed
-   and was silently swallowed by `|| true`, so no superuser was ever actually
-   created. It replicates the migration step itself because Cloud Run/GKE init jobs
+   job. It replicates the migration step itself because Cloud Run/GKE init jobs
    invoke the container's command/args directly, bypassing the vendor image's
    own `uwsgi.ini` boot chain (where `hook-pre-app = exec:./manage.py migrate`
    normally runs automatically) — and on Cloud Run, init jobs complete strictly

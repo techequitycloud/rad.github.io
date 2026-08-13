@@ -95,16 +95,22 @@ Platform-specific adjustments handled here:
 
 ## 5. Health probe behaviour
 
-The default probes target Mautic's login page, which returns HTTP 200 only once the
-application is fully initialised, with a generous startup delay to allow first-boot
-database setup.
+`Mautic_Common`'s base probe config targets Mautic's login page, but **both** the
+`Mautic_CloudRun` and `Mautic_GKE` variant modules override it away from that path —
+for two different reasons:
 
-- **GKE** keeps the HTTP probe — in-cluster probe traffic reaches the container
-  directly.
-- **Cloud Run** uses a **TCP** startup probe instead, because Cloud Run health
-  traffic arrives over plain HTTP and Apache answers with a 301 redirect to HTTPS, so
-  an HTTP probe would never observe a 200. A TCP probe only checks that the port is
-  open and is unaffected by the redirect.
+- **Cloud Run** overrides the startup probe to **TCP** and the liveness probe to
+  HTTP `/healthz`, because Cloud Run health traffic arrives over plain HTTP and
+  Apache answers with a 301 redirect to HTTPS once `HTTPS=on`/`MAUTIC_SITE_URL` are
+  set, so an HTTP probe against `/index.php/s/login` would never observe a 200. A
+  TCP probe only checks that the port is open and is unaffected by the redirect;
+  `/healthz` is a static file served without a redirect.
+- **GKE** overrides both the startup and liveness probes to HTTP `/healthz` as well,
+  for a different reason: in-cluster kube-probe traffic reaches the container
+  directly (no redirect), but `/index.php/s/login` itself returns **HTTP 500** (the
+  installer redirect) until the database is configured, so a login-page probe fails
+  during first-boot DB setup regardless of redirects. `/healthz` returns 200
+  regardless of application state.
 
 ---
 

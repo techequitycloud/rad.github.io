@@ -227,7 +227,7 @@ See [App_GKE](App_GKE.md) for uptime check gating and alert policy wiring.
   entrypoint (`cloud-entrypoint.sh`, baked into the image) maps these onto
   Chatwoot's `POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_DATABASE`/
   `POSTGRES_USERNAME`/`POSTGRES_PASSWORD` convention.
-  <!-- TODO: could not confirm whether App_GKE also forwards db_host_env_var_name / db_user_env_var_name aliasing vars for Chatwoot; the entrypoint does its own mapping regardless, so these Foundation-mirror variables in Group 16 are effectively unused for this app. -->
+  {/* TODO: could not confirm whether App_GKE also forwards db_host_env_var_name / db_user_env_var_name aliasing vars for Chatwoot; the entrypoint does its own mapping regardless, so these Foundation-mirror variables in Group 16 are effectively unused for this app. */}
 - **Redis URL is self-healing.** If `REDIS_URL` is not already set, the entrypoint
   builds it from the injected `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` — this covers
   both the explicit `redis_host` case and the default NFS-fallback case, so leaving
@@ -240,7 +240,7 @@ See [App_GKE](App_GKE.md) for uptime check gating and alert policy wiring.
 - **Admin/first-run account.** Chatwoot's own onboarding UI creates the first admin
   account interactively at `/installation/onboarding` on first visit — there is no
   auto-generated admin credential secret for this module.
-  <!-- TODO: could not confirm the exact first-run onboarding route/behaviour from the wiring files alone; verified against general Chatwoot self-hosted conventions, not this repo's source. -->
+  {/* TODO: could not confirm the exact first-run onboarding route/behaviour from the wiring files alone; verified against general Chatwoot self-hosted conventions, not this repo's source. */}
 - **Health path.** Startup and liveness probes are **HTTP** `GET /` (the login/
   onboarding page returns 200 with no auth); the readiness probe set by the Common
   module (`initial_delay_seconds = 30`) also targets `/`. Allow time on first boot —
@@ -248,6 +248,13 @@ See [App_GKE](App_GKE.md) for uptime check gating and alert policy wiring.
 - **Cloud SQL proxy shutdown signal.** Both init Jobs `wget`/`curl`-POST to the
   proxy sidecar's `--quitquitquit` endpoint (`127.0.0.1:9091/quitquitquit`) on exit
   so the Job pod completes instead of hanging on a live sidecar.
+- **Updates recreate the pod instead of rolling it.** Because `enable_nfs = true`
+  by default, `App_GKE` deploys the workload with the `Recreate` strategy rather
+  than `RollingUpdate` — two pods contending for the same NFS attachment volume
+  and the shared database would deadlock on the surge Pod during a rollout
+  (verified live via a Chatwoot NFS rollout). A version bump or config change
+  that touches the pod template therefore causes brief downtime while the old
+  pod terminates before the new one starts, rather than a zero-downtime rollover.
 - **Inspect the init jobs and running config:**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -323,7 +330,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_database_user` | `chatwoot` | Application database user; password auto-generated in Secret Manager. |
 | `enable_postgres_extensions` | `true` (Common default) | Enables `vector` post-provisioning; `db-init.sh` also pre-creates it defensively. |
 
-### Group 23 — Search & Optional Integrations
+### Group 1 — Search & Optional Integrations
 
 | Variable | Default | Description |
 |---|---|---|
@@ -389,7 +396,7 @@ locate and explore the running resources.
 | `SECRET_KEY_BASE` (auto-generated) | Never change | Critical | Rotating it invalidates every signed session/cookie and makes ActiveRecord-encrypted columns permanently unreadable; Sidekiq will also fail to decrypt in-flight jobs. |
 | `enable_redis` | `true` (forwarded unconditionally) | Critical | Sidekiq (background jobs, channel delivery) and ActionCable (real-time UI) both require Redis; disabling it silently breaks message delivery even though the web UI loads. |
 | `min_instance_count` | `1` | High | Below 1, the co-located Sidekiq worker is not running between requests, so background jobs (channel polling, notifications, reports) stall between cold starts. |
-| `enable_nfs` | `true` | High | Disabling it makes uploaded attachments ephemeral — lost on pod recreation. |
+| `enable_nfs` | `true` | High | Disabling it makes uploaded attachments ephemeral — lost on pod recreation. Leaving it enabled also switches the deploy strategy to `Recreate` (brief downtime per update) instead of `RollingUpdate` — expected, not a bug. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar on `127.0.0.1:5432` is required for DB connectivity on GKE. |
 | `chatwoot-prepare` job order | Runs after `db-init` (`depends_on_jobs = ["db-init"]`) | High | Running schema prep before the database/role/extension grants exist fails the Job (`must be superuser` on `CREATE EXTENSION`, or the DB/role missing entirely). |
 | `container_image_source` | `custom` | High | Chatwoot is a Docker Hub prebuilt image wrapped in a custom entrypoint (env mapping + Sidekiq launch); switching to `prebuilt` skips that wrapper and the container won't map `DB_*`/`REDIS_*` correctly. |
@@ -405,5 +412,6 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Chatwoot-specific application configuration shared with the Cloud Run variant is
-described in the Chatwoot_Common module (`modules/Chatwoot_Common`); a dedicated
-`Chatwoot_Common.md` guide has not been published yet.
+described in the Chatwoot_Common module (`modules/Chatwoot_Common`); see
+**[Chatwoot_Common](Chatwoot_Common.md)** for secrets, DB bootstrap, the
+container image/entrypoint, health probes, and object storage.

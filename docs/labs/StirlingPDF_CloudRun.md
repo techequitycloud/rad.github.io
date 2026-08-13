@@ -37,8 +37,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -118,8 +120,10 @@ export REGION="us-central1"          # the region you deploy into
 
 4. **Gate access.** The default instance is open. To make it private, set
    `enable_login = true` (Stirling-PDF's built-in auth) and/or enable IAP, then
-   **Update**. For a public instance, enable Cloud Armor and Redis-backed rate
-   limiting (`enable_redis = true`) to throttle abuse.
+   **Update**. For a public instance, enable Cloud Armor (`enable_cloud_armor =
+   true`) to throttle abuse. Leave `enable_redis` alone — it only makes the
+   foundation inject unused `REDIS_*` env vars into the container; Stirling-PDF
+   never reads them, so it does not implement rate limiting or bot detection.
 
 5. **Tune for large documents** by raising `memory_limit` and `timeout_seconds`, and
    cap uploads with `SYSTEM_MAXFILESIZE` via `environment_variables`.

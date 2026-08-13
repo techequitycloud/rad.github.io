@@ -34,7 +34,7 @@ and the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md
 | Container image | Builds a **thin custom image** `FROM tiredofit/freescout` (base tag `php8.3-1.17.159` when `application_version = latest`) with a cloud entrypoint; built via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** (`MYSQL_8_0`) as the engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Declares a **Cloud Storage** uploads bucket (`freescout-uploads`) | `storage_buckets` output |
+| Object storage | Declares a **Cloud Storage** uploads bucket (name suffix `freescout-uploads`, i.e. `gcs-freescout<tenant-prefix>-freescout-uploads`) | `storage_buckets` output |
 | Core settings | Sets the baseline FreeScout environment: MySQL driver, DB port, admin seed identity, `APP_URL`/`SITE_URL`, PHP limits | Application behaviour in the platform guides |
 | Health checks | Supplies the default TCP startup probe and HTTP `GET /` liveness probe | §Observability in the platform guides |
 

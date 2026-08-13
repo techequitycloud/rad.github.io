@@ -29,7 +29,7 @@ the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Two databases | Defines the first-deploy `db-init` job that creates the metadata DB **and** the second "ToolJet Database", grants the shared `CREATEROLE` role, and resets the `postgrest` schema | `initialization_jobs` output |
 | Object storage | Declares **no** data bucket — ToolJet stores apps, datasources, and uploads in PostgreSQL | `storage_buckets` output (`[]`) |
 | Core settings | Sets the baseline ToolJet environment: `SERVE_CLIENT`, port 80, `TOOLJET_DB`, signup state, telemetry | Application behaviour in the platform guides |
-| Health checks | Supplies the default startup/liveness/readiness probes targeting `/api/health` | §Observability in the platform guides |
+| Health checks | Declares a default startup/liveness probe path of `/api/health`, but both `ToolJet_CloudRun` and `ToolJet_GKE` always explicitly forward their own `startup_probe`/`liveness_probe` variables (default `path = "/"`) into this module call, so this Common-level default is never actually used | §Observability in the platform guides |
 
 ---
 
@@ -170,14 +170,19 @@ Platform-specific adjustments handled by the entrypoint:
 
 ## 6. Health probe behaviour
 
-The default startup, liveness, and readiness probes target **`/api/health`** — the
-public, unauthenticated ToolJet health endpoint (the `/api/*` surface otherwise
-requires auth). The startup probe uses a **generous budget (30 × 15 s)** to absorb
-the TypeORM migrations that run on first boot before the server begins listening.
+`ToolJet_Common` declares its own `startup_probe`/`liveness_probe` variable defaults
+targeting **`/api/health`** — the public, unauthenticated ToolJet health endpoint
+(the `/api/*` surface otherwise requires auth). In practice this Common-level
+default is never used: both `ToolJet_CloudRun` and `ToolJet_GKE` always explicitly
+forward their own `startup_probe`/`liveness_probe` variables into the `ToolJet_Common`
+module call, and those platform-level variables default the probe `path` to **`/`**
+instead. The startup probe uses a **generous budget (30 × 15 s)** to absorb the
+TypeORM migrations that run on first boot before the server begins listening.
 
-- **Cloud Run** — HTTP startup probe on `/api/health`, 60 s initial delay, 15 s
-  period, 30 failures; liveness on `/api/health`, 30 s period.
-- **GKE** — the same `/api/health` probes, with the App_GKE infrastructure startup
+- **Cloud Run** — HTTP startup probe on `/` by default, 60 s initial delay, 15 s
+  period, 30 failures; liveness on `/` by default, 30 s period. Override
+  `startup_probe`/`liveness_probe` `path` to `/api/health` if preferred.
+- **GKE** — the same `/`-by-default probes, with the App_GKE infrastructure startup
   probe absorbing scheduling and Auth-Proxy-sidecar startup.
 
 ---

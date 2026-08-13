@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** authenticated: `gcloud auth login`,
   `gcloud auth application-default login`.
@@ -203,7 +205,9 @@ subscribes to them.
    ```
 
 2. **Monitoring** — review the GKE workload dashboard for CPU/memory, restart counts,
-   and pod health. The module provisions an **uptime check** against `/health`; confirm
+   and pod health. The module can provision an **uptime check** against `/health` via
+   `uptime_check_config`, but it defaults to `enabled = false` — set
+   `uptime_check_config.enabled = true` at deploy time if you want one, then confirm
    it is green under Monitoring → Uptime checks, and review Alerting → Policies.
 
 ---

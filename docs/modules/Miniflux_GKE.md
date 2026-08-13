@@ -225,7 +225,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -441,7 +441,7 @@ locate and explore the running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid backup source fails the import job. |
 | `ADMIN_PASSWORD` (auto-generated) | Retrieve from Secret Manager | High | It is the only owner credential seeded on first boot; without it you cannot log in until you reset it in the DB. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity on GKE; disabling it breaks the DB connection. |
-| `min_instance_count` | `1` | High | Not enforced by the platform (0 is a valid value), but dropping to 0 stops the in-process feed poller — no pod means feeds stop refreshing until the next request wakes one up. |
+| `min_instance_count` | `1` | High | GKE requires min ≥ 1; keeping 1 ensures the in-process feed poller keeps refreshing. |
 | `enable_redis` | `false` | Medium | Redis is unused; enabling it wastes resources and changes nothing. |
 | `session_affinity` | `ClientIP` | Medium | Without stickiness a client's requests hop pods, disrupting the UI session. |
 | `startup_probe.path` | `/healthcheck` | High | Pointing the probe at an authenticated page returns 401/403 and the pod never becomes Ready. |

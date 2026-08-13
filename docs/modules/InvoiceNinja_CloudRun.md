@@ -29,7 +29,7 @@ Invoice Ninja is a professional open-source invoicing and billing platform used 
 | Variable | Group | Type | Default | Description |
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'invoiceninja'` | Base resource name. Do not change after initial deployment. |
@@ -279,12 +279,26 @@ Traffic splitting is supported via `traffic_split`. Invoice Ninja's Redis-backed
 
 Invoice Ninja does not expose a dedicated health endpoint. Both startup and liveness probes target `/` (the Invoice Ninja login or dashboard page), which returns `HTTP 200` when the application is fully initialised.
 
-**Invoice Ninja performs PHP-FPM initialisation, database migrations, and configuration caching on first boot.** The startup probe defaults allow 90 seconds of initial delay plus up to 30 retry periods of 15 seconds each — giving Invoice Ninja up to 540 seconds of total startup tolerance on cold deployments with pending migrations.
+The table below lists `var.startup_probe`'s declared default — **but `startup_probe` is currently inert.** `InvoiceNinja_CloudRun/main.tf`'s `locals.invoiceninja_module` unconditionally merges a hardcoded override *after* `module.invoiceninja_app.config`, so whatever value is supplied for `var.startup_probe` is silently discarded at apply time. The probe actually deployed is:
+
+```hcl
+startup_probe = {
+  enabled               = true
+  type                  = "TCP"   # port-open check — Cloud Run health checks arrive over plain HTTP
+  path                  = "/"     # ignored for a TCP probe
+  initial_delay_seconds = 60
+  timeout_seconds       = 10
+  period_seconds        = 15
+  failure_threshold     = 36
+}
+```
+
+i.e. **TCP / 60s initial delay / 36 retries** (540 seconds of total tolerance), not the HTTP/90s/30-retry default shown in the Inputs table. Do not rely on changing `startup_probe` to alter the deployed probe type or timing — edit the hardcoded block in `main.tf` instead. `liveness_probe` is also hardcoded in the same merge, but to the identical values its variable declares (`HTTP` / `/` / 120s initial delay / 10s timeout / 30s period / 3 failures), so — unlike `startup_probe` — its documented default does match what is deployed.
 
 | Variable | Group | Default | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=30 }` | Startup readiness probe. Container receives no traffic until this succeeds. |
-| `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. |
+| `startup_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=30 }` | **Inert** — `main.tf` unconditionally overrides this to a hardcoded `TCP` probe (`initial_delay_seconds=60`, `failure_threshold=36`) regardless of this variable's value. See above. |
+| `liveness_probe` | 14 | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Liveness probe. Container is restarted after `failure_threshold` consecutive failures. `main.tf` hardcodes this to the same values, so the declared default matches the deployed probe. |
 | `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). When enabled, alerts notify `support_users` if unreachable. |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 
@@ -647,7 +661,7 @@ All user-configurable variables exposed by `InvoiceNinja CloudRun`, sorted by UI
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |
-| `tenant_deployment_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'invoiceninja'` | Base resource name. Do not change after initial deployment. |
@@ -725,8 +739,8 @@ All user-configurable variables exposed by `InvoiceNinja CloudRun`, sorted by UI
 | `rotation_propagation_delay_sec` | 12 | `90` | Seconds to wait after rotation before restarting the service. |
 | `initialization_jobs` | 13 | `[]` | One-shot Cloud Run Jobs. Leave empty for default `db-init` and `artisan-migrate`. |
 | `cron_jobs` | 13 | `[]` | Recurring scheduled Cloud Run Jobs. |
-| `startup_probe` | 14 | `{ path="/", initial_delay_seconds=90, failure_threshold=30, ... }` | Startup probe. Long initial delay for Invoice Ninja PHP initialisation. |
-| `liveness_probe` | 14 | `{ path="/", initial_delay_seconds=120, failure_threshold=3, ... }` | Liveness probe. |
+| `startup_probe` | 14 | `{ path="/", initial_delay_seconds=90, failure_threshold=30, ... }` | **Inert** — declared default shown here is never deployed; `main.tf` unconditionally overrides to a hardcoded `type="TCP"`, `initial_delay_seconds=60`, `failure_threshold=36` probe. See §7C. |
+| `liveness_probe` | 14 | `{ path="/", initial_delay_seconds=120, failure_threshold=3, ... }` | Liveness probe. `main.tf` hardcodes this to the same values as the declared default, so it is effectively always this. |
 | `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check (disabled by default). |
 | `alert_policies` | 14 | `[]` | Cloud Monitoring metric alert policies. |
 | `enable_redis` | 21 | `true` | **Enabled by default.** Required for PDF generation and email queuing. |

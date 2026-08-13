@@ -29,7 +29,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, user, and grants | `initialization_jobs` output |
 | Object storage | Declares the **Cloud Storage** uploads bucket (`monica-uploads`) | `storage_buckets` output |
 | Core settings | Sets the Laravel-native env baseline: `DB_CONNECTION`, `DB_PORT`, `APP_URL`, and the `DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE` env-name mapping | Application behaviour in the platform guides |
-| Health checks | Supplies the default TCP startup probe (targeting `/`) and HTTP liveness probe (targeting `/status`) | §Observability in the platform guides |
+| Health checks | Declares its own default TCP startup probe (targeting `/`) and HTTP liveness probe (targeting `/status`), but both platform variants override this default — see §6 | §Observability in the platform guides |
 
 ---
 
@@ -140,14 +140,19 @@ variant's `db_*_env_var_name` mapping for the deployment-scoped values:
 
 ## 6. Health probe behaviour
 
-Monica serves an unauthenticated JSON health endpoint at `/status` with a `200`. The
-defaults reflect that:
+`Monica_Common`'s own `liveness_probe` variable defaults to Monica's unauthenticated
+JSON health endpoint at `/status`. However, **this default is dead code in
+practice**: both `Monica_CloudRun` and `Monica_GKE` declare their own
+`startup_probe`/`liveness_probe` variables (each defaulting `path = "/"`) and pass
+those through to `Monica_Common` on every call, so the `/status` default here is
+never actually applied by either deployed variant. What actually ships is:
 
 - **Startup probe** — **TCP** on `/` (port-listening) with a generous
   `failure_threshold` so first-boot Apache startup plus `php artisan migrate --force`
   has time to complete before traffic is routed.
-- **Liveness probe** — **HTTP** `GET /status` expecting a `200`, with a long initial
-  delay so a slow first migration does not trigger a restart loop.
+- **Liveness probe** — **HTTP** `GET /` (Monica's home page, returns HTTP 200
+  without auth), with a long initial delay so a slow first migration does not
+  trigger a restart loop.
 
 ---
 

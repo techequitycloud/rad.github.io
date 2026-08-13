@@ -24,11 +24,11 @@ guide ([Supabase_GKE](Supabase_GKE.md)) and the foundation guides
 |---|---|---|
 | JWT credentials | Generates and stores the JWT signing secret, anon key, service role key, publishable key, secret key, and secret_key_base in **Secret Manager** | Retrieve via Secret Manager; placeholders require post-deploy replacement |
 | Container image | Pins the **Kong API gateway** image and the Cloud Build configuration that extends it | `container_image` output of the platform deployment |
-| Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guide |
-| Database bootstrap | Defines the first-deploy `db-init` job that installs extensions and sets up the Supabase schema | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** `supabase-storage` bucket | `storage_buckets` output |
+| Database engine | Fixes **PostgreSQL 15** as the only supported engine (`Supabase_GKE` runs it in-namespace, not on Cloud SQL) | §Database in the platform guide |
+| Database bootstrap | Defines the first-deploy `db-init` job that sets the Supabase service-role passwords and creates the Supabase schemas/grants | `initialization_jobs` output |
+| Object storage | Declares the **Cloud Storage** `storage` bucket (`name_suffix = "storage"`) | `storage_buckets` output |
 | Kong configuration | Sets the baseline Kong environment (DB-less mode, declarative config path, routing ports, proxy buffer settings) | Application behaviour in the platform guide |
-| Health checks | Supplies the default HTTP startup and liveness probe targeting Kong's `/health` endpoint | §Observability in the platform guide |
+| Health checks | Declares `startup_probe`/`liveness_probe` variable defaults (HTTP `/health`) — not what is actually deployed; `Supabase_GKE` overrides both to TCP | §5 below and §Observability in the platform guide |
 
 ---
 
@@ -78,21 +78,30 @@ See [App_Common](App_Common.md) for the shared secret and Workload Identity mode
 ## 3. Database engine and bootstrap
 
 Supabase requires **PostgreSQL 15**; the engine is fixed and no other database is
-supported. On the first deployment a one-shot `db-init` job connects to Cloud SQL
-through the Auth Proxy and idempotently:
+supported. The Common config declares `database_type = "POSTGRES_15"`, but
+`Supabase_GKE` overrides it to `"NONE"` on the foundation and runs the
+`supabase/postgres` image as an in-namespace service instead — so there is no Cloud
+SQL instance and no Auth Proxy in a deployed Supabase.
 
-1. creates the Supabase database and user (if absent),
-2. enables the `pgcrypto`, `uuid-ossp`, and `pgvector` extensions,
-3. sets up the Supabase schema required by GoTrue, PostgREST, Realtime, and Storage.
+On the first deployment a one-shot `db-init` job connects to that in-namespace
+Postgres as `supabase_admin` and idempotently:
 
-The job uses the `postgres:15-alpine` image and runs `scripts/db-init.sh`. It is safe
-to re-run. Inspect the database directly:
+1. sets LOGIN passwords on the service roles the `supabase/postgres` image creates
+   but leaves password-less (`authenticator`, `supabase_auth_admin`,
+   `supabase_storage_admin`),
+2. creates the `auth`, `storage`, `_realtime`, and `realtime` schemas and the
+   `public`-schema grants/default privileges for `anon`, `authenticated`, and
+   `service_role`,
+3. sets the database-level `app.settings.jwt_secret` / `jwt_exp` GUCs used by RLS.
+
+The job uses the `mirror.gcr.io/library/postgres:15-alpine` image (for `psql`) and
+runs `scripts/db-init.sh`. It is safe to re-run. Inspect the database directly:
 
 ```bash
-gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
+kubectl exec -n "<namespace>" deploy/<postgres-workload> -- psql -U supabase_admin -d postgres
 ```
 
-The instance, database, and user names are in the platform deployment outputs.
+The namespace and service names are in the platform deployment outputs.
 
 ---
 
@@ -132,16 +141,21 @@ from functioning outside the cluster.
 
 ## 5. Health probe behaviour
 
-Both probes target Kong's `/health` endpoint, which returns HTTP 200 when the gateway
-is running and declarative configuration has been loaded:
+The `startup_probe`/`liveness_probe` variables declared here default to HTTP `/health`:
 
 | Probe | Type | Path | Initial delay | Period | Failure threshold |
 |---|---|---|---|---|---|
 | Startup | HTTP | `/health` | 30 s | 10 s | 18 |
 | Liveness | HTTP | `/health` | 60 s | 30 s | 3 |
 
-The generous startup failure threshold (18 × 10 s = ~3 minutes) accommodates first-boot
-database schema creation by the `db-init` job before Kong begins accepting traffic.
+**These defaults are never actually deployed.** `kong.yml` is a DB-less declarative
+config that only defines routes for `/rest/v1`, `/auth/v1`, `/realtime/v1`,
+`/storage/v1`, `/pg`, and `/` (Studio) — there is no `/health` route, so an HTTP
+probe against it would 404. `Supabase_GKE/main.tf` unconditionally overrides both
+probes to **TCP** against the Kong container port in its `supabase_module` merge,
+regardless of the value passed in for these variables. Treat this section as
+documenting the variable's shape only, not the probe behaviour you will observe on a
+deployed instance — see `docs/modules/Supabase_GKE.md` for what is actually applied.
 
 ---
 

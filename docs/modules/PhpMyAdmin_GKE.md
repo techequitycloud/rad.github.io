@@ -225,7 +225,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -249,8 +249,8 @@ All other inputs follow standard App_GKE behaviour.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `container_image_source` | `custom` | phpMyAdmin ships as a thin custom build (`FROM phpmyadmin/phpmyadmin`); keep `custom`. |
-| `container_port` | `80` | Apache listens on port 80. |
-| `min_instance_count` | `1` | Minimum replicas; GKE has no scale-to-zero, keep ≥ 1 so the console is reachable. |
+| `container_port` | `80` | Apache listens on port 80. **Hardcoded** — `PhpMyAdmin_Common`'s config output fixes `container_port = 80` with no `container_port` input passed through from this variable, so setting a different value in `deploy.tfvars` has no effect on the deployed workload. |
+| `min_instance_count` | `1` | Minimum replicas; GKE has no scale-to-zero, keep ≥ 1 so the console is reachable. **Hardcoded** — `phpmyadmin.tf` merges `min_instance_count = 1` directly into the application config that `App_GKE` deploys (`local.selected_module.min_instance_count`, not the top-level `var.min_instance_count`), so this input is immune to user overrides. |
 | `max_instance_count` | `3` | Maximum replicas. |
 | `enable_cloudsql_volume` | `false` | phpMyAdmin does not use the platform Cloud SQL integration; it connects to an external MySQL host directly. |
 | `enable_image_mirroring` | `true` | Mirror the phpMyAdmin image into Artifact Registry. |

@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -55,7 +58,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **RocketChat (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **RocketChat (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. **Confirm `stateful_pvc_enabled = true`** — MongoDB requires a real block
    filesystem; `gcsfuse` corrupts WiredTiger. Configure only what else you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/RocketChat_GKE)
@@ -88,22 +91,26 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get statefulset,pods,pvc,svc -n "$NS"
    ```
 
-2. The Service is **ClusterIP** by default. Reach the UI with a port-forward (or enable
-   a custom domain + Gateway for permanent external access):
+2. The Service is **LoadBalancer** by default (Rocket.Chat is a public-facing chat
+   app), with a static IP reserved so the address survives redeploys. Find the
+   external IP and confirm the API responds:
 
    ```bash
-   kubectl port-forward -n "$NS" svc/"$(kubectl get svc -n "$NS" -o jsonpath='{.items[0].metadata.name}')" 3000:3000 &
-   curl -s "http://localhost:3000/api/info"   # expect {"version":"6.12.1","success":true,...}
+   EXTERNAL_IP=$(kubectl get svc -n "$NS" \
+     -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
+   echo "External IP: $EXTERNAL_IP"
+   curl -s "http://${EXTERNAL_IP}/api/info"   # expect {"version":"6.12.1","success":true,...}
    ```
 
-   If it is not yet ready, confirm the embedded MongoDB reached PRIMARY on boot:
+   If it is not yet ready (empty `EXTERNAL_IP` or no response), confirm the embedded
+   MongoDB reached PRIMARY on boot:
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" \
      | grep -i "replica set rs0 is PRIMARY"
    ```
 
-3. Open `http://localhost:3000` in a browser. On first visit Rocket.Chat launches the
+3. Open `http://${EXTERNAL_IP}` in a browser. On first visit Rocket.Chat launches the
    **4-step setup wizard** — no admin credential is pre-seeded:
 
    - **Step 1 — Admin Info:** full name, username, admin email

@@ -54,6 +54,13 @@ together a focused set of Google Cloud services:
 - **`service_type = LoadBalancer` with `session_affinity = ClientIP`.** WriteFreely is
   exposed on an external LoadBalancer IP and requests from the same client stick to
   the same pod.
+- **`reserve_static_ip = true` is load-bearing — do not flip it to `false`.** The
+  entrypoint bakes its resolved public host into `config.ini` at every boot, falling
+  back to the foundation-injected `GKE_SERVICE_URL` when `WF_PUBLIC_URL` is unset.
+  `GKE_SERVICE_URL` is only computed from the *reserved* static IP; with
+  `reserve_static_ip = false` it can fall back to an unreachable internal
+  `*.svc.cluster.local` hostname if the ephemeral LoadBalancer IP isn't known yet at
+  apply time — confirmed on WriteFreely (see §6).
 - **NFS is enabled by default** (`enable_nfs = true`), which also co-hosts the
   (unused) Redis endpoint on the NFS server VM.
 - **No admin account is created automatically.** Registration is closed; create the
@@ -151,6 +158,17 @@ By default the workload is exposed through an external Cloud Load Balancing IP
 (`service_type = LoadBalancer`). A custom domain with a Google-managed certificate can
 be enabled, and a static IP can be reserved so the address survives redeploys.
 
+- **`reserve_static_ip` defaults to `true` — do not change it to `false`.** WriteFreely
+  bakes a self-referencing public host into `config.ini` at every container boot (the
+  entrypoint's `PUBLIC_URL` fallback chain: `WF_PUBLIC_URL` → `CLOUDRUN_SERVICE_URL` →
+  `GKE_SERVICE_URL`). `App_GKE` computes `GKE_SERVICE_URL` from the *reserved* static IP
+  when `reserve_static_ip = true`; with `false`, the ephemeral LoadBalancer IP is often
+  not yet known at the moment Terraform renders the Deployment's env vars, so
+  `GKE_SERVICE_URL` falls back to the cluster-internal `*.svc.cluster.local` hostname —
+  a real, reproducible race, not just a theoretical edge case (confirmed on WriteFreely
+  and fixed by setting `reserve_static_ip = true`, per the module's `deploy.tfvars`
+  default). An unreachable internal host baked into federation/generated links looks
+  like "the app works but every absolute link is broken."
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
   ```bash
@@ -267,7 +285,7 @@ specific to or notable for WriteFreely are listed; every other input is inherite
 |---|---|---|
 | `application_database_name` | `writefreely` | Database name → injected as `DB_NAME`. Immutable after first deploy. |
 | `application_database_user` | `writefreely` | Application user → injected as `DB_USER`. Immutable after first deploy. |
-| `database_type` | `null` | Inherits `MYSQL_8_0` from the shared application layer. |
+| `database_type` | `"MYSQL_8_0"` | Set explicitly, matching the engine the shared application layer expects. |
 
 ### Group 10 — Observability & Health
 
@@ -341,6 +359,7 @@ and explore the running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid backup file fails the import job. |
 | `container_image_source` | `custom` | High | Setting `prebuilt` without an image that embeds the config-gen entrypoint yields a pod that cannot render `config.ini` and fails to start. |
 | `WF_PUBLIC_URL` | External LoadBalancer URL / domain | High | An incorrect public host breaks generated links, federation, and redirects. |
+| `reserve_static_ip` | `true` | High | With `false`, `GKE_SERVICE_URL` can fall back to an unreachable internal `*.svc.cluster.local` host at apply time (an ephemeral LB IP race), which the entrypoint bakes into `config.ini` as the public host — confirmed on WriteFreely. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
 | `session_affinity` | `ClientIP` | Medium | Without stickiness, sessions may bounce between pods; stable cookie keys make this tolerable but affinity is preferred. |

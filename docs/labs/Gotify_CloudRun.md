@@ -38,8 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -204,8 +207,10 @@ token* subscribes to them.
 
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count, and CPU / memory utilisation.
-   The module also provisions an **uptime check** against `/health`; confirm it is
-   green under Monitoring → Uptime checks, and review Alerting → Policies.
+   The module can provision an **uptime check** against `/health` via
+   `uptime_check_config`, but it defaults to `enabled = false` — set
+   `uptime_check_config.enabled = true` at deploy time if you want one, then confirm
+   it is green under Monitoring → Uptime checks, and review Alerting → Policies.
 
 ---
 

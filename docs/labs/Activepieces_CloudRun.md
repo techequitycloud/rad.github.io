@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -115,8 +118,12 @@ export REGION="us-central1"          # the region you deploy into
    that scaling beyond one instance requires Redis (`enable_redis = true`); without
    it each instance maintains its own in-memory queue.
 
-3. **Update the application version** by changing the version input in the RAD platform
-   and applying it via **Update**; a new image builds and a new revision rolls out.
+3. **Update the application version tag** by changing the version input in the RAD
+   platform and applying it via **Update**; a new image builds and a new revision
+   rolls out. Note this only relabels the pushed Artifact Registry tag — the
+   `Activepieces_Common` Dockerfile always builds `FROM activepieces/activepieces:latest`
+   with no version ARG, so it does not change which upstream Activepieces release
+   is actually built into the image.
 
 4. **Manage secrets and backups:**
 
@@ -147,8 +154,10 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count (scaling behaviour), and
-   CPU / memory utilisation. The module also provisions an **uptime check**; confirm
-   it is green under Monitoring → Uptime checks, and review Alerting → Policies.
+   CPU / memory utilisation. The module can provision an **uptime check** (when
+   `uptime_check_config.enabled = true` — it defaults to `false`); if enabled,
+   confirm it is green under Monitoring → Uptime checks, and review Alerting →
+   Policies.
 
 ---
 

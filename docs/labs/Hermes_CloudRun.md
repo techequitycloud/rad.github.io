@@ -41,10 +41,13 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project **with
-  `create_network_filesystem = true`** — Hermes stores its entire identity on the
-  shared NFS share, so the NFS server VM is **required** and must be `RUNNING`
-  before you deploy:
+- **Services_GCP**, with the NFS server VM (`create_network_filesystem = true`)
+  — Hermes stores its entire identity on the shared NFS share, so the NFS
+  server VM is **required**. You do not need to deploy or configure this
+  yourself first: `create_network_filesystem` is on by default for every
+  automated deployment, so the platform's auto-provisioned Services_GCP
+  already satisfies this. If you deploy Services_GCP manually instead, do not
+  turn this off. To confirm the NFS server VM is `RUNNING` after deploy:
   ```bash
   gcloud compute instances list --project="$PROJECT" \
     --filter="name~nfs" --format="table(name,zone,status)"

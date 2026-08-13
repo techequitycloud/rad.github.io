@@ -58,6 +58,14 @@ together a focused set of Google Cloud services:
   system failure.
 - **`max_instance_count` defaults to 1.** Increase only after confirming Redis session
   sharing is operational; multiple instances without Redis cause PHP session loss.
+- **`cpu_always_allocated` defaults to `true`.** OpenEMR's first-boot setup (Twig cache
+  clear, login-page-layout DB check, and a recursive file-permission hardening pass)
+  is background work not tied to any single inbound request. Under request-based
+  billing (`false`) Cloud Run throttles CPU to near-zero between requests, so that
+  one-time setup can take many minutes or effectively never finish — confirmed live:
+  the identical boot sequence went from stuck to a fully rendered login page in under
+  15s once this was set `true`. Only flip to `false` once you've verified the instance
+  is past first boot.
 
 ---
 
@@ -246,7 +254,7 @@ specific to or notable for OpenEMR are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -266,6 +274,7 @@ specific to or notable for OpenEMR are listed; every other input is inherited fr
 | `deploy_application` | `true` | Set `false` to provision infrastructure only without deploying the container. |
 | `cpu_limit` | `2000m` | CPU per instance; 2 vCPU recommended for concurrent clinical workloads. |
 | `memory_limit` | `4Gi` | Memory per instance; 4 GiB recommended. Below 2 GiB causes OOM kills under clinical load. |
+| `cpu_always_allocated` | `true` | Allocate CPU at all times (instance-based billing), not just during requests. OpenEMR's first-boot background setup (Twig cache clear, DB layout check, permission-hardening pass) needs continuous CPU; under request-based billing (`false`) it throttles to near-zero and can hang for many minutes or never complete. |
 | `min_instance_count` | `1` | Minimum instances. Keep ≥ 1 to avoid cold-start delays for clinical users. |
 | `max_instance_count` | `1` | Increase only after confirming Redis session sharing is operational. |
 | `container_port` | `80` | OpenEMR/Apache listens on port 80. |
@@ -436,6 +445,7 @@ running resources.
 | `redis_host` | `""` (NFS) or explicit | High | An unreachable Redis host causes PHP session failures and prevents all logins. |
 | `memory_limit` | ≥ `4Gi` | High | OpenEMR PDF generation and billing reports are memory-intensive. Below 2 GiB causes OOM kills mid-request. |
 | `min_instance_count` | `1` | High | Scale-to-zero adds cold-start latency and risks missed clinical access. |
+| `cpu_always_allocated` | `true` | High | OpenEMR's first-boot setup (Twig cache clear, DB layout check, permission-hardening pass) is background work, not tied to a request. Under request-based billing (`false`) CPU throttles to near-zero between requests, so first boot can take many minutes or effectively never finish — confirmed live: identical boot went from stuck to a rendered login page in &lt;15s once set `true`. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | HIPAA-regulated environments should retain at least 90 days. |
 | `enable_iap` / `enable_cloud_armor` | enable for healthcare | Medium | The OpenEMR admin interface and patient records are publicly reachable without these controls. |
 | `enable_audit_logging` | `true` for HIPAA | Medium | HIPAA requires audit logging of access to PHI. |

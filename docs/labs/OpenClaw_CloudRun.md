@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Serverless VPC Access,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Serverless VPC Access, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,7 +57,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **OpenClaw (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **OpenClaw (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. An Anthropic API key is required on the first deploy — set it in the
    corresponding input field. Configure only what else you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun)
@@ -82,8 +85,10 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. By default, `ingress_settings = "internal"` restricts the service to VPC traffic.
-   For direct access in this lab, use the `gcloud` proxy:
+1. By default, `ingress_settings = "all"` makes the service directly reachable at its
+   `run.app` URL — no proxy or tunnel needed. If you set `ingress_settings = "internal"`
+   (restricting the service to VPC traffic, e.g. when fronting it with an OpenClaw router),
+   use the `gcloud` proxy instead:
 
    ```bash
    gcloud run services proxy "$SERVICE" \
@@ -91,12 +96,10 @@ export REGION="us-central1"          # the region you deploy into
    # Access at http://localhost:8080
    ```
 
-   Alternatively, set `ingress_settings = "all"` in the RAD platform and apply it via **Update**.
-
 2. Confirm the service is healthy:
 
    ```bash
-   curl -s http://localhost:8080/health   # expect {"status":"ok"}
+   curl -s "$SERVICE_URL/health"   # expect {"status":"ok"}
    ```
 
 3. Retrieve the gateway token from Secret Manager to authenticate API calls:

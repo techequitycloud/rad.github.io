@@ -34,7 +34,7 @@ ingest endpoint; GlitchTip stores, groups, and alerts on them.
 | Database bootstrap | Defines two first-deploy jobs (`db-init`, `glitchtip-migrate`) that create the database/user, run Django migrations, and create the superuser | `initialization_jobs` output |
 | Object storage | Declares the **Cloud Storage** data bucket (`storage` suffix) | `storage_buckets` output |
 | Core settings | Sets the baseline GlitchTip environment: `SERVER_ROLE=all_in_one`, registration state, event retention, disabled Valkey/Redis | Application behaviour in the platform guides |
-| Health checks | Supplies the default startup/liveness/readiness probes targeting `/_health/` | §Observability in the platform guides |
+| Health checks | Supplies a `readiness_probe` (`/_health/`) in its `config` output that neither foundation module consumes (dead configuration); the actual startup/liveness probes come from variant-level variables that override this layer's `/_health/` default to `/` | §Observability in the platform guides |
 
 ---
 
@@ -162,14 +162,25 @@ comes up correctly on first boot:
 
 ## 6. Health probe behaviour
 
-The default startup, liveness, and readiness probes target `/_health/` — GlitchTip's
-unauthenticated endpoint that returns 200 once the server is up. The startup probe
-allows a generous window (60-second initial delay, 30 failure threshold) to
-accommodate the first-boot migrations run by `glitchtip-migrate`.
+This module's own `config` output defaults `startup_probe`/`liveness_probe` to
+`/_health/` and defines a `readiness_probe` at the same path. Neither of those defaults
+is what actually ships, though: both `GlitchTip_CloudRun` and `GlitchTip_GKE` declare
+their own `startup_probe`/`liveness_probe` variables and forward them straight into this
+module's call, overriding the `/_health/` default above. Those variant-level variables
+default to path `/` (also an unauthenticated 200 endpoint), so **`/` is the actually-
+deployed default probe path on both platforms**, not `/_health/`. The `readiness_probe`
+field is set here but never read by `App_CloudRun` or `App_GKE` — neither foundation
+module wires a `readiness_probe`/`readinessProbe` into its Cloud Run or Kubernetes
+resources — so it is dead configuration with no effect on deployed behavior.
 
-- **Startup** — HTTP `GET /_health/`, 60 s initial delay, 15 s period, 30 failures.
-- **Liveness** — HTTP `GET /_health/`, 60 s initial delay, 30 s period, 3 failures.
-- **Readiness** — HTTP `GET /_health/`, 30 s initial delay, 10 s period, 3 failures.
+Actual deployed defaults (from `GlitchTip_CloudRun`/`GlitchTip_GKE` `variables.tf`, both
+platforms identical):
+
+- **Startup** — HTTP `GET /`, 60 s initial delay, 15 s period, 30 failures. Allows a
+  generous window for the first-boot migrations run by `glitchtip-migrate`.
+- **Liveness** — HTTP `GET /`, 60 s initial delay, 30 s period, 3 failures.
+- **Readiness** — not applicable; the `readiness_probe` this module sets is unused by
+  either foundation module.
 
 ---
 

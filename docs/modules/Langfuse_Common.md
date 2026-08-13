@@ -159,11 +159,14 @@ Platform-specific adjustments handled by the entrypoint:
 
 ## 6. Health probe behaviour
 
-The default probes target `/api/public/health` — Langfuse's unauthenticated health endpoint
-that returns a 200 only once the server is fully initialised. A generous startup window
+This layer's own default probe object targets `/api/public/health` — Langfuse's
+unauthenticated health endpoint that returns a 200 only once the server is fully
+initialised — and it is what the hardcoded `readiness_probe` uses. Both platform
+variants, however, pass their own `startup_probe`/`liveness_probe` defaults, which use
+`/`, so a stock deployment probes `/`. A generous startup window
 accommodates the Prisma migrations that run on first boot (and on any version upgrade).
 
-- **Cloud Run** uses HTTP probes against `/api/public/health` with a wide failure-threshold
+- **Cloud Run** uses HTTP probes against `/` with a wide failure-threshold
   window so first-boot migrations complete before the revision is marked unhealthy.
 - **GKE** uses HTTP startup/liveness probes against the same path; the startup probe's wide
   failure threshold covers first-boot migrations.

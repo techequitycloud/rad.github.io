@@ -27,7 +27,7 @@ platform guides ([Audiobookshelf_GKE](Audiobookshelf_GKE.md),
 | Container image | Wraps the official `ghcr.io/advplyr/audiobookshelf` image with a thin `Dockerfile` and builds/mirrors it into **Artifact Registry** via Cloud Build (Kaniko) | `container_image` output of the platform deployment |
 | Database engine | **None** — Audiobookshelf embeds its own **SQLite** database under `CONFIG_PATH`; no Cloud SQL, no init job, no migrations job | `database_type = "NONE"` in the config |
 | Persistent storage | Declares a single **Cloud Storage** data bucket and mounts it at `/data` (covering both `CONFIG_PATH` and `METADATA_PATH`) | `storage_buckets` output |
-| Core settings | Sets the baseline environment: `PORT`, `CONFIG_PATH`, `METADATA_PATH`, container port `80` | Application behaviour in the platform guides |
+| Core settings | Sets the baseline environment: `CONFIG_PATH`, `METADATA_PATH`, container port `80` (no `PORT` env var — it's a Cloud Run reserved name) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness probe targeting `/healthcheck` | §Observability in the platform guides |
 | Secrets | **None** — the first admin ("root") user is created interactively in the first-run web UI; `secret_ids` and `secret_values` are empty | — |
 
@@ -135,14 +135,17 @@ gcloud artifacts docker images list \
 `Audiobookshelf_Common` establishes the baseline environment so the application comes
 up correctly on first boot:
 
-- **Port** — `PORT = "80"`; the container listens on port `80` (Audiobookshelf's
-  default HTTP port).
+- **Port** — the container listens on port `80` via `container_port` (Audiobookshelf's
+  default HTTP port). There is **no `PORT` environment variable** — Audiobookshelf
+  listens on the `$PORT` Cloud Run auto-injects from `container_port`, and a
+  user-supplied `PORT` env var is a reserved name that the platform rejects, so the
+  module deliberately does not set one.
 - **Config path** — `CONFIG_PATH = "/data/config"`.
 - **Metadata path** — `METADATA_PATH = "/data/metadata"`.
 
-These defaults can be overridden via `environment_variables` when the same key is
-supplied, but changing `CONFIG_PATH`/`METADATA_PATH` after first boot would orphan the
-existing SQLite database and cached metadata.
+`CONFIG_PATH`/`METADATA_PATH` can be overridden via `environment_variables` when the
+same key is supplied, but changing them after first boot would orphan the existing
+SQLite database and cached metadata.
 
 ---
 

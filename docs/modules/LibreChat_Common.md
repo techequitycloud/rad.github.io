@@ -25,7 +25,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Cryptographic secrets | Generates `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `MONGO_URI` and stores them in **Secret Manager** | Retrieve via Secret Manager (see below) |
 | Container image | Pins the official LibreChat image (`ghcr.io/danny-avila/librechat`) and mirrors it to Artifact Registry | `container_image` output of the platform deployment |
-| Database connectivity | Manages the MongoDB URI — three modes: explicit URI, manual Firestore config, or Firestore ENTERPRISE auto-provisioning | `MONGO_URI` secret; §Database below |
+| Database connectivity | Manages the MongoDB URI — three modes: explicit URI (used by default, via each caller's own `mongo:7` sidecar/helper), manual Firestore config, or Firestore ENTERPRISE auto-provisioning (opt-in) | `MONGO_URI` secret; §Database below |
 | Object storage | Declares a **Cloud Storage** bucket (suffix `uploads`) for user file uploads | `storage_buckets` output |
 | Port binding | Sets `container_port = 3080` — LibreChat's Express server port | Service/revision configuration |
 | Core settings | Sets the baseline LibreChat environment (`HOST`, `NODE_ENV`, `APP_TITLE`, `TRUST_PROXY`, `ALLOW_REGISTRATION`, `DOMAIN_CLIENT`, `DOMAIN_SERVER`) | Application behaviour in the platform guides |
@@ -37,9 +37,15 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 Five core LibreChat secrets are generated automatically on first deploy and stored in
 Secret Manager. Two more (`scram-password`, `firestore-host`) are added only when the Firestore
-MongoDB-compatible auto-provisioning path is active (§3) — which is the **default** whenever
-`mongodb_uri` and `firestore_mongodb_host` are both left empty. All are injected into the
-workload at runtime; plaintext is never written to state files or logs.
+MongoDB-compatible auto-provisioning path is active (§3) — which, considered purely as
+`LibreChat_Common`'s own bare-variable behaviour, fires whenever `mongodb_uri` and
+`firestore_mongodb_host` are both left empty. That is **not what a default platform deployment
+does**, however: neither actual caller (`LibreChat_CloudRun`, `LibreChat_GKE`) ever invokes this
+module with both left empty under its own defaults — Cloud Run always passes its in-pod
+`mongo:7` sidecar URI, and GKE always computes an in-namespace `mongo:7` helper-service URI
+when its own `mongodb_uri` is empty (see §3, mode 1). Firestore auto-provisioning only runs when
+an operator explicitly clears the effective `mongodb_uri` to opt into it. All secrets are
+injected into the workload at runtime; plaintext is never written to state files or logs.
 
 | Secret suffix | Environment variable | Content |
 |---|---|---|
@@ -72,16 +78,26 @@ gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT
 LibreChat requires MongoDB. `LibreChat_Common` supports three mutually exclusive connection
 paths:
 
-1. **Explicit URI.** Provide `mongodb_uri` with a full MongoDB connection string
-   (`mongodb+srv://...` for Atlas, `mongodb://...` for self-hosted). The URI is stored directly
-   as the `MONGO_URI` secret and the Firestore provisioning path is skipped entirely.
+1. **Explicit URI (the platform default, via the caller's own default wiring).** Provide
+   `mongodb_uri` with a full MongoDB connection string (`mongodb+srv://...` for Atlas,
+   `mongodb://...` for self-hosted). The URI is stored directly as the `MONGO_URI` secret and
+   the Firestore provisioning path is skipped entirely. This is also the mode both platform
+   callers use out of the box: `LibreChat_CloudRun` always passes its in-pod `mongo:7` sidecar
+   URI (`mongodb://127.0.0.1:27017/LibreChat`), and `LibreChat_GKE`'s `main.tf` computes an
+   in-namespace `mongo:7` helper-service URI (`mongodb://<service>-mongo.<namespace>.svc.cluster.local:27017/LibreChat`)
+   whenever its own `mongodb_uri` input is empty — neither ever forwards a genuinely empty
+   string into this module under default settings.
 
 2. **Manual Firestore configuration.** Set `firestore_mongodb_host` to the Firestore
    MongoDB-compatible endpoint and provide `firestore_mongodb_username` and
    `firestore_mongodb_password`. The module constructs the SCRAM-authenticated URI automatically
    and stores it in Secret Manager.
 
-3. **Firestore ENTERPRISE auto-provisioning (default).** Leave all three variables empty. The
+3. **Firestore ENTERPRISE auto-provisioning (opt-in — `LibreChat_Common`'s own bare default,
+   not the platform default).** Leave all three variables empty on the *effective* call into
+   this module — which requires an operator to explicitly override `mongodb_uri` on
+   `LibreChat_CloudRun`/`LibreChat_GKE` to `""`, since neither module's own default reaches
+   this module with an empty URI (see mode 1). When this path does run, the
    module:
    - Discovers any externally-managed (Services_GCP-labelled) ENTERPRISE Firestore database.
    - Creates a new ENTERPRISE Firestore database if none is found (idempotent — safe on retry).

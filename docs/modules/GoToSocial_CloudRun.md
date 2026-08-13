@@ -280,7 +280,7 @@ behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `cr`) from any co-deployed GKE variant (e.g. `gke`) — same-tenant CR+GKE collide on service name, secrets, and buckets. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Use a distinct value (e.g. `cr`) from any co-deployed GKE variant (e.g. `gke`) — same-tenant CR+GKE collide on service name, secrets, and buckets. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

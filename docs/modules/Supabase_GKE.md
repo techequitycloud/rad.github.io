@@ -36,34 +36,30 @@ a set of Supabase microservices. It wires together the following Google Cloud se
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | API gateway (compute) | GKE Autopilot | Kong gateway pods, 1 vCPU / 2 GiB by default, horizontally autoscaled |
-| Database + microservices | GKE Autopilot (hardcoded `additional_services`) | `postgres` (Supabase's own image, not Cloud SQL), GoTrue, PostgREST, Realtime, Storage API, imgproxy, postgres-meta, and Studio — 8 in-namespace Deployments wired up automatically; the `additional_services` variable only adds MORE services on top |
-| Database | Self-hosted PostgreSQL (`supabase/postgres` pod) | **Not Cloud SQL.** Runs as one of the hardcoded `additional_services` above; the image ships every Supabase role/extension (pgvector, pgjwt, pgsodium, pg_graphql, …) that Cloud SQL can't provide. Data lives on the pod's local ephemeral disk by default — it resets on pod restart |
-| Object storage | Cloud Storage | A dedicated `supabase-storage` bucket for file uploads |
-| Secrets | Secret Manager | JWT signing secret (auto-generated), anon key, service role key, publishable key, secret key, secret_key_base, and an internally auto-generated Postgres password (not user-supplied) |
+| Microservices | GKE Autopilot (additional services) | GoTrue auth, PostgREST, Realtime, Storage API, Studio — each a separate Deployment |
+| Database | GKE Autopilot (in-namespace `supabase/postgres`) | Required — Supabase is PostgreSQL-native. Not Cloud SQL: `main.tf` sets `database_type = "NONE"` on the foundation and runs `supabase/postgres` as an additional service |
+| Object storage | Cloud Storage | A dedicated `storage`-suffixed bucket for file uploads |
+| Secrets | Secret Manager | JWT signing secret (auto-generated), anon key, service role key, publishable key, secret key, and secret_key_base |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
 
-- **Supabase runs its OWN PostgreSQL, not Cloud SQL.** The `database_type` /
-  `application_database_name` / `application_database_user` / `enable_postgres_extensions` /
-  `postgres_extensions` inputs are inherited from App_GKE for schema parity, but the module
-  internally forces the per-app config to `database_type = "NONE"` and
-  `enable_postgres_extensions = false` — Cloud SQL is never provisioned for this module.
-- **The Postgres data directory is ephemeral by default.** The in-namespace `postgres`
-  service has no PVC — all data (schemas, users, tables) is lost on pod restart or
-  reschedule. This is acceptable for a lab/test deployment only; a production deployment
-  needs a per-pod PVC (block storage), which this module does not yet wire up.
+- **PostgreSQL 15 is mandatory.** The database engine is fixed; using any other engine
+  breaks startup.
 - **Kong runs in declarative (database-less) mode.** Routing is defined in
-  `/home/kong/kong.yml` baked into the container image — no separate Kong database is
-  needed (Kong is stateless; it does not use the Supabase Postgres pod either).
+  `/home/kong/kong.yml` baked into the container image — no Kong database is needed.
 - **JWT credentials are auto-generated or placeholder.** The JWT signing secret is
   auto-generated (32 random characters). The anon key and service role key are stored
   as placeholders and **must be replaced with valid signed JWTs** before production
   use.
-- **pgvector ships pre-installed.** The `supabase/postgres` image already bundles
-  pgvector, pgjwt, pgsodium, and the rest of Supabase's extension set — there is no
-  separate extension-enabling step for this module (the standard `enable_postgres_extensions`
-  job is disabled).
+- **The in-namespace Postgres superuser password is auto-generated.** Like the
+  Realtime `SECRET_KEY_BASE`/`DB_ENC_KEY`, it's a `random_password` with no
+  corresponding input variable — not user-supplied, and internal-only (ClusterIP,
+  never exposed).
+- **pgvector ships with the database image.** `pgcrypto`, `uuid-ossp`, and `pgvector`
+  come with `supabase/postgres`, so Supabase's AI/embedding features work out of the
+  box; the foundation's own extension jobs are disabled (`enable_postgres_extensions`
+  is overridden to `false` in `main.tf`) because they target Cloud SQL.
 - **Image mirroring is always on.** Kong and sidecar images are mirrored into
   Artifact Registry on every apply to avoid Docker Hub rate limits.
 - **Session affinity is `None`.** Kong is stateless; sticky routing is not required
@@ -106,34 +102,33 @@ deployed as separate Kubernetes Deployments in the same namespace via
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload
 type (Deployment vs StatefulSet) are managed.
 
-### B. In-cluster PostgreSQL (`supabase/postgres`) — no Cloud SQL
+### B. PostgreSQL 15 — in-namespace `supabase/postgres`
 
-Supabase does **not** use Cloud SQL. Its database is the `postgres` service in
-`local.supabase_additional_services` — the official `supabase/postgres` image running
-as a ClusterIP-only pod (`INGRESS_TRAFFIC_INTERNAL_ONLY`), reached by every other
-Supabase service over cluster DNS at `<service-name>-postgres:5432`. Its password is
-generated internally with `random_password` (24 chars, never a user-supplied
-variable) and never leaves the cluster. On first deploy the non-blocking `db-init`
-job waits for the Postgres pod to accept connections, then sets passwords on the
-service login roles (`authenticator`, `supabase_auth_admin`, `supabase_storage_admin`
-— the image creates these roles but not their passwords), creates the `auth`/
-`storage`/`realtime`/`_realtime` schemas, and wires the JWT secret as a database GUC.
+Supabase stores all application data in a `supabase/postgres` Deployment running in
+the same namespace (a ClusterIP service, never exposed externally) — **not** Cloud
+SQL, and with no Auth Proxy involved. On first deploy the `db-init` job connects to
+it as `supabase_admin` and sets the service-role passwords, creates the Supabase
+schemas, and applies the `public`-schema grants.
 
-- **CLI (no Cloud SQL Console page applies here):**
+> **Data is ephemeral.** The postgres pod writes to the pod's local disk
+> (`ephemeral_storage_limit = "4Gi"`), so data resets when the pod restarts —
+> acceptable for a lab/test deployment; a production deploy needs a per-pod block PVC.
+
+- **Console:** Kubernetes Engine → Workloads → the `postgres` Deployment.
+- **CLI:**
   ```bash
-  kubectl get pods,svc -n "$NAMESPACE" | grep postgres
-  kubectl exec -it -n "$NAMESPACE" deploy/<service-name>-postgres -- \
-    psql -U supabase_admin -d postgres
+  kubectl get deploy,svc -n "$NAMESPACE" | grep postgres
+  kubectl exec -n "$NAMESPACE" deploy/<postgres-workload> -- \
+    psql -U supabase_admin -d postgres -c '\dn'
   ```
 
-Because the data directory is ephemeral pod-local disk (see §1), there is no
-persistent volume to inspect with `kubectl get pvc` unless you have added one
-yourself — this module does not provision one.
+For the foundation's own (unused here) Cloud SQL connection model, backups, and
+password rotation, see [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage
 
-A dedicated **Cloud Storage** bucket (`supabase-storage`) is provisioned for
-Supabase file uploads. The workload service account is granted access automatically.
+A dedicated **Cloud Storage** bucket (declared with `name_suffix = "storage"`) is
+provisioned for Supabase file uploads. The workload service account is granted access automatically.
 Public-access prevention is set to `inherited` so bucket-level ACLs can be used for
 serving objects.
 
@@ -193,9 +188,8 @@ details.
 
 ### F. Cloud Logging & Monitoring
 
-Pod stdout/stderr (including the in-namespace `postgres` pod's own logs) flow to
-Cloud Logging; GKE metrics flow to Cloud Monitoring. Optional uptime checks and
-alert policies are available.
+Pod stdout/stderr flow to Cloud Logging; GKE and Cloud SQL metrics flow to Cloud
+Monitoring. Optional uptime checks and alert policies are available.
 
 - **Console:** Logging → Logs Explorer; Monitoring → Dashboards / Alerting.
 - **CLI:**
@@ -208,16 +202,15 @@ alert policies are available.
 
 ## 3. Supabase Application Behaviour
 
-- **First-deploy database setup.** The `db-init` job runs non-blocking
-  (`execute_on_apply = false`, since the foundation runs `initialization_jobs` before
-  creating `additional_services` — a blocking job would deadlock waiting for a
-  Postgres service that doesn't exist yet). It waits for the in-namespace
-  `supabase/postgres` pod to accept connections, then idempotently sets passwords on
-  the service login roles, creates the `auth`/`storage`/`realtime`/`_realtime`
-  schemas with the correct ownership, and sets the JWT secret/expiry as database GUCs.
-  It does **not** create a Cloud SQL database or install extensions — the
-  `supabase/postgres` image ships every role and extension Supabase needs already. It
-  is safe to re-run.
+- **First-deploy database setup.** The `db-init` job connects to the in-namespace
+  `supabase/postgres` service as `supabase_admin` and idempotently sets LOGIN
+  passwords on the service roles the image leaves password-less (`authenticator`,
+  `supabase_auth_admin`, `supabase_storage_admin`), creates the `auth`, `storage`,
+  `_realtime`, and `realtime` schemas with their grants, and sets the
+  `app.settings.jwt_secret`/`jwt_exp` database GUCs. It runs non-blocking
+  (`execute_on_apply = false`) with its own `pg_isready` wait loop, because the
+  foundation creates initialization jobs before additional services. It is safe to
+  re-run.
 - **JWT placeholder replacement.** After the first deploy, the anon key and service
   role key secrets contain placeholder strings. These **must be replaced** with valid
   JWTs signed by the auto-generated `jwt_secret` before Supabase clients can
@@ -234,11 +227,15 @@ alert policies are available.
   while leaving derived keys unchanged invalidates all issued tokens immediately.
 - **Kong is stateless.** The gateway reads routing from the declarative `kong.yml`
   baked into the image. No Kong database is used.
-- **Health probes are TCP, not HTTP.** Kong's proxy port 8000 has no `/health` route
-  (it 404s), so HTTP probes never pass — the module uses TCP probes against the
-  container port instead: startup 15 s initial delay / 30 failures (~5 min
-  tolerance) for first-boot Postgres + `db-init` to settle; liveness 30 s initial
-  delay / 3 failures.
+- **Health probes are TCP, not HTTP `/health`.** The `startup_probe`/`liveness_probe`
+  (and `startup_probe_config`/`health_check_config`) variables all declare an HTTP
+  `GET /health` default, but `kong.yml`'s DB-less declarative config defines no
+  `/health` route (only `/rest/v1`, `/auth/v1`, `/realtime/v1`, `/storage/v1`,
+  `/pg`, and `/` for Studio) — an HTTP probe against it would 404. `main.tf`
+  unconditionally overrides the deployed Kong container's startup and liveness
+  probes to **TCP** on the container port, regardless of what these variables are
+  set to. The startup probe still allows ~5 minutes (`15 s initial delay × 30
+  failures × 10 s period`) for first-boot database setup to complete.
 - **Realtime uses PostgreSQL LISTEN/NOTIFY.** No Redis is required for the core
   Supabase stack; `enable_redis` defaults to `false`.
 
@@ -257,15 +254,11 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the workload and regional resources. |
 
-> There is no `supabase_db_password` input. The in-namespace Postgres password is
-> generated internally (`random_password`, 24 chars) and is never a user-supplied
-> variable — it does not appear anywhere in this configuration surface.
-
 ### Group 2 — Deployment Environment
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -287,7 +280,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `min_instance_count` | `1` | Minimum Kong pod replicas. Keep ≥ 1 — cold starts disrupt OAuth redirect flows. |
 | `max_instance_count` | `3` | Maximum Kong pod replicas (autoscaler ceiling). |
 | `container_port` | `8000` | Kong HTTP proxy port. |
-| `enable_cloudsql_volume` | `true` | Inherited from App_GKE, but Supabase never has a Cloud SQL instance to proxy to (`database_type` is forced to `NONE` internally — see Group 16); Kong and the Supabase microservices reach the database over cluster DNS to the in-namespace `postgres` pod (§2B), not through a Cloud SQL Auth Proxy socket. |
+| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar. Not used by Supabase — every service connects to the in-namespace `supabase/postgres` directly. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
 | `container_image_source` | `custom` | Image source mode. `custom` builds via Cloud Build from `Supabase_Common/scripts/Dockerfile`. |
 | `enable_image_mirroring` | `true` | Always enabled — Kong is mirrored from Docker Hub into Artifact Registry. |
@@ -326,7 +319,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable PVC templates in the StatefulSet. Currently unset/unused by this module — the in-namespace Postgres pod has no PVC and runs on ephemeral pod-local disk (see §1); wiring a PVC here would need custom work, not just flipping this flag. |
+| `stateful_pvc_enabled` | `null` | Enable PVC templates in the StatefulSet. Leave unset — Supabase state lives in Cloud SQL and GCS, not pod-local storage. |
 | `stateful_pvc_size` | `10Gi` | PVC size per pod (if StatefulSet PVCs are enabled). |
 
 ### Group 8 — Resource Quota
@@ -348,8 +341,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | TCP, 15 s initial delay, 30 failures | Kong's proxy port has no `/health` route — the module forces TCP probes; allows ~5 min for first-boot Postgres + `db-init` to settle. |
-| `health_check_config` | TCP, 30 s initial delay, 3 failures | Liveness probe. |
+| `startup_probe_config` | HTTP `/health`, 30 s initial delay, 18 failures | **Ignored.** `main.tf` hardcodes the deployed Kong startup probe to TCP; see §3. |
+| `health_check_config` | HTTP `/health`, 60 s initial delay, 3 failures | **Ignored.** `main.tf` hardcodes the deployed Kong liveness probe to TCP; see §3. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
@@ -379,7 +372,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the `supabase-storage` bucket. |
+| `create_cloud_storage` | `true` | Provision the `storage`-suffixed bucket. |
 | `storage_buckets` / `gcs_volumes` | _(set by Common)_ | Additional buckets / GCS Fuse mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -387,13 +380,13 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` (declared default) | **Inert for Cloud SQL creation.** Accepted for schema parity with other App_GKE apps, but the module internally forces the per-app config to `NONE` — Supabase always runs its own in-cluster Postgres regardless of this value. |
-| `application_database_name` | `postgres` (declared default) | **Inert** — forwarded but not what actually names the in-cluster database (that's hardcoded `postgres` in `supabase_services.tf`). |
-| `application_database_user` | `supabase_admin` (declared default) | **Inert** — same caveat; the in-cluster superuser role is hardcoded to `supabase_admin`. |
-| `enable_postgres_extensions` | `true` (declared default) | **Inert** — internally forced to `false`. The `supabase/postgres` image ships pgvector/pgcrypto/uuid-ossp/etc. pre-installed, so no separate extension-enabling job runs. |
-| `postgres_extensions` | `["pgcrypto","uuid-ossp","pgvector"]` (declared default) | **Inert** — internally forced to `[]` for the same reason. |
-| `database_password_length` | `32` | Inert — the in-cluster Postgres password (24 chars) is generated by a separate `random_password` resource, not sized by this variable. |
-| `enable_auto_password_rotation` | `false` | Inert for this module — there is no Cloud SQL password to rotate. |
+| `database_type` | `POSTGRES_15` | Inert — `main.tf` overrides the value the foundation actually receives to `"NONE"`, since PostgreSQL runs in-namespace rather than on Cloud SQL. |
+| `application_database_name` | `postgres` | Database name. Immutable after first deploy. |
+| `application_database_user` | `supabase_admin` | Application user. Immutable after first deploy. |
+| `enable_postgres_extensions` | `true` | Install `pgcrypto`, `uuid-ossp`, and `pgvector`. Required. |
+| `postgres_extensions` | `["pgcrypto","uuid-ossp","pgvector"]` | Extension list. |
+| `database_password_length` | `32` | Generated password length (16–64). |
+| `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
 
 ### Group 17 — Backup & Maintenance
 
@@ -459,7 +452,11 @@ locate and explore the running resources.
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
 | `service_url` | URL to reach the Supabase API via the Kong gateway. |
-| `database_instance_name` / `database_name` / `database_user` / `database_password_secret` / `database_host` / `database_port` | **Empty/unset for this module.** These outputs mirror the App_GKE Cloud SQL fields, but Supabase never provisions a Cloud SQL instance — its actual database is the in-cluster `<service-name>-postgres` pod (see §2B), which these outputs do not describe. |
+| `database_instance_name` | Cloud SQL instance name. |
+| `database_name` | Application database name (`postgres`). |
+| `database_user` | Application database user (`supabase_admin`). |
+| `database_password_secret` | Secret Manager secret holding the DB password. |
+| `database_host` / `database_port` | DB endpoint (127.0.0.1 via Auth Proxy) / port. |
 | `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
 | `container_image` / `container_registry` | Deployed Kong image and Artifact Registry repo. |
@@ -485,14 +482,16 @@ locate and explore the running resources.
 |---|---|---|---|
 | `jwt_secret` | auto-generated or fixed at first deploy | Critical | Changing it post-deploy invalidates every issued JWT; all client connections break. `anon_key` and `service_role_key` must be regenerated together. |
 | `anon_key` / `service_role_key` | signed JWTs (replace placeholders) | Critical | Placeholder values cause every Supabase API call to return 401. All three JWT credentials must be regenerated as an atomic set. |
-| Postgres data persistence | ephemeral pod-local disk by default | Critical | The in-namespace `postgres` service has no PVC — all schemas/users/tables are lost on pod restart or reschedule. Acceptable for a lab/test deployment only; add a persistent volume before running anything you can't afford to lose. |
+| `enable_cloudsql_volume` | `true` | Low | Inert for Supabase — GoTrue, PostgREST, Realtime and Storage all connect to the in-namespace `supabase/postgres` over their own `postgres://` URLs, not through the Auth Proxy. |
+| `database_type` | `POSTGRES_15` | Low | Inert — `main.tf` passes `"NONE"` to the foundation regardless, because PostgreSQL 15 runs as an in-namespace `supabase/postgres` service. |
+| `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`) | Critical | Bare integers are bytes and block all pod scheduling. |
-| `database_type` / `application_database_name` / `application_database_user` / `enable_postgres_extensions` / `postgres_extensions` | any value — inert | Low | These App_GKE-inherited inputs are accepted but internally overridden (`database_type` forced to `NONE`, extensions forced off) — Supabase always uses its own in-cluster `supabase/postgres` pod, never Cloud SQL, regardless of what you set here. |
+| `enable_postgres_extensions` | `true` | Low | Overridden to `false` in `main.tf` (the foundation's extension jobs target Cloud SQL, which this module does not use); the extensions ship inside the `supabase/postgres` image. |
 | `min_instance_count` | `1` | High | Setting to `0` allows scale-to-zero; Kong cold starts take 15–30 s and disrupt OAuth redirect flows. |
 | `container_resources` CPU | `2000m` for production | High | Insufficient CPU causes elevated latency and 504 timeouts under load. |
 | `container_resources` memory | `2Gi` minimum | High | Too little memory causes OOM kills under concurrent load. |
-| `startup_probe_config.failure_threshold` | `30` (default) | High | Reducing it too far causes the pod to be killed before the in-cluster Postgres pod and `db-init` finish on first deploy. |
+| `startup_probe_config` / `startup_probe` | inert — `main.tf` hardcodes the deployed probe to TCP (`failure_threshold=30`, `period_seconds=10`, ~5 min) | High | Setting these variables has no effect on the deployed Kong container; do not rely on them to extend first-boot tolerance — see §3. |
 | `site_url` / `api_external_url` / `supabase_public_url` | real public URLs | High | Localhost defaults prevent OAuth flows and redirect construction from working outside the cluster. |
 | `application_version` | pinned (not `latest`) | Medium | Pulling `latest` risks Kong versions incompatible with the bundled declarative config. |
 | `enable_nfs` | `false` | Low | NFS is unnecessary for Supabase; enabling it adds Filestore cost and a dependency that can delay provisioning. |

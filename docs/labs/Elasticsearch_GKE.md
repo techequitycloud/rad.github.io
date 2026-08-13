@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -55,7 +58,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Elasticsearch (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Elasticsearch (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Elasticsearch_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -104,6 +107,19 @@ export REGION="us-central1"           # the region you deploy into
 3. Note the `elasticsearch_endpoint` output from the deployment's **Outputs** tab —
    this URL is the value to pass to the `elasticsearch_hosts` variable when deploying
    RAGFlow or another application that consumes this cluster.
+
+4. If `enable_xpack_security = true`, the module auto-generates a random password for
+   the `elastic` superuser and stores it in Secret Manager — no manual setup is needed.
+   Retrieve the username and password from the deployment's **Outputs** tab
+   (`elasticsearch_username`, always `"elastic"`, and `elasticsearch_password_secret_id`),
+   then read the secret value:
+
+   ```bash
+   gcloud secrets versions access latest \
+     --secret="<elasticsearch_password_secret_id>" --project="$PROJECT"
+
+   curl -s -u "elastic:<password>" "http://${EXTERNAL_IP}:9200/_cluster/health?pretty"
+   ```
 
 ---
 
@@ -184,8 +200,13 @@ platform-level diagnostics and do not change with Elasticsearch releases.
   + shard recovery). The startup probe allows up to 60 attempts. If it still times out,
   check that `es_java_heap` is at most half of `memory_limit` — oversized heap triggers
   OOM kills before the probe can succeed.
-- **`/_cluster/health` returns 401:** X-Pack security is enabled. The probe type should
-  be `TCP` in this mode — update the probe config and apply it via **Update** in the RAD platform.
+- **`/_cluster/health` returns 401:** X-Pack security is enabled (`enable_xpack_security =
+  true`) and the request has no credentials — this is expected, not a probe problem. The
+  module's health/liveness/startup probes are always `TCP` (a port-9200-open check), not
+  HTTP requests to `/_cluster/health`, so probe configuration never needs changing here
+  regardless of X-Pack state. Instead, authenticate the request: retrieve the `elastic`
+  password from Secret Manager via the `elasticsearch_password_secret_id` output (see
+  Task 2, step 4) and pass `-u elastic:<password>` to `curl`.
 - **Data lost after pod restart:** the PVC was not attached (check `stateful_pvc_enabled =
   true`) or `stateful_pvc_mount_path` does not match `path.data`.
 - **Pending pod / no external IP:** check `kubectl describe pod` events for resource or

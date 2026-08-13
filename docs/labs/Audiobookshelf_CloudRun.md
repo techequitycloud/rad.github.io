@@ -28,8 +28,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -46,12 +48,13 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Audiobookshelf (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Audiobookshelf (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Audiobookshelf_CloudRun)
-   documents every input by group, with defaults. If you want to reach the web UI from
-   your browser in Task 2, set `ingress_settings = "all"` now (the default is
-   `internal`, VPC-only). Review the estimated cost (if credits are enabled) and click
+   documents every input by group, with defaults. `ingress_settings` already defaults
+   to `"all"`, so the web UI is reachable from your browser in Task 2 with no change;
+   set `ingress_settings = "internal"` instead if you want to lock the service to
+   VPC-only access. Review the estimated cost (if credits are enabled) and click
    **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the Cloud Run service, a dedicated GCS **state bucket**
@@ -86,10 +89,11 @@ export REGION="us-central1"          # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/healthcheck"
    ```
 
-   > If this returns **404**, the service is still on the default
-   > `ingress_settings = "internal"` and is only reachable from inside the VPC.
-   > Change the ingress input to `all` via **Update** on the deployment details page
-   > (or verify from a VM inside the VPC).
+   > If this returns **404**, check whether `ingress_settings` was changed to
+   > `"internal"` (the default is `"all"`, publicly reachable) — an `internal`
+   > service only answers callers inside the VPC. Change the ingress input back to
+   > `all` via **Update** on the deployment details page (or verify from a VM inside
+   > the VPC).
 
 2. Open `$SERVICE_URL` in a browser. On first boot Audiobookshelf presents its
    **first-run setup wizard** — create the initial **root** (admin) user with a strong
@@ -98,8 +102,8 @@ export REGION="us-central1"          # the region you deploy into
    mobile apps or automation are minted later in the web UI.
 
 3. Immediate hardening: because the admin account is created by whoever reaches the
-   wizard first, complete step 2 right after deploying — or keep ingress `internal`
-   / enable IAP until you have.
+   wizard first, complete step 2 right after deploying — or set `ingress_settings =
+   "internal"` (it defaults to `"all"`, public) / enable IAP until you have.
 
 ---
 
@@ -158,10 +162,11 @@ export REGION="us-central1"          # the region you deploy into
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count, and CPU / memory
    utilisation (library scans are the CPU/memory spikes to watch). The module's
-   **uptime check** is disabled by default because the default ingress is
-   VPC-internal; after switching ingress to `all`, enable `uptime_check_config`
-   (path `/healthcheck`) via **Update** and confirm it is green under
-   Monitoring → Uptime checks.
+   **uptime check** (`uptime_check_config`) defaults to `enabled = false`
+   independent of ingress — enable it (path `/healthcheck`) via **Update** and
+   confirm it is green under Monitoring → Uptime checks. Note it can only pass
+   against a publicly reachable endpoint, so it requires `ingress_settings = "all"`
+   (the default) to succeed.
 
 ---
 

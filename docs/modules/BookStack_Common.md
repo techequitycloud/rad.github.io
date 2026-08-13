@@ -155,6 +155,9 @@ The default probes rely on BookStack's public health surface:
   window (300-second initial delay) accommodates the automatic
   `php artisan migrate --force` that runs on the first container start.
 
+> On the GKE variant, the shipped `liveness_probe` default already points at
+> `/status` — no override needed for accurate BookStack health signalling.
+
 ---
 
 ## 7. Object storage & persistent files

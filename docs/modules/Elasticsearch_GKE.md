@@ -201,16 +201,34 @@ Monitoring. Optional uptime checks can probe `/_cluster/health`.
   `vm.max_map_count`. Accordingly, the module sets `node.store.allow_mmap = false`, which
   prevents mmap-based memory-mapped files and incurs a minor sequential-read penalty
   compared to mmap mode. This is a known GKE Autopilot constraint.
-- **Health probes target `/_cluster/health`.** Both the startup probe and liveness probe
-  issue HTTP GET requests to `/_cluster/health`. The startup probe allows up to 18
-  attempts (approximately 3 minutes) to accommodate the initial shard recovery period
-  after the PVC is first attached. When `enable_xpack_security = true`, override both
-  probe configs to use TCP — HTTP probes return `401 Unauthorized` when authentication
-  is required.
+- **Health probes are hardcoded to TCP, unconditionally.** `elasticsearch.tf` sets both
+  the startup probe and the liveness probe to `type = "TCP"` regardless of
+  `enable_xpack_security` — a simple port-open check on 9200, not an HTTP request to
+  `/_cluster/health`. The startup probe allows up to 60 attempts at a 10s period
+  (≈10 minutes total, on top of a 30s initial delay) to accommodate cold-node
+  provisioning, image pull, and JVM/shard-recovery boot time; the liveness probe uses a
+  60s initial delay, 30s period, and 3-attempt threshold. This is deliberate: an HTTP
+  probe would return `401 Unauthorized` once X-Pack security is enabled, and would fail
+  before Elasticsearch's own bootstrap checks (implied passed once port 9200 is open)
+  complete. **The `startup_probe_config` and `health_check_config` variables have no
+  effect on this module** — `App_GKE` (`modules.tf`) always prefers the app-hardcoded
+  probe over the value forwarded from these variables, so there is nothing for an
+  operator to configure or override here, including when `enable_xpack_security = true`.
 - **X-Pack security is disabled by default.** With `enable_xpack_security = false`, the
   HTTP endpoint accepts unauthenticated requests. Any caller who can reach port 9200 can
   read, write, or delete all indexes. This is acceptable for a cluster accessible only
   within the VPC; enable it for public or multi-tenant deployments.
+- **X-Pack auth is fully automated when enabled.** Setting `enable_xpack_security = true`
+  triggers `elasticsearch_auth.tf` to generate a random password, store it in Secret
+  Manager as `secret-<prefix>-<application_name>-elastic-password`, and inject it into
+  the container as `ELASTIC_PASSWORD` — the official image bootstraps the `elastic`
+  superuser with this value on first start of an empty data directory. No operator setup
+  is required. The username (always `elastic`) and the secret ID are exposed via the
+  `elasticsearch_username` and `elasticsearch_password_secret_id` outputs (see
+  [Outputs](#5-outputs)) — retrieve the password with
+  `gcloud secrets versions access latest --secret=<elasticsearch_password_secret_id>`.
+  Consuming modules such as RAGFlow or Zammad can reference the same secret ID
+  deterministically to authenticate against this cluster.
 - **Cluster name is baked into node identity.** Changing `cluster_name` after the first
   index is created causes Elasticsearch to treat the existing PVC data as foreign and
   fail to start. A rename requires destroying the PVC and re-indexing all documents.
@@ -240,7 +258,7 @@ specific to or notable for Elasticsearch are listed; every other input is inheri
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -310,7 +328,7 @@ Data persistence is critical — all Elasticsearch index data lives in the PVC.
 | `stateful_headless_service` | `null` | Set `true` to create a headless Service for stable pod DNS entries. |
 | `stateful_pod_management_policy` | `null` | `OrderedReady` or `Parallel`. |
 | `stateful_update_strategy` | `null` | `RollingUpdate` or `OnDelete`. |
-| `stateful_fs_group` | `0` | Pod `fsGroup` GID. Set to `1000` so the Elasticsearch process (UID/GID 1000) can write to the PVC. Leaving at `0` causes immediate startup failure — the process cannot write to a root-owned volume. |
+| `stateful_fs_group` | `0` | **Inert for this module.** `elasticsearch.tf` and `main.tf` hardcode `stateful_fs_group = 1000` (Elasticsearch's UID/GID) unconditionally on the call into `App_GKE`; this variable's value is never read. Declared for `App_GKE` interface compatibility only — no operator action is needed. |
 
 ### Group 8 — Resource Quota
 
@@ -332,8 +350,8 @@ Data persistence is critical — all Elasticsearch index data lives in the PVC.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | HTTP `/_cluster/health`, 18 retries | Generous threshold (≈3 min) for initial shard recovery. Override to TCP when `enable_xpack_security = true`. |
-| `health_check_config` | HTTP `/_cluster/health`, 3 retries | Liveness probe. Override to TCP when `enable_xpack_security = true`. |
+| `startup_probe_config` | HTTP `/_cluster/health`, 18 retries | **Inert for this module.** The module always deploys a hardcoded `TCP` startup probe (30s initial delay, 60-attempt threshold) regardless of this variable's value — no operator action needed, including when `enable_xpack_security = true`. See [Application Behaviour](#3-elasticsearch-application-behaviour). |
+| `health_check_config` | HTTP `/_cluster/health`, 3 retries | **Inert for this module.** The module always deploys a hardcoded `TCP` liveness probe (60s initial delay, 3-attempt threshold) regardless of this variable's value — no operator action needed. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check against `/_cluster/health`. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
@@ -447,6 +465,8 @@ locate and explore the running resources.
 | `kubernetes_ready` | `true` when the cluster endpoint is available and all workload resources are deployed. `false` on the first apply of a new cluster — the CI/CD pipeline must re-run apply to complete the deployment. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | VPC-SC status. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Audit logging and CMEK status. |
+| `elasticsearch_username` | Elasticsearch superuser username. Always `"elastic"`. Only meaningful when `enable_xpack_security = true`. |
+| `elasticsearch_password_secret_id` | Secret Manager secret ID holding the auto-generated `elastic` superuser password. Empty string when `enable_xpack_security = false`. |
 
 ---
 
@@ -461,14 +481,14 @@ locate and explore the running resources.
 | `stateful_pvc_mount_path` | `/usr/share/elasticsearch/data` | Critical | Must match `path.data`. A mismatch silently writes indexes to the ephemeral layer — data is lost on each restart. |
 | `cluster_name` | set once | Critical | Immutable after first index. Renaming causes Elasticsearch to reject all PVC data as foreign; a full re-index is required. |
 | `es_java_heap` vs `memory_limit` | heap ≤ `memory_limit / 2` | Critical | Heap exceeding half the container memory competes with Lucene's page cache; OOM kills occur under search load. Plan-time precondition enforces this. |
-| `stateful_fs_group` | `1000` | Critical | Elasticsearch runs as UID/GID 1000. `fsGroup = 0` leaves the PVC root-owned; the process cannot write to it and crashes immediately on startup. |
+| `stateful_fs_group` | n/a — hardcoded | n/a | The module always passes `stateful_fs_group = 1000` (Elasticsearch's UID/GID) to `App_GKE`, regardless of this variable. Not an operator concern; listed here only because the variable exists on the interface. |
 | `max_instance_count` | `1` | Critical | Increasing without overriding `discovery.type` creates isolated single-node clusters. Enforced at plan time. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`) | Critical | Bare integers are bytes and block all scheduling immediately. |
 | `enable_xpack_security` | `true` for production | High | With `false`, any caller who can reach port 9200 can read, write, or delete all indexes without credentials. |
 | `stateful_pvc_size` | size with 50–100% headroom | High | An undersized PVC triggers flood-stage watermark protection at 95% full; the index becomes read-only. |
 | `stateful_pvc_storage_class` | `standard-rwo` (or `premium-rwo` for production) | Medium | `standard-rwo` is adequate for typical search workloads; high-throughput vector kNN indexing benefits from `premium-rwo`. StorageClass cannot be changed after PVC creation. |
 | `memory_limit` | ≥ `2 × es_java_heap` | Critical | Insufficient memory headroom triggers OOM kills during search/indexing. |
-| `startup_probe_config` | HTTP → TCP when X-Pack enabled | High | HTTP probes return `401 Unauthorized` with X-Pack security; the pod never passes readiness and enters a restart loop. |
+| `startup_probe_config` / `health_check_config` | n/a — hardcoded to TCP | n/a | The module always deploys hardcoded TCP probes regardless of these variables' values, so an HTTP-vs-X-Pack mismatch cannot occur; there is nothing to override. Listed here only because the variables exist on the interface. |
 | `enable_image_mirroring` | `true` | Low | Disabling mirroring pulls directly from Elastic's registry; rate limits can cause intermittent deployment failures. |
 | `application_version` | `8.13.4` (or locked version) | Medium | Major version upgrades (7.x → 8.x) may require index compatibility checks; do not upgrade without reviewing the Elasticsearch migration guide. |
 | `pdb_min_available` vs `min_instance_count` | headroom | Medium | `pdb_min_available = "1"` with a single-pod cluster prevents any voluntary disruption (e.g., node upgrades) from proceeding. Scale to 2+ pods or accept the constraint. |

@@ -3,17 +3,17 @@ title: "Cal_Common \u2014 Shared Application Configuration"
 description: "Shared configuration reference for the CalDiy module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
 ---
 
-# Cal_Common — Shared Application Configuration
+# CalDiy_Common — Shared Application Configuration
 
 `CalDiy_Common` is the **shared application layer** for Cal.diy. It is not deployed on
 its own; instead it supplies the Cal.diy-specific configuration that both
-[Cal_GKE](CalDiy_GKE.md) and [Cal_CloudRun](CalDiy_CloudRun.md) build on, so the two
+[CalDiy_GKE](CalDiy_GKE.md) and [CalDiy_CloudRun](CalDiy_CloudRun.md) build on, so the two
 platform variants behave identically where it matters. End users never configure this
 layer directly — it has no deployment UI inputs of its own — but understanding what it
 provides explains the defaults you see in the platform docs.
 
 For the infrastructure that actually provisions and runs Cal.diy, see the platform
-guides ([Cal_GKE](CalDiy_GKE.md), [Cal_CloudRun](CalDiy_CloudRun.md)) and the
+guides ([CalDiy_GKE](CalDiy_GKE.md), [CalDiy_CloudRun](CalDiy_CloudRun.md)) and the
 foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
@@ -132,13 +132,12 @@ user-configurable.
 
 ## 6. Object storage
 
-`CalDiy_Common` itself declares no storage bucket (its `storage_buckets` output is
-empty) — the default Cloud Storage `data` bucket comes from the platform variant's
-own `storage_buckets` variable default (`Cal_GKE`/`Cal_CloudRun`), which the foundation
-then provisions and grants the workload service account access to. Unlike applications
-with media uploads, Cal.diy does not require shared NFS — all booking state lives in
-PostgreSQL. Additional buckets can be declared in the platform module's `storage_buckets`
-variable. List them with:
+This layer declares no buckets of its own — its `storage_buckets` output is empty. A
+default Cloud Storage `data` bucket comes from the platform modules' `storage_buckets`
+default and is provisioned by the foundation, which also grants the workload service
+account access. Unlike applications with media uploads, Cal.diy does not require
+shared NFS — all booking state lives in PostgreSQL. Additional buckets can be
+declared in the platform module's `storage_buckets` variable. List them with:
 
 ```bash
 gcloud storage buckets list --project "$PROJECT"
@@ -148,4 +147,4 @@ gcloud storage buckets list --project "$PROJECT"
 
 For the Cal.diy-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
-**[Cal_GKE](CalDiy_GKE.md)** and **[Cal_CloudRun](CalDiy_CloudRun.md)**.
+**[CalDiy_GKE](CalDiy_GKE.md)** and **[CalDiy_CloudRun](CalDiy_CloudRun.md)**.

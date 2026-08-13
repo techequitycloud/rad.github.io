@@ -219,7 +219,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -265,6 +265,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `gke_cluster_selection_mode` | `primary` | Cluster selection strategy. |
 | `namespace_name` | `""` | Kubernetes namespace. Generated from resource prefix when empty. |
 | `enable_multi_cluster_service` | `false` | Enable Multi-Cluster Services ServiceExport. |
+| `reserve_static_ip` | `true` | Reserve a static external IP for the load balancer so the address survives redeploys (fleet-wide default per the GKE campaign — an ephemeral IP can otherwise leave `GKE_SERVICE_URL`/self-referencing config pointed at unreachable internal DNS). |
+| `static_ip_name` | `""` | Name of an existing static IP to use. Leave empty to auto-create. |
 
 ### Group 7 — Backup & Maintenance
 

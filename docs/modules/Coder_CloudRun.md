@@ -172,7 +172,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 
 All other inputs follow standard App_CloudRun behaviour.
 

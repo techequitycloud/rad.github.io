@@ -42,8 +42,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot cluster, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -61,13 +64,13 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **TechnitiumDNS (GKE)** from the
+1. Click **Deploy** in the RAD platform top navigation, open **TechnitiumDNS (GKE)** from the
    **Platform Modules** list to start configuration, set `project_id`, and review the inputs. Configure
    only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/TechnitiumDNS_GKE) documents every
    input by group, with defaults. Review the estimated cost (if credits are enabled) and click
    **Deploy**, which opens the deployment status page with real-time logs. If deploying alongside
-   `TechnitiumDNS_CloudRun` on the same tenant, set a distinct `tenant_deployment_id` (e.g. `"gke"`) to
+   `TechnitiumDNS_CloudRun` on the same tenant, set a distinct `tenant_id` (e.g. `"gke"`) to
    avoid a naming collision.
 
 2. The platform deploys a single Deployment workload into the GKE Autopilot cluster running the official

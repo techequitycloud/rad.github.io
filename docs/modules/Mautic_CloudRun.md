@@ -39,12 +39,15 @@ a focused set of Google Cloud services:
 **Sensible defaults worth knowing up front:**
 
 - **MySQL 8.0 is mandatory.** Selecting PostgreSQL or `NONE` breaks startup.
-- **Probes are HTTP against the public login page.** The startup and liveness probes
-  target `/index.php/s/login` with generous initial delays (90s / 120s) to allow
-  database migrations and PHP initialisation on first boot.
+- **Probes are overridden away from the login page.** Apache issues an HTTP→HTTPS
+  301 redirect once `HTTPS=on`/`MAUTIC_SITE_URL` are set, which breaks an HTTP-type
+  probe against `/index.php/s/login`. The module overrides the startup probe to
+  **TCP** (port-open check, 60s initial delay) and the liveness probe to **HTTP
+  `/healthz`** (a static file Apache serves without a redirect, 120s initial delay).
 - **`HTTPS=on` and a predicted service URL are injected** so Mautic generates correct
-  absolute links and avoids the HTTP→HTTPS redirect loops (which would 301 the HTTP
-  probes) behind the Cloud Run front end.
+  absolute links and avoids the HTTP→HTTPS redirect loops behind the Cloud Run front
+  end (the same redirects the TCP/`/healthz` probe overrides above are designed
+  around).
 - **Cold-start by default.** `min_instance_count = 0` and `cpu_always_allocated =
   false` (request-based billing): the UI and contact tracking work on-request; the
   marketing cron is externalised as scheduled Cloud Run Jobs (§3). Set
@@ -214,7 +217,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -323,8 +326,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | HTTP `/index.php/s/login`, 90s initial delay | Startup probe — generous budget for first-boot migrations and PHP init. |
-| `liveness_probe` / `health_check_config` | HTTP `/index.php/s/login`, 120s initial delay | Liveness probe. |
+| `startup_probe` / `startup_probe_config` | Overridden to TCP (port-open check), 60s initial delay | Startup probe — TCP avoids the Apache HTTP→HTTPS 301 that breaks an HTTP probe. |
+| `liveness_probe` / `health_check_config` | Overridden to HTTP `/healthz`, 120s initial delay | Liveness probe — `/healthz` is a static file served without a redirect. |
 | `uptime_check_config` | disabled (`enabled = false`, path `/`) | Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
@@ -398,7 +401,7 @@ running resources.
 | `enable_nfs` | `true` | Critical | Without shared storage, uploads are lost between instances/restarts. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `startup_probe` | HTTP `/index.php/s/login` (default) | High | Without the injected `HTTPS=on`, Apache 301-redirects Cloud Run's plain-HTTP health checks and the probe never sees a 200. |
+| `startup_probe` | TCP, not HTTP (module default) | High | An HTTP probe against `/index.php/s/login` fails: Apache 301-redirects Cloud Run's plain-HTTP health checks once `HTTPS=on` is set, so the probe never sees a 200. The module overrides `startup_probe` to TCP and `liveness_probe` to HTTP `/healthz` to avoid this. |
 | `enable_redis` | `true` | High | Multiple instances with isolated caches cause inconsistency. |
 | `memory_limit` | ≥ `2Gi` | High | Too little memory causes PHP OOM during imports/sends. |
 | `mautic_admin_email` / `mailer_from_email` | real addresses | High | Placeholders send to nowhere and get rejected/spam-filed. |

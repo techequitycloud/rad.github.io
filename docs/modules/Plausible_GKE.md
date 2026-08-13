@@ -69,8 +69,11 @@ wires together a focused set of Google Cloud services:
   `"invite_only"`) via `environment_variables`.
 - **Port 8000; probes on `/api/health`.** The health endpoint responds without
   authentication, so startup/liveness probes never see a 401/403.
-- **1Gi memory is the reliable floor** for the BEAM runtime plus the in-process
-  Oban job queue (the shared-layer default).
+- **The shipped default is 512Mi memory**, not 1Gi — `container_resources` defaults
+  to `1000m` / `512Mi` in this module (see § 4 below), overriding the shared-layer's
+  own 1Gi default. 1Gi is a recommended floor for the BEAM runtime plus the
+  in-process Oban job queue that operators should raise toward for production, not
+  what deploys out of the box.
 - **No NFS, no GCS buckets.** All state lives in PostgreSQL and ClickHouse.
 
 ---
@@ -265,7 +268,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

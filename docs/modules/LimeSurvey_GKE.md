@@ -272,7 +272,7 @@ defaults.
 | `memory_limit` | `2Gi` | Minimum 512Mi; 2Gi recommended for production. |
 | `min_instance_count` | `1` | Keep at 1 to keep the workload reachable. |
 | `max_instance_count` | `1` | **Keep at 1** unless session-sharing behaviour is verified. |
-| `container_port` | `8080` | The martialblog/limesurvey apache image listens on 8080 (the Cloud Run variant uses a different, prebuilt image on port 80). |
+| `container_port` | `8080` | The martialblog/limesurvey apache image listens on 8080 (the Cloud Run variant builds the identical thin wrapper via `LimeSurvey_Common` and also defaults to port 8080). |
 | `enable_cloudsql_volume` | `true` | Auth Proxy sidecar (loopback) — required on GKE. |
 | `php_memory_limit` | `512M` | PHP memory limit; raise for large surveys/exports. |
 | `upload_max_filesize` / `post_max_size` | `64M` | Max upload / POST size; keep `post_max_size ≥ upload_max_filesize`. |

@@ -121,10 +121,14 @@ default) no secret is created.
 **Caveat — vestigial env var name.** The `secret_ids`/`secret_values` outputs key
 the token under `QDRANT__SERVICE__API_KEY`, a name inherited from the module this
 one was cloned from (Qdrant's REST/gRPC API-key convention), not a real Rocket.Chat
-setting. `RocketChat_GKE` routes the value through `explicit_secret_values` (a raw
-`QDRANT__SERVICE__API_KEY` key is not representable as a GKE SecretSync `targetKey`,
-which forbids consecutive underscores). Rocket.Chat's own entrypoint and application
-code never read this variable — Rocket.Chat's REST API authenticates via login-issued
+setting. `RocketChat_GKE` — the only remaining variant — routes the value through
+`explicit_secret_values` rather than `module_secret_env_vars`, because a raw
+`QDRANT__SERVICE__API_KEY` key is not representable as a GKE SecretSync
+`targetKey`, which forbids consecutive underscores. (The now-removed
+`RocketChat_CloudRun` injected it as that literal env var name instead, since
+Cloud Run has no SecretSync CRD and no such restriction.)
+Either way Rocket.Chat's own entrypoint and application code never
+read this variable — Rocket.Chat's REST API authenticates via login-issued
 `X-Auth-Token`/`X-User-Id` headers or Personal Access Tokens created in the admin
 UI, not a static env var. Treat `enable_api_key` as "mint a token into Secret
 Manager for your own external tooling," not as something that changes Rocket.Chat's

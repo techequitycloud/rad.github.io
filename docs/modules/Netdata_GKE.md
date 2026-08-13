@@ -37,7 +37,7 @@ focused set of Google Cloud services:
 | File persistence | Per-pod block PVC (default) | `stateful_pvc_enabled = true` provisions a 20Gi `standard-rwo` (SSD) PVC at `/var/lib/netdata`; Cloud Filestore (NFS) is available but off by default |
 | Object storage | Cloud Storage | A `storage` bucket is always provisioned, but only mounted at `/var/lib/netdata` via GCS FUSE when the block PVC is disabled |
 | Secrets | Secret Manager | Optional `NETDATA_ADMIN_PASSWORD` (off by default) — Netdata's local dashboard has no built-in login |
-| Ingress | Kubernetes Service (`ClusterIP` by default) | Optional custom domain via Kubernetes Gateway; `LoadBalancer`/`NodePort` available |
+| Ingress | Kubernetes Service (`LoadBalancer` by default) | Optional custom domain via Kubernetes Gateway; `ClusterIP`/`NodePort` available |
 
 **Sensible defaults worth knowing up front:**
 
@@ -70,9 +70,11 @@ focused set of Google Cloud services:
   configure Netdata's own login; it generates a stable credential for an
   operator-managed reverse proxy or Netdata Cloud claim flow layered in
   front of it.
-- **`service_type` defaults to `ClusterIP`** (internal-only), so the
-  dashboard is not reachable from outside the cluster until you change
-  `service_type` or configure a custom domain via `enable_custom_domain`
+- **`service_type` defaults to `LoadBalancer`** (external access), so the
+  dashboard is reachable from outside the cluster via an external IP as soon
+  as the Service is provisioned — no built-in login gates it (see the
+  authentication note above). Set `service_type = ClusterIP` to keep it
+  internal-only, or configure a custom domain via `enable_custom_domain`
   (which itself defaults `true` but has no effect until `application_domains`
   is populated).
 - **Image is a thin custom build.** `Netdata_Common` ships a minimal
@@ -168,11 +170,11 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 ### E. Networking & ingress
 
-By default the workload is exposed only inside the cluster
-(`service_type = ClusterIP`). Set `service_type = LoadBalancer` for an
-external IP, or configure `application_domains` (with
-`enable_custom_domain`, default `true`) for Gateway-routed access with a
-managed certificate.
+By default the workload is exposed externally via an ephemeral or reserved
+IP (`service_type = LoadBalancer`, `reserve_static_ip = true`). Set
+`service_type = ClusterIP` to keep it internal-only, or configure
+`application_domains` (with `enable_custom_domain`, default `true`) for
+Gateway-routed access with a managed certificate.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -215,7 +217,7 @@ Monitoring. Optional uptime checks and alert policies are available
   are both HTTP `GET /api/v1/info`, unauthenticated. The same path is the
   default for the foundation-level `health_check_config`,
   `startup_probe_config`, and `uptime_check_config` variables.
-  <!-- TODO: verify exact response body/status contract of /api/v1/info in the deployed image — variable descriptions reference it as Netdata's "dedicated liveness endpoint" but do not specify the payload. -->
+  {/* TODO: verify exact response body/status contract of /api/v1/info in the deployed image — variable descriptions reference it as Netdata's "dedicated liveness endpoint" but do not specify the payload. */}
 - **Single-instance scaling.** `min_instance_count = 1` /
   `max_instance_count = 1` by default — the metrics database on the PVC is
   written by one process; do not scale beyond 1 without verifying Netdata's
@@ -264,7 +266,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal-only by default; set `LoadBalancer` for a public IP. |
+| `service_type` | `LoadBalancer` | Public IP by default; set `ClusterIP` to keep it internal-only. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to StatefulSet because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | No sticky routing needed with a single replica. |
 
@@ -369,7 +371,7 @@ to locate and explore the running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `service_type` (default `ClusterIP`) + `enable_admin_password` | Leave `enable_admin_password=false` internal-only, or add a reverse-proxy/auth layer before exposing externally | Critical | Netdata's dashboard has no built-in login; exposing it externally (`LoadBalancer`, or a configured custom domain) with no operator-added auth layer publishes all collected host/container metrics. |
+| `service_type` (default `LoadBalancer`) + `enable_admin_password` | Set `service_type = ClusterIP` to stay internal-only, or add a reverse-proxy/auth layer before exposing externally | Critical | Netdata's dashboard has no built-in login; the default `LoadBalancer` Service (or a configured custom domain) exposes all collected host/container metrics externally with no operator-added auth layer. |
 | `stateful_pvc_enabled` | `true` | Critical | Disabling it falls back to GCS FUSE, which corrupts Netdata's dbengine metrics files — data loss / crash-looping. |
 | `max_instance_count` | `1` | High | Netdata's dbengine is written by a single process against one PVC; scaling beyond 1 risks file corruption/lock contention. |
 | `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Draws the tight `SSD_TOTAL_GB` regional quota; switch to `standard` (HDD) on quota-constrained projects — Netdata's write pattern does not need SSD IOPS. |

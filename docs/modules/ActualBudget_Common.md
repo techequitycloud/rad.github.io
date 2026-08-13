@@ -22,7 +22,7 @@ For the infrastructure that actually provisions and runs ActualBudget, see the p
 | Object storage | Declares the **Cloud Storage** `storage` bucket that backs `/data` on Cloud Run | `storage_buckets` output |
 | Core settings | Sets `ACTUAL_PORT = 5006`, `ACTUAL_SERVER_FILES = /data/server-files`, `ACTUAL_USER_FILES = /data/user-files` | Application behaviour in the platform guides |
 | Optional API key | When `enable_api_key = true`, generates a 32-char token in **Secret Manager**, injected as `ACTUAL_TOKEN` | `secret_ids` output / Secret Manager |
-| Health checks | Supplies the default startup/liveness probe behaviour against the root path | §Observability in the platform guides |
+| Health checks | Supplies the default startup/liveness probe behaviour against `/health` | §Observability in the platform guides |
 
 ---
 
@@ -113,7 +113,12 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~actualbudget"
 
 ## 7. Health probe behaviour
 
-Both probes issue an **HTTP GET `/`**, which the Node server answers with `200` as soon as it is listening, with **no authentication** — so the probes pass independent of onboarding state.
+`ActualBudget_Common`'s own probe defaults issue an **HTTP GET `/health`**, with **no
+authentication** — so the probes pass independent of onboarding state. (The
+`ActualBudget_CloudRun` and `ActualBudget_GKE` wrapper modules override this default
+to `/`, which the Node server also answers with `200` as soon as it is listening — so
+the effective, deployed probe path is `/`; this section describes Common's own default
+before that override.)
 
 - **Startup probe** — `initial_delay = 15s`, `timeout = 5s`, `period = 10s`, `failure_threshold = 10`.
 - **Liveness probe** — `initial_delay = 30s`, `timeout = 5s`, `period = 30s`, `failure_threshold = 3`.

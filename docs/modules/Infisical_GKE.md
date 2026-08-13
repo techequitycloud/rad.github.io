@@ -52,9 +52,10 @@ together a focused set of Google Cloud services:
   `Infisical_Common` instead creates and injects its own `REDIS_URL` secret.
 - **`site_url` does not auto-compute on GKE.** Unlike the Cloud Run variant, this
   module passes `site_url` straight through with no predicted-URL computation.
-  Leaving it empty means `SITE_URL` — and the `admin-bootstrap` job's target —
-  falls back to `http://localhost:8080`, which is not reachable from the
-  bootstrap job's own pod. See [§3](#3-infisical-application-behaviour).
+  Leaving it empty means the app's own `SITE_URL` falls back to
+  `http://localhost:8080`; the `admin-bootstrap` job is not affected — its script
+  resolves the Foundation-injected `GKE_SERVICE_URL` when `INFISICAL_API_URL` is
+  empty. See [§3](#3-infisical-application-behaviour).
 - **The health probes target HTTP `/api/status`,** unlike the Cloud Run variant's
   TCP-only startup probe. Allow a generous `initial_delay_seconds`/
   `failure_threshold` on first boot — that endpoint only returns 2xx once the
@@ -194,15 +195,14 @@ Monitoring. Optional uptime checks and alert policies are available.
 - **The admin account is bootstrapped headlessly, and retries until the server is
   reachable.** The `admin-bootstrap` init job (image `infisical/cli:latest`,
   depends on `db-init`) runs `infisical bootstrap --ignore-if-bootstrapped`
-  against `INFISICAL_API_URL` (derived from `site_url`). On GKE,
+  against `INFISICAL_API_URL` (set from `site_url`). On GKE,
   `execute_on_apply = false` only gates Terraform's *wait* for the job — the job's
   pod is still scheduled and runs immediately, retrying up to 20 times (15s apart).
-  **This only works if `site_url` resolves to the actual reachable service.** If
-  `site_url` is left empty, `INFISICAL_API_URL` defaults to
-  `http://localhost:8080` — unreachable from the job's own pod — and every attempt
-  fails. Set `site_url` to the external LoadBalancer IP or custom domain (known
-  after the Service has an external IP) before or shortly after the first apply,
-  then re-apply so the job can succeed:
+  **If `site_url` is set, it must resolve to the actual reachable service.** When
+  it is left empty, `admin-bootstrap.sh` falls back to the Foundation-injected
+  `GKE_SERVICE_URL`, and only then to `http://localhost:8080` if that is unset
+  too. To pin the target explicitly, set `site_url` to the external LoadBalancer
+  IP or custom domain (known after the Service has an external IP) and re-apply:
   ```bash
   kubectl get svc <service-name> -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
   # set site_url = "https://<that-ip-or-domain>" and re-apply
@@ -239,7 +239,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -281,7 +281,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `gke_cluster_name` | `""` | Leave empty for auto-discovery. |
 | `namespace_name` | `""` | Leave empty to auto-generate. |
-| `workload_type` | `Deployment` | Fixed to `Deployment` at the `infisical.tf` call site — Infisical keeps no state that survives a pod restart. |
+| `workload_type` | `Deployment` | Fixed to `Deployment` at the `main.tf` Foundation call site — Infisical keeps no state that survives a pod restart. |
 | `service_type` | `LoadBalancer` | External access by default. |
 | `session_affinity` | `ClientIP` | Foundation default; Infisical's own auth is JWT-based, so this is not a hard requirement. |
 
@@ -380,7 +380,7 @@ locate and explore the running resources.
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_redis` | Forward `var.enable_redis` unconditionally to `App_GKE` | Critical | Hardcoding it to `false` at the Foundation call leaves `REDIS_URL` completely unset in the common no-auth case — Infisical crashes at boot. |
 | `database_type` | `POSTGRES_15` | Critical | MySQL is not supported; any non-Postgres value breaks the connection entirely. |
-| `site_url` | Set after first deploy, once the LoadBalancer IP/domain is known | High | Left empty, `admin-bootstrap` targets an unreachable `localhost:8080` inside its own pod and every attempt fails — no admin account is ever created. |
+| `site_url` | Set after first deploy, once the LoadBalancer IP/domain is known | High | Left empty, the app's own `SITE_URL` stays `http://localhost:8080`, breaking invite/email links and CORS (`admin-bootstrap` itself still resolves `GKE_SERVICE_URL`). Set to a host that is not actually reachable and the bootstrap job fails every attempt too — no admin account is ever created. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity on GKE. |
 | `postgres_extensions` / `enable_postgres_extensions` | N/A | Low | Declared but not forwarded to `App_GKE` — setting them has no effect; Infisical does not need pgvector. |
 | `smtp_host` / `smtp_user` / `smtp_password` / `mail_from` / `cubejs_api_url` / `hub_api_url` | N/A | Low | Declared for convention-mirroring parity but never forwarded to `Infisical_Common` — setting them has no effect. |

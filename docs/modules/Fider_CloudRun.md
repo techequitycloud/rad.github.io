@@ -256,9 +256,9 @@ specific to or notable for Fider are listed; every other input is inherited from
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance. |
 | `memory_limit` | `4Gi` | Memory per instance. |
-| `min_instance_count` | `1` | Warm baseline. Fider has no background worker, so `0` (scale-to-zero) is data-safe if you accept a cold start. |
+| `min_instance_count` | `0` | Scale-to-zero. Fider has no background worker, so idling at zero is data-safe; set `1` if you want a warm baseline and will accept the always-on cost. |
 | `max_instance_count` | `5` | Cost ceiling; must be ≥ `min_instance_count`. |
-| `cpu_always_allocated` | `true` | Instance-based billing for a consistently warm service; safe to set `false` for request-based billing since Fider does no background work. |
+| `cpu_always_allocated` | `false` | Instance-based billing for a consistently warm service; safe to set `false` for request-based billing since Fider does no background work. |
 | `container_port` | `3000` | Fider listens on 3000; Cloud Run auto-injects `PORT`. |
 | `execution_environment` | `gen2` | Gen2 required for NFS and GCS Fuse mounts. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |

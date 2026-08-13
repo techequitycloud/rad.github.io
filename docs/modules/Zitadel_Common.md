@@ -117,8 +117,13 @@ entrypoint can run (per the repo's scratch/distroless convention):
   to a pinned known-good tag (`v2.71.0`).
 - The entrypoint is installed with `COPY --chmod` (no `RUN`, which would need
   `/etc/group`) and invoked through the grafted busybox `sh`.
-- `CMD` is `zitadel start-from-init --masterkeyFromEnv --tlsMode external` — TLS is
-  terminated upstream by Cloud Run or the GKE LoadBalancer.
+- The image's `CMD` is `["/app/zitadel", "start-from-init", "--masterkeyFromEnv"]` —
+  it does **not** hardcode `--tlsMode`. Zitadel treats that CLI flag (not just the
+  `ZITADEL_EXTERNALSECURE` env var) as authoritative for whether it is reachable over
+  HTTPS, so the flag is intentionally omitted from `CMD` and appended dynamically by
+  the entrypoint instead (see below) — a hardcoded `--tlsMode external` would always
+  self-report HTTPS even on a plain-HTTP deployment (GKE with no custom domain),
+  silently baking unreachable `https://` URLs into the Console's `environment.json`.
 
 The cloud entrypoint (`entrypoint.sh`) runs before the binary and, using pure POSIX
 parameter expansion (no `sed` — busybox has no `sed` symlink on PATH):
@@ -135,7 +140,10 @@ parameter expansion (no `sed` — busybox has no `sed` symlink on PATH):
 - **Sets `ZITADEL_PORT` from `$PORT`** — Cloud Run reserves and injects `PORT`
   (= `container_port`); the entrypoint reads it (falling back to `8080` on GKE where
   `PORT` is unset) so the binary listens on the right port.
-- **Execs `zitadel start-from-init`** as PID 1.
+- **Computes `--tlsMode` from `ZITADEL_EXTERNALSECURE`** (`external` when `"true"`,
+  `disabled` otherwise) and execs `zitadel start-from-init --masterkeyFromEnv --tlsMode <mode>`
+  as PID 1 — this is the mechanism that lets the flag track the env var instead of
+  being fixed by the image's `CMD`.
 
 ---
 

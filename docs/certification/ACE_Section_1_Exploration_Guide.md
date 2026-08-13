@@ -9,7 +9,6 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 1 — 
 
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers exam Section 1 using the RAD platform foundation modules as a hands-on lab. The module exercised here is almost entirely `Services_GCP` — the platform layer deployed once per project. Deploy the **Baseline platform** profile from the [Lab Map](ACE_Certification_Guide.md) before starting; add the **Operations & security add-ons** profile (specifically `create_billing_budget = true`) for subsection 1.2.
 
 ---
@@ -25,7 +24,7 @@ This guide covers exam Section 1 using the RAD platform foundation modules as a 
 | Variable | Default | Effect |
 |---|---|---|
 | `project_id` | — (required) | Target project for all resources |
-| `tenant_deployment_id` | `"demo"` | Tenant suffix used in resource naming |
+| `tenant_id` | `"demo"` | Tenant suffix used in resource naming |
 | `enable_services` | `true` | Enables the ~45 required APIs at apply time |
 | `additional_apis` | `[]` | Extra APIs to enable |
 | `support_users` | `[]` | Emails that receive monitoring/budget notification channels |

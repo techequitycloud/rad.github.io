@@ -237,7 +237,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -456,7 +456,6 @@ locate and explore the running resources.
 | `db_name` / `db_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all workflow data. |
 | `enable_nfs` | `true` | Critical | Without shared storage, binary files are not shared across replicas and `filesystem` binary mode fails. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `quota_memory_requests` / `_limits` | binary units | Critical | Bare integers are bytes and block all pod scheduling. |
 | `enable_redis` | `true` | High | Without Redis queue mode, running more than one replica causes workflow execution conflicts. |
 | `redis_host` | `""` (NFS) or explicit | High | No valid endpoint if Redis is on but NFS is off and no host is set. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, WebSocket editor sessions drop when routed to a different pod. |
@@ -465,6 +464,12 @@ locate and explore the running resources.
 | `enable_iap` / `enable_cloud_armor` | enable for production | Medium | The n8n editor is otherwise publicly reachable and exposes all saved credentials. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `pdb_min_available` vs `min_instance_count` | leave headroom | Medium | `1`/`1` can stall node upgrades (single pod cannot be evicted). |
+
+> **Note:** `enable_resource_quota` and the `quota_*` variables (Group 8) are
+> declared in `N8N_GKE/variables.tf` to satisfy the repository's mirroring
+> convention, but are never forwarded to `App_GKE` in `main.tf`/`n8n.tf` — each
+> variable's own description states it has no effect on deployment in this
+> module. They carry no operational risk here.
 
 ---
 

@@ -238,7 +238,7 @@ All other inputs follow standard App_CloudRun behaviour.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `container_port` | `80` | The all-in-one image's nginx proxy serves the whole app on port 80 — must stay 80. |
-| `cpu_limit` / `memory_limit` | `4000m` / `8Gi` | CPU and memory per instance; the bundled CouchDB/MinIO/Redis + app tier need generous memory — 4Gi OOM-loops on Cloud Run gen2 (the writable `/data` dir counts against the memory limit), so 8Gi is the reliable minimum. `container_resources` (default `null`) can override both together if set. |
+| `container_resources` | `4000m` / `8Gi` | CPU and memory per instance; the bundled CouchDB/MinIO/Redis + app tier need generous memory — 4Gi OOM-loops on Cloud Run gen2 (the writable `/data` dir counts against the memory limit), so 8Gi is the reliable minimum. |
 | `min_instance_count` | `1` | Keep at 1 — scale-to-zero would drop the local data store. |
 | `max_instance_count` | `1` | Keep at 1 — the container holds all state locally; replicas would not share data. |
 | `cpu_always_allocated` | `true` | Allocate CPU at all times so bundled background services keep running between requests. |

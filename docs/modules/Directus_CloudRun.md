@@ -171,7 +171,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. Do not change after first deploy. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. Do not change after first deploy. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -338,7 +338,7 @@ These values are returned on a successful deployment and are the quickest way to
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Directus requires PostgreSQL; changing to MySQL or `NONE` prevents startup and orphans the existing database. |
 | `application_name` | set once | Critical | Embedded in Secret Manager secret IDs (KEY, SECRET, ADMIN_PASSWORD). Changing recreates all secrets — all active sessions and JWTs are immediately invalidated. |
-| `tenant_deployment_id` | set once | Critical | Changing after first deploy orphans the Cloud SQL instance and generates a new empty database plus new KEY/SECRET, invalidating all sessions. |
+| `tenant_id` | set once | Critical | Changing after first deploy orphans the Cloud SQL instance and generates a new empty database plus new KEY/SECRET, invalidating all sessions. |
 | `KEY` / `SECRET` secrets | auto-generated, never rotate casually | Critical | Rotating KEY logs out all users. Rotating SECRET invalidates all API tokens. Only rotate during a planned maintenance window. |
 | `ADMIN_EMAIL` env var | a real email address | High | Default `admin@example.com` creates the admin account with a guessable email. Override via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` before first deploy. |
 | `enable_nfs` | `true` | High | Without shared NFS, uploaded assets written by one instance are invisible to others and lost on scale-down (unless using GCS exclusively). |

@@ -222,7 +222,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

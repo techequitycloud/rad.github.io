@@ -57,9 +57,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE
-  Autopilot cluster, Cloud SQL capability, Artifact Registry, and shared
-  service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL
+  capability, Artifact Registry, and shared service accounts this module depends
+  on). You do not need to deploy this yourself first — the platform
+  automatically detects whether it already exists in the target project and
+  provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -81,11 +83,11 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Woodpecker
+1. Click **Deploy** in the RAD platform top navigation, open **Woodpecker
    (GKE)** from the **Platform Modules** list to start configuration, set
    `project_id`, and review the inputs. The module deploys cleanly with
    defaults — including placeholder forge credentials — so a first-pass
-   deploy needs no changes beyond `project_id`/`tenant_deployment_id`.
+   deploy needs no changes beyond `project_id`/`tenant_id`.
    **If you already have a real Gitea/Forgejo OAuth application ready**, set
    `forge_url`/`forge_client_id`/`forge_client_secret` now to skip the
    Update round-trip in Task 2. Configure anything else you need — the

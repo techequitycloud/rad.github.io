@@ -3,7 +3,7 @@ title: "BookStack on GKE Autopilot \u2014 Lab Guide"
 description: "Hands-on lab: deploy BookStack on GKE Autopilot in your own Google Cloud project — guided setup, verification, operations, observability, and teardown."
 ---
 
-# BookStack on GKE Autopilot — Lab Guide
+# BookStack on GKE — Lab Guide
 
 📖 **[Configuration Guide](https://docs.radmodules.dev/docs/modules/BookStack_GKE)**
 
@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  GKE Autopilot cluster, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, GKE Autopilot cluster, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -72,7 +74,7 @@ gcloud container clusters get-credentials "$CLUSTER" --region="$REGION" --projec
 2. The platform provisions the GKE Autopilot workload (Deployment) and a
    `LoadBalancer` Service with a reserved static IP, a Cloud SQL (MySQL 8.0)
    database with its Secret Manager secrets (the Laravel `APP_KEY` and the database
-   password), a Cloud Storage `bookstack-uploads` bucket, an NFS volume mounted at
+   password), a Cloud Storage bucket (`gcs-<service>-data`), an NFS volume mounted at
    `/var/lib/bookstack` for uploaded images and attachments, mirrors the prebuilt
    `linuxserver/bookstack` image into Artifact Registry, and runs a one-shot
    database-initialisation (`db-init`) job that creates the database, application
@@ -131,8 +133,9 @@ gcloud container clusters get-credentials "$CLUSTER" --region="$REGION" --projec
    GKE has **no scale-to-zero**, so at least one replica always runs. Because uploads
    live on a shared NFS volume, the module deploys with the `Recreate` strategy and a
    single pod — do not scale beyond one replica without enabling Redis
-   (`enable_redis = true`) for shared cache and sessions. A PodDisruptionBudget guards
-   the workload against involuntary eviction during node maintenance.
+   (`enable_redis = true`) for shared cache and sessions. A PodDisruptionBudget can guard
+   the workload against voluntary eviction during node maintenance, but is disabled by
+   default (`enable_pod_disruption_budget = false`) because the default replica count is 1.
 
 3. **Update the application version** by changing the version input in the RAD platform
    and applying it via **Update**. BookStack uses the prebuilt `linuxserver/bookstack`
@@ -208,10 +211,9 @@ platform-level diagnostics and do not change with BookStack releases.
 
 See the Configuration Guide's *Configuration Pitfalls* section for setting-specific
 gotchas (including the critical rule never to rotate `APP_KEY` after first boot —
-doing so makes all previously encrypted database values undecryptable). Note that the
-GKE variant's shipped `liveness_probe` default path is a stale WordPress leftover
-(`/wp-admin/install.php`); the correct BookStack health path is `/status` — set it
-explicitly if the default has not been corrected in your deployment.
+doing so makes all previously encrypted database values undecryptable). The GKE
+variant's shipped `liveness_probe` default path is already BookStack's health
+endpoint (`/status`) — no override needed.
 
 ---
 
@@ -229,7 +231,7 @@ managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions the GKE workload, LoadBalancer, Cloud SQL (MySQL 8.0), secrets, `bookstack-uploads` bucket, NFS, and runs DB init |
+| 1 — Deploy | Automated | Module provisions the GKE workload, LoadBalancer, Cloud SQL (MySQL 8.0), secrets, `gcs-<service>-data` bucket, NFS, and runs DB init |
 | 2 — Access & verify | Manual | Health check passes; sign in and change the default admin credentials |
 | 3 — Operate | Manual | Inspect pods, scale, update version, manage secrets/backups, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |

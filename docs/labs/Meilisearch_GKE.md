@@ -39,8 +39,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **kubectl** installed.
@@ -59,17 +62,22 @@ export REGION="us-central1"          # the region you deploy into
 ## Task 1 — Deploy the module [Automated]
 
 1. In the RAD platform, open **Meilisearch (GKE)**, set `project_id`, and set
-   `stateful_pvc_enabled = true` for production-grade Persistent Disk storage. Review
-   the remaining inputs — the
+   `stateful_pvc_enabled = true` for production-grade Persistent Disk storage. **Also
+   set `stateful_pvc_mount_path = "/meili_data"`** — the variable's own default
+   (`/meilisearch/storage`) does **not** match the fixed `MEILI_DB_PATH`
+   (`/meili_data`), so leaving it at the default means the PVC never receives the
+   index data (it appears empty on every restart). Review the remaining inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Meilisearch_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform generates the `MEILI_MASTER_KEY` and stores it in Secret Manager
    (injecting it as a native Kubernetes Secret), builds and mirrors the
    `getmeili/meilisearch:v1.11` image, creates a StatefulSet with a PVC mounted at
-   `/meili_data`, and exposes a ClusterIP Service. There is **no** Cloud SQL database
-   and **no** init job — Meilisearch manages its own storage. First deploys take
-   roughly **8–15 minutes** (image build + Autopilot pod scheduling).
+   the path you set in `stateful_pvc_mount_path` (`/meili_data`, per step 1 above),
+   and exposes a **LoadBalancer** Service by default (`service_type =
+   "LoadBalancer"`). There is **no** Cloud SQL database and **no** init job —
+   Meilisearch manages its own storage. First deploys take roughly **8–15 minutes**
+   (image build + Autopilot pod scheduling).
 
 3. When it completes, get cluster credentials and discover the resources with
    name-agnostic filters:
@@ -169,8 +177,11 @@ token.
    # returns only Interstellar
    ```
 
-5. **Persistence check.** All of this lives on the PVC at `/meili_data`. Delete the
-   pod and watch the StatefulSet recreate it with the same data attached:
+5. **Persistence check.** All of this lives on the PVC at `/meili_data` — this only
+   holds if `stateful_pvc_mount_path` was set to `/meili_data` in Task 1 (the
+   default `/meilisearch/storage` does not back the data directory, so the index
+   would be lost on pod recreation). Delete the pod and watch the StatefulSet
+   recreate it with the same data attached:
 
    ```bash
    kubectl delete pod -n "$NAMESPACE" -l app=meilisearch      # StatefulSet recreates it

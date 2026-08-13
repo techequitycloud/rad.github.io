@@ -33,7 +33,7 @@ services:
 | Database | Cloud SQL for PostgreSQL 15 | Required — pgvector extension enabled for vector storage |
 | Vector store | pgvector (in-database) | Reuses the Cloud SQL instance; no separate vector database needed |
 | Shared files | Filestore (NFS) | Shared Redis host co-location; NFS VM also used for task state |
-| Object storage | Cloud Storage | A dedicated `dify-storage` bucket for uploaded files and assets |
+| Object storage | Cloud Storage | A dedicated `gcs-dify<resource-prefix>-storage` bucket for uploaded files and assets |
 | Cache & task queue | Redis | Required for Celery broker/backend and SSE/WebSocket LLM streaming |
 | Secrets | Secret Manager | Auto-generated SECRET_KEY and database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -106,7 +106,7 @@ password rotation, see [App_GKE](App_GKE.md).
 
 A **Filestore (NFS)** share is mounted into every pod. The NFS server VM also runs the Redis
 process used as the Celery broker when no external Redis host is configured. A dedicated **Cloud
-Storage** bucket (`dify-storage`) is provisioned for uploaded files and assets; Dify's
+Storage** bucket (`gcs-dify<resource-prefix>-storage`) is provisioned for uploaded files and assets; Dify's
 `google-storage` driver accesses it via Workload Identity — no service account key file is
 needed.
 
@@ -229,7 +229,7 @@ with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost and ownership tracking. |
 
@@ -322,7 +322,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision additional GCS buckets. The `dify-storage` bucket is always provisioned by Dify_Common. |
+| `create_cloud_storage` | `true` | Provision additional GCS buckets. The `gcs-dify<resource-prefix>-storage` bucket is always provisioned by Dify_Common. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional buckets beyond the auto-provisioned storage bucket. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts via the CSI driver. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
@@ -356,7 +356,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `enable_custom_domain` | `true` | Provision Ingress for custom hostnames + managed certificate. |
 | `application_domains` | `[]` | Hostnames to serve. |
-| `reserve_static_ip` | `true` | Stable external IP across redeploys. |
+| `reserve_static_ip` | `true` | Stable external IP across redeploys. **Do not set `false` for Dify** — see the Critical pitfall in [§6](#6-configuration-pitfalls--sensible-defaults): the web frontend's API calls resolve to an unreachable internal hostname without it. |
 
 ### Group 20 — Identity-Aware Proxy (IAP)
 
@@ -434,6 +434,7 @@ locate and explore the running resources.
 | `enable_redis` + `enable_nfs` | both `true` if no external Redis | Critical | Without NFS, there is no Redis host when `redis_host` is empty — Celery fails to start. |
 | `secret_environment_variables` for LLM keys | always use secret refs | Critical | Plain env vars expose API keys in pod specs visible via `kubectl describe pod`. |
 | `enable_redis` + `redis_host` | correct host | High | Incorrect `redis_host` produces a malformed Celery broker URL; all async tasks queue indefinitely. |
+| `reserve_static_ip` + `service_type` | `true` / `LoadBalancer` — **do not change for Dify** | Critical | The web frontend's `CONSOLE_API_URL`/`APP_API_URL` resolve via the `$(GKE_SERVICE_URL)` sentinel to `local.service_url`, which falls back to the unreachable internal `*.svc.cluster.local` hostname if `reserve_static_ip=false` or `service_type` is overridden away from `LoadBalancer`. The page loads, but every browser-side API call fails with `net::ERR_NAME_NOT_RESOLVED`. This is a genuine exception to the fleet-wide `reserve_static_ip=false` IP-quota-conservation convention. |
 | `memory_limit` | `4Gi` | High | Too little memory causes OOM kills during document ingestion or LLM workflow caching. |
 | `min_instance_count` | `1` | High | Scale-to-zero causes cold starts and abandons in-flight Celery tasks. |
 | `timeout_seconds` | `300` (raise for workflows) | High | Multi-step workflows and RAG indexing can exceed 300 s; increase to `3600` for complex deployments. |

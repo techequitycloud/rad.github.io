@@ -22,8 +22,8 @@ deployment lifecycle — refer to the [App_GKE foundation guide](App_GKE.md) rat
 than repeating them here.
 
 > **Deployment prerequisite:** `RAGFlow_GKE` requires `Elasticsearch_GKE` to be deployed
-> first. The `elasticsearch_hosts` variable has **no default value**, so Terraform
-> requires it to be set on every plan/apply.
+> first. The `elasticsearch_hosts` variable is **mandatory** — the plan is rejected if it
+> is empty when `deploy_application = true`.
 
 ---
 
@@ -229,12 +229,11 @@ Monitoring. Optional uptime checks and alert policies are available.
   but are never processed.
 - **Embedding model loading on startup.** RAGFlow downloads and loads embedding models
   during first boot. The startup probe targets `/v1/health` with a 120-second initial
-  delay and 60 failure retries to allow ample time. The liveness probe instead targets
-  `/v1/system/version` (also a 120-second initial delay) once startup succeeds.
-- **Health endpoints.** The (hardcoded, non-configurable) readiness probe and the
-  liveness probe both use `/v1/system/version`; the startup probe uses `/v1/health`.
-  These return HTTP 200 only when the application is fully initialised and all
-  services are reachable.
+  delay and 60 failure retries to allow ample time. Liveness transitions to `/v1/health`
+  once startup succeeds.
+- **Health endpoints.** The readiness and liveness probes use `/v1/health` and
+  `/v1/system/version`. These return HTTP 200 only when the application is fully
+  initialised and all services are reachable.
 - **Session affinity.** `session_affinity = "ClientIP"` routes requests from a browser to
   the same pod, ensuring upload sessions and in-progress document workflows remain
   consistent.
@@ -259,7 +258,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -335,7 +334,7 @@ These settings apply only when `workload_type = "StatefulSet"` or `stateful_pvc_
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/v1/health`, 120s delay, 60 retries | HTTP probe allowing ample time for embedding model loading. |
-| `liveness_probe` / `health_check_config` | `/v1/system/version`, 120s delay | HTTP liveness probe once startup succeeds. |
+| `liveness_probe` / `health_check_config` | `/v1/health` | HTTP liveness probe once startup succeeds. |
 | `uptime_check_config` | `{ enabled=false, path="/v1/health" }` | Optional Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
@@ -484,7 +483,7 @@ locate and explore the running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `elasticsearch_hosts` | required — set from `Elasticsearch_GKE` | Critical | RAGFlow cannot index or search; all ingestion and retrieval operations fail. The variable has no default, so Terraform rejects a plan/apply that omits it entirely. |
+| `elasticsearch_hosts` | required — set from `Elasticsearch_GKE` | Critical | RAGFlow cannot index or search; all ingestion and retrieval operations fail. Plan is rejected when empty and `deploy_application = true`. |
 | `enable_redis` | `true` | Critical | Without Redis the document processing task queue never runs; uploaded files remain unprocessed indefinitely. |
 | `database_type` | `MYSQL_8_0` | Critical | RAGFlow requires MySQL; PostgreSQL/`NONE` breaks startup. |
 | `enable_cloudsql_volume` | `true` | Critical | RAGFlow connects via Unix socket; disabling the proxy sidecar causes a database connection failure on startup. |

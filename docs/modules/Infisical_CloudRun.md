@@ -233,7 +233,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -334,7 +334,7 @@ see [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `startup_probe` | TCP, `container_port` | Forwarded to `Infisical_Common`. TCP, not HTTP `/api/status` — see [§1](#1-overview). |
 | `liveness_probe` | **disabled** | Forwarded to `Infisical_Common`. Disabled for the same reason as the startup probe. |
-| `uptime_check_config` | `{ enabled=true, path="/" }` | Cloud Monitoring uptime check — consider pointing `path` at `/api/status` for a meaningful external health signal. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check — consider pointing `path` at `/api/status` for a meaningful external health signal. |
 
 ### Group 21 — Redis Cache
 

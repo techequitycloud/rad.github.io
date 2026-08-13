@@ -192,7 +192,7 @@ Override `initialization_jobs` with a non-empty list to replace this default job
 
 ## 6. Health Probes
 
-Mattermost Common configures startup and liveness probes targeting the `/api/v4/system/ping` endpoint. This endpoint is part of Mattermost's REST API and returns `HTTP 200` when the server is fully initialised, database-connected, and ready to serve requests.
+`Mattermost_Common` declares `startup_probe`/`liveness_probe` variables that default to targeting the `/api/v4/system/ping` endpoint. This endpoint is part of Mattermost's REST API and returns `HTTP 200` when the server is fully initialised, database-connected, and ready to serve requests.
 
 This is a more precise health signal than probing the root path (`/`): the ping endpoint validates that Mattermost has successfully connected to PostgreSQL and completed any pending schema migrations.
 
@@ -201,7 +201,11 @@ This is a more precise health signal than probing the root path (`/`): the ping 
 | **Startup** | `/api/v4/system/ping` | 30s | 10s | 10s | 30 | Allows up to 330 seconds total for Mattermost to complete database migration and initialise. Generous threshold accommodates first-run schema creation on a fresh database. |
 | **Liveness** | `/api/v4/system/ping` | 30s | 5s | 30s | 3 | Restarts the container if Mattermost becomes unresponsive or loses its database connection. |
 
-The GKE module (`Mattermost_GKE`) uses the same probe paths and defaults. The Cloud Run module (`Mattermost_CloudRun`) also includes `startup_probe_config` and `health_check_config` variables that configure the service-level probes independently — these default to the same paths.
+**This table is `Mattermost_Common`'s own variable default, not what every platform actually deploys.** `Mattermost_GKE` forwards `startup_probe`/`liveness_probe` unchanged, so GKE does use these paths and defaults. `Mattermost_CloudRun`, however, declares its **own** `startup_probe`/`liveness_probe` variables that default to `path = "/"` instead — that default silently overrides `Mattermost_Common`'s default when forwarded in `mattermost.tf`, so **Cloud Run's real deployed probes default to the root path, not `/api/v4/system/ping`**, unless the operator explicitly overrides them (see `docs/modules/Mattermost_CloudRun.md` §C).
+
+`Mattermost_CloudRun` and `Mattermost_GKE` also each declare separate `startup_probe_config`/`health_check_config` variables. These are **not** an alternate way to configure the same probes and do **not** default to the same paths as the table above — they are dead for Mattermost on both platforms, wired only into each Foundation module's own internal, unused fallback preset (`App_CloudRun`'s `cloudrunapp` / `App_GKE`'s `gkeapp`). Overriding them has no effect on the deployed service/pod; use `startup_probe`/`liveness_probe` instead.
+
+Separately, this module's `config` output also sets a third key, `readiness_probe` (hardcoded to `path = "/api/v4/system/ping"` in `main.tf`), which is likewise dead — neither `App_CloudRun` nor `App_GKE` reads a `readiness_probe` field from the application config, so it has no runtime effect on either platform.
 
 ---
 

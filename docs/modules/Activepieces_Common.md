@@ -105,8 +105,9 @@ entrypoint (`entrypoint.sh`) that runs before the Node.js server starts:
   both with the actual `CLOUDRUN_SERVICE_URL` injected at runtime, correcting any
   stale plan-time predicted URL and ensuring webhooks and OAuth redirects always use
   the real service address.
-- **Locates and launches the Node.js server** — searches for `main.js` under the
-  Activepieces install path and launches it with `exec node <entry>` as PID 1.
+- **Locates and launches the server** — searches for `main.js` under the
+  Activepieces install path and launches it as PID 1 with `exec bun <entry>` when
+  `bun` is present (Activepieces 0.35+), otherwise `exec node <entry>`.
 
 ---
 

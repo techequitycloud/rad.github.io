@@ -38,8 +38,7 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on). PhotoPrism itself
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service accounts this module depends on). You do not need to deploy this yourself first — the platform automatically detects whether it already exists in the target project and provisions it before this module if not (see Task 1). PhotoPrism itself
   provisions no Cloud SQL instance — it uses an embedded SQLite database.
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
@@ -61,7 +60,7 @@ export REGION="us-central1"          # the region you deploy into
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PhotoPrism_CloudRun)
    documents every input by group, with defaults. Note that `memory_limit` defaults to
-   `1Gi`; consider raising it before deploying if you expect a real photo/video library
+   `2Gi`; consider raising it before deploying if you expect a real photo/video library
    (see Task 3). Review the estimated cost (if credits are enabled) and click **Deploy**,
    which opens the deployment status page with real-time logs.
 
@@ -130,11 +129,11 @@ export REGION="us-central1"          # the region you deploy into
    index corruption. This is not a scaling dial to tune.
 
 3. **Tune memory for your library size.** The module's own `memory_limit` variable
-   defaults to `1Gi`, but PhotoPrism loads vector indexes into memory for face
-   recognition and thumbnailing, and the application layer's own baseline
-   recommendation is `4Gi` for real indexing workloads. If you see OOM kills in the
-   logs (Task 4) as your library grows, raise `memory_limit` in the RAD platform and
-   apply via **Update**.
+   defaults to `2Gi` — the minimum that keeps face recognition/RAW support enabled —
+   but PhotoPrism loads vector indexes into memory for face recognition and
+   thumbnailing, and the application layer's own baseline recommendation is `4Gi`
+   for real indexing workloads. If you see OOM kills in the logs (Task 4) as your
+   library grows, raise `memory_limit` in the RAD platform and apply via **Update**.
 
 4. **Update the application version** by changing the version input in the RAD
    platform and applying it via **Update**; a new image builds (pinned to a
@@ -190,7 +189,7 @@ platform-level diagnostics and do not change with PhotoPrism releases.
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Container OOM-killed:** check the revision's memory utilisation in Monitoring; if
-  it is pinned near the `memory_limit` ceiling, raise it (see Task 3) — 1Gi is the
+  it is pinned near the `memory_limit` ceiling, raise it (see Task 3) — 2Gi is the
   module default but under-sized for real libraries.
 - **GCS FUSE mount failures:** confirm `execution_environment = "gen2"` — GCS FUSE
   volumes only work under gen2, and this is required, not optional, for this module.

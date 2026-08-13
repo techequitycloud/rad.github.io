@@ -33,7 +33,7 @@ guide ([Plausible_GKE](Plausible_GKE.md)) and the foundation guides
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** — accounts/sites configuration ONLY; all analytics events live in ClickHouse | Database section of the platform guide |
 | Database bootstrap | Defines the first-deploy `db-init` job (`postgres:15-alpine` + `create-db-and-user.sh`) creating the Postgres role and database | `initialization_jobs` output |
 | ClickHouse wiring | Exposes `clickhouse_url`/`clickhouse_db`/`clickhouse_user` as `PLATFORM_CLICKHOUSE_*` env vars for the entrypoint to compose `CLICKHOUSE_DATABASE_URL` | Application behaviour in the platform guide |
-| Core settings | `HTTP_PORT = 8000`, 1 vCPU / 1Gi memory (BEAM + Oban floor), min 1 / max 10 replicas, Cloud SQL Auth Proxy sidecar on | Defaults in the platform guide |
+| Core settings | `HTTP_PORT = 8000`, 1 vCPU / 1Gi memory (this module's own default; `Plausible_GKE` overrides memory to 512Mi — see below), min 1 / max 10 replicas, Cloud SQL Auth Proxy sidecar on | Defaults in the platform guide |
 | Health checks | Default startup/liveness probes targeting HTTP `GET /api/health` (unauthenticated) | Observability section of the platform guide |
 | Object storage | None — `storage_buckets` is empty; no NFS needed | `storage_buckets` output |
 
@@ -147,9 +147,13 @@ rebuild.
 correctly on first boot:
 
 - **Port** — `HTTP_PORT = "8000"`; the container port is 8000.
-- **Resources** — `cpu_limit = "1000m"`, `memory_limit = "1Gi"`. 1Gi is a reliable
-  floor: the Elixir/BEAM runtime plus Plausible's in-process Oban job queue need the
-  headroom.
+- **Resources** — this module's own default is `cpu_limit = "1000m"`,
+  `memory_limit = "1Gi"`. `Plausible_Common` is never deployed standalone, though —
+  `Plausible_GKE` always forwards `var.container_resources`, whose own default is
+  `512Mi` (see [Plausible_GKE](Plausible_GKE.md) § Group 4 Configuration Variables),
+  so **the effective deployed default is 512Mi**, not 1Gi. 1Gi is a recommended
+  minimum operators should raise to for headroom — the Elixir/BEAM runtime plus
+  Plausible's in-process Oban job queue can need it — not what ships by default.
 - **Scaling** — `min_instance_count = 1`, `max_instance_count = 10`. Plausible is
   stateless at the pod level (all state in Cloud SQL + ClickHouse), so it scales
   horizontally.

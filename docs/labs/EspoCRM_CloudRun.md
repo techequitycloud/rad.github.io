@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Filestore NFS, Artifact Registry, and shared service accounts this module depends
-  on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Filestore NFS, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -67,7 +69,7 @@ export REGION="us-central1"          # the region you deploy into
 2. The platform provisions the Cloud Run service, a Cloud SQL (MySQL 8.0) database
    with its Secret Manager secrets (`ESPOCRM_ADMIN_PASSWORD` and the database
    password), a `espocrm-data` Cloud Storage bucket (provisioned but not mounted by
-   default), a shared Filestore NFS volume mounted at `/var/lib/espocrm` for uploads
+   default), a shared Filestore NFS volume mounted at `/var/www/html/data` for uploads
    (`enable_nfs = true` by default), builds the container image, and runs a one-shot
    database-initialisation job. The upstream EspoCRM installer then runs its own
    install/migrate step automatically on first container boot. First deploys take
@@ -138,7 +140,7 @@ export REGION="us-central1"          # the region you deploy into
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~espocrm"
-   gcloud filestore instances list --project="$PROJECT"   # backs /var/lib/espocrm uploads
+   gcloud filestore instances list --project="$PROJECT"   # backs /var/www/html/data uploads
    gcloud run jobs list --project="$PROJECT" --region="$REGION"   # db-init job
    ```
 

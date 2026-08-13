@@ -38,10 +38,7 @@ By the end of this lab you will be able to:
 
 ## Task 1 — Prerequisites & authentication
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, the **NFS server VM** — which both hosts the media library
-  and co-hosts Redis, two things Immich cannot run without — and Artifact
-  Registry). Confirm the NFS VM is `RUNNING` before deploying:
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, the **NFS server VM** — which both hosts the media library and co-hosts Redis, two things Immich cannot run without — and Artifact Registry). You do not need to deploy this yourself first — the platform automatically detects whether it already exists in the target project and provisions it before this module if not (see Task 1). Confirm the NFS VM is `RUNNING` before deploying:
   ```bash
   gcloud compute instances list --project="$PROJECT" --filter="name~nfs" \
     --format="table(name,zone,status)"
@@ -67,12 +64,12 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Deploy the module and wait for healthy [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Immich (GKE)** from
+1. Click **Deploy** in the RAD platform top navigation, open **Immich (GKE)** from
    the **Platform Modules** list, set `project_id`, and review the inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Immich_GKE)
    documents every input by group. Note that `enable_nfs`, `enable_redis`, and
    `max_instance_count = 1` are enforced by plan-time validations — do not fight
-   them. Review the estimated credit cost and click **Submit**; the deployment
+   them. Review the estimated credit cost and click **Deploy**; the deployment
    status page streams real-time logs.
 
 2. The platform builds the thin custom server image (over

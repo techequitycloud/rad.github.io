@@ -41,7 +41,7 @@ after deployment:
 ```bash
 # List secrets and find the admin password:
 gcloud secrets list --project "$PROJECT" --filter="name~admin-password"
-gcloud secrets versions access latest --secret=<resource_prefix>-admin-password --project "$PROJECT"
+gcloud secrets versions access latest --secret=secret-<resource_prefix>-kestra-admin-password --project "$PROJECT"
 ```
 
 The default admin username is `admin`. Log in to the Kestra UI with this username and the
@@ -136,13 +136,14 @@ risking a false negative from a slow HTTP response during early JVM startup.
 
 ## 6. Object storage
 
-A dedicated **Cloud Storage** bucket is declared here (with suffix `-kestra-storage`) and
+A dedicated **Cloud Storage** bucket is declared here (named
+`gcs-<application_name><resource_prefix>-storage`) and
 provisioned by the foundation, which also grants the workload service account access. This
 gives Kestra a durable, shared artifact storage backend that persists across restarts and
 container replacements. List it with:
 
 ```bash
-gcloud storage buckets list --project "$PROJECT" --filter="name~kestra-storage"
+gcloud storage buckets list --project "$PROJECT" --filter="name~kestra.*-storage"
 ```
 
 GCS Fuse volumes can optionally be configured in the platform modules to mount additional

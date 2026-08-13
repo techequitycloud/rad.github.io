@@ -7,7 +7,7 @@ description: "Configuration reference for deploying Penpot on GKE Autopilot with
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Penpot_GKE.png" alt="Penpot GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-This guide describes every configuration variable available in the `Penpot_GKE` module. `Penpot_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Penpot_Common`](Penpot_Common.md) shared application configuration to deploy [Penpot](https://penpot.app/) — an open-source design and prototyping tool — on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Penpot_GKE` module. `Penpot_GKE` is a **wrapper module** that combines the generic [`App_GKE`](./App_GKE.md) infrastructure module with the [`Penpot_Common`](./Penpot_Common) shared application configuration to deploy [Penpot](https://penpot.app/) — an open-source design and prototyping tool — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Penpot GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Penpot** are described in full here.
 
@@ -17,7 +17,7 @@ Most configuration options in `Penpot GKE` map directly to the same options in `
 
 ## Standard Configuration Reference
 
-The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](App_GKE.md) for full documentation.
+The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](./App_GKE.md) for full documentation.
 
 | Configuration Area | App GKE.md Section | Penpot-Specific Notes |
 |---|---|---|
@@ -43,7 +43,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Always enabled — no configuration required. |
 | Traffic & Ingress | §5 Traffic & Ingress | Identical. |
 | CDN | §5.B CDN | Identical. |
-| Custom Domain & Static IP | §5.C Static IP Reservation | `public_uri` must be updated to match the custom domain; see [Group 16: Custom Domain & Static IP](#group-16-custom-domain--static-ip). |
+| Custom Domain & Static IP | §5.C Static IP Reservation | `public_uri` must be updated to match the custom domain; see [Group 15: Custom Domain & Static IP](#group-15-custom-domain--static-ip). |
 | Cloud Build Triggers | §6.A Cloud Build Triggers | Identical. |
 | Cloud Deploy Pipeline | §6.B Cloud Deploy Pipeline | Identical. |
 | Image Mirroring | §6.C Image Mirroring | `enable_image_mirroring` defaults to `true`; Penpot images are hosted on Docker Hub. |
@@ -51,7 +51,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 12: Database Configuration](#group-12-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true` — Redis is **mandatory** for WebSocket pub/sub; see [Group 17: Redis (WebSocket Pub/Sub)](#group-17-redis-websocket-pubsub). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true` — Redis is **mandatory** for WebSocket pub/sub; see [Group 16: Redis (WebSocket Pub/Sub)](#group-16-redis-websocket-pubsub). |
 | Backup Import | §8.B Backup Import | See [Group 6: Backup & Maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | `enable_multi_cluster_service` exists on `App_GKE` but is **not** mirrored onto `Penpot_GKE` — MCS is not configurable for this module. |
@@ -79,7 +79,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -90,7 +90,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
 **Penpot-specific defaults:**
 
@@ -105,7 +105,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-comp
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
 
 **Penpot-specific defaults and behaviour:**
 
@@ -124,13 +124,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md
 | `enable_cloudsql_volume` | `true` | `true` | Cloud SQL Auth Proxy sidecar is required. The Penpot backend connects to PostgreSQL via the Auth Proxy Unix socket. |
 | `enable_image_mirroring` | `true` | `true` | Penpot images are hosted on Docker Hub. Mirroring to Artifact Registry avoids rate limits and satisfies Binary Authorization requirements. Applied to the backend image; the frontend and exporter images are also mirrored automatically. |
 
-The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
+The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#4-advanced-security), [App_GKE](App_GKE.md#5-traffic--ingress), and [App_GKE](App_GKE.md#d-networking--network-policies).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress), and [App_GKE](./App_GKE.md#d-networking--network-policies).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -183,7 +183,7 @@ kubectl logs -n NAMESPACE POD_NAME --since=5m | grep -i "flags\|heap\|migration\
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
 **Penpot-specific defaults:**
 
@@ -208,7 +208,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-data
 
 ## Group 7: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#3-core-service-configuration).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#3-core-service-configuration).
 
 **One application-level secret is auto-generated.** `Penpot Common` creates `PENPOT_SECRET_KEY` (a 64-character random value stored in Secret Manager as `secret-<prefix>-penpot-key`) — the shared JWT signing key used by the backend and the exporter. It is exposed via the `secret_ids` output and wired in as `module_secret_env_vars`; the exporter additionally references it directly since its config schema requires `:secret-key`. Penpot does not otherwise create admin passwords or other application secrets. The database password (`DB_PASSWORD`) is provisioned automatically by `App GKE`.
 
@@ -222,7 +222,7 @@ environment_variables = {
 
 **`PENPOT_EXPORTER_URI` is injected automatically** by the `penpot.tf` local block. It is set to the exporter service's cluster-internal URL. Do not override this unless you are deploying a custom exporter at a different address.
 
-The standard variables (`environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](App_GKE.md#3-core-service-configuration).
+The standard variables (`environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](./App_GKE.md#3-core-service-configuration).
 
 ---
 
@@ -263,13 +263,13 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "smtp\|email\|mail"
 
 ## Group 9: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs).
+These variables behave as described in [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
 **Default `db-init` job:** When `initialization_jobs` is empty (the default), `Penpot Common` supplies a `db-init` Kubernetes Job (image `postgres:15-alpine`, script `scripts/db-init.sh`, `execute_on_apply = true`) that creates the PostgreSQL database and application user. Penpot's Clojure application then handles schema creation and migration internally on backend startup, before accepting HTTP or WebSocket connections. Supplying a non-empty `initialization_jobs` list replaces the default job.
 
 **CronJobs:**
 
-The `cron_jobs` variable is available for custom scheduled tasks such as batch export jobs or analytics processing. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs) for full schema documentation.
+The `cron_jobs` variable is available for custom scheduled tasks such as batch export jobs or analytics processing. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) for full schema documentation.
 
 > **Note:** GKE CronJobs use `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, and `suspend` fields. The Cloud Run–style fields (`parallelism`, `paused`, `max_retries`, `task_count`) are not available.
 
@@ -279,7 +279,7 @@ The `cron_jobs` variable is available for custom scheduled tasks such as batch e
 
 ## Group 10: Storage & Filesystem — NFS
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Penpot-specific defaults:**
 
@@ -292,7 +292,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#c-stor
 
 ## Group 11: Storage & Filesystem — GCS
 
-These variables behave identically to `App_GKE`. See [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Penpot-specific auto-provisioned bucket:**
 
@@ -308,13 +308,13 @@ The following environment variables are injected automatically by `Penpot Common
 
 You do not need to configure GCS credentials manually. The backend's Kubernetes Service Account is bound to a GCP Service Account with Storage Object Admin permissions on the assets bucket via Workload Identity.
 
-The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 ---
 
 ## Group 12: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
 **Penpot-specific defaults and restrictions:**
 
@@ -344,7 +344,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-data
 
 ## Group 13: Custom SQL Scripts
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
 Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root`.
 
@@ -352,7 +352,7 @@ Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `
 
 ## Group 14: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 **Penpot-specific defaults:**
 
@@ -419,7 +419,7 @@ kubectl exec -n NAMESPACE FRONTEND_POD_NAME -- \
 
 ## Group 15: Reliability Policies
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#7-reliability--scheduling).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
 **Penpot-specific defaults:**
 
@@ -432,9 +432,9 @@ Available variables: `enable_pod_disruption_budget`, `pdb_min_available`, `enabl
 
 ---
 
-## Group 16: Custom Domain & Static IP
+## Group 15: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 > **`public_uri` and custom domains:** Penpot must know its public URL at startup. `PENPOT_PUBLIC_URI` is injected automatically using the predicted service URL. When using a custom domain, set `PENPOT_PUBLIC_URI` explicitly via `environment_variables` to match the domain in `application_domains`. Penpot uses `public_uri` to:
 > - Generate invitation links sent in email notifications
@@ -445,9 +445,9 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
 
 ---
 
-## Group 17: Redis (WebSocket Pub/Sub)
+## Group 16: Redis (WebSocket Pub/Sub)
 
-These variables configure Penpot's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](App_GKE.md#a-redis--memorystore)). Redis is **mandatory** for Penpot — it is the WebSocket pub/sub event bus that synchronises real-time design changes between all connected users across all backend replicas.
+These variables configure Penpot's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](./App_GKE.md#a-redis--memorystore)). Redis is **mandatory** for Penpot — it is the WebSocket pub/sub event bus that synchronises real-time design changes between all connected users across all backend replicas.
 
 > **Note:** In `Penpot GKE`, the Redis variables are in **group 21**.
 
@@ -485,9 +485,9 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "redis\|connected\|pub/sub"
 
 ---
 
-## Group 18: GKE Backend Configuration
+## Group 17: GKE Backend Configuration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 **Penpot-specific defaults:**
 
@@ -501,9 +501,9 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ---
 
-## Group 19: Stateful Workloads
+## Group 18: Stateful Workloads
 
-Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 Setting `stateful_pvc_enabled = true` automatically selects `workload_type = "StatefulSet"`. Penpot's design asset storage is backed by GCS, so a per-pod PVC is not required for design data durability. A StatefulSet with PVC may be useful for storing local JVM heap dumps or persistent Penpot internal caches between restarts.
 

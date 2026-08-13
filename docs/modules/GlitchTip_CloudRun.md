@@ -234,7 +234,7 @@ specific to or notable for GlitchTip are listed; every other input is inherited 
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment (use `cr` to run alongside the GKE variant). |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment (use `cr` to run alongside the GKE variant). |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 

@@ -36,7 +36,7 @@ services:
 | Database | _None_ | `database_type = NONE` — code-server has no SQL database |
 | Cache & queue | _None_ | Redis is explicitly disabled (`enable_redis = false`) |
 | Secrets | Secret Manager | Auto-generated editor `PASSWORD` (when `enable_password = true`) |
-| Ingress | Cloud Run URL / Cloud Load Balancing | **Default ingress is `all`** — publicly reachable out of the box, gated by the auto-generated password |
+| Ingress | Cloud Run URL / Cloud Load Balancing | **Default ingress is `all`** — publicly reachable by default; the auto-generated `PASSWORD` gates the login page |
 
 **Sensible defaults worth knowing up front:**
 
@@ -44,10 +44,9 @@ services:
   the workspace volume. `database_type` is fixed to `NONE` by the shared application
   layer and Redis is disabled.
 - **Ingress is `all` (public) by default.** The service is reachable from the public
-  internet out of the box, gated by the auto-generated password. A plan-time guard
-  rejects `ingress_settings = "all"` with `enable_password = false`. Set
-  `ingress_settings = "internal"` to restrict access to the VPC instead, or front it
-  with an HTTPS load balancer.
+  internet out of the box, gated by the auto-generated `PASSWORD`. Keep
+  `enable_password = true` whenever `ingress_settings = "all"`, or switch to
+  `ingress_settings = "internal"` to restrict access to the VPC.
 - **A random editor `PASSWORD` is generated automatically** and stored in Secret
   Manager. It gates the login page. Disabling `enable_password` serves the editor with
   no authentication — only safe behind `internal` ingress.
@@ -122,10 +121,10 @@ See [App_CloudRun](App_CloudRun.md) for secret injection and rotation details.
 
 ### D. Networking & ingress
 
-The service defaults to **`all` ingress** — reachable from the public internet,
-gated by the auto-generated password. Set `ingress_settings = "internal"` to
-restrict the editor to within the VPC, or layer an external HTTPS load balancer
-with a custom domain, Cloud CDN, and Cloud Armor.
+The service defaults to **`all` ingress** — reachable from the public internet, with
+the auto-generated `PASSWORD` gating the login page. To restrict access to the VPC,
+set `ingress_settings = "internal"`, or layer an external HTTPS load balancer with a
+custom domain, Cloud CDN, and Cloud Armor.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -195,7 +194,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -227,7 +226,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Public by default (keep the password on). Set `internal` to restrict to VPC-only access. |
+| `ingress_settings` | `all` | Public by default (gated by the `PASSWORD` secret). Set `internal` to restrict access to the VPC. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Route only RFC 1918 traffic via VPC. |
 | `enable_iap` | `false` | Require Google sign-in in front of the editor. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
@@ -286,7 +285,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `codeserver_url` | URL of the code-server editor (port 8080). Publicly reachable by default (`ingress_settings = "all"`); reachable only within the VPC when set to `internal`. |
+| `codeserver_url` | URL of the code-server editor (port 8080). Reachable only within the VPC when ingress is `internal`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -319,7 +318,7 @@ running resources.
 | `max_instance_count` | `1` | High | Scaling beyond 1 splits editor sessions across instances and risks concurrent writes to the single workspace volume. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero (`0`) adds cold-start latency and re-mounts the workspace on the next request. |
 | `execution_environment` | `gen2` | High | `gen1` cannot mount GCS FUSE — the workspace volume fails and state is lost on restart. |
-| `ingress_settings` | `all` + password (default), or `internal` | High | `all` without a password is rejected at plan time; `internal` blocks all browser access from outside the VPC. |
+| `ingress_settings` | `all` + password (or `internal`) | High | `all` without a password publishes an open IDE; `internal` blocks all browser access from outside the VPC. |
 | `enable_cloudsql_volume` | `false` | Low | code-server has no database; enabling adds an unused Auth Proxy sidecar. |
 | `memory_limit` | `1Gi`+ | Medium | Heavy language servers/extensions can OOM below 1 GiB. |
 

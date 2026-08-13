@@ -203,6 +203,20 @@ Monitoring, with optional uptime checks and alert policies.
 - **No scheduled tasks required.** Cal.diy does not require separately scheduled
   background jobs — bookings and reminders are handled by Next.js API routes.
 
+- **Scheduled-flow reliability gap (no `cpu_always_allocated` override).** The
+  repository-wide `cpu_always_allocated` audit (CLAUDE.md, 2026-07-10 OPEN CAVEAT)
+  lists Cal.diy (alongside Activepieces) as shipping scheduler/worker/cron/queue
+  components that default to request-based billing with `min_instance_count = 0`,
+  and warns that if a deployment enables Cal.diy's *scheduled* flows, those triggers
+  will silently not fire while the service is scaled to zero — the documented fix
+  being an override to `cpu_always_allocated = true` + `min_instance_count = 1` (the
+  same pattern used for n8n). **`CalDiy_CloudRun` currently has no way to apply that
+  fix**: `cpu_always_allocated` is a Foundation (`App_CloudRun`) variable that is not
+  declared in `CalDiy_CloudRun/variables.tf` and not forwarded in `main.tf`, so it
+  cannot be set through this module's inputs. `min_instance_count = 1` alone (already
+  exposed) avoids scale-to-zero, but leaves the request-based CPU-throttling half of
+  the problem unaddressed for any scheduled-flow use case.
+
 ---
 
 ## 4. Configuration Variables
@@ -222,7 +236,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -410,6 +424,7 @@ running resources.
 | `enable_redis` | `true` for multi-instance | High | Without Redis, sessions are per-instance; users are logged out when scale-to-zero or instance rotation occurs. |
 | `redis_host` | required when `enable_redis=true` | High | Empty `redis_host` with Redis enabled injects a malformed URL; session operations fail at runtime. |
 | `min_instance_count` | `1` for production | Medium | Scale-to-zero is the default; Cal.diy's 4–5 minute cold start adds unacceptable latency for production scheduling. |
+| scheduled/cron-driven flows | not supported without a module change | Medium | Per CLAUDE.md's `cpu_always_allocated` audit (2026-07-10 OPEN CAVEAT), Cal.diy's scheduler/worker/cron/queue components need `cpu_always_allocated = true` to fire reliably while scaled to zero — but this module does not declare or forward that Foundation variable, so it cannot be set today. |
 | `SMTP_HOST` / `EMAIL_FROM` | real SMTP config | Medium | Without valid SMTP, booking confirmations, reminders, and password resets are never delivered. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | If using Memorystore Redis, its private IP may not be in default VPC ranges; change to `ALL_TRAFFIC` or ensure correct VPC routing. |
 | `organization_id` | set explicitly for VPC-SC | Medium | VPC-SC perimeter is only activated when `organization_id` is set; `enable_vpc_sc = true` alone has no effect. |

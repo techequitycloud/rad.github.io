@@ -20,7 +20,7 @@ The lab focuses on operating the **Cloud Run module and the Google Cloud platfor
 By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
-- Access the service through its default `internal` ingress and verify it is healthy.
+- Access the service through its default `all` (public) ingress and verify it is healthy.
 - Claim the administrator account via the first-run setup wizard and understand why timing matters.
 - Perform day-2 operations — inspect revisions, manage the GCS-backed workspace, and update the version.
 - Observe the service with Cloud Logging and Cloud Monitoring.
@@ -29,8 +29,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -47,13 +49,14 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **CloudBeaver (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **CloudBeaver (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/CloudBeaver_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
-2. The platform builds the container image (from `dbeaver/cloudbeaver` with a custom
-   entrypoint), provisions the Cloud Run service (port 8978, 1 vCPU / 1 GiB), and
+2. The platform builds the container image (a thin wrapper `FROM dbeaver/cloudbeaver`
+   — no custom entrypoint, the upstream image's own startup is used unchanged),
+   provisions the Cloud Run service (port 8978, 1 vCPU / 1 GiB), and
    creates a dedicated GCS **workspace bucket** mounted via GCS FUSE at
    `/opt/cloudbeaver/workspace`. There is **no Cloud SQL instance, no Redis, and no
    application secret** — CloudBeaver keeps all of its own state in the workspace.
@@ -76,20 +79,20 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. **Mind the ingress mode first.** The module defaults to
-   `ingress_settings = "internal"` — appropriate for a database admin console, but it
-   means the service URL is only reachable from inside the VPC. A `curl` from your
-   laptop returns **404** in that mode; that is the ingress policy working, not a
-   failure. Check the current mode:
+1. **Mind the ingress mode first.** The module defaults to `ingress_settings = "all"`
+   — the service URL is reachable from the public internet immediately after deploy,
+   which is convenient for this lab but a real consideration for a database admin
+   console (see Task 2 step 3 on claiming the admin account promptly). Check the
+   current mode:
 
    ```bash
    gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
      --format="value(metadata.annotations['run.googleapis.com/ingress'])"
    ```
 
-   For browser access from outside the VPC, either set `ingress_settings = "all"` via
-   **Update** on the deployment details page (temporarily, for this lab) or front the
-   service with an external HTTPS load balancer and IAP.
+   To restrict access to within the VPC, set `ingress_settings = "internal"` via
+   **Update** on the deployment details page, or front the service with an external
+   HTTPS load balancer and IAP for controlled public access.
 
 2. Once reachable, confirm the service is healthy. CloudBeaver's health path is `/`,
    which returns HTTP 200 once the JVM has finished starting (allow ~15–30 seconds
@@ -172,10 +175,12 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count (should sit flat at 1), and
-   CPU / memory utilisation (watch memory — CloudBeaver is JVM-based). Note that the
-   module's **uptime check** is only provisioned when the endpoint is publicly
-   reachable — with the default `internal` ingress there is no public endpoint to
-   probe, so Monitoring → Uptime checks may legitimately be empty.
+   CPU / memory utilisation (watch memory — CloudBeaver is JVM-based). Note that
+   `uptime_check_config.enabled` defaults to `false`, so Monitoring → Uptime checks is
+   legitimately empty unless you turn it on; if you do, a Cloud Monitoring uptime
+   check is only provisioned when the endpoint is publicly reachable — the default
+   `all` ingress qualifies, but switching to `ingress_settings = "internal"` removes
+   the public endpoint and the ability to provision one.
 
 ---
 
@@ -184,8 +189,10 @@ export REGION="us-central1"          # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with CloudBeaver releases.
 
-- **URL returns 404 from your machine:** almost always the default `internal`
-  ingress, not an outage. Check the ingress annotation (Task 2) before reading logs.
+- **URL returns 404 from your machine:** if you switched `ingress_settings` to
+  `internal` for a tighter deployment, that is the ingress policy working, not an
+  outage — the service is only reachable from inside the VPC in that mode. Check the
+  ingress annotation (Task 2) before reading logs.
 - **Revision unhealthy / service won't serve:** the startup probe targets `/` with a
   15-second initial delay and a 10-failure retry window (the JVM boot is quick but
   not instant). Inspect the latest revision and its logs:
@@ -224,7 +231,7 @@ On the **Deployments** page, open the deployment and click the **Trash** icon (*
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds the image and provisions Cloud Run + the GCS workspace bucket (no DB, no Redis, no secrets) |
-| 2 — Access & verify | Manual | Understand `internal` ingress; health check passes; claim the admin account via the setup wizard |
+| 2 — Access & verify | Manual | Understand the default `all` (public) ingress; health check passes; claim the admin account via the setup wizard |
 | 3 — Operate | Manual | Inspect revisions, keep single-instance scaling, update version, back up the workspace bucket |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics; understand when the uptime check exists |
 | 5 — Troubleshoot | Manual | Diagnose ingress, revision, workspace, VPC-egress, build, and IAM issues |

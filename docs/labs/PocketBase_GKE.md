@@ -38,8 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot cluster,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -57,7 +60,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **PocketBase (GKE)** from the
+1. Click **Deploy** in the RAD platform top navigation, open **PocketBase (GKE)** from the
    **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PocketBase_GKE) documents
@@ -88,8 +91,8 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. Confirm the pod is running. The Service is `ClusterIP` by default (internal only); if you
-   enabled `service_type = LoadBalancer`, find its external address:
+1. Confirm the pod is running. The Service is `LoadBalancer` by default (external), since
+   PocketBase is a public-facing backend-as-a-service — find its external address:
 
    ```bash
    kubectl get pods,svc -n "$NS"
@@ -110,8 +113,8 @@ export REGION="us-central1"           # the region you deploy into
      -- wget -qO- http://127.0.0.1:8090/api/health
    ```
 
-3. Open the admin UI at `/_/` (via the external IP, or `kubectl port-forward` if the Service
-   stayed `ClusterIP`) **immediately**:
+3. Open the admin UI at `/_/` (via the external IP, or `kubectl port-forward` if you set
+   `service_type = ClusterIP`) **immediately**:
 
    ```bash
    kubectl port-forward -n "$NS" svc/<service-name> 8090:8090   # if internal-only
@@ -209,8 +212,9 @@ diagnostics and do not change with PocketBase releases.
 - **Can't reach `/_/` or someone else claimed the admin account:** there is no reset
   mechanism from the platform side; use the PocketBase CLI/API against the running pod, or
   restore from a pre-claim backup of the PVC if this happened on a fresh deploy.
-- **No external IP:** confirm `service_type = LoadBalancer` is set (default is internal
-  `ClusterIP`), and check `kubectl get svc -n "$NS"` for a pending `EXTERNAL-IP`.
+- **No external IP:** `service_type = LoadBalancer` is the default, so an IP should
+  provision automatically — check `kubectl get svc -n "$NS"` for a pending `EXTERNAL-IP`
+  (provisioning can take a minute); confirm `service_type` wasn't overridden to `ClusterIP`.
 - **Image pull errors:** confirm the image exists in Artifact Registry and the node service
   account can pull it.
 

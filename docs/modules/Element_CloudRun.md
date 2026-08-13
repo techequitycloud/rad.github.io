@@ -192,7 +192,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -216,8 +216,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `512Mi` | Memory per instance (gen2 floor is 512 MiB). |
 | `container_port` | `80` | nginx listens on port 80. |
-| `min_instance_count` | `0` | Scale-to-zero — a static server is free at idle. |
-| `max_instance_count` | `3` | Autoscaling upper bound. |
+| `min_instance_count` | `0` | **Hardcoded, not tunable.** `element.tf` pins this to `0` in the Foundation module call and the config merge; `var.min_instance_count` is never forwarded, so raising it (e.g. to eliminate cold starts) is silently ignored. Scale-to-zero is always in effect — a static server is free at idle regardless of the input value. |
+| `max_instance_count` | `3` | Autoscaling upper bound — genuinely adjustable; forwarded via `var.max_instance_count`. |
 | `cpu_always_allocated` | `false` | Request-based billing (cheaper) — Element does no background work. |
 | `execution_environment` | `gen2` | Cloud Run execution environment. |
 | `enable_cloudsql_volume` | `false` | No database — Auth Proxy not mounted. |

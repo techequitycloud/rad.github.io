@@ -21,7 +21,7 @@ Windmill runs as a combined server+worker workload. The deployment wires togethe
 |---|---|---|
 | Compute | GKE Autopilot | Combined server+worker pods, 2 vCPU / 2 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 16 | Required — Windmill requires PostgreSQL 16 or later |
-| Object storage | Cloud Storage | A `windmill-data` bucket for workflow outputs and artefacts |
+| Object storage | Cloud Storage | A `data` bucket (`gcs-<app><tenant-prefix>-data`) for workflow outputs and artefacts |
 | Secrets | Secret Manager | Auto-generated database password and SMTP placeholder secret |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
@@ -75,7 +75,7 @@ The instance name, database name, user, and the Secret Manager secret holding th
 
 ### C. Cloud Storage
 
-A dedicated **Cloud Storage** bucket (`windmill-data`) is provisioned for workflow outputs, artefacts, and script dependencies. The workload service account is granted access automatically.
+A dedicated **Cloud Storage** bucket (name suffix `data`, i.e. `gcs-<app><tenant-prefix>-data`) is provisioned for workflow outputs, artefacts, and script dependencies. The workload service account is granted access automatically.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -160,7 +160,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -256,7 +256,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see [App_GKE](App_GK
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provision the `windmill-data` bucket and any additional buckets. |
+| `create_cloud_storage` | `true` | Provision the `data` bucket and any additional buckets. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts via the CSI driver. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |

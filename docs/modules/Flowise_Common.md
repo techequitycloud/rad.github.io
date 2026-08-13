@@ -128,9 +128,8 @@ gcloud storage buckets list --project "$PROJECT"
 ```
 
 The bucket uses `STORAGE_CLASS=STANDARD` in the deployment region, with public
-access prevention inherited from the project/org policy (not explicitly enforced at
-the bucket level). Additional buckets can be added through the `storage_buckets`
-variable in the platform module.
+access prevention set to `inherited`. Additional buckets can be added through the
+`storage_buckets` variable in the platform module.
 
 ---
 

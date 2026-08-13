@@ -28,13 +28,13 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 
 ## 1. Overview
 
-Uptime Kuma runs as a single Node.js web workload built from a thin custom
-image layered on the official Docker Hub image. The deployment wires
-together a deliberately small set of Google Cloud services:
+Uptime Kuma runs as a single Node.js web workload pulled directly from the
+official Docker Hub image. The deployment wires together a deliberately
+small set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Custom-built `louislam/uptime-kuma` pods (SQLite journal mode patched) on port 3001, 1 vCPU / 512Mi by default |
+| Compute | GKE Autopilot | Custom-built `louislam/uptime-kuma`-based pods on port 3001, 1 vCPU / 512Mi by default |
 | Database | None (embedded SQLite) | `database_type = "NONE"` — no Cloud SQL instance is provisioned |
 | File persistence | Cloud Filestore (NFS) | The SQLite database and uploads persist under `/app/data`, shared across pods |
 | Object storage | Cloud Storage | None provisioned by default — `storage_buckets = []` |
@@ -52,21 +52,24 @@ together a deliberately small set of Google Cloud services:
   lost on pod recreation.
 - **No Redis, no application secrets.** `UptimeKuma_Common` outputs
   `secret_ids = {}`; there is nothing to inject from Secret Manager.
-- **Thin custom build, not the stock image used verbatim.** `container_image_source =
-  "custom"` builds `FROM louislam/uptime-kuma:<application_version>` (default
-  tag `1`, the v1 stable/SQLite line) and source-patches the hardcoded SQLite
-  `journal_mode = WAL` to `DELETE` — WAL requires shared-memory byte-range
-  locking between the DB file and its `-wal` sidecar, which the NFS-backed
-  `/app/data` volume does not reliably provide (observed as `SQLITE_CORRUPT`).
-  The built image is mirrored into Artifact Registry by default
+- **Custom build patches SQLite for NFS safety.** `container_image_source =
+  "custom"` builds a thin image `FROM louislam/uptime-kuma:<application_version>`
+  (default tag `1`, the v1 stable/SQLite line) via Cloud Build. Uptime Kuma
+  unconditionally sets `PRAGMA journal_mode = WAL` on every boot (hardcoded in
+  `server/database.js`, not configurable via env var); WAL relies on
+  shared-memory byte-range locking between the DB file and its `-wal` sidecar,
+  which the NFS-backed `/app/data` volume does not reliably provide and has
+  produced observed `SQLITE_CORRUPT` errors. The build patches that PRAGMA to
+  `DELETE` mode, which only needs standard whole-file locking that NFS handles
+  correctly. The built image is then mirrored into Artifact Registry by default
   (`enable_image_mirroring = true`) to avoid Docker Hub rate limits.
 - **`container_port = 3001`** — Uptime Kuma's native port.
 - **Single replica by default and required.** `min_instance_count = 1`,
   `max_instance_count = 1`. SQLite is a single-writer database; do not scale
   beyond 1 replica sharing the same NFS-mounted database file.
-- **`tenant_deployment_id` gets a `-gke` suffix** when the variant calls
+- **`tenant_id` gets a `-gke` suffix** when the variant calls
   `UptimeKuma_Common`, so a CloudRun and GKE variant on the same
-  `tenant_deployment_id` do not collide on Common-owned naming.
+  `tenant_id` do not collide on Common-owned naming.
 - **First-run setup is entirely in-app.** There is no default admin account —
   Uptime Kuma prompts you to create one on first access.
 
@@ -224,7 +227,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `container_image_source` | `custom` | Builds a thin wrapper via Cloud Build that patches SQLite's journal mode away from WAL for NFS safety; `"prebuilt"` would deploy the official image directly (unpatched). |
+| `container_image_source` | `custom` | Builds a thin custom image via Cloud Build that patches SQLite's hardcoded `journal_mode` from `WAL` to `DELETE` for NFS safety (see Overview). Keep `custom`. |
 | `container_port` | `3001` | Uptime Kuma's native port. |
 | `enable_cloudsql_volume` | `false` | Unused — Uptime Kuma has no external database. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Keep both at `1` — single SQLite writer. |
@@ -318,6 +321,7 @@ to locate and explore the running resources.
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS, bookmarks, and any external status-page embed. |
 | First-run admin setup | Complete immediately after deploy | Medium | The setup wizard is reachable by anyone who finds the URL before an admin account is created — do not leave a freshly deployed instance with a public IP unconfigured for long. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Applies to Foundation-managed backups; since Uptime Kuma's real state is the NFS-hosted SQLite file, verify NFS/Filestore backup coverage separately rather than relying solely on this setting. |
+| `container_image_source` | `custom` (default) | Critical | Setting `"prebuilt"` skips the Cloud Build step and deploys the unpatched upstream image — Uptime Kuma then writes SQLite in WAL mode over NFS, which has produced observed `SQLITE_CORRUPT` database corruption. |
 
 ---
 

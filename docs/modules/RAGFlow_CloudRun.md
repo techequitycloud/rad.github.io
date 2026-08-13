@@ -48,9 +48,11 @@ wires together a focused set of Google Cloud services:
 - **`elasticsearch_hosts` is required.** RAGFlow cannot index or search documents
   without a reachable Elasticsearch endpoint. This check is skipped only when
   `deploy_application = false`.
-- **Redis is required for document processing.** With `enable_redis = true` (default)
-  and a non-empty `redis_host`, `REDIS_HOST` and `REDIS_PORT` are injected automatically.
-  Without Redis, uploaded files remain unprocessed indefinitely.
+- **Redis is required for document processing.** With `enable_redis = true` (default),
+  `REDIS_HOST` and `REDIS_PORT` are injected automatically. If `redis_host` is left
+  empty, App_CloudRun falls back to the NFS server's IP (the NFS VM co-hosts Redis) —
+  same behavior as the GKE variant. Without a reachable Redis, uploaded files remain
+  unprocessed indefinitely.
 - **Cold-start by default.** `min_instance_count = 0` and `cpu_always_allocated = false`
   (request-based billing) — the service scales to zero when idle and only bills CPU
   while serving a request. **Trade-off:** the background document task-executor stops
@@ -251,7 +253,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -369,8 +371,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Use Redis for the document processing task queue. Redis is wired only when `redis_host` is non-empty. |
-| `redis_host` | `""` | Redis endpoint. Leave empty to use the NFS server IP (the platform co-hosts Redis on the NFS VM); set explicitly for a dedicated Memorystore instance. |
+| `enable_redis` | `true` | Use Redis for the document processing task queue. Forwarded unconditionally to App_CloudRun — Redis is wired whether `redis_host` is set or left empty. |
+| `redis_host` | `""` | Redis endpoint. When left empty, App_CloudRun injects `REDIS_HOST = <NFS server IP>` as a fallback (identical behavior to the GKE variant, since the NFS VM co-hosts Redis). Set explicitly to point at a different Redis instance (e.g. Memorystore). |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
 | `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when `xpack.security.enabled = false`. |
@@ -428,7 +430,7 @@ running resources.
 | `enable_cloudsql_volume` | `true` | Critical | RAGFlow connects via Unix socket bridged to TCP by socat; disabling the proxy sidecar causes a database connection failure on startup. |
 | `db_name` / `db_user` | set once | Critical | Immutable after first deploy; renaming recreates the database/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `redis_host` | `""` (NFS fallback) or explicit Memorystore IP | High | An unreachable Redis host silently breaks all async document workers. Leaving it empty falls back to the NFS server's co-hosted Redis; if NFS is also disabled, workers never receive tasks. |
+| `redis_host` | leave empty to use the NFS-server Redis fallback, or set an explicit Memorystore IP | High | When `redis_host = ""` and `enable_redis = true`, App_CloudRun injects `REDIS_HOST = <NFS server IP>` (requires `enable_nfs = true`, the default) — same as the GKE variant. If NFS is disabled and `redis_host` is left empty, no Redis host is injected and async document workers silently never run. |
 | `min_instance_count` / `cpu_always_allocated` | `1` / `true` for continuous ingestion | High | Defaults are `0` / `false` (cold-start): background document processing stops while idle and cold starts take 2–3 minutes. Set both for always-on ingestion. |
 | `memory_limit` | `4Gi` (≥ `8Gi` for prod) | High | Embedding models plus the application server require significant RAM; too little causes OOM kills. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Memorystore Redis is on a private VPC IP; wrong egress routing breaks the task queue. |

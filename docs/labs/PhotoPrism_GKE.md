@@ -39,8 +39,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
   PhotoPrism itself provisions no Cloud SQL instance — it uses an embedded SQLite
   database on a block PVC.
 - A Google Cloud project with **billing enabled**.
@@ -60,7 +63,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **PhotoPrism (GKE)** from
+1. Click **Deploy** in the RAD platform top navigation, open **PhotoPrism (GKE)** from
    the **Platform Modules** list to start configuration, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PhotoPrism_GKE)
@@ -103,9 +106,10 @@ export REGION="us-central1"           # the region you deploy into
    echo "External IP: $EXTERNAL_IP"
    ```
 
-   By default the Service is `ClusterIP` (not `LoadBalancer`); if `EXTERNAL_IP` is
-   empty, check whether a custom domain / Gateway route was configured instead
-   (`enable_custom_domain = true` by default) and use `kubectl get gateway,httproute -n "$NS"`.
+   By default the Service is `LoadBalancer` (`service_type = "LoadBalancer"`); if
+   `EXTERNAL_IP` is empty, check whether a custom domain / Gateway route was
+   configured instead (`enable_custom_domain = true` by default) and use
+   `kubectl get gateway,httproute -n "$NS"`.
 
 2. Confirm the service is healthy. PhotoPrism exposes an unauthenticated status
    endpoint that responds once the HTTP server is up and the SQLite index is ready:
@@ -147,13 +151,13 @@ export REGION="us-central1"           # the region you deploy into
    corruption. This is not a scaling dial to tune.
 
 3. **Tune resources for your library size.** `cpu_limit`/`memory_limit` default to
-   `1000m`/`1Gi`, but PhotoPrism loads vector indexes into memory for face recognition
-   and thumbnailing, and the application layer's own baseline recommendation is `4Gi`
-   for real indexing workloads. If you see pod restarts from OOM in `kubectl describe
-   pod` events (Task 4) as your library grows, raise `memory_limit` in the RAD
-   platform and apply via **Update**. Also confirm `stateful_fs_group = 3000` remains
-   set — a mismatched or missing `fsGroup` leaves the PVC non-writable by PhotoPrism's
-   UID 1000/GID 2000 and blocks startup.
+   `1000m`/`2Gi` — 2Gi is the minimum that keeps face recognition and RAW support
+   enabled; PhotoPrism loads vector indexes into memory, and upstream recommends `4Gi`
+   for real indexing workloads on large libraries. If you see pod restarts from OOM in
+   `kubectl describe pod` events (Task 4) as your library grows, raise `memory_limit`
+   in the RAD platform and apply via **Update**. Also confirm `stateful_fs_group = 3000`
+   remains set — a mismatched or missing `fsGroup` leaves the PVC non-writable by
+   PhotoPrism's UID 1000/GID 2000 and blocks startup.
 
 4. **Update the application version** by changing the version input in the RAD
    platform and applying it via **Update**; a new image builds (pinned to a
@@ -212,7 +216,7 @@ platform-level diagnostics and do not change with PhotoPrism releases.
   with `-var stateful_pvc_storage_class=standard` on quota-constrained projects.
   Scaling the pod to zero does not free the PVC — only deleting it reclaims quota.
 - **Container OOM-killed:** check pod restart count and events; if memory is pinned
-  near the `memory_limit` ceiling, raise it (see Task 3) — 1Gi is the module default
+  near the `memory_limit` ceiling, raise it (see Task 3) — 2Gi is the module default
   but under-sized for real libraries.
 - **Locked out of the admin account:** re-read the password from Secret Manager
   (Task 2); it is the source of truth and PhotoPrism re-applies it at every boot.

@@ -259,7 +259,7 @@ to or notable for Odoo are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -278,6 +278,7 @@ to or notable for Odoo are listed; every other input is inherited from
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` / `memory_limit` | `1000m` / `1Gi` | Instance CPU and memory limits. **Raise to ≥ 2 vCPU / 4 GiB for production.** |
+| `cpu_always_allocated` | `false` | When `true`, CPU is allocated at all times (instance-based billing) instead of only while serving a request. Odoo defaults to request-based billing, but it also runs an in-process cron (`max_cron_threads`) for scheduled actions — set `true` if you rely on those (recurring invoices/reminders), otherwise CPU throttles between requests and cron jobs stall. |
 | `min_instance_count` | `0` | Minimum instances. Set to `1` to avoid cold starts for active users. |
 | `max_instance_count` | `1` | Maximum instances. Do not raise above `1` without enabling Redis. |
 | `container_port` | `8069` | Port Odoo listens on. Do not change unless the Odoo server is reconfigured. |
@@ -437,6 +438,7 @@ explore the running resources.
 | `enable_redis` | `true` when `max_instance_count > 1` | High | Without Redis, users are logged out when their request lands on a different instance. |
 | `redis_host` | explicit endpoint | High | Required when `enable_redis = true`; empty causes session backend failures at startup. |
 | `min_instance_count` | `1` for production | High | Scale-to-zero adds cold-start delays of 30–90 seconds and stops the Odoo background scheduler. |
+| `cpu_always_allocated` | `true` if relying on Odoo's cron | High | Default `false` is request-based billing — CPU throttles to near-zero between requests **even with `min_instance_count = 1`**, so Odoo's in-process cron (`max_cron_threads`) that drives scheduled actions (recurring invoices/reminders) can stall or never run. Set `true` to keep CPU allocated for the cron worker. |
 | `backup_retention_days` | `90` for production | High | Odoo contains financial records; 7 days is insufficient for most compliance requirements. |
 | `application_version` | valid LTS (`18.0`, `17.0`) | High | Invalid version tag fails the Cloud Build step during image build. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | High | The Odoo database manager and admin portal should not be publicly reachable without authentication. |

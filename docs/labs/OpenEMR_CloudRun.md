@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,7 +57,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **OpenEMR (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **OpenEMR (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenEMR_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -174,6 +177,15 @@ platform-level diagnostics and do not change with OpenEMR releases.
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
+- **Revision looks stuck "starting" forever (no crash, no error logs):** this is a
+  known OpenEMR-specific failure mode, not a generic hang. OpenEMR's first-boot setup
+  (Twig cache clear, login-page-layout DB check, and a recursive file-permission
+  hardening pass) runs as background work that is not tied to any single inbound
+  request. If `cpu_always_allocated = false` (request-based billing), Cloud Run
+  throttles CPU to near-zero between requests, so that one-time setup can take many
+  minutes or effectively never finish — even though it completes in under 15 seconds
+  with continuous CPU. Fix: confirm `cpu_always_allocated = true` (the module default)
+  and redeploy/restart the revision; do not assume the app or entrypoint is broken.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
   DB password secret exists, and both initialisation jobs completed successfully.
 - **Initialisation jobs failed:** list executions and read the failed job's logs:

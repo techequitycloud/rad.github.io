@@ -121,16 +121,19 @@ Platform-specific adjustments handled here:
 
 ## 5. Health probe behaviour
 
-The default probes target the n8n root path (`/`), which returns HTTP 200 only
-once the application is fully initialised and the database connection is
-established.
+`N8N_Common`'s own `startup_probe`/`liveness_probe` variables default to n8n's
+unauthenticated health-check endpoint, `/healthz`, with a 10-second startup
+initial delay and a 15-second liveness initial delay (see the "Health Probe
+Defaults" table in `N8N_Common/README.md`).
 
-- The **startup probe** uses a 120-second initial delay to allow time for first-boot
-  database setup and schema migration.
-- The **liveness probe** uses a 30-second initial delay after startup succeeds.
+The `N8N_CloudRun` and `N8N_GKE` variant modules override these defaults in
+their own `variables.tf`, targeting the n8n root path (`/`) instead, with a
+120-second startup initial delay and a 30-second liveness initial delay — long
+enough for first-boot database setup and schema migration to complete before
+the probe is evaluated. `/` returns HTTP 200 only once the application is
+fully initialised and the database connection is established.
 
-Both GKE and Cloud Run variants use HTTP probes against `/` — n8n does not issue
-HTTP→HTTPS redirects on health probe paths.
+n8n does not issue HTTP→HTTPS redirects on either health probe path.
 
 ---
 

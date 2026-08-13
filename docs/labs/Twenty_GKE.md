@@ -36,9 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module
-  depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,7 +58,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Twenty (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Twenty (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Twenty_GKE)
    documents every input by group, with defaults. Note that `SERVER_URL` and
@@ -65,9 +67,10 @@ export REGION="us-central1"           # the region you deploy into
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a
    Cloud SQL (PostgreSQL 15) database with its Secret Manager secrets, optional
-   Redis/GCS storage, builds the container image, and runs two one-shot initialisation
-   jobs (`db-init` followed by `twenty-migrate`). First deploys take roughly
-   **20–35 minutes** (Cloud SQL creation dominates).
+   Redis/GCS storage, builds the container image, and runs three one-shot
+   initialisation jobs in sequence (`db-init`, then `twenty-migrate`, then
+   `twenty-verify` — a guard job that fails the deploy if the schema ends up empty).
+   First deploys take roughly **20–35 minutes** (Cloud SQL creation dominates).
 
 3. Connect to the cluster and discover the namespace with name-agnostic filters:
 
@@ -128,7 +131,7 @@ export REGION="us-central1"           # the region you deploy into
    ```bash
    kubectl get secrets -n "$NS"
    gcloud secrets list --project="$PROJECT" --filter="name~twenty"
-   kubectl get jobs -n "$NS"          # db-init, twenty-migrate, and any scheduled jobs
+   kubectl get jobs -n "$NS"          # db-init, twenty-migrate, twenty-verify, and any scheduled jobs
    ```
 
 5. **Open a database session** for inspection or maintenance:
@@ -170,12 +173,26 @@ platform-level diagnostics and do not change with Twenty releases.
   ```
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the
   DB password secret materialised into the namespace, `enable_cloudsql_volume` is
-  `true`, and both initialisation jobs completed.
+  `true`, and all three initialisation jobs (`db-init`, `twenty-migrate`,
+  `twenty-verify`) completed.
 - **Initialisation job failed:** inspect the jobs and their pod logs:
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/db-init
   kubectl logs -n "$NS" job/twenty-migrate
+  kubectl logs -n "$NS" job/twenty-verify
+  ```
+- **"Unable to Reach Back-end" in the UI on an otherwise Ready pod (Twenty-specific):**
+  an init-job failure does NOT fail the module apply on its own, so a raced or failed
+  `twenty-migrate` on a fresh tenant can leave the pod Ready and serving against an
+  **empty** database — every backend query then dies with
+  `relation "core.keyValuePair" does not exist`. This is the exact failure mode the
+  `twenty-verify` guard job exists to catch (it fails the apply loudly if the `core`
+  schema has no tables). If you still hit this — e.g. the guard was bypassed via a
+  custom `initialization_jobs` override — check `kubectl logs -n "$NS" job/twenty-migrate`
+  for a Cloud SQL race on a just-provisioned instance, then re-trigger it:
+  ```bash
+  kubectl delete job -n "$NS" twenty-migrate twenty-verify   # allows the next apply to recreate and re-run them
   ```
 - **Redis connection failure:** Twenty v0.4+ requires Redis. If `enable_redis = true`
   and pods fail to start, confirm `redis_host` is set or `enable_nfs = true`.
@@ -202,9 +219,9 @@ Cloud SQL, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module deploys the GKE workload, Cloud SQL, secrets, and runs db-init + twenty-migrate |
+| 1 — Deploy | Automated | Module deploys the GKE workload, Cloud SQL, secrets, and runs db-init + twenty-migrate + twenty-verify |
 | 2 — Access & verify | Manual | Connect to the cluster; health check passes; create workspace via browser |
 | 3 — Operate | Manual | Inspect workload, scale, update version, manage secrets/storage, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose pod, database, init-job, Redis, scheduling, and image-pull issues |
+| 5 — Troubleshoot | Manual | Diagnose pod, database, init-job (including the empty-DB guard), Redis, scheduling, and image-pull issues |
 | 6 — Tear down | Automated | Delete (Trash) removes all module resources |

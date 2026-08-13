@@ -158,39 +158,41 @@ Dockerfile grafts a shell entrypoint (`entrypoint.sh`, copied to
   ClassicPress application into `/var/www/html` if that directory is empty, and
   starts `apache2-foreground` as PID 1 (the Dockerfile's `CMD`).
 
-**Known limitation — the entrypoint never touches persistent storage.**
-`ClassicPress_Common`'s Dockerfile and `entrypoint.sh` contain no reference to
-`/var/lib/classicpress`, Filestore/NFS, or any Foundation-level NFS mount path —
-confirmed by direct inspection of both files. The only two things the entrypoint
-does are the `DB_*` aliasing above and salt derivation; it neither reads from nor
-writes to any mount the Foundation might attach. Whether that matters depends
-entirely on what the Foundation mounts *over* `/var/www/html` (the directory the
-upstream `docker-entrypoint.sh` actually populates with the app, `wp-content`, and
-uploads):
+**How persistence actually works — the NFS mount path IS the entrypoint's data
+directory.** `ClassicPress_Common`'s Dockerfile and `entrypoint.sh` themselves
+contain no explicit reference to a Filestore/NFS path — the only two things the
+entrypoint does directly are the `DB_*` aliasing above and salt derivation.
+Persistence instead comes from where each Application module's `nfs_mount_path`
+points: both variants default it to `/var/www/html/wp-content`, the exact
+subdirectory the *upstream* `docker-entrypoint.sh` reads and writes uploaded media,
+installed plugins, and themes to. Upstream's first-boot copy logic explicitly skips
+an existing `wp-content` directory rather than overwriting it, so mounting NFS
+directly onto that path is what makes the mount effective, without this Common
+layer needing any code of its own to wire it up:
 
-- On **Cloud Run**, no PVC-equivalent exists and the default `enable_nfs = true`
-  mounts Filestore at `/var/lib/classicpress` — a path this layer never reads or
-  writes. `/var/www/html` is therefore left on the container's own ephemeral
-  filesystem, and with `min_instance_count = 0` (the Cloud Run variant's default),
-  every cold-started instance starts from an empty `/var/www/html`: uploaded media
-  and any plugins/themes installed via wp-admin on a prior instance are lost, even
-  though the Cloud SQL database (posts, pages, settings, and media metadata rows)
-  is durable. This is confirmed, not theoretical — see
-  [ClassicPress_CloudRun](ClassicPress_CloudRun.md) §3 and §6.
-- On **GKE**, the Application module (not this Common layer) separately enables
+- On **Cloud Run**, no PVC-equivalent exists, so the default `enable_nfs = true`
+  mounting Filestore at `/var/www/html/wp-content` is the *primary* persistence
+  mechanism: uploaded media and any plugins/themes installed via wp-admin survive
+  scale-to-zero cold starts, redeploys, and instance replacement. Only the
+  ClassicPress core files outside `wp-content` are freshly copied into
+  `/var/www/html` on each cold start, which is expected since they ship with the
+  image. See [ClassicPress_CloudRun](ClassicPress_CloudRun.md) §3 and §6.
+- On **GKE**, the Application module (not this Common layer) additionally enables
   `stateful_pvc_enabled = true`, which auto-selects a `StatefulSet` and mounts a
-  block PVC at `stateful_pvc_mount_path = /var/www/html` — the exact directory the
-  upstream entrypoint populates. That PVC is what actually persists the install
-  across pod restarts on GKE; it is unrelated to, and not provided by, this Common
-  module. GKE's own `enable_nfs = true` default still mounts Filestore at
-  `/var/lib/classicpress`, which remains unused by the entrypoint/Dockerfile for the
-  same reason as on Cloud Run — see [ClassicPress_GKE](ClassicPress_GKE.md) §3.
+  per-pod block PVC at `stateful_pvc_mount_path = /var/www/html` — the whole
+  directory the upstream entrypoint populates, giving the entire install (core
+  files included) per-pod persistence. GKE's `enable_nfs = true` default still
+  mounts Filestore at `/var/www/html/wp-content`, a subdirectory of that PVC; on a
+  single-replica StatefulSet the PVC alone already covers `wp-content`, but the NFS
+  mount is what would keep `wp-content` durable and shared if `stateful_pvc_enabled`
+  were ever disabled or the workload scaled to multiple replicas — see
+  [ClassicPress_GKE](ClassicPress_GKE.md) §3.
 
-In short: this layer's NFS-unawareness is real and identical on both platforms: it
-never wires `/var/lib/classicpress` (or any NFS mount) into where ClassicPress
-actually stores its install. It is masked on GKE only because that variant's
-*Foundation-level* StatefulSet PVC happens to be mounted at the correct path
-(`/var/www/html`), not because `ClassicPress_Common` fixed anything.
+In short: this layer's Dockerfile/entrypoint don't need to know about NFS directly
+— persistence works because each Application module's `nfs_mount_path` default
+lines up with the exact subdirectory (`wp-content`) that upstream's own copy-skip
+logic treats specially. That alignment, not any code in `ClassicPress_Common`, is
+what makes the mount effective on both platforms.
 
 ---
 

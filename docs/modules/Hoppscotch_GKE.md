@@ -241,7 +241,7 @@ All other inputs follow standard App_GKE behaviour.
 | `workload_type` | `null` (→ `Deployment`) | Stateless Deployment; no StatefulSet needed. |
 | `session_affinity` | `None` | The static bundle is identical on every pod; no stickiness required. |
 | `reserve_static_ip` | `true` | Keep a stable external IP across redeploys. |
-| `namespace_name` | `""` | Kubernetes namespace for the workload. Auto-generated from `application_name` and `tenant_deployment_id` when empty. |
+| `namespace_name` | `""` | Kubernetes namespace for the workload. Auto-generated from `application_name` and `tenant_id` when empty. |
 
 All other inputs follow standard App_GKE behaviour.
 

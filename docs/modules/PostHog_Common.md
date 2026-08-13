@@ -114,9 +114,8 @@ Environment defaults injected into `config.environment_variables` (caller-suppli
 | `IS_BEHIND_PROXY` | `"true"` | GKE's LoadBalancer/Gateway terminates externally |
 | `DISABLE_SECURE_SSL_REDIRECT` | `"true"` | Prevents an HTTPS-redirect loop behind the internal proxy |
 
-Sizing defaults: `cpu_limit = "4000m"`, `memory_limit = "16Gi"` — both bumped from generic
-defaults (and, for memory, bumped again more than once after further live OOM-kill
-verification) after confirming PostHog's genuinely heavy first-boot import/migration
+Sizing defaults: `cpu_limit = "4000m"`, `memory_limit = "8Gi"` — both bumped from generic
+defaults after live verification of PostHog's genuinely heavy first-boot import/migration
 sequence.
 
 **Not defined here:** `CLICKHOUSE_HOST`/`PORT`, `KAFKA_HOSTS`, and `SITE_URL` depend on

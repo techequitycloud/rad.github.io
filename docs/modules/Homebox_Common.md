@@ -27,7 +27,7 @@ and the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md
 | Container image | References the official `ghcr.io/sysadminsmedia/homebox` image directly — no custom build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15**; sets `HBOX_DATABASE_DRIVER=postgres` explicitly | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Declares a `data` GCS bucket (item photos/attachments) — not auto-mounted | `storage_buckets` output |
+| Object storage | Declares a `data` GCS bucket (item photos/attachments) and mounts it at `/data` via `gcs_volumes` | `storage_buckets` output |
 | Health checks | Supplies the default startup/liveness probe targeting `/api/v1/status` | §Observability in the platform guides |
 | Secrets | Generates `HBOX_AUTH_API_KEY_PEPPER`, a real secret Homebox uses to pepper API-key hashing | `secret_ids` output |
 
@@ -51,7 +51,7 @@ the platform guides' *Configuration Pitfalls* section for this called out as
 a risk item.
 
 The database password and the `HBOX_AUTH_API_KEY_PEPPER` secret are
-generated and managed by this module and the foundation respectively — see
+generated and managed by the foundation and this module respectively — see
 [App_Common](App_Common.md) for the shared secret and Workload Identity
 model used elsewhere in the catalogue.
 
@@ -130,13 +130,12 @@ instruction (`wget ... http://localhost:7745/api/v1/status`).
 ## 7. Object storage
 
 A `data` GCS bucket is declared here and provisioned by the foundation, for
-item photo and attachment storage — but it is **not** automatically mounted
-into the container. Operators who need uploaded item photos and attachments
-to persist across revisions/restarts must add a `gcs_volumes` entry (at the
-Application Module level) mounted at Homebox's `/data` path. Because photo
-attachments are core to a home-inventory app's value — more so than in
-catalogue apps where images are an optional extra — plan to wire this before
-onboarding real inventory. Item *metadata* (names, locations, quantities) is
+item photo and attachment storage, and this module also declares a
+`gcs_volumes` entry that mounts it (as `gcs-<application_name><tenant-prefix>-data`)
+at Homebox's `/data` path — so uploaded item photos and attachments persist
+across revisions/restarts by default. An operator-supplied `gcs_volumes` list
+(at the Application Module level) takes precedence over this module's entry
+when non-empty. Item *metadata* (names, locations, quantities) is
 unaffected either way — it's stored in PostgreSQL.
 
 ```bash

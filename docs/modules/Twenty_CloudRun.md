@@ -28,7 +28,7 @@ focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Node.js service, 1 vCPU / 2 GiB by default, request-based autoscaling |
+| Compute | Cloud Run v2 | Node.js service, 2 vCPU / 2 GiB by default, request-based autoscaling |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Twenty does not support MySQL |
 | Object storage | Cloud Storage | Optional; a dedicated bucket when `enable_gcs_storage = true` |
 | Background jobs | Redis (optional) | bull-mq when enabled; pg-boss (PostgreSQL-backed) by default with no extra infra |
@@ -46,10 +46,12 @@ focused set of Google Cloud services:
   infrastructure and uses the PostgreSQL database directly.
 - **File attachments default to ephemeral local storage.** Enable `enable_gcs_storage`
   for persistent object storage using GCS.
-- **Two init jobs run before the server starts.** `db-init` creates the database and
-  user; `twenty-migrate` runs TypeORM schema migrations. Database migrations are
-  disabled in the main container (`DISABLE_DB_MIGRATIONS=true`) to keep cold starts
-  fast after the first boot.
+- **Three init jobs run before the server starts.** `db-init` creates the database and
+  user; `twenty-migrate` runs TypeORM schema migrations; `twenty-verify` is a guard job
+  that fails the apply if the `core` schema has no tables, catching a raced/failed
+  migration loudly instead of shipping a healthy service against an empty database.
+  Database migrations are disabled in the main container
+  (`DISABLE_DB_MIGRATIONS=true`) to keep cold starts fast after the first boot.
 - **`SERVER_URL` and `FRONT_BASE_URL` must be set manually.** Without them, API links,
   CORS, and email invitations are broken.
 - The **APP_SECRET / ENCRYPTION_KEY** is generated automatically and stored in Secret
@@ -84,9 +86,11 @@ environment, and traffic splitting.
 
 Twenty stores all application data (contacts, pipelines, custom objects) in a managed
 Cloud SQL for PostgreSQL 15 instance. The service connects privately through the
-**Cloud SQL Auth Proxy** over a Unix socket (no public IP). On first deploy two
-initialization Jobs run: `db-init` creates the database and user, and `twenty-migrate`
-runs schema migrations using Twenty's own entrypoint.
+**Cloud SQL Auth Proxy** over a Unix socket (no public IP). On first deploy three
+initialization Jobs run in sequence: `db-init` creates the database and user,
+`twenty-migrate` runs schema migrations using Twenty's own entrypoint, and
+`twenty-verify` guards against an empty schema by failing the apply if migrations
+did not actually create any tables.
 
 - **Console:** SQL → select the instance for connections, backups, flags, metrics.
 - **CLI:**
@@ -181,14 +185,22 @@ Monitoring, with optional uptime checks and alert policies.
 
 ## 3. Twenty Application Behaviour
 
-- **First-deploy database setup.** Two initialization Jobs run sequentially before the
-  service starts:
+- **First-deploy database setup.** Three initialization Jobs run sequentially before
+  the service starts:
   1. `db-init` — connects to Cloud SQL via the Auth Proxy Unix socket, creates the
      PostgreSQL database and user, grants privileges, and installs the `uuid-ossp`
      extension. It is idempotent and safe to re-run.
   2. `twenty-migrate` — runs Twenty's own entrypoint (`twenty-entrypoint.sh`) with
      `DISABLE_DB_MIGRATIONS=false`, executing TypeORM schema migrations and registering
-     background cron jobs.
+     background cron jobs. `max_retries = 3` because a fresh tenant's Cloud SQL instance
+     can still be settling when this job races in.
+  3. `twenty-verify` — a guard job (`depends_on_jobs = ["twenty-migrate"]`) that checks
+     the `core` schema actually has tables and **fails the apply** if it doesn't. This
+     exists because an init-job failure does NOT fail the module apply on its own — without
+     this guard, a raced or failed `twenty-migrate` could silently ship a healthy-looking
+     service pointed at an EMPTY database (every backend query then dies with
+     `relation "core.keyValuePair" does not exist"`, and the UI shows "Unable to Reach
+     Back-end").
   Inspect them after deploy:
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
@@ -238,7 +250,7 @@ specific to or notable for Twenty are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -260,6 +272,7 @@ specific to or notable for Twenty are listed; every other input is inherited fro
 | `memory_limit` | `2Gi` | Memory per instance. Raise to `4Gi` for large datasets. |
 | `min_instance_count` | `0` | Minimum instances. Keep ≥ 1 to avoid cold-start on webhook/job workloads. |
 | `max_instance_count` | `3` | Maximum instances. |
+| `cpu_always_allocated` | `false` | Request-based billing by default: this service runs only Twenty's server (`node dist/main`) — no worker process is deployed and cron registration is disabled, so there's no in-process background work to throttle. Set `true` only if a Twenty worker or other background job is deployed in this container. |
 | `container_port` | `3000` | Twenty listens on port 3000. Do not change unless using a custom image. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for Unix socket connections. |
 | `execution_environment` | `gen2` | Gen2 required for VPC networking. |
@@ -339,7 +352,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` and `twenty-migrate` jobs. |
+| `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init`, `twenty-migrate`, and `twenty-verify` jobs. |
 | `cron_jobs` | `[]` | Additional recurring Cloud Run jobs triggered by Cloud Scheduler. |
 | `additional_services` | `[]` | Additional Cloud Run services. Required for a dedicated bull-mq worker when `enable_redis = true`. |
 
@@ -425,6 +438,7 @@ running resources.
 | `container_port` | `3000` | High | Twenty's server listens on port 3000; any other value causes health checks to fail permanently. |
 | `startup_probe` | HTTP `/healthz`, generous timeout | High | Too short a window causes the service to be killed during first-boot migrations (which take 8–10 minutes on a fresh schema). |
 | `min_instance_count` | `1` | Medium | `0` adds cold-start latency and risks missing incoming webhooks while the instance scales up. |
+| `cpu_always_allocated` | `false` unless a worker is deployed | Medium | Setting `true` with no worker/cron running in this container pays for idle CPU with nothing to throttle; only needed if background work is added to this service. |
 | `enable_iap` / `enable_cloud_armor` | enable for non-public deployments | Medium | The CRM interface is otherwise publicly reachable. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | When Memorystore Redis is used, its private IP may require `ALL_TRAFFIC` for routing. |
 | `organization_id` | set explicitly for VPC-SC | Medium | VPC-SC perimeter is not activated without this — `enable_vpc_sc = true` has no effect. |

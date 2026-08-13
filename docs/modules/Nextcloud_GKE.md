@@ -107,11 +107,12 @@ automated backups, and password rotation, see [App_GKE](App_GKE.md).
 
 ### C. Filestore (NFS) and Cloud Storage
 
-Nextcloud data is written to a **Filestore (NFS)** share mounted into every pod.
-`entrypoint.sh` symlinks `/var/www/html/config` → `/mnt/nfs/nextcloud-config` and
-sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all replicas share the same
-`config.php` and user files. A **Cloud Storage** `nc-data` bucket is also provisioned
-per deployment and the workload service account is granted access automatically.
+Nextcloud user file data is written to a **Filestore (NFS)** share mounted into every
+pod. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all replicas
+share the same user files. `config.php` is **not** stored on NFS — it is reconstructed
+locally on every pod from Secret Manager secrets (see §3 "Post-install config secrets"
+below). A **Cloud Storage** `nc-data` bucket is also provisioned per deployment and the
+workload service account is granted access automatically.
 
 - **Console:** Filestore → Instances for the NFS share; Cloud Storage → Buckets for
   the data bucket.
@@ -210,9 +211,11 @@ Monitoring. Optional uptime checks and alert policies are available.
   seeds `NEXTCLOUD_TRUSTED_DOMAINS` with the cluster-internal DNS name and any
   `application_domains`. Requests from unlisted hostnames receive an
   "Access through untrusted domain" error.
-- **NFS config symlink.** When NFS is mounted, `entrypoint.sh` symlinks
-  `/var/www/html/config` → `/mnt/nfs/nextcloud-config`. This is what allows all
-  replicas to share the same `config.php`.
+- **NFS user data only.** NFS backs the shared user data directory
+  (`NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data`) only. `config.php` is not stored on
+  NFS or shared via a symlink — each replica reconstructs it locally from the Secret
+  Manager values described above, which is what allows all replicas to converge on
+  the same configuration without an NFS dependency for config state.
 - **Health path.** Startup and liveness probes target `/status.php`, which returns an
   HTTP 200 with a JSON status object regardless of Nextcloud's setup state — making it
   the canonical health endpoint.
@@ -238,7 +241,7 @@ specific to or notable for Nextcloud are listed; every other input is inherited 
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 

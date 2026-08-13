@@ -218,7 +218,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `workload_type` | `null` (auto-resolves to `StatefulSet`) | Because `stateful_pvc_enabled = true` by default. |
-| `service_type` | `LoadBalancer` | Headscale's clients and admin web UI both need external reachability, so this defaults to `LoadBalancer` rather than the internal-only `ClusterIP` default used by many modules in this catalog. |
+| `service_type` | `ClusterIP` | Public reachability comes from the Gateway (`enable_custom_domain`), not this Service type — this is not the same fleet-wide "should be LoadBalancer" bug seen on browser-facing apps elsewhere in this catalog, since the actual client-facing entry point is the Gateway/static-IP path. |
 
 ### Group 7 — StatefulSet
 

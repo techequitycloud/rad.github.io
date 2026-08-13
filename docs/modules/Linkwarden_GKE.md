@@ -221,7 +221,7 @@ is inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for regional resources. |
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 
 ### Group 3 — Application Identity
 

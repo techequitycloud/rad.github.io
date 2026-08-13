@@ -229,6 +229,19 @@ Monitoring, with optional uptime checks and alert policies.
   `REDIS_SERVER_HOST`/`REDIS_SERVER_PORT`/`REDIS_SERVER_PASS` before `exec`-ing the
   upstream `/app/ds/run-document-server.sh`. Because this logic is baked into the
   custom image, an edit to `cloud-entrypoint.sh` needs a rebuild to take effect.
+- **Cloud-Run-only vendor bug, patched at build time.** On Cloud Run, `DB_HOST` is a
+  Cloud SQL Auth Proxy Unix-socket **directory** (`/cloudsql/<instance>`), which is
+  fine for the real DB connection — but the upstream `run-document-server.sh` has its
+  own separate readiness gate, `waiting_for_connection()`, that unconditionally runs
+  `nc -z "$DB_HOST" "$DB_PORT"`. `nc` cannot resolve a filesystem path as a TCP host,
+  so unpatched this loops forever (`Waiting for connection to the /cloudsql/... host
+  on port 5432` repeating in Cloud Logging) and the container never becomes Ready.
+  The module's Dockerfile `sed -i` patches that gate to short-circuit successfully
+  when `$1` is an existing directory, leaving the original `nc` check unchanged for
+  real TCP hosts — so GKE (whose Auth Proxy sidecar listens on `127.0.0.1`) is
+  unaffected and needs no patch. A `grep -q` assertion right after the `sed` fails
+  the Cloud Build loudly if a future `ONLYOFFICE_VERSION` bump changes the upstream
+  script's wording — see `modules/OnlyOffice_Common/scripts/Dockerfile`.
 - **No traditional sign-up flow.** Document Server is not usually opened directly by
   end users — it is embedded via API calls from a host application (Nextcloud,
   ownCloud, a custom integration) using the shared JWT secret. There is no admin
@@ -268,7 +281,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -470,6 +483,7 @@ running resources.
 | `create_cloud_storage` / `storage_buckets` | leave defaults unless persistence needs adjusting | Medium | Setting `create_cloud_storage = false` also removes the Common-declared `storage` bucket, since both are gated by the same flag. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `enable_cloud_armor` | enable for production | Medium | The Document Server API is publicly reachable without WAF protection. |
+| `ONLYOFFICE_VERSION` build ARG (Dockerfile) | Bump only after confirming the `sed`/`grep` readiness-gate patch still matches upstream wording | High | The Dockerfile's `sed -i` patch to `run-document-server.sh`'s `waiting_for_connection()` (making the Cloud SQL socket-directory `DB_HOST` short-circuit the `nc -z` check) is guarded by a build-time `grep -q` assertion. If a version bump changes the upstream script's exact text, the Cloud Build fails loudly at that step — the fix is to update the `sed` pattern in `modules/OnlyOffice_Common/scripts/Dockerfile`, not to skip the check. Left unpatched, the vendor image hangs forever on Cloud Run (repeating `Waiting for connection to the /cloudsql/... host on port 5432` in Cloud Logging) because `nc` can never resolve a Unix-socket directory as a TCP host; GKE is unaffected since its Auth Proxy sidecar listens on a real `127.0.0.1` TCP host. |
 
 ---
 

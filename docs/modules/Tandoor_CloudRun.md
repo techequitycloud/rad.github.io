@@ -32,9 +32,9 @@ together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Single all-in-one container (nginx + gunicorn), 1 vCPU / 512Mi by default, serverless autoscaling; scale-to-zero supported |
+| Compute | Cloud Run v2 | Single all-in-one container (nginx + gunicorn), 1 vCPU / 1Gi by default, serverless autoscaling; scale-to-zero supported |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Tandoor has no supported production fallback engine |
-| Object storage | Cloud Storage | A dedicated `data` bucket provisioned automatically (for recipe images), not auto-mounted |
+| Object storage | Cloud Storage | A dedicated `data` bucket provisioned automatically and mounted at `/opt/recipes/mediafiles` (recipe images) |
 | Cache | Redis (optional) | Genuinely optional — Django falls back to local-memory cache when unset; no Celery/background worker |
 | Secrets | Secret Manager | Auto-generated Django `SECRET_KEY` and initial superuser password; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -67,10 +67,11 @@ together a focused set of Google Cloud services:
 - **Redis is genuinely optional and disabled by default.** `CACHES['default']`
   only switches to Redis if `REDIS_HOST` is set; otherwise Django's built-in
   local-memory cache is used. There is no Celery worker or queue to keep warm.
-- **Recipe image storage is not GCS-mounted by default.** A `data` bucket is
-  created but not automatically mounted — add a `gcs_volumes` entry at
-  `/opt/recipes/mediafiles` if uploaded recipe images need to persist across
-  revisions.
+- **Recipe image storage is GCS-mounted by default.** `Tandoor_Common` declares a
+  `gcs_volumes` entry mounting the `data` bucket
+  (`gcs-<application_name><tenant_prefix>-data`) at `/opt/recipes/mediafiles`, so
+  uploaded recipe images persist across revisions instead of living on ephemeral
+  container disk. An operator-supplied `gcs_volumes` replaces this default.
 
 ---
 
@@ -123,9 +124,9 @@ model, backups, and password rotation.
 ### C. Cloud Storage
 
 A dedicated **Cloud Storage** `data` bucket is provisioned automatically for
-recipe images, but is **not** auto-mounted into the container. Additional
-buckets can be declared via `storage_buckets`; mount the data bucket by adding
-an entry to `gcs_volumes` targeting `/opt/recipes/mediafiles`.
+recipe images and mounted into the container at `/opt/recipes/mediafiles`
+(Tandoor's `MEDIA_ROOT`) via GCS FUSE. Additional buckets can be declared via
+`storage_buckets`; supplying your own `gcs_volumes` replaces the default mount.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -220,8 +221,10 @@ Cloud Monitoring, with optional uptime checks and alert policies.
   public, unauthenticated login view — since Tandoor has no dedicated
   health/info endpoint. It only renders 200 once the app has connected to
   Postgres and applied migrations, making it a genuine readiness signal. The
-  liveness probe uses a plain TCP (port-listening) check instead, so a
-  transient DB hiccup doesn't flap an already-healthy instance.
+  liveness probe targets the same path over HTTP: Cloud Run rejects TCP-type
+  liveness probes outright ("Cloud Run currently does not support TCP socket in
+  liveness probe" — TCP is startup-probe-only there), so `Tandoor_CloudRun`
+  overrides `Tandoor_Common`'s TCP liveness default with an HTTP one.
 - **Log in with the generated credential.** Retrieve
   `DJANGO_SUPERUSER_PASSWORD` from Secret Manager and log in at
   `/accounts/login/` with the configured `admin_username` (default `admin`).
@@ -250,7 +253,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -271,7 +274,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `container_image_source` | `prebuilt` | Tandoor uses the official image directly — no custom build needed. |
 | `container_image` | `""` | Leave empty for the module default (`vabene1111/recipes`). |
 | `cpu_limit` | `1000m` | CPU per instance. |
-| `memory_limit` | `512Mi` | Memory per instance. |
+| `memory_limit` | `1Gi` | Memory per instance. Tandoor's gunicorn (3 workers) + nginx + django-vite OOM-crash-loop at 512Mi — 1Gi is the floor. |
 | `min_instance_count` | `0` | Scale-to-zero by default. |
 | `max_instance_count` | `1` | Raise for concurrent traffic. |
 | `container_port` | `80` | Tandoor's nginx listens on port 80 (`TANDOOR_PORT`). |
@@ -334,7 +337,7 @@ bucket after provisioning. See [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `data` bucket. |
-| `gcs_volumes` | `[]` | Add an entry mounted at `/opt/recipes/mediafiles` to persist recipe images across revisions. |
+| `gcs_volumes` | `[]` | Empty means the module default applies (the `data` bucket at `/opt/recipes/mediafiles`); any entry here replaces that default entirely. |
 | `enable_nfs` | `false` | NFS is off by default. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -367,7 +370,7 @@ bucket after provisioning. See [App_CloudRun](App_CloudRun.md).
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/accounts/login/` 30s delay | Startup probe — passes once Postgres connectivity and migrations succeed. |
-| `liveness_probe` | TCP 30s delay | Liveness probe — a plain port-listening check. |
+| `liveness_probe` | HTTP `/accounts/login/` 30s delay | Liveness probe — HTTP, because Cloud Run does not support TCP liveness probes. |
 | `startup_probe_config` | HTTP `/accounts/login/` | Alternative structured probe forwarded directly to the Foundation. |
 | `health_check_config` | TCP | Alternative structured liveness probe forwarded directly to the Foundation. |
 | `uptime_check_config` | `{ enabled=false }` | Cloud Monitoring uptime check; enable explicitly to activate. |
@@ -443,7 +446,7 @@ the running resources.
 | `db_ssl_mode` (`PGSSLMODE`, set internally) | `require` on Cloud Run | High | The `db_host_env_var_name` alias resolves to the raw Cloud SQL private IP on Cloud Run (not a socket), which rejects unencrypted TCP — this module hardcodes `require` in its wiring so this should not need manual attention, but do not override it to `disable`. |
 | `enable_redis` | `false` unless needed | Low | Tandoor has no background worker; Redis only affects Django's cache backend. |
 | `ingress_settings` | `all` for a public app | Medium | Setting to `internal` blocks browser access unless paired with IAP or a private network path. |
-| `memory_limit` | `≥512Mi` | Medium | Gen2 execution environment enforces a 512Mi floor regardless of billing mode; values below this are rejected at apply. |
+| `memory_limit` | `1Gi` | High | Confirmed live: Tandoor OOM-crash-loops at 512Mi (gunicorn workers SIGKILLed). Gen2 also enforces its own 512Mi floor regardless of billing mode. |
 
 ---
 

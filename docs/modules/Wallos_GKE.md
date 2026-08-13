@@ -299,7 +299,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Wallos uses no Redis; the App_GKE default of `true` is overridden to `false`. |
+| `enable_redis` | `true` | Inherited from App_GKE and **not** overridden by this module. Wallos uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
 
 ### Group 16 — Database Backend
 
@@ -385,7 +385,7 @@ locate and explore the running resources.
 | `startup_probe` / `liveness_probe` path | `/` | Medium | No dedicated `/health` endpoint is documented for `bellamy/wallos` — if the app ever gates its root path behind auth, the probe path needs adjusting. |
 | `container_image_source` | `prebuilt` (forwarded) | High | If not forwarded, App_GKE's own default (`custom`) silently wins and triggers a from-source Kaniko build against an image with no Dockerfile — the build fails. |
 | `enable_cloudsql_volume` | `false` | Medium | Wallos has no Cloud SQL; enabling adds a useless Auth Proxy sidecar. |
-| `enable_redis` | `false` | Medium | Wallos has no Redis; the App_GKE default `true` is overridden — leaving it on wires an unused dependency. |
+| `enable_redis` | `true` | Medium | Wallos has no Redis, but the App_GKE default of `true` is inherited unchanged — set it to `false` explicitly, or an unused dependency is wired in. |
 | `enable_iap` | credentials required | High | Enabling IAP without `iap_oauth_client_id`/`secret` silently exposes the service unauthenticated (blocked by a plan-time guard). |
 | `stateful_fs_group` | Verify at first deploy | Medium | Runtime UID/GID for `bellamy/wallos` was not confirmed during research; a permission-denied writing to the database PVC means this needs setting explicitly. |
 

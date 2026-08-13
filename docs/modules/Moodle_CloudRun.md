@@ -268,7 +268,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -288,6 +288,7 @@ defaults.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `1000m` | CPU per instance. Increase to `2000m` for production with concurrent students. |
 | `memory_limit` | `2Gi` | Memory per instance; 2 GiB provides headroom for PHP with OPcache. |
+| `cpu_always_allocated` | `false` | Cost-first cold-start default (request-based billing, paired with `min_instance_count = 0`). In-container Moodle cron stops, but Moodle officially supports external cron — Cloud Scheduler drives `admin/cli/cron.php` while the service scales to zero, so there is no feature loss. Set `true` together with `min_instance_count >= 1` to restore continuous always-on operation. |
 | `min_instance_count` | `0` | Minimum live instances. Set to `1` to eliminate cold-start latency. |
 | `max_instance_count` | `3` | Maximum concurrent instances. |
 | `container_port` | `8080` | Moodle/Apache listens on port 8080. |
@@ -445,7 +446,7 @@ locate and explore the running resources.
 | `enable_redis` | `true` | High | Without a shared session store, users on multi-instance deployments are logged out on each new instance. |
 | `redis_host` | `""` (NFS) or explicit | High | No valid endpoint if Redis is on but NFS is off and no host is set. |
 | `memory_limit` | `2Gi` | High | Too little memory causes PHP OOM during course imports or large file uploads. |
-| `min_instance_count` | `1` for production | High | `0` causes cold-start delays; the Cloud Scheduler cron job may time out waiting for the first request to warm the instance. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` for production | High | Both default `0` / `false` (cost-first cold-start): the service scales to zero and CPU is billed only per-request. `0` causes cold-start delays on the first request after idle, including the per-minute Cloud Scheduler hit to `admin/cli/cron.php` — Moodle officially supports this external-cron pattern, so scheduled tasks still run correctly (no feature loss), just with occasional added latency. Set both to `1` / `true` to eliminate cold starts and restore continuous operation. |
 | `nfs_mount_path` | `/mnt/nfs` | High | Must match `MOODLE_DATA_DIR`; changing after first deploy moves the data root and breaks the installation. |
 | `application_domains` + `MOODLE_REVERSE_PROXY` | set together | High | Without the reverse proxy flags, Moodle generates HTTP URLs behind an HTTPS load balancer, breaking links and logins. |
 | `enable_cloud_armor` / `enable_iap` | enable for admin-facing | Medium | The admin UI is otherwise publicly reachable. |

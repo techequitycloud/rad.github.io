@@ -19,7 +19,7 @@ For the infrastructure that actually provisions and runs WordPress, see the plat
 | Container image | Builds a custom PHP 8.4 + Apache image from the official WordPress source via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Default **Cloud Storage** bucket (name suffix `data`, from the platform variant's `storage_buckets` default) — not mounted into the container by default | `storage_buckets` output |
+| Object storage | Declares the **Cloud Storage** `wp-uploads` media bucket | `storage_buckets` output |
 | Core settings | Sets the baseline WordPress environment (table prefix, debug mode, Redis connection, trusted proxy handling) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup (TCP) and liveness (HTTP `/wp-admin/install.php`) probe configuration | §Observability in the platform guides |
 
@@ -34,7 +34,7 @@ Eight WordPress security constants are generated automatically as 64-character r
 gcloud secrets list --project "$PROJECT" --filter="name~<resource-prefix>"
 
 # Retrieve a specific secret value:
-gcloud secrets versions access latest --secret=<resource-prefix>-auth-key --project "$PROJECT"
+gcloud secrets versions access latest --secret=secret-<resource-prefix>-wordpress-auth-key --project "$PROJECT"
 ```
 
 The eight secrets correspond to the WordPress constants `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT`, and `NONCE_SALT`. They are injected into the application pods at runtime via the Kubernetes Secrets Store CSI driver (GKE) or Cloud Run secret mounting (Cloud Run).
@@ -95,7 +95,7 @@ gcloud run services logs read <service-name> --project "$PROJECT" --region "$REG
 
 - **Table prefix** — `WORDPRESS_TABLE_PREFIX` is set to `wp_`. Override via `environment_variables` only when migrating an existing database with a non-standard prefix.
 - **Debug mode** — `WORDPRESS_DEBUG` is set to `false`. Enable in development environments only; debug mode may expose sensitive information in HTTP responses.
-- **Redis object cache** — when `enable_redis = true`, `WP_REDIS_HOST` and `WP_REDIS_PORT` are injected and the `docker-entrypoint.sh` configures the WP Redis plugin. When `redis_host` is left empty, `WP_REDIS_HOST` is set to the literal placeholder `$(REDIS_HOST)`, which `docker-entrypoint.sh` substitutes at container start time with the platform-injected `REDIS_HOST` value (itself resolved to the NFS server's IP when no dedicated Redis instance is configured) — enabling Redis on the NFS VM without knowing its IP at plan time.
+- **Redis object cache** — when `enable_redis = true`, `WP_REDIS_HOST` and `WP_REDIS_PORT` are injected and the `docker-entrypoint.sh` configures the WP Redis plugin. When `redis_host` is left empty, the `$(REDIS_HOST)` placeholder is resolved at container start time to the NFS server's IP address — enabling Redis on the NFS VM without knowing its IP at plan time.
 
 Platform-specific adjustments handled here:
 
@@ -116,13 +116,13 @@ The probes are identical for both GKE and Cloud Run variants — both use TCP fo
 
 ## 7. Object storage
 
-This layer itself declares no bucket of its own — the default **Cloud Storage** bucket (name suffix `data`) comes from the platform variant's own `storage_buckets` default and is provisioned by the foundation, which also grants the workload service account access. It is **not** mounted into the container by default (`gcs_volumes` defaults to `[]`); add a `gcs_volumes` entry if you want to use it as a filesystem mount. List it with:
+A dedicated **Cloud Storage** media bucket with the name suffix `wp-uploads` is declared here and provisioned by the foundation, which also grants the workload service account access. List it with:
 
 ```bash
-gcloud storage buckets list --project "$PROJECT"
+gcloud storage buckets list --project "$PROJECT" --filter="name~wp-uploads"
 ```
 
-The bucket is provisioned in the deployment region. Media durability instead comes from the shared Filestore (NFS) volume (`enable_nfs = true` by default), which is what WordPress actually reads and writes uploads to.
+The bucket is provisioned in the deployment region. Combined with the shared Filestore (NFS) volume, this gives WordPress durable media storage that is consistent across all instances.
 
 ---
 

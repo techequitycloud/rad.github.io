@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot cluster,
-  Cloud SQL, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **kubectl** installed.
@@ -208,7 +211,10 @@ diagnostics and do not change with Langfuse releases.
   kubectl describe pod -n "$NAMESPACE" -l app="$SERVICE"
   kubectl logs -n "$NAMESPACE" deploy/"$SERVICE" --tail=100
   ```
-  The startup probe targets `/api/public/health` and allows a generous window on first boot for
+  The startup probe defaults to path `/` (not the dedicated `/api/public/health` endpoint — that
+  path is not wired in as the default; see the
+  [Configuration Guide](https://docs.radmodules.dev/docs/modules/Langfuse_GKE) to override it)
+  and allows a generous window on first boot (60s initial delay, 30 failure threshold) for
   Prisma migrations.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the Auth Proxy
   sidecar is running in the pod, the DB password secret exists, and the `db-init` job completed.

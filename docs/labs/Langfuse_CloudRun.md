@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -201,7 +204,10 @@ diagnostics and do not change with Langfuse releases.
   gcloud secrets list --project="$PROJECT" --filter="name~secret-key OR name~superuser-password"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-  The startup probe targets `/api/public/health` and allows a generous window on first boot for
+  The startup probe defaults to path `/` (not the dedicated `/api/public/health` endpoint — that
+  path is not wired in as the default; see the
+  [Configuration Guide](https://docs.radmodules.dev/docs/modules/Langfuse_CloudRun) to override
+  it) and allows a generous window on first boot (60s initial delay, 30 failure threshold) for
   Prisma migrations.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB password
   secret exists, and the `db-init` job completed successfully.

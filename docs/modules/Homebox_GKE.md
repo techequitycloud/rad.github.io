@@ -33,7 +33,7 @@ small, focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Go/Echo pod, 1 vCPU / 512 MiB by default |
 | Database | Cloud SQL for PostgreSQL 15 | Homebox reads discrete `HBOX_DATABASE_*` env vars, not a constructed DSN |
-| Object storage | Cloud Storage | A `data` bucket is created for item photos/attachments, but not auto-mounted |
+| Object storage | Cloud Storage | A `data` bucket is created for item photos/attachments and auto-mounted at `/data` |
 | Cache & queue | none | Homebox has no Redis or queue dependency |
 | Secrets | Secret Manager | Database password plus `HBOX_AUTH_API_KEY_PEPPER` (a real, app-consumed secret) |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -53,9 +53,9 @@ small, focused set of Google Cloud services:
 - **`workload_type = "Deployment"`, not `StatefulSet`.** Homebox keeps no
   local state beyond what's already in Cloud SQL — no PVC, no NFS mount
   required.
-- **Item photos are not persisted by default.** A GCS bucket is created but
-  not auto-mounted — add a `gcs_volumes` entry if uploaded item photos and
-  attachments need to survive a pod restart.
+- **Item photos are persisted by default.** `Homebox_Common` declares a
+  `gcs_volumes` entry mounting the `data` GCS bucket at `/data`, so uploaded
+  item photos and attachments survive a pod restart.
 
 ---
 
@@ -162,8 +162,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `data` bucket | Created but not auto-mounted. |
-| `stateful_pvc_enabled` | `null` | Not used — Homebox is stateless at the pod level. |
+| `storage_buckets` | one `data` bucket | Created and auto-mounted at `/data`. |
+| `stateful_pvc_enabled` | `null` (auto, disabled) | Not used — Homebox is stateless at the pod level. |
 
 ### Group 12 (16) — Database Backend
 
@@ -205,7 +205,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `container_image_source` | `prebuilt` (default) | High | `"custom"` triggers an unnecessary Cloud Build with no Dockerfile in this module. |
 | First registration | Complete promptly after deploy | **Medium** | The first person to register on a fresh, publicly reachable instance becomes the admin — until you register and set `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, anyone who discovers the URL can claim the admin account. |
-| `gcs_volumes` for item photos | Add explicitly before real use | **High** | Without it, uploaded item photos and attachments live on the pod's ephemeral filesystem and do not survive a restart — this is a bigger deal for Homebox than for apps where images are optional, since photo attachments are core to a home-inventory workflow. |
+| `gcs_volumes` for item photos | Leave empty (use the module's own `/data` mount) | **High** | `Homebox_Common` already mounts the `data` bucket at `/data`. Supplying a non-empty `gcs_volumes` list replaces that mount entirely — if the replacement does not also cover `/data`, uploaded item photos and attachments fall back to the pod's ephemeral filesystem and do not survive a restart. |
 | `db_*_env_var_name` variables | Leave at their Homebox-specific defaults | Critical | Changing/clearing these breaks Homebox's Postgres connection — it reads `HBOX_DATABASE_*`, not `DB_*`. |
 | `HBOX_DATABASE_SSL_MODE` | `disable` (already set by this module) | Critical | On GKE, `DB_HOST` resolves to `127.0.0.1` (the cloud-sql-proxy sidecar), which terminates TLS itself and serves plaintext on loopback. Homebox's Postgres client defaults `HBOX_DATABASE_SSL_MODE` to `require` and **panics on boot** (`tls error: server refused TLS connection`) unless told the local connection is unencrypted. `Homebox_GKE` sets this via `module_env_vars` — do not clear it. Not needed on Cloud Run, which connects over a Unix socket (no TLS negotiation applies there regardless of this setting). |
 

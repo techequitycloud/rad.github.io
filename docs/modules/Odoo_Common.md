@@ -91,7 +91,7 @@ automatically. SMTP variables are pre-populated as defaults for you to fill in:
 | Variable | Purpose |
 |---|---|
 | `ODOO_MASTER_PASS` | Master password injected from Secret Manager (see above). |
-| `DB_HOST` | PostgreSQL host — set to `127.0.0.1` (Cloud SQL Auth Proxy Unix socket). |
+| `DB_HOST` | PostgreSQL host. **Platform-dependent** — on Cloud Run there is no `127.0.0.1` proxy; this is the Cloud SQL Auth Proxy Unix socket **directory** (e.g. `/cloudsql/<instance>`). On GKE the cloud-sql-proxy runs as a sidecar and `DB_HOST` is `127.0.0.1`. |
 | `DB_PORT` | PostgreSQL port — `5432`. |
 | `DB_USER` | Application database user (from `application_database_user`). |
 | `DB_NAME` | Application database name (from `application_database_name`). |
@@ -101,7 +101,7 @@ automatically. SMTP variables are pre-populated as defaults for you to fill in:
 | `SMTP_HOST` | Outgoing mail relay hostname. Set this for email delivery. |
 | `SMTP_PORT` | SMTP port (default `25`). |
 | `SMTP_USER` | SMTP authentication username. |
-| `SMTP_SSL` | `true` or `false` — whether to use SSL for the SMTP connection (default `false`). |
+| `SMTP_SSL` | Boolean-like string — `"true"` enables SSL/STARTTLS, `"false"` (default) disables it. |
 | `EMAIL_FROM` | Default sender address for outbound email. |
 | `SMTP_PASSWORD` | SMTP password — pass via `secret_environment_variables`. |
 
@@ -154,7 +154,7 @@ without modification unless you explicitly override them.
 
 | Platform | Type | Initial delay | Period | Threshold | Max wait |
 |---|---|---|---|---|---|
-| Cloud Run | TCP (port 8069) | 60 s | 30 s | 3 | ~2.5 min |
+| Cloud Run | TCP (port 8069) | 60 s | — | — | ~9 min |
 | GKE | HTTP `/web/health` | 180 s | 120 s | 3 | ~9 min |
 
 Odoo's HTTP handler is not available until the `base` module is fully installed and the
@@ -166,7 +166,7 @@ fresh install.
 
 | Platform | Type | Path | Initial delay | Period |
 |---|---|---|---|---|
-| Cloud Run | HTTP | `/web/health` | 120 s | 120 s |
+| Cloud Run | HTTP | `/web/health` | 120 s | 30 s |
 | GKE | HTTP | `/web/health` | 30 s | 30 s |
 
 `/web/health` returns `HTTP 200` only when Odoo has successfully connected to PostgreSQL.
@@ -205,4 +205,4 @@ gcloud storage cp -r ./my_custom_addon gs://<addons-bucket>/my_custom_addon/
 For deployment variables and platform-specific options, see
 **[Odoo_CloudRun](Odoo_CloudRun.md)** or **[Odoo_GKE](Odoo_GKE.md)**. For the shared
 infrastructure that both platforms depend on, see the
-[Services_GCP platform guide](Services_GCP.md).
+[Services_GCP platform guide](./Services_GCP.md).

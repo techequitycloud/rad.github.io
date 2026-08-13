@@ -225,7 +225,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Inherited from the App_GKE default; Healthchecks itself needs no shared filesystem and does not read from the mounted volume. Safe to set `false`. |
+| `enable_nfs` | `true` | Inherited default. Healthchecks needs no shared filesystem, so set it to `false` when deploying. |
 
 ### Group 15 — Redis Cache & Queue
 

@@ -28,7 +28,7 @@ platform guides ([StirlingPDF_GKE](StirlingPDF_GKE.md),
 | Database engine | Fixes **`database_type = "NONE"`** — Stirling-PDF is stateless and uses no database | §Database in the platform guides |
 | Secrets | **None.** `secret_ids` and `secret_values` are empty maps — login is off by default, so no session secret is required | §Environment Variables & Secrets in the platform guides |
 | Object storage | **None.** `storage_buckets` is always an empty list — Stirling-PDF persists nothing | `storage_buckets` output |
-| Core settings | Sets the baseline Stirling-PDF environment: login toggle (`SECURITY_ENABLELOGIN`) and default UI locale (`SYSTEM_DEFAULTLOCALE`) | Application behaviour in the platform guides |
+| Core settings | *Not provided here.* Login toggle (`SECURITY_ENABLELOGIN`) and default UI locale (`SYSTEM_DEFAULTLOCALE`) are set by each Application module's own `enable_login`/`default_locale` variables and wired via its `module_env_vars` — `StirlingPDF_Common`'s `config` output contains neither key | Application behaviour in the platform guides |
 | Runtime shape | Port 8080, CPU/memory limits (2Gi floor), and per-platform min/max instance counts | §Runtime & Scaling in the platform guides |
 | Health checks | Supplies the default startup / liveness / readiness probes targeting `/api/v1/info/status` | §Observability in the platform guides |
 
@@ -76,17 +76,19 @@ image tag — no rebuild is required, and there is no schema migration to run.
 
 ---
 
-## 4. Core application settings
+## 4. Core application settings (owned by the Application modules, not Common)
 
-`StirlingPDF_Common` establishes the baseline Stirling-PDF environment so the
-application comes up correctly on first boot. The Application module assembles these
-into `module_env_vars`:
+`StirlingPDF_Common/variables.tf` declares no `enable_login` or `default_locale`
+variable, and its `config` output (in `main.tf`) never sets `SECURITY_ENABLELOGIN` or
+`SYSTEM_DEFAULTLOCALE`. Both settings are owned entirely by each Application module's
+own `stirlingpdf.tf` (`StirlingPDF_CloudRun`/`StirlingPDF_GKE`), which declare
+`enable_login`/`default_locale` and assemble them into `local.module_env_vars`:
 
-- **`SECURITY_ENABLELOGIN`** — set from `enable_login` (default `false`). An open
-  instance ships by default; set `enable_login = true` and front the service with
-  IAP or Cloud Armor for a private deployment.
-- **`SYSTEM_DEFAULTLOCALE`** — set from `default_locale` (default `en-US`) to keep
-  the UI language predictable.
+- **`SECURITY_ENABLELOGIN`** — set from the Application module's `enable_login`
+  (default `false`). An open instance ships by default; set `enable_login = true`
+  and front the service with IAP or Cloud Armor for a private deployment.
+- **`SYSTEM_DEFAULTLOCALE`** — set from the Application module's `default_locale`
+  (default `en-US`) to keep the UI language predictable.
 
 Additional Stirling-PDF settings (for example `SYSTEM_MAXFILESIZE` to cap upload
 size) can be supplied through the Application module's `environment_variables` input;

@@ -218,7 +218,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `application_name` | `gatus` | Base name for the service, registry repo, and secrets. Do not change after first deploy. |
 | `application_display_name` | `Gatus` | Human-readable name shown in the Console. |
 | `application_version` | `latest` | Image version tag; `latest` maps to a pinned `v5.36.0` base. Pin an explicit `v5.x.y` in production. |

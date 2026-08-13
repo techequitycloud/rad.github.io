@@ -162,7 +162,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -182,7 +182,8 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `1000m` | CPU per instance; sized for light/typical usage — raise to `2000m` for production with heavy image processing or membership. |
 | `memory_limit` | `512Mi` | Memory per instance (Ghost's floor); raise to `1Gi`+ for production with active membership features. |
-| `min_instance_count` | `0` | Minimum instances; `0` enables scale-to-zero — set `1` to avoid cold starts with migration delays. |
+| `min_instance_count` | `0` | Minimum instances; `0` enables scale-to-zero — set `1` to avoid cold starts with migration delays. **Known bug:** `main.tf`'s `ghost_module` local currently hardcodes `min_instance_count = 0`, silently overriding this variable regardless of what is configured (flagged by a `TODO` in `main.tf`) — see the Configuration Pitfalls entry below. |
+| `max_instance_count` | `1` | Maximum instances; caps concurrent scale-out. **Known bug:** `main.tf`'s `ghost_module` local currently hardcodes `max_instance_count = 5`, silently overriding this variable regardless of what is configured. |
 | `container_port` | `2368` | Ghost's native HTTP port. |
 | `container_image_source` | `custom` | `custom` builds via Cloud Build (default); `prebuilt` deploys an existing image. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. Required for Ghost. |
@@ -336,7 +337,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `environment_variables` SMTP settings | real SMTP server | High | No email delivery means no member sign-ups, no password resets, no newsletters. |
 | `container_image_source` | `custom` | High | The upstream Ghost image lacks the custom entrypoint that maps DB credentials and detects the service URL. |
 | `execution_environment` | `gen2` | High | NFS mounts require gen2; gen1 cannot mount Filestore. |
-| `min_instance_count` | `0` (default) or `1` | Medium | `0` (the default) causes cold starts during which Ghost runs migrations — set `1` if first-request timeouts matter. |
+| `min_instance_count` / `max_instance_count` | `0` (default) or `1` | Medium | **Known bug:** `main.tf`'s `ghost_module` local hardcodes `min_instance_count = 0` and `max_instance_count = 5`, silently overriding these variables — setting them in `tfvars` and re-applying currently has no effect on the deployed service's scaling limits until the hardcoded override is removed from the module source. |
 | `enable_iap` / `enable_cloud_armor` | enable for admin-facing | Medium | The Ghost admin panel (`/ghost`) is otherwise publicly reachable. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

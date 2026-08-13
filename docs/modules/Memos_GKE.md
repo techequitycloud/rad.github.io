@@ -31,7 +31,7 @@ no background workers:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Go pod, 1 vCPU / 512 MiB by default, horizontally autoscaled |
-| Database | Cloud SQL for PostgreSQL | Required — this module standardizes on Postgres via a single `MEMOS_DSN` connection URL |
+| Database | Cloud SQL for PostgreSQL 15 | Required — this module standardizes on Postgres via a single `MEMOS_DSN` connection URL |
 | Object storage | none | Not provisioned by this module — see the attachments note below |
 | Cache & queue | none | Memos has no queue or cache dependency |
 | Secrets | Secret Manager | Only the database password (managed by the Foundation); Memos itself has no app-level secret |
@@ -39,11 +39,8 @@ no background workers:
 
 **Sensible defaults worth knowing up front:**
 
-- **PostgreSQL is the standardized engine.** `database_type` defaults to the
-  generic `"POSTGRES"` (the only version selectable via the module's UI,
-  alongside `"NONE"`), which the foundation resolves to its current default
-  Cloud SQL Postgres version on a fresh inline instance — not a hardcoded
-  `POSTGRES_15`.
+- **PostgreSQL is the standardized engine.** `Memos_Common` fixes
+  `database_type = "POSTGRES_15"`.
 - **No admin-bootstrap secret exists.** The **first account created through the web
   UI becomes the host/admin** — there is no `DEFAULTUSER`-style env var and nothing
   to retrieve from Secret Manager for first login.
@@ -92,10 +89,10 @@ minimum and maximum replica counts.
 See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type
 (Deployment vs StatefulSet) are managed.
 
-### B. Cloud SQL for PostgreSQL
+### B. Cloud SQL for PostgreSQL 15
 
 Memos stores all application data (notes, tags, users, resources metadata) in a
-managed Cloud SQL for PostgreSQL instance. Pods reach it privately through the
+managed Cloud SQL for PostgreSQL 15 instance. Pods reach it privately through the
 **Cloud SQL Auth Proxy** sidecar over `127.0.0.1`; no public IP is exposed. On
 first deploy an initialization Job creates the application database and user.
 
@@ -196,7 +193,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -255,14 +252,14 @@ Standard App_GKE Cloud Build integration — see [App_GKE](App_GKE.md).
 |---|---|---|
 | `storage_buckets` | `[]` | No bucket provisioned by default. |
 | `enable_nfs` | `false` | Not used — Memos keeps no state outside PostgreSQL in this module's wiring. |
-| `stateful_pvc_enabled` | `false` | Memos is stateless at the pod level; no block PVC needed. |
+| `stateful_pvc_enabled` | `null` | Unset, so `App_GKE`'s own resolution logic applies (no PVC). Memos is stateless at the pod level; no block PVC needed. |
 | `gcs_volumes` | `[]` | Add an entry here (mounted at Memos's data directory) if attachment persistence is required. |
 
 ### Group 12 — Database Backend
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES` | Generic Postgres selector (only `POSTGRES`/`NONE` are offered); resolves to the foundation's current default Cloud SQL Postgres version on a fresh instance. |
+| `database_type` | `POSTGRES_15` | Fixed by `Memos_Common`. |
 | `application_database_name` | `memos` | PostgreSQL database name. Immutable after first deploy. |
 | `application_database_user` | `memos` | Application database user. Password auto-generated in Secret Manager. |
 

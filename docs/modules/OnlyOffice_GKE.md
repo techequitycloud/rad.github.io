@@ -395,7 +395,7 @@ locate and explore the running resources.
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS and any registered integration callback URL. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 
-<!-- TODO: verify whether enable_custom_domain=true with an empty application_domains list falls back to a nip.io hostname on the reserved LoadBalancer IP, or leaves the Ingress unconfigured until a domain is set. -->
+{/* TODO: verify whether enable_custom_domain=true with an empty application_domains list falls back to a nip.io hostname on the reserved LoadBalancer IP, or leaves the Ingress unconfigured until a domain is set. */}
 
 ---
 

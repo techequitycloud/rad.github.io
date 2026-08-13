@@ -25,7 +25,7 @@ platform guides ([SparkyFitness_GKE](SparkyFitness_GKE.md),
 | Area | Provided by SparkyFitness_Common | Where it surfaces |
 |---|---|---|
 | Cryptographic secrets | Generates `SPARKY_FITNESS_API_ENCRYPTION_KEY` (64-char hex), `BETTER_AUTH_SECRET`, and `SPARKY_FITNESS_APP_DB_PASSWORD`, all stored in **Secret Manager** | Injected automatically; retrieve via Secret Manager (see below) |
-| Container image | References the official prebuilt `codewithcj/sparkyfitness_server` image — no custom build or entrypoint wrapper | `config.container_image` output |
+| Container image | Thin custom build (`image_source = "custom"`) FROM the official `codewithcj/sparkyfitness_server` image, patching its three `pg.Pool` constructors to enable SSL — no entrypoint wrapper | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the admin role and database only | `initialization_jobs` output |
 | Core settings | Sets the baseline backend environment: log level, timezone, CORS, admin bootstrap, disable-signup, SMTP | Application behaviour in the platform guides |
@@ -92,11 +92,17 @@ The instance, database, and user names are in the platform deployment outputs.
 
 ---
 
-## 4. Container image (no custom build)
+## 4. Container image (thin SSL patch, no entrypoint wrapper)
 
-Both the backend (`codewithcj/sparkyfitness_server`) and frontend
-(`codewithcj/sparkyfitness`) images are used **exactly as published** upstream — no
-custom Dockerfile, no entrypoint wrapper. This is possible because:
+The frontend (`codewithcj/sparkyfitness`) image is used **exactly as published**
+upstream. The backend (`codewithcj/sparkyfitness_server`) is a **thin custom build**
+(`image_source = "custom"`, build arg `SPARKYFITNESS_SERVER_VERSION`) whose only
+change is a `sed` patch adding an `ssl` option to the three `pg.Pool` constructors
+in `db/poolManager.ts` and `auth.ts` — the app has no env-var SSL toggle, and Cloud
+SQL rejects the unencrypted private-IP TCP connection Cloud Run hands the backend.
+SSL is applied only when the resolved host is not loopback, so GKE's
+already-TLS-terminated cloud-sql-proxy sidecar connection is untouched. Neither
+image needs an **entrypoint wrapper**, because:
 
 - The backend already reads discrete, standard-shaped env vars
   (`SPARKY_FITNESS_DB_HOST`/`_PORT`/`_NAME`/`_USER`/`_PASSWORD`), which the Foundation

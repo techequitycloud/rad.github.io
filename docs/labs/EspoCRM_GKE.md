@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Filestore NFS, Artifact Registry, and shared service accounts
-  this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL,
+  Filestore NFS, Artifact Registry, and shared service accounts this module
+  depends on). You do not need to deploy this yourself first — the platform
+  automatically detects whether it already exists in the target project and
+  provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -58,7 +60,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **EspoCRM (GKE)** from
+1. Click **Deploy** in the RAD platform top navigation, open **EspoCRM (GKE)** from
    the **Platform Modules** list to start configuration, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/EspoCRM_GKE)
@@ -69,7 +71,7 @@ export REGION="us-central1"           # the region you deploy into
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a
    Cloud SQL (MySQL 8.0) database with its Secret Manager secrets
    (`ESPOCRM_ADMIN_PASSWORD` and the database password), a `espocrm-data` Cloud
-   Storage bucket, a shared Filestore NFS volume mounted at `/var/lib/espocrm` for
+   Storage bucket, a shared Filestore NFS volume mounted at `/var/www/html/data` for
    uploads (`enable_nfs = true` by default), builds the container image, and runs a
    one-shot database-initialisation job. The pod reaches Cloud SQL through a
    co-located Auth Proxy sidecar on loopback (`enable_cloudsql_volume = true` by
@@ -109,8 +111,8 @@ export REGION="us-central1"           # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "http://${EXTERNAL_IP}/"   # expect 200
    ```
 
-   On a slow first boot the startup (10s initial delay) and liveness (15s initial
-   delay) probes are noticeably tighter than the Cloud Run variant's — pods can flap
+   On a slow first boot the startup (TCP, 30s initial delay) and liveness (`HTTP GET
+   /`, 300s initial delay) probes match the Cloud Run variant's — pods can flap
    briefly while the install/migrate step finishes; give it a few minutes before
    troubleshooting.
 
@@ -156,7 +158,7 @@ export REGION="us-central1"           # the region you deploy into
    ```bash
    kubectl get secrets -n "$NS"
    gcloud secrets list --project="$PROJECT" --filter="name~espocrm"
-   gcloud filestore instances list --project="$PROJECT"   # backs /var/lib/espocrm uploads
+   gcloud filestore instances list --project="$PROJECT"   # backs /var/www/html/data uploads
    kubectl get jobs -n "$NS"          # db-init job
    ```
 
@@ -198,11 +200,11 @@ export REGION="us-central1"           # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with EspoCRM releases.
 
-- **Pod not Ready / flapping on first boot:** the startup probe (10s initial delay,
-  10s period, 3 failures) and liveness probe (15s initial delay, 30s period, 3
-  failures) are both `HTTP GET /`. On a slow first boot (the install/migrate step),
+- **Pod not Ready / flapping on first boot:** the startup probe is TCP (30s initial
+  delay, 15s period, 20 failures) and the liveness probe is `HTTP GET /` (300s initial
+  delay, 60s period, 3 failures). On a slow first boot (the install/migrate step),
   pods can flap before EspoCRM finishes initializing; raise the initial delay /
-  failure threshold via `startup_probe_config` / `health_check_config` if this
+  failure threshold via `startup_probe` / `liveness_probe` if this
   persists.
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events section shows scheduling/probe/mount errors

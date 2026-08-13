@@ -159,10 +159,14 @@ port-listening check (liveness):
 
 A dedicated **Cloud Storage** `data` bucket (for recipe images) is declared
 here and provisioned by the foundation, which also grants the workload
-service account access. It is **not** automatically mounted — add a
-`gcs_volumes` entry at `/opt/recipes/mediafiles` (Tandoor's `MEDIA_ROOT`) if
-uploaded images need to persist. `STATIC_ROOT` regenerates on every boot and
-needs no persistence.
+service account access. It **is** mounted automatically: `Tandoor_Common`
+declares a `gcs_volumes` entry mounting `gcs-<app><prefix>-data` at
+`/opt/recipes/mediafiles` (Tandoor's `MEDIA_ROOT`) with
+`implicit-dirs,uid=0,gid=0,file-mode=0644,dir-mode=0755` — without it,
+uploaded recipe images lived on ephemeral container disk and were lost on
+every restart. An operator-supplied `gcs_volumes` still wins (the foundation
+prefers it). `STATIC_ROOT` regenerates on every boot and needs no
+persistence.
 
 ```bash
 gcloud storage buckets list --project "$PROJECT"

@@ -47,15 +47,21 @@ The **only optional secret** is an API key, gated behind `enable_api_key`
 
 - When `enable_api_key = true`, a 32-character random value is generated and stored
   in Secret Manager under the name `secret-<prefix>-<app>-api-key` (for example
-  `secret-<prefix>-jellyfin-api-key`). It is injected into the container as a secret
-  environment variable via the foundation's `module_secret_env_vars` mechanism.
+  `secret-<prefix>-jellyfin-api-key`).
 - When `enable_api_key = false` (the default), no secret is created and the module's
   secret map is empty.
 
-In normal operation you do not need this option: Jellyfin creates and manages API
-keys itself through **Dashboard → API Keys** in the web UI. The
-`enable_api_key` secret exists only for deployments that want a pre-provisioned key
-baked into the environment before the UI is reachable.
+**Known bug — this secret is not actually usable by Jellyfin.** The `secret_ids`
+and `secret_values` outputs both key the generated value under the env-var name
+`QDRANT__SERVICE__API_KEY` — a copy-paste leftover from the Qdrant_Common module
+this module was cloned from (see the `# Injected as QDRANT__SERVICE__API_KEY env
+var` comment in `main.tf`). Jellyfin never reads that or any environment variable
+for API-key authentication — it has no custom entrypoint script (see §4), and API
+keys can only be created via an authenticated Dashboard/REST call. So today,
+`enable_api_key = true` only creates an **orphaned** Secret Manager secret; it does
+not pre-provision a working API key. Jellyfin creates and manages API keys itself
+through **Dashboard → API Keys** in the web UI — that remains the only way to get
+a usable key.
 
 Retrieve the secret after deployment (only when `enable_api_key = true`):
 
@@ -170,6 +176,15 @@ SQLite-heavy `/config` directory and transcode cache. On GKE, the block PVC
 SQLite files. Cloud Run's GCS FUSE mount works but has higher latency and is better
 suited to light use; heavy libraries and active transcoding are far happier on the
 GKE block PVC.
+
+The GKE block PVC defaults to the SSD-backed `standard-rwo` StorageClass, which
+draws the tight regional `SSD_TOTAL_GB` quota — and scaling the app to zero does
+**not** release the PVC, so a campaign of stateful modules can exhaust that quota.
+Jellyfin is exactly the media/SQLite case this affects: it doesn't need SSD IOPS,
+so on a quota-constrained project override to HDD with
+`-var stateful_pvc_storage_class=standard` (`pd-standard`, drawing the much larger
+`DISKS_TOTAL_GB` quota instead) — still a real block device, so it preserves the
+SQLite write-locking integrity the block PVC exists for.
 
 ---
 

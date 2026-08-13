@@ -41,8 +41,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -63,7 +66,7 @@ export REGION="us-central1"          # the region you deploy into
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/GoAlert_CloudRun)
    documents every input by group, with defaults. If deploying alongside a
-   `GoAlert_GKE` instance in the same project, set `tenant_deployment_id = "cr"`
+   `GoAlert_GKE` instance in the same project, set `tenant_id = "cr"`
    (and `"gke"` on the GKE deployment) so the two variants don't collide on shared
    resource names. Review the estimated cost (if credits are enabled) and click
    **Deploy**, which opens the deployment status page with real-time logs.

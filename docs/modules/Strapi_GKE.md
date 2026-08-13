@@ -53,8 +53,11 @@ focused set of Google Cloud services:
 - **Redis is disabled by default.** Enable it only when using plugins that explicitly
   require a shared cache or session store.
 - **Container port is 1337.** Strapi's HTTP server binds to port 1337 by default.
-- **GCS media bucket variables are auto-injected.** `GCS_BUCKET_NAME` and
-  `GCS_BASE_URL` are set automatically; no manual configuration is required.
+- **GCS media bucket variables are auto-injected — but currently point at the wrong bucket.** `GCS_BUCKET_NAME` and
+  `GCS_BASE_URL` are set automatically, but `Strapi_GKE/strapi.tf` computes the bucket name from the
+  tenant-only resource prefix instead of the app-scoped bucket name the Foundation module (`App_GKE`)
+  actually creates (`gcs-${service_name}-strapi-uploads`). The injected values therefore reference a
+  bucket that does not exist by default — see Section 3 and the module README's Notes for the fix.
 
 ---
 
@@ -110,8 +113,11 @@ automated backups, and password rotation, see
 
 Uploaded media is written to a **Filestore (NFS)** share mounted into every pod so
 all replicas see the same files. A dedicated **Cloud Storage** bucket (suffix
-`strapi-uploads`) is also provisioned and configured as the Strapi GCS upload
-provider; the workload service account is granted access automatically.
+`strapi-uploads`) is also provisioned by the Foundation module and the workload
+service account is granted access to it automatically — but see the known bug in
+Section 3: the `GCS_BUCKET_NAME`/`GCS_BASE_URL` values injected into the container
+do not currently match this bucket's actual name, so Strapi's GCS upload provider
+does not connect to it out of the box.
 
 - **Console:** Filestore → Instances for the NFS share; Cloud Storage → Buckets for
   the uploads bucket.
@@ -195,11 +201,18 @@ Monitoring. Optional uptime checks and alert policies are available.
   and idempotently creates the Strapi database and user, grants the necessary
   privileges (including `CREATEDB`, which Strapi's migration system requires), and
   signals the Cloud SQL Auth Proxy to shut down cleanly.
-- **GCS media provider.** `GCS_BUCKET_NAME` and `GCS_BASE_URL` are automatically
-  injected into the container. Strapi's `config/plugins.js` detects these variables
-  and switches to the
-  `@strapi-community/strapi-provider-upload-google-cloud-storage` provider, storing
-  all media library uploads in the `strapi-uploads` GCS bucket.
+- **GCS media provider — known bucket-name mismatch.** `GCS_BUCKET_NAME` and `GCS_BASE_URL`
+  are automatically injected into the container, and Strapi's `config/plugins.js` detects
+  these variables and switches to the
+  `@strapi-community/strapi-provider-upload-google-cloud-storage` provider. However,
+  `Strapi_GKE/strapi.tf` builds `GCS_BUCKET_NAME` as `${resource_prefix}-strapi-uploads`
+  using the tenant-only `tenant_resource_prefix`, while the Foundation module (`App_GKE`)
+  actually names the created bucket `gcs-${service_name}-strapi-uploads` (app-scoped). The
+  two names do not match, so by default the injected value points at a bucket that was
+  never created and media uploads fail. (The `Strapi_CloudRun` sibling does not have this
+  bug — it resolves the bucket name via `module.app_cloudrun.storage_buckets["strapi-uploads"]`.)
+  Until fixed, set `GCS_BUCKET_NAME`/`GCS_BASE_URL` explicitly in `environment_variables`
+  using the real bucket name from this module's `storage_buckets` output.
 - **Email delivery (optional).** If `SMTP_HOST` is set in `environment_variables`,
   `config/plugins.js` automatically enables the `nodemailer` email provider for
   Strapi notifications (user invitations, password resets, workflow events). Set
@@ -232,7 +245,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -243,7 +256,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_name` | `strapi` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Strapi CMS` | Friendly name shown in the Console. |
 | `application_description` | `Strapi Headless CMS on GKE` | Workload description annotation. |
-| `application_version` | `5.0.0` | Image version tag; increment to trigger a new Cloud Build run. |
+| `application_version` | `5.0.0` | Image tag; increment to trigger a new Cloud Build run and workload revision. Does **not** select the Strapi package version — `@strapi/strapi` is pinned in `Strapi_Common/scripts/package.json` (currently `4.24.2`) and this variable has no effect on it. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -266,7 +279,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Extra non-secret settings. `GCS_BUCKET_NAME` and `GCS_BASE_URL` are injected automatically. |
+| `environment_variables` | `{}` | Extra non-secret settings. `GCS_BUCKET_NAME` and `GCS_BASE_URL` are injected automatically, but see the known bucket-name mismatch in Section 3 — override these explicitly if uploads fail. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name for additional secrets. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 | `secret_rotation_period` | `2592000s` | Pub/Sub rotation notification frequency. |

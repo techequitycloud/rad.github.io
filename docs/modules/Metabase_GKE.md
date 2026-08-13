@@ -199,7 +199,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -301,10 +301,12 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixed — do not change. Metabase requires PostgreSQL. |
-| `application_database_name` | `metabase` | Database name. Immutable after first deploy. |
-| `application_database_user` | `metabase` | Application user. Immutable after first deploy. |
+| `application_database_name` | `metabase` | Generic App_GKE database-name input. **Inert for this module** — App_GKE derives the actual database name from the module's `db_name` config (see below), not this variable. |
+| `application_database_user` | `metabase` | Generic App_GKE database-user input. **Inert for this module** — see `db_user` below. |
 | `database_password_length` | `32` | Generated password length (16–64). |
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
+| `db_name` | `metabase` | **Authoritative** database name, forwarded to `Metabase_Common`. Immutable after first deploy — renaming recreates the database and destroys data. |
+| `db_user` | `metabase` | **Authoritative** application user, forwarded to `Metabase_Common`. Immutable after first deploy. |
 
 ### Group 17 — Backup & Maintenance
 
@@ -400,7 +402,7 @@ locate and explore the running resources.
 | `database_type` | `POSTGRES_15` | Critical | Metabase requires PostgreSQL; any other engine breaks startup. |
 | `enable_cloudsql_volume` | `true` | Critical | Disabling breaks all database connections (Auth Proxy sidecar required). |
 | `container_resources.memory_limit` | `4Gi` | Critical | Under 2 GiB the JVM crashes with OutOfMemoryError on startup. |
-| `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all application data. |
+| `db_name` / `db_user` | set once | Critical | The **actual** DB name/user controls (forwarded to `Metabase_Common`); immutable after first deploy — renaming recreates the DB/user and destroys all application data. `application_database_name`/`application_database_user` are the generic App_GKE inputs but are shadowed/inert for this module (App_GKE derives the real name from the module's `db_name` config), so changing them has no effect. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `application_version` | increment carefully | Critical | Metabase migrations are one-way; downgrading corrupts the schema. Always test upgrades in staging. |
 | `quota_memory_requests` / `_limits` | binary units | Critical | Bare integers are bytes and block all scheduling. |

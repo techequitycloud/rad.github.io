@@ -38,7 +38,7 @@ guides ([Excalidraw_GKE](Excalidraw_GKE.md),
 | Object storage | **None** — `storage_buckets` and `gcs_volumes` are empty | No GCS bucket is provisioned |
 | Cache / queue | **None** — no Redis, no message queue | — |
 | Database bootstrap | **None** — there are no initialization jobs (`initialization_jobs = []`) | `initialization_jobs` output is empty |
-| Version pinning | Sets an app-specific `EXCALIDRAW_VERSION` build ARG so `application_version = "latest"` resolves to a known-good tag rather than the Foundation-injected `APP_VERSION` | `container_build_config.build_args` |
+| Version pinning | Sets an app-specific `EXCALIDRAW_VERSION` build ARG so the Foundation-injected `APP_VERSION` cannot overwrite the tag — but `application_version = "latest"` still resolves to `"latest"` (no pinning; `pinned_excalidraw_version` is itself `"latest"`) | `container_build_config.build_args` |
 | Health checks | Supplies default startup / liveness / readiness probes targeting the root path `/` | §Observability in the platform guides |
 
 ---
@@ -65,9 +65,12 @@ EXPOSE 80
   Foundation injects `APP_VERSION = application_version` into `build_args` and **wins**
   any merge, so a Common-level `APP_VERSION` would be silently overwritten with
   `latest`. Excalidraw's base tag is therefore derived from an **app-specific**
-  `EXCALIDRAW_VERSION` build ARG that the Foundation does not touch. When
-  `application_version = "latest"` (the campaign default), the Common layer resolves it
-  to a pinned known-good tag so the `FROM` never references a non-existent tag.
+  `EXCALIDRAW_VERSION` build ARG that the Foundation does not touch. Unlike some sibling
+  modules, this does **not** pin `latest` to a known-good tag: `main.tf` sets
+  `pinned_excalidraw_version = "latest"`, so `application_version = "latest"` (the
+  campaign default) resolves right back to `"latest"` and the build tracks Docker Hub's
+  rolling `excalidraw/excalidraw:latest` tag. Set an explicit tag (e.g. `v1.11.86`) to
+  actually pin a production release.
 
 Inspect the resolved build args without deploying:
 

@@ -34,8 +34,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Redis, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Redis, Artifact Registry, and
+  shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -52,7 +55,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **OnlyOffice (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **OnlyOffice (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/OnlyOffice_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -163,6 +166,7 @@ platform-level diagnostics and do not change with OnlyOffice releases.
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
+- **Revision stuck "Waiting for connection to the /cloudsql/... host on port 5432" forever:** a known vendor-image behaviour, not a real connectivity problem. On Cloud Run, `DB_HOST` is a Cloud SQL Auth Proxy Unix-socket *directory*, but the upstream Document Server launcher's own readiness gate runs `nc -z "$DB_HOST" "$DB_PORT"`, and `nc` can never resolve a filesystem path as a TCP host — so an *unpatched* image loops that log line (sometimes alongside `nc: getaddrinfo ... Name or service not known`) indefinitely and the revision never becomes Ready. The module's `Dockerfile` (`modules/OnlyOffice_Common/scripts/Dockerfile`) patches this at build time with a `sed -i` against `/app/ds/run-document-server.sh`, guarded by a `grep -q` assertion that fails the Cloud Build loudly if a future `ONLYOFFICE_VERSION` bump changes the upstream script's wording. If you see this exact log pattern, check whether the build-time assertion failed (review Cloud Build history for that step) — the fix is to update the `sed` pattern in the Dockerfile to match the new upstream wording, then rebuild. GKE is unaffected (its Auth Proxy sidecar listens on a real `127.0.0.1` TCP host).
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB password secret exists, and the initialisation job completed successfully.
 - **Initialisation job failed:** list executions and read the failed one's logs:
   ```bash

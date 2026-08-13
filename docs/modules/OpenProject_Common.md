@@ -29,7 +29,7 @@ platform guides ([OpenProject_GKE](OpenProject_GKE.md),
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy jobs (`db-init` → `db-migrate`) that create the role/database and then run `rake db:migrate db:seed` | `initialization_jobs` output |
 | Core settings | Sets the baseline OpenProject environment: `RAILS_ENV`, HTTPS mode, STDOUT logging, `good_job` async execution, DB pool sizing | Application behaviour in the platform guides |
-| Health checks | Supplies the default **TCP** startup/liveness probes and the HTTP readiness probe (`/health_checks/default`) | §Observability in the platform guides |
+| Health checks | Defines **HTTP** startup/liveness probe defaults (`/health_checks/default`) — `OpenProject_CloudRun`/`OpenProject_GKE` override these to **TCP** to sidestep Rails Host Authorization; also assembles a `readiness_probe` object that is inert (not a recognized `App_CloudRun`/`App_GKE` input field) | §Observability in the platform guides |
 
 ---
 
@@ -144,14 +144,15 @@ numeric major tags (16, 15, …) and **no `latest` tag**, so the campaign defaul
 correctly on first boot:
 
 - **`RAILS_ENV = production`**.
-- **`OPENPROJECT_HTTPS = tostring(var.https_enabled)`** — not hardcoded. It forces an
-  `http://` → `https://` redirect, so it must only be `true` when the deployment is
-  actually reachable over HTTPS. `OpenProject_CloudRun` always passes `true` (the
-  `run.app` URL is always HTTPS); `OpenProject_GKE` passes `var.enable_custom_domain`,
-  because a bare LoadBalancer IP with no custom domain is plain HTTP only — forcing
-  `true` there redirects every request to an `https://` address that never responds
-  (a silent, total outage). Combined with `OPENPROJECT_HOST__NAME` (set by the
-  entrypoint) this yields correct absolute URLs when true.
+- **`OPENPROJECT_HTTPS = tostring(var.https_enabled)`** — combined with
+  `OPENPROJECT_HOST__NAME` (set by the entrypoint) this yields correct absolute URLs,
+  but `https_enabled` is **not** a fixed `true`: `OpenProject_CloudRun` always passes
+  `true` (a Cloud Run `*.run.app` URL is always HTTPS), while `OpenProject_GKE` passes
+  `var.enable_custom_domain` — HTTPS mode only turns on once a custom domain + managed
+  certificate is configured. Forcing `true` on GKE with no custom domain would
+  force-redirect every request to an `https://` address that never responds (a silent,
+  total outage), which is why the variant passes this through conditionally instead of
+  hardcoding it.
 - **`RAILS_LOG_TO_STDOUT = true`** — emit logs for Cloud Logging / GKE.
 - **`GOOD_JOB_EXECUTION_MODE = async`** — background jobs (emails, notifications,
   scheduled work) run in-process inside the web container. There is **no Redis**:
@@ -176,12 +177,20 @@ service domain) works fine. The probes are therefore configured as follows:
 
 - **Startup probe: TCP.** Checks only that Puma is listening on the port, sidestepping
   Host Authorization. Because migrations run in the `db-migrate` job (not on boot), the
-  container becomes port-ready quickly.
+  container becomes port-ready quickly. Note this TCP behaviour comes from
+  `OpenProject_CloudRun`'s/`OpenProject_GKE`'s own `startup_probe` variable defaults —
+  `OpenProject_Common`'s own `startup_probe` default is HTTP against
+  `/health_checks/default`; the platform variants override it.
 - **Liveness probe:** **TCP on GKE** (GKE supports a TCP liveness probe, so a healthy
   Puma stays alive); **disabled on Cloud Run** (Cloud Run supports only HTTP/gRPC
-  liveness probes, and an HTTP one would restart-loop a healthy container).
-- **Readiness probe: HTTP `GET /health_checks/default`** — OpenProject's health
-  endpoint, evaluated by the platform where the `Host` header is set correctly.
+  liveness probes, and an HTTP one would restart-loop a healthy container). As with the
+  startup probe, this override happens at the platform variant, not in `Common`.
+- **Readiness probe: not actually evaluated.** `OpenProject_Common`'s `main.tf` builds a
+  `readiness_probe` object pointed at `GET /health_checks/default`, but `readiness_probe`
+  is not a recognized input field of `App_CloudRun` or `App_GKE` (only `startup_probe`,
+  `liveness_probe`, `health_check_config`, and `uptime_check_config` are) — it is inert,
+  dead configuration. The actual `health_check_config`/`uptime_check_config` variables on
+  the CloudRun/GKE variants default their `path` to `/`, not `/health_checks/default`.
 
 ---
 

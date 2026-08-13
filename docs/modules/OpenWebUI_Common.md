@@ -109,8 +109,8 @@ URL-encoded in the process so special characters do not break URL parsing.
 - When connecting over TCP (external PostgreSQL), `DB_HOST` is the IP or hostname and
   a standard `postgresql://user:password@host/dbname` URL is assembled.
 
-Do not set `DATABASE_URL` directly — it will be overwritten unless you also clear the
-`DB_*` variables.
+If `DATABASE_URL` is already set, the wrapper leaves it as-is and skips the assembly
+step entirely.
 
 ---
 

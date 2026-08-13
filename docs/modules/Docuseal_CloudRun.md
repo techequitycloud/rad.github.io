@@ -238,7 +238,7 @@ specific to or notable for DocuSeal are listed; every other input is inherited f
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -259,6 +259,7 @@ specific to or notable for DocuSeal are listed; every other input is inherited f
 | `min_instance_count` | `1` | Instances kept warm. DocuSeal tolerates `0` (scale-to-zero) since documents live on NFS. |
 | `max_instance_count` | `5` | Maximum instances. |
 | `container_port` | `3000` | Puma listens on 3000. Do not change. |
+| `cpu_always_allocated` | `true` | **Default/description mismatch:** the variable's own description says it is "Defaulted FALSE for DocuSeal: it is a request/response Rails app with no background scheduler or queue worker … so request-based billing … is cheaper with no functional loss," but the coded default is `true` (instance-based billing). DocuSeal genuinely has no in-process worker/beat/scheduler (see [§3](#3-docuseal-application-behaviour)), so operators who want the cheaper, described behavior should explicitly set `cpu_always_allocated = false`. |
 | `container_resources` | `null` | Structured CPU/memory override; when set, overrides `cpu_limit`/`memory_limit`. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts (and imposes a 512 MiB memory floor). |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |
@@ -273,7 +274,7 @@ specific to or notable for DocuSeal are listed; every other input is inherited f
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name. `SECRET_KEY_BASE` is injected automatically. |
 | `secret_propagation_delay` | `30` | Seconds to wait after secret creation before proceeding. |
 
-### Group 11 — Storage & Filesystem
+### Group 10 — Storage & Filesystem
 
 | Variable | Default | Description |
 |---|---|---|
@@ -365,6 +366,7 @@ running resources.
 | `memory_limit` | `4Gi` | Medium | PDF rendering/signing is memory-hungry; shrinking too far risks OOM under load. |
 | `min_instance_count` | `1` (or `0` for cost) | Medium | Scale-to-zero adds a cold-start delay to the first request after idle; documents on NFS are safe either way. |
 | `application_version` | Pin in production | Medium | `latest` can pull a new major on redeploy, applying migrations you did not review. |
+| `cpu_always_allocated` | `false` (request-based) | Medium | Coded default is `true` (instance-based billing), which the variable's own description says is unnecessary for DocuSeal's request/response workload — leaving it at the default pays for idle CPU with no functional benefit. |
 
 ---
 

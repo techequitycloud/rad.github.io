@@ -221,7 +221,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -232,7 +232,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_name` | `strapi` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Strapi CMS` | Friendly name shown in the Console. |
 | `application_description` | `Strapi CMS on Cloud Run` | Service description. |
-| `application_version` | `5.0.0` | Image version tag; increment to trigger a new Cloud Build run. |
+| `application_version` | `5.0.0` | Image tag; increment to trigger a new Cloud Build run and revision. Does **not** select the Strapi package version — `@strapi/strapi` is pinned in `Strapi_Common/scripts/package.json` (currently `4.24.2`) and this variable has no effect on it. |
 
 ### Group 4 — Runtime & Scaling
 

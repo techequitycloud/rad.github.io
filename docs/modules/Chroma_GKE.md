@@ -222,7 +222,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `credit_cost` | `150` | Specify the module cost. (e.g., 50) |
 | `require_credit_purchases` | `false` | Set to true to require credit purchases to deploy this module. |
 | `enable_purge` | `true` | Set to true to enable the ability to purge this module. |
-| `public_access` | `true` | Set to true to enable the module to be available to all platform users. |
+| `public_access` | `false` | Set to true to enable the module to be available to all platform users. |
 | `require_services_gcp_module` | `true` | Enforces that the Services_GCP module is deployed before this module. When true, the deployment fails at plan time with a clear error if no Services_GCP-managed VPC network is detected in the project. Set to false to allow standalone deployment with inline prerequisite resources. |
 | `resource_creator_identity` | `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com` | The Service Account used by terraform to create resources in the destination project. (e.g., "rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com") |
 | `shared_users` | _(set)_ | List of users who can view and deploy this module regardless of the public_access setting. Enter one or more user email addresses. Metadata only. |
@@ -240,7 +240,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Select an existing project on the RAD platform or enter the project ID of an external GCP project. You must grant Owner role to the RAD GCP Project agent service account when deploying into an external project. (e.g., 'my-project-123') |
-| `tenant_deployment_id` | `demo` | Specify a unique tenant or deployment identifier. This uniquely identifies your application deployment and is used in resource naming (1-20 lowercase alphanumeric characters and hyphens). |
+| `tenant_id` | `demo` | Specify a unique tenant or deployment identifier. This uniquely identifies your application deployment and is used in resource naming (1-20 lowercase alphanumeric characters and hyphens). |
 | `region` | `us-central1` | GCP region for resource deployment (e.g., 'us-central1'). Used as fallback when network discovery cannot determine the region from existing VPC subnets. |
 
 All other inputs in this group follow standard App_GKE behaviour.
@@ -250,7 +250,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `support_users` | _(set)_ | Email addresses of users to be granted access the Google Cloud project, monitoring alerts and notifications (e.g., ['admin@example.com', 'ops@example.com']). |
-| `resource_labels` | _(set)_ | Key-value labels applied to all resources created by this module. Use to enforce organisational tagging policies such as cost centre, environment, or team ownership. (e.g., { env = "prod", team = "engineering" }) |
+| `resource_labels` | _(set)_ | Key-value labels applied to all resources created by this module. Use to enforce organisational tagging policies such as cost centre, environment, or team ownership. (e.g., `{ env = "prod", team = "engineering" }`) |
 
 All other inputs in this group follow standard App_GKE behaviour.
 
@@ -284,8 +284,8 @@ All other inputs in this group follow standard App_GKE behaviour.
 | `timeout_seconds` | `300` | Request timeout in seconds (0-3600). Maximum time a request can take. (e.g., 300) |
 | `enable_cloudsql_volume` | `false` | Injects a Cloud SQL Auth Proxy sidecar container into the GKE pod. Chroma does not use Cloud SQL — this should remain false unless you are running a custom sidecar alongside Chroma. |
 | `cloudsql_volume_mount_path` | `/cloudsql` | Cloud SQL Auth Proxy socket mount path. Not referenced — Chroma has no Cloud SQL database. |
-| `service_annotations` | _(set)_ | Custom annotations applied to the Kubernetes Service resource. (e.g., { "cloud.google.com/neg" = "{\\"ingress\\": true}" }) |
-| `service_labels` | _(set)_ | Custom labels applied specifically to the Kubernetes Service resource. (e.g., { category = "production", tier = "database" }) |
+| `service_annotations` | _(set)_ | Custom annotations applied to the Kubernetes Service resource. (e.g., `{ "cloud.google.com/neg" = "{\\"ingress\\": true}" }`) |
+| `service_labels` | _(set)_ | Custom labels applied specifically to the Kubernetes Service resource. (e.g., `{ category = "production", tier = "database" }`) |
 | `cloud_sql_proxy_version` | `2-alpine` | Cloud SQL Auth Proxy image tag. Not applicable — Chroma has no Cloud SQL database. |
 | `cpu_limit` | `1000m` | CPU limit allocated to the Chroma container. (e.g., '1000m', '2000m') |
 | `memory_limit` | `1Gi` | Memory limit allocated to the Chroma container. Chroma loads embedding indexes into memory; size this based on your collections. (e.g., '1Gi', '4Gi') |
@@ -297,7 +297,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | _(set)_ | Static environment variables for the Chroma container as key-value pairs. (e.g., { CHROMA_LOG_CONFIG_FILE = "/chroma/log_config.yml" }) |
+| `environment_variables` | _(set)_ | Static environment variables for the Chroma container as key-value pairs. (e.g., `{ CHROMA_LOG_CONFIG_FILE = "/chroma/log_config.yml" }`) |
 | `secret_environment_variables` | _(set)_ | Environment variables from Secret Manager. Map environment variable name to Secret Manager secret name. |
 | `secret_rotation_period` | `2592000s` | Secret rotation schedule. (e.g., '2592000s' for 30 days) |
 | `secret_propagation_delay` | `30` | Time in seconds to wait after a secret is created or updated before proceeding with dependent operations. (e.g., 30) |
@@ -312,7 +312,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | `prereq_gke_subnet_cidr` | `10.201.0.0/24` | CIDR range for the inline GKE subnet. Not referenced — setting this variable has no effect on deployment in this application module. |
 | `gke_cluster_selection_mode` | `primary` | Strategy for choosing target GKE cluster. (e.g., 'primary') |
 | `prereq_subnet_cidr_override` | `` | Override for the inline VPC primary subnet CIDR. |
-| `namespace_name` | `` | Kubernetes namespace for deployment. Leave empty to auto-generate from application_name and tenant_deployment_id. (e.g., 'chroma-prod') |
+| `namespace_name` | `` | Kubernetes namespace for deployment. Leave empty to auto-generate from application_name and tenant_id. (e.g., 'chroma-prod') |
 | `prereq_gke_pod_cidr_override` | `` | Override for the inline GKE pod secondary range CIDR. |
 | `prereq_gke_service_cidr_override` | `` | Override for the inline GKE service secondary range CIDR. |
 | `workload_type` | `null` | Kubernetes workload type. Use 'StatefulSet' (recommended for Chroma) for stable pod identity and orderly restarts, or 'Deployment' for stateless operation with GCS-backed storage. (e.g., 'Deployment' or 'StatefulSet') |
@@ -372,12 +372,12 @@ All other inputs in this group follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | _(set)_ | Configuration for the Kubernetes startup probe. Chroma exposes /api/v2/heartbeat. Example: { enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }. |
-| `health_check_config` | _(set)_ | Configuration for the Kubernetes liveness probe. Uses /api/v2/heartbeat (Chroma's health endpoint). Example: { enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }. |
-| `uptime_check_config` | _(set)_ | Uptime check configuration. Monitors service availability. Example: { enabled = true, path = "/api/v2/heartbeat", check_interval = "60s", timeout = "10s" }. |
+| `startup_probe_config` | _(set)_ | Configuration for the Kubernetes startup probe. Chroma exposes /api/v2/heartbeat. Example: `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`. |
+| `health_check_config` | _(set)_ | Configuration for the Kubernetes liveness probe. Uses /api/v2/heartbeat (Chroma's health endpoint). Example: `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }`. |
+| `uptime_check_config` | _(set)_ | Uptime check configuration. Monitors service availability. Example: `{ enabled = true, path = "/api/v2/heartbeat", check_interval = "60s", timeout = "10s" }`. |
 | `alert_policies` | _(set)_ | Custom alert policies for Cloud Monitoring. |
-| `startup_probe` | _(set)_ | Startup probe configuration. Chroma exposes /api/v2/heartbeat once fully ready to serve requests. Example: { enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }. |
-| `liveness_probe` | _(set)_ | Liveness probe configuration. Uses /api/v2/heartbeat (Chroma's health endpoint). Example: { enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }. |
+| `startup_probe` | _(set)_ | Startup probe configuration. Chroma exposes /api/v2/heartbeat once fully ready to serve requests. Example: `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`. |
+| `liveness_probe` | _(set)_ | Liveness probe configuration. Uses /api/v2/heartbeat (Chroma's health endpoint). Example: `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }`. |
 
 All other inputs in this group follow standard App_GKE behaviour.
 
@@ -399,7 +399,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | `github_repository_url` | `` | GitHub repository URL for automated CI/CD (e.g., 'https://github.com/username/repo'). |
 | `github_token` | `` | GitHub Personal Access Token (PAT). Required when enable_cicd_trigger is true. |
 | `github_app_installation_id` | `` | GitHub App installation ID. |
-| `cicd_trigger_config` | _(set)_ | Cloud Build trigger configuration for automated CI/CD pipeline. Example: { branch_pattern = "^main$", included_files = [], ignored_files = [], trigger_name = null, description = "Automated build and deployment trigger", substitutions = { } }. |
+| `cicd_trigger_config` | _(set)_ | Cloud Build trigger configuration for automated CI/CD pipeline. Example: `{ branch_pattern = "^main$", included_files = [], ignored_files = [], trigger_name = null, description = "Automated build and deployment trigger", substitutions = { } }`. |
 | `enable_cloud_deploy` | `false` | Enable Google Cloud Deploy for a managed Dev → Staging → Prod promotion pipeline. Requires enable_cicd_trigger = true. |
 | `cloud_deploy_stages` | _(set)_ | Ordered list of Cloud Deploy pipeline stages. |
 | `enable_binary_authorization` | `false` | Enable Binary Authorization for this deployment. (e.g., false) |

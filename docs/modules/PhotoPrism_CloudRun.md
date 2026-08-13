@@ -32,7 +32,7 @@ services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Go binary container on port 2342, 1 vCPU / 2 GiB by default; **single instance always** (`min=1`, `max=1`) — no scale-to-zero, no horizontal scaling |
+| Compute | Cloud Run v2 | Go binary container on port 2342, 1 vCPU / 1 GiB by default; **single instance always** (`min=1`, `max=1`) — no scale-to-zero, no horizontal scaling |
 | Database | None | Embedded SQLite (`PHOTOPRISM_DATABASE_DRIVER=sqlite`) — no Cloud SQL instance is provisioned by default |
 | Persistent storage | Cloud Storage (GCS FUSE) | The **only** persistence layer on this variant — the entire `/photoprism` data directory (SQLite DB, cache, originals, imports) is mounted from a single GCS bucket via GCS FUSE |
 | Secrets | Secret Manager | Auto-generated `PHOTOPRISM_ADMIN_PASSWORD` |
@@ -222,7 +222,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -243,7 +243,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `1000m` | CPU per instance. |
-| `memory_limit` | `2Gi` | "PhotoPrism loads vector indexes into memory; size this based on your collections." `PhotoPrism_Common`'s own baseline default is `4Gi` for indexing/face-recognition workloads — raise for real libraries. |
+| `memory_limit` | `2Gi` | "PhotoPrism loads vector indexes into memory; size this based on your collections." 2Gi is the minimum that keeps face recognition/RAW support enabled — `PhotoPrism_Common`'s own baseline default is `4Gi` for real indexing workloads on large libraries. |
 | `min_instance_count` | `1` | Fixed at 1 to avoid cold starts during index loading. |
 | `max_instance_count` | `1` | **Keep at 1** — a single PhotoPrism instance for data consistency. |
 | `container_port` | `2342` | PhotoPrism's HTTP server port. |
@@ -342,7 +342,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `startup_probe` | HTTP `/api/v1/status`, 15s delay, 10s period, 10-failure threshold | Primary startup probe (~1m55s window after the delay). |
 | `liveness_probe` | HTTP `/api/v1/status`, 30s delay, 30s period, 3-failure threshold | Primary liveness probe. |
-| `startup_probe_config` | `enabled = true`, path `/api/v1/status` | Alternative structured startup probe surface. <!-- TODO: verify precedence against `startup_probe` if both are set to conflicting values — unlike some sibling modules this alternative surface defaults `enabled = true` here, not disabled. --> |
+| `startup_probe_config` | `enabled = true`, path `/api/v1/status` | Alternative structured startup probe surface. {/* TODO: verify precedence against `startup_probe` if both are set to conflicting values — unlike some sibling modules this alternative surface defaults `enabled = true` here, not disabled. */} |
 | `health_check_config` | `enabled = true`, path `/api/v1/status` | Alternative structured liveness probe surface (same precedence caveat as above). |
 | `uptime_check_config` | `{ enabled = false, path = "/api/v1/status" }` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
@@ -403,7 +403,7 @@ default (unlike Activepieces/BookStack-style modules).
 | `database_type` | `NONE` | Medium | Unlike `PhotoPrism_GKE` (which hardcodes `NONE`), this module still forwards the variable to the foundation. Setting it to `MYSQL`/`POSTGRES` provisions a real, billed Cloud SQL instance that `PhotoPrism_Common` never wires into the app (no `DB_HOST`/`DB_USER` are consumed) — wasted cost with no functional benefit. |
 | `enable_redis` | Forced `false` in `main.tf` | Low | No action needed — the override is intentional and cannot be defeated by setting the variable `true`. |
 | `enable_cloudsql_volume` | `false` (default and hardcoded) | Low | Cannot be enabled even by setting the variable — informational only. |
-| `memory_limit` | `2Gi` default — raise for real libraries | High | `PhotoPrism_Common`'s own baseline is `4Gi` for indexing/face-recognition workloads; 2Gi risks OOM kills once a library has meaningful photo/video volume. |
+| `memory_limit` | `2Gi` default — raise for real libraries | High | `PhotoPrism_Common`'s own baseline is `4Gi` for indexing/face-recognition workloads; 2Gi is the floor that keeps those features enabled but can still risk OOM kills once a library has meaningful photo/video volume. |
 | `PHOTOPRISM_ADMIN_PASSWORD` (auto-generated) | Retrieve before first login | Medium | Not knowing it locks you out of the first admin account until reset via the database. |
 | `site_url` | Set to the deployed Cloud Run URL once known | Medium | Left empty, PhotoPrism falls back to the request host; absolute links/thumbnail URLs can be wrong behind a load balancer or custom domain. |
 | `ingress_settings` | `all` for direct web-UI access | Medium | Setting to `internal` blocks browser access to the UI unless reached through a VPC-connected client or an internal load balancer. |

@@ -32,7 +32,7 @@ Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | PHP/Apache service on port 80, 1 vCPU / 2 GiB by default; scale-to-zero (`min_instance_count = 0`) is the default |
 | Database | Cloud SQL for MySQL 8.0 | Fixed — `ClassicPress_Common` hardcodes `database_type = "MYSQL_8_0"` |
-| File persistence | Cloud Filestore (NFS), optional | Mounted at `/var/lib/classicpress` by default (`enable_nfs = true`) — see the note in [Section 3](#3-classicpress-application-behaviour) on what this path actually covers |
+| File persistence | Cloud Filestore (NFS), optional | Mounted at `/var/www/html/wp-content` by default (`enable_nfs = true`) — see [Section 3](#3-classicpress-application-behaviour) for how this achieves upload/plugin/theme persistence |
 | Object storage | Cloud Storage | Both a `data` bucket (from the variant's own `storage_buckets` default) and a `classicpress-uploads` bucket (from `ClassicPress_Common`) are provisioned automatically; neither is mounted into the container by default |
 | Secrets | Secret Manager | Auto-generated `CLASSICPRESS_SALT_SEED` (derives the 8 WordPress-style auth keys/salts); database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -54,20 +54,17 @@ Google Cloud services:
   otherwise set); the entrypoint builds `CLASSICPRESS_DB_HOST` from `DB_IP:DB_PORT`.
   MySQL on the Cloud SQL private range needs no SSL. Set `enable_cloudsql_volume =
   true` to use the Auth Proxy socket instead.
-- **The ClassicPress install itself lives on the container's own ephemeral
-  filesystem.** Cloud Run has no per-instance persistent block volume equivalent to
-  GKE's StatefulSet PVC. The upstream entrypoint writes `wp-config.php` and copies
-  the whole application (including `wp-content/uploads` and any plugins installed
-  through wp-admin) into `/var/www/html` on first boot of *each* container instance.
-  With the default `min_instance_count = 0`, every cold start after idle spins up a
-  fresh instance with an empty `/var/www/html` — uploaded media and admin-installed
-  plugins/themes from a previous instance do **not** carry over, even though the
-  Cloud SQL database (pages, posts, settings, and the media *records*) is durable.
-  See the pitfalls table for mitigations.
-- **NFS is enabled by default but mounted at a path the app never uses.**
-  `enable_nfs = true` provisions Filestore and mounts it at `/var/lib/classicpress`,
-  but neither the Dockerfile nor the entrypoint reference that path — it does not
-  cover the actual `/var/www/html` install directory.
+- **The ClassicPress *core* install lives on the container's own ephemeral
+  filesystem, but uploads/plugins/themes persist via NFS.** Cloud Run has no
+  per-instance persistent block volume equivalent to GKE's StatefulSet PVC, so the
+  upstream entrypoint re-copies the ClassicPress core application into
+  `/var/www/html` on first boot of *each* container instance — expected, since
+  those core files ship with the image and need no persistence. `enable_nfs = true`
+  mounts Filestore at `/var/www/html/wp-content` by default, and the upstream
+  entrypoint's copy logic explicitly skips an existing `wp-content` directory rather
+  than overwriting it, so uploaded media, installed plugins, and themes under
+  `wp-content` *do* carry over across cold starts, redeploys, and instance
+  replacement — this is how persistence is actually achieved, not a gap.
 - **`CLASSICPRESS_SALT_SEED` is generated automatically** and stored in Secret
   Manager; the entrypoint derives all 8 WordPress-style `AUTH_KEY`/`SALT` values from
   it deterministically, so cookies and sessions survive restarts and agree across
@@ -131,10 +128,10 @@ connection model, backups, and password rotation.
 
 Two Cloud Storage buckets are provisioned by default: a `data` bucket (declared by
 this variant's own `storage_buckets` default) and a `classicpress-uploads` bucket
-(declared by `ClassicPress_Common`). Neither is mounted into the container as a
-`gcs_volumes` entry out of the box — add one explicitly (e.g. mounted at
-`/var/www/html/wp-content/uploads`) if you want media uploads to survive across
-Cloud Run cold starts.
+(declared by `ClassicPress_Common`). Neither is mounted into the container by
+default — media/plugin/theme persistence is instead handled by the NFS mount at
+`/var/www/html/wp-content` (see [Section D](#d-cloud-filestore-nfs)); a `gcs_volumes`
+mount is an alternative only if you prefer GCS-backed storage over Filestore.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -148,9 +145,11 @@ See [App_CloudRun](App_CloudRun.md) for GCS Fuse and CMEK options.
 ### D. Cloud Filestore (NFS)
 
 `enable_nfs = true` is the default, mounting a shared Filestore instance at
-`/var/lib/classicpress`. As noted above, this path is not currently referenced by
-the Dockerfile or entrypoint shim, so it provides spare shared storage rather than
-covering any confirmed data path. `enable_nfs = true` is also what makes
+`/var/www/html/wp-content`. ClassicPress (a WordPress fork) reads/writes uploaded
+media, installed plugins, and themes under `wp-content`, and the upstream
+entrypoint's first-boot copy logic explicitly skips an existing `wp-content`
+directory, so this mount is the confirmed path that achieves persistence across
+restarts, redeploys, and cold starts. `enable_nfs = true` is also what makes
 `redis_host = ""` fall back to the NFS server's co-hosted Redis IP (see Group 21).
 
 - **Console:** Filestore → Instances.
@@ -234,19 +233,23 @@ Monitoring, with optional uptime checks and alert policies.
   restart and every cold-started instance agrees on the same values without
   persisting `wp-config.php` state — sessions and login cookies remain valid across
   instance churn even though the filesystem does not.
-- **The install itself lives on the container's ephemeral filesystem, not on
-  persistent storage.** The upstream `docker-entrypoint.sh` writes `wp-config.php`
-  and copies the ClassicPress application into `/var/www/html` on first boot of each
-  container instance. On Cloud Run this directory is *not* backed by NFS, GCS Fuse,
-  or a block volume by default, so uploaded media (`wp-content/uploads`) and any
-  plugins/themes installed via wp-admin are lost whenever the instance recycles
-  (redeploy, scale-to-zero-and-back, instance replacement). The Cloud SQL database
-  (posts, pages, settings, and media metadata rows) is unaffected.
-- **NFS mount path is not referenced by the image or entrypoint.**
-  `enable_nfs = true` mounts Filestore at `/var/lib/classicpress` by default, but
-  neither `ClassicPress_Common`'s Dockerfile nor its `entrypoint.sh` read or write
-  that path — it does not currently provide the persistence that would fix the
-  point above. Treat it as spare shared storage, not a confirmed data path.
+- **The install's *core* files live on the container's ephemeral filesystem;
+  `wp-content` persists via NFS.** The upstream `docker-entrypoint.sh` writes
+  `wp-config.php` and copies the ClassicPress application into `/var/www/html` on
+  first boot of each container instance. With `enable_nfs = true` (the default),
+  Filestore is mounted directly at `/var/www/html/wp-content`, and the copy logic
+  explicitly skips an existing `wp-content` directory rather than overwriting it —
+  so uploaded media, plugins, and themes installed via wp-admin survive whenever the
+  instance recycles (redeploy, scale-to-zero-and-back, instance replacement). Only
+  the core files outside `wp-content` are freshly copied each time, which is
+  expected since they ship with the image.
+- **NFS mount path is the confirmed persistence mechanism.**
+  `enable_nfs = true` mounts Filestore at `/var/www/html/wp-content` by default.
+  ClassicPress (a WordPress fork) reads/writes uploaded media, plugins, and themes
+  under `wp-content` relative to its webroot, and the upstream entrypoint's
+  copy-skip logic for an existing `wp-content` directory is exactly what makes
+  mounting NFS there safe and effective — this is how persistence is actually
+  achieved, not spare/unused storage.
 - **`php_memory_limit`, `upload_max_filesize`, and `post_max_size` are accepted but
   not currently wired into a PHP setting.** These variables are forwarded through to
   `ClassicPress_Common`, but its `config.environment_variables` does not set any
@@ -292,7 +295,7 @@ ClassicPress are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -380,8 +383,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional GCS bucket beyond `ClassicPress_Common`'s own `classicpress-uploads` bucket (both are created; neither is mounted by default). |
-| `enable_nfs` | `true` | On by default, mounted at `/var/lib/classicpress` — not currently used by the entrypoint (see Section 3). |
-| `nfs_mount_path` | `/var/lib/classicpress` | Mount path inside the container. |
+| `enable_nfs` | `true` | On by default, mounted at `/var/www/html/wp-content` — this is how upload/plugin/theme persistence is achieved (see Section 3). |
+| `nfs_mount_path` | `/var/www/html/wp-content` | Mount path inside the container. The upstream entrypoint's copy logic skips an existing `wp-content` directory, so mounting here is safe. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2); add an entry mounted at `/var/www/html/wp-content/uploads` for real media persistence. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -470,17 +473,17 @@ running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| Media/plugin persistence at `/var/www/html` | Add a `gcs_volumes` mount (e.g. at `wp-content/uploads`) or keep `min_instance_count ≥ 1` | Critical | With the default `min_instance_count = 0` and no volume covering `/var/www/html`, every cold-started instance starts from an empty filesystem — uploaded media and wp-admin-installed plugins/themes from earlier instances are gone, even though the database is intact. |
+| Media/plugin persistence at `/var/www/html/wp-content` | Keep `enable_nfs = true` (the default) | Low | With `enable_nfs = true`, Filestore is mounted at `/var/www/html/wp-content` and the upstream entrypoint's copy logic skips it on boot, so uploaded media and wp-admin-installed plugins/themes survive cold starts. Disabling `enable_nfs` removes this persistence — every cold-started instance would then start from an empty `wp-content`. |
 | `CLASSICPRESS_SALT_SEED` (auto-generated) | Never rotate after first boot | Critical | Rotating it invalidates all signed cookies and logged-in sessions across every instance. |
 | `database_type` | Leave at default (`MYSQL_8_0`) | Critical | `ClassicPress_Common`'s `db-init` job and entrypoint are MySQL-specific; the value is hardcoded regardless of the variable, but relying on the variable to select an engine is a dead end. |
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and orphans all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `max_instance_count` | `1` | High | The container filesystem is per-instance; scaling beyond 1 gives every replica a separate, diverging copy of the site rather than a shared one. |
+| `max_instance_count` | `1` | Medium | `wp-content` (uploads/plugins/themes) is shared via the NFS mount, but the ClassicPress core files outside it are copied independently per instance; scaling beyond 1 has not been validated for concurrent-write safety on `wp-content`. |
 | First-run admin setup | Complete `/wp-admin/install.php` promptly after deploy | High | Until the installer runs, the site has no schema and no admin account — there is no generated admin-password secret to recover with. |
-| `enable_nfs` | `true` (but currently unused by the app) | Medium | Provisions and pays for a Filestore instance that the current entrypoint/Dockerfile never mount data onto — see Section 3. Disabling it does not remove any confirmed persistence, but confirm against a live deployment before relying on this. |
+| `enable_nfs` | `true` | Medium | Provisions and pays for a Filestore instance mounted at `/var/www/html/wp-content` — the confirmed mechanism for upload/plugin/theme persistence (see Section 3). Disabling it removes that persistence. |
 | `php_memory_limit` / `upload_max_filesize` / `post_max_size` | Any value | Low | Currently not wired into a PHP setting — do not assume changing them affects upload limits or PHP memory in the deployed container. |
 | `memory_limit` | `2Gi` | Medium | Below ~512Mi the PHP/Apache container risks OOM under load or with heavier plugins. |
-| `min_instance_count` | `1` for production | Medium | Scale-to-zero (`0`) adds cold-start latency and compounds the filesystem-persistence issue above. |
+| `min_instance_count` | `1` for production | Medium | Scale-to-zero (`0`) adds cold-start latency while the core files are re-copied into `/var/www/html`; uploads/plugins/themes under `wp-content` are unaffected since they persist via NFS. |
 | `enable_cloud_armor` | enable for production | Medium | The admin UI and public site are reachable without WAF protection by default. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 

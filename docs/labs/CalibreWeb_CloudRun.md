@@ -37,8 +37,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -65,7 +67,11 @@ export REGION="us-central1"          # the region you deploy into
 2. The platform builds and mirrors the container image (pinned to a known-good
    `0.6.24` tag when `application_version = "latest"`), provisions the Cloud Run
    service, a Secret Manager secret (`CALIBRE_ADMIN_PASSWORD`), and a Cloud Storage
-   bucket mounted at `/config` via GCS Fuse. There is no database and no
+   bucket (`create_cloud_storage = true` — created, but **not** mounted at
+   `/config`). `/config` is backed by the shared **NFS** volume instead
+   (`enable_nfs` defaults to `true`, `nfs_mount_path` to `/config`); the GCS FUSE
+   volume is deliberately off (`enable_gcs_storage_volume = false`) because
+   Calibre-Web's SQLite `app.db` lives there. There is no database and no
    initialisation job — Calibre-Web manages its own SQLite storage on first boot.
    First deploys typically take **5–15 minutes** (mostly the container build).
 
@@ -122,9 +128,9 @@ export REGION="us-central1"          # the region you deploy into
    ```
 
 2. **Do not raise `max_instance_count` above `1`.** Every Cloud Run instance
-   mounts the same GCS-Fuse-backed bucket at `/config`; more than one instance
+   mounts the same NFS-backed volume at `/config`; more than one instance
    writing to the same SQLite files (`app.db`, Calibre's `metadata.db`)
-   concurrently risks corruption under gcsfuse's relaxed consistency model. Scaling
+   concurrently risks corruption. Scaling
    is otherwise a configuration change in the RAD platform (change the min/max
    instance inputs and click **Update**), not a manual `gcloud` edit — a manual
    edit would be reverted on the next apply.
@@ -186,15 +192,18 @@ platform-level diagnostics and do not change with Calibre-Web releases.
   `admin` / `admin123` (the upstream default), not the `CALIBRE_ADMIN_PASSWORD`
   Secret Manager value — that secret is provisioned but not applied to the
   container's actual login flow.
-- **`/config` looks empty or reset after a redeploy:** confirm the GCS-Fuse-backed
-  `storage` bucket still exists and is still mounted (`create_cloud_storage =
-  true`); a new bucket would explain an apparently "reset" library.
-- **Suspected SQLite corruption under load:** this module has no block-storage
-  option — `/config` is always GCS-Fuse-backed, which the module's own
-  description flags as suited to development/light use only. If you are seeing
-  write errors or corruption, this is expected under concurrent or heavy access;
-  migrate to `CalibreWeb_GKE` (block PVC) for production use rather than trying to
-  tune this module further.
+- **`/config` looks empty or reset after a redeploy:** confirm the shared NFS
+  server is still discovered and still mounted at `/config` (`enable_nfs = true`,
+  `nfs_mount_path = "/config"`); a newly provisioned NFS volume would explain an
+  apparently "reset" library. The `storage` GCS bucket is still created
+  (`create_cloud_storage = true`) but is not what backs `/config`.
+- **Suspected SQLite corruption under load:** `/config` is NFS-backed by default
+  (`enable_nfs = true`), precisely because GCS FUSE cannot sustain Calibre-Web's
+  SQLite rollback journal (confirmed live on this module:
+  `BufferedWriteHandler.OutOfOrderError for object: app.db-journal`). If you see
+  that error, the defaults have been changed — `enable_gcs_storage_volume` turned
+  on, or `enable_nfs` turned off — so restore them rather than tuning further. For
+  a real block device, use `CalibreWeb_GKE` (block PVC).
 - **Image build failed:** review Cloud Build history for the failed build's log.
 - **403 / permission errors:** verify the runtime service account's IAM roles.
 
@@ -223,7 +232,7 @@ removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, a Secret Manager admin-password secret, and a GCS-Fuse `/config` bucket; no database |
+| 1 — Deploy | Automated | Module provisions Cloud Run, a Secret Manager admin-password secret, an NFS-backed `/config` mount and a (separate, unmounted) GCS bucket; no database |
 | 2 — Access & verify | Manual | Health check passes; sign in with `admin`/`admin123` and change the password immediately |
 | 3 — Operate | Manual | Inspect revisions, keep `max_instance_count=1`, update version, inspect the `/config` bucket |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics (uptime check optional, off by default) |

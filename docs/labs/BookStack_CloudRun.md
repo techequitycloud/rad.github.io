@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -62,7 +65,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. The platform provisions the Cloud Run service, a Cloud SQL (MySQL 8.0)
    database with its Secret Manager secrets (the Laravel `APP_KEY` and the database
-   password), a Cloud Storage `bookstack-uploads` bucket, an NFS volume mounted at
+   password), a Cloud Storage bucket (`gcs-<service>-data`), an NFS volume mounted at
    `/var/lib/bookstack` for uploaded images and attachments, mirrors the prebuilt
    `linuxserver/bookstack` image into Artifact Registry, and runs a one-shot
    database-initialisation (`db-init`) job that creates the database, application
@@ -207,7 +210,7 @@ SQL, registry) are managed separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL (MySQL 8.0), secrets, `bookstack-uploads` bucket, NFS, and runs DB init |
+| 1 — Deploy | Automated | Module provisions Cloud Run, Cloud SQL (MySQL 8.0), secrets, `gcs-<service>-data` bucket, NFS, and runs DB init |
 | 2 — Access & verify | Manual | Health check passes; sign in and change the default admin credentials |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/backups, DB access |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |

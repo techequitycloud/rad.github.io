@@ -36,8 +36,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact Registry, and
-  shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,16 +56,19 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **LibreChat (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **LibreChat (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/LibreChat_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the Cloud Run service, mirrors the LibreChat container image to
-   Artifact Registry, auto-provisions a Firestore ENTERPRISE database with MongoDB
-   compatibility (when no external `mongodb_uri` is supplied), generates cryptographic
-   secrets in Secret Manager, and provisions a GCS uploads bucket. First deploys take
-   roughly **10–20 minutes** (Firestore provisioning and image mirroring dominate).
+   Artifact Registry, adds the official `mongo:7` image as an **in-pod sidecar** (the default
+   MongoDB backend — its `mongodb://127.0.0.1:27017/LibreChat` URI is what `mongodb_uri`
+   defaults to), generates cryptographic secrets in Secret Manager, and provisions a GCS
+   uploads bucket. First deploys take roughly **10–20 minutes** (image mirroring and NFS
+   provisioning for the sidecar's data directory dominate). No Firestore database is created
+   in this default configuration — Firestore MongoDB compatibility is an opt-in alternative
+   (clear `mongodb_uri` to `""` to enable it; see the Configuration Guide).
 
 3. When it completes, discover the resources with name-agnostic filters (so the commands
    keep working regardless of the deployment suffix):
@@ -122,8 +127,9 @@ export REGION="us-central1"          # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page — the
    module owns the service spec, so scaling is a configuration change, not a manual `gcloud`
    edit (a manual edit would be reverted on the next apply). Note: if you are using the
-   embedded Firestore MongoDB backend, keep `max_instance_count = 1`; increase it only when
-   pointing at an external MongoDB with Redis session management enabled.
+   default in-pod `mongo:7` sidecar, keep `max_instance_count = 1`; increase it only after
+   pointing `mongodb_uri` at an external MongoDB (Atlas, self-hosted, or Firestore) with
+   Redis session management enabled.
 
 3. **Update the application version** by changing the version input via **Update** on the deployment details page; a new image is mirrored and a new revision rolls out.
 
@@ -132,7 +138,12 @@ export REGION="us-central1"          # the region you deploy into
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~librechat"
 
-   # Inspect the Firestore database used as the MongoDB backend
+   # Inspect the default MongoDB backend — the in-pod mongo:7 sidecar container
+   # (additional_containers) in the same Cloud Run service, not Firestore:
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+     --format=json | jq '.spec.template.spec.containers'
+
+   # If mongodb_uri was cleared to "" to opt into Firestore MongoDB compatibility instead:
    gcloud firestore databases list --project="$PROJECT"
 
    # View the uploads GCS bucket
@@ -177,15 +188,21 @@ platform-level diagnostics and do not change with LibreChat releases.
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-- **MongoDB / Firestore connection errors:** confirm the Firestore database exists and the
-  `mongo-uri` secret has a valid version. The auto-generated SCRAM URI is written by a
-  provisioner on every apply — a missing or placeholder URI is the most common first-deploy
-  failure.
+- **MongoDB connection errors:** by default there is no Firestore database to check — confirm
+  the in-pod `mongo:7` sidecar container is present and running, and that the `mongo-uri`
+  secret has a valid version (it holds the sidecar's `mongodb://127.0.0.1:27017/LibreChat` URI
+  unless `mongodb_uri` was overridden).
   ```bash
-  gcloud firestore databases list --project="$PROJECT"
+  gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+    --format=json | jq '.spec.template.spec.containers'
   MONGO_SECRET=$(gcloud secrets list --project="$PROJECT" \
     --filter="name~librechat AND name~mongo-uri" --format="value(name)" --limit=1)
   gcloud secrets versions list "$MONGO_SECRET" --project="$PROJECT"
+  ```
+  Only if `mongodb_uri` was explicitly cleared to `""` to opt into Firestore MongoDB
+  compatibility should you instead confirm the Firestore database exists:
+  ```bash
+  gcloud firestore databases list --project="$PROJECT"
   ```
 - **Image mirror failed:** review Cloud Build history in the console for the failed build
   log. The module mirrors the LibreChat image from GHCR to Artifact Registry on every
@@ -203,10 +220,12 @@ gotchas.
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service, Secret
-Manager secrets, GCS uploads bucket, and Artifact Registry images. The **Firestore
-database is intentionally retained** (ABANDON policy) to prevent data loss; delete it
-manually via the GCP Console if it is no longer needed. Resources owned by **Services_GCP**
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service (and its in-pod `mongo:7` sidecar), Secret
+Manager secrets, GCS uploads bucket, NFS volume, and Artifact Registry images. If instead you
+had opted into Firestore MongoDB compatibility (by clearing `mongodb_uri` to `""`), that
+**Firestore database is intentionally retained** (ABANDON policy) to prevent data loss; delete
+it manually via the GCP Console if it is no longer needed — this does not apply to a default
+deployment, since no Firestore database was created. Resources owned by **Services_GCP**
 (the VPC, shared registry) are managed separately and are not removed here.
 
 ---
@@ -215,9 +234,9 @@ manually via the GCP Console if it is no longer needed. Resources owned by **Ser
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run, Firestore, secrets, and GCS uploads bucket |
+| 1 — Deploy | Automated | Module provisions Cloud Run (with an in-pod `mongo:7` sidecar), secrets, and GCS uploads bucket |
 | 2 — Access & verify | Manual | Health check passes; register initial admin account; confirm secrets |
 | 3 — Operate | Manual | Inspect revisions, scale, update version, manage secrets/storage |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose revision, MongoDB/Firestore, image-mirror, startup, and IAM issues |
-| 6 — Tear down | Automated | Delete (Trash) removes all module resources; Firestore database is retained |
+| 5 — Troubleshoot | Manual | Diagnose revision, MongoDB sidecar, image-mirror, startup, and IAM issues |
+| 6 — Tear down | Automated | Delete (Trash) removes all module resources; Firestore database (if opted into) is retained |

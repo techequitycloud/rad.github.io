@@ -248,7 +248,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -382,7 +382,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `null` → `MYSQL_8_0` | Fixed — BookStack requires MySQL 8.0. |
+| `database_type` | `MYSQL_8_0` | Fixed — BookStack requires MySQL 8.0. |
 | `application_database_name` | `bookstack` | MySQL database name (tenant-prefixed). Immutable after first deploy. |
 | `application_database_user` | `bookstack` | Application database user (tenant-prefixed). Immutable after first deploy. |
 | `database_password_length` | `32` | Generated password length. |
@@ -488,13 +488,13 @@ locate and explore the running resources.
 |---|---|---|---|
 | `APP_KEY` (auto-generated) | Never rotate after first boot | Critical | Rotating it makes all encrypted DB values (two-factor secrets, some settings) permanently undecryptable. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
-| `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
+| `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_file` fails the import job. |
 | `database_type` | `MYSQL_8_0` | Critical | BookStack requires MySQL; any other engine breaks startup. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `APP_URL` (via `environment_variables`) | External LoadBalancer / custom domain URL | High | A wrong base URL breaks asset loading, links, and login redirects. |
 | `enable_nfs` | `true` | High | Disabling loses all uploaded images and attachments on redeploy or pod reschedule. |
 | `memory_limit` | `2Gi` | High | Lower values risk OOM kills under concurrent editing and full-text indexing. |
-| `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for MySQL connectivity on GKE; disabling it is blocked by a plan-time validation guard. |
+| `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for MySQL connectivity on GKE; disabling it breaks DB connectivity (it is not blocked at plan time). |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; keeping 1 is correct for the NFS-backed single-pod deployment. |
 | `max_instance_count` | `1` | High | Multiple pods against the same NFS volume and DB deadlock; do not scale out without external coordination. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, UI sessions bounce between pods (only relevant if ever scaled >1). |

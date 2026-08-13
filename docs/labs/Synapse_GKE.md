@@ -38,9 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts this module depends
-  on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -60,7 +62,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform, open **Synapse (GKE)** from the **Platform
+1. Click **Deploy** in the RAD platform, open **Synapse (GKE)** from the **Platform
    Modules** list, set `project_id`, and — importantly — set **`server_name`** to your
    real domain (it is baked into every user ID and is immutable after first boot).
    Review the rest of the inputs; the
@@ -110,14 +112,24 @@ export REGION="us-central1"           # the region you deploy into
    curl -s "http://${EXTERNAL_IP}/_matrix/client/versions"   # expect JSON with a "versions" array
    ```
 
-3. **Register the first admin user.** Open self-service registration is disabled by
-   default; you create users out-of-band with `register_new_matrix_user`, run from inside
-   the pod where `homeserver.yaml` (with its shared secret) is present:
+3. **The first admin user is already registered.** The module's `create-admin`
+   initialization job runs `register_new_matrix_user -u admin -a` for you, using the
+   generated superuser password held in Secret Manager. Read that password:
+
+   ```bash
+   PW_SECRET=$(gcloud secrets list --project="$PROJECT" \
+     --filter="name~synapse AND name~superuser-password" --format="value(name)" --limit=1)
+   gcloud secrets versions access latest --secret="$PW_SECRET" --project="$PROJECT"
+   ```
+
+   Open self-service registration is disabled by default, so create any *additional*
+   users out-of-band with `register_new_matrix_user`, run from inside the pod where
+   `homeserver.yaml` (with its shared secret) is present:
 
    ```bash
    POD=$(kubectl get pods -n "$NS" -o jsonpath='{.items[0].metadata.name}')
    kubectl exec -n "$NS" "$POD" -- \
-     register_new_matrix_user -c /data/homeserver.yaml -u admin -p '<strong-password>' -a \
+     register_new_matrix_user -c /data/homeserver.yaml -u <new-user> -p '<strong-password>' \
      http://localhost:8008
    ```
 
@@ -188,7 +200,8 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Monitoring** — open the GKE / Kubernetes dashboards and review pod CPU and memory
    utilisation, restart counts, and request metrics. The module can provision an
-   **uptime check** (when enabled) against `/health`; review Monitoring → Uptime checks
+   **uptime check** (when enabled — `uptime_check_config` defaults to
+   `enabled = false`) against `/`, not `/health`; review Monitoring → Uptime checks
    and Alerting → Policies.
 
 ---
@@ -198,8 +211,10 @@ export REGION="us-central1"           # the region you deploy into
 Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Synapse releases.
 
-- **Pod not Ready / CrashLoopBackOff:** inspect events and logs. The probes target
-  `/health` on port **8008** — a container port or probe port mismatch makes the probe
+- **Pod not Ready / CrashLoopBackOff:** inspect events and logs. The `startup_probe` and
+  `liveness_probe` default to path `/` (this GKE variant overrides `Synapse_Common`'s own
+  `/health` default) and the readiness probe targets `/health`, all on port **8008** — a
+  container port or probe port mismatch makes the probe
   hit a dead port and the pod never becomes Ready even though Synapse is healthy.
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events show scheduling/probe/mount errors
@@ -213,9 +228,12 @@ platform-level diagnostics and do not change with Synapse releases.
   kubectl logs -n "$NS" job/<db-init-job>
   ```
 - **Federation broken / device sessions lost after a redeploy:** the signing key was
-  regenerated because the data directory was not persistent. Ensure `enable_nfs = true`
-  (the default), or use a StatefulSet PVC for `/data`, so the signing key survives pod
-  restarts.
+  regenerated because the data directory was not persistent. Either use a StatefulSet PVC
+  (`stateful_pvc_mount_path` already defaults to `/data`), or keep `enable_nfs = true`
+  (the default) **and set `nfs_mount_path = "/data"`** — its default is
+  `/opt/synapse/storage`, which does not match the entrypoint's data directory
+  (`SYNAPSE_DATA_DIR = "/data"`), so the signing key would not land on the persistent
+  mount and would not survive pod restarts.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB
   password secret materialised into the namespace, and the init job completed.
 - **Pending pod / no external IP:** check `kubectl describe pod` events for resource or

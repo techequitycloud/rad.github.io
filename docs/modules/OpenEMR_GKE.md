@@ -259,7 +259,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `credit_cost` | `150` | Platform credits consumed per deployment. |
 | `require_credit_purchases` | `false` | Require credit balance check before deploy. |
 | `enable_purge` | `true` | Allow full resource deletion on destroy. |
-| `public_access` | `true` | Make the module visible in the public catalogue. |
+| `public_access` | `false` | Make the module visible in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected in the project. |
 | `shared_users` / `technical_support_users` | `[]` | Users granted access / routed support requests, regardless of `public_access`. |
 | `resource_creator_identity` | _(RAD service account)_ | Service account Terraform uses to create resources. |
@@ -279,7 +279,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 

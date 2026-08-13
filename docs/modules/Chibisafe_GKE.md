@@ -202,9 +202,14 @@ wiring.
   (`HOST=0.0.0.0`, `NODE_ENV=production`); `PORT` is deliberately left unset by
   `Chibisafe_Common` so the image's own default (`8000`, matching
   `container_port`) is used consistently across platforms.
-- **Health path.** Both the startup and liveness probes are **HTTP** `GET /`
-  (`health_check_config`/`startup_probe_config` default `path = "/"`) — the
-  backend returns 200 as soon as it is serving, with no authentication required.
+- **Health path.** Both the startup and liveness probes are **HTTP**
+  `GET /api/health` (`startup_probe`/`liveness_probe` default `path = "/api/health"`,
+  matching `Chibisafe_CloudRun`) — the backend has no root route (`GET /` 404s, since
+  the uploader UI is a separate frontend container this module does not ship), so it
+  returns `200 {"status":"yes"}` at `/api/health` once serving, no authentication
+  required. The alternate `health_check_config`/`startup_probe_config` variables
+  still default `path = "/"` but are inert — they are declared for foundation
+  mirroring only and are never forwarded to `App_GKE`.
 - **Single-writer scaling constraint.** `min_instance_count = max_instance_count =
   1` by default; each StatefulSet pod owns its own PVC, so scaling beyond 1 without
   redesigning storage risks split SQLite writers.
@@ -264,7 +269,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `health_check_config` / `startup_probe_config` | `path = "/"` | The backend returns 200 on `GET /` once serving; no auth required. |
+| `startup_probe` / `liveness_probe` | `path = "/api/health"` | The live, effective probes (forwarded to `App_GKE` in `main.tf`). The backend has no root route (`GET /` 404s) — returns `200 {"status":"yes"}` at `/api/health`, no auth required. |
+| `health_check_config` / `startup_probe_config` | `path = "/"` | Inert — declared for foundation-variable mirroring only, never forwarded to `App_GKE`. Do not rely on these to change the deployed probe. |
 | `uptime_check_config` | `enabled = false` | Enable to add a public uptime check and alert once the endpoint is publicly reachable. |
 
 ### Group 14 — Cloud Storage

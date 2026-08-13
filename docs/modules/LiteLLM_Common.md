@@ -41,8 +41,8 @@ Manager — they are never set in plain text.
 
 | Secret | Environment variable | Purpose |
 |---|---|---|
-| `<resource-prefix>-<app-name>-master-key` | `LITELLM_MASTER_KEY` | Primary admin API key, prefixed `sk-` for OpenAI compatibility. Required for `/key/generate` and all admin operations. |
-| `<resource-prefix>-<app-name>-salt-key` | `LITELLM_SALT_KEY` | Salt for hashing virtual keys. **Never rotate after virtual keys have been issued** — all existing keys become permanently invalid. |
+| `secret-<resource-prefix>-<app-name>-master-key` | `LITELLM_MASTER_KEY` | Primary admin API key, prefixed `sk-` for OpenAI compatibility. Required for `/key/generate` and all admin operations. |
+| `secret-<resource-prefix>-<app-name>-salt-key` | `LITELLM_SALT_KEY` | Salt for hashing virtual keys. **Never rotate after virtual keys have been issued** — all existing keys become permanently invalid. |
 
 Retrieve the master key after deployment:
 
@@ -102,9 +102,9 @@ comes up correctly on first boot:
 ## 5. Container image and build
 
 LiteLLM uses `image_source = "custom"` with a Cloud Build Dockerfile. The custom
-image extends the official `ghcr.io/berriai/litellm` image and embeds an
-`entrypoint.sh` script that assembles `DATABASE_URL` at container startup from
-the `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD`, and `DB_PORT` environment
+image extends the official `ghcr.io/berriai/litellm-database:main-stable` image
+and embeds an `entrypoint.sh` script that assembles `DATABASE_URL` at container
+startup from the `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD`, and `DB_PORT` environment
 variables injected by the foundation. This is necessary because the Cloud SQL Auth
 Proxy socket path is only known at runtime.
 

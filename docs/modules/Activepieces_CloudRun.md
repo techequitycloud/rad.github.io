@@ -60,6 +60,16 @@ together a focused set of Google Cloud services:
 - **`AP_FRONTEND_URL` and `AP_WEBHOOK_URL_PREFIX` are set from the predicted service
   URL at plan time and corrected at runtime** by the container entrypoint, ensuring
   webhook and OAuth redirect URLs always reflect the actual Cloud Run service URL.
+- **Scheduled/triggered flows silently won't fire at the default scaling.** This
+  module defaults to request-based billing with `min_instance_count = 0`.
+  Activepieces ships its own scheduler/worker/cron/queue-style trigger components,
+  which only run while an instance is warm — enabling Activepieces' own scheduled
+  flows on a scaled-to-zero service means those triggers silently never fire. The
+  documented workaround is `cpu_always_allocated = true` + `min_instance_count = 1`
+  (same rationale as n8n), but **this module does not expose `cpu_always_allocated`**
+  — it is not declared in `variables.tf` or forwarded to the foundation. Set
+  `min_instance_count = 1` to keep an instance warm; safe as-is for webhook-only or
+  interactive use.
 
 ---
 
@@ -239,7 +249,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -250,7 +260,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_name` | `activepieces` | Base name for resources. Do not change after first deploy. |
 | `display_name` | `Activepieces Workflow Automation` | Human-readable name shown in the Console. |
 | `description` | _(set)_ | Service description. |
-| `application_version` | `latest` | Activepieces image version tag; pin to a specific release in production. |
+| `application_version` | `latest` | Deployment-tracking tag for the built image. **Does not pin the upstream release**: `Activepieces_Common`'s Dockerfile always builds `FROM activepieces/activepieces:latest` with no version ARG, so changing this value only relabels the pushed Artifact Registry tag. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -427,6 +437,7 @@ running resources.
 | `enable_iap` | only when webhooks not needed | High | IAP blocks all unauthenticated requests, including external webhook callbacks. |
 | `AP_SIGN_UP_ENABLED` (auto-injected `"true"`) | Disable after first admin | High | Leaving sign-up open allows anyone with the URL to create an account. |
 | `min_instance_count` | `1` for production | Medium | Scale-to-zero (`0`) adds 5–15 second cold-start delays on incoming webhooks after idle. |
+| `min_instance_count` (with Activepieces scheduled/triggered flows enabled) | `1` (no `cpu_always_allocated` override exists) | High | Activepieces' own scheduler/worker/cron components only run while an instance is warm; at `min_instance_count = 0` scheduled flows silently never fire, and this module does not expose `cpu_always_allocated` to force always-on CPU instead. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `enable_cloud_armor` | enable for production | Medium | Webhook endpoints and the admin UI are publicly reachable without WAF protection. |
 

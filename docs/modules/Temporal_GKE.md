@@ -47,8 +47,9 @@ Cloud services:
   History, Matching, and Worker share the same CPU and memory allocation.
 - **Schema initialisation is automatic.** `temporalio/auto-setup` creates both
   databases and runs schema migrations on first start. No separate init job is
-  required. A generous TCP startup probe (30 s initial delay, 60 failure threshold at
-  a 10 s period) accommodates Autopilot node provisioning plus schema setup time.
+  required. A generous TCP startup probe (30 s initial delay, 10 failure threshold at
+  a 30 s period — a 5-minute window) accommodates Autopilot node provisioning plus
+  schema setup time.
 - **`num_history_shards` is permanently immutable.** This value is written into the
   database schema on first deploy and cannot be changed without wiping and
   re-initialising all workflow data. Default is `4` (dev/demo); use `512` or higher
@@ -183,11 +184,14 @@ Monitoring. Optional uptime checks and alert policies are available.
 
 ## 3. Temporal Application Behaviour
 
-- **First-deploy database setup.** Before the Temporal server pod starts, a
-  `temporal-db-init` Kubernetes Job connects as the PostgreSQL superuser and creates
-  the Temporal role with `CREATEDB` privilege. The `temporalio/auto-setup` image then
-  creates both databases and runs all schema migrations on its own first start. The
-  init job is idempotent.
+- **First-deploy database setup.** `Temporal_GKE` hardcodes `initialization_jobs = []`
+  — no Kubernetes Job runs before the server pod starts. The Temporal PostgreSQL role
+  and both databases are created directly by `Temporal_Common`'s
+  `google_sql_user`/`google_sql_database` Terraform resources via the Cloud SQL Admin
+  API. The `temporalio/auto-setup` image then runs all schema migrations on its own
+  first start (see [Temporal_Common](Temporal_Common.md) §6 for the full breakdown,
+  including the `temporal-db-init.sh` and `schema-init.sh` bootstrapping scripts that
+  ship with the modules but are not currently wired into any Job).
 - **Schema initialisation on every start.** `auto-setup` detects the current schema
   version at startup. If the schema is already up-to-date, startup proceeds
   immediately. If pending migrations exist, they are applied before any Temporal
@@ -197,9 +201,12 @@ Monitoring. Optional uptime checks and alert policies are available.
   For large deployments, review the
   [Temporal release notes](https://github.com/temporalio/temporal/releases) for
   breaking schema changes before updating.
-- **Temporal Web UI.** No Web UI is deployed automatically. Add one as a companion
-  service via the `additional_services` variable. A typical Temporal Web UI image is
-  `temporalio/ui`, configuring it to point at the Frontend service on port 7233.
+- **Temporal Web UI.** Deployed automatically by default. `deploy_temporal_ui`
+  defaults to `true`, and `temporal.tf` auto-builds a `temporalio/ui` service pointed
+  at the Frontend service on port 7233, exposed via an external LoadBalancer, and
+  merged ahead of any caller-supplied `additional_services`. Set
+  `deploy_temporal_ui = false` to disable it; use `additional_services` for any
+  further companion services.
 - **Temporal namespaces.** Temporal uses its own internal namespace concept (separate
   from Kubernetes namespaces). The `default` Temporal namespace is created
   automatically by `auto-setup`. Additional namespaces can be created with:
@@ -213,7 +220,7 @@ Monitoring. Optional uptime checks and alert policies are available.
   use `service_external_ip:7233`.
 - **Health probes.** TCP probes are used for both startup and liveness checks because
   Temporal Frontend exposes gRPC (not HTTP/1.1) on port 7233. The startup probe
-  allows up to 10 minutes (60 attempts × 10-second period) for schema initialisation
+  allows up to 5 minutes (10 attempts × 30-second period) for schema initialisation
   to complete.
 
 ---
@@ -235,7 +242,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -309,7 +316,7 @@ Not required for Temporal. All durable state lives in Cloud SQL PostgreSQL. Sett
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | TCP on port 7233 | 60-attempt window (10 minutes at a 10 s period) for schema init on first start. |
+| `startup_probe_config` | TCP on port 7233 | 10-attempt window (5 minutes at a 30 s period) for schema init on first start. |
 | `health_check_config` | TCP on port 7233 | Liveness probe; 60 s initial delay. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
@@ -318,9 +325,11 @@ Not required for Temporal. All durable state lives in Cloud SQL PostgreSQL. Sett
 
 | Variable | Default | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Additional Jobs to run before the server pod. The built-in `temporal-db-init` job is always included. |
+| `initialization_jobs` | `[]` | Additional Jobs to run before the server pod. Hardcoded to `[]` by `Temporal_GKE` — no built-in Job runs; the DB role and databases are created directly by `Temporal_Common`'s Terraform resources. |
 | `cron_jobs` | `[]` | Scheduled Kubernetes CronJobs. |
-| `additional_services` | `[]` | Companion services — use this to deploy the Temporal Web UI (`temporalio/ui`). |
+| `deploy_temporal_ui` | `true` | Deploy the Temporal Web UI (`temporalio/ui`) automatically, wired to the Frontend service and exposed via an external LoadBalancer. |
+| `temporal_ui_version` | `2.34.0` | Image tag for the Temporal Web UI. |
+| `additional_services` | `[]` | Sidecar or helper GKE services. Merged with the auto-deployed Temporal Web UI (controlled by `deploy_temporal_ui`). |
 
 ### Group 12 — CI/CD & GitHub Integration
 

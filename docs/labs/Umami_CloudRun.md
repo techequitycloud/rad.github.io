@@ -36,8 +36,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -54,7 +57,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Umami (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
+1. Click **Deploy** in the RAD platform top navigation, open **Umami (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Umami_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -158,6 +161,14 @@ platform-level diagnostics and do not change with Umami releases.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB
   password secret exists, and the initialisation job completed. Note that Umami runs its
   own Prisma migrations on startup — the first boot takes longer than subsequent restarts.
+  If the revision logs show `ECONNREFUSED 127.0.0.1:5432`, this is a known issue with the
+  shared entrypoint (`Umami_Common/scripts/umami-entrypoint.sh`): it unconditionally
+  resolves a socket-path `DB_HOST` to `127.0.0.1` before building `DATABASE_URL`, which is
+  only correct on GKE (a real `cloud-sql-proxy` sidecar listening on loopback). Cloud Run's
+  Cloud SQL integration is socket-only — there is no Auth Proxy sidecar and no
+  `127.0.0.1:5432` TCP listener — so this substitution is invalid on Cloud Run and produces
+  exactly this connection-refused error as a startup-probe failure. Verify the deployed
+  revision's injected `DB_HOST`/`DB_IP` with `gcloud run revisions describe … --format=json`.
 - **Initialisation job failed:** list executions and read the failed one's logs:
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \

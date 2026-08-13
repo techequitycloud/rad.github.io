@@ -28,7 +28,7 @@ the foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the `db-init` job that creates the MySQL database, user, and grants privileges | `initialization_jobs` output |
 | NFS initialisation | Defines the `nfs-init` job that prepares the `sites/` directory structure and optionally restores a backup | `initialization_jobs` output |
-| GKE schema install | Defines the `openemr-install` job (GKE only) that runs `auto_configure.php` in authority mode to install the database schema and write `$config=1` to NFS | `initialization_jobs` output |
+| Schema install | Defines the `openemr-install` job that runs `auto_configure.php` in authority mode to install the database schema and write `$config=1` to NFS | `initialization_jobs` output |
 | Object storage | Declares no GCS buckets by default — NFS covers patient document storage | `storage_buckets` output is always `[]` |
 | Core settings | Sets the baseline OpenEMR environment (MySQL port, admin user, Redis session store, disable swarm mode, skip root DB access) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup (TCP) and liveness (HTTP login page) probe configuration | §Observability in the platform guides |
@@ -59,7 +59,7 @@ Identity model.
 ## 3. Database engine and bootstrap
 
 OpenEMR requires **MySQL 8.0**; the engine is fixed and PostgreSQL is not supported.
-On first deployment two one-shot jobs run:
+On first deployment three one-shot jobs run:
 
 1. **`nfs-init`** — mounts the NFS share and creates the `sites/` directory
    structure. If `BACKUP_FILEID` is set (by providing `backup_uri` in the platform
@@ -69,15 +69,12 @@ On first deployment two one-shot jobs run:
 2. **`db-init`** — connects to Cloud SQL through the Auth Proxy and idempotently
    creates the OpenEMR database and user, then grants the user full privileges.
 
-On **GKE**, a third job — **`openemr-install`** — runs after the first two. It
-launches the OpenEMR container in `K8S=admin` mode, which executes
-`auto_configure.php` to install the database schema and create the admin account,
-then writes `$config=1` to `sqlconf.php` on NFS and exits. The main service pod waits
-for `$config=1` before starting Apache, so it skips the installer on every subsequent
-start.
-
-On **Cloud Run**, the container itself runs `auto_configure.php` on first boot with a
-temporary PHP web server serving health probe responses during the installation phase.
+3. **`openemr-install`** — runs after the first two on both platforms. It launches
+   the OpenEMR container in `K8S=admin` mode, which executes `auto_configure.php` to
+   install the database schema and create the admin account, then writes `$config=1`
+   to `sqlconf.php` on NFS and exits. The main service container waits for
+   `$config=1` before starting Apache, so it skips the installer on every subsequent
+   start.
 
 All jobs are idempotent and safe to re-run. Inspect the database directly with:
 
@@ -112,10 +109,12 @@ Platform-specific adjustments:
 - **GKE** additionally injects `K8S=yes` in the main pod, which instructs `openemr.sh`
   to use the Kubernetes-aware startup path (skipping slow recursive `chown` operations
   that would cause startup timeouts).
-- **Cloud Run** runs the schema installer (`auto_configure.php`) inside the service
-  container itself rather than in a separate job, because Cloud Run does not support
-  the Kubernetes Job ordering model. A temporary PHP built-in web server serves HTTP
-  200 responses on the probe path during the installation phase.
+- **Cloud Run** does not set `K8S`, so `openemr.sh` follows its non-Kubernetes
+  startup path.
+
+On both platforms the main container starts a temporary PHP built-in web server that
+answers HTTP 200 on the probe path while setup runs, and stops it before Apache binds
+the same port.
 
 ---
 

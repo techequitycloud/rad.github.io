@@ -123,7 +123,11 @@ See [App_CloudRun](App_CloudRun.md) for GCS Fuse and CMEK options.
 
 One application secret is generated automatically and stored in Secret Manager:
 `FOCALBOARD_ADMIN_PASSWORD` (a 24-char random string, injected as a SERVICE secret env).
-The database password is managed separately by the foundation.
+A second, dedicated secret — `secret-<resource_prefix>-focalboard-safe-db-password`
+(alnum-only, no special characters) — overrides the SERVICE's `DB_PASSWORD` and is
+what `db-init` actually sets the Postgres role's password to (as
+`FOCALBOARD_SAFE_DB_PASSWORD`); the fleet-wide `database_password_secret` output does
+**not** authenticate against the role. See [Section 3](#3-focalboard-application-behaviour).
 
 - **Console:** Security → Secret Manager.
 - **CLI:**
@@ -171,6 +175,16 @@ connection wiring.
   and database, grants privileges, and reassigns the `public` schema owner to the app
   role so Focalboard can run its migrations. No Postgres extensions are installed. The
   job is safe to re-run.
+- **The role's real password is a dedicated alnum-only secret, not `database_password_secret`.**
+  The Foundation's standard fleet-wide DB password (charset `_%@`) can contain a `%`
+  that crashes Focalboard's Go postgres driver — its `url.Parse`-based DSN validation
+  gate and its actual `lib/pq` connector disagree on percent-decoding, so no single
+  encoding of that password satisfies both. `Focalboard_Common` generates a separate
+  password (`secret-<resource_prefix>-focalboard-safe-db-password`), overrides the
+  SERVICE's `DB_PASSWORD` with it, and passes it to `db-init` as
+  `FOCALBOARD_SAFE_DB_PASSWORD`, which is what the role's password is actually set to.
+  The `database_password_secret` output (§5) reports the fleet-wide secret name, which
+  does not authenticate against this role.
 - **Migrations run on start.** Focalboard applies its own schema migrations on every
   boot as the application user, so upgrading `application_version` applies schema changes
   without a separate migration step.
@@ -273,7 +287,7 @@ resources.
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
 | `database_instance_name` | Cloud SQL instance name. |
 | `database_name` / `database_user` | Application database name / user. |
-| `database_password_secret` | Secret Manager secret holding the DB password. |
+| `database_password_secret` | Secret Manager secret holding the standard fleet-wide DB password — **not** the credential Focalboard's Postgres role authenticates with (see [Section 3](#3-focalboard-application-behaviour)); use `secret-<resource_prefix>-focalboard-safe-db-password` instead. |
 | `database_host` / `database_port` | DB endpoint / port. |
 | `storage_buckets` | Created Cloud Storage buckets (the attachment bucket). |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, regions. |
@@ -311,6 +325,7 @@ resources.
 | `enable_redis` | `false` | Medium | Focalboard needs no Redis; enabling it wires an unused dependency. |
 | `min_instance_count` | `1` for latency-sensitive use | Medium | Scale-to-zero (`0`) adds cold-start latency to the first request after idle. |
 | `enable_cloudsql_volume` | `true` | Medium | The entrypoint falls back to private-IP TCP with `sslmode=require`, but the Auth Proxy socket is the primary path. |
+| `database_password_secret` output | Don't use it to connect | High | Reports the fleet-wide `DB_PASSWORD` secret, which does not authenticate against Focalboard's Postgres role. Retrieve `secret-<resource_prefix>-focalboard-safe-db-password` for a working credential. |
 
 ---
 

@@ -39,9 +39,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, Artifact Registry, and shared service accounts both modules
-  depend on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL, Artifact
+  Registry, and shared service accounts both modules depend on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI**, **kubectl**, and **OpenTofu** installed.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -83,7 +85,7 @@ Plausible **cannot start without ClickHouse** — a plan-time validation in
 Plausible_GKE blocks the apply when `clickhouse_url` is empty. Deploy ClickHouse
 first and do not proceed until it is serving.
 
-1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (click **Modules**,
+1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (click **Deploy**,
    open **ClickHouse (GKE)**, set `project_id`, click **Deploy**), or directly:
 
    ```bash
@@ -139,7 +141,7 @@ or your platform inputs):
 
 ```hcl
 project_id                 = "<your-gcp-project-id>"
-tenant_deployment_id       = "demo"
+tenant_id       = "demo"
 
 # From the ClickHouse_GKE outputs above:
 clickhouse_url             = "http://<clickhouse-svc>.<namespace>.svc.cluster.local:8123"

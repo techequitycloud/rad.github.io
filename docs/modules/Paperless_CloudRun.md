@@ -29,7 +29,7 @@ Paperless-ngx is a community-supported open-source document management system th
 | Variable | Group | Type | Default | Description |
 |---|---|---|---|---|
 | `project_id` | 1 | `string` | — | GCP project ID. **Required.** |
-| `tenant_deployment_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `string` | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `list(string)` | `[]` | Email recipients for monitoring alerts. |
 | `resource_labels` | 2 | `map(string)` | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `string` | `'paperless'` | Base resource name. Do not change after initial deployment. |
@@ -68,7 +68,7 @@ For the complete role tables and IAP, password rotation, and public access detai
 
 Paperless-ngx is a Python Django/gunicorn application with background Celery workers. It performs OCR using Tesseract, which is CPU-intensive on document ingestion. `Paperless CloudRun` exposes `cpu_limit` and `memory_limit` as dedicated top-level variables with production-ready defaults.
 
-**`min_instance_count = 0` by default.** Like most modules in this repository, Paperless-ngx scales to zero by default (cost-first). The trade-off: the background consumption pipeline only runs while an instance is warm, so documents dropped into the consumption directory may sit unprocessed until the next request wakes the service. Set `min_instance_count = 1` or more to keep the consumption pipeline continuously listening and avoid this delay.
+**`min_instance_count = 0` and `cpu_always_allocated = false` by default.** Like most modules in this repository, Paperless-ngx scales to zero and bills on a request basis by default (cost-first). The trade-off: the background document consumer + OCR worker only run while an instance is warm, so documents dropped into the consumption directory may sit unprocessed until the next request wakes the service. Setting `min_instance_count = 1` alone is **not sufficient** to restore continuous processing — request-based billing (`cpu_always_allocated = false`) still throttles CPU to near-zero between requests. Set **both** `cpu_always_allocated = true` **and** `min_instance_count = 1` or more to keep the consumption pipeline continuously listening with allocated CPU.
 
 **Startup CPU Boost** is always enabled (hardcoded in `App CloudRun`).
 
@@ -83,7 +83,8 @@ Paperless-ngx is a Python Django/gunicorn application with background Celery wor
 | `container_image` | — | `""` | Override image URI. Leave empty for Cloud Build to manage. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended for OCR workloads. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. 2 Gi minimum; increase for large document batches. |
-| `min_instance_count` | 4 | `0` | Minimum running instances. Scale-to-zero by default; set to `1`+ to keep the consumption pipeline active. |
+| `cpu_always_allocated` | 4 | `false` | `false` = cost-first cold-start (request-based billing); document consumer + OCR worker stop processing when scaled to zero. Set `true` **and** `min_instance_count >= 1` together to restore continuous operation. |
+| `min_instance_count` | 4 | `0` | Minimum running instances. Scale-to-zero by default; set to `1`+ **and** `cpu_always_allocated = true` to keep the consumption pipeline active. |
 | `max_instance_count` | 4 | `3` | Maximum running instances. Cost ceiling. |
 | `container_port` | 4 | `8000` | Paperless-ngx gunicorn port. Do not change without matching the Dockerfile. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse volume mounts. |
@@ -580,7 +581,7 @@ The following behaviours are applied automatically by `Paperless CloudRun` regar
 | **Django secret key auto-generated** | `PAPERLESS_SECRET_KEY` secret provisioned by `Paperless Common` | Required for Django session signing. Regenerating this key invalidates all existing user sessions. |
 | **GCS Fuse auto-mounted** | `paperless-media` bucket mounted at `/usr/src/paperless/media` | When `gcs_volumes = []`, `Paperless Common` automatically provisions and mounts the media bucket. Requires `gen2`. |
 | **Redis required** | `enable_redis = true` default | Paperless-ngx will not start without Redis. When `redis_host = ""`, the NFS server IP is used. |
-| **min_instance_count = 0** | Default in `variables.tf` (scale-to-zero) | Cost-first default. Set to `1`+ to keep the consumption pipeline alive without cold-start delay. |
+| **min_instance_count = 0, cpu_always_allocated = false** | Default in `variables.tf` (scale-to-zero, request-based billing) | Cost-first default. Set **both** `cpu_always_allocated = true` and `min_instance_count = 1`+ to keep the consumption pipeline alive without cold-start delay — `min_instance_count` alone is not sufficient. |
 | **Image mirroring enabled** | `enable_image_mirroring = true` default | GHCR images are mirrored to Artifact Registry to avoid rate limits and to satisfy Binary Authorization requirements. |
 | **Default db-init job** | Supplied by `Paperless Common` when `initialization_jobs = []` | PostgreSQL database and user are created automatically. Override with a non-empty list to replace. |
 | **Scripts directory** | `scripts_dir = abspath("${module.paperless_app.path}/scripts")` | Initialization scripts are sourced from `Paperless Common`, not from the deployment directory. |
@@ -595,7 +596,7 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 |---|---|---|---|
 | `project_id` | 1 | — | GCP project ID. **Required.** |
 | `region` | 1 | `'us-central1'` | GCP region for resource deployment. |
-| `tenant_deployment_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
+| `tenant_id` | 2 | `'demo'` | Short suffix appended to all resource names. |
 | `support_users` | 2 | `[]` | Email addresses for monitoring alerts. |
 | `resource_labels` | 2 | `{}` | Labels applied to all provisioned resources. |
 | `application_name` | 3 | `'paperless'` | Base resource name. Do not change after initial deployment. |
@@ -605,7 +606,8 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `deploy_application` | 4 | `true` | Set `false` for infrastructure-only deployment. |
 | `cpu_limit` | 4 | `'2000m'` | CPU per instance. 2 vCPU recommended for OCR. |
 | `memory_limit` | 4 | `'2Gi'` | Memory per instance. |
-| `min_instance_count` | 4 | `0` | Minimum instances. Scale-to-zero by default; set to `1`+ to keep consumption pipeline alive. |
+| `cpu_always_allocated` | 4 | `false` | Cost-first cold-start default. Set `true` together with `min_instance_count >= 1` to restore continuous consumer/OCR processing. |
+| `min_instance_count` | 4 | `0` | Minimum instances. Scale-to-zero by default; set to `1`+ **and** `cpu_always_allocated = true` to keep consumption pipeline alive. |
 | `max_instance_count` | 4 | `3` | Maximum instances. Cost ceiling. |
 | `container_port` | 4 | `8000` | Paperless-ngx gunicorn port. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 required for GCS Fuse. |
@@ -726,6 +728,7 @@ All user-configurable variables exposed by `Paperless CloudRun`, sorted by UI gr
 | `execution_environment` | `'gen2'` | **Critical** | GCS Fuse requires Gen2. Switching to `'gen1'` while GCS volumes are mounted causes Cloud Run revisions to fail to start. The `paperless-media` GCS Fuse volume is always mounted when `gcs_volumes = []`. |
 | `gcs_volumes` | `[]` (auto-mounts paperless-media) | **Critical** | The `paperless-media` bucket is the sole persistent storage for all Paperless-ngx documents. If the auto-mount is overridden incorrectly, documents are written to the ephemeral container filesystem and lost on the next revision deployment or instance restart. |
 | `min_instance_count` | `0` (default; scale-to-zero) | **High** | When the instance is cold, uploaded documents are not consumed until the next request warms the service. For unattended consumption directory workflows, this can result in hours of unprocessed documents — set to `1`+ if this matters. |
+| `cpu_always_allocated` | `false` (default; request-based billing) | **High** | Even with `min_instance_count >= 1`, request-based billing throttles CPU to near-zero between requests, so the document consumer + OCR worker effectively stall. Set `true` **together with** `min_instance_count >= 1` to fully restore continuous background processing. |
 | `db_name` | `"paperless"` | **Critical** | Immutable after first deployment — changing this causes Terraform to recreate the database, destroying all document metadata, tags, correspondents, and settings. Physical document files in GCS survive but become unreferenced. |
 | `db_user` | `"paperless"` | **Critical** | Immutable after first deployment — changing this recreates the Cloud SQL user and invalidates all stored credentials. |
 | `application_version` | `"latest"` | **Medium** | Using `latest` means each Cloud Build run may pull a new Paperless-ngx version, which can include database migrations or breaking changes. Pin to a specific version (e.g., `"2.13.5"`) for production deployments. |

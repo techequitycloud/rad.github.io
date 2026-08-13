@@ -162,11 +162,17 @@ optional NFS mount for large collections, or additional GCS FUSE volumes.
 
 Jellyfin requires **no mandatory cryptographic secrets** — there is no encryption
 key, JWT, or master password to manage. When `enable_api_key = true`, the module
-generates a 32-character random value, stores it in Secret Manager as
+generates a 32-character random value and stores it in Secret Manager as
 `secret-<prefix>-<app>-api-key` (surfaced as the `jellyfin_api_key_secret_id`
-output), and injects it so external callers can authenticate programmatically. In
-day-to-day use, API keys are created and revoked in-app under **Dashboard → API
-Keys**; primary auth remains the wizard admin account.
+output). **Known bug:** the value is delivered via `explicit_secret_values` under
+the key `QDRANT__SERVICE__API_KEY` — the module's own `main.tf` comment even
+documents it as "Jellyfin's `__` nested-config convention", but Jellyfin has no
+such convention; this is a copy-paste leftover inherited from Qdrant_GKE. Nothing
+in the Jellyfin container reads that (or any) environment variable for API-key
+auth, so today `enable_api_key = true` only materialises an unused Kubernetes
+Secret — it does **not** let external callers authenticate. The only way to get a
+usable API key is in-app under **Dashboard → API Keys**; primary auth remains the
+wizard admin account.
 
 - **Console:** Security → Secret Manager.
 - **CLI:**
@@ -255,7 +261,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -299,7 +305,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `service_type` | `ClusterIP` | How the Kubernetes Service is exposed; `LoadBalancer` for external access. |
 | `workload_type` | `null` → `StatefulSet` | Resolves to StatefulSet when `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Session affinity mode for the Service. |
-| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_deployment_id` when empty. |
+| `namespace_name` | `""` | Auto-generated from `application_name` + `tenant_id` when empty. |
 | `network_tags` | `["nfsserver"]` | `nfsserver` is required when `enable_nfs = true`. |
 | `termination_grace_period_seconds` | `60` | Seconds after SIGTERM before SIGKILL — allows in-flight writes to flush. |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources. |
@@ -311,7 +317,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `stateful_pvc_enabled` | `null` | Enable the PVC template. **Recommended `true` for Jellyfin** — auto-resolves to StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; size to hold `/config` (SQLite, metadata, transcode cache). |
 | `stateful_pvc_mount_path` | `/config` | Container mount path for the PVC (Jellyfin's config/persistence dir). |
-| `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD; use `premium-rwo` for higher IOPS. |
+| `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD (SSD); use `premium-rwo` for higher IOPS, or `standard` (HDD `pd-standard`) on a quota-constrained project — see the pitfalls table below. |
 | `stateful_headless_service` | `null` | Headless Service for stable pod DNS names. |
 | `stateful_pod_management_policy` | `null` → `OrderedReady` | Safe ordered restarts for Jellyfin. |
 | `stateful_update_strategy` | `null` → `RollingUpdate` | Update strategy. |
@@ -487,9 +493,10 @@ locate and explore the running resources.
 | `cpu_limit` | `1000m` (raise for transcoding) | High | Live transcoding (no GPU) saturates CPU; prefer direct-play clients. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
-| `enable_api_key` | `true` when externally reachable | Medium | Without it, the API surface relies solely on session auth once exposed. |
+| `enable_api_key` | Leave `false`; not currently functional | Medium | The generated secret is delivered as `QDRANT__SERVICE__API_KEY` (a Qdrant_GKE copy-paste leftover) — Jellyfin never reads it, so it only materialises an unused Kubernetes Secret. Create API keys in-app under Dashboard → API Keys instead. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict the single pod during maintenance, interrupting streams. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short to recover an older library snapshot. |
+| `stateful_pvc_storage_class` | `standard` (HDD) on quota-constrained projects | Medium | Jellyfin is a media/SQLite app — the default `standard-rwo` draws the tight regional `SSD_TOTAL_GB` quota, and scale-to-zero does NOT release the PVC. A campaign of stateful modules can exhaust SSD quota; override to HDD (`stateful_pvc_storage_class=standard`) since Jellyfin's write pattern doesn't need SSD IOPS. |
 
 ---
 

@@ -48,8 +48,12 @@ a focused set of Google Cloud services:
   `POSTGRESQL_*` convention.
 - **Database migrations run on every pod start** (idempotent via `zammad-init`). The
   startup probe allows ample time for first-boot migration.
-- **Session affinity is `ClientIP`.** Zammad WebSocket connections are pinned to one
-  pod; Redis pub/sub coordinates real-time events across replicas.
+- **Session affinity is `ClientIP`, but ActionCable WebSocket real-time push does not
+  actually work.** `additional_services` is empty by default for this module, so the
+  `zammad-websocket` process (port 6042) is never exposed via a Kubernetes Service —
+  the browser's WebSocket handshake cannot reach it, the same gap documented for Cloud
+  Run in `Zammad_Common/scripts/entrypoint.sh`. Session affinity only pins ordinary
+  HTTP requests to one pod; the UI falls back to polling for live ticket updates.
 - **PodDisruptionBudget is enabled by default.** At least one Zammad pod stays up
   during node maintenance.
 
@@ -200,13 +204,19 @@ Monitoring. Optional uptime checks and alert policies are available.
 - **Variable bridging.** The Foundation module injects database credentials as
   `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. The custom `entrypoint.sh` maps these
   to Zammad's `POSTGRESQL_*` convention at runtime.
-- **WebSocket connectivity.** Zammad agents receive live ticket updates via
-  ActionCable WebSockets. With multiple replicas, Redis pub/sub coordinates events
-  across pods — this is why `enable_redis = true` is mandatory for production.
-- **Health path.** Both startup and liveness probes target `/api/v1/ping`, which
-  returns HTTP 200 only when Zammad is fully initialised. The startup probe allows
-  a generous tolerance (60-second initial delay, up to 30 retries) to accommodate
-  first-boot schema migration.
+- **WebSocket connectivity — real-time push does not actually work on GKE either.**
+  The `zammad-websocket` (ActionCable) process starts on port 6042 alongside the
+  railsserver, but `main.tf` forwards `additional_services = var.additional_services`
+  (empty by default, never populated with a 6042 entry for this module), so no
+  Kubernetes Service exposes that port — the browser's WebSocket handshake cannot
+  reach it. The UI falls back to polling gracefully, the same limitation documented
+  for Cloud Run in `Zammad_Common/scripts/entrypoint.sh`. `enable_redis = true` is
+  still mandatory for production because Sidekiq (background jobs) depends on it
+  regardless of ActionCable's reachability.
+- **Health path.** Both startup and liveness probes target `/` by default, which
+  returns HTTP 200 only when Zammad is fully initialised (`path` can be overridden,
+  e.g. to `/api/v1/ping`). The startup probe allows a generous tolerance (60-second
+  initial delay, up to 30 retries) to accommodate first-boot schema migration.
 - **Email integration.** Zammad sends email notifications for ticket events and
   password resets. Configure SMTP after first login at **Admin → Channels → Email**.
   SMTP credentials can be injected as secret environment variables.
@@ -237,7 +247,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -312,9 +322,9 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | `/api/v1/ping`, 60s delay, 30 retries | Generous tolerance for schema migration on first boot. |
-| `liveness_probe` / `health_check_config` | `/api/v1/ping`, 60s delay | Restarts the container after 3 consecutive failures. |
-| `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
+| `startup_probe` / `startup_probe_config` | `/`, 120s delay, 15 retries (override `path` for `/api/v1/ping`) | Generous tolerance for schema migration on first boot. |
+| `liveness_probe` / `health_check_config` | `/`, 60s delay (override `path` for `/api/v1/ping`) | Restarts the container after 3 consecutive failures. |
+| `uptime_check_config` | disabled, `path = "/"` | Optional Cloud Monitoring uptime check; override `path` if enabling with `/api/v1/ping`. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 
 ### Group 11 — Jobs & Scheduled Tasks
@@ -470,7 +480,7 @@ locate and explore the running resources.
 | `nfs_mount_path` | `/opt/zammad/storage` | High | Changing this causes attachments to be written to ephemeral pod storage; existing NFS attachments become inaccessible. |
 | `enable_nfs` | `true` | High | Without NFS, all uploaded attachments are lost on pod restart or rolling update. |
 | `min_instance_count` | `1` | High | `0` causes 60–90-second cold starts for the first agent to open a ticket. |
-| `session_affinity` | `ClientIP` | High | Without stickiness and without Redis, multi-replica WebSocket sessions lose real-time updates. |
+| `session_affinity` | `ClientIP` | Medium | Affects only ordinary HTTP request routing across replicas; it does NOT enable ActionCable — `additional_services` is empty by default so port 6042 is never exposed via a Kubernetes Service, and real-time WebSocket push does not work regardless of this setting. Do not rely on it for live ticket updates. |
 | `stateful_pvc_enabled = true` with `workload_type = "Deployment"` | avoid | High | This combination fails at plan time. |
 | `startup_probe.initial_delay_seconds` | `60` (or higher) | High | Too short causes restart loops on first boot while schema migration is running. |
 | `max_instance_count` > 1 without Redis | configure Redis first | Medium | Multiple pods without Redis cause race conditions on ticket assignment and real-time state divergence. |

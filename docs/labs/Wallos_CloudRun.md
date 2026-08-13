@@ -42,8 +42,10 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Artifact
-  Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Artifact Registry, and shared service
+  accounts this module depends on). You do not need to deploy this yourself
+  first — the platform automatically detects whether it already exists in the
+  target project and provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -71,9 +73,12 @@ export REGION="us-central1"          # the region you deploy into
    Review the estimated cost (if credits are enabled) and click **Deploy**, which
    opens the deployment status page with real-time logs.
 
-2. The platform provisions the Cloud Run service, **two** Cloud Storage buckets
-   (`db` mounted at `/var/www/html/db` holding the SQLite database, and `uploads`
-   mounted at `/var/www/html/images/uploads/logos` holding custom provider logos),
+2. The platform provisions the Cloud Run service, a shared **NFS** volume mounted
+   at `/var/www/html/db` holding the SQLite database (`enable_nfs` defaults to
+   `true` and `enable_gcs_db_volume` to `false` — GCS FUSE cannot sustain SQLite's
+   locking), a Cloud Storage `uploads` bucket mounted at
+   `/var/www/html/images/uploads/logos` holding custom provider logos (a `db`
+   bucket is still created but is not mounted by default),
    and pulls the prebuilt `bellamy/wallos` image. There is no Cloud SQL instance,
    no Secret Manager application secret, and no database-initialisation job —
    Wallos is self-contained. First deploys typically complete in **5–10 minutes**.
@@ -142,15 +147,13 @@ export REGION="us-central1"          # the region you deploy into
    `internal` and `all`, or enable `enable_iap` with authorized users/groups, then
    apply via **Update**.
 
-5. **Inspect the persistent state** — the SQLite database lives in the `db` GCS
-   bucket, and custom provider logos live in the `uploads` GCS bucket, both
-   reported in the deployment Outputs. Never delete either bucket; doing so
-   destroys that state permanently:
+5. **Inspect the persistent state** — the SQLite database lives on the NFS volume
+   mounted at `/var/www/html/db`, and custom provider logos live in the `uploads`
+   GCS bucket reported in the deployment Outputs. Never delete the NFS volume or
+   the `uploads` bucket; doing so destroys that state permanently:
 
    ```bash
    gcloud storage buckets list --project="$PROJECT" --filter="name~wallos"
-   gcloud storage ls gs://<db-bucket>/
-   gcloud storage ls gs://<db-bucket>/wallos.db
    gcloud storage ls gs://<uploads-bucket>/
    ```
 
@@ -191,9 +194,9 @@ platform-level diagnostics and do not change with Wallos releases.
 - **Service unreachable from your workstation:** check `ingress_settings` — the
   default is `all` (public); if it has been changed to `internal` (VPC-only), that
   is expected behaviour, not a fault.
-- **GCS FUSE mount / state not persisting:** confirm `execution_environment = gen2`
-  (required for both GCS FUSE mounts) and that the `db`/`uploads` buckets still
-  exist.
+- **NFS / GCS FUSE mount / state not persisting:** confirm `execution_environment = gen2`
+  (required for both the NFS and GCS FUSE mounts) and that the NFS volume and the
+  `uploads` bucket still exist.
   ```bash
   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -206,8 +209,8 @@ platform-level diagnostics and do not change with Wallos releases.
 - **Login shows `admin`/`admin` still active after redeploy:** this is expected —
   the credential is seeded only if no SQLite DB exists yet at
   `/var/www/html/db/wallos.db`. If a fresh admin/admin prompt appears
-  unexpectedly, the `db` bucket may have been replaced or emptied; check for a
-  bucket deletion/recreation in Cloud Audit Logs.
+  unexpectedly, the NFS volume backing that path may have been replaced or
+  emptied; check for a deletion/recreation in Cloud Audit Logs.
 - **Missing default provider logos on first deploy:** if `bellamy/wallos` bakes in
   any default assets under the mounted paths, they can be hidden by the volume
   mount (see the Configuration Guide's Pitfalls table) — this is a known,
@@ -219,14 +222,14 @@ platform-level diagnostics and do not change with Wallos releases.
 
 See the Configuration Guide's *Configuration Pitfalls* section for setting-specific
 gotchas (including the critical rule to keep `min_instance_count = max_instance_count
-= 1` with `cpu_always_allocated = true`, and to never delete the `db`/`uploads`
-buckets).
+= 1` with `cpu_always_allocated = true`, and to never delete the NFS database volume
+or the `uploads` bucket).
 
 ---
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service, the `db` and `uploads` GCS buckets (including the embedded SQLite database and custom logos — this is destructive and unrecoverable), and Artifact Registry images. Resources owned by **Services_GCP** (the VPC, shared Artifact Registry) are managed separately and are not removed here.
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service, the `db` and `uploads` GCS buckets (including the custom logos — this is destructive and unrecoverable), and Artifact Registry images. The SQLite database itself lives on the NFS volume mounted at `/var/www/html/db`; copy it out first if you want to keep it. Resources owned by **Services_GCP** (the VPC, shared Artifact Registry) are managed separately and are not removed here.
 
 ---
 
@@ -234,9 +237,9 @@ On the **Deployments** page, open the deployment and click the **Trash** icon (*
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run and the `db`/`uploads` GCS FUSE buckets; no Cloud SQL, no init job |
+| 1 — Deploy | Automated | Module provisions Cloud Run, the NFS database volume, and the `uploads` GCS FUSE bucket; no Cloud SQL, no init job |
 | 2 — Access & verify | Manual | Health check passes; log in with seeded `admin`/`admin` and change the password immediately |
-| 3 — Operate | Manual | Inspect revisions, keep `min = max = 1` + `cpu_always_allocated = true`, update version, adjust ingress, inspect GCS state |
+| 3 — Operate | Manual | Inspect revisions, keep `min = max = 1` + `cpu_always_allocated = true`, update version, adjust ingress, inspect NFS/GCS state |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and uptime check |
-| 5 — Troubleshoot | Manual | Diagnose revision, ingress, GCS FUSE, cron-daemon, and IAM issues |
-| 6 — Tear down | Automated | Delete (Trash) removes the service and the `db`/`uploads` buckets (destructive) |
+| 5 — Troubleshoot | Manual | Diagnose revision, ingress, NFS/GCS FUSE, cron-daemon, and IAM issues |
+| 6 — Tear down | Automated | Delete (Trash) removes the service and the `db`/`uploads` buckets (destructive) — the SQLite database lives on the NFS volume |

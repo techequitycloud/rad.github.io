@@ -42,6 +42,12 @@ wires together a focused set of Google Cloud services:
   to `false`.
 - **`min_instance_count` defaults to `0` (scale-to-zero).** JVM cold starts take
   60–120 seconds. Set to `1` for production to eliminate this latency.
+- **`cpu_always_allocated` defaults to `false` (request-based billing).** Metabase
+  serves interactive queries on request, so CPU is billed only while handling a
+  call. If you rely on **scheduled subscriptions/pulses or periodic DB-sync
+  scans**, that work runs with no inbound request and gets throttled under
+  request-based billing — set `cpu_always_allocated = true` so scheduled jobs
+  actually complete.
 - **Health probes target `/api/health`** (HTTP), which returns 200 only once the
   JVM is fully up. The startup probe uses a 120-second initial delay with 15
   retries, giving ~270 seconds total tolerance.
@@ -184,7 +190,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -206,6 +212,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `4Gi` | Memory per instance; JVM requires at least 2 GiB; 4 GiB recommended for production. |
 | `min_instance_count` | `0` | Minimum instances. Set to `1` for production to eliminate 60–120s JVM cold starts. |
 | `max_instance_count` | `3` | Maximum instances (cost ceiling). |
+| `cpu_always_allocated` | `false` | Request-based billing by default — Metabase serves on request. Set `true` if you rely on scheduled subscriptions/pulses or periodic DB-sync scans, which run with no inbound request and would otherwise be throttled. |
 | `container_port` | `3000` | Metabase's Jetty port — must match `MB_JETTY_PORT`. |
 | `execution_environment` | `gen2` | Gen2 recommended for improved startup performance. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for Unix socket connections. Required. |
@@ -360,6 +367,7 @@ running resources.
 | `startup_probe.failure_threshold` | `15` (≥ 15) | High | Reducing causes premature container kills before the JVM completes startup. |
 | `min_instance_count` | `1` for production | High | `0` causes 60–120s cold starts; startup probe failures on first request. |
 | `cpu_limit` | `2000m` | High | Under 500m JVM JIT compilation stalls startup, triggering probe failures. |
+| `cpu_always_allocated` | `true` if using scheduled subscriptions/pulses/DB-sync scans | Medium | Defaults `false` (request-based billing); scheduled subscriptions/pulses/DB-sync scans run with no inbound request and are throttled to near-zero CPU, so they may not complete unless flipped to `true`. |
 | `enable_iap` / `ingress_settings` | IAP on; `internal-and-cloud-load-balancing` | High | Metabase login page is otherwise publicly reachable. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `timeout_seconds` | `300` | Medium | Reducing below 120s aborts in-flight analytical queries. |

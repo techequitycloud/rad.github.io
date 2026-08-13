@@ -9,7 +9,6 @@ description: "Prepare for the PCDE exam Section 1 (Scalable Database Solution De
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers Section 1 of the Professional Cloud Database Engineer (PCDE) exam — the largest section, weighted at roughly a third of the questions. It exercises `Services_GCP` (which provisions Cloud SQL PostgreSQL/MySQL, AlloyDB, Firestore Enterprise, and Memorystore Redis) with supporting connectivity patterns from `App_CloudRun` and `App_GKE`. Before starting, deploy the **relational-baseline** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md); subsections 1.2 and 1.4 additionally use the **ha-production**, **multi-engine**, and **alloydb-ai** profiles.
 
 ---
@@ -33,7 +32,7 @@ Storage is deliberately *not* a variable: the PostgreSQL instance is fixed to a 
 
 **Try it**
 1. In your deployment portal, change `postgres_tier` from `db-custom-1-3840` to `db-custom-2-7680` (2 vCPU / 7.5 GB) and apply. This is an in-place `PATCH` that restarts the instance.
-2. Observe the change in **Console > SQL > cloudsql-\&lt;prefix\>-postgres > Edit > Machine configuration**, then confirm from the CLI:
+2. Observe the change in **Console > SQL > cloudsql-\<prefix\>-postgres > Edit > Machine configuration**, then confirm from the CLI:
 
    ```bash
    gcloud sql instances describe cloudsql-<prefix>-postgres \
@@ -147,7 +146,7 @@ A: Via the instance's maintenance window (`gcloud sql instances patch <name> --m
    gcloud sql instances describe cloudsql-<prefix>-postgres \
      --format="yaml(ipAddresses, settings.ipConfiguration.sslMode, settings.ipConfiguration.ipv4Enabled)"
    ```
-2. In **Console > Cloud Run > \&lt;service\> > Revisions > Volumes**, find the `cloudsql` volume bound to the instance connection name. On GKE, `kubectl get pod -n <namespace> -o jsonpath='{.items[0].spec.containers[*].name}'` lists the `cloud-sql-proxy` sidecar.
+2. In **Console > Cloud Run > \<service\> > Revisions > Volumes**, find the `cloudsql` volume bound to the instance connection name. On GKE, `kubectl get pod -n <namespace> -o jsonpath='{.items[0].spec.containers[*].name}'` lists the `cloud-sql-proxy` sidecar.
 3. Connect the way an operator would — fetch the root password from Secret Manager and use psql through a Cloud SQL Auth Proxy (the instance is private-IP, so run this from a VM/workstation with VPC access, or inside a GKE pod):
 
    ```bash

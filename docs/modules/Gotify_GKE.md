@@ -207,7 +207,7 @@ specific to or notable for Gotify are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -235,7 +235,7 @@ specific to or notable for Gotify are listed; every other input is inherited fro
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for connectivity. |
 | `enable_image_mirroring` | `true` | Mirror `ghcr.io/gotify/server` into Artifact Registry. |
 
-### Group 5 — Environment Variables & Secrets
+### Group 6 — Environment Variables & Secrets
 
 | Variable | Default | Description |
 |---|---|---|
@@ -321,7 +321,7 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | `enable_auto_password_rotation` | `false` | Zero-downtime DB password rotation. |
 | `rotation_propagation_delay_sec` | `90` | Seconds to wait after rotation before rolling-restarting pods. |
 
-### Group 18 — Custom SQL Scripts
+### Group 9 — Custom SQL Scripts
 
 `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
 `custom_sql_scripts_use_root` — run SQL from a GCS bucket after provisioning. See
@@ -335,7 +335,7 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | `application_domains` | `[]` | Hostnames to serve. |
 | `reserve_static_ip` | `true` | Stable external IP across redeploys. |
 
-### Group 20 — Identity-Aware Proxy (IAP)
+### Group 5 — Identity-Aware Proxy (IAP)
 
 > **Warning:** Enabling IAP requires Google identity authentication for **all**
 > inbound requests, including token-only send/receive API calls. Only enable IAP when

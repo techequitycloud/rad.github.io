@@ -122,7 +122,7 @@ This approach is transparent to Formbricks — no code changes or plugins are re
 | `application_name` | `string` | `"formbricks"` | Application name. Used as a prefix for all resource names. |
 | `application_version` | `string` | `"latest"` | Formbricks Docker image tag. |
 | `description` | `string` | `"Formbricks - Open Source Survey & Experience Management"` | Init job and service description. |
-| `tenant_deployment_id` | `string` | `"demo"` | Tenant deployment identifier used in resource naming. |
+| `tenant_id` | `string` | `"demo"` | Tenant deployment identifier used in resource naming. |
 | `resource_prefix` / `deployment_id_suffix` | `string` | `""` | Naming overrides supplied by the wrapper modules. |
 | `db_name` | `string` | `"formbricks"` | PostgreSQL database name. |
 | `db_user` | `string` | `"formbricks"` | PostgreSQL application user. |
@@ -243,6 +243,8 @@ Unlike Ghost Common (which creates no secrets), Formbricks Common creates and ma
 - `SMTP_PASSWORD` — Created and stored in Secret Manager only when `smtp_host` is non-empty. If `smtp_password` is left blank, an auto-generated random value is stored — useful for accounts that require an SMTP password but where the value is managed externally.
 - `REDIS_URL` — Created only when `enable_redis = true` and `redis_auth` is non-empty. Contains the full `redis://:password@host:port` URL.
 
+**`SMTP_USER` placeholder fallback (plain env var, not a secret):** Formbricks validates `SMTP_USER` as a non-empty string (`z.string().min(1)`) once `smtp_host` is configured — an empty `smtp_user` alongside a non-empty `smtp_host` otherwise fails Zod validation at boot ("Invalid environment variables" → the server never starts). `main.tf` defaults `SMTP_USER` to `"noreply@formbricks.local"` when `smtp_host` is set but `smtp_user` is left empty, so the app always boots; operators override `smtp_user` with real credentials to actually send mail. This mirrors `SMTP_PASSWORD`'s conditional-secret pattern but as a plain (non-secret) environment variable. In the same partial-config case, `EMAIL_VERIFICATION_DISABLED` is set to `"1"` (verification emails off) — it is set to `"0"` (verification on) only when both `smtp_host` and `smtp_user` are non-empty, since a placeholder `SMTP_USER` has no working SMTP credentials to actually deliver verification emails.
+
 **Secret rotation:** None of these Formbricks-specific secrets carry a `rotation` block — they are created once as static Secret Manager secret versions with no automatic rotation or Pub/Sub notification. Rotating one (e.g. `NEXTAUTH_SECRET`, to invalidate all sessions) requires manually creating a new secret version and restarting the container. Only `DB_PASSWORD` (managed by the Foundation module, outside `Formbricks Common`) supports automated rotation when `enable_auto_password_rotation = true`.
 
 ---
@@ -274,7 +276,7 @@ module "formbricks_app" {
 
   application_name    = var.application_name
   application_version = var.application_version
-  tenant_deployment_id = var.tenant_deployment_id
+  tenant_id = var.tenant_id
   db_name             = var.db_name
   db_user             = var.db_user
   cpu_limit           = var.cpu_limit

@@ -24,14 +24,14 @@ Audiobookshelf runs as a Node.js container on Cloud Run v2. Unusually for this c
 | Persistent state | Cloud Storage (GCS FUSE) | A dedicated `storage` bucket mounted at `/data` (gen2 required) |
 | Container image | Cloud Build + Artifact Registry | Thin wrapper built `FROM ghcr.io/advplyr/audiobookshelf` and mirrored into your registry |
 | Secrets | Secret Manager | No application secrets — the admin user is created in the first-run web UI |
-| Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, public (`ingress_settings = all`) by default; optional external HTTPS load balancer |
+| Ingress | Cloud Run URL / Cloud Load Balancing | **Defaults to `all`** (public internet); optional external HTTPS load balancer |
 
 **Sensible defaults worth knowing up front:**
 
 - **No external database.** `database_type = "NONE"` and `enable_cloudsql_volume = false` are fixed by `Audiobookshelf_Common`; Audiobookshelf creates and migrates its internal SQLite database on first boot. No `db-init` job runs.
 - **One persistent mount covers everything.** `CONFIG_PATH = /data/config` (SQLite DB + app config) and `METADATA_PATH = /data/metadata` (cover art, cached metadata) are both redirected under `/data`, which is backed by an automatically provisioned GCS bucket mounted via GCS FUSE. Losing this bucket loses all Audiobookshelf state.
 - **Single instance.** `min_instance_count = 1` and `max_instance_count = 1` — one shared SQLite library must be served by exactly one writer. Do not raise the maximum.
-- **Ingress defaults to `all` (public).** The `run.app` URL is reachable from the internet by default; set `ingress_settings = "internal"` to restrict it to VPC-only traffic if you prefer to front it with a load balancer instead.
+- **Ingress defaults to `all`.** The `run.app` URL is publicly reachable from a browser out of the box, matching the `App_CloudRun` foundation default. Set `ingress_settings = "internal"` (or front the service with the load balancer) to lock it down to VPC-only access.
 - **Custom (thin-wrapper) image.** Cloud Build wraps the upstream `ghcr.io/advplyr/audiobookshelf` image so it is mirrored into Artifact Registry. The Dockerfile reads the app-specific `AUDIOBOOKSHELF_VERSION` build ARG; `application_version = "latest"` resolves to the pinned `2.17.0`.
 - **No generated secrets.** The initial **root** user is created interactively in the first-run web UI, and API tokens are minted in the UI afterwards — `Audiobookshelf_Common` exposes empty `secret_ids`.
 - **Health probes target `/healthcheck`**, Audiobookshelf's unauthenticated 200 endpoint (startup: 15 s initial delay, 10 failures allowed; liveness: 30 s delay, 3 failures).
@@ -95,7 +95,7 @@ Audiobookshelf itself needs no injected secrets — there is no database passwor
 
 ### E. Networking & ingress
 
-By default `ingress_settings = "all"` — the service is reachable from the internet, which is what lets the web UI and mobile apps connect directly. Set `ingress_settings = "internal"` to restrict the service to VPC-only callers, or enable the external HTTPS load balancer (`enable_cloud_armor`) with a custom domain instead.
+By default `ingress_settings = "all"` — the service is publicly reachable, matching the `App_CloudRun` foundation default. Set `ingress_settings = "internal"` to restrict the service to callers inside the VPC, or enable the external HTTPS load balancer (`enable_cloud_armor`) with a custom domain for a fronted setup.
 
 - **Console:** Cloud Run (service URL); Network services → Load balancing.
 - **CLI:**
@@ -151,7 +151,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -184,7 +184,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Public by default. Set `internal` to restrict the service to VPC-only callers. |
+| `ingress_settings` | `all` | Public by default. Set `internal` (or use the load balancer) to restrict the web UI and mobile apps to VPC-only access. |
 | `enable_iap` | `false` | Require Google sign-in via Identity-Aware Proxy. |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -193,7 +193,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Merged over the module defaults `PORT=80`, `CONFIG_PATH=/data/config`, `METADATA_PATH=/data/metadata`. Do not change the two paths after first boot. |
+| `environment_variables` | `{}` | Merged over the module defaults `CONFIG_PATH=/data/config`, `METADATA_PATH=/data/metadata`. No `PORT` default is set — Audiobookshelf listens on the Cloud Run auto-injected `$PORT`, and a user-supplied `PORT` env var is a reserved name the platform rejects. Do not change the two paths after first boot. |
 | `secret_environment_variables` | `{}` | Map of env var → Secret Manager secret name (none required by Audiobookshelf). |
 
 All other inputs follow standard App_CloudRun behaviour.
@@ -272,7 +272,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `audiobookshelf_url` | URL of the web UI / API. Reachable from the internet by default (`ingress_settings = "all"`); only VPC-internal if set to `internal`. |
+| `audiobookshelf_url` | URL of the web UI / API. Publicly reachable by default (`ingress_settings = "all"`); only VPC-internal if `ingress_settings` is changed to `"internal"`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -300,10 +300,10 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `max_instance_count` | `1` | Critical | Multiple instances write the same SQLite database over the shared FUSE mount — database corruption. |
 | `create_cloud_storage` / the `storage` bucket | keep provisioned | Critical | `/data` holds *all* state (SQLite DB, config, metadata). Deleting the bucket loses the entire library configuration. |
 | `CONFIG_PATH` / `METADATA_PATH` overrides | leave defaults | Critical | Changing them after first boot orphans the existing SQLite database and cached metadata. |
-| `container_port` | `80` | Critical | Audiobookshelf listens on 80 (`PORT=80` injected); a mismatch fails every health probe. |
+| `container_port` | `80` | Critical | Audiobookshelf listens on the Cloud Run auto-injected `$PORT`, derived from `container_port=80` (no explicit `PORT` env var is set — it's a reserved name Cloud Run rejects); a `container_port` mismatch fails every health probe. |
 | `execution_environment` | `gen2` | High | GCS FUSE mounts require gen2; gen1 cannot mount the `/data` bucket. |
 | `enable_backup_import` | `false` unless restoring | High | Enabling without a valid `backup_uri` fails the import job. |
-| `ingress_settings` | `all` (default) / `internal` for VPC-only | Medium | Set to `internal` without a load balancer in front, and the web UI and mobile apps lose all external access. |
+| `ingress_settings` | `all` (default) / `internal` when needed | Medium | Default `all` is publicly reachable; set `internal` (or add the load balancer) only if you specifically want to lock the service to VPC-only access. |
 | `application_version` | pinned tag | Medium | `latest` silently resolves to the pinned `2.17.0`; pin explicitly to control upgrades. |
 | `min_instance_count` | `1` | Medium | `0` saves cost (state is on GCS, so it is data-safe) but adds a cold start to the first stream after idle. |
 | Library size on GCS FUSE | small/medium libraries | Medium | Large libraries and frequent scans suffer FUSE latency — use `Audiobookshelf_GKE` (block PVC) for production-scale libraries. |

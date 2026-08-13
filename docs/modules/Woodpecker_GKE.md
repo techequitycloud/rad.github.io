@@ -244,7 +244,7 @@ group-by-group input reference.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 
 ### Group 3 — Application Identity
@@ -309,7 +309,7 @@ there is no per-pod filesystem state to persist via a PVC.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | **Stale default and description**, left over from this module's Immich clone source — Woodpecker CI has no media library and no functional use for NFS. See §7. |
+| `enable_nfs` | `false` | Off by default. Woodpecker CI has no media library and no functional use for NFS. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -342,7 +342,7 @@ there is no per-pod filesystem state to persist via a PVC.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | **Not confirmed to be functionally required** — `Woodpecker_Common`'s entrypoint never reads `REDIS_HOST`/`REDIS_PORT`. See §7. |
+| `enable_redis` | `false` | **Not confirmed to be functionally required** — `Woodpecker_Common`'s entrypoint never reads `REDIS_HOST`/`REDIS_PORT`. See §7. |
 
 ### Groups 8, 9, 12, 17, 18, 22
 
@@ -393,7 +393,7 @@ to locate and explore the running resources.
 | `service_type` / `reserve_static_ip` | `LoadBalancer` / `true` once external IP quota allows | **High** | The reference deployment used `ClusterIP` / `false` purely because the test project's `IN_USE_ADDRESSES` quota was exhausted. Forge webhooks (push/PR events) need to reach this server from the internet — a `ClusterIP` deployment cannot receive them and pipelines will not auto-trigger. |
 | `max_instance_count` | `1` (enforced at plan time) | **Critical** | Each pod runs a co-located server+agent; more than one replica would run multiple servers against the same database with no verified coordination. |
 | Health probes | Leave as HTTP `/healthz` (module default) | **Medium** | `/healthz` is confirmed unauthenticated and returns `204`; pointing a probe at an authenticated endpoint would wedge the rollout. |
-| `enable_nfs` | Leave default or verify against actual need — description text is misleading | **Low** | Description references a "photo/video library" that doesn't exist in Woodpecker CI; if `true`, an unused NFS mount is provisioned into the pod at an Immich-derived path with no functional effect, but it is not free — see Notes in `modules/Woodpecker_GKE/README.md`. |
+| `enable_nfs` | Leave at `false` | **Low** | Correct by default. Setting it `true` provisions an unused NFS mount into the pod with no functional effect, and it is not free. |
 | `enable_redis` | Leave default; not confirmed required | **Low** | Description claims Redis is "REQUIRED", but `Woodpecker_Common`'s entrypoint never reads `REDIS_HOST`/`REDIS_PORT` — this appears to be inert leftover from the module's clone source, not verified Woodpecker CI behaviour. |
 
 ---

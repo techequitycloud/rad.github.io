@@ -47,8 +47,9 @@ together a focused set of Google Cloud services:
   as immutable after first use.
 - **New users require admin approval by default.** `default_user_role = "pending"`
   means self-registered accounts cannot access the UI until an admin promotes them.
-- **A warm instance is the default.** `min_instance_count` defaults to `1`; set it to
-  `0` to enable scale-to-zero and accept the cold-start latency on the first request.
+- **`min_instance_count` defaults to `1`** (a warm pod, not scale-to-zero). Set it to
+  `0` to allow scale-to-zero, at the cost of 30–60 s cold-start latency on the first
+  request (pod + Cloud SQL proxy startup).
 - **Health probes target `/health`.** Open WebUI exposes this path natively; both
   startup and liveness probes use it.
 - **`DATABASE_URL` is assembled automatically** from the Cloud SQL credentials injected
@@ -122,9 +123,9 @@ See [App_GKE](App_GKE.md) for GCS Fuse and CMEK options.
 
 ### D. Filestore (NFS) — optional shared storage
 
-NFS is enabled by default (`enable_nfs = true`) so uploaded files stay visible across
-all pods once you run more than one replica. Without shared storage, a file uploaded to
-one pod is not visible to another.
+NFS is disabled by default. Enable it (`enable_nfs = true`) when running more than one
+replica and uploaded files must be visible across all pods. Without shared storage, a
+file uploaded to one pod is not visible to another.
 
 - **Console:** Filestore → Instances for the NFS share.
 - **CLI:**
@@ -232,7 +233,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 

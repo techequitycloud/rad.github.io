@@ -29,8 +29,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Filestore/NFS
-  networking, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Filestore/NFS networking, Artifact
+  Registry, and shared service accounts this module depends on). You do not need
+  to deploy this yourself first — the platform automatically detects whether it
+  already exists in the target project and provisions it before this module if
+  not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -47,18 +50,20 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **UptimeKuma (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **UptimeKuma (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/UptimeKuma_CloudRun)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the Cloud Run service with **CPU always allocated** (the
-   check scheduler runs between requests), a Filestore NFS share mounted at
-   `/app/data` for the embedded SQLite database, and mirrors the official
-   `louislam/uptime-kuma` image into Artifact Registry. There is **no Cloud SQL
-   instance, no application secret, and no initialization job** — this is one of
-   the fastest modules to deploy (typically **10–15 minutes**; no database
-   provisioning).
+   check scheduler runs between requests) and a Filestore NFS share mounted at
+   `/app/data` for the embedded SQLite database. A Cloud Build step builds a thin
+   custom image `FROM louislam/uptime-kuma` that patches the hardcoded SQLite
+   `journal_mode` from `WAL` to `DELETE` — WAL's shared-memory locking is unsafe on
+   the NFS-backed `/app/data` volume — and the built image is pushed to Artifact
+   Registry. There is **no Cloud SQL instance, no application secret, and no
+   initialization job** — this is one of the fastest modules to deploy (typically
+   **10–15 minutes**; no database provisioning).
 
 3. When it completes, discover the resources with name-agnostic filters (so the
    commands keep working regardless of the deployment suffix):
@@ -187,9 +192,14 @@ platform-level diagnostics and do not change with Uptime Kuma releases.
   VPC egress; the default `vpc_egress_setting = "PRIVATE_RANGES_ONLY"` covers
   this. For probes that must egress via the VPC/NAT (stable source IP for
   allow-listed targets), set `ALL_TRAFFIC`.
-- **Image pull failed:** confirm `enable_image_mirroring = true` and check the
-  mirrored copy in Artifact Registry (`gcloud artifacts docker images list ...`).
-  There is no Cloud Build step to debug — the image is prebuilt.
+- **Image pull failed / stale image:** confirm `container_image_source = "custom"`
+  (the default — this module ships a real Cloud Build step, not a prebuilt image)
+  and check the build and pushed image in Artifact Registry
+  (`gcloud builds list --project="$PROJECT"`,
+  `gcloud artifacts docker images list ...`). If the build never appears in
+  `tofu plan`/`tofu show -json plan.tfplan | jq`, verify `container_image_source`
+  wasn't overridden to `"prebuilt"` in `deploy.tfvars` — that skips the SQLite
+  WAL->DELETE patch and re-exposes the NFS corruption risk described in Task 3.
 - **403 / permission errors:** verify the runtime service account's IAM roles.
 
 See the Configuration Guide's *Configuration Pitfalls* section for setting-specific
@@ -211,7 +221,7 @@ separately and are not removed here.
 
 | Task | Type | Outcome |
 |---|---|---|
-| 1 — Deploy | Automated | Module provisions Cloud Run (CPU always allocated), NFS at `/app/data`, and mirrors the prebuilt image — no DB, secrets, or init jobs |
+| 1 — Deploy | Automated | Module provisions Cloud Run (CPU always allocated), NFS at `/app/data`, and builds/mirrors a custom image patched for NFS-safe SQLite — no DB, secrets, or init jobs |
 | 2 — Access & verify | Manual | Health check passes; admin account created on the first-run setup page |
 | 3 — Operate | Manual | Inspect revisions, set min=1/max=1 for 24/7 single-writer monitoring, update version, verify NFS state |
 | 4 — Observe | Manual | Query Cloud Logging; watch instance count and CPU baseline; optionally monitor the monitor |

@@ -155,9 +155,10 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
 ### E. Networking & ingress
 
-By default the workload is exposed through a `ClusterIP` Service
-(`service_type = "ClusterIP"`); switch to `LoadBalancer` for a direct external
-IP, or enable a custom domain (`enable_custom_domain = true` by default) via
+By default the workload is exposed through a `LoadBalancer` Service
+(`service_type = "LoadBalancer"`) — PhotoPrism is a public-facing web UI, not
+a database workload; switch to `ClusterIP` for internal-only access, or
+enable a custom domain (`enable_custom_domain = true` by default) via
 the Kubernetes Gateway API with a Google-managed certificate.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
@@ -210,10 +211,10 @@ default) and custom alert policies are available.
   `GET /api/v1/status` (initial delay 15s / 10 retries for startup, 30s / 3
   retries for liveness) — no auth required. The Group-10 foundation-level
   `startup_probe_config`/`health_check_config` variables mirror the same
-  path as generic defaults. <!-- TODO: verify precedence if the two probe
+  path as generic defaults. {/* TODO: verify precedence if the two probe
   configuration surfaces (Common-level startup_probe/liveness_probe vs.
   Group-10 startup_probe_config/health_check_config) are set to conflicting
-  values. -->
+  values. */}
 - **Scaling is pinned to one pod.** `min_instance_count = 1` and
   `max_instance_count = 1` — PhotoPrism keeps a single writable SQLite
   database and a single writable media volume; there is no multi-writer
@@ -248,7 +249,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | CPU allocated to the PhotoPrism container. Indexing/thumbnailing is CPU-bound; raise for large libraries. |
-| `memory_limit` | `2Gi` | Memory allocated to the container. PhotoPrism_Common's own default is `4Gi`; `PhotoPrism_GKE`'s variable default is `2Gi` — raise toward 4Gi for large libraries. |
+| `memory_limit` | `2Gi` | Memory allocated to the container. PhotoPrism loads vector indexes into memory; 2Gi is the minimum that keeps face recognition/RAW support enabled — raise toward 4Gi for large collections. |
 | `min_instance_count` | `1` | Keep at 1 to avoid cold starts during index loading. |
 | `max_instance_count` | `1` | **Keep at 1** — single writable SQLite DB and media volume. |
 | `container_port` | `2342` | Not forwarded to App_GKE; PhotoPrism always serves on 2342, fixed by `PhotoPrism_Common`. |

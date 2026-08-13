@@ -7,7 +7,7 @@ description: "Configuration reference for deploying Listmonk on GKE Autopilot wi
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Listmonk_GKE.png" alt="Listmonk GKE Module — Configuration Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-This guide describes every configuration variable available in the `Listmonk_GKE` module. `Listmonk_GKE` is a **wrapper module** that combines the generic [`App_GKE`](App_GKE.md) infrastructure module with the [`Listmonk_Common`](Listmonk_Common.md) shared application configuration to deploy [Listmonk](https://listmonk.app/), the self-hosted newsletter and mailing list manager, on Google Kubernetes Engine (GKE) Autopilot.
+This guide describes every configuration variable available in the `Listmonk_GKE` module. `Listmonk_GKE` is a **wrapper module** that combines the generic [`App_GKE`](./App_GKE.md) infrastructure module with the [`Listmonk_Common`](./Listmonk_Common) shared application configuration to deploy [Listmonk](https://listmonk.app/), the self-hosted newsletter and mailing list manager, on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Listmonk GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Listmonk** are described in full here.
 
@@ -17,7 +17,7 @@ Most configuration options in `Listmonk GKE` map directly to the same options in
 
 ## Standard Configuration Reference
 
-The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](App_GKE.md) for full documentation.
+The following configuration areas are provided by the underlying `App_GKE` module. Consult the linked sections of the [App_GKE Configuration Guide](./App_GKE.md) for full documentation.
 
 | Configuration Area | App GKE.md Section | Listmonk-Specific Notes |
 |---|---|---|
@@ -73,14 +73,14 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 
 **Listmonk GKE variables in this group:**
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | *(required)* | GCP project ID. No default — deployment fails without this value. |
-| `tenant_deployment_id` | `"demo"` | Suffix appended to resource names to distinguish multiple deployments in the same project. |
+| `tenant_id` | `"demo"` | Suffix appended to resource names to distinguish multiple deployments in the same project. |
 | `support_users` | `[]` | Users granted read access to deployment outputs (e.g. URLs, secret names). |
 | `resource_labels` | `{}` | Labels applied to all GCP resources created by this module. |
 | `region` | `"us-central1"` | GCP region for all resources. Used as the default storage bucket location and GKE node region. |
@@ -89,7 +89,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md#2-iam--access-control).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot) for descriptions.
 
 **Listmonk-specific defaults:**
 
@@ -106,7 +106,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-comp
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
 
 **Listmonk-specific defaults and behaviour:**
 
@@ -122,13 +122,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](App_GKE.md
 
 **`container_resources`:** The variable default is `{ cpu_limit = "1000m", memory_limit = "512Mi" }`. This is appropriate for development and small subscriber lists. For production deployments sending campaigns to tens of thousands of subscribers, increase to at least `{ cpu_limit = "2000m", memory_limit = "1Gi" }` to prevent OOM kills during bulk campaign send operations.
 
-The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](App_GKE.md#a-compute-gke-autopilot).
+The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#4-advanced-security), [App_GKE](App_GKE.md#5-traffic--ingress), and [App_GKE](App_GKE.md#d-networking--network-policies).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress), and [App_GKE](./App_GKE.md#d-networking--network-policies).
 
 The following networking variables are available in `Listmonk GKE`:
 
@@ -136,7 +136,7 @@ The following networking variables are available in `Listmonk GKE`:
 |---|---|---|
 | `service_type` | `"LoadBalancer"` | Kubernetes service type. `"LoadBalancer"` provisions a GCP external load balancer. Use `"ClusterIP"` with `enable_custom_domain = true` for Gateway-based routing. |
 | `enable_network_segmentation` | `false` | Deploys a Kubernetes NetworkPolicy restricting pod-to-pod traffic to explicitly allowed paths. |
-| `namespace_name` | `""` | Kubernetes namespace for the Listmonk workload. Auto-generated from `application_name` and `tenant_deployment_id` when blank. |
+| `namespace_name` | `""` | Kubernetes namespace for the Listmonk workload. Auto-generated from `application_name` and `tenant_id` when blank. |
 | `network_tags` | `["nfsserver"]` | Firewall tags applied to GKE cluster nodes. |
 | `enable_iap` | `false` | Enables Identity-Aware Proxy authentication on the load balancer. |
 | `iap_authorized_users` | `[]` | Individual users or service accounts granted IAP access. |
@@ -162,7 +162,7 @@ The following networking variables are available in `Listmonk GKE`:
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#3-core-service-configuration).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#3-core-service-configuration).
 
 **Listmonk-specific defaults:**
 
@@ -185,13 +185,13 @@ environment_variables = {
 }
 ```
 
-The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) behave as described in [App_GKE](App_GKE.md#3-core-service-configuration).
+The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) behave as described in [App_GKE](./App_GKE.md#3-core-service-configuration).
 
 ---
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
 **Listmonk-specific defaults:**
 
@@ -213,7 +213,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-data
 
 ## Group 7: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#6-cicd--delivery).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#6-cicd--delivery).
 
 The following CI/CD variables are available: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config` (default `{ branch_pattern = "^main$" }`), `enable_cloud_deploy`, `cloud_deploy_stages` (default `[dev, staging, prod]`), `enable_binary_authorization`, `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`).
 
@@ -221,7 +221,7 @@ The following CI/CD variables are available: `enable_cicd_trigger`, `github_repo
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs), with one important Listmonk-specific behaviour.
+These variables behave as described in [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs), with one important Listmonk-specific behaviour.
 
 **Listmonk default `db-init` job:**
 
@@ -241,7 +241,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 **CronJobs and Additional Services:**
 
-The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs) for full documentation.
+The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) for full documentation.
 
 > **Note:** The `cron_jobs` schema in `Listmonk GKE` uses Kubernetes CronJob fields — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — rather than Cloud Run-style fields. The `secret_env_vars` field is not available in GKE cron jobs; secrets are managed via `secret_environment_variables` at the module level.
 
@@ -249,7 +249,7 @@ The `cron_jobs` and `additional_services` variables are available and behave ide
 
 ## Group 9: Storage & Filesystem — NFS
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Listmonk-specific defaults:**
 
@@ -265,7 +265,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#c-stor
 
 ## Group 10: Storage & Filesystem — GCS
 
-These variables behave identically to `App_GKE`. See [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Listmonk-specific defaults:**
 
@@ -277,13 +277,13 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 9](App_GKE.m
 
 Additional GCS buckets can be defined in `storage_buckets` — for example, a separate bucket for backup exports or custom template assets.
 
-The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 ---
 
 ## Group 11: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
 **Listmonk-specific defaults and restrictions:**
 
@@ -315,7 +315,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#b-data
 
 ## Group 12: Custom SQL Scripts
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -328,7 +328,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md#e-initialization-jobs--cronjobs
 
 ## Group 13: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 **Listmonk-specific defaults:**
 
@@ -342,13 +342,13 @@ Listmonk exposes a dedicated `/api/health` HTTP endpoint, but as of Listmonk v6.
 | `startup_probe_config` | `{ enabled = true, type = "TCP", path = "/api/health", initial_delay_seconds = 30, period_seconds = 10, failure_threshold = 30 }` | Kubernetes startup probe. `failure_threshold = 30` gives Listmonk up to 300 seconds (30 × 10 s) to start before Kubernetes restarts the pod — sufficient for even cold-start schema migrations. |
 | `uptime_check_config` | `{ enabled = false, path = "/api/health" }` | Cloud Monitoring uptime check. **Disabled by default** — enable explicitly if you want an alert fired to `support_users` when the endpoint stops responding (note `/api/health` requires a session, so an HTTP uptime check would need to target `/health` instead). |
 
-The `alert_policies` variable is available and behaves as described in [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+The `alert_policies` variable is available and behaves as described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Group 14: Reliability Policies
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#7-reliability--scheduling).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -398,7 +398,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 ## Group 16: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 > **Listmonk base URL configuration:** Listmonk must know its public-facing URL for generating unsubscribe links, confirmation emails, and campaign tracking pixels. This is **not** an env var — `app.root_url` is a row in Listmonk's `settings` table, so `Listmonk_Common`'s `entrypoint.sh` sets it automatically on every start from the platform-injected `GKE_SERVICE_URL`, after the `--install` step (using `psql`, since `--install` only seeds it via `INSERT ... ON CONFLICT DO NOTHING`, so the entrypoint's `UPDATE` always wins on later starts). If you attach a custom domain via `application_domains`, verify `app.root_url` under **Settings → General** in the Listmonk UI and update it manually if it still shows the GKE service URL instead of your custom domain.
 
@@ -406,7 +406,7 @@ Identical to `App_GKE`. See [App_GKE](App_GKE.md#5-traffic--ingress).
 
 ## Group 17: GKE Backend Configuration
 
-Identical to `App_GKE`. See [App_GKE](App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds` (default `30`), `gke_cluster_selection_mode` (default `"primary"`; options: `explicit`, `round-robin`, `primary`), `network_name` (default `""`; auto-discovered when empty).
 
@@ -416,7 +416,7 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ## Group 18: Stateful Workloads
 
-Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](App_GKE.md#a-compute-gke-autopilot) (`workload_type = "StatefulSet"`) and the associated StatefulSet variables.
+Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot) (`workload_type = "StatefulSet"`) and the associated StatefulSet variables.
 
 Available variables: `stateful_pvc_enabled` (default `null`), `stateful_pvc_size` (default `"10Gi"`), `stateful_pvc_mount_path` (default `"/data"`), `stateful_pvc_storage_class` (default `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group` (default `0`).
 
@@ -458,7 +458,7 @@ Once your Listmonk GKE deployment is complete, the GCP Console provides a rich v
 
 Navigate to **Kubernetes Engine → Workloads** in the GCP Console. Select your cluster from the cluster dropdown.
 
-- **Listmonk Deployment:** You should see a Deployment named `listmonk-<tenant_deployment_id>` in the namespace `listmonk-<tenant_deployment_id>`. The **Pods** column should show at least `1/1` pods running if `min_instance_count = 1`. Drill into the Deployment to see the pod template, environment variables (including the `LISTMONK_*` config), resource requests and limits, and the Cloud SQL Auth Proxy sidecar container.
+- **Listmonk Deployment:** You should see a Deployment named `listmonk-<tenant_id>` in the namespace `listmonk-<tenant_id>`. The **Pods** column should show at least `1/1` pods running if `min_instance_count = 1`. Drill into the Deployment to see the pod template, environment variables (including the `LISTMONK_*` config), resource requests and limits, and the Cloud SQL Auth Proxy sidecar container.
 - **db-init Job:** On first deployment, a completed Job named `db-init` will appear in the same namespace under **Kubernetes Engine → Workloads** (filter by resource type: Job). A green checkmark indicates the PostgreSQL database and user were created successfully. If the job shows a red failure state, click into the job's pod logs to diagnose the Cloud SQL connection or credential issue.
 - **Pods:** Navigate to **Kubernetes Engine → Pods** and filter by namespace. Each running pod shows two containers: the Listmonk application container (`listmonk`) and the Cloud SQL Auth Proxy sidecar (`cloud-sql-proxy`). Click a pod and select the **Logs** tab to stream live application logs directly from the Console.
 - **Services & Ingress:** Navigate to **Kubernetes Engine → Services & Ingress**. The LoadBalancer service for Listmonk will appear with an **External endpoints** column showing the provisioned IP address and port. If `enable_custom_domain = true`, a Gateway or Ingress resource will appear alongside it.
@@ -467,7 +467,7 @@ Navigate to **Kubernetes Engine → Workloads** in the GCP Console. Select your 
 
 Navigate to **SQL** in the GCP Console.
 
-- **Instance:** The Cloud SQL instance is typically named `app-sql-<tenant_deployment_id>` (or a custom name if `sql_instance_name` was set). Click the instance to verify its database version shows **PostgreSQL 15**. The **Overview** tab shows CPU and memory utilisation, active connections, and query throughput — useful for validating that Listmonk is connecting and sending queries.
+- **Instance:** The Cloud SQL instance is typically named `app-sql-<tenant_id>` (or a custom name if `sql_instance_name` was set). Click the instance to verify its database version shows **PostgreSQL 15**. The **Overview** tab shows CPU and memory utilisation, active connections, and query throughput — useful for validating that Listmonk is connecting and sending queries.
 - **Databases:** Under the instance's **Databases** tab, confirm the `listmonk` database exists (or your custom `application_database_name`). This is the database Listmonk's schema migration created on first startup.
 - **Users:** Under the **Users** tab, confirm the `listmonk` user (or your `application_database_user`) exists. Listmonk connects as this user for all database operations.
 - **Connections:** Under the **Connections** tab, confirm the instance is configured for Private IP only (if using VPC-native connectivity) or that the Cloud SQL Auth Proxy is the only connection path. The Auth Proxy connection from the GKE cluster will appear in the **Active connections** panel.
@@ -486,7 +486,7 @@ Navigate to **Security → Secret Manager** in the GCP Console.
 
 Navigate to **Artifact Registry → Repositories** in the GCP Console.
 
-- **Repository:** If `container_image_source = "custom"` and `enable_image_mirroring = true`, a repository named after the deployment (e.g. `listmonk-<tenant_deployment_id>`) will contain the built Listmonk image. The repository will show the image tag (matching `application_version`) and the digest.
+- **Repository:** If `container_image_source = "custom"` and `enable_image_mirroring = true`, a repository named after the deployment (e.g. `listmonk-<tenant_id>`) will contain the built Listmonk image. The repository will show the image tag (matching `application_version`) and the digest.
 - **Image details:** Click an image tag to view the full digest, size, creation time, and vulnerability scanning results. Review the vulnerability findings tab before promoting to production — Listmonk's base image is regularly updated, and the platform's retention policy (`max_images_to_retain = 7`) will automatically clean up old image versions.
 - **Cleanup policies:** Under the repository's **Settings** tab, confirm the cleanup policy is configured to retain the last `max_images_to_retain` images and delete untagged images after `image_retention_days` days.
 
@@ -510,7 +510,7 @@ Navigate to **Cloud Build → History** in the GCP Console.
 
 ## Exploring with gcloud / kubectl
 
-The following commands let you inspect every layer of a Listmonk GKE deployment from the command line. Replace `PROJECT_ID`, `REGION`, `CLUSTER_NAME`, `NAMESPACE`, and `POD_NAME` with your actual values. The namespace and deployment name are typically `listmonk-<tenant_deployment_id>`.
+The following commands let you inspect every layer of a Listmonk GKE deployment from the command line. Replace `PROJECT_ID`, `REGION`, `CLUSTER_NAME`, `NAMESPACE`, and `POD_NAME` with your actual values. The namespace and deployment name are typically `listmonk-<tenant_id>`.
 
 ```bash
 # ── Cluster Access ──────────────────────────────────────────────────────────

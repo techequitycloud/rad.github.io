@@ -33,7 +33,7 @@ focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Single-container pods (nginx + gunicorn), 1 vCPU / 512Mi by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Tandoor has no supported production fallback engine |
-| Object storage | Cloud Storage | A dedicated `data` bucket provisioned automatically (for recipe images), not auto-mounted |
+| Object storage | Cloud Storage | A dedicated `data` bucket provisioned automatically and mounted at `/opt/recipes/mediafiles` (for recipe images) |
 | Cache | Redis (optional) | Genuinely optional — Django falls back to local-memory cache when unset; no Celery/background worker |
 | Secrets | Secret Manager | Auto-generated Django `SECRET_KEY` and initial superuser password; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -59,7 +59,7 @@ focused set of Google Cloud services:
   Tandoor is a browser-driven interactive UI, so it gets a real external IP
   — not `ClusterIP` (which is only appropriate for internal-only services).
 - **NFS is disabled by default.** Tandoor stores all application data in
-  PostgreSQL and recipe images in an (optional) GCS-mounted bucket.
+  PostgreSQL and recipe images in an auto-mounted GCS bucket.
 - **Redis is genuinely optional and disabled by default.** There is no Celery
   worker or queue to keep warm — enabling Redis only affects Django's cache
   backend.
@@ -117,9 +117,9 @@ connection model, automated backups, and password rotation, see
 ### C. Cloud Storage
 
 A dedicated **Cloud Storage** `data` bucket is provisioned automatically for
-recipe images. The workload service account is granted access, but the
-bucket is **not** auto-mounted — add a `gcs_volumes` entry targeting
-`/opt/recipes/mediafiles` to persist uploaded images across pod restarts.
+recipe images. The workload service account is granted access, and the bucket
+is mounted by default at `/opt/recipes/mediafiles` (Tandoor's `MEDIA_ROOT`) via
+the GCS Fuse CSI driver, so uploaded images persist across pod restarts.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -234,7 +234,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -337,7 +337,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create additional GCS buckets beyond the auto-provisioned `data` bucket. |
 | `storage_buckets` | `[]` | Additional buckets to provision. |
-| `gcs_volumes` | `[]` | Add an entry mounted at `/opt/recipes/mediafiles` via the CSI driver to persist recipe images. |
+| `gcs_volumes` | `[]` | Leave empty to use the module default (the `data` bucket mounted at `/opt/recipes/mediafiles` via the CSI driver); an operator-supplied value overrides it. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 | `max_images_to_retain` | `7` | Maximum recent Artifact Registry images to keep. |
 

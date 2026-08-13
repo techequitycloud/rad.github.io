@@ -315,6 +315,8 @@ All other inputs follow standard App_GKE behaviour.
 | `db_user` | `calcom` | Application database user. Immutable after first deploy. |
 | `database_type` | `POSTGRES_15` | Fixed to PostgreSQL 15; other engines are unsupported. |
 | `database_password_length` | `32` | Generated password length. |
+| `enable_postgres_extensions` | `true` | **GKE-only default** — overrides `CalCom_Common`'s own off-by-default. Triggers `App_GKE`'s privileged `<service>-db-extensions` Kubernetes Job. |
+| `postgres_extensions` | `["vector", "uuid-ossp"]` | Extensions the `db-extensions` job pre-creates. `vector` (pgvector) is required by Cal.com's Prisma schema; without it, the app's own unprivileged `CREATE EXTENSION IF NOT EXISTS` fails with a permission-denied error. `CalCom_CloudRun` does not forward these two variables at all. |
 
 All other inputs follow standard App_GKE behaviour.
 
@@ -401,6 +403,7 @@ and explore the running resources.
 | `memory_limit` | `2Gi` | High | Below 2 GiB, Next.js 16 OOM-crashes at startup and the pod never becomes Ready. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, a client's requests hop between pods, disrupting UI sessions. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar provides the PostgreSQL loopback endpoint; disabling it with a real DB is blocked by a plan-time guard. |
+| `enable_postgres_extensions` / `postgres_extensions` | `true` / `["vector", "uuid-ossp"]` | High | GKE defaults these on (unlike `CalCom_Common`'s own off default and unlike `CalCom_CloudRun`, which doesn't forward them at all) so the privileged `db-extensions` job pre-creates `vector` — without it, Cal.com's own unprivileged `CREATE EXTENSION IF NOT EXISTS` hits a permission-denied error on Cloud SQL. |
 | `enable_iap` | only for private instances | High | IAP blocks all unauthenticated requests — including embeds and public booking pages. |
 | Open sign-up | disable for private instances | High | Self-hosted Cal.com allows self-service sign-up; leaving it open lets anyone with the URL create an account. |
 | `min_instance_count` ≤ `max_instance_count` | keep ordered | Medium | A conflicting HPA range fails a plan-time precondition. |

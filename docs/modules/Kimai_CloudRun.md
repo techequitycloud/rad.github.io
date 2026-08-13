@@ -236,7 +236,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -321,7 +321,7 @@ bucket after provisioning. See [App_CloudRun](App_CloudRun.md).
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the generic `data` GCS bucket. Not read or written by Kimai. |
-| `enable_nfs` | `true` | **Functionally unused** — mounted at `/var/lib/kimai`, but Kimai's real persistent storage is the GCS-FUSE-mounted `storage` bucket at `/opt/kimai/var/data`. Safe to disable. |
+| `enable_nfs` | `false` | **Functionally unused** — mounted at `/var/lib/kimai`, but Kimai's real persistent storage is the GCS-FUSE-mounted `storage` bucket at `/opt/kimai/var/data`. Safe to disable. |
 | `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts (requires gen2), merged with the `storage` bucket mount. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

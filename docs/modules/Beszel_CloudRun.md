@@ -231,10 +231,9 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 ### Group — Redis Cache & Queue
 
-Beszel does not use Redis. The `enable_redis` variable is still declared on this module (for
-interface compatibility, default `true`), but it has no effect — the wrapper's `main.tf`
-hardcodes `enable_redis = false` in its call to `App_CloudRun` regardless of the variable's
-value, so there is nothing to configure here.
+Beszel does not use Redis. `enable_redis` is not exposed as a variable on this module — the
+wrapper's `main.tf` hardcodes `enable_redis = false` in its call to `App_CloudRun` (whose
+own default is `true`), so there is nothing to configure here.
 
 ### Group — Observability & Health
 

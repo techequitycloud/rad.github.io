@@ -38,8 +38,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, Cloud SQL,
-  Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, Cloud SQL, Artifact Registry, and shared
+  service accounts this module depends on). You do not need to deploy this
+  yourself first — the platform automatically detects whether it already exists
+  in the target project and provisions it before this module if not (see Task
+  1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -184,8 +187,9 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Monitoring** — open the Cloud Run dashboard for the service and review request
    count, request latency (P50/P95/P99), instance count, and CPU / memory utilisation.
-   The module also provisions an **uptime check** against `/health`; confirm it is green
-   under Monitoring → Uptime checks, and review Alerting → Policies.
+   `uptime_check_config` defaults to `enabled = false` — no uptime check is provisioned
+   out of the box. If you enable it, note the default target path is `/`, not `/health`;
+   confirm it is green under Monitoring → Uptime checks, and review Alerting → Policies.
 
 ---
 
@@ -195,8 +199,11 @@ Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Synapse releases.
 
 - **Revision unhealthy / service won't serve:** inspect the latest revision and its logs
-  for startup errors. The probe targets `/health` on port 8008; a probe pointed at an
-  authenticated Matrix path would 401/403 and never pass.
+  for startup errors. The `startup_probe`/`liveness_probe` default to path `/` on port
+  8008 (the underlying `Synapse_Common` module's own probe variables default to
+  `/health`, but this Cloud Run variant overrides them with its own `/`-defaulting
+  variables in `synapse.tf`); a probe pointed at an authenticated Matrix path would
+  401/403 and never pass.
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
@@ -206,7 +213,10 @@ platform-level diagnostics and do not change with Synapse releases.
   database with `LC_COLLATE='C' LC_CTYPE='C'`.
 - **Federation broken / device sessions lost after a redeploy:** the signing key was
   regenerated because the data directory was not persistent. Ensure `enable_nfs = true`
-  (the default) so `/data` survives restarts — the signing key must never change.
+  (the default) **and set `nfs_mount_path = "/data"`** — its default is
+  `/opt/synapse/storage`, which does not match the entrypoint's data directory
+  (`SYNAPSE_DATA_DIR = "/data"`), so the signing key would not land on the persistent
+  mount. The signing key must never change.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB
   password secret exists, and the `db-init` job completed successfully.
   ```bash

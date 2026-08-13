@@ -197,9 +197,14 @@ Monitoring, with optional uptime checks and alert policies.
   `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. The custom `entrypoint.sh` maps these
   to Zammad's `POSTGRESQL_*` convention, and uses `DB_IP` (Cloud SQL private IP) for
   the TCP readiness check because Cloud Run's `DB_HOST` is a Unix socket path.
-- **WebSocket connectivity.** Zammad agents receive live ticket updates via
-  ActionCable WebSockets. With multiple instances, Redis pub/sub coordinates events
-  across them — this is why `enable_redis = true` is mandatory.
+- **WebSocket connectivity — real-time push does not actually work on Cloud Run.**
+  The `zammad-websocket` (ActionCable) process starts on port 6042 alongside the
+  railsserver, but Cloud Run only exposes the single declared `container_port` —
+  clients cannot reach port 6042 directly, so the browser's ActionCable handshake
+  never connects. The UI falls back to polling gracefully instead (documented in
+  `Zammad_Common/scripts/entrypoint.sh`). `enable_redis = true` is still mandatory
+  because Sidekiq (background jobs — email fetching, escalations, SLA calculations)
+  depends on it regardless of ActionCable's reachability.
 - **Health path.** Startup and liveness probes target `/`, which returns
   HTTP 200 only when Zammad is fully initialised. The startup probe allows up to
   510 seconds total (60-second initial delay, 30 retries at 15-second intervals) to
@@ -226,12 +231,14 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `project_id` | _(required)_ | Target Google Cloud project. |
 | `region` | `us-central1` | Region for the service and regional resources. |
+| `elasticsearch_url` | `""` | Elasticsearch HTTP endpoint for full-text search. Leave empty to disable. |
+| `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when security is disabled. |
 
 ### Group 2 — Deployment Environment
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -255,6 +262,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `4Gi` | Memory per instance. Minimum 2 GiB; 4 GiB recommended. |
 | `container_port` | `3000` | Zammad railsserver port. Must match `ZAMMAD_RAILSSERVER_PORT`. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts and GCS Fuse. |
+| `cpu_always_allocated` | `false` | Cost-first cold-start default. `false` throttles CPU to ~0 between requests, which stops the in-process Sidekiq scheduler (triggers, escalations) and ActionCable. Set `true` (with `min_instance_count >= 1`) to restore continuous operation. |
 | `min_instance_count` | `0` | Minimum instances (scale-to-zero). Set ≥ 1 to avoid cold starts on a production helpdesk. |
 | `max_instance_count` | `5` | Maximum instances (cost ceiling). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. Do not disable. |
@@ -355,14 +363,6 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
 
-### Group 20 — Elasticsearch (optional full-text search)
-
-| Variable | Default | Description |
-|---|---|---|
-| `elasticsearch_url` | `""` | Elasticsearch HTTP endpoint for full-text search (e.g. the `elasticsearch_endpoint` output from [Elasticsearch_GKE](Elasticsearch_GKE.md)). Leave empty to disable — Zammad runs fine without it. |
-| `elasticsearch_username` | `""` | Elasticsearch username. Leave empty when `xpack.security.enabled` is false. |
-| `elasticsearch_password_secret` | `""` | Secret Manager secret ID holding the Elasticsearch password. Leave empty for an unauthenticated cluster. |
-
 ### Group 22 — VPC Service Controls & Audit Logging
 
 | Variable | Default | Description |
@@ -420,7 +420,9 @@ running resources.
 | `memory_limit` | `4Gi` | High | Zammad OOMs during schema migration or under load below 2 GiB. |
 | `nfs_mount_path` | `/opt/zammad/storage` | High | Changing this causes attachments to be written to ephemeral instance storage; existing NFS attachments become inaccessible. |
 | `enable_nfs` | `true` | High | Without NFS, all uploaded attachments are lost on instance restart. |
-| `min_instance_count` | `1` | High | `0` causes 60–90-second cold starts for the first agent to open a ticket. |
+| `cpu_always_allocated` | `true` for production | High | Default `false` (cost-first cold-start) throttles CPU to ~0 between requests, stopping the in-process Sidekiq scheduler (triggers, escalations) and ActionCable. Set `true` with `min_instance_count >= 1` for a production helpdesk that must process timed events continuously. |
+| `min_instance_count` | `1` | High | `0` (the default) causes 60–90-second cold starts for the first agent to open a ticket. |
+| ActionCable / port 6042 | not operator-configurable | Medium | Real-time WebSocket ticket updates never work on Cloud Run regardless of `enable_redis`/`session` settings — only the declared `container_port` is reachable, so the browser's ActionCable handshake cannot reach port 6042. The UI falls back to polling gracefully; do not rely on live push notifications. |
 | `vpc_egress_setting` | `ALL_TRAFFIC` when using Memorystore | High | Memorystore Redis private IP may not be reachable with `PRIVATE_RANGES_ONLY`; Redis connections are refused. |
 | `startup_probe.initial_delay_seconds` | `60` (or higher) | High | Too short causes restart loops while schema migration is running on first boot. |
 | `max_instance_count` > 1 without Redis | configure Redis first | Medium | Multiple instances without Redis cause race conditions on ticket assignment and real-time state divergence. |

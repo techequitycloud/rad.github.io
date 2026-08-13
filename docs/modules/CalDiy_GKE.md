@@ -230,7 +230,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -238,7 +238,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `application_name` | `cal` | Base name for resources. Do not change after first deploy. |
+| `application_name` | `caldiy` | Base name for resources. Do not change after first deploy. |
 | `application_display_name` | `Cal.com Scheduling` | Friendly name shown in the Console. |
 | `application_description` | _(set)_ | Workload description annotation. |
 | `application_version` | `v6.2.0` | Cal.diy image version tag — **no `latest` tag exists**, always pin to a versioned release. |
@@ -482,4 +482,4 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Cal.diy-specific application configuration shared with the
-Cloud Run variant is described in **[Cal_Common](CalDiy_Common.md)**.
+Cloud Run variant is described in **[CalDiy_Common](CalDiy_Common.md)**.

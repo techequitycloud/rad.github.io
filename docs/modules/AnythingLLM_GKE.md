@@ -230,9 +230,12 @@ Monitoring. An uptime check targeting `/api/ping` is enabled by default.
 - **Embedding engine consistency.** Changing `EMBEDDING_ENGINE` after documents have been
   ingested makes existing vector indices incompatible. All documents must be re-ingested
   after any change to the embedding engine.
-- **Fixed environment variables.** `SERVER_PORT=3001`, `STORAGE_DIR=/app/server/storage`,
-  `UID=1000`, and `GID=1000` are set automatically by `AnythingLLM_Common`. Do not
-  override them.
+- **Fixed environment variables.** `SERVER_PORT=3001`, `UID=1000`, and `GID=1000` are set
+  automatically by `AnythingLLM_Common`. Do not override them. `AnythingLLM_Common` also
+  sets `STORAGE_DIR=/app/server/storage` as its own default, but `AnythingLLM_GKE`
+  overrides it to the NFS mount path (`nfs_mount_path`, default `/mnt/nfs`) whenever
+  `enable_nfs = true` — the platform default — so a deployment actually runs with
+  `STORAGE_DIR=/mnt/nfs` unless `enable_nfs` is explicitly disabled (see Section E).
 
 ---
 
@@ -253,7 +256,7 @@ specific to or notable for AnythingLLM are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 

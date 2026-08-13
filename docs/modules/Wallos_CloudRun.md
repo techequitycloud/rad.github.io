@@ -32,7 +32,7 @@ cron daemon, which drives several of the defaults below:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Single PHP/php-fpm service, 1 vCPU / 1 GiB by default; `min = max = 1`, `cpu_always_allocated = true` |
-| Persistent state | Cloud Storage (GCS FUSE) | **Two** buckets: `db` mounted at `/var/www/html/db` (SQLite file), `uploads` mounted at `/var/www/html/images/uploads/logos` (custom provider logos) |
+| Persistent state | NFS + Cloud Storage (GCS FUSE) | The SQLite directory `/var/www/html/db` is served from **NFS** (`enable_nfs = true`) — GCS FUSE cannot provide the POSIX locks SQLite needs; the `uploads` bucket is mounted via GCS FUSE at `/var/www/html/images/uploads/logos` (custom provider logos) |
 | Database | None (embedded SQLite) | `database_type = NONE`; no Cloud SQL is provisioned; confirmed no MySQL/Postgres support exists anywhere in the app |
 | Cache & queue | None | Wallos uses no Redis |
 | Secrets | Secret Manager | No app secrets generated; users live in the SQLite DB |
@@ -41,12 +41,14 @@ cron daemon, which drives several of the defaults below:
 
 **Sensible defaults worth knowing up front:**
 
-- **State lives in two SQLite/logo files on GCS, each in its own bucket.**
+- **State lives on two separate volumes.**
   Wallos has no Cloud SQL database. Its subscriptions, categories, settings, and
-  users are stored in `/var/www/html/db/wallos.db` (bucket `db`); user-uploaded
-  custom provider logos live in `/var/www/html/images/uploads/logos` (bucket
-  `uploads`). Both paths are fixed — no environment variable relocates either one.
-  Losing or wiping either bucket loses that state.
+  users are stored in `/var/www/html/db/wallos.db`, mounted from **NFS**
+  (`enable_nfs = true`, `nfs_mount_path = "/var/www/html/db"`,
+  `enable_gcs_db_volume = false`); user-uploaded custom provider logos live in
+  `/var/www/html/images/uploads/logos` (GCS FUSE, bucket `uploads`).
+  Both paths are fixed — no environment variable relocates either one.
+  Losing or wiping either volume loses that state.
 - **CRITICAL — single always-on instance, not just cold-start tuning.**
   `min_instance_count = max_instance_count = 1` **and** `cpu_always_allocated =
   true`. This is a harder constraint than the usual "avoid cold starts" pattern:
@@ -95,20 +97,18 @@ across revisions for safe rollouts.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution
 environment, and traffic splitting.
 
-### B. Cloud Storage — persistent state (GCS FUSE)
+### B. NFS and Cloud Storage — persistent state
 
 Wallos has no Cloud SQL database. Its embedded SQLite database
-(`/var/www/html/db/wallos.db`) and its user-uploaded provider logos
-(`/var/www/html/images/uploads/logos`) live in **two separate** Cloud Storage
-buckets, each mounted into the container via GCS FUSE (requires the `gen2`
-execution environment).
+(`/var/www/html/db/wallos.db`) is served from the shared **NFS** volume, while its
+user-uploaded provider logos (`/var/www/html/images/uploads/logos`) live in a
+Cloud Storage bucket mounted into the container via GCS FUSE (both mounts require
+the `gen2` execution environment).
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
   ```bash
   gcloud storage buckets list --project "$PROJECT" --filter="name~wallos"
-  gcloud storage ls gs://<db-bucket>/               # bucket name is in the Outputs
-  gcloud storage ls gs://<db-bucket>/wallos.db      # the SQLite DB object
   gcloud storage ls gs://<uploads-bucket>/          # user-uploaded logo files
   ```
 
@@ -163,17 +163,17 @@ container logs — there is no separate Cloud Run Job to inspect.
 
 - **No first-deploy database setup.** There is no `db-init` job and no Cloud SQL
   instance. On first start Wallos creates its SQLite database at
-  `/var/www/html/db/wallos.db` (on the GCS FUSE mount) if it does not already exist
+  `/var/www/html/db/wallos.db` (on the NFS mount) if it does not already exist
   and seeds the default `admin`/`admin` user.
 - **State persistence.** Subscriptions, categories, settings, and users live
   entirely in `/var/www/html/db/wallos.db`. Because that file is on the persistent
-  `db` GCS bucket, it survives restarts and redeploys. Custom provider logos
+  NFS volume, it survives restarts and redeploys. Custom provider logos
   persist separately on the `uploads` bucket.
 - **Default credentials must be changed.** The seeded `admin`/`admin` login is
   well-known. Log in and change the password (and ideally the username) in the web
   UI immediately after the first deploy.
 - **Single-writer constraint.** The embedded SQLite database does not support
-  concurrent writers across instances on a GCS FUSE mount. Keep
+  concurrent writers across instances on a shared network mount. Keep
   `max_instance_count = 1`; scaling out risks corrupting the database.
 - **Always-on cron daemon — not request-triggered.** Wallos's 8 baked-in scheduled
   tasks (exchange-rate refresh, renewal notifications, an email-verification poll
@@ -265,8 +265,11 @@ Leave at defaults.
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the Wallos `db` and `uploads` buckets (and any extra `storage_buckets`). |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `db`/`uploads` buckets. |
-| `enable_nfs` | `false` | NFS is off by default; not needed for Wallos. |
-| `gcs_volumes` | `[]` | Extra GCS FUSE mounts. The `db` and `uploads` buckets are added automatically. |
+| `enable_nfs` | `true` | On by default — Wallos's SQLite directory is served from NFS, not GCS FUSE. |
+| `nfs_mount_path` | `/var/www/html/db` | Wallos hardcodes its SQLite database directory here; do not change. |
+| `enable_gcs_db_volume` | `false` | GCS FUSE at `/var/www/html/db` breaks SQLite locking — the database comes from NFS instead. |
+| `enable_gcs_uploads_volume` | `true` | Mounts the `uploads` bucket at `/var/www/html/images/uploads/logos` (whole-file writes, no locking needed). |
+| `gcs_volumes` | `[]` | Extra GCS FUSE mounts. The `uploads` bucket is added automatically. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
 ### Group 12 — Database Backend
@@ -339,17 +342,17 @@ running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `min_instance_count` | `1` | Critical | Scaling to zero silently stops Wallos's cron daemon — renewal notifications and every other scheduled task stop firing, with no error anywhere. |
-| `max_instance_count` | `1` | Critical | >1 puts concurrent writers on SQLite over GCS FUSE, corrupting the database. |
+| `max_instance_count` | `1` | Critical | >1 puts concurrent writers on the SQLite file on the shared NFS volume, corrupting the database. |
 | `cpu_always_allocated` | `true` | Critical | `false` throttles CPU to near-zero between requests, starving the cron daemon of the CPU cycles it needs to run scheduled tasks. |
-| `db` / `uploads` GCS buckets | Never delete | Critical | The embedded SQLite DB and custom logos live here; deleting either bucket destroys that state permanently. |
+| NFS volume / `uploads` GCS bucket | Never delete | Critical | The embedded SQLite DB (NFS) and custom logos (`uploads` bucket) live here; deleting either destroys that state permanently. |
 | `admin` / `admin` (seeded login) | Change on first login | Critical | Leaving the default credential lets anyone who can reach the service take full control. |
 | `ingress_settings` | `all` (or `internal` to restrict) | High | Default `all` exposes the service to the public internet — pair with IAP or Cloud Armor if that's not desired; set `internal` for VPC-only access. |
 | `container_port` | `80` | High | Wallos listens on 80; a different port makes the startup probe fail and the revision never becomes Ready. |
 | `startup_probe` / `liveness_probe` path | `/` | Medium | No dedicated `/health` endpoint is documented for `bellamy/wallos` — if the app ever gates its root path behind auth, the probe path needs adjusting. |
 | `container_image_source` | `prebuilt` (forwarded) | High | If not forwarded, App_CloudRun's own default (`custom`) silently wins and triggers a from-source Kaniko build against an image with no Dockerfile — the deploy fails. |
 | `enable_cloudsql_volume` | `false` | Medium | Wallos has no Cloud SQL; enabling adds a useless Auth Proxy sidecar. |
-| `execution_environment` | `gen2` | High | `gen1` cannot mount the GCS FUSE volumes, so state is not persisted. |
-| `db`/`uploads` volume-shadowing | Verify at first deploy | High | If `bellamy/wallos` seeds any default assets inside `/var/www/html/db` or `/var/www/html/images/uploads/logos`, mounting a fresh empty bucket over that exact path hides them on first boot — this was not confirmed either way during research. |
+| `execution_environment` | `gen2` | High | `gen1` cannot mount the NFS or GCS FUSE volumes, so state is not persisted. |
+| `db`/`uploads` volume-shadowing | Verify at first deploy | High | If `bellamy/wallos` seeds any default assets inside `/var/www/html/db` or `/var/www/html/images/uploads/logos`, mounting a fresh empty volume over that exact path hides them on first boot — this was not confirmed either way during research. |
 
 ---
 

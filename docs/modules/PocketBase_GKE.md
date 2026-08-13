@@ -34,7 +34,7 @@ POSIX file locking. The deployment wires together a deliberately minimal set of 
 | Persistent storage | Persistent Disk (block PVC) | A per-pod ReadWriteOnce PVC (20 GiB default) mounted at `/pb_data` |
 | Cache & queue | **None** | PocketBase uses no Redis; `enable_redis = false` |
 | Secrets | Secret Manager | None auto-generated — auth lives inside SQLite; secrets optional for your own use |
-| Ingress | Cloud Load Balancing | `ClusterIP` by default (internal); optional LoadBalancer / custom domain for external access |
+| Ingress | Cloud Load Balancing | `LoadBalancer` by default (external); PocketBase is a public-facing backend-as-a-service, not an internal-only workload |
 
 **Sensible defaults worth knowing up front:**
 
@@ -50,8 +50,10 @@ POSIX file locking. The deployment wires together a deliberately minimal set of 
 - **Single replica.** SQLite is single-writer and the PVC is ReadWriteOnce, so both
   `min_instance_count` and `max_instance_count` default to `1`. Do not raise
   `max_instance_count`.
-- **`service_type = ClusterIP` by default** (internal cluster access). Expose PocketBase
-  externally with a LoadBalancer Service or a custom domain + managed certificate.
+- **`service_type = LoadBalancer` by default** (external access). PocketBase is a
+  public-facing backend-as-a-service with an admin dashboard and REST API, so it is
+  reachable from outside the cluster out of the box; set `service_type = "ClusterIP"`
+  if you want it internal-only, or add a custom domain + managed certificate.
 - **The admin account is created interactively on first run at `/_/`.** No admin password
   is injected. Create the superuser immediately after the app is reachable.
 - **No secret is auto-generated.** PocketBase issues and stores all auth itself; Secret
@@ -134,10 +136,10 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration.
 
 ### E. Networking & ingress
 
-By default the workload is exposed via a `ClusterIP` Service (internal only). To reach
-PocketBase from outside the cluster, set `service_type = LoadBalancer` or enable a custom
-domain with a Google-managed certificate; a static IP can be reserved so the address
-survives redeploys.
+By default the workload is exposed via a `LoadBalancer` Service (external), reflecting
+PocketBase's role as a public-facing backend-as-a-service. To make it internal-only, set
+`service_type = ClusterIP`; a custom domain with a Google-managed certificate is also
+available, and a static IP can be reserved so the address survives redeploys.
 
 - **Console:** Network services → Load balancing; VPC network → IP addresses.
 - **CLI:**
@@ -208,7 +210,7 @@ specific to or notable for PocketBase are listed; every other input is inherited
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -236,7 +238,7 @@ specific to or notable for PocketBase are listed; every other input is inherited
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `ClusterIP` | Internal by default; use `LoadBalancer` for external access. |
+| `service_type` | `LoadBalancer` | External by default (PocketBase is public-facing); use `ClusterIP` for internal-only access. |
 | `workload_type` | `null` → `StatefulSet` | Auto-resolves to StatefulSet because `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Single replica, so stickiness is unnecessary. |
 
@@ -331,7 +333,7 @@ explore the running resources.
 | Admin account at `/_/` | Create immediately after access | Critical | Until the superuser exists, anyone reaching `/_/` can claim it and own the instance. |
 | `application_version` bump | Back up the PVC first | High | PocketBase auto-migrates the schema on start; an interrupted upgrade can leave the SQLite DB mid-migration. |
 | `workload_type` | leave `null` (auto StatefulSet) | High | Forcing `Deployment` with `stateful_pvc_enabled = true` fails the plan-time validation. |
-| `service_type` | `ClusterIP` (internal) or `LoadBalancer` (external) | High | Leaving `ClusterIP` when external access is needed leaves the app unreachable from outside the cluster. |
+| `service_type` | `LoadBalancer` (external, the default) or `ClusterIP` (internal) | High | Switching to `ClusterIP` when external access is needed leaves the app unreachable from outside the cluster. |
 | `enable_iap` | Only for private deployments | High | IAP blocks all unauthenticated requests, including public API clients and the admin UI. |
 | `stateful_pvc_size` | `20Gi` (raise for heavy file uploads) | Medium | Too small a PVC fills up as uploaded files accumulate, and PVCs cannot always be shrunk. |
 | `memory_limit` | `1Gi` | Low | PocketBase is lightweight; over-provisioning only adds cost on Autopilot. |

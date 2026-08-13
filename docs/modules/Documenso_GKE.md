@@ -255,7 +255,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only
 settings specific to or notable for Documenso are listed; every other input is
 inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 The full list of every declared variable, including ones inherited unchanged
-from the Foundation, is in the [module README](../../modules/Documenso_GKE/README.md).
+from the Foundation, is in the [module README](https://github.com/techequitycloud/partner-modules/blob/main/modules/Documenso_GKE/README.md).
 
 ### Group 1 — Project & Identity
 
@@ -268,7 +268,7 @@ from the Foundation, is in the [module README](../../modules/Documenso_GKE/READM
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -462,7 +462,7 @@ Platform/UI-only metadata (`module_description`, `module_documentation`,
 (`application_module`, `explicit_secret_values`, `scripts_dir` — the module
 wires its own secret values and scripts path internally from
 `Documenso_Common`). None of these affect the deployed infrastructure; see the
-[module README](../../modules/Documenso_GKE/README.md#module-metadata-group-0)
+[module README](https://github.com/techequitycloud/partner-modules/blob/main/modules/Documenso_GKE/README.md#module-metadata-group-0)
 for the full table.
 
 All other inputs follow standard [App_GKE](App_GKE.md) behaviour.

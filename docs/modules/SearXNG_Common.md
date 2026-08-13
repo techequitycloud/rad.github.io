@@ -75,9 +75,26 @@ resources are provisioned by the foundation but are not used by SearXNG itself.
 ## 4. Container image and build
 
 `SearXNG_Common` sets `container_image = "searxng/searxng"` with
-`image_source = "custom"` to route the image through the Cloud Build pipeline in
-Artifact Registry. The `Dockerfile` in `scripts/` extends the official SearXNG
-image, allowing custom build arguments (such as `APP_VERSION`) to be passed.
+`image_source = "custom"` in its `config` output, which would route the image
+through the Cloud Build pipeline in Artifact Registry. The `Dockerfile` in
+`scripts/` extends the official SearXNG image (plus `searxng-rad-entrypoint.sh`,
+which enables the JSON API for n8n intent-radar integration and injects
+`SEARXNG_SECRET` into `settings.yml` at startup), allowing custom build
+arguments (such as `APP_VERSION`) to be passed.
+
+**This `"custom"` setting is not authoritative by default.** Both
+`SearXNG_CloudRun` and `SearXNG_GKE` declare their own `container_image_source`
+variable defaulting to `"prebuilt"` and forward it into `App_CloudRun`/
+`App_GKE`. The Foundation Module's precedence logic
+(`final_container_image_source = var.container_image_source != "" ?
+var.container_image_source : local.module_container_image_source` —
+`App_CloudRun/modules.tf`, equivalent in `App_GKE/modules.tf`) means the
+non-empty top-level variable always wins over `SearXNG_Common`'s `"custom"`
+value. So with default settings, the Cloud Build custom-image path above is
+**not exercised** — SearXNG deploys the stock, mirrored `searxng/searxng`
+image instead, and the JSON-API-enabling entrypoint never runs. Set
+`container_image_source = "custom"` on the calling `SearXNG_CloudRun`/
+`SearXNG_GKE` module to actually opt into the custom image.
 
 The `enable_image_mirroring` flag (default `true`) mirrors the upstream image into
 Artifact Registry before deployment, avoiding Docker Hub rate limits.

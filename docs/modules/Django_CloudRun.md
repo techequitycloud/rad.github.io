@@ -254,7 +254,7 @@ specific to or notable for Django are listed; every other input is inherited fro
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources for cost/ownership tracking. |
 
@@ -429,7 +429,7 @@ locate and explore the running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Django requires PostgreSQL; MySQL or `NONE` will fail the `db-init` job. |
-| `application_name` / `tenant_deployment_id` | set once | Critical | Embedded in resource names; changing recreates all named resources and destroys data. |
+| `application_name` / `tenant_id` | set once | Critical | Embedded in resource names; changing recreates all named resources and destroys data. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `startup_probe` path | `/healthz` (no redirect) | Critical | Cloud Run probe traffic is plain HTTP; a redirect returns 301, Cloud Run never sees 200, service never starts. |
 | `SECURE_SSL_REDIRECT` in `settings.py` | `False` or exempt `/healthz` | Critical | `True` redirects every HTTP request including the startup probe; service stuck in `STARTING`. |

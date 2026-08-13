@@ -37,9 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Cloud SQL, NFS/Redis, Artifact Registry, and shared service accounts
-  this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Cloud SQL,
+  NFS/Redis, Artifact Registry, and shared service accounts this module depends
+  on). You do not need to deploy this yourself first — the platform
+  automatically detects whether it already exists in the target project and
+  provisions it before this module if not (see Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -57,7 +59,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Chatwoot (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Click **Deploy** in the RAD platform top navigation, open **Chatwoot (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Chatwoot_GKE)
    documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
@@ -144,7 +146,11 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Update the application version** by changing the `application_version`
    input (the `chatwoot/chatwoot` image tag) in the RAD platform and applying
-   it via **Update**; a new image builds and a rolling update replaces the pods.
+   it via **Update**; a new image builds and the pods are recreated (not a
+   rolling update — `enable_nfs = true` by default, and `App_GKE` deploys
+   NFS-backed apps with the `Recreate` strategy so two pods never contend for
+   the same NFS attachment volume and shared database during an update).
+   Expect brief downtime while the old pod terminates and the new one starts.
 
 4. **Manage secrets, storage, and jobs:**
 

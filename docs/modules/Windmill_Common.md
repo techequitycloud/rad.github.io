@@ -19,7 +19,7 @@ For the infrastructure that actually provisions and runs Windmill, see the platf
 | Container image | Pins the official `ghcr.io/windmill-labs/windmill` image and builds a custom wrapper with a startup shim | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for PostgreSQL 16** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job that creates the database, user, roles, and grants | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** `windmill-data` bucket for workflow outputs and artefacts | `storage_buckets` output |
+| Object storage | Declares the **Cloud Storage** `data` bucket (`gcs-<app><tenant-prefix>-data`) for workflow outputs and artefacts | `storage_buckets` output |
 | Core settings | Sets the baseline Windmill environment (combined server+worker mode, namespace isolation disabled, structured logging, Prometheus metrics, service URL) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup, liveness, and readiness probe configuration targeting `/api/version` | §Observability in the platform guides |
 
@@ -110,7 +110,7 @@ The startup probe allows up to 160 seconds (60 s delay + 10 × 10 s) for Windmil
 
 ## 7. Object storage
 
-A dedicated **Cloud Storage** bucket (`windmill-data`) is declared here and provisioned by the foundation, which also grants the workload service account access. This bucket holds workflow outputs, job artefacts, and any files produced by script execution. List it with:
+A dedicated **Cloud Storage** bucket (name suffix `data`, i.e. `gcs-<app><tenant-prefix>-data`) is declared here and provisioned by the foundation, which also grants the workload service account access. This bucket holds workflow outputs, job artefacts, and any files produced by script execution. List it with:
 
 ```bash
 gcloud storage buckets list --project "$PROJECT"
