@@ -4,8 +4,8 @@ description: "Map every Associate Cloud Engineer (ACE) exam domain to hands-on R
 ---
 
 # Associate Cloud Engineer (ACE) Certification Lab Map
-> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
+> 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
 The Associate Cloud Engineer certification validates that you can deploy applications, monitor operations, and manage enterprise solutions on Google Cloud using both the console and the command line. The RAD platform's four foundation modules — `Services_GCP` (shared VPC networking, Cloud SQL, Redis, Filestore, GKE Autopilot, service accounts), `App_CloudRun` (Cloud Run v2 deployment engine), `App_GKE` (GKE deployment engine), and the `App_Common` shared library (secrets, IAM, storage, CMEK, CI/CD plumbing) — give you a live, inspectable lab: every toggle in your deployment portal maps to real GCP resources you can then explore with `gcloud`, `kubectl`, and the console. Application wrapper modules (Django, WordPress, etc.) exist on top of these but are not needed for exam preparation.
 
@@ -32,7 +32,7 @@ The Associate Cloud Engineer certification validates that you can deploy applica
 | Variable | Value |
 |---|---|
 | `project_id` | your project ID |
-| `tenant_deployment_id` | `demo` (default) |
+| `tenant_id` | `demo` (default) |
 | `create_postgres` | `true` (default) |
 | `create_network_filesystem` | `true` (default) |
 | `support_users` | your email address |
@@ -131,7 +131,7 @@ Revision management, traffic splitting, CI/CD with Cloud Build and Cloud Deploy,
 | 3.3 Routes, peering, DNS operations | 📘 | not implemented | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#33-managing-networking-resources) |
 | 3.4 Alert policies, channels, dashboards | ✅ | `support_users`, `alert_policies`, `alert_cpu_threshold` (default `80`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
 | 3.4 Audit logs | ✅ | `enable_audit_logging` | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
-| 3.4 Uptime checks | ✅ | `uptime_check_config` (default `{ enabled = true, path = "/" }`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
+| 3.4 Uptime checks | ✅ | `uptime_check_config` (default `{ enabled = false, path = "/" }` — opt in with `enabled = true`) | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
 | 3.4 Log sinks, log-based metrics | 📘 | not implemented | [Section 3 guide](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging) |
 
 ## Section 4: Configuring access and security (~20% of the exam)

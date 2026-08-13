@@ -9,7 +9,6 @@ description: "Prepare for the PCD exam Section 1 (Scalable Cloud-Native App Desi
 
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers the largest PCD exam section using the RAD platform foundation modules. You will exercise `App_CloudRun` (Cloud Run v2 service design), `App_GKE` (Kubernetes workload design), and `Services_GCP` (the shared database, cache, and security infrastructure). Deploy the **Serverless baseline** profile from the [Lab Map](PCD_Certification_Guide.md) before starting; add the **Hardened edge** profile for 1.1 (caching/CDN) and 1.2 (IAP, rotation).
 
 ---
@@ -31,7 +30,7 @@ This guide covers the largest PCD exam section using the RAD platform foundation
 
 Cloud Run-specific performance levers:
 
-- `cpu_always_allocated` (default `true`) — set `false` to bill CPU only during requests. Startup CPU boost is always on, and session affinity is always on for the service.
+- `cpu_always_allocated` (default `false`, i.e. request-based billing) — set `true` to keep CPU allocated between requests (schedulers, queue workers, WebSocket servers). Startup CPU boost is always on, and session affinity is always on for the service. NOTE: line 59 of the same file ("keep `cpu_always_allocated = true`") is phrased as an override and stays correct only if reworded from "keep" to "set".
 - `execution_environment` (default `"gen2"`) — plan-time validations require gen2 for NFS (`enable_nfs`) and GCS Fuse (`gcs_volumes`) mounts.
 - `traffic_split` (default `[]` = 100% to latest) takes a list of `{ type, revision, percent, tag }` entries where `type` is `TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST` or `TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION`; validation enforces that percents sum to exactly 100. The optional `tag` gives a revision a stable preview URL.
 - `max_revisions_to_retain` (default `7`) prunes old revisions automatically; revisions serving traffic are never deleted.

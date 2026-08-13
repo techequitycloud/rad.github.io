@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,14 +59,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Audiobookshelf (GKE)**
+1. Click **Deploy** in the RAD platform top navigation, open **Audiobookshelf (GKE)**
    from the **Platform Modules** list to start configuration, set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Audiobookshelf_GKE)
-   documents every input by group, with defaults. If you want a directly reachable
-   external IP without configuring a custom domain, set `service_type = "LoadBalancer"`
-   now (the default `ClusterIP` is only reachable in-cluster, though a custom domain
-   is enabled by default and provides its own external path). Review the estimated
+   documents every input by group, with defaults. `service_type` now defaults to
+   `LoadBalancer`, so a directly reachable external IP is provisioned out of the box
+   (a custom domain is also enabled by default and provides its own external path).
+   Set `service_type = "ClusterIP"` only if you deliberately want it cluster-internal. Review the estimated
    cost (if credits are enabled) and click **Deploy**, which opens the deployment
    status page with real-time logs.
 
@@ -131,7 +134,7 @@ export REGION="us-central1"           # the region you deploy into
 
 5. Immediate hardening: because the admin account is created by whoever reaches the
    wizard first, complete step 4 right after deploying — or restrict reachability
-   (keep `service_type = ClusterIP`, or gate the custom domain behind IAP) until you
+   (set `service_type = ClusterIP` — it defaults to `LoadBalancer`, so this is an explicit change, not the status quo — or gate the custom domain behind IAP) until you
    have.
 
 ---
@@ -221,8 +224,10 @@ platform-level diagnostics and do not change with Audiobookshelf releases.
   `-var stateful_pvc_storage_class=standard` (HDD `pd-standard`) — Audiobookshelf's
   SQLite/media workload does not need SSD IOPS. Reclaiming already-consumed SSD
   quota requires deleting the PVC, not just scaling to zero.
-- **No external reachability:** the default `service_type` is `ClusterIP`
-  (in-cluster only). Confirm the Service type and, if using the custom-domain path,
+- **No external reachability:** `service_type` defaults to `LoadBalancer`, so an
+  external IP should be assigned (it can take a minute or two); an in-cluster-only
+  Service means it was explicitly set to `ClusterIP`. Confirm the Service type and,
+  if using the custom-domain path,
   that the Gateway/managed certificate has provisioned:
   ```bash
   kubectl get svc,gateway -n "$NS"

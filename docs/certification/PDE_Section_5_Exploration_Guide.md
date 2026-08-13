@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Sect
 
 > 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers exam Section 5 using the RAD foundation modules. Performance levers live in `App_CloudRun` (execution environment, CPU allocation, probes, resources) and `App_GKE` (resource requests, VPA, quotas); cost levers span both engines plus Artifact Registry cleanup and the GKE cluster's cost-allocation configuration. Deploy the **Cost-lean serverless** profile from the [Lab Map](PDE_Certification_Guide.md); the GKE exercises reuse the **GKE release engineer** profile.
 
 ---
@@ -26,7 +25,7 @@ This guide covers exam Section 5 using the RAD foundation modules. Performance l
 |---|---|---|
 | Execution environment | `execution_environment` (default `gen2`) | gen2 gives full Linux compatibility (required by the module's NFS and GCS Fuse mounts — validated at plan time) and different startup/CPU characteristics vs. gen1 |
 | Startup CPU boost | startup CPU boost is always on for the Cloud Run service | extra CPU during instance start shrinks cold-start latency |
-| CPU allocation | `cpu_always_allocated` (default `true`) controls whether CPU stays allocated when idle | always-on CPU keeps background work running between requests; request-only CPU throttles to near-zero when idle |
+| CPU allocation | `cpu_always_allocated` (default `false`) controls whether CPU stays allocated when idle | always-on CPU keeps background work running between requests; request-only CPU throttles to near-zero when idle |
 | Warm floor | `min_instance_count` (default `0`) | ≥1 eliminates cold starts at a constant cost |
 | Resource ceiling | `container_resources` (`cpu_limit` `1000m`, `memory_limit` `512Mi`) | undersized limits show up as throttling/OOM kills |
 | Probe tuning | `startup_probe_config` / `health_check_config` | a slow `/healthz` or tight `failure_threshold` masquerades as deploy flakiness |

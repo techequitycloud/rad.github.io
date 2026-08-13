@@ -9,7 +9,9 @@ description: "Hands-on lab: deploy the Services GCP foundation module — VPC, n
 
 ## Overview
 
-`Services GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. It must be deployed before any application module and provisions the shared GCP services that all applications depend on: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and a broad set of optional capabilities — AlloyDB for PostgreSQL, Firestore, Cloud Memorystore (Redis), Cloud Filestore (NFS), GKE Autopilot/Standard clusters, and security/governance controls (CMEK, Binary Authorization, VPC Service Controls, Security Command Center, Workload Identity Federation, audit logging, monitoring alerts, and billing budgets).
+`Services GCP` is the **foundational infrastructure module** in the RAD Modules ecosystem. Every application module depends on it and provisions on top of its shared GCP services: VPC networking, Cloud SQL databases, a self-managed NFS and Redis VM, Artifact Registry, IAM service accounts, and a broad set of optional capabilities — AlloyDB for PostgreSQL, Firestore, Cloud Memorystore (Redis), Cloud Filestore (NFS), GKE Autopilot/Standard clusters, and security/governance controls (CMEK, Binary Authorization, VPC Service Controls, Security Command Center, Workload Identity Federation, audit logging, monitoring alerts, and billing budgets).
+
+**You do not need to deploy this yourself before deploying an application module.** The platform auto-detects whether `Services GCP` already exists in the target project and, if not, provisions it automatically — with the specific resources (`create_postgres`, `create_mysql`, `create_google_kubernetes_engine`, etc.) that the application module you're deploying actually needs — before continuing with your module's own build. This lab walks through deploying and verifying `Services GCP` **directly and manually**, which is still useful for understanding what it provisions under the hood, pre-provisioning it with a specific configuration before any app depends on it, or intentionally sharing one `Services GCP` deployment across several app deployments up front.
 
 **Estimated time:** 1.5–2.5 hours (add 30–40 minutes if deploying a GKE cluster)
 
@@ -88,15 +90,15 @@ export NFS_VM=$(gcloud compute instances list \
 
 Variables are configured in the module configuration form in the RAD platform before deploying. The table below covers the most commonly adjusted variables; the **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Services_GCP)** documents every variable, grouped exactly as the form presents them, with a *"Choosing…"* decision note for each group explaining the cost / availability / security trade-offs behind the choice.
 
-> **Inputs are validated at plan time.** You do not have to get every combination right by memory — the module rejects invalid values (a malformed `tenant_deployment_id`, a Filestore capacity below the tier minimum, a budget threshold outside `0–1`) and invalid combinations (a read replica with no primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster) *before* anything is created, with a message naming the offending variable. Treat a clean plan as confirmation that the value and combination rules passed — sizing and CIDR-topology choices are still yours to get right.
+> **Inputs are validated at plan time.** You do not have to get every combination right by memory — the module rejects invalid values (a malformed `tenant_id`, a Filestore capacity below the tier minimum, a budget threshold outside `0–1`) and invalid combinations (a read replica with no primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster) *before* anything is created, with a message naming the offending variable. Treat a clean plan as confirmation that the value and combination rules passed — sizing and CIDR-topology choices are still yours to get right.
 
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | GCP project ID to deploy into |
-| `tenant_deployment_id` | `demo` | **Prefix of every resource name** (lowercase letters/numbers only, no hyphens — enforced). Application modules must use this same value to bind to this foundation. Never change after first deploy. |
+| `tenant_id` | `demo` | **Prefix of every resource name** (lowercase letters/numbers only, no hyphens — enforced). Application modules must use this same value to bind to this foundation. Never change after first deploy. |
 | `availability_regions` | `['us-central1']` | List of regions for subnets and resources; first entry is the primary region. A second region enables cross-region read replicas. |
 | `subnet_cidr_range` | `['10.0.0.0/24']` | CIDR ranges for VPC subnets, one per region (at least one per region is enforced). The VPC network name is derived automatically from the tenant — it is not a configurable variable. |
-| `support_users` | `[]` | Email addresses added to monitoring notification channels and IAM |
+| `support_users` | `[]` | Extra recipients for **billing budget** alerts only, and only when `create_billing_budget = true` (merged with `budget_alert_emails`). Grants no IAM and does not feed Cloud Monitoring alerts — those come from `notification_alert_emails` plus `configure_email_notification`. Inert while `create_billing_budget = false`. |
 | `resource_labels` | `{}` | Labels applied to all provisioned resources |
 | `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance |
 | `postgres_database_version` | `POSTGRES_17` | PostgreSQL engine version (`POSTGRES_17`/`16`/`15`/`14` — validated) |
@@ -122,13 +124,13 @@ Variables are configured in the module configuration form in the RAD platform be
 
 This lab supports two configurations. Pick one based on how much of the module you want to exercise (and how much lab time/cost you can spend).
 
-**Path A — Minimal (fastest, ~20–35 min).** Accept the defaults: PostgreSQL + the self-managed NFS/Redis VM. This is enough to back a single Cloud Run application and to walk Phases 2–4 and 7. Set only `project_id` and `tenant_deployment_id`.
+**Path A — Minimal (fastest, ~20–35 min).** Accept the defaults: PostgreSQL + the self-managed NFS/Redis VM. This is enough to back a single Cloud Run application and to walk Phases 2–4 and 7. Set only `project_id` and `tenant_id`.
 
 **Path B — Full-Feature (recommended for this lab, ~45–70 min with GKE).** Turn on a representative breadth of capabilities so every verification phase has something to demonstrate. Suggested configuration:
 
 ```hcl
 project_id                      = "<your-project-id>"
-tenant_deployment_id            = "demo"
+tenant_id            = "demo"
 
 # Databases — exercise all three relational engines + Firestore
 create_postgres                 = true
@@ -163,7 +165,7 @@ budget_alert_emails             = ["you@example.com"]
 
 ### Step 1.2 — Initiate Deployment
 
-Deployment is initiated from the RAD platform: click **Modules** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, and click **Submit**.
+Deployment is initiated from the RAD platform: click **Deploy** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, and click **Deploy**.
 
 **Expected resource provisioning times:**
 
@@ -476,7 +478,7 @@ gcloud alloydb instances list \
   --format="table(name,instanceType,state)"
 ```
 
-**Expected result:** A `READY` cluster with at least a `PRIMARY` instance (plus a `READ_POOL` instance if `enable_alloydb_read_pool = true`). The connection IP is exposed as the `alloydb_primary_ip` output. AlloyDB is PostgreSQL-compatible — use it instead of Cloud SQL PostgreSQL for analytics/vector workloads.
+**Expected result:** This step no longer succeeds on a default deployment. `alloydb.googleapis.com` was deliberately removed from `default_apis`, so `enable_alloydb = true` now **fails at apply** rather than provisioning a cluster — AlloyDB was trimmed as a high-cost capability. To run this step you must add `alloydb.googleapis.com` to `additional_apis` (and, on RAD-managed folders, to the `gcp.restrictServiceUsage` allowlist in `rad-automation/scripts/02-setup-ui.sh`) — enabling the API on the project and allowlisting it at the folder are two independent gates. Note the stale comment at `modules/Services_GCP/alloydb.tf:30` ("Requires alloydb.googleapis.com — added to default_apis in main.tf") is wrong for the same reason, and Services_GCP.md lines 19, 103 and 205-206 carry the same outdated assumption.
 
 ### Step 3.8 — Confirm Firestore Database [`create_firestore = true`]
 

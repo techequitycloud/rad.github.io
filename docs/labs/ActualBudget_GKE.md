@@ -28,7 +28,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and `gcloud auth application-default login` completed.
 - **Project Owner** (or equivalent) IAM on the project.
@@ -45,7 +49,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **ActualBudget (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs. Configure only what you need — the [Configuration Guide](https://docs.radmodules.dev/docs/modules/ActualBudget_GKE) documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
+1. Click **Deploy** in the RAD platform top navigation, open **ActualBudget (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs. Configure only what you need — the [Configuration Guide](https://docs.radmodules.dev/docs/modules/ActualBudget_GKE) documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a GCS data bucket, and builds the container image. No database or initialisation job is required. First deploys take roughly **10–20 minutes** (image build dominates).
 
@@ -64,18 +68,28 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. **Retrieve the service endpoint** and verify the liveness probe:
+1. **Retrieve the service and verify the liveness probe.** `service_type` defaults to `LoadBalancer` for this module, so an external IP is provisioned out of the box (it can take a minute or two to be assigned). While the address is still pending — or if you deliberately set `service_type = "ClusterIP"` — port-forward for a quick check:
 
    ```bash
    kubectl get svc -n "$NS"
-   # For an external IP or ingress hostname:
-   ENDPOINT=$(kubectl get svc -n "$NS" -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-   curl -s "http://$ENDPOINT/health/live"
+   SVC=$(kubectl get svc -n "$NS" -o jsonpath='{.items[0].metadata.name}')
+   kubectl port-forward -n "$NS" "svc/$SVC" 5006:5006
    ```
 
-   Expect an HTTP 200 response. If the service uses a Gateway or Ingress, retrieve the hostname from `kubectl get gateway,ingress -n "$NS"` instead.
+   In a second terminal:
 
-2. **Open the ActualBudget UI** in your browser. ActualBudget does not require initial credentials — you will be prompted to create or import a budget file on first access. No password retrieval is needed before you can begin.
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:5006/"
+   ```
+
+   Expect an HTTP 200 response — the same root path the deployment's own startup and liveness probes check. For durable external access, set `service_type = "LoadBalancer"` via **Update** on the deployment details page, then retrieve the external IP:
+
+   ```bash
+   ENDPOINT=$(kubectl get svc -n "$NS" "$SVC" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   curl -s -o /dev/null -w "%{http_code}\n" "http://$ENDPOINT/"
+   ```
+
+2. **Open the ActualBudget UI** in your browser (the port-forward URL, or the external IP once `service_type = LoadBalancer` is set). ActualBudget does not require initial credentials — you will be prompted to create or import a budget file on first access. No password retrieval is needed before you can begin.
 
 ---
 

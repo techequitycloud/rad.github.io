@@ -9,7 +9,6 @@ description: "Prepare for the PCDE exam Section 2 — manage a solution that can
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers Section 2 of the Professional Cloud Database Engineer (PCDE) exam: day-2 management — access control, monitoring, backup/recovery, cost/performance tuning, and task automation. It exercises all four foundation modules: `Services_GCP` (instances, IAM auth, alert policies), `App_CloudRun` and `App_GKE` (database users, export schedulers, rotation jobs), and the `App_Common` submodules and scripts that implement them. Deploy the **relational-baseline** and **app-dataops** profiles from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting; 2.2 also benefits from the **ha-production** profile's notification settings.
 
 ---
@@ -51,7 +50,7 @@ Note the engine nuance: the flag *name* differs per engine — PostgreSQL uses `
    gcloud sql users list --instance=cloudsql-<prefix>-postgres \
      --format="table(name, type)"
    ```
-3. In **Console > SQL > \&lt;instance\> > Users**, observe the built-in `postgres`/`root` user, the application user created by the `db-init` job, and your new `CLOUD_IAM_SERVICE_ACCOUNT` user.
+3. In **Console > SQL > \<instance\> > Users**, observe the built-in `postgres`/`root` user, the application user created by the `db-init` job, and your new `CLOUD_IAM_SERVICE_ACCOUNT` user.
 4. You know it worked when `gcloud sql users list` shows the IAM principal with type `CLOUD_IAM_SERVICE_ACCOUNT` and the flags output contains `cloudsql.iam_authentication=on`.
 
 **Check yourself**
@@ -87,7 +86,7 @@ A: Least privilege and blast-radius control: the app user owns only its own data
 | `[prefix] Cloud SQL - High Memory Usage` | `cloudsql.googleapis.com/database/memory/utilization` | `alert_memory_threshold` (`80`) |
 | `[prefix] Cloud SQL - High Disk Usage` | `cloudsql.googleapis.com/database/disk/utilization` | `alert_disk_threshold` (`80`) |
 
-Notifications fan out to email channels built from `configure_email_notification` (default `false`) + `notification_alert_emails`. The application modules add the workload side: `alert_policies` (a list of `{name, metric_type, comparison, threshold_value, duration_seconds, aggregation_period}` objects, default `[]`) in `App_CloudRun`, plus a monitoring dashboard. `uptime_check_config` (default `{ enabled = true, path = "/" }`) creates a `<service>-uptime-check` synthetic probe plus a failure alert policy whenever the application endpoint is publicly reachable — symptom-based monitoring of the database-backed service from outside. On the database itself, `enable_query_insights` (Services_GCP, default `false`) adds an `insights_config` block (query strings recorded up to 1024 chars) to both the PostgreSQL and MySQL primaries, lighting up **Console > SQL > Query insights** with per-query load and plans. For audit-trail troubleshooting, `enable_audit_logging` (Services_GCP, default `false`) records ADMIN_READ/DATA_READ/DATA_WRITE. Slow-query capture is *available* through the flag mechanism — the `postgres_database_flags` variable's own example shows `log_min_duration_statement = 1000` — but no slow-query flag is set by default.
+Notifications fan out to email channels built from `configure_email_notification` (default `false`) + `notification_alert_emails`. The application modules add the workload side: `alert_policies` (a list of `{name, metric_type, comparison, threshold_value, duration_seconds, aggregation_period}` objects, default `[]`) in `App_CloudRun`, plus a monitoring dashboard. `uptime_check_config` (default `{ enabled = false, path = "/" }`) creates a `<service>-uptime-check` synthetic probe plus a failure alert policy, once enabled, whenever the application endpoint is publicly reachable — symptom-based monitoring of the database-backed service from outside. On the database itself, `enable_query_insights` (Services_GCP, default `false`) adds an `insights_config` block (query strings recorded up to 1024 chars) to both the PostgreSQL and MySQL primaries, lighting up **Console > SQL > Query insights** with per-query load and plans. For audit-trail troubleshooting, `enable_audit_logging` (Services_GCP, default `false`) records ADMIN_READ/DATA_READ/DATA_WRITE. Slow-query capture is *available* through the flag mechanism — the `postgres_database_flags` variable's own example shows `log_min_duration_statement = 1000` — but no slow-query flag is set by default.
 
 **Try it**
 1. Enable email notification in the portal, apply, then confirm the policies exist:
@@ -103,7 +102,7 @@ Notifications fan out to email channels built from `configure_email_notification
      'resource.type="cloudsql_database" AND logName:"postgres.log" AND textPayload:"duration"' \
      --limit=5 --freshness=1h
    ```
-3. In **Console > SQL > \&lt;instance\> > System insights**, correlate CPU, memory, connections, and disk during your test load. Then set `enable_query_insights = true`, apply, and open **Query insights** on the same instance to see per-query load and captured query text.
+3. In **Console > SQL > \<instance\> > System insights**, correlate CPU, memory, connections, and disk during your test load. Then set `enable_query_insights = true`, apply, and open **Query insights** on the same instance to see per-query load and captured query text.
 4. You know it worked when the three alert policies list as enabled, your `pg_sleep` statement appears in the postgres log with its duration, and Query insights starts charting query load.
 
 **Check yourself**
@@ -153,7 +152,7 @@ A: Sustained high CPU and read IOPS with slow specific queries; confirm with Que
    gcloud sql instances clone cloudsql-<prefix>-postgres pitr-drill-1 \
      --point-in-time "2026-06-10T03:00:00Z"
    ```
-3. Trigger the logical export immediately instead of waiting for 02:00 UTC, then verify the artifact: **Console > Cloud Storage > \&lt;backup bucket\>**.
+3. Trigger the logical export immediately instead of waiting for 02:00 UTC, then verify the artifact: **Console > Cloud Storage > \<backup bucket\>**.
 
    ```bash
    gcloud scheduler jobs run <service>-backup-schedule --location=us-central1
@@ -260,7 +259,7 @@ A: Each replica bills like an instance of the primary's tier (`postgres_tier` is
 5. **Scheduled maintenance.** `sql_maintenance_window_day` (1–7, Monday-based, default `7` = Sunday), `sql_maintenance_window_hour` (0–23 UTC, default `3`), and `sql_maintenance_update_track` (`"stable"`/`"canary"`/`"week5"`, default `"stable"`) pin Cloud SQL maintenance to a predictable low-traffic window on both the PostgreSQL and MySQL primaries — patching becomes a declared, scheduled operation instead of Google-chosen timing.
 
 **Try it**
-1. Inspect the rotation plumbing after applying app-dataops: **Console > Security > Secret Manager > secret-\&lt;instance\>-\&lt;service\> > Rotation**, and:
+1. Inspect the rotation plumbing after applying app-dataops: **Console > Security > Secret Manager > secret-\<instance\>-\<service\> > Rotation**, and:
 
    ```bash
    gcloud scheduler jobs list --location=us-central1

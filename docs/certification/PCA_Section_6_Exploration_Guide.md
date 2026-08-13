@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud Architect (PCA) exam Section 6 
 
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 Day-2 operations: observing systems, releasing safely, controlling quality, and keeping production reliable. Every RAD deployment ships with a dashboard and alerting wired to your email, and publicly reachable deployments add a synthetic uptime check (see 6.2) — so most of this section is observable on the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md); add the **Security and delivery** profile for release management (6.3) and the **GKE architecture** profile for the reliability mechanics in 6.6. Modules exercised: all four, with emphasis on the monitoring layers of `Services_GCP` and `App_CloudRun`, plus the platform's shared monitoring and dashboard layers.
 
 ---
@@ -57,7 +56,7 @@ A: A managed instance group with TCP health checks (ports 2049/6379) and auto-he
 | Notification channels | email channels per address | `support_users` (App modules), `configure_email_notification` + `notification_alert_emails` (Services_GCP) |
 | Infrastructure alerts | Cloud SQL CPU/memory/disk and NFS-VM CPU/memory/instance-down policies provisioned by the platform | `alert_cpu_threshold` / `alert_memory_threshold` / `alert_disk_threshold` (all default `80`) |
 | Application alerts | per-service policies filtered to the Cloud Run service | `alert_policies` list — `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period` (default `"60s"`) |
-| Synthetic monitoring | `<service>-uptime-check` (HTTP GET from multiple global probe regions) plus a `<service>-uptime-check-alert` policy on `monitoring.googleapis.com/uptime_check/check_passed`, created by the platform's monitoring layer when the endpoint is publicly reachable; `uptime_check_names` outputs the real check name | `uptime_check_config` (default `{ enabled = true, path = "/" }`; `check_interval` default `"60s"`, `timeout` default `"10s"`) |
+| Synthetic monitoring | `<service>-uptime-check` (HTTP GET from multiple global probe regions) plus a `<service>-uptime-check-alert` policy on `monitoring.googleapis.com/uptime_check/check_passed`, created by the platform's monitoring layer when the endpoint is publicly reachable; `uptime_check_names` outputs the real check name | `uptime_check_config` (default `{ enabled = false, path = "/" }`; `check_interval` default `"60s"`, `timeout` default `"10s"`) |
 | Dashboards | per-deployment dashboard provisioned by the platform | App_CloudRun / App_GKE |
 | GKE telemetry | system + workload logging, managed Prometheus | fixed defaults in Services_GCP |
 

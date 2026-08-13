@@ -9,7 +9,6 @@ description: "Prepare for the PCA exam Section 1 — designing and planning a cl
 
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This is the heaviest-weighted PCA section, and it is about *choices*: which compute platform, which availability tier, which storage type — and why. All four foundation modules are exercised here. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md) first, then apply the **Resilient data tier** and **GKE architecture** profiles as you reach 1.2 and 1.3, so you can compare the cheap architecture and the resilient one in the same project.
 
 ---
@@ -26,7 +25,7 @@ This is the heaviest-weighted PCA section, and it is about *choices*: which comp
 |---|---|---|
 | Minimize idle cost | `min_instance_count` (default `0`) — Cloud Run scales to zero | App_CloudRun |
 | Cap maximum spend on compute | `max_instance_count` (default `1`) | App_CloudRun |
-| CPU billing trade-off | `cpu_always_allocated` (default `false`) — request-based billing (CPU billed only during request processing) by default; set `true` to keep CPU allocated at all times | App_CloudRun |
+| CPU billing trade-off | `cpu_always_allocated` (default `false` — request-based billing) — set `true` to keep CPU allocated between requests for in-process background work | App_CloudRun |
 | Financial guardrails | `create_billing_budget` (default `false`), `budget_amount` (default `100`), `budget_alert_thresholds` (default `[0.5, 0.9, 1.0]`) | Services_GCP |
 | Zero-trust access for internal apps | `enable_iap` (default `false`) + `iap_authorized_users` / `iap_authorized_groups` | App_CloudRun |
 | Stakeholder visibility | `support_users` — becomes Cloud Monitoring email notification channels | App_CloudRun / App_GKE |

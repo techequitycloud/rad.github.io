@@ -35,7 +35,7 @@ deployment wires together a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Calibre-Web (LinuxServer.io image) container on port 8083, 1 vCPU / 1 GiB by default; `min_instance_count = max_instance_count = 1` |
-| Config/library persistence | Cloud Storage + **GCS Fuse** | The auto-provisioned `storage`-suffixed bucket is mounted at `/config` by default (`enable_gcs_storage_volume = true` in `CalibreWeb_Common`, not exposed as a module variable) |
+| Config/library persistence | Shared NFS (Filestore / NFS VM) | `/config` is mounted from the shared NFS server by default (`enable_nfs = true`, `nfs_mount_path = "/config"`). The `storage`-suffixed bucket is still provisioned but **not** mounted — `enable_gcs_storage_volume` is exposed as a module variable on `CalibreWeb_CloudRun` and defaults to `false`, because GCS FUSE corrupts Calibre-Web's SQLite `app.db`. |
 | Database | None | `database_type = "NONE"`; no Cloud SQL instance, user, or `db-init` job |
 | Cache & queue | None | `enable_redis` is declared for foundation-variable mirroring but **hardcoded to `false`** in `main.tf` regardless of the variable's value |
 | Secrets | Secret Manager | Auto-generated `CALIBRE_ADMIN_PASSWORD` — provisioned but **not** the credential Calibre-Web actually authenticates with on first login (see §3) |
@@ -46,7 +46,7 @@ deployment wires together a focused set of Google Cloud services:
 - **GCS Fuse persistence, not a block PVC — dev/light-use by design.** Unlike
   `CalibreWeb_GKE` (which uses a real block Persistent Volume specifically because
   gcsfuse's relaxed consistency model can corrupt SQLite), this Cloud Run module has
-  no block-storage option at all — `/config` is always backed by a GCS Fuse mount.
+  no block-storage option at all — `/config` is backed by a shared **NFS** mount by default (`enable_nfs = true`, `nfs_mount_path = "/config"`), which supplies the POSIX semantics SQLite needs. The GCS Fuse mount at that path is disabled by default (`enable_gcs_storage_volume = false`) because it corrupts `app.db`.
   The module's own `module_description` explicitly says this variant is "best
   suited for development/light use" and recommends `CalibreWeb_GKE` with a block PVC
   for production.
@@ -110,11 +110,10 @@ environment, and traffic splitting.
 ### B. Cloud Storage & GCS Fuse — the `/config` mount
 
 A dedicated **Cloud Storage** bucket (suffix `storage`) is always provisioned when
-`create_cloud_storage = true` (the default), and it is mounted into the container at
-`/config` via **GCS Fuse** — the same path where Calibre-Web keeps its SQLite files
+`create_cloud_storage = true` (the default), but by default it is **not** mounted: `enable_gcs_storage_volume = false`, so `/config` — the path where Calibre-Web keeps its SQLite files
 (`app.db`, Calibre's `metadata.db`), configuration, cache, and logs. The mount is
-enabled unconditionally by `CalibreWeb_Common` (`enable_gcs_storage_volume = true`);
-there is no module variable to turn it off on Cloud Run. Additional buckets/volumes
+controlled by the `enable_gcs_storage_volume` module variable, which defaults to **`false`** on Cloud Run;
+the bucket is still provisioned but left unmounted, and `/config` is served by NFS instead (see `enable_nfs`). Additional buckets/volumes
 can be declared via `storage_buckets` / `gcs_volumes`.
 
 - **Console:** Cloud Storage → Buckets.
@@ -184,7 +183,7 @@ Uptime checks are disabled by default (`uptime_check_config.enabled = false`).
   Foundation builds/mirrors the image into Artifact Registry.
 - **First-boot storage layout.** The image drops privileges to `PUID=1000`/
   `PGID=1000` (injected as environment variables by `CalibreWeb_Common`) and keeps
-  all state under `/config` (the GCS-Fuse-mounted bucket): `app.db`, Calibre's
+  all state under `/config` (the NFS-mounted volume): `app.db`, Calibre's
   `metadata.db`, config, cache, and logs. The ebook library itself lives under
   `/books` (empty on first run — the in-app setup wizard points Calibre-Web at it).
 - **`CALIBRE_ADMIN_PASSWORD` is provisioned but not applied.** The Secret-Manager
@@ -234,7 +233,7 @@ for Calibre-Web are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `tenant_deployment_id` | `demo` | Short suffix that makes resource names unique per environment. |
+| `tenant_id` | `demo` | Short suffix that makes resource names unique per environment. |
 | `support_users` | `[]` | Emails granted project access and monitoring alerts. |
 | `resource_labels` | `{}` | Labels applied to all resources. |
 
@@ -321,11 +320,11 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Always provisions the `storage`-suffixed bucket mounted at `/config` (see §2.B). |
+| `create_cloud_storage` | `true` | Always provisions the `storage`-suffixed bucket. It is **not** mounted by default — see `enable_gcs_storage_volume` (`false`) and §2.B. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned one. |
-| `enable_nfs` | `false` | NFS is **not** used by Calibre-Web — persistence is via the GCS Fuse mount instead. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path if NFS were enabled; unused by default. |
-| `gcs_volumes` | `[]` | Additional GCS Fuse volumes, merged with the automatic `storage`→`/config` volume. |
+| `enable_nfs` | `true` | NFS **is** how Calibre-Web persists on Cloud Run: `/config` holds a SQLite `app.db` in rollback-journal mode, which GCS FUSE cannot sustain (`BufferedWriteHandler.OutOfOrderError for object: app.db-journal`). NFS supplies the POSIX rename/fsync/locking semantics FUSE does not. Set `false` only if you accept the corruption risk. |
+| `nfs_mount_path` | `/config` | Where the NFS volume is mounted — Calibre-Web keeps all of its state (`app.db`, `metadata.db`, config, cache, logs) there. Must stay in step with `enable_gcs_storage_volume`: mounting both NFS and the GCS FUSE volume at `/config` is a double-mount conflict. |
+| `gcs_volumes` | `[]` | Additional GCS Fuse volumes. The automatic `storage`→`/config` volume is only merged in when `enable_gcs_storage_volume = true`, which defaults to `false` on Cloud Run. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 | `enable_redis` | `true` (declared) | **Inert** — `main.tf` hardcodes `enable_redis = false` on the Foundation call regardless of this variable. Calibre-Web has no Redis dependency. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Declared for foundation-variable mirroring but **not forwarded** to App_CloudRun at all. |
@@ -381,7 +380,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `calibreweb_url` | The Cloud Run service URL (`status.url`) for the Calibre-Web UI (port 8083), reachable per `ingress_settings` (public by default). |
+| `calibreweb_url` | The Cloud Run service URL (`status.url`). Note: this output's description in `outputs.tf` references an "internal VPC ... REST API (port 6333)" — that text is a stale copy-paste from an unrelated module (Calibre-Web has no such API/port); the value itself is simply the normal service URL, reachable per `ingress_settings` (public by default). |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
@@ -413,7 +412,7 @@ Note: `outputs.tf` does not expose the Secret Manager secret ID for
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `/config` persistence model | Use `CalibreWeb_GKE` for production libraries | Critical | This module's `/config` is always GCS Fuse-backed (no block-PVC option); gcsfuse's relaxed consistency model can corrupt Calibre-Web's SQLite files (`app.db`, `metadata.db`) under real usage. The module's own description flags this variant as dev/light-use only. |
+| `/config` persistence model | Use `CalibreWeb_GKE` for production libraries | Critical | This module has no block-PVC option; `/config` is **NFS**-backed by default (`enable_nfs = true`, `nfs_mount_path = "/config"`), which avoids the gcsfuse SQLite corruption. Do not set `enable_gcs_storage_volume = true` at this path — gcsfuse's relaxed consistency model corrupts `app.db`/`metadata.db` under real usage, and it would also double-mount `/config`. The module's own description flags this variant as dev/light-use only. |
 | `max_instance_count` | `1` | Critical | Above 1, multiple Cloud Run instances write to the **same** gcsfuse-mounted SQLite files concurrently — a real risk of database corruption, distinct from (and in some ways riskier than) the GKE variant's per-replica PVC forking. |
 | `CALIBRE_ADMIN_PASSWORD` (auto-generated) | Change the login in the UI on first sign-in | High | The generated secret is not applied automatically; the working first-login credential is the upstream default `admin`/`admin123` until changed manually. |
 | `enable_redis` | Ignore — inert | Low | `main.tf` hardcodes `enable_redis = false` regardless of this variable; Calibre-Web has no Redis dependency. |

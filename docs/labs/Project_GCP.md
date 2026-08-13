@@ -22,7 +22,7 @@ This lab focuses on operating **`Project GCP` and the guardrails it establishes*
 ### What the Module Automates
 
 - Enables a hardcoded floor of ~35 Google Cloud APIs on `project_id`, plus anything in `additional_apis` (additive-only — nothing in this module can shrink the floor)
-- Applies three self-imposed quota ceilings via the Cloud Quotas API (Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs — capped to zero by default)
+- Applies self-imposed quota ceilings via the Cloud Quotas API, selected by `tier` — Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Memorystore capacity, three Filestore tiers, and all 81 Vertex AI accelerator quotas (GPUs, TPUs and accelerators capped to zero by default)
 - Validates `create_project`'s companion variables at **plan time** — an incomplete project-creation request is rejected before anything is created
 - *(Optional, `create_project = true`)* Creates the sandbox project, grants a least-privilege role bundle to a separate deploying identity, grants a strictly read-only bundle to the human who requested it, denies the deploying identity permission to raise its own quota caps, and places a deletion lien
 
@@ -100,7 +100,7 @@ Deployment is initiated the same way as any other module — from the RAD platfo
 | Phase | Typical duration |
 |---|---|
 | API enablement (~35 APIs, no propagation wait built into this module) | 2–4 min |
-| Quota preference apply (3 defaults, Cloud Quotas API) | 1–3 min |
+| Quota preference apply (7 capacity caps + 81 Vertex AI accelerator caps, Cloud Quotas API) | 1–3 min |
 | Project creation (Path B only) | 1–2 min |
 | IAM bundle grants + deny policy + lien (Path B only) | 1–2 min |
 | **Total (Path A)** | **5–10 min** |
@@ -168,7 +168,7 @@ gcloud beta quotas preferences list \
   --format="table(name,service,quotaId,quotaConfig.preferredValue,reconciling)"
 ```
 
-**Expected result:** Three preferences are listed for `run.googleapis.com` (`CpuAllocPerProjectRegion` = 16), `compute.googleapis.com` (`CPUS-per-project-region` = 24), and `compute.googleapis.com` (`GPUS-ALL-REGIONS-per-project` = 0) — or your overridden values if you set `quota_value_overrides`. `reconciling: true` means GCP is still applying the requested cap; re-check after a few minutes.
+**Expected result (default `tier = sandbox`):** 88 preferences are listed — seven capacity caps (`run.googleapis.com/CpuAllocPerProjectRegion` = `16000` **milli**-vCPU, i.e. 16 vCPU; `compute.googleapis.com/CPUS-per-project-region` = `24`; `compute.googleapis.com/GPUS-ALL-REGIONS-per-project` = `0`; `redis.googleapis.com/TotalCapacityPerProjectPerRegion` = `16`; and three `file.googleapis.com` Filestore tiers) plus 81 `aiplatform.googleapis.com` Vertex AI accelerator quotas all capped to `0`. `tier = development` swaps in higher values and adds a BigQuery `QueryUsagePerDay` cap; `tier = production` applies no capacity caps. — or your overridden values if you set `quota_value_overrides`. `reconciling: true` means GCP is still applying the requested cap; re-check after a few minutes.
 
 ### Step 3.2 — Describe a Specific Preference
 
@@ -180,7 +180,7 @@ gcloud beta quotas preferences describe \
 
 (Substitute `<preference-id>` from the `name` field in Step 3.1's output.)
 
-**Expected result:** `justification` reads the "Sandbox guardrail: ..." text from `quotas.tf`, and `dimensions.region` matches `var.region`.
+**Expected result:** `justification` reads the "Sandbox guardrail: ..." text from `quotas.tf`, and `dimensions` is **empty** for the `run.googleapis.com` preference this step describes. Only `compute.googleapis.com/CPUS-per-project-region` still carries `dimensions = { region = var.region }` (quotas.tf:255 — that quota rejects empty dimensions); every other cap, including the Vertex AI accelerator set, uses `dimensions = {}` (all regions).
 
 ### Step 3.3 — Confirm the Cap Is Actually Effective
 

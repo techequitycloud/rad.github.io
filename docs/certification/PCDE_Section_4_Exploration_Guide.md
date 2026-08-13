@@ -9,7 +9,6 @@ description: "Prepare for the PCDE exam Section 4 — deploy scalable and highly
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) exam — and it is the section where this repository *is* the answer key. "Automate database instance provisioning" is literally what `Services_GCP` does: every Cloud SQL, AlloyDB, Redis, and Firestore deployment in the platform is declarative infrastructure-as-code applied through your deployment portal or Cloud Build. The HA, replica, and monitoring machinery comes from `Services_GCP`; application failover behavior is observed through `App_CloudRun`/`App_GKE`. Deploy the **ha-production** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting.
 
 ---
@@ -34,7 +33,7 @@ This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) e
 
 *Automated provisioning.* This is infrastructure-as-code end to end: `tofu init → plan → apply` (run by the platform's create/update pipeline in CI), idempotent re-application, dependency sequencing (instances are gated on the Service Networking connection; a 120 s delay separates the two Cloud SQL instances), and discovery-not-duplication in the app layer (App_Common finds the platform instance by its `managed-by = services-gcp` label; `App_CloudRun` provisions an equivalent inline ZONAL PostgreSQL 17 instance only when none exists). Replica lifecycle is also codified: replicas are rebuilt if the primary is replaced.
 
-*Monitoring for HA databases.* The platform ships CPU/memory/disk alert policies on `resource.type = "cloudsql_database"` wired to email channels (`configure_email_notification`, `notification_alert_emails`); each replica additionally publishes its endpoint as a `<replica-name>-host` secret so consumers fail over reads deliberately. Application-side, `uptime_check_config` (default `{ enabled = true, path = "/" }`) creates a `<service>-uptime-check` synthetic probe plus failure alert whenever the application endpoint is publicly reachable — ready-made detection of user-visible impact during failover tests (internal-only deployments get none).
+*Monitoring for HA databases.* The platform ships CPU/memory/disk alert policies on `resource.type = "cloudsql_database"` wired to email channels (`configure_email_notification`, `notification_alert_emails`); each replica additionally publishes its endpoint as a `<replica-name>-host` secret so consumers fail over reads deliberately. Application-side, `uptime_check_config` (default `{ enabled = false, path = "/" }`) creates a `<service>-uptime-check` synthetic probe plus failure alert once enabled whenever the application endpoint is publicly reachable — ready-made detection of user-visible impact during failover tests (internal-only deployments get none).
 
 **Try it**
 1. Apply ha-production and map the fleet:

@@ -9,7 +9,6 @@ description: "Prepare for the PCNE exam Section 1 — designing and planning a G
 
 > 📚 **Official exam guide:** [Professional Cloud Network Engineer certification](https://cloud.google.com/learn/certification/cloud-network-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This section tests network *design decisions*: how to size and segment IP space, when to choose Shared VPC vs peering vs Private Service Connect, and how to plan GKE networking before the first cluster exists. Deploy the **VPC Foundation** profile first; add the **GKE Network Lab** profile before working through 1.4. The modules exercised are `Services_GCP` (the network itself) and `App_Common` (how downstream modules discover it).
 
 ---
@@ -179,7 +178,7 @@ A: Advertise `199.36.153.4/30` (restricted.googleapis.com) or `199.36.153.8/30` 
 | Pod range | a /14 slice of `gke_pod_base_cidr` (`10.64.0.0/10`) | `10.64.0.0/14` (~262k pod IPs) |
 | Service range | a /20 slice of `gke_service_base_cidr` (`10.8.0.0/16`) | `10.8.0.0/20` (4,094 services) |
 
-Each subnet carries two **named secondary ranges** (`gke-{prefix}-pods-{i}`, `gke-{prefix}-services-{i}`) — i.e., VPC-native/alias-IP clusters. Other verified design choices: `gke_cluster_mode` default `AUTOPILOT` (or `STANDARD` with an explicit node pool: `gke_node_machine_type` default `e2-standard-4`, autoscaling `gke_node_min_count` 1 to `gke_node_max_count` 5, `pd-balanced` disks, Shielded nodes); Dataplane V2 on every cluster; the standard Gateway API channel; release channel `REGULAR`; **no private cluster config** — nodes and control-plane endpoint are public. The inline cluster additionally configures master authorized networks with Google public CIDR access enabled *plus* a `0.0.0.0/0` block so Cloud Build workers can reach the API server.
+Each subnet carries two **named secondary ranges** (`gke-{prefix}-pods-{i}`, `gke-{prefix}-services-{i}`) — i.e., VPC-native/alias-IP clusters. Other verified design choices: `gke_cluster_mode` default `AUTOPILOT` (or `STANDARD` with an explicit node pool: `gke_node_machine_type` default `e2-standard-4`, autoscaling `gke_node_min_count` 1 to `gke_node_max_count` 5, `pd-balanced` disks, Shielded nodes);release channel `REGULAR`; **private nodes** — `private_cluster_config { enable_private_nodes = true }` plus a control-plane-only `/28` from `gke_master_base_cidr`, required because RAD-managed projects deny `compute.vmExternalIpAccess`; `enable_private_endpoint` is left `false`, so the control-plane endpoint stays public for CI/CD. The inline cluster additionally configures master authorized networks with Google public CIDR access enabled *plus* a `0.0.0.0/0` block so Cloud Build workers can reach the API server.
 
 **Try it**
 
@@ -194,7 +193,7 @@ Each subnet carries two **named secondary ranges** (`gke-{prefix}-pods-{i}`, `gk
      --format="yaml(ipCidrRange,secondaryIpRanges)"
    ```
 
-2. Confirm `privateClusterConfig` is absent (public cluster) and `datapathProvider: ADVANCED_DATAPATH`.
+2. Confirm `privateClusterConfig.enablePrivateNodes: true` (nodes have no external IPs) and `datapathProvider: ADVANCED_DATAPATH`.
 3. In your portal, set `gke_cluster_count = 2` and redeploy: observe cluster 2 receive `10.68.0.0/14` pods and `10.8.16.0/20` services — non-overlapping by construction.
 4. You know it worked when `kubectl get pods -o wide` shows pod IPs inside the cluster's pod CIDR rather than the node CIDR (alias IPs in action):
 
@@ -213,7 +212,7 @@ A: Each base CIDR is sliced using the cluster index: 16 possible /14 pod slices 
 <details>
 <summary>Q2: A regulated customer demands nodes with no public IPs and a control plane reachable only from a bastion subnet. What changes relative to the RAD design?</summary>
 
-A: Add a private cluster configuration with private nodes (nodes get only internal IPs; Cloud NAT — which RAD already provides — handles their internet egress) and either a private endpoint or a public endpoint restricted by authorized networks listing only the bastion CIDR. RAD's clusters are public-endpoint by design because the CI/CD path (Cloud Build) needs API-server access; the inline cluster even opens authorized networks to `0.0.0.0/0` (auth still required) — recognize that as a convenience trade-off, not a security best practice.
+A: Private nodes are already configured (`enable_private_nodes = true` on both the `Services_GCP` cluster and App_GKE's inline fallback; Cloud NAT handles their egress). Only the control plane changes: set `enable_private_endpoint = true`, or keep the public endpoint but restrict master authorized networks to the bastion CIDR (today the inline cluster opens them to `0.0.0.0/0`). RAD's clusters are public-endpoint by design because the CI/CD path (Cloud Build) needs API-server access; the inline cluster even opens authorized networks to `0.0.0.0/0` (auth still required) — recognize that as a convenience trade-off, not a security best practice.
 </details>
 
 <details>

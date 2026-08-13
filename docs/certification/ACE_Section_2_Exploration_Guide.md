@@ -9,7 +9,6 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 2 — 
 
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers exam Section 2 using the RAD platform foundation modules as a hands-on lab. All four foundation modules are exercised: `Services_GCP` provides the VPC, databases, and (optionally) the GKE Autopilot cluster; `App_CloudRun` and `App_GKE` are the two deployment engines; the `App_Common` shared library handles storage, secrets, and builds. Deploy the **Serverless application** profile first, then the **Kubernetes application** profile from the [Lab Map](ACE_Certification_Guide.md).
 
 ---
@@ -33,7 +32,7 @@ This guide covers exam Section 2 using the RAD platform foundation modules as a 
 | `container_port` | `8080` | Port Cloud Run routes requests to |
 | `execution_environment` | `"gen2"` | gen2 is required for NFS and GCS Fuse volumes |
 | `timeout_seconds` | `300` | Request timeout, 0–3600 |
-| `cpu_always_allocated` | `true` | When false, CPU is only allocated during request processing |
+| `cpu_always_allocated` | `false` | Default is request-based billing (CPU only during request processing); set `true` to keep CPU allocated between requests |
 
 `enable_image_mirroring` (default `true`) copies public images into Artifact Registry first (a digest-aware copy), so the service never pulls directly from Docker Hub.
 

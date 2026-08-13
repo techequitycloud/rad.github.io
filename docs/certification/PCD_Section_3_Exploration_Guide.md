@@ -9,7 +9,6 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 3 
 
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This section is where the RAD foundation modules shine: `App_CloudRun` deploys a fully configured Cloud Run v2 service (scaling, probes, volumes, traffic management, jobs, optional Cloud Deploy pipeline) and `App_GKE` deploys the equivalent Kubernetes workload on GKE Autopilot (Deployment/StatefulSet, HPA, probes, quotas, Gateway API). Deploy the **Serverless baseline** and **Delivery pipeline** profiles for 3.1, and the **Kubernetes lab** profile for 3.2 (see the [Lab Map](PCD_Certification_Guide.md)).
 
 ---
@@ -27,7 +26,7 @@ This section is where the RAD foundation modules shine: `App_CloudRun` deploys a
 | Lifecycle | `deploy_application` (`true`) — `false` provisions infra only |
 | Image | `container_image_source` (`"custom"` = Cloud Build; `"prebuilt"` = use `container_image` as-is), `enable_image_mirroring` (`true`) |
 | Scaling | `min_instance_count` (`0`), `max_instance_count` (`1`); plan-time check min ≤ max |
-| Runtime | `container_port` (`8080`), `container_resources` (`1000m`/`512Mi`), `timeout_seconds` (`300`), `execution_environment` (`"gen2"`), `cpu_always_allocated` (`true`), `startup_cpu_boost` hardcoded on |
+| Runtime | `container_port` (`8080`), `container_resources` (`1000m`/`512Mi`), `timeout_seconds` (`300`), `execution_environment` (`"gen2"`), `cpu_always_allocated` (`false`), `startup_cpu_boost` hardcoded on |
 | Probes | `startup_probe_config` (enabled, HTTP `/healthz`, delay 10s, period 10s, failure threshold 10) and `health_check_config` → liveness probe (enabled, HTTP `/healthz`, delay 15s, period 30s, failure threshold 3); both support TCP |
 | Volumes | Cloud SQL socket (`enable_cloudsql_volume` `true`, mount `cloudsql_volume_mount_path` `/cloudsql`), NFS (`enable_nfs` `true`, `nfs_mount_path` `/mnt/nfs`), GCS Fuse (`gcs_volumes`) — NFS and Fuse require gen2 (validated) |
 | Traffic | `traffic_split` (default all-to-latest), revision `tag` for preview URLs, `max_revisions_to_retain` (`7`) |
@@ -103,12 +102,12 @@ A: Add a `traffic_split` entry for the revision with `percent = 0` and a `tag` (
 - **Autoscaling.** The HPA is created only when `max_instance_count > 1` (default `3`) **and** `enable_vertical_pod_autoscaling = false` (its default); it targets 70% CPU and 80% memory utilization. Turning VPA on therefore replaces horizontal scaling with request right-sizing — they are mutually exclusive here because both would act on the same CPU/memory signals.
 - **Probes.** `startup_probe_config` (enabled, HTTP `/healthz`, delay 10s, period 10s, failure threshold 3) and `health_check_config` → liveness probe (delay 15s, period 30s, failure threshold 3). **No readiness probe is configured** — the module relies on the startup probe to gate first traffic; be ready to explain on the exam why a dedicated readiness probe still matters for temporarily-overloaded pods.
 - **Sidecar.** When a database exists and `enable_cloudsql_volume = true`, a `cloud-sql-proxy` sidecar (image mirrored into Artifact Registry) runs with `--private-ip` and a preStop hook calling `/quitquitquit` for graceful shutdown.
-- **Namespace governance.** `enable_resource_quota` (default `false`) creates a ResourceQuota — `quota_cpu_requests`/`quota_cpu_limits` default `"4"`, `quota_memory_requests` default `"4Gi"`, `quota_memory_limits` default `"8Gi"` (binary unit suffix is *validated*: a bare `"4"` would be read as 4 bytes by Kubernetes and block all scheduling), `quota_max_pods` `"20"`. `enable_pod_disruption_budget` (default `true`) creates a PDB with `pdb_min_available` default `"1"`, skipped when `max_instance_count = 1` and validated to be &lt; `max_instance_count`. `enable_network_segmentation` (default `false`) adds NetworkPolicies (requires Dataplane V2). `enable_topology_spread` spreads pods across zones/hosts.
+- **Namespace governance.** `enable_resource_quota` (default `false`) creates a ResourceQuota — `quota_cpu_requests`/`quota_cpu_limits` default `"4"`, `quota_memory_requests` default `"4Gi"`, `quota_memory_limits` default `"8Gi"` (binary unit suffix is *validated*: a bare `"4"` would be read as 4 bytes by Kubernetes and block all scheduling), `quota_max_pods` `"20"`. `enable_pod_disruption_budget` (default `true`) creates a PDB with `pdb_min_available` default `"1"`, skipped when `max_instance_count = 1` and validated to be < `max_instance_count`. `enable_network_segmentation` (default `false`) adds NetworkPolicies (requires Dataplane V2). `enable_topology_spread` spreads pods across zones/hosts.
 - **Exposure.** The Service is `service_type` default `"LoadBalancer"`, `service_port` `80` → `container_port` `8080`, `session_affinity` default `"ClientIP"`. `enable_custom_domain` (default `false`) switches to the Gateway API: a `Gateway` with `gatewayClassName: gke-l7-global-external-managed`, an `HTTPRoute` (plus a `ReferenceGrant` for cross-namespace backends), Certificate Manager Google-managed certs for `application_domains`, and a reserved global static IP (`reserve_static_ip` default `true`). Cloud Armor and CDN attach via `GCPBackendPolicy`.
 
 **Try it**
 
-1. Get credentials and inspect what the module deployed (the namespace is auto-generated from `application_name` + `tenant_deployment_id` unless `namespace_name` is set):
+1. Get credentials and inspect what the module deployed (the namespace is auto-generated from `application_name` + `tenant_id` unless `namespace_name` is set):
 
    ```bash
    gcloud container clusters get-credentials <cluster-name> --region=us-central1

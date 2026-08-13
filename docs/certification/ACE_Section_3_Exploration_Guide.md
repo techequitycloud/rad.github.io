@@ -9,7 +9,6 @@ description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 3 — 
 
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-
 This guide covers exam Section 3 — day-2 operations — using the RAD platform foundation modules. `App_CloudRun` and `App_GKE` carry most of the load (revisions, traffic, CI/CD, backups, alerts); `Services_GCP` supplies the infrastructure alerts and audit logging. Deploy the **Serverless application** profile (plus the **Kubernetes application** profile for the `kubectl` labs and the **Operations & security add-ons** profile for 3.4) from the [Lab Map](ACE_Certification_Guide.md).
 
 ---
@@ -174,7 +173,7 @@ A: Global (`gcloud compute addresses create NAME --global`). Global LBs use a si
 
 *Logging:* GKE clusters ship `SYSTEM_COMPONENTS` and `WORKLOADS` logs and enable Managed Prometheus. `enable_audit_logging` (default `false`) turns on `allServices` ADMIN_READ/DATA_READ/DATA_WRITE Data Access audit logs plus explicit Secret Manager and KMS configs.
 
-*Uptime checks:* `uptime_check_config` (default `{ enabled = true, path = "/" }`; `check_interval` default `"60s"`, `timeout` default `"10s"`) creates a `<service>-uptime-check` — an HTTP GET probe from multiple global regions — plus a `<service>-uptime-check-alert` policy on `monitoring.googleapis.com/uptime_check/check_passed` that notifies the `support_users` channels (via the platform's monitoring layer). The check is only created when the endpoint is publicly reachable (e.g. a custom domain, the nip.io LB host, or the run.app URL with `ingress_settings = "all"`); internal-only deployments get none. The `uptime_check_names` output returns the created check's name.
+*Uptime checks:* `uptime_check_config` (default `{ enabled = false, path = "/" }` — you must set `enabled = true`; `check_interval` default `"60s"`, `timeout` default `"10s"`) creates a `<service>-uptime-check` — an HTTP GET probe from multiple global regions — plus a `<service>-uptime-check-alert` policy on `monitoring.googleapis.com/uptime_check/check_passed` that notifies the `support_users` channels (via the platform's monitoring layer). The check is only created when the endpoint is publicly reachable (e.g. a custom domain, the nip.io LB host, or the run.app URL with `ingress_settings = "all"`); internal-only deployments get none. The `uptime_check_names` output returns the created check's name.
 
 **Try it**
 1. List what monitoring the modules created:

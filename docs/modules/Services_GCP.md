@@ -7,9 +7,9 @@ description: "Configuration reference for the Services GCP RAD module on Google 
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Services_GCP.png" alt="Services GCP — Platform Foundation Module" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-`Services GCP` is the platform foundation layer. It is deployed **once per GCP project**, before any application module, and provisions the shared infrastructure that every application depends on: the VPC and networking, Cloud SQL and AlloyDB databases, Memorystore Redis, Cloud Filestore (or a self-managed NFS/Redis VM), the GKE Autopilot cluster, the shared Artifact Registry repository, the platform service accounts and IAM, and optional security controls (Binary Authorization, CMEK, VPC Service Controls, and Security Command Center).
+`Services GCP` is the platform foundation layer, provisioning the shared infrastructure that every application depends on: the VPC and networking, Cloud SQL and AlloyDB databases, Memorystore Redis, Cloud Filestore (or a self-managed NFS/Redis VM), the GKE Autopilot cluster, the shared Artifact Registry repository, the platform service accounts and IAM, and optional security controls (Binary Authorization, CMEK, VPC Service Controls, and Security Command Center).
 
-Because everything else depends on its outputs, `Services GCP` must be provisioned and healthy before `App CloudRun`, `App GKE`, or any application module is deployed.
+Because everything else depends on its outputs, `Services GCP` must be provisioned and healthy before `App CloudRun`, `App GKE`, or any application module is deployed — but you do not need to arrange this yourself. When you deploy an application module into a project that doesn't have `Services GCP` yet, the platform detects that, auto-provisions it first (with the specific resources the application's own `requires_services` declares — e.g. Postgres vs. MySQL, GKE or not), waits for it to succeed, and then deploys your application on top of it. Deploying `Services GCP` directly, as documented below, remains supported for pre-configuring it before any app depends on it or deliberately sharing one deployment across several applications.
 
 **Deployment order:**
 
@@ -50,7 +50,7 @@ Before deploying `Services GCP`:
 
 1. **A GCP project** with billing enabled.
 2. **Deployment identity**: the service account used by the platform to apply the module must hold the Owner role (ideally time-limited and conditional) in the target project. When deploying into an external project, grant Owner to the RAD GCP Project agent service account (`rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com`).
-3. **Required APIs**: the module enables the full set of GCP APIs it needs automatically. A propagation delay after enablement ensures services are ready before resources are provisioned.
+3. **Required APIs**: the module enables the APIs its default feature set needs automatically, with a propagation delay before resources are provisioned. Two deliberate exceptions: the GKE Enterprise / Anthos fleet APIs (`gkehub`, `gkeconnect`, `anthosconfigmanagement`, `anthospolicycontroller`, `mesh`) are enabled by `Project_GCP` at Tier-0, not here — on a project not provisioned by `Project_GCP`, `configure_config_management` / `configure_policy_controller` / `configure_cloud_service_mesh` fail at apply with `Error 403: GKE Hub API has not been used in project ...` and must be supplied through `additional_apis`; and `alloydb.googleapis.com` was removed outright, so `enable_alloydb` fails at apply.
 4. **Billing account access** (only for the optional billing budget): the deployment identity needs billing account viewer access.
 5. **Organization-level roles** (only for VPC Service Controls and SCC notifications): perimeter and notification creation are silently skipped when the calling identity lacks the required org-level roles.
 
@@ -110,7 +110,7 @@ gcloud sql instances list --project=PROJECT_ID \
 
 ## AlloyDB for PostgreSQL
 
-Provisions an AlloyDB for PostgreSQL cluster in the primary region — PostgreSQL-compatible and optimised for analytics and AI/vector workloads with a columnar engine and pgvector/SCANN support. Use instead of Cloud SQL PostgreSQL for mixed OLTP/analytics workloads. The vCPU size is configurable, and an optional horizontally scalable read pool can be provisioned alongside the primary for analytics offload.
+> **AlloyDB is no longer usable in this module.** `alloydb.googleapis.com` was removed from the enabled-API set on an explicit cost decision (PR #2673), so `enable_alloydb = true` fails at apply instead of creating a cluster. The `alloydb.tf` resources, the `enable_alloydb` / `alloydb_cpu_count` / `alloydb_database_flags` / `enable_alloydb_read_pool` / `alloydb_read_pool_node_count` variables and the `alloydb_*` outputs remain declared but are unreachable unless the API is supplied via `additional_apis` (denied on RAD-managed folders). Use Cloud SQL PostgreSQL (`create_postgres`) instead.
 
 **Console:** AlloyDB for PostgreSQL → Clusters to view cluster and instance details, including columnar engine status.
 
@@ -187,7 +187,13 @@ gcloud filestore instances describe INSTANCE_NAME \
 
 ## Self-Managed NFS & Redis VM
 
-The lower-cost alternative to managed Filestore and Memorystore. Provisions a single Compute Engine VM running both an NFS server (port 2049) and Redis (port 6379), deployed as a Managed Instance Group of size 1 with auto-healing on TCP health-check failure, an SSD persistent data disk, and daily disk snapshots with 7-day retention. Recommended for development and cost-sensitive deployments.
+The lower-cost alternative to managed Filestore and Memorystore. Provisions a single Compute Engine VM running both an NFS server (port 2049) and Redis (port 6379), deployed as a **regional** Managed Instance Group of size 1 with auto-healing on TCP health-check failure, an SSD persistent data disk (a per-instance stateful disk, preserved across recreation), and daily disk snapshots with 7-day retention. Recommended for development and cost-sensitive deployments.
+
+The MIG is distributed across **every zone in the region** with `distribution_policy_target_shape = "ANY"`, so GCE places the single instance wherever capacity exists. This replaced an earlier single-zone pin that got stuck indefinitely on `ZONE_RESOURCE_POOL_EXHAUSTED` — a **capacity** failure, not a quota one, which is why CPU/instance quota can look completely clear while the VM still never launches.
+
+| Variable | Default | Description |
+|---|---|---|
+| `nfs_excluded_zones` | `[]` | Zones to exclude from the MIG's distribution policy. Needed for the residual failure mode where even `target_shape = "ANY"` commits the instance to a stocked-out zone and retries there forever; excluding that zone rebuilds the MIG with a policy that cannot pick it. **Changing this list force-replaces the MIG** (`distribution_policy_zones` is immutable) — the data disk survives via the daily snapshot, and a fresh deployment has nothing to lose. Only worth setting when a *subset* of zones is stocked out; if every zone is exhausted, exclusions cannot help and the MIG will self-heal once capacity returns. |
 
 > The self-managed VM and the managed Filestore/Memorystore services are independent. Running both creates redundant infrastructure and risks split-brain file storage — use one or the other.
 
@@ -212,6 +218,10 @@ gcloud compute snapshots list --project=PROJECT_ID \
 ## GKE Autopilot Cluster
 
 Optionally provisions one or more GKE clusters in the primary region, registered to a GKE Fleet. **Autopilot** mode (default) is fully managed by Google — node provisioning, scaling, and security hardening are automatic and billing is per pod. **Standard** mode gives full control over node pool machine type, disk, and count via the node-pool variables, for workloads with strict scheduling or hardware requirements. Node, pod, and service CIDRs are configurable and must not overlap. Three independent Fleet add-ons are available: Cloud Service Mesh (managed Istio, mTLS), Config Sync (GitOps reconciliation), and Policy Controller (OPA Gatekeeper). When more than one cluster is provisioned, Multi-Cluster Ingress is available via the config cluster.
+
+**Nodes are always private, and this is not configurable.** Every cluster is created with `private_cluster_config { enable_private_nodes = true }`. RAD-managed projects enforce a `constraints/compute.vmExternalIpAccess` DENY organization policy; without private nodes GKE tries to assign external IPs to its nodes, node creation fails with `Constraint constraints/compute.vmExternalIpAccess violated`, and the cluster is left stuck in `ERROR`. Only the nodes are affected — `enable_private_endpoint` stays at its default (`false`), so the control plane keeps its public endpoint and CI/CD tooling outside the VPC can still reach it.
+
+Each cluster's control plane also needs its own private `/28`, carved per-cluster from a dedicated base CIDR in a different RFC1918 block from the subnet, pod, and service ranges so it cannot collide with them. Like the other three ranges, it is fixed at cluster creation — changing it forces cluster replacement.
 
 **Console:** Kubernetes Engine → Clusters (status, mode, version, CIDRs); Fleets (registration); Features → Service Mesh / Config Management / Policy Controller (add-on status).
 
@@ -245,13 +255,13 @@ Optionally enables Backup for GKE on the provisioned cluster(s), creating schedu
 
 ```bash
 # List all GKE backup plans in the region
-gcloud container backup-restore backup-plans list \
+gcloud beta container backup-restore backup-plans list \
   --location=REGION \
   --project=PROJECT_ID \
   --format="table(name,cluster,retentionPolicy.backupDeleteLockDays,state)"
 
 # List completed backups for a backup plan
-gcloud container backup-restore backups list \
+gcloud beta container backup-restore backups list \
   --backup-plan=BACKUP_PLAN_NAME \
   --location=REGION \
   --project=PROJECT_ID \
@@ -280,14 +290,16 @@ gcloud artifacts docker images list \
 
 ## IAM & Service Accounts
 
-Implements a least-privilege IAM strategy using dedicated platform service accounts, created on every deployment and exposed as outputs for downstream application modules:
+Implements a least-privilege IAM strategy using dedicated platform service accounts, exposed as outputs for downstream application modules:
 
 - **Cloud Build service account** — CI/CD pipeline execution; builds images and manages deployments.
 - **Cloud Deploy service account** — progressive delivery; manages delivery pipelines and rollout jobs.
 - **Cloud Run service account** — runtime identity for Cloud Run containers; accesses secrets, Cloud SQL, and storage.
 - **NFS/Redis VM service account** — identity for the self-managed NFS/Redis VM.
 
-Users listed in `support_users` are granted project-level IAM access and added as alert recipients.
+These accounts are tenant-scoped and shared. A GKE-enabled deployment also manages `gke-sa`, which `App GKE` creates under the same name. `Services GCP` is not the only creator of four of them (`cloudbuild-sa`, `cloudrun-sa`, `nfs-sa`, `gke-sa`) — an application deployed before `Services GCP` provisions `cloudbuild-sa` and `cloudrun-sa` (`App CloudRun`), `cloudbuild-sa` (`App GKE`), and `nfs-sa` on the inline-NFS path, and never deletes them. `clouddeploy-sa` is created here alone. An account that already exists is imported into state and managed normally, so it is also removed when this module is destroyed. Each account is therefore probed before the apply; one that already exists is imported into state and managed like any other, so deploying `Services GCP` into a project an application module reached first does not fail with `already exists`. IAM bindings are applied either way.
+
+`support_users` grants no IAM access. Its only effect is to add email recipients to the Cloud Billing budget notification channels, and only when `create_billing_budget = true`; Cloud Monitoring alert recipients come from `notification_alert_emails` with `configure_email_notification`.
 
 **Console:** IAM & Admin → Service Accounts (confirm the platform service accounts exist); IAM (filter by service account email or support user to view bindings).
 
@@ -449,7 +461,7 @@ gcloud billing budgets list \
 
 Variables are organised into groups that correspond to the sections shown in the deployment UI. Configure one group at a time before deploying.
 
-> **Inputs are validated at plan time.** The module enforces value and combination rules *before* any resource is created (it requires OpenTofu ≥ 1.9). Invalid values — a malformed `tenant_deployment_id`, an out-of-range threshold, a database version that does not exist — and invalid *combinations* — a read replica without its primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster — fail the plan with a clear, named error rather than surfacing as a cryptic mid-apply failure or, worse, succeeding silently and doing nothing. Each group below notes the rules that apply. The intent is that a plan either deploys what you asked for or tells you exactly why it cannot.
+> **Inputs are validated at plan time.** The module enforces value and combination rules *before* any resource is created (it requires OpenTofu ≥ 1.9). Invalid values — a malformed `tenant_id`, an out-of-range threshold, a database version that does not exist — and invalid *combinations* — a read replica without its primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster — fail the plan with a clear, named error rather than surfacing as a cryptic mid-apply failure or, worse, succeeding silently and doing nothing. Each group below notes the rules that apply. The intent is that a plan either deploys what you asked for or tells you exactly why it cannot.
 
 ### Group 1 — Project & Core Services
 
@@ -458,11 +470,11 @@ Variables are organised into groups that correspond to the sections shown in the
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | *(required)* | GCP project ID into which all module resources are deployed. Changing it after initial deployment recreates all resources in the new project. |
-| `tenant_deployment_id` | `"demo"` | Short identifier (**lowercase letters and numbers only, no hyphens** — enforced at plan time) used as the prefix of every resource name. Never change after initial deployment — it would rename, and therefore recreate, every resource. |
+| `tenant_id` | `"demo"` | Short identifier (**lowercase letters and numbers only, no hyphens** — enforced at plan time) used as the prefix of every resource name. Never change after initial deployment — it would rename, and therefore recreate, every resource. |
 | `availability_regions` | `["us-central1"]` | Regions for regional resources (subnets, Cloud SQL, Redis). The first region is the primary; a second region enables cross-region read replicas. 1–2 regions are supported, and you must supply at least one `subnet_cidr_range` per region (enforced at plan time). |
 | `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance in the primary region. The general-purpose default for relational workloads. |
 | `create_mysql` | `false` | Provision a Cloud SQL MySQL instance. Enable for MySQL-native applications (WordPress, Moodle, OpenEMR); leave off otherwise to avoid an unused instance. |
-| `enable_alloydb` | `false` | Provision an AlloyDB for PostgreSQL cluster. Prefer over `create_postgres` for analytics/AI/vector workloads; it is materially more expensive than a small Cloud SQL instance, so do not enable it "just in case". |
+| `enable_alloydb` | `false` | **Not supported — leave off.** `alloydb.googleapis.com` was dropped from the module's enabled-API set on an explicit cost decision (PR #2673), so `enable_alloydb = true` fails at apply with a service-not-enabled error unless an operator supplies the API through `additional_apis` (and RAD-managed folders deny it at the folder allowlist). Use `create_postgres` instead. |
 | `create_firestore` | `false` | Create a Firestore Native database in Enterprise edition. A serverless document store — pay-per-use, scales to zero, so low-risk to enable speculatively. |
 | `create_google_kubernetes_engine` | `false` | Provision GKE cluster(s). Must be `true` before deploying any GKE application module; unnecessary (and a needless control-plane cost) for Cloud Run-only deployments. |
 
@@ -470,7 +482,7 @@ Variables are organised into groups that correspond to the sections shown in the
 
 | Variable | Default | Description |
 |---|---|---|
-| `support_users` | `[]` | Email addresses granted IAM access to the project and added as recipients for budget alerts and monitoring notifications. |
+| `support_users` | `[]` | Email addresses added as recipients for **billing budget alerts only**, and only when `create_billing_budget = true` (merged with `budget_alert_emails`). Grants **no** IAM access and does **not** feed Cloud Monitoring alerts — monitoring recipients come from `notification_alert_emails` with `configure_email_notification`. Inert while `create_billing_budget = false`. |
 | `resource_labels` | `{}` | Key-value labels applied to all resources created by the module (cost centre, environment, team). |
 
 ### Group 3 — Networking & VPC
@@ -585,6 +597,7 @@ Variables are organised into groups that correspond to the sections shown in the
 | `gke_subnet_base_cidr` | `"10.128.0.0/12"` | Base CIDR for GKE node subnets. Must not overlap with subnet, pod, or service CIDRs. |
 | `gke_pod_base_cidr` | `"10.64.0.0/10"` | Base CIDR for pod IP ranges. Must not overlap with other CIDRs. |
 | `gke_service_base_cidr` | `"10.8.0.0/16"` | Base CIDR for Kubernetes Service ClusterIP ranges. Must not overlap with other CIDRs. |
+| `gke_master_base_cidr` | `"172.16.0.0/16"` | Base CIDR the control-plane private range (a `/28` per cluster) is carved from. Deliberately in a different RFC1918 block (`172.16.0.0/12`, not `10.x`) from the three above, so it can never collide with them however they are resized. Required because clusters run with private nodes — a private cluster's control plane always needs its own dedicated `/28`, whether or not its API endpoint is private. |
 
 **Standard Mode Node Pool** *(ignored in Autopilot)*
 
@@ -626,7 +639,7 @@ Variables are organised into groups that correspond to the sections shown in the
 
 ### Group 12 — Binary Authorization
 
-> **Choosing Binary Authorization configuration.** The intended end state is `REQUIRE_ATTESTATION` — only images signed by your CI/CD attestor may deploy to Cloud Run or GKE project-wide. But the *order of operations* matters: switching to `REQUIRE_ATTESTATION` before the signing pipeline is producing valid attestations blocks **every** deployment in the project, with recovery only by reverting to `ALWAYS_ALLOW`. Enable with `ALWAYS_ALLOW` first, stand up the attestation pipeline, confirm images are being signed, then tighten to `REQUIRE_ATTESTATION`. `ALWAYS_DENY` is an emergency lockdown switch, not a normal setting.
+> **Choosing Binary Authorization configuration.** The intended end state is `REQUIRE_ATTESTATION` — only images signed by your CI/CD attestor may deploy to Cloud Run or GKE project-wide. But the *order of operations* matters: switching to `REQUIRE_ATTESTATION` before the signing pipeline is producing valid attestations blocks **every** deployment in the project — and it cannot be undone from this module. The policy update is additive and **escalate-only** (multiple tenants share one project policy), so setting `binauthz_evaluation_mode` back to `ALWAYS_ALLOW` is ignored: the apply succeeds, logs a WARNING, and the live policy still enforces. Recovery is out-of-band with `gcloud container binauthz policy import <file>`. Enable with `ALWAYS_ALLOW` first, stand up the attestation pipeline, confirm images are being signed, then tighten to `REQUIRE_ATTESTATION`. `ALWAYS_DENY` is an emergency lockdown switch, not a normal setting.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -728,7 +741,7 @@ After a successful deployment, the following values are available in the platfor
 | `gke_service_account_email` | Email of the GKE node service account (when `create_google_kubernetes_engine = true`). |
 | `gke_clusters` | Map of all cluster details — name, endpoint, CA cert, location, and CIDRs (sensitive; when `create_google_kubernetes_engine = true`). |
 | `gke_mci_config_cluster` | Config cluster name for Multi-Cluster Ingress (multi-cluster GKE). |
-| `gke_fleet_membership_ids` | Fleet membership IDs for all clusters (GKE with Config Management or Service Mesh). |
+| `gke_fleet_membership_ids` | Fleet membership IDs for all clusters (GKE with Config Management, Policy Controller, or Service Mesh). |
 | `artifact_registry_repository_name` | Name of the shared Artifact Registry repository. |
 | `artifact_registry_repository_location` | Region of the Artifact Registry repository. |
 | `artifact_registry_repository_project` | Project ID of the Artifact Registry repository. |
@@ -751,7 +764,7 @@ Because `Services GCP` is the platform layer that every application module depen
 
 | Variable | Sensible Default | Risk | Consequence of Incorrect Value |
 |---|---|---|---|
-| `tenant_deployment_id` | lowercase alphanumeric, set once | **High** 🛡 plan-time | Uppercase, hyphens, or underscores are rejected at plan time — it prefixes every resource name and invalid characters would otherwise break GCP naming across dozens of resources. Changing it later renames (recreates) everything. |
+| `tenant_id` | lowercase alphanumeric, set once | **High** 🛡 plan-time | Uppercase, hyphens, or underscores are rejected at plan time — it prefixes every resource name and invalid characters would otherwise break GCP naming across dozens of resources. Changing it later renames (recreates) everything. |
 | `wif_github_org` (with `wif_provider_type = "github"`) | your GitHub org | **Critical** 🛡 plan-time | Empty removes the `repository_owner` restriction, letting **any** GitHub repository impersonate the platform service accounts. Now rejected at plan time when WIF + github is enabled. |
 | `wif_oidc_issuer_uri` (with `wif_provider_type = "generic"`) | your `https://` issuer | **High** 🛡 plan-time | Empty/non-HTTPS issuer fails provider creation; now validated at plan time. |
 | `create_*_read_replica` without `create_*` | match to the primary | **Medium** 🛡 plan-time | Previously the replica was silently dropped (you believed you had replicas; you had none). Now rejected at plan time. |
@@ -762,7 +775,7 @@ Because `Services GCP` is the platform layer that every application module depen
 | `enable_vpc_sc` | `false`; always enable with `vpc_sc_dry_run = true` first | **Critical** | Enabling with `vpc_sc_dry_run = false` on first enable immediately blocks API access across Cloud Build, Cloud Run, GKE, and Secret Manager for any identity, IP, or network missing from the access level. Dry-run for 24–72 hours, then enforce. |
 | `vpc_sc_dry_run` | `true` — never skip dry-run on first enable | **Critical** | `false` without a prior dry-run audit causes immediate, wide-blast-radius API blocking with no automatic rollback — the access level must be corrected manually. |
 | `admin_ip_ranges` | Office/VPN CIDR + CI/CD runner IPs | **Critical** (partly 🛡 plan-time) | Empty while *enforcing* (`enable_vpc_sc = true`, `vpc_sc_dry_run = false`) is rejected at plan time. In dry-run it is allowed, but an incomplete allow-list still surfaces as `POLICY_VIOLATION` in audit logs — the reason dry-run exists. |
-| `enable_binary_authorization` | `false`; enable only after attestation pipeline is in place | **Critical** | `REQUIRE_ATTESTATION` without a functioning attestation pipeline blocks every image deployment across the project; recovery requires reverting to `ALWAYS_ALLOW`. |
+| `enable_binary_authorization` | `false`; enable only after attestation pipeline is in place | **Critical** | `REQUIRE_ATTESTATION` without a functioning attestation pipeline blocks every image deployment across the project. **Reverting `binauthz_evaluation_mode` does not undo it** — the policy update is additive and escalate-only, so a downgrade is ignored (the apply still succeeds, logging a WARNING). Recovery is out-of-band: `gcloud container binauthz policy import <file>`. |
 | `subnet_cidr_range` | `["10.0.0.0/24"]` — must not overlap GKE pod/service CIDRs | **High** | Overlap with `gke_pod_base_cidr` or `gke_service_base_cidr` fails GKE cluster creation with a CIDR conflict, blocking all GKE application modules. |
 | `gke_pod_base_cidr` | `"10.64.0.0/10"` — large enough for pod density | **High** | Too small for the expected pod count: GKE cannot schedule new pods once the pod CIDR is exhausted (`no available IP addresses`). |
 | `postgres_database_availability_type` | `"ZONAL"`; use `"REGIONAL"` for production | **High** | `"ZONAL"` in production has no hot standby — a zone outage causes complete database unavailability for all dependent application modules. |

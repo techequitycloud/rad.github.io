@@ -37,8 +37,11 @@ By the end of this lab you will be able to:
 
 ## Prerequisites
 
-- **Services_GCP deployed** in the target project (provides the VPC, GKE Autopilot
-  cluster, Artifact Registry, and shared service accounts this module depends on).
+- **Services_GCP** (provides the VPC, GKE Autopilot cluster, Artifact Registry,
+  and shared service accounts this module depends on). You do not need to deploy
+  this yourself first — the platform automatically detects whether it already
+  exists in the target project and provisions it before this module if not (see
+  Task 1).
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
@@ -56,13 +59,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Modules** in the RAD platform top navigation, open **Calibre-Web (GKE)**
+1. Click **Deploy** in the RAD platform top navigation, open **Calibre-Web (GKE)**
    from the **Platform Modules** list to start configuration, set `project_id`,
    and review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/CalibreWeb_GKE)
-   documents every input by group, with defaults. If you want the web UI reachable
-   externally out of the box, set `application_domains` to a hostname or switch
-   `service_type` to `LoadBalancer` before deploying (see Task 2). Review the
+   documents every input by group, with defaults. The web UI is reachable externally
+   out of the box — `service_type` already defaults to `LoadBalancer` (see Task 2).
+   Set `application_domains` only if you want a custom hostname served through the
+   Gateway instead of the raw LoadBalancer IP. Review the
    estimated cost (if credits are enabled) and click **Deploy**, which opens the
    deployment status page with real-time logs.
 
@@ -96,10 +100,10 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get statefulset,pods -n "$NS"
    ```
 
-2. Find how to reach it. `service_type` defaults to **`ClusterIP`** (internal-only),
-   and while `enable_custom_domain = true` by default provisions a Gateway API
-   resource, the default empty `application_domains = []` leaves it with no
-   hostname to route — so **there is no external access configured out of the box**
+2. Find how to reach it. `service_type` defaults to **`LoadBalancer`**, so an
+   external IP is provisioned out of the box. `enable_custom_domain = true` also
+   provisions a Gateway API resource, but the default empty `application_domains = []`
+   leaves it with no hostname to route — so **the LoadBalancer IP is the route in**
    unless you set `application_domains` or switched `service_type` to
    `LoadBalancer` before deploying:
 
@@ -220,10 +224,10 @@ platform-level diagnostics and do not change with Calibre-Web releases.
   `admin` / `admin123` (the upstream default), not the `CALIBRE_ADMIN_PASSWORD`
   Secret Manager value — that secret is provisioned but not applied to the
   container's actual login flow.
-- **No external access at all:** the default `service_type = ClusterIP` combined
-  with empty `application_domains` leaves no route in — this is expected out of
-  the box (see Task 2), not a failure. Set `application_domains` or switch to
-  `LoadBalancer` and re-apply.
+- **No external access at all:** `service_type` defaults to `LoadBalancer`, so
+  check whether an external IP has been assigned yet (it can take a minute or two).
+  Empty `application_domains` only means the custom-domain path has no hostname to
+  route — the LoadBalancer IP is still the route in (see Task 2).
 - **PVC stuck `Pending` / `SSD_TOTAL_GB` quota exceeded:** check current disk usage
   and consider switching `stateful_pvc_storage_class` to `standard` (HDD) on a
   quota-constrained project; remember scale-to-zero does not free existing PVCs.
