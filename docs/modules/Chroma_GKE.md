@@ -224,7 +224,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `enable_purge` | `true` | Set to true to enable the ability to purge this module. |
 | `public_access` | `true` | Set to true to enable the module to be available to all platform users. |
 | `require_services_gcp_module` | `true` | Enforces that the Services_GCP module is deployed before this module. When true, the deployment fails at plan time with a clear error if no Services_GCP-managed VPC network is detected in the project. Set to false to allow standalone deployment with inline prerequisite resources. |
-| `resource_creator_identity` | `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com` | The Service Account used by terraform to create resources in the destination project. (e.g., "rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com") |
+| `resource_creator_identity` | `rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com` | The Service Account used by terraform to create resources in the destination project. (e.g., "rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com") |
 | `shared_users` | _(set)_ | List of users who can view and deploy this module regardless of the public_access setting. Enter one or more user email addresses. Metadata only. |
 | `technical_support_users` | _(set)_ | List of users responsible for providing technical support for this module. Enter one or more user email addresses. The deployment portal routes support requests for this module to these users. Metadata only. |
 | `impersonation_service_account` | `` | Service account email to impersonate when calling GCP APIs from shell scripts. Leave empty to use the runner's own credentials. (e.g., 'deployer@my-project.iam.gserviceaccount.com') |

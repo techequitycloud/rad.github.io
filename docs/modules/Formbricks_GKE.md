@@ -87,7 +87,7 @@ Platform/UI metadata read by the RAD platform for the catalogue listing, depende
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected. Set `false` for standalone deployment with inline prerequisites. |
 | `shared_users` | `[]` | Users granted access regardless of `public_access`. |
 | `technical_support_users` | `[]` | Users the platform routes support requests to. |
-| `resource_creator_identity` | `"rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com"` | Service account Terraform uses to create resources. |
+| `resource_creator_identity` | `"rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com"` | Service account Terraform uses to create resources. |
 | `application_module` | `""` | Not referenced — has no effect in this application module. |
 | `impersonation_service_account` | `""` | Not referenced — has no effect in this application module. |
 | `job_execution_wait_timeout` | `900` | Max seconds a deployment waits for the `db-init` job before aborting the apply. |

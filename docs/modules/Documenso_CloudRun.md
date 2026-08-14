@@ -281,7 +281,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `require_services_gcp_module` | `true` | An `App_CloudRun` feature — fails the plan if no `Services_GCP` VPC exists — but this variable is **not forwarded** to `App_CloudRun` here, so it has no effect at this module's level. |
 | `shared_users` | `[]` | **Actively enforced by the platform** (unlike most Group 0 vars): users listed here get access regardless of `public_access`. |
 | `technical_support_users` | `[]` | Routes support requests for this module to these users. |
-| `resource_creator_identity` | `rad-module-creator@tec-rad-ui-2b65.iam.gserviceaccount.com` | SA Terraform uses to create resources; forwarded to `App_CloudRun`. |
+| `resource_creator_identity` | `rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com` | SA Terraform uses to create resources; forwarded to `App_CloudRun`. |
 | `impersonation_service_account` / `job_execution_wait_timeout` / `module_writable_secret_ids` | `""` / `900` / `{}` | Declared for convention parity; **not forwarded** anywhere in `main.tf` — setting any of these has no effect. |
 
 ### Group 1 — Project & Identity
