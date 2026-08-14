@@ -256,7 +256,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `module_description` / `module_documentation` / `module_dependency` / `module_services` | _(set)_ | Platform catalogue metadata. |
-| `credit_cost` | `150` | Platform credits consumed per deployment. |
+| `credit_cost` | `300` | Platform credits consumed per deployment. |
 | `require_credit_purchases` | `false` | Require credit balance check before deploy. |
 | `enable_purge` | `true` | Allow full resource deletion on destroy. |
 | `public_access` | `true` | Make the module visible in the public catalogue. |

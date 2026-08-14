@@ -219,7 +219,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `module_documentation` | `https://docs.radmodules.dev/docs/modules/Chroma_GKE` | The URL to the module documentation. |
 | `module_dependency` | _(set)_ | Specify the names of the modules this module depends on in the order in which they should be deployed. (e.g., ["Services_GCP"]) |
 | `module_services` | _(set)_ | Specify the module services. |
-| `credit_cost` | `150` | Specify the module cost. (e.g., 50) |
+| `credit_cost` | `75` | Specify the module cost. (e.g., 50) |
 | `require_credit_purchases` | `false` | Set to true to require credit purchases to deploy this module. |
 | `enable_purge` | `true` | Set to true to enable the ability to purge this module. |
 | `public_access` | `true` | Set to true to enable the module to be available to all platform users. |
