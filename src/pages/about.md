@@ -16,9 +16,9 @@ cloud resource you deployed yourself.
 
 ## What the platform covers
 
-- **159 module reference guides** — configuration references for deploying
-  100+ open-source and cloud-native applications on Cloud Run and GKE Autopilot
-- **111 hands-on labs** — guided deploy → verify → operate → observe → tear-down
+- **520+ module reference guides** — configuration references for deploying
+  190+ open-source and cloud-native applications on Cloud Run and GKE Autopilot
+- **345+ hands-on labs** — guided deploy → verify → operate → observe → tear-down
   walkthroughs in your own GCP project
 - **Certification lab maps and section guides** for seven Google Cloud
   certifications: Associate Cloud Engineer (ACE), Professional Cloud Architect
