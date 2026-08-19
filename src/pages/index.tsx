@@ -18,7 +18,7 @@ function HomepageHeader() {
         </Heading>
         <p className={styles.heroIntro}>
           Seven certification study paths align every official exam domain with
-          hands-on deployment labs, built from 100+ open-source application
+          hands-on deployment labs, built from 350+ open-source application
           modules running on Cloud Run and GKE Autopilot. Each guide is
           authored by Google Cloud Authorized Trainers who hold certifications
           in the domains they teach — so you&apos;re learning from people
@@ -118,8 +118,8 @@ function CertificationPaths() {
 function PlatformStats() {
   const stats = [
     {value: '7', label: 'Google Cloud certifications covered', to: '/docs/certification/ACE_Certification_Guide'},
-    {value: '111', label: 'hands-on deployment labs', to: '/docs/labs/Services_GCP'},
-    {value: '159', label: 'module configuration guides', to: '/docs/modules/Services_GCP'},
+    {value: '345+', label: 'hands-on deployment labs', to: '/docs/labs/Services_GCP'},
+    {value: '520+', label: 'module configuration guides', to: '/docs/modules/Services_GCP'},
   ];
   return (
     <section className={styles.statsSection}>
