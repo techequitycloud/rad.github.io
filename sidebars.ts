@@ -10,6 +10,7 @@ const sidebars: SidebarsConfig = {
     {type: 'doc', id: 'guides/support-guide', label: 'Support Guide'},
     {type: 'doc', id: 'guides/admin-guide', label: 'Admin Guide'},
     {type: 'doc', id: 'guides/finance-guide', label: 'Finance Guide'},
+    {type: 'doc', id: 'guides/trainer-guide', label: 'Trainer Guide'},
   ],
   modulesSidebar: [
     {

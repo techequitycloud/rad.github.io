@@ -59,7 +59,8 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Deployments |
 | **Agent** | Earns referral commission on activity from users they referred | Revenue |
 | **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
-| **Support** | Triages support tickets and views deployments | Deployments |
+| **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Deployments |
+| **Trainer** | Provisions lab deployments for an assigned roster of participants, one per participant, and sees what they provisioned | Deployments |
 
 See the role guides at the end for the full task lists.
 
@@ -67,7 +68,7 @@ See the role guides at the end for the full task lists.
 
 ## Core concepts
 
-### Modules and the catalog
+### The Modules catalog
 
 The **Modules** page is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
 
@@ -78,15 +79,15 @@ There are two kinds of modules:
 
 If you're a partner you'll see two tabs (your own **Partner modules** and **Platform modules**, which also includes other partners' public modules). Everyone else sees a single combined catalog of public modules.
 
-You can **pin** the modules you use most so they stay at the top, **search** by name, and page through the catalog. A stats strip at the top shows total deployments, your credit balance (when credits are enabled), and how long deployment history is kept.
+You can **pin** the modules you use most so they stay at the top, **search** by name, filter by **category** from the list beside the grid, and page through the catalog. A stats strip at the top shows total deployments, your credit balance (when credits are enabled), and how long deployment history is kept.
 
 ### Deploying a module
 
-1. Click a module card to open its guided, multi-step **configuration form**. By default you get **Basic mode**: only the essential first-page fields, priced at build cost only. Fill in the fields, using **Next** to move through the steps. Required fields can't be left blank, and the form checks your entries before you continue.
+1. Click a module card to open its guided, multi-step **configuration form**. Fill in the fields, using **Next** to move through the steps. Required fields can't be left blank, and the form checks your entries before you continue.
 2. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
-3. Click **Submit** (or **Confirm**, if a confirmation dialog appeared). The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
+3. Click **Deploy Module**. The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
-On the **Deployments** page each row shows the module, deployment ID, project, status, the action, who deployed it, when, how long it took, the credits used, and an editable **star rating**. (Admins and support can switch between **All deployments** and **My deployments**; everyone else sees their own.)
+On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it, and can switch between **All deployments** and **My deployments**; everyone else sees their own. For support, "All deployments" is scoped to the customers whose open tickets are assigned to them, not the whole platform.
 
 Click a deployment to open its details, which has three tabs:
 
@@ -96,19 +97,35 @@ Click a deployment to open its details, which has three tabs:
 
 From the details view you can:
 
-- **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished. You can also switch on **Advanced mode** here to reveal every configuration page, which adds a module fee on top of the build cost.
-- **Delete** — choose **Delete** to tear down the cloud resources, or **Purge** to remove the deployment from RAD *without* destroying the cloud resources (useful when a deployment is stuck or was changed outside RAD).
+- **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished.
+- **Delete** — choose **Delete** to tear down the cloud resources, or **Purge** to remove the deployment from RAD *without* destroying the cloud resources (useful when a deployment is stuck or was changed outside RAD). A RAD-managed GCP project ("GCP Project on RAD") is torn down the same way, but because that takes the whole project with it, RAD refuses while any other deployment is still running in that project and lists the ones to delete first. Google keeps a deleted project recoverable for about 30 days.
+- **Cancel** — released a deployment that is stuck in Queued and never starts building, or a purge that has stalled.
 
-Deployment statuses you may see include Queued, Working, Success, Failure, Deleting, Deleted, Cancelled, Timeout, and Expired.
+Deployment statuses you may see include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire.
+
+### Solutions
+
+The **Solutions** page is a catalog of ready-made **solutions** — bundles of modules that deploy together as one unit into a single project. Solutions are grouped into categories, and each card shows a combined credit cost and an average rating derived from the modules it contains.
+
+A solution's modules are grouped into **waves**, a rough deploy order — but what actually gates a member's start is its real configuration dependency on another member: it waits only for that specific producer to finish, not for its whole nominal wave, so members frequently provision concurrently both within and across waves. Provisioning a solution walks you through a single configuration form covering its members. The resulting **solution deployment** gets its own details page, where — as with a module deployment — you can update, delete, or purge it.
 
 ### Credits
 
-Usage is metered in credits. Your **balance** is your awarded credits plus your purchased credits, and it's checked before each deployment. Deploying a module costs that module's credit cost. (A partner deploying their own module isn't charged.)
+Usage is metered in credits, held in three separate balances:
+
+- **Awards** — free credits (signup, monthly, referral), reset each month.
+- **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
+- **Top-up** — credits bought outright as a one-off. These never expire.
+
+Spending draws on awards first, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all three together and is checked before each deployment.
+
+Deploying a module costs that module's credit cost plus a build cost, metered from how long the build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only.
 
 The **Credits** page has:
 
 - A **Credit Transactions** tab — your full history of awards, purchases, and spend, filterable by deployment and date, with **Export CSV**.
-- A **Buy Credits** tab (when enabled).
+- A **Subscriptions** tab and a **Buy Credits** tab (when enabled).
+- An **ROI** tab — the calculator described below.
 
 To buy credits, choose a currency and amount, pick a payment provider, and complete checkout on the provider's secure page. Your credits are added automatically once the payment confirms.
 
@@ -118,24 +135,23 @@ Some platforms require *purchased* credits (not just awarded ones) for certain d
 
 Payments are handled through **Stripe** and **Flutterwave**. You choose the provider at checkout; which ones are available depends on your currency and what the platform has enabled. Pricing is shown in your selected currency.
 
-Subscriptions are optional recurring plans ("tiers") that grant a set number of credits each billing cycle. You can subscribe, and cancel or reinstate at any time. Subscriptions only grant credits — they do not grant the Partner role, which an administrator assigns manually.
+Subscriptions are optional recurring plans ("tiers") that grant a set number of credits each billing cycle. You can subscribe, and cancel or reinstate at any time, but you can hold only one subscription at a time — to move to a different tier, or a different payment provider, cancel the current one first. Subscriptions only grant credits — they do not grant the Partner role, which an administrator assigns manually.
 
 ### ROI
 
-The **ROI** tab on the **Help** page is an interactive estimator. It comes pre-filled with your recent activity and lets you adjust assumptions (such as monthly deployments, manual deployment time, engineer hourly cost, and time-savings percentage) to estimate your labour cost, platform cost, net savings, and ROI. It's an estimator only — it doesn't deploy or charge anything.
+The **ROI** tab on the **Credits** page is an interactive estimator. It comes pre-filled with your recent activity and lets you adjust assumptions (such as monthly deployments, manual deployment time, engineer hourly cost, and time-savings percentage) to estimate your labour cost, platform cost, net savings, and ROI. It's an estimator only — it doesn't deploy or charge anything.
 
 ### Costs and invoices
 
-What you can see depends on your role. Regular users and partners can see costs and invoices only for projects they own or deployed. Admins and finance users can see costs and invoices across all users and projects, including org-wide cloud-cost invoices. These detailed views live on the **Credits** and **Billing** pages.
+You can see your own spending on the **Credits** page, two ways. **Credit Transactions** lists every award, purchase and charge on your account. **Project Transactions** — shown whenever project credits are enabled — breaks the project side of that down per Google Cloud project, with the credits debited and the underlying cloud cost for each, over a date range you choose. It exists because a project charge reaches the ledger as one combined row covering all your projects at once.
+
+Platform-wide reporting stays an administrator and finance view: the **Module Costs** and **Project Invoices** tabs on the Credits page, and the whole **Billing** page, are limited to those two roles. If you need a formal invoice, ask through the Support form.
 
 ---
 
 ## Getting help
 
-The **Help** page has two tabs:
-
-- **Support** — a contact form that raises a support ticket and emails the support team.
-- **ROI** — the ROI Calculator described above.
+The **Help** page's **Support** tab is a contact form that raises a support ticket and emails the support team. Depending on your role you may see more tabs there: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). Where referrals are enabled, the Support tab also carries your **Invite Friends** card with your referral link and code.
 
 You can also reach Help from the **Contact us** link in the footer.
 
@@ -151,3 +167,4 @@ For the full set of tasks in each role:
 - [Agent](agent-guide.md)
 - [Finance](finance-guide.md)
 - [Support](support-guide.md)
+- [Trainer](trainer-guide.md)
