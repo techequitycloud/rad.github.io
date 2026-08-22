@@ -51,7 +51,7 @@ Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite
 Open a deployment to see its details, which has these tabs:
 
 - **Outputs** — the non-sensitive results of the deployment (such as application URLs, addresses, and endpoints exported by the module). These appear once the deployment succeeds.
-- **Build Status** — live logs, useful for watching progress or troubleshooting a failure.
+- **Build Status** — live logs, useful for watching progress or troubleshooting a failure. Once the deployment has succeeded, **Explain this** opens a plain-English explanation of the Google Cloud resources it created, written for someone who does not read Terraform. It sends only the *kinds* of resource involved and how many of each — never your project ID, resource names, email addresses or any configured values. On a step that has *failed*, **Search for a fix** opens a search built from the actual error the step printed, and **Ask for help** raises a support request with that same output attached.
 - **Builds** — the build history for the deployment.
 
 From the details view you can also:

@@ -92,7 +92,7 @@ On the **Deployments** page each row shows the module, the deployment ID, an edi
 Click a deployment to open its details, which has three tabs:
 
 - **Outputs** — the non-sensitive results (such as URLs and endpoints), shown once the deployment succeeds.
-- **Build Status** — live logs as the deployment runs.
+- **Build Status** — live logs as the deployment runs. Once it succeeds, **Explain this** opens a plain-English summary of what was created in your Google Cloud project; on a step that failed, **Search for a fix** and **Ask for help** both work from the error that step printed.
 - **Builds** — the build history for that deployment.
 
 From the details view you can:
