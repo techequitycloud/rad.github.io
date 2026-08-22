@@ -5,6 +5,8 @@ description: "RAD Platform trainer guide — provisioning lab environments for a
 
 # Trainer Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/guides/Trainer_Guide.png" alt="Trainer Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 For trainers who run a course on RAD and provision lab environments for their participants. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do
