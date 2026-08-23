@@ -189,3 +189,10 @@ For the Hermes-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Hermes_GKE](Hermes_GKE.md)** and
 **[Hermes_CloudRun](Hermes_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hermes Agent on Google Cloud Run](Hermes_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Hermes Agent on GKE Autopilot](Hermes_GKE.md) — this configuration deployed on GKE.

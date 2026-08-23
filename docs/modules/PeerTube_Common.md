@@ -234,3 +234,10 @@ gcloud storage buckets describe gs://<videos-bucket> --format='value(iamConfigur
 For the PeerTube-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guide: **[PeerTube_CloudRun](PeerTube_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [PeerTube on Google Cloud Run](PeerTube_CloudRun.md) — this configuration deployed on Cloud Run.
+- [PeerTube on GKE Autopilot](PeerTube_GKE.md) — this configuration deployed on GKE.

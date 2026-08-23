@@ -450,3 +450,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. OpenProject-specific application configuration shared
 with the Cloud Run variant is described in
 **[OpenProject_Common](OpenProject_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenProject on GKE Autopilot](../labs/OpenProject_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [OpenProject on Google Cloud Run](OpenProject_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [OpenProject Common — Shared Application Configuration](OpenProject_Common.md) — the configuration shared by both deployment targets.

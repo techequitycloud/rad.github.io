@@ -257,3 +257,10 @@ For the Planka-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Planka_GKE](Planka_GKE.md)** and
 **[Planka_CloudRun](Planka_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Planka on Google Cloud Run](Planka_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Planka on GKE Autopilot](Planka_GKE.md) — this configuration deployed on GKE.

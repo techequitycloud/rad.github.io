@@ -350,3 +350,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. EspoCRM-specific
 application configuration shared with the Cloud Run variant is described in
 **[EspoCRM_Common](EspoCRM_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: EspoCRM on GKE Autopilot](../labs/EspoCRM_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [EspoCRM on Google Cloud Run](EspoCRM_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [EspoCRM Common — Shared Application Configuration](EspoCRM_Common.md) — the configuration shared by both deployment targets.

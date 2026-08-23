@@ -113,3 +113,10 @@ Gitea starts quickly (single Go binary), but first boot also runs schema migrati
 
 For the Gitea-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guide:
 **[Gitea_CloudRun](Gitea_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Gitea on Google Cloud Run](Gitea_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Gitea on GKE Autopilot](Gitea_GKE.md) — this configuration deployed on GKE.

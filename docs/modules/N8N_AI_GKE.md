@@ -522,3 +522,11 @@ ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 and image mirroring — see **[App_GKE](App_GKE.md)**. n8n AI-specific application
 configuration shared with the Cloud Run variant is described in
 **[N8N_AI_Common](N8N_AI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: N8N_AI on GKE Autopilot](../labs/N8N_AI_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [N8N AI on Cloud Run](N8N_AI_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [N8N AI Common — Shared Application Configuration](N8N_AI_Common.md) — the configuration shared by both deployment targets.

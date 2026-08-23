@@ -397,3 +397,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 shared with the Cloud Run variant (secret generation, the `db-init` job, NFS
 upload storage, and the DB env-var mapping) is described in
 **[LimeSurvey_Common](LimeSurvey_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LimeSurvey on GKE Autopilot](../labs/LimeSurvey_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LimeSurvey on Google Cloud Run](LimeSurvey_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [LimeSurvey Common — Shared Application Configuration](LimeSurvey_Common.md) — the configuration shared by both deployment targets.

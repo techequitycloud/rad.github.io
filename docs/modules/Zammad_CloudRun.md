@@ -437,3 +437,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Zammad-specific application configuration shared
 with the GKE variant is described in **[Zammad_Common](Zammad_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Zammad on Cloud Run](../labs/Zammad_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Zammad on GKE Autopilot](Zammad_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Zammad Common — Shared Application Configuration](Zammad_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Elasticsearch on GKE Autopilot](Elasticsearch_GKE.md), [Snipe-IT on Google Cloud Run](SnipeIT_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [GoAlert on Google Cloud Run](GoAlert_CloudRun.md) in the **IT Service Desk** solution.

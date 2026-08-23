@@ -372,3 +372,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 with the Cloud Run variant (image, `APP_KEY` secret, init jobs) is described
 in `modules/SnipeIT_Common/README.md` — no standalone `docs/modules/
 SnipeIT_Common.md` guide exists yet.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: SnipeIT on GKE Autopilot](../labs/SnipeIT_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Snipe-IT on Google Cloud Run](SnipeIT_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Snipe-IT Common — Shared Application Configuration](SnipeIT_Common.md) — the configuration shared by both deployment targets.

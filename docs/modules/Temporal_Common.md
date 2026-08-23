@@ -139,3 +139,9 @@ through the Cloud SQL Admin API rather than by connecting as the app role.
 For the Temporal-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guide:
 **[Temporal_GKE](Temporal_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Temporal on GKE Autopilot](Temporal_GKE.md) — this configuration deployed on GKE.

@@ -147,3 +147,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Open WebUI-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[OpenWebUI_GKE](OpenWebUI_GKE.md)** and **[OpenWebUI_CloudRun](OpenWebUI_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Open WebUI on GKE Autopilot](OpenWebUI_GKE.md) — this configuration deployed on GKE.

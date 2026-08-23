@@ -167,3 +167,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Tolgee-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[Tolgee_GKE](Tolgee_GKE.md)** and **[Tolgee_CloudRun](Tolgee_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Tolgee on Google Cloud Run](Tolgee_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Tolgee on GKE Autopilot](Tolgee_GKE.md) — this configuration deployed on GKE.

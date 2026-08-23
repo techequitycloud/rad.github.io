@@ -256,3 +256,10 @@ For the Chatwoot-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Chatwoot_GKE](Chatwoot_GKE.md)** and
 **[Chatwoot_CloudRun](Chatwoot_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Chatwoot on GKE Autopilot](Chatwoot_GKE.md) — this configuration deployed on GKE.

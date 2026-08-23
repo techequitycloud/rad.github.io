@@ -315,3 +315,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Hoppscotch-specific application configuration
 shared with the GKE variant is described in
 **[Hoppscotch_Common](Hoppscotch_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Hoppscotch on Cloud Run](../labs/Hoppscotch_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Hoppscotch on GKE Autopilot](Hoppscotch_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Hoppscotch Common — Shared Application Configuration](Hoppscotch_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Gitea on Google Cloud Run](Gitea_CloudRun.md), [Woodpecker CI on GKE Autopilot](Woodpecker_GKE.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Source Control & CI/CD** solution.

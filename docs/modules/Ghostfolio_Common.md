@@ -166,3 +166,10 @@ For the Ghostfolio-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Ghostfolio_GKE](Ghostfolio_GKE.md)** and
 **[Ghostfolio_CloudRun](Ghostfolio_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Ghostfolio on Google Cloud Run](Ghostfolio_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Ghostfolio on GKE Autopilot](Ghostfolio_GKE.md) — this configuration deployed on GKE.

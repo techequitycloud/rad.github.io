@@ -310,3 +310,11 @@ Binary Authorization, VPC-SC, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. AdGuard-Home-specific application
 configuration shared with the GKE variant is described in
 **[AdGuardHome_Common](AdGuardHome_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: AdGuardHome on Cloud Run](../labs/AdGuardHome_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [AdGuard Home on GKE Autopilot](AdGuardHome_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [AdGuardHome Common — Shared Application Configuration](AdGuardHome_Common.md) — the configuration shared by both deployment targets.

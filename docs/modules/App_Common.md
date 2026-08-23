@@ -506,3 +506,10 @@ gcloud kms keys versions list \
 ## Deployment Inputs and Outputs
 
 App Common is an internal shared library. It has no UI-deployable input variables and exposes no top-level deployment outputs of its own — its capabilities are always consumed through a foundation module. For the user-facing configuration variables and the outputs returned after a successful deployment, see the [App GKE Configuration Guide](App_GKE.md) and the [App CloudRun Configuration Guide](App_CloudRun.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [App CloudRun Module — Configuration Guide](App_CloudRun.md) — this configuration deployed on Cloud Run.
+- [App GKE Module — Configuration Guide](App_GKE.md) — this configuration deployed on GKE.

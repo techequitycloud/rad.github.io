@@ -173,3 +173,10 @@ gcloud storage ls gs://<resource-prefix>-media/
 For the Django-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Django_GKE](Django_GKE.md)** and **[Django_CloudRun](Django_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Django on Cloud Run](Django_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Django on GKE Autopilot](Django_GKE.md) — this configuration deployed on GKE.

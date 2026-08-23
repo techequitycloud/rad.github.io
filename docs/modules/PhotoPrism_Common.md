@@ -187,3 +187,10 @@ For the PhotoPrism-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[PhotoPrism_GKE](PhotoPrism_GKE.md)** and
 **[PhotoPrism_CloudRun](PhotoPrism_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [PhotoPrism on Google Cloud Run](PhotoPrism_CloudRun.md) — this configuration deployed on Cloud Run.
+- [PhotoPrism on GKE Autopilot](PhotoPrism_GKE.md) — this configuration deployed on GKE.

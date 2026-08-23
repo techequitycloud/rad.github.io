@@ -354,3 +354,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Kavita-specific application configuration shared with the Cloud Run variant is
 described in **[Kavita_Common](Kavita_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Kavita on GKE Autopilot](../labs/Kavita_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Kavita on Google Cloud Run](Kavita_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Kavita Common — Shared Application Configuration](Kavita_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md), [Komga on GKE Autopilot](Komga_GKE.md), [Audiobookshelf on GKE Autopilot](Audiobookshelf_GKE.md), [Navidrome on GKE Autopilot](Navidrome_GKE.md) in the **Digital Library** solution.

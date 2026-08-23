@@ -134,3 +134,10 @@ requirement.
 For the ntfy-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Ntfy_GKE](Ntfy_GKE.md)** and **[Ntfy_CloudRun](Ntfy_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Ntfy on Google Cloud Run](Ntfy_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Ntfy on GKE Autopilot](Ntfy_GKE.md) — this configuration deployed on GKE.

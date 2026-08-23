@@ -174,3 +174,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Flarum-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[Flarum_GKE](Flarum_GKE.md)** and **[Flarum_CloudRun](Flarum_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Flarum on Google Cloud Run](Flarum_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Flarum on GKE Autopilot](Flarum_GKE.md) — this configuration deployed on GKE.

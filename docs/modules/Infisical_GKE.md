@@ -395,3 +395,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Infisical-specific application configuration shared
 with the Cloud Run variant is described in
 **[Infisical_Common](Infisical_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Infisical on GKE Autopilot](../labs/Infisical_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Infisical on Google Cloud Run](Infisical_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Infisical Common — Shared Application Configuration](Infisical_Common.md) — the configuration shared by both deployment targets.

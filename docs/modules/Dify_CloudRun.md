@@ -421,3 +421,12 @@ For the foundation behaviour referenced throughout — service identity, scaling
 ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Dify-specific application
 configuration shared with the GKE variant is described in **[Dify_Common](Dify_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Dify on Cloud Run](../labs/Dify_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Dify on GKE Autopilot](Dify_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Dify Common — Shared Application Configuration](Dify_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Crawl4AI on Google Cloud Run](Crawl4AI_CloudRun.md), [Langfuse on Google Cloud Run](Langfuse_CloudRun.md) in the **AI Application Builder** solution.

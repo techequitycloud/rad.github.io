@@ -154,3 +154,10 @@ connection pools), so the initial delays are intentionally short.
 For the Element-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Element_GKE](Element_GKE.md)** and **[Element_CloudRun](Element_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Element on Google Cloud Run](Element_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Element on GKE Autopilot](Element_GKE.md) — this configuration deployed on GKE.

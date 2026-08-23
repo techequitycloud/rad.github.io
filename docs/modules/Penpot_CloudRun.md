@@ -745,3 +745,12 @@ tofu destroy
 ```
 
 The second run will succeed once GCP has released the reserved addresses.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Penpot on Cloud Run](../labs/Penpot_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Penpot GKE Module — Configuration Guide](Penpot_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Penpot Common Shared Configuration Module](Penpot_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Excalidraw on Google Cloud Run](Excalidraw_CloudRun.md), [AFFiNE on Google Cloud Run](Affine_CloudRun.md) in the **Design & Visual Collaboration** solution.

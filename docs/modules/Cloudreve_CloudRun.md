@@ -442,3 +442,12 @@ module (`modules/Cloudreve_Common`); a dedicated `Cloudreve_Common.md` guide
 does not yet exist in this documentation set — see also
 **[Cloudreve_GKE](Cloudreve_GKE.md)** for the block-PVC-backed production
 alternative.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Cloudreve on Cloud Run](../labs/Cloudreve_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cloudreve on GKE Autopilot](Cloudreve_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Cloudreve Common — Shared Application Configuration](Cloudreve_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md), [Gokapi on Google Cloud Run](Gokapi_CloudRun.md), [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md) in the **File Sharing & Transfer** solution.

@@ -164,3 +164,10 @@ storage for a specific custom component.
 For the LangFlow-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[LangFlow_GKE](LangFlow_GKE.md)** and **[LangFlow_CloudRun](LangFlow_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LangFlow on Google Cloud Run](LangFlow_CloudRun.md) — this configuration deployed on Cloud Run.
+- [LangFlow on GKE Autopilot](LangFlow_GKE.md) — this configuration deployed on GKE.

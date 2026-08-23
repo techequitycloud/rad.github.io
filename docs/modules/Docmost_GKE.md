@@ -414,3 +414,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Docmost-specific
 application configuration shared with the Cloud Run variant is described in
 **[Docmost_Common](Docmost_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Docmost on GKE Autopilot](../labs/Docmost_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Docmost on Google Cloud Run](Docmost_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Docmost Common — Shared Application Configuration](Docmost_Common.md) — the configuration shared by both deployment targets.

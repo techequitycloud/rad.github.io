@@ -501,3 +501,11 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. LibreChat-specific application configuration
 shared with the Cloud Run variant is described in **[LibreChat_Common](LibreChat_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LibreChat on GKE Autopilot](../labs/LibreChat_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LibreChat on Google Cloud Run](LibreChat_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [LibreChat Common — Shared Application Configuration](LibreChat_Common.md) — the configuration shared by both deployment targets.

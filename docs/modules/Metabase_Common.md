@@ -149,3 +149,10 @@ The `scripts/` directory in `Metabase_Common` contains:
 For the Metabase-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Metabase_GKE](Metabase_GKE.md)** and **[Metabase_CloudRun](Metabase_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Metabase on Google Cloud Run](Metabase_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Metabase on GKE Autopilot](Metabase_GKE.md) — this configuration deployed on GKE.

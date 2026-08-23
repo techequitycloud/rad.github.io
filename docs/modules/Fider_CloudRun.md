@@ -375,3 +375,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Fider-specific application configuration shared
 with the GKE variant is described in **[Fider_Common](Fider_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Fider on Cloud Run](../labs/Fider_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Fider on GKE Autopilot](Fider_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Fider Common — Shared Application Configuration](Fider_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [FreeScout on Google Cloud Run](FreeScout_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Gotify on Google Cloud Run](Gotify_CloudRun.md) in the **Customer Support Desk** solution.

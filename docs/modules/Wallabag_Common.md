@@ -231,3 +231,10 @@ For the Wallabag-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Wallabag_GKE](Wallabag_GKE.md)** and
 **[Wallabag_CloudRun](Wallabag_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Wallabag on Google Cloud Run](Wallabag_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Wallabag on GKE Autopilot](Wallabag_GKE.md) — this configuration deployed on GKE.

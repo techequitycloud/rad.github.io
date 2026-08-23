@@ -217,3 +217,11 @@ autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. Karakeep-specific application
 configuration shared with the Cloud Run variant is described in
 **[Karakeep_Common](Karakeep_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Karakeep on GKE Autopilot](../labs/Karakeep_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Karakeep on Google Cloud Run](Karakeep_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Karakeep Common — Shared Application Configuration](Karakeep_Common.md) — the configuration shared by both deployment targets.

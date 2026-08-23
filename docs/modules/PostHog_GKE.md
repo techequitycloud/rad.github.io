@@ -504,3 +504,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. PostHog-specific application configuration is described in
 **[PostHog_Common](PostHog_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PostHog on GKE Autopilot](../labs/PostHog_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PostHog Common — Shared Application Configuration](PostHog_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [ClickHouse on GKE Autopilot](ClickHouse_GKE.md), [Plausible Analytics on GKE Autopilot](Plausible_GKE.md), [Metabase on GKE Autopilot](Metabase_GKE.md) in the **Product Analytics** solution.

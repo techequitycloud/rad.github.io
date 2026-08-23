@@ -398,3 +398,11 @@ For the foundation behaviour referenced throughout — Workload Identity, autosc
 and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image
 mirroring — see **[App_GKE](App_GKE.md)**. Ollama-specific shared application configuration
 is described in **[Ollama_Common](Ollama_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Ollama on GKE Autopilot](../labs/Ollama_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Ollama on Google Cloud Run](Ollama_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Ollama Common — Shared Application Configuration](Ollama_Common.md) — the configuration shared by both deployment targets.

@@ -412,3 +412,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, and image mirroring — see **[App_GKE](App_GKE.md)**. Element-specific
 application configuration shared with the Cloud Run variant is described in
 **[Element_Common](Element_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Element on GKE Autopilot](../labs/Element_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Element on Google Cloud Run](Element_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Element Common — Shared Application Configuration](Element_Common.md) — the configuration shared by both deployment targets.

@@ -479,3 +479,12 @@ ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-S
 and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. n8n AI-specific application
 configuration shared with the GKE variant is described in
 **[N8N_AI_Common](N8N_AI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: N8N_AI on Cloud Run](../labs/N8N_AI_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [N8N AI on GKE Autopilot](N8N_AI_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [N8N AI Common — Shared Application Configuration](N8N_AI_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Langfuse on Google Cloud Run](Langfuse_CloudRun.md) in the **AI Automation Starter** solution.

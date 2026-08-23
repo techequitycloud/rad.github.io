@@ -486,3 +486,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Speedtest Tracker-specific application configuration
 shared with the Cloud Run variant is described in
 **[SpeedtestTracker_Common](SpeedtestTracker_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Speedtest Tracker on GKE Autopilot](../labs/SpeedtestTracker_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Speedtest Tracker on Google Cloud Run](SpeedtestTracker_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Speedtest Tracker Common — Shared Application Configuration](SpeedtestTracker_Common.md) — the configuration shared by both deployment targets.

@@ -271,3 +271,12 @@ and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Homepage-specific application
 configuration is described in **[Homepage_Common](Homepage_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Homepage on Cloud Run](../labs/Homepage_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Homepage on GKE Autopilot](Homepage_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Homepage Common — Shared Application Configuration](Homepage_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md), [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Docuseal on Google Cloud Run](Docuseal_CloudRun.md) in the **Small Business Suite** solution.

@@ -152,3 +152,10 @@ attachments without adding a `gcs_volumes` entry.
 For the Memos-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Memos_GKE](Memos_GKE.md)** and **[Memos_CloudRun](Memos_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Memos on Google Cloud Run](Memos_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Memos on GKE Autopilot](Memos_GKE.md) — this configuration deployed on GKE.

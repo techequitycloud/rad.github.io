@@ -358,3 +358,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Chibisafe-specific application configuration shared with the Cloud Run variant is
 described in the Chibisafe_Common module (`modules/Chibisafe_Common/README.md`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Chibisafe on GKE Autopilot](../labs/Chibisafe_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Chibisafe Common — Shared Application Configuration](Chibisafe_Common.md) — the configuration shared by both deployment targets.

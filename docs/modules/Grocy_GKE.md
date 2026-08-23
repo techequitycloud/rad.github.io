@@ -355,3 +355,12 @@ VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Grocy-specific application configuration shared with the Cloud Run variant is
 described in **[Grocy_Common](Grocy_Common.md)**. For the storage-corruption bug
 this module avoided by design, see **[Grocy_CloudRun](Grocy_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Grocy on GKE Autopilot](../labs/Grocy_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Grocy on Google Cloud Run](Grocy_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Grocy Common — Shared Application Configuration](Grocy_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Mealie on GKE Autopilot](Mealie_GKE.md), [Homebox on GKE Autopilot](Homebox_GKE.md), [Wallos on GKE Autopilot](Wallos_GKE.md), [LubeLogger on GKE Autopilot](LubeLogger_GKE.md) in the **Home & Life Management** solution.

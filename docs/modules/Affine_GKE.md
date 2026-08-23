@@ -385,3 +385,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. AFFiNE-specific application configuration shared
 with the Cloud Run variant is described in
 **[Affine_Common](Affine_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: AFFiNE on GKE Autopilot](../labs/Affine_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [AFFiNE on Google Cloud Run](Affine_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [AFFiNE Common — Shared Application Configuration](Affine_Common.md) — the configuration shared by both deployment targets.

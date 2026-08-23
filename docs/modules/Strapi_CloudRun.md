@@ -419,3 +419,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Strapi-specific application configuration shared
 with the GKE variant is described in **[Strapi_Common](Strapi_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Strapi on Cloud Run](../labs/Strapi_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Strapi on GKE Autopilot](Strapi_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Strapi Common — Shared Application Configuration](Strapi_Common.md) — the configuration shared by both deployment targets.

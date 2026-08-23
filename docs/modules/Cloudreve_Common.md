@@ -259,3 +259,10 @@ For the Cloudreve-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Cloudreve_GKE](Cloudreve_GKE.md)** and
 **[Cloudreve_CloudRun](Cloudreve_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Cloudreve on GKE Autopilot](Cloudreve_GKE.md) — this configuration deployed on GKE.

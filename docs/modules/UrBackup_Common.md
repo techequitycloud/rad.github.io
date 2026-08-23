@@ -213,3 +213,9 @@ each resource from the Console and CLI), see the platform guide:
 **[UrBackup_GKE](UrBackup_GKE.md)**. There is no `UrBackup_CloudRun` — see the
 note at the top of this guide for why Cloud Run cannot back UrBackup's
 multi-port client protocol.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [UrBackup on GKE Autopilot](UrBackup_GKE.md) — this configuration deployed on GKE.

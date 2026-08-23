@@ -384,3 +384,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Passbolt-specific application
 configuration shared with the GKE variant is described in
 **[Passbolt_Common](Passbolt_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Passbolt on Cloud Run](../labs/Passbolt_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Passbolt on GKE Autopilot](Passbolt_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Passbolt Common — Shared Application Configuration](Passbolt_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Odoo on Cloud Run](Odoo_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md) in the **Integrated ERP Platform** solution.

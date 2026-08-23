@@ -434,3 +434,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. AnythingLLM-specific
 application configuration shared with the GKE variant is described in
 **[AnythingLLM_Common](AnythingLLM_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: AnythingLLM on Cloud Run](../labs/AnythingLLM_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [AnythingLLM on GKE Autopilot](AnythingLLM_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [AnythingLLM Common — Shared Application Configuration](AnythingLLM_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Outline on Google Cloud Run](Outline_CloudRun.md), [Ollama on Google Cloud Run](Ollama_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Crawl4AI on Google Cloud Run](Crawl4AI_CloudRun.md) in the **Team Knowledge Assistant** solution.

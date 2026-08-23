@@ -192,3 +192,10 @@ For the Evolution-API-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[EvolutionAPI_GKE](EvolutionAPI_GKE.md)** and
 **[EvolutionAPI_CloudRun](EvolutionAPI_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [EvolutionAPI on Google Cloud Run](EvolutionAPI_CloudRun.md) — this configuration deployed on Cloud Run.
+- [EvolutionAPI on GKE Autopilot](EvolutionAPI_GKE.md) — this configuration deployed on GKE.

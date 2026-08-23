@@ -329,3 +329,10 @@ Key differences from Ghost Common's pattern:
 - `module_secret_env_vars` is always empty (`{}`) — Mattermost manages its own secrets internally.
 - `module_storage_buckets` is a single `data` bucket, forwarded verbatim from `Mattermost_Common`'s output — unlike most Common modules, the bucket is declared in Common rather than the wrapper.
 - `edition` is **not** passed into `module "mattermost_app"` at all — it exists only on the wrapper module and is consumed locally to override `container_image` in the merge shown above. Redis variables, by contrast, genuinely are forwarded into `Mattermost_Common`.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Mattermost on Google Cloud Run](Mattermost_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Mattermost GKE Module — Configuration Guide](Mattermost_GKE.md) — this configuration deployed on GKE.

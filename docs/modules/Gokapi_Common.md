@@ -247,3 +247,10 @@ For the Gokapi-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Gokapi_GKE](Gokapi_GKE.md)** and
 **[Gokapi_CloudRun](Gokapi_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Gokapi on Google Cloud Run](Gokapi_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Gokapi on GKE Autopilot](Gokapi_GKE.md) — this configuration deployed on GKE.

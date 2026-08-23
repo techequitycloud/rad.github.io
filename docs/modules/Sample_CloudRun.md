@@ -408,3 +408,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. The
 shared application configuration (Flask secret, database bootstrap, probe behaviour, and
 Redis sidecar) is described in **[Sample_Common](Sample_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Sample on Cloud Run](../labs/Sample_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Sample Application on GKE Autopilot](Sample_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Sample Common — Shared Application Configuration](Sample_Common.md) — the configuration shared by both deployment targets.

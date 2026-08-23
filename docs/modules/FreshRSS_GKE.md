@@ -389,3 +389,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 FreshRSS-specific application configuration shared with the Cloud Run variant is
 described in **[FreshRSS_Common](FreshRSS_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: FreshRSS on GKE Autopilot](../labs/FreshRSS_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [FreshRSS on Google Cloud Run](FreshRSS_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [FreshRSS Common — Shared Application Configuration](FreshRSS_Common.md) — the configuration shared by both deployment targets.

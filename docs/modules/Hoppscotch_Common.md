@@ -175,3 +175,10 @@ For the Hoppscotch-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Hoppscotch_GKE](Hoppscotch_GKE.md)** and
 **[Hoppscotch_CloudRun](Hoppscotch_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hoppscotch on Google Cloud Run](Hoppscotch_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Hoppscotch on GKE Autopilot](Hoppscotch_GKE.md) — this configuration deployed on GKE.

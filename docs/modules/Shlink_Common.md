@@ -103,3 +103,10 @@ None. Shlink keeps all state — short URLs, visits, tags, domains, API keys —
 
 For the Shlink-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guide:
 **[Shlink_CloudRun](Shlink_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Shlink on Google Cloud Run](Shlink_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Shlink on GKE Autopilot](Shlink_GKE.md) — this configuration deployed on GKE.

@@ -505,3 +505,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Supabase-specific application configuration shared
 across secrets, the Kong image build, and the database init job is described in
 **[Supabase_Common](Supabase_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Supabase on GKE Autopilot](../labs/Supabase_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Supabase Common — Shared Application Configuration](Supabase_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Hasura on Google Cloud Run](Hasura_CloudRun.md), [Directus on Cloud Run](Directus_CloudRun.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) in the **Application Backend Services** solution.

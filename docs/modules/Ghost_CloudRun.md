@@ -344,3 +344,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Ghost-specific application configuration shared with the GKE variant is described in **[Ghost_Common](Ghost_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Ghost on Cloud Run](../labs/Ghost_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Ghost on GKE Autopilot](Ghost_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Ghost Common — Shared Application Configuration](Ghost_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Castopod on Google Cloud Run](Castopod_CloudRun.md), [PeerTube on Google Cloud Run](PeerTube_CloudRun.md), [WriteFreely on Google Cloud Run](WriteFreely_CloudRun.md), [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) in the **Creator & Media Publishing** solution.

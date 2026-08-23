@@ -532,3 +532,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 shared with the Cloud Run variant (secrets, the `db-init` job, and the
 custom entrypoint) is described in **Documenso_Common** (module source:
 `modules/Documenso_Common`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Documenso on GKE Autopilot](../labs/Documenso_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Documenso on Google Cloud Run](Documenso_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Documenso Common — Shared Application Configuration](Documenso_Common.md) — the configuration shared by both deployment targets.

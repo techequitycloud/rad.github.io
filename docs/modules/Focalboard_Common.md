@@ -191,3 +191,10 @@ first boot against a freshly provisioned Cloud SQL instance.
 For the Focalboard-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Focalboard_GKE](Focalboard_GKE.md)** and **[Focalboard_CloudRun](Focalboard_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Focalboard on Google Cloud Run](Focalboard_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Focalboard on GKE Autopilot](Focalboard_GKE.md) — this configuration deployed on GKE.

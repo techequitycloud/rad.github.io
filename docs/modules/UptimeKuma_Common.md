@@ -95,3 +95,10 @@ There is no separate authenticated health endpoint to worry about — the root p
 
 For the Uptime Kuma-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guide:
 **[UptimeKuma_CloudRun](UptimeKuma_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Uptime Kuma on GKE Autopilot](UptimeKuma_GKE.md) — this configuration deployed on GKE.

@@ -187,3 +187,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~dolibarr-documen
 For the Dolibarr-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Dolibarr_GKE](Dolibarr_GKE.md)** and **[Dolibarr_CloudRun](Dolibarr_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Dolibarr on GKE Autopilot](Dolibarr_GKE.md) — this configuration deployed on GKE.

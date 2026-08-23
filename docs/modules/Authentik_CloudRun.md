@@ -402,3 +402,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. authentik-specific application configuration
 shared with the GKE variant is described in
 **[Authentik_Common](Authentik_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Authentik on Cloud Run](../labs/Authentik_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Authentik on GKE Autopilot](Authentik_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Authentik Common — Shared Application Configuration](Authentik_Common.md) — the configuration shared by both deployment targets.

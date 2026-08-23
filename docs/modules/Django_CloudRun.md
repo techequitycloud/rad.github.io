@@ -452,3 +452,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Django-specific application configuration shared
 with the GKE variant is described in **[Django_Common](Django_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Django on Cloud Run](../labs/Django_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Django on GKE Autopilot](Django_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Django Common — Shared Application Configuration](Django_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md), [Gitea on Google Cloud Run](Gitea_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Custom Application Starter** solution.

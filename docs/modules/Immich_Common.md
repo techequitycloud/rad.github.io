@@ -205,3 +205,9 @@ migrations; the liveness probe checks every 30 seconds with a 3-failure threshol
 For the Immich-specific, user-facing configuration (variables by group, outputs,
 service exploration from the Console and CLI, and the risk-rated pitfalls table),
 see the platform guide: **[Immich_GKE](Immich_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Immich on GKE Autopilot](Immich_GKE.md) — this configuration deployed on GKE.

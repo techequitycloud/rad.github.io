@@ -436,3 +436,10 @@ gcloud redis instances describe REDIS_INSTANCE_NAME \
   --project=PROJECT_ID \
   --format="table(name,host,port,state,authEnabled)"
 ```
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Paperless-ngx GKE Module — Configuration Guide](Paperless_GKE.md) — this configuration deployed on GKE.

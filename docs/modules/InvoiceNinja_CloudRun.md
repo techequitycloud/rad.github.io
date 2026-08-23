@@ -825,3 +825,12 @@ tofu destroy
 ```
 
 The second run will succeed once GCP has released the reserved addresses.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: InvoiceNinja on Cloud Run](../labs/InvoiceNinja_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Invoice Ninja GKE Module — Configuration Guide](InvoiceNinja_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [InvoiceNinja Common Shared Configuration Module](InvoiceNinja_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Docuseal on Google Cloud Run](Docuseal_CloudRun.md), [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md) in the **Small Business Suite** solution.

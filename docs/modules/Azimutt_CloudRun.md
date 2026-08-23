@@ -394,3 +394,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Azimutt-specific application configuration shared
 with the GKE variant is described in **[Azimutt_Common](Azimutt_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Azimutt on Cloud Run](../labs/Azimutt_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Azimutt on GKE Autopilot](Azimutt_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Azimutt Common — Shared Application Configuration](Azimutt_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Metabase on Google Cloud Run](Metabase_CloudRun.md), [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md), [NocoDB on Google Cloud Run](NocoDB_CloudRun.md) in the **Self-service BI** solution.

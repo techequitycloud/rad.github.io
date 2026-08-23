@@ -171,3 +171,10 @@ this application.
 For the Unleash-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Unleash_GKE](Unleash_GKE.md)** and **[Unleash_CloudRun](Unleash_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Unleash on Google Cloud Run](Unleash_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Unleash on GKE Autopilot](Unleash_GKE.md) — this configuration deployed on GKE.

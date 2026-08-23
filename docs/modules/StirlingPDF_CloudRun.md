@@ -374,3 +374,12 @@ Authorization, VPC-SC, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Stirling-PDF-specific application configuration
 shared with the GKE variant is described in
 **[StirlingPDF_Common](StirlingPDF_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Stirling-PDF on Cloud Run](../labs/StirlingPDF_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Stirling-PDF on GKE Autopilot](StirlingPDF_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Stirling-PDF Common — Shared Application Configuration](StirlingPDF_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Outline on Google Cloud Run](Outline_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md) in the **Knowledge Base & Documentation** solution.

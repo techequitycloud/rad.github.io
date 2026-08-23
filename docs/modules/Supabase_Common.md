@@ -177,3 +177,9 @@ For the Supabase-specific, user-facing configuration (variables by group, output
 and how to explore each service from the Console and CLI), see the platform guide:
 **[Supabase_GKE](Supabase_GKE.md)**. For the infrastructure layer that runs the
 workload, see **[App_GKE](App_GKE.md)** and **[App_Common](App_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Supabase on GKE Autopilot](Supabase_GKE.md) — this configuration deployed on GKE.

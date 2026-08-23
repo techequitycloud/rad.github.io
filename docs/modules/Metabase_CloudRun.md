@@ -382,3 +382,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Metabase-specific application configuration
 shared with the GKE variant is described in
 **[Metabase_Common](Metabase_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Metabase on Cloud Run](../labs/Metabase_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Metabase on GKE Autopilot](Metabase_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Metabase Common — Shared Application Configuration](Metabase_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Odoo on Cloud Run](Odoo_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md), [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) in the **Integrated ERP Platform** solution.

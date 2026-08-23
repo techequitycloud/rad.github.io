@@ -449,3 +449,10 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. MongoDB_GKE has no separate Common module; all
 MongoDB-specific configuration is self-contained in the module.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: MongoDB on GKE Autopilot](../labs/MongoDB_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- Deployed alongside [Elasticsearch on GKE Autopilot](Elasticsearch_GKE.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md) in the **Shared Data Services** solution.

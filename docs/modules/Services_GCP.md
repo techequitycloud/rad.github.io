@@ -793,3 +793,9 @@ Because `Services GCP` is the platform layer that every application module depen
 | `enable_gke_backup` | `false` — requires `create_google_kubernetes_engine = true` | **Medium** 🛡 plan-time | Enabling without a GKE cluster (along with the other GKE add-ons: Service Mesh, Config Sync, Policy Controller) is now rejected at plan time. Enable GKE first. |
 | `enable_audit_logging` | `false` | **Medium** | `true` significantly increases Cloud Logging ingestion volume and cost. Enable deliberately for compliance environments. |
 | `configure_email_notification` | `false` | **Low** | `true` with an empty `notification_alert_emails` list creates a notification channel with no recipients — alerts are silently dropped. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Services GCP](../labs/Services_GCP.md) — deploy it step by step, with the console screens and commands at each stage.

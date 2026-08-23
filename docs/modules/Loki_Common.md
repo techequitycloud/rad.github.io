@@ -208,3 +208,10 @@ it becomes ready within seconds of boot.
 For the Loki-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Loki_GKE](Loki_GKE.md)** and **[Loki_CloudRun](Loki_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Loki on Google Cloud Run](Loki_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Loki on GKE Autopilot](Loki_GKE.md) — this configuration deployed on GKE.

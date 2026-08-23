@@ -528,3 +528,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 configuration shared with the GKE variant (secrets, the `db-init` job, and the
 custom entrypoint) is defined in `Documenso_Common` (module source:
 `modules/Documenso_Common`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Documenso on Cloud Run](../labs/Documenso_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Documenso on GKE Autopilot](Documenso_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Documenso Common — Shared Application Configuration](Documenso_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [OpenProject on Google Cloud Run](OpenProject_CloudRun.md), [Cal.com on Google Cloud Run](CalCom_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md) in the **Professional Services Automation** solution.

@@ -405,3 +405,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Unleash-specific
 application configuration shared with the Cloud Run variant is described in
 **[Unleash_Common](Unleash_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Unleash on GKE Autopilot](../labs/Unleash_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Unleash on Google Cloud Run](Unleash_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Unleash Common — Shared Application Configuration](Unleash_Common.md) — the configuration shared by both deployment targets.

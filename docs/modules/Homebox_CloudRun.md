@@ -234,3 +234,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Homebox-specific application configuration
 shared with the GKE variant is described in
 **[Homebox_Common](Homebox_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Homebox on Cloud Run](../labs/Homebox_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Homebox on GKE Autopilot](Homebox_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Homebox Common — Shared Application Configuration](Homebox_Common.md) — the configuration shared by both deployment targets.

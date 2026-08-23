@@ -388,3 +388,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. DocuSeal-specific
 application configuration shared with the Cloud Run variant is described in
 **[Docuseal_Common](Docuseal_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: DocuSeal on GKE Autopilot](../labs/Docuseal_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Docuseal on Google Cloud Run](Docuseal_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Docuseal Common — Shared Application Configuration](Docuseal_Common.md) — the configuration shared by both deployment targets.

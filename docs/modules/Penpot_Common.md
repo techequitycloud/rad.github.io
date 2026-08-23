@@ -503,3 +503,10 @@ gcloud logging read \
   --limit=20 \
   --format="table(timestamp,textPayload)"
 ```
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Penpot on Google Cloud Run](Penpot_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Penpot GKE Module — Configuration Guide](Penpot_GKE.md) — this configuration deployed on GKE.

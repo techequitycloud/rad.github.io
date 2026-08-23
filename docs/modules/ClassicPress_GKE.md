@@ -403,3 +403,11 @@ Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.
 ClassicPress-specific application configuration shared with the Cloud Run variant is
 described in the `ClassicPress_Common` module (no standalone `ClassicPress_Common.md`
 guide exists yet in this docs set).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ClassicPress on GKE Autopilot](../labs/ClassicPress_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [ClassicPress on Google Cloud Run](ClassicPress_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [ClassicPress Common — Shared Application Configuration](ClassicPress_Common.md) — the configuration shared by both deployment targets.

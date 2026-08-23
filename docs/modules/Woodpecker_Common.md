@@ -242,3 +242,9 @@ outputs, and how to explore each service from the Console and CLI), see the
 platform guide: **[Woodpecker_GKE](Woodpecker_GKE.md)**. There is no
 `Woodpecker_CloudRun` — see the note at the top of this guide for why the
 Kubernetes execution backend makes that permanently impossible.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Woodpecker CI on GKE Autopilot](Woodpecker_GKE.md) — this configuration deployed on GKE.

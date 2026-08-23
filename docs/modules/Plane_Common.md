@@ -118,3 +118,10 @@ Do not tighten the startup failure threshold: killing the container mid-migratio
 
 For the Plane-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guide:
 **[Plane_CloudRun](Plane_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Plane on Google Cloud Run](Plane_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Plane on GKE Autopilot](Plane_GKE.md) — this configuration deployed on GKE.

@@ -146,3 +146,10 @@ level via `storage_buckets` and `gcs_volumes`.
 For the RAGFlow-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[RAGFlow_GKE](RAGFlow_GKE.md)** and **[RAGFlow_CloudRun](RAGFlow_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [RAGFlow on Google Cloud Run](RAGFlow_CloudRun.md) — this configuration deployed on Cloud Run.
+- [RAGFlow on GKE Autopilot](RAGFlow_GKE.md) — this configuration deployed on GKE.

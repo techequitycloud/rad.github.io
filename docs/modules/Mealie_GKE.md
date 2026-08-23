@@ -211,3 +211,12 @@ ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Mealie-specific
 application configuration shared with the Cloud Run variant is described in
 **[Mealie_Common](Mealie_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Mealie on GKE Autopilot](../labs/Mealie_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Mealie on Google Cloud Run](Mealie_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Mealie Common — Shared Application Configuration](Mealie_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Grocy on GKE Autopilot](Grocy_GKE.md), [Homebox on GKE Autopilot](Homebox_GKE.md), [Wallos on GKE Autopilot](Wallos_GKE.md), [LubeLogger on GKE Autopilot](LubeLogger_GKE.md) in the **Home & Life Management** solution.

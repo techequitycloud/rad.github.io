@@ -361,3 +361,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 EspoCRM-specific application configuration shared with the GKE variant is described in
 **[EspoCRM_Common](EspoCRM_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: EspoCRM on Cloud Run](../labs/EspoCRM_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [EspoCRM on GKE Autopilot](EspoCRM_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [EspoCRM Common — Shared Application Configuration](EspoCRM_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Cyclos on Google Cloud Run](Cyclos_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md) in the **Financial Inclusion & Community Banking** solution.

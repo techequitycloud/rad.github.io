@@ -402,3 +402,11 @@ These values are returned on a successful deployment and are the quickest way to
 ---
 
 For the foundation behaviour referenced throughout — IAM and Workload Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Directus-specific application configuration shared with the Cloud Run variant is described in **[Directus_Common](Directus_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Directus on GKE Autopilot](../labs/Directus_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Directus on Cloud Run](Directus_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Directus Common — Shared Application Configuration](Directus_Common.md) — the configuration shared by both deployment targets.

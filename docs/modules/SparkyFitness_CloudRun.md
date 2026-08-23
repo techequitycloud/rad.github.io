@@ -296,3 +296,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. SparkyFitness-specific application configuration
 shared with the GKE variant is described in
 **[SparkyFitness_Common](SparkyFitness_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: SparkyFitness on Cloud Run](../labs/SparkyFitness_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [SparkyFitness on GKE Autopilot](SparkyFitness_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [SparkyFitness Common — Shared Application Configuration](SparkyFitness_Common.md) — the configuration shared by both deployment targets.

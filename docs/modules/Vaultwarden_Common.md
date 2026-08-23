@@ -164,3 +164,10 @@ For the Vaultwarden-specific, user-facing configuration (variables by group, out
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Vaultwarden_GKE](Vaultwarden_GKE.md)** and
 **[Vaultwarden_CloudRun](Vaultwarden_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Vaultwarden on GKE Autopilot](Vaultwarden_GKE.md) — this configuration deployed on GKE.

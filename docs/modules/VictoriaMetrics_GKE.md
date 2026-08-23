@@ -465,3 +465,11 @@ Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. VictoriaMetrics-specific application configuration
 is described in **[VictoriaMetrics_Common](VictoriaMetrics_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: VictoriaMetrics on GKE Autopilot](../labs/VictoriaMetrics_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [VictoriaMetrics Common — Shared Application Configuration](VictoriaMetrics_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Loki on Google Cloud Run](Loki_CloudRun.md), [Grafana on Google Cloud Run](Grafana_CloudRun.md), [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Observability & On-call** solution.

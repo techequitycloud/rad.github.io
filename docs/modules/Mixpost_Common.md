@@ -237,3 +237,10 @@ For the Mixpost-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Mixpost_GKE](Mixpost_GKE.md)** and
 **[Mixpost_CloudRun](Mixpost_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Mixpost on Google Cloud Run](Mixpost_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Mixpost on GKE Autopilot](Mixpost_GKE.md) — this configuration deployed on GKE.

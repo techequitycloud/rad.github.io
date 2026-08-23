@@ -403,3 +403,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Gotify-specific application configuration shared
 with the GKE variant is described in **[Gotify_Common](Gotify_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Gotify on Cloud Run](../labs/Gotify_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Gotify on GKE Autopilot](Gotify_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Gotify Common — Shared Application Configuration](Gotify_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [FreeScout on Google Cloud Run](FreeScout_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Fider on Google Cloud Run](Fider_CloudRun.md) in the **Customer Support Desk** solution.

@@ -164,3 +164,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Sample-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[Sample_GKE](Sample_GKE.md)** and **[Sample_CloudRun](Sample_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Sample Application on Google Cloud Run](Sample_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Sample Application on GKE Autopilot](Sample_GKE.md) — this configuration deployed on GKE.

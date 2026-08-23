@@ -426,3 +426,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Saleor-specific application configuration
 shared with the GKE variant is described in
 **[Saleor_Common](Saleor_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Saleor on Cloud Run](../labs/Saleor_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Saleor on GKE Autopilot](Saleor_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Saleor Common — Shared Application Configuration](Saleor_Common.md) — the configuration shared by both deployment targets.

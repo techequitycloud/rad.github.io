@@ -462,3 +462,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 shared with the GKE variant is described in
 **[Emby_Common](Emby_Common.md)**. For a guided walkthrough, see the
 [Emby_CloudRun lab](../labs/Emby_CloudRun.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Emby on Cloud Run](../labs/Emby_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Emby on GKE Autopilot](Emby_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Emby Common — Shared Application Configuration](Emby_Common.md) — the configuration shared by both deployment targets.

@@ -118,3 +118,10 @@ None. Keycloak keeps realms, clients, users, and sessions entirely in PostgreSQL
 
 For the Keycloak-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Keycloak_GKE](Keycloak_GKE.md)** and **[Keycloak_CloudRun](Keycloak_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Keycloak on Google Cloud Run](Keycloak_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Keycloak on GKE Autopilot](Keycloak_GKE.md) — this configuration deployed on GKE.

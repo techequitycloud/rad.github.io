@@ -178,3 +178,10 @@ For the Tandoor-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Tandoor_GKE](Tandoor_GKE.md)** and
 **[Tandoor_CloudRun](Tandoor_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Tandoor on Google Cloud Run](Tandoor_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Tandoor on GKE Autopilot](Tandoor_GKE.md) — this configuration deployed on GKE.

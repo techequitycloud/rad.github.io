@@ -325,3 +325,12 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Headscale-specific application configuration
 shared with the Cloud Run variant is described in
 **[Headscale_Common](Headscale_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Headscale on GKE Autopilot](../labs/Headscale_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Headscale on Google Cloud Run](Headscale_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Headscale Common — Shared Application Configuration](Headscale_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [TechnitiumDNS on GKE Autopilot](TechnitiumDNS_GKE.md), [AdGuard Home on GKE Autopilot](AdGuardHome_GKE.md), [Gatus on GKE Autopilot](Gatus_GKE.md) in the **Zero-trust Network & DNS** solution.

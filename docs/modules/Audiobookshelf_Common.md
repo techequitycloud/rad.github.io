@@ -167,3 +167,10 @@ For the Audiobookshelf-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Audiobookshelf_GKE](Audiobookshelf_GKE.md)** and
 **[Audiobookshelf_CloudRun](Audiobookshelf_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Audiobookshelf on Google Cloud Run](Audiobookshelf_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Audiobookshelf on GKE Autopilot](Audiobookshelf_GKE.md) — this configuration deployed on GKE.

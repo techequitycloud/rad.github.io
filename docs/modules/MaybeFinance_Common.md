@@ -263,3 +263,10 @@ For the Maybe-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[MaybeFinance_GKE](MaybeFinance_GKE.md)** and
 **[MaybeFinance_CloudRun](MaybeFinance_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Maybe Finance on Google Cloud Run](MaybeFinance_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Maybe Finance on GKE Autopilot](MaybeFinance_GKE.md) — this configuration deployed on GKE.

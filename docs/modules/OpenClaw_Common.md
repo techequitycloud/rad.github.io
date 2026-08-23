@@ -193,3 +193,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the OpenClaw-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[OpenClaw_GKE](OpenClaw_GKE.md)** and **[OpenClaw_CloudRun](OpenClaw_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [OpenClaw on Google Cloud Run](OpenClaw_CloudRun.md) — this configuration deployed on Cloud Run.
+- [OpenClaw on GKE Autopilot](OpenClaw_GKE.md) — this configuration deployed on GKE.

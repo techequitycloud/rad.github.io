@@ -239,3 +239,10 @@ For the Radicale-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Radicale_GKE](Radicale_GKE.md)** and
 **[Radicale_CloudRun](Radicale_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Radicale on Google Cloud Run](Radicale_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Radicale on GKE Autopilot](Radicale_GKE.md) — this configuration deployed on GKE.

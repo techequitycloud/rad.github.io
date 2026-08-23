@@ -357,3 +357,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Element-specific application configuration shared with the GKE variant is described
 in **[Element_Common](Element_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Element on Cloud Run](../labs/Element_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Element on GKE Autopilot](Element_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Element Common — Shared Application Configuration](Element_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Synapse on Google Cloud Run](Synapse_CloudRun.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md), [Headscale on Google Cloud Run](Headscale_CloudRun.md) in the **Secure Team Communications** solution.

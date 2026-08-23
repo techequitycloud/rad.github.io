@@ -402,3 +402,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Logto-specific application configuration shared
 with the GKE variant is described in **[Logto_Common](Logto_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Logto on Cloud Run](../labs/Logto_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Logto on GKE Autopilot](Logto_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Logto Common — Shared Application Configuration](Logto_Common.md) — the configuration shared by both deployment targets.

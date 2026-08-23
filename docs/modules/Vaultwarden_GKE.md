@@ -451,3 +451,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Vaultwarden-specific application configuration shared with the
 Cloud Run variant is described in **[Vaultwarden_Common](Vaultwarden_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Vaultwarden on GKE Autopilot](../labs/Vaultwarden_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Vaultwarden Common — Shared Application Configuration](Vaultwarden_Common.md) — the configuration shared by both deployment targets.

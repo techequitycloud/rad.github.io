@@ -391,3 +391,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Logto-specific
 application configuration shared with the Cloud Run variant is described in
 **[Logto_Common](Logto_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Logto on GKE Autopilot](../labs/Logto_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Logto on Google Cloud Run](Logto_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Logto Common — Shared Application Configuration](Logto_Common.md) — the configuration shared by both deployment targets.

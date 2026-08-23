@@ -144,3 +144,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Budibase-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Budibase_GKE](Budibase_GKE.md)** and **[Budibase_CloudRun](Budibase_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Budibase on Google Cloud Run](Budibase_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Budibase on GKE Autopilot](Budibase_GKE.md) — this configuration deployed on GKE.

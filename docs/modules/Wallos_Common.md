@@ -166,3 +166,10 @@ For the Wallos-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Wallos_GKE](Wallos_GKE.md)** and
 **[Wallos_CloudRun](Wallos_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Wallos on Google Cloud Run](Wallos_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Wallos on GKE Autopilot](Wallos_GKE.md) — this configuration deployed on GKE.

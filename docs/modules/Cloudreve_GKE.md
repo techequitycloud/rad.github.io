@@ -393,3 +393,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 shared with the Cloud Run variant is described in the `Cloudreve_Common`
 module (`modules/Cloudreve_Common`); a dedicated `Cloudreve_Common.md` guide
 does not yet exist in this documentation set.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Cloudreve on GKE Autopilot](../labs/Cloudreve_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Cloudreve Common — Shared Application Configuration](Cloudreve_Common.md) — the configuration shared by both deployment targets.

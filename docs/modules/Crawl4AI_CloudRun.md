@@ -376,3 +376,12 @@ and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Crawl4AI-specific shared application
 configuration is described in **[Crawl4AI_Common](Crawl4AI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Crawl4AI on Cloud Run](../labs/Crawl4AI_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Crawl4AI on GKE Autopilot](Crawl4AI_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Crawl4AI Common — Shared Application Configuration](Crawl4AI_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Elasticsearch on GKE Autopilot](Elasticsearch_GKE.md), [RAGFlow on GKE Autopilot](RAGFlow_GKE.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md) in the **Enterprise RAG & Document Intelligence** solution.

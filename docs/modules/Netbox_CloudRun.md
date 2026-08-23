@@ -479,3 +479,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. NetBox-specific application configuration
 shared with the GKE variant is described in
 **[Netbox_Common](Netbox_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: NetBox on Cloud Run](../labs/Netbox_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [NetBox on GKE Autopilot](Netbox_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [NetBox Common — Shared Application Configuration](Netbox_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Snipe-IT on Google Cloud Run](SnipeIT_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Homepage on Google Cloud Run](Homepage_CloudRun.md) in the **IT Asset & Infrastructure Records** solution.

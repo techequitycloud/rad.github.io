@@ -202,3 +202,10 @@ For the LimeSurvey-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[LimeSurvey_GKE](LimeSurvey_GKE.md)** and
 **[LimeSurvey_CloudRun](LimeSurvey_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LimeSurvey on Google Cloud Run](LimeSurvey_CloudRun.md) — this configuration deployed on Cloud Run.
+- [LimeSurvey on GKE Autopilot](LimeSurvey_GKE.md) — this configuration deployed on GKE.

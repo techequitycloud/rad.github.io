@@ -138,3 +138,10 @@ For the Spoolman-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Spoolman_GKE](Spoolman_GKE.md)** and
 **[Spoolman_CloudRun](Spoolman_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Spoolman on Google Cloud Run](Spoolman_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Spoolman on GKE Autopilot](Spoolman_GKE.md) — this configuration deployed on GKE.

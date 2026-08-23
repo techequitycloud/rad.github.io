@@ -427,3 +427,12 @@ and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. LiteLLM-specific application configuration
 shared with the GKE variant is described in **[LiteLLM_Common](LiteLLM_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LiteLLM on Cloud Run](../labs/LiteLLM_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LiteLLM on GKE Autopilot](LiteLLM_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [LiteLLM Common — Shared Application Configuration](LiteLLM_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ollama on Google Cloud Run](Ollama_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md), [SearXNG on Google Cloud Run](SearXNG_CloudRun.md) in the **Private AI Assistant** solution.

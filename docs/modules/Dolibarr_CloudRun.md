@@ -321,3 +321,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Dolibarr-specific application configuration
 shared with the GKE variant is described in **[Dolibarr_Common](Dolibarr_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Dolibarr on Cloud Run](../labs/Dolibarr_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Dolibarr on GKE Autopilot](Dolibarr_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Dolibarr Common — Shared Application Configuration](Dolibarr_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Docuseal on Google Cloud Run](Docuseal_CloudRun.md), [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md) in the **Small Business Suite** solution.

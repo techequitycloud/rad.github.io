@@ -183,3 +183,9 @@ so no GCS bucket is declared by this layer.
 For the Appsmith-specific, user-facing configuration (variables by group,
 outputs, and how to explore the service from the Console and CLI), see the
 platform guide: **[Appsmith_GKE](Appsmith_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Appsmith on GKE Autopilot](Appsmith_GKE.md) — this configuration deployed on GKE.

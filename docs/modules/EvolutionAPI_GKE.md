@@ -369,3 +369,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Evolution-API-specific application configuration shared
 with the Cloud Run variant is described in
 **[EvolutionAPI_Common](EvolutionAPI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Evolution API on GKE Autopilot](../labs/EvolutionAPI_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [EvolutionAPI on Google Cloud Run](EvolutionAPI_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [EvolutionAPI Common — Shared Application Configuration](EvolutionAPI_Common.md) — the configuration shared by both deployment targets.

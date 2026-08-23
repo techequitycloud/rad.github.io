@@ -170,3 +170,10 @@ For the Activepieces-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Activepieces_GKE](Activepieces_GKE.md)** and
 **[Activepieces_CloudRun](Activepieces_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Activepieces on Google Cloud Run](Activepieces_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Activepieces on GKE Autopilot](Activepieces_GKE.md) — this configuration deployed on GKE.

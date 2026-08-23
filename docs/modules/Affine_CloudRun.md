@@ -319,3 +319,12 @@ Cross-variable validation runs at plan time (`validation.tf`): it enforces Postg
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. AFFiNE-specific application configuration shared with the GKE variant is described in **[Affine_Common](Affine_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: AFFiNE on Cloud Run](../labs/Affine_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [AFFiNE on GKE Autopilot](Affine_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [AFFiNE Common — Shared Application Configuration](Affine_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Penpot on Google Cloud Run](Penpot_CloudRun.md), [Excalidraw on Google Cloud Run](Excalidraw_CloudRun.md) in the **Design & Visual Collaboration** solution.

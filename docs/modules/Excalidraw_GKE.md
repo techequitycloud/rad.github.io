@@ -304,3 +304,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud CDN, Cloud Armor, IAP, Binar
 Authorization, VPC-SC, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Excalidraw-specific application configuration shared with the Cloud Run variant is
 described in **[Excalidraw_Common](Excalidraw_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Excalidraw on GKE Autopilot](../labs/Excalidraw_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Excalidraw on Google Cloud Run](Excalidraw_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Excalidraw Common — Shared Application Configuration](Excalidraw_Common.md) — the configuration shared by both deployment targets.

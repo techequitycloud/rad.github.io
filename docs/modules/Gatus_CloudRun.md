@@ -347,3 +347,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Gatus-specific application configuration shared
 with the GKE variant is described in **[Gatus_Common](Gatus_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Gatus on Cloud Run](../labs/Gatus_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Gatus on GKE Autopilot](Gatus_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Gatus Common — Shared Application Configuration](Gatus_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md), [Healthchecks on Google Cloud Run](Healthchecks_CloudRun.md), [Beszel on Google Cloud Run](Beszel_CloudRun.md), [Netdata on Google Cloud Run](Netdata_CloudRun.md) in the **Monitoring & NOC** solution.

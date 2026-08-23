@@ -431,3 +431,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Calibre-Web-specific application configuration
 shared with the GKE variant is described in
 **[CalibreWeb_Common](CalibreWeb_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Calibre-Web on Cloud Run](../labs/CalibreWeb_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Calibre-Web Common — Shared Application Configuration](CalibreWeb_Common.md) — the configuration shared by both deployment targets.

@@ -164,3 +164,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Twenty-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Twenty_GKE](Twenty_GKE.md)** and **[Twenty_CloudRun](Twenty_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Twenty CRM on Google Cloud Run](Twenty_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Twenty CRM on GKE Autopilot](Twenty_GKE.md) — this configuration deployed on GKE.

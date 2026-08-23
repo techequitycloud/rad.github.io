@@ -161,3 +161,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~nc-data"
 For the Nextcloud-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Nextcloud_GKE](Nextcloud_GKE.md)** and **[Nextcloud_CloudRun](Nextcloud_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Nextcloud on GKE Autopilot](Nextcloud_GKE.md) — this configuration deployed on GKE.

@@ -166,3 +166,10 @@ as an HTTP probe on both platforms.
 For the NocoDB-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[NocoDB_GKE](NocoDB_GKE.md)** and **[NocoDB_CloudRun](NocoDB_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [NocoDB on Google Cloud Run](NocoDB_CloudRun.md) — this configuration deployed on Cloud Run.
+- [NocoDB on GKE Autopilot](NocoDB_GKE.md) — this configuration deployed on GKE.

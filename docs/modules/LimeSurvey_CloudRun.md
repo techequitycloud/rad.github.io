@@ -367,3 +367,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. LimeSurvey-specific application configuration
 shared with the GKE variant is described in
 **[LimeSurvey_Common](LimeSurvey_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LimeSurvey on Cloud Run](../labs/LimeSurvey_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LimeSurvey on GKE Autopilot](LimeSurvey_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [LimeSurvey Common — Shared Application Configuration](LimeSurvey_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Flarum on Google Cloud Run](Flarum_CloudRun.md), [Fider on Google Cloud Run](Fider_CloudRun.md), [Formbricks on Google Cloud Run](Formbricks_CloudRun.md), [Rallly on Google Cloud Run](Rallly_CloudRun.md) in the **Community & Voice of Customer** solution.

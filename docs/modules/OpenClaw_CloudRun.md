@@ -361,3 +361,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. OpenClaw-
 specific application configuration shared with the GKE variant is described in
 **[OpenClaw_Common](OpenClaw_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenClaw on Cloud Run](../labs/OpenClaw_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [OpenClaw on GKE Autopilot](OpenClaw_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [OpenClaw Common — Shared Application Configuration](OpenClaw_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [n8n on Google Cloud Run](N8N_CloudRun.md), [Hermes Agent on Google Cloud Run](Hermes_CloudRun.md) in the **AI Agent Workspace** solution.

@@ -235,3 +235,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Mealie-specific application configuration
 shared with the GKE variant is described in
 **[Mealie_Common](Mealie_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Mealie on Cloud Run](../labs/Mealie_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Mealie on GKE Autopilot](Mealie_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Mealie Common — Shared Application Configuration](Mealie_Common.md) — the configuration shared by both deployment targets.

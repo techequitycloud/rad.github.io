@@ -766,3 +766,11 @@ gcloud alpha monitoring policies list \
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes, preventing all pods from being scheduled and causing a complete deployment outage. |
 | `enable_topology_spread` | `false` | **Medium** | Without topology spread, all replicas may land in the same GKE zone. A zone failure takes down the entire Invoice Ninja deployment. Enable for production deployments with `min_instance_count > 1`. |
 | `APP_URL env var` | _(not set by default)_ | **Medium** | If Invoice Ninja initialises without a correct `APP_URL`, all links in sent invoices and client portal emails reference `localhost` or an incorrect URL. Set `APP_URL` in `environment_variables` before first boot. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: InvoiceNinja on GKE Autopilot](../labs/InvoiceNinja_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [InvoiceNinja Common Shared Configuration Module](InvoiceNinja_Common.md) — the configuration shared by both deployment targets.

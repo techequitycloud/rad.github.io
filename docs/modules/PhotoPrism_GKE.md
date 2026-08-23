@@ -372,3 +372,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. PhotoPrism-specific application configuration
 shared with the Cloud Run variant is described in
 **[PhotoPrism_Common](PhotoPrism_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PhotoPrism on GKE Autopilot](../labs/PhotoPrism_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PhotoPrism on Google Cloud Run](PhotoPrism_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [PhotoPrism Common — Shared Application Configuration](PhotoPrism_Common.md) — the configuration shared by both deployment targets.

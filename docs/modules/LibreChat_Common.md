@@ -182,3 +182,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~uploads"
 For the LibreChat-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[LibreChat_GKE](LibreChat_GKE.md)** and **[LibreChat_CloudRun](LibreChat_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LibreChat on Google Cloud Run](LibreChat_CloudRun.md) — this configuration deployed on Cloud Run.
+- [LibreChat on GKE Autopilot](LibreChat_GKE.md) — this configuration deployed on GKE.

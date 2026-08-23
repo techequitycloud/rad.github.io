@@ -437,3 +437,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Cal.diy-specific application configuration shared
 with the GKE variant is described in **[CalDiy_Common](CalDiy_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: CalDiy on Cloud Run](../labs/CalDiy_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cal.diy on GKE Autopilot](CalDiy_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [CalDiy_Common — Shared Application Configuration](CalDiy_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Monica on Google Cloud Run](Monica_CloudRun.md), [Radicale on Google Cloud Run](Radicale_CloudRun.md), [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) in the **Personal Organiser** solution.

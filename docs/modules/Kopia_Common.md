@@ -248,3 +248,9 @@ For the Kopia-specific, user-facing configuration (variables by group, outputs, 
 how to explore each service from the Console and CLI), see the platform guide:
 **[Kopia_GKE](Kopia_GKE.md)**. There is no `Kopia_CloudRun` — see the note at the
 top of this guide for why Cloud Run cannot back Kopia's gRPC snapshot protocol.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Kopia on GKE Autopilot](Kopia_GKE.md) — this configuration deployed on GKE.

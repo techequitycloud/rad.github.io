@@ -250,3 +250,10 @@ For the Chibisafe-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Chibisafe_GKE](Chibisafe_GKE.md)** and
 **[Chibisafe_CloudRun](Chibisafe_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Chibisafe on GKE Autopilot](Chibisafe_GKE.md) — this configuration deployed on GKE.

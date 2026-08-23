@@ -126,3 +126,10 @@ Do not reduce the startup delay: on first boot the entrypoint waits for PostgreS
 
 For the Outline-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Outline_GKE](Outline_GKE.md)** and **[Outline_CloudRun](Outline_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Outline on Google Cloud Run](Outline_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Outline on GKE Autopilot](Outline_GKE.md) — this configuration deployed on GKE.

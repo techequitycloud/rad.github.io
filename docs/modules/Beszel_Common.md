@@ -152,3 +152,10 @@ hub (the UI and `/api/*` data routes require the admin session).
 For the Beszel-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Beszel_GKE](Beszel_GKE.md)** and **[Beszel_CloudRun](Beszel_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Beszel on Google Cloud Run](Beszel_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Beszel on GKE Autopilot](Beszel_GKE.md) — this configuration deployed on GKE.

@@ -203,3 +203,10 @@ For the ONLYOFFICE-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[OnlyOffice_GKE](OnlyOffice_GKE.md)** and
 **[OnlyOffice_CloudRun](OnlyOffice_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md) — this configuration deployed on Cloud Run.
+- [OnlyOffice on GKE Autopilot](OnlyOffice_GKE.md) — this configuration deployed on GKE.

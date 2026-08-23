@@ -199,3 +199,10 @@ For the Infisical-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Infisical_GKE](Infisical_GKE.md)** and
 **[Infisical_CloudRun](Infisical_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Infisical on Google Cloud Run](Infisical_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Infisical on GKE Autopilot](Infisical_GKE.md) — this configuration deployed on GKE.

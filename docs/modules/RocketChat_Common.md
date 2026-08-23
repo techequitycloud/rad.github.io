@@ -175,3 +175,9 @@ and how to explore each service from the Console and CLI), see the platform guid
 **[RocketChat_GKE](RocketChat_GKE.md)**. (There is no `RocketChat_CloudRun` — see
 the note at the top of this guide for why Cloud Run can't back Rocket.Chat's embedded
 MongoDB.)
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Rocket.Chat on GKE Autopilot](RocketChat_GKE.md) — this configuration deployed on GKE.

@@ -148,3 +148,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Cal.diy-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[CalDiy_GKE](CalDiy_GKE.md)** and **[CalDiy_CloudRun](CalDiy_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Cal.diy on Google Cloud Run](CalDiy_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Cal.diy on GKE Autopilot](CalDiy_GKE.md) — this configuration deployed on GKE.

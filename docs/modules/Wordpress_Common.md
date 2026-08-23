@@ -128,3 +128,10 @@ The bucket is provisioned in the deployment region. Combined with the shared Fil
 
 For the WordPress-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Wordpress_GKE](Wordpress_GKE.md)** and **[Wordpress_CloudRun](Wordpress_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [WordPress on Google Cloud Run](Wordpress_CloudRun.md) — this configuration deployed on Cloud Run.
+- [WordPress on GKE Autopilot](Wordpress_GKE.md) — this configuration deployed on GKE.

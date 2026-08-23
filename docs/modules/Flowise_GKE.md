@@ -461,3 +461,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Flowise-specific application configuration shared with the
 Cloud Run variant is described in **[Flowise_Common](Flowise_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Flowise on GKE Autopilot](../labs/Flowise_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Flowise on Google Cloud Run](Flowise_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Flowise Common — Shared Application Configuration](Flowise_Common.md) — the configuration shared by both deployment targets.

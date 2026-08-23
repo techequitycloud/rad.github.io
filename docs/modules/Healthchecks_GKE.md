@@ -291,3 +291,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Healthchecks-specific application configuration
 shared with the Cloud Run variant is described in
 **[Healthchecks_Common](Healthchecks_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Healthchecks on GKE Autopilot](../labs/Healthchecks_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Healthchecks on Google Cloud Run](Healthchecks_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Healthchecks Common — Shared Application Configuration](Healthchecks_Common.md) — the configuration shared by both deployment targets.

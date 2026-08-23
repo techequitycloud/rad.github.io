@@ -191,3 +191,10 @@ No other GCS volumes or NFS storage are configured for Saleor beyond this defaul
 For the Saleor-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Saleor_GKE](Saleor_GKE.md)** and **[Saleor_CloudRun](Saleor_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Saleor on Google Cloud Run](Saleor_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Saleor on GKE Autopilot](Saleor_GKE.md) — this configuration deployed on GKE.

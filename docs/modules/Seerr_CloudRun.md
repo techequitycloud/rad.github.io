@@ -271,3 +271,11 @@ and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Seerr-specific application configuration
 shared with the GKE variant is described in **[Seerr_Common](Seerr_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Seerr on Cloud Run](../labs/Seerr_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Seerr on GKE Autopilot](Seerr_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Seerr Common — Shared Application Configuration](Seerr_Common.md) — the configuration shared by both deployment targets.

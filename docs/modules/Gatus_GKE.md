@@ -383,3 +383,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Gatus-specific application configuration shared with the Cloud Run variant is
 described in **[Gatus_Common](Gatus_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Gatus on GKE Autopilot](../labs/Gatus_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Gatus on Google Cloud Run](Gatus_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Gatus Common — Shared Application Configuration](Gatus_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Headscale on GKE Autopilot](Headscale_GKE.md), [TechnitiumDNS on GKE Autopilot](TechnitiumDNS_GKE.md), [AdGuard Home on GKE Autopilot](AdGuardHome_GKE.md) in the **Zero-trust Network & DNS** solution.

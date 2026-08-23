@@ -342,3 +342,10 @@ To add team members:
 3. Assign the appropriate role.
 
 Multiple websites can be tracked within a single Umami instance — each website gets its own tracking ID and isolated analytics view.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Umami on Google Cloud Run](Umami_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Umami GKE Module — Configuration Guide](Umami_GKE.md) — this configuration deployed on GKE.

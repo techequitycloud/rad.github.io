@@ -415,3 +415,11 @@ Chatwoot-specific application configuration shared with the Cloud Run variant is
 described in the Chatwoot_Common module (`modules/Chatwoot_Common`); see
 **[Chatwoot_Common](Chatwoot_Common.md)** for secrets, DB bootstrap, the
 container image/entrypoint, health probes, and object storage.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Chatwoot on GKE Autopilot](../labs/Chatwoot_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Chatwoot Common — Shared Application Configuration](Chatwoot_Common.md) — the configuration shared by both deployment targets.

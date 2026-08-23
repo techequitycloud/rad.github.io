@@ -413,3 +413,12 @@ ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-S
 and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Kestra-specific application
 configuration shared with the GKE variant is described in
 **[Kestra_Common](Kestra_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Kestra on Cloud Run](../labs/Kestra_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Kestra on GKE Autopilot](Kestra_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Kestra Common — Shared Application Configuration](Kestra_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Windmill on Google Cloud Run](Windmill_CloudRun.md), [Temporal on GKE Autopilot](Temporal_GKE.md), [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md) in the **Data & Workflow Orchestration** solution.

@@ -417,3 +417,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Stirling-PDF-specific application configuration shared with the Cloud Run variant is
 described in **[StirlingPDF_Common](StirlingPDF_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Stirling-PDF on GKE Autopilot](../labs/StirlingPDF_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Stirling-PDF on Google Cloud Run](StirlingPDF_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Stirling-PDF Common — Shared Application Configuration](StirlingPDF_Common.md) — the configuration shared by both deployment targets.

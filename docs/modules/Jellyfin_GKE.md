@@ -506,3 +506,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Jellyfin-specific application configuration shared with
 the Cloud Run variant is described in **[Jellyfin_Common](Jellyfin_Common.md)**. For
 a guided walkthrough, see the [Jellyfin_GKE lab](../labs/Jellyfin_GKE.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Jellyfin on GKE Autopilot](../labs/Jellyfin_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Jellyfin on Google Cloud Run](Jellyfin_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Jellyfin Common — Shared Application Configuration](Jellyfin_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Prowlarr on GKE Autopilot](Prowlarr_GKE.md), [Seerr on GKE Autopilot](Seerr_GKE.md), [Jellystat on GKE Autopilot](Jellystat_GKE.md), [Homepage on GKE Autopilot](Homepage_GKE.md) in the **Media Server** solution.

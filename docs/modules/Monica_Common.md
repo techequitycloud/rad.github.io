@@ -171,3 +171,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Monica-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Monica_GKE](Monica_GKE.md)** and **[Monica_CloudRun](Monica_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Monica on Google Cloud Run](Monica_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Monica on GKE Autopilot](Monica_GKE.md) — this configuration deployed on GKE.

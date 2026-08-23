@@ -117,3 +117,10 @@ For the Karakeep-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Karakeep_GKE](Karakeep_GKE.md)** and
 **[Karakeep_CloudRun](Karakeep_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Karakeep on Google Cloud Run](Karakeep_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Karakeep on GKE Autopilot](Karakeep_GKE.md) — this configuration deployed on GKE.

@@ -485,3 +485,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Temporal-specific
 database and secret provisioning shared across deployments is described in
 **[Temporal_Common](Temporal_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Temporal on GKE Autopilot](../labs/Temporal_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Temporal Common — Shared Application Configuration](Temporal_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Kestra on Google Cloud Run](Kestra_CloudRun.md), [Windmill on Google Cloud Run](Windmill_CloudRun.md), [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md) in the **Data & Workflow Orchestration** solution.

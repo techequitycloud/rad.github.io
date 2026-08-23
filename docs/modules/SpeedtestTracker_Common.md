@@ -189,3 +189,10 @@ For the Speedtest Tracker-specific, user-facing configuration (variables by grou
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[SpeedtestTracker_GKE](SpeedtestTracker_GKE.md)** and
 **[SpeedtestTracker_CloudRun](SpeedtestTracker_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Speedtest Tracker on Google Cloud Run](SpeedtestTracker_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Speedtest Tracker on GKE Autopilot](SpeedtestTracker_GKE.md) — this configuration deployed on GKE.

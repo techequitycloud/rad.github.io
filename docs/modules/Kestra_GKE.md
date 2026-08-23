@@ -485,3 +485,12 @@ ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 and image mirroring — see **[App_GKE](App_GKE.md)**. Kestra-specific application
 configuration shared with the Cloud Run variant is described in
 **[Kestra_Common](Kestra_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Kestra on GKE Autopilot](../labs/Kestra_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Kestra on Google Cloud Run](Kestra_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Kestra Common — Shared Application Configuration](Kestra_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [ClickHouse on GKE Autopilot](ClickHouse_GKE.md), [Apache Superset on GKE Autopilot](Superset_GKE.md), [Metabase on GKE Autopilot](Metabase_GKE.md) in the **Analytics Warehouse** solution.

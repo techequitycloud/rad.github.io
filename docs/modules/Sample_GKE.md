@@ -487,3 +487,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. The shared
 application configuration (Flask secret, database bootstrap, probe behaviour, and Redis
 sidecar) is described in **[Sample_Common](Sample_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Sample on GKE Autopilot](../labs/Sample_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Sample Application on Google Cloud Run](Sample_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Sample Common — Shared Application Configuration](Sample_Common.md) — the configuration shared by both deployment targets.

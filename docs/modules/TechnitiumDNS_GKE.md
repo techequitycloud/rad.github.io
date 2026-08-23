@@ -356,3 +356,12 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. TechnitiumDNS-specific application configuration shared with the Cloud Run
 variant is described in **[TechnitiumDNS_Common](TechnitiumDNS_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: TechnitiumDNS on GKE Autopilot](../labs/TechnitiumDNS_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [TechnitiumDNS on Google Cloud Run](TechnitiumDNS_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [TechnitiumDNS Common — Shared Application Configuration](TechnitiumDNS_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Headscale on GKE Autopilot](Headscale_GKE.md), [AdGuard Home on GKE Autopilot](AdGuardHome_GKE.md), [Gatus on GKE Autopilot](Gatus_GKE.md) in the **Zero-trust Network & DNS** solution.

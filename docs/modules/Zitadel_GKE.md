@@ -465,3 +465,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Zitadel-specific
 application configuration shared with the Cloud Run variant is described in
 **[Zitadel_Common](Zitadel_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Zitadel on GKE Autopilot](../labs/Zitadel_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Zitadel on Google Cloud Run](Zitadel_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Zitadel Common — Shared Application Configuration](Zitadel_Common.md) — the configuration shared by both deployment targets.

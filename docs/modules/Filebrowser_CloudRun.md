@@ -338,3 +338,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Filebrowser-specific application configuration
 shared with the GKE variant is described in
 **[Filebrowser_Common](Filebrowser_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Filebrowser on Cloud Run](../labs/Filebrowser_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Filebrowser on GKE Autopilot](Filebrowser_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Filebrowser Common — Shared Application Configuration](Filebrowser_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Gokapi on Google Cloud Run](Gokapi_CloudRun.md), [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md), [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) in the **File Sharing & Transfer** solution.

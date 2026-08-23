@@ -496,3 +496,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Zammad-specific application configuration shared with the
 Cloud Run variant is described in **[Zammad_Common](Zammad_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Zammad on GKE Autopilot](../labs/Zammad_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Zammad on Google Cloud Run](Zammad_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Zammad Common — Shared Application Configuration](Zammad_Common.md) — the configuration shared by both deployment targets.

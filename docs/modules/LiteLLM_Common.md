@@ -131,3 +131,10 @@ For the LiteLLM-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[LiteLLM_GKE](LiteLLM_GKE.md)** and
 **[LiteLLM_CloudRun](LiteLLM_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md) — this configuration deployed on Cloud Run.
+- [LiteLLM on GKE Autopilot](LiteLLM_GKE.md) — this configuration deployed on GKE.

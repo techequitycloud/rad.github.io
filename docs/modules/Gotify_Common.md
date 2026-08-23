@@ -169,3 +169,10 @@ by default; enable NFS or a GCS Fuse volume at the platform layer if you rely on
 For the Gotify-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Gotify_GKE](Gotify_GKE.md)** and **[Gotify_CloudRun](Gotify_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Gotify on Google Cloud Run](Gotify_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Gotify on GKE Autopilot](Gotify_GKE.md) — this configuration deployed on GKE.

@@ -381,3 +381,10 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Appsmith-specific application configuration
 (secrets, environment defaults, probe wiring) shared with the Cloud Run
 variant lives in the `Appsmith_Common` module.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Appsmith on GKE Autopilot](../labs/Appsmith_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Appsmith Common — Shared Application Configuration](Appsmith_Common.md) — the configuration shared by both deployment targets.

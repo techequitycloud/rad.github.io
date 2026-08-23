@@ -412,3 +412,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. n8n-specific application configuration shared
 with the GKE variant is described in **[N8N_Common](N8N_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: N8N on Cloud Run](../labs/N8N_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [n8n on GKE Autopilot](N8N_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [N8N Common — Shared Application Configuration](N8N_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Mautic on Google Cloud Run](Mautic_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Shlink on Google Cloud Run](Shlink_CloudRun.md) in the **Marketing Automation Suite** solution.

@@ -157,3 +157,10 @@ For the Stirling-PDF-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[StirlingPDF_GKE](StirlingPDF_GKE.md)** and
 **[StirlingPDF_CloudRun](StirlingPDF_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Stirling-PDF on Google Cloud Run](StirlingPDF_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Stirling-PDF on GKE Autopilot](StirlingPDF_GKE.md) — this configuration deployed on GKE.

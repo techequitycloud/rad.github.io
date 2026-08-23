@@ -308,3 +308,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Tolgee-specific application configuration shared with the GKE variant is described in
 **[Tolgee_Common](Tolgee_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Tolgee on Cloud Run](../labs/Tolgee_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Tolgee on GKE Autopilot](Tolgee_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Tolgee Common — Shared Application Configuration](Tolgee_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Unleash on Google Cloud Run](Unleash_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md), [Formbricks on Google Cloud Run](Formbricks_CloudRun.md) in the **Release Management & Quality** solution.

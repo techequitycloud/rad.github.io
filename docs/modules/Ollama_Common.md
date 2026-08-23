@@ -156,3 +156,10 @@ this path, so no TCP-probe adjustment is needed (unlike PHP/Apache applications)
 For the Ollama-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[Ollama_GKE](Ollama_GKE.md)** and **[Ollama_CloudRun](Ollama_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Ollama on Google Cloud Run](Ollama_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Ollama on GKE Autopilot](Ollama_GKE.md) — this configuration deployed on GKE.

@@ -423,3 +423,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Open WebUI-specific application configuration shared
 with the GKE variant is described in **[OpenWebUI_Common](OpenWebUI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenWebUI on Cloud Run](../labs/OpenWebUI_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Open WebUI on GKE Autopilot](OpenWebUI_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Open WebUI Common — Shared Application Configuration](OpenWebUI_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ollama on Google Cloud Run](Ollama_CloudRun.md), [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [SearXNG on Google Cloud Run](SearXNG_CloudRun.md) in the **Private AI Assistant** solution.

@@ -375,3 +375,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. DocuSeal-specific application configuration
 shared with the GKE variant is described in **[Docuseal_Common](Docuseal_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Docuseal on Cloud Run](../labs/Docuseal_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Docuseal on GKE Autopilot](Docuseal_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Docuseal Common — Shared Application Configuration](Docuseal_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md), [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md) in the **Small Business Suite** solution.

@@ -212,3 +212,10 @@ For the Headscale-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Headscale_GKE](Headscale_GKE.md)** and
 **[Headscale_CloudRun](Headscale_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Headscale on Google Cloud Run](Headscale_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Headscale on GKE Autopilot](Headscale_GKE.md) — this configuration deployed on GKE.

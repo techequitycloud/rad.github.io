@@ -150,3 +150,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Superset-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Superset_GKE](Superset_GKE.md)** and **[Superset_CloudRun](Superset_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Apache Superset on Google Cloud Run](Superset_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Apache Superset on GKE Autopilot](Superset_GKE.md) — this configuration deployed on GKE.

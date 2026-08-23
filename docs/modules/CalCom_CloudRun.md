@@ -400,3 +400,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Cal.com-specific application configuration shared
 with the GKE variant is described in **[CalCom_Common](CalCom_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Cal.com on Cloud Run](../labs/CalCom_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cal.com on GKE Autopilot](CalCom_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [CalCom Common — Shared Application Configuration](CalCom_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [OpenProject on Google Cloud Run](OpenProject_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Documenso on Google Cloud Run](Documenso_CloudRun.md), [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md) in the **Professional Services Automation** solution.

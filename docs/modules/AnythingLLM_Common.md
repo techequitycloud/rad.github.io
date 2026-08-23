@@ -156,3 +156,10 @@ For the AnythingLLM-specific, user-facing configuration (variables by group, out
 how to explore each service from the Console and CLI), see the platform guides:
 **[AnythingLLM_GKE](AnythingLLM_GKE.md)** and
 **[AnythingLLM_CloudRun](AnythingLLM_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [AnythingLLM on Google Cloud Run](AnythingLLM_CloudRun.md) — this configuration deployed on Cloud Run.
+- [AnythingLLM on GKE Autopilot](AnythingLLM_GKE.md) — this configuration deployed on GKE.

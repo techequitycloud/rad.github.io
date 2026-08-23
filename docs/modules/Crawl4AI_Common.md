@@ -155,3 +155,10 @@ For the Crawl4AI-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Crawl4AI_GKE](Crawl4AI_GKE.md)** and
 **[Crawl4AI_CloudRun](Crawl4AI_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Crawl4AI on Google Cloud Run](Crawl4AI_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Crawl4AI on GKE Autopilot](Crawl4AI_GKE.md) — this configuration deployed on GKE.

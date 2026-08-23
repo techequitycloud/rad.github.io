@@ -417,3 +417,11 @@ Mixpost-specific application configuration (the `APP_KEY` secret, the `db-init`
 script, and the environment variables merged into the container) is shared with
 the Cloud Run variant via the internal `Mixpost_Common` module, which is not
 deployed directly and does not yet have its own configuration guide.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Mixpost on GKE Autopilot](../labs/Mixpost_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Mixpost on Google Cloud Run](Mixpost_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Mixpost Common — Shared Application Configuration](Mixpost_Common.md) — the configuration shared by both deployment targets.

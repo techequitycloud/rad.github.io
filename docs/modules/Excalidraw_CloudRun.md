@@ -293,3 +293,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud CDN, Cloud Armor, IAP, Bin
 Authorization, VPC-SC, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Excalidraw-specific application configuration shared with the GKE variant is described
 in **[Excalidraw_Common](Excalidraw_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Excalidraw on Cloud Run](../labs/Excalidraw_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Excalidraw on GKE Autopilot](Excalidraw_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Excalidraw Common — Shared Application Configuration](Excalidraw_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Penpot on Google Cloud Run](Penpot_CloudRun.md), [AFFiNE on Google Cloud Run](Affine_CloudRun.md) in the **Design & Visual Collaboration** solution.

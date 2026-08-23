@@ -494,3 +494,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Moodle-specific shared configuration is described in
 **[Moodle_Common](Moodle_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Moodle on GKE Autopilot](../labs/Moodle_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Moodle on Google Cloud Run](Moodle_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Moodle Common — Shared Application Configuration](Moodle_Common.md) — the configuration shared by both deployment targets.

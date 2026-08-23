@@ -190,3 +190,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Langfuse-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[Langfuse_GKE](Langfuse_GKE.md)** and **[Langfuse_CloudRun](Langfuse_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Langfuse on Google Cloud Run](Langfuse_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Langfuse on GKE Autopilot](Langfuse_GKE.md) — this configuration deployed on GKE.

@@ -699,3 +699,11 @@ gcloud builds list \
 | `pdb_min_available` | `"1"` | **Medium** | With a single replica, PDB prevents all voluntary disruptions until the pod is rescheduled. Use at least 2 replicas in production to allow rolling maintenance. |
 | `stateful_pvc_size` | `"10Gi"` | **Medium** | Survey file uploads grow quickly. `10Gi` is a minimum for development. Provision 50–100Gi for active production deployments accepting file attachments. PVC size can be expanded but not reduced without data migration. |
 | `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Formbricks admin panel is protected only by Formbricks's own authentication. Enable for any publicly accessible production deployment. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Formbricks on GKE Autopilot](../labs/Formbricks_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Formbricks on Google Cloud Run](Formbricks_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Formbricks Common Shared Configuration Module](Formbricks_Common.md) — the configuration shared by both deployment targets.

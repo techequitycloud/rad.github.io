@@ -415,3 +415,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 with the Cloud Run variant lives in the `MaybeFinance_Common` module — see
 **[MaybeFinance_Common](MaybeFinance_Common.md)** for secrets, DB bootstrap,
 entrypoint behavior, health probes, and storage.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Maybe Finance on GKE Autopilot](../labs/MaybeFinance_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Maybe Finance on Google Cloud Run](MaybeFinance_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [MaybeFinance Common — Shared Application Configuration](MaybeFinance_Common.md) — the configuration shared by both deployment targets.

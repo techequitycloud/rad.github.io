@@ -494,3 +494,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 shared with the GKE variant — the JWT secret, database bootstrap, container image
 and entrypoint, core application settings, and health probe behaviour — is described
 in **[OnlyOffice_Common](OnlyOffice_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OnlyOffice on Cloud Run](../labs/OnlyOffice_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [OnlyOffice on GKE Autopilot](OnlyOffice_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [OnlyOffice Common — Shared Application Configuration](OnlyOffice_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Odoo on Cloud Run](Odoo_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) in the **Integrated ERP Platform** solution.

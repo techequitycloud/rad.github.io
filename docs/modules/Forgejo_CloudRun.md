@@ -535,3 +535,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Forgejo-specific application
 configuration (database wiring, secrets, and NFS layout) is defined in the
 `Forgejo_Common` module and shared with the GKE variant of this application.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Forgejo on Cloud Run](../labs/Forgejo_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Forgejo on GKE Autopilot](Forgejo_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Forgejo Common — Shared Application Configuration](Forgejo_Common.md) — the configuration shared by both deployment targets.

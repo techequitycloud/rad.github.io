@@ -163,3 +163,10 @@ For the Qdrant-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Qdrant_GKE](Qdrant_GKE.md)** and
 **[Qdrant_CloudRun](Qdrant_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Qdrant on Google Cloud Run](Qdrant_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Qdrant on GKE Autopilot](Qdrant_GKE.md) — this configuration deployed on GKE.

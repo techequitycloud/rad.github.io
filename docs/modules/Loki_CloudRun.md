@@ -364,3 +364,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Loki-specific application configuration shared
 with the GKE variant is described in **[Loki_Common](Loki_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Loki on Cloud Run](../labs/Loki_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Loki on GKE Autopilot](Loki_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Loki Common — Shared Application Configuration](Loki_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [VictoriaMetrics on GKE Autopilot](VictoriaMetrics_GKE.md), [Grafana on Google Cloud Run](Grafana_CloudRun.md), [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Observability & On-call** solution.

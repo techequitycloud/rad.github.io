@@ -327,3 +327,12 @@ Plan-time validations in `validation.tf` catch the worst combinations early: min
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Coder-specific application configuration shared with the GKE variant is described in **[Coder_Common](Coder_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Coder on Cloud Run](../labs/Coder_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Coder on GKE Autopilot](Coder_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Coder Common — Shared Application Configuration](Coder_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [code-server on Google Cloud Run](CodeServer_CloudRun.md), [Gitea on Google Cloud Run](Gitea_CloudRun.md), [Hoppscotch on Google Cloud Run](Hoppscotch_CloudRun.md) in the **Cloud Development Environments** solution.

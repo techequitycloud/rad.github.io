@@ -148,3 +148,10 @@ For the code-server-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[CodeServer_GKE](CodeServer_GKE.md)** and
 **[CodeServer_CloudRun](CodeServer_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [code-server on Google Cloud Run](CodeServer_CloudRun.md) — this configuration deployed on Cloud Run.
+- [code-server on GKE Autopilot](CodeServer_GKE.md) — this configuration deployed on GKE.

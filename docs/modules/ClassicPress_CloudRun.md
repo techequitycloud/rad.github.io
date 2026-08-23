@@ -497,3 +497,11 @@ shared with the GKE variant lives in the `ClassicPress_Common` module (no standa
 `ClassicPress_Common.md` guide exists yet in this docs set); see also
 [ClassicPress_GKE](ClassicPress_GKE.md) for how the same application behaves on a
 StatefulSet with a per-pod block PVC.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ClassicPress on Cloud Run](../labs/ClassicPress_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [ClassicPress on GKE Autopilot](ClassicPress_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [ClassicPress Common — Shared Application Configuration](ClassicPress_Common.md) — the configuration shared by both deployment targets.

@@ -171,3 +171,10 @@ For the CloudBeaver-specific, user-facing configuration (variables by group, out
 and how to explore each service from the Console and CLI), see the platform guides:
 **[CloudBeaver_GKE](CloudBeaver_GKE.md)** and
 **[CloudBeaver_CloudRun](CloudBeaver_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md) — this configuration deployed on Cloud Run.
+- [CloudBeaver on GKE Autopilot](CloudBeaver_GKE.md) — this configuration deployed on GKE.

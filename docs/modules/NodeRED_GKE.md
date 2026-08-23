@@ -467,3 +467,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Node-RED-specific application configuration shared
 with the Cloud Run variant is described in **[NodeRED_Common](NodeRED_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: NodeRED on GKE Autopilot](../labs/NodeRED_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Node-RED on Google Cloud Run](NodeRED_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [NodeRED Common — Shared Application Configuration](NodeRED_Common.md) — the configuration shared by both deployment targets.

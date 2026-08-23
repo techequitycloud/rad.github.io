@@ -331,3 +331,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Uptime Kuma-specific application configuration
 shared with the Cloud Run variant is described in
 **[UptimeKuma_Common](UptimeKuma_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Uptime Kuma on GKE Autopilot](../labs/UptimeKuma_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Uptime Kuma Common — Shared Application Configuration](UptimeKuma_Common.md) — the configuration shared by both deployment targets.

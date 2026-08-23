@@ -403,3 +403,11 @@ Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Woodpecker-specific application configuration is
 described in **[Woodpecker_Common](Woodpecker_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Woodpecker CI on GKE Autopilot](../labs/Woodpecker_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Woodpecker Common — Shared Application Configuration](Woodpecker_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Gitea on Google Cloud Run](Gitea_CloudRun.md), [Hoppscotch on Google Cloud Run](Hoppscotch_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Source Control & CI/CD** solution.

@@ -186,3 +186,10 @@ attachment storage survives pod restarts — see [Azimutt_GKE](Azimutt_GKE.md).
 For the Azimutt-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Azimutt_GKE](Azimutt_GKE.md)** and **[Azimutt_CloudRun](Azimutt_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Azimutt on Google Cloud Run](Azimutt_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Azimutt on GKE Autopilot](Azimutt_GKE.md) — this configuration deployed on GKE.

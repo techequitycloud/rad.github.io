@@ -165,3 +165,10 @@ resolves the `$(NFS_SERVER_IP)` placeholder in `REDIS_HOST` before starting Stra
 For the Strapi-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Strapi_GKE](Strapi_GKE.md)** and **[Strapi_CloudRun](Strapi_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Strapi on Google Cloud Run](Strapi_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Strapi on GKE Autopilot](Strapi_GKE.md) — this configuration deployed on GKE.

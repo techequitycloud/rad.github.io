@@ -440,3 +440,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. BookStack-specific application configuration
 shared with the GKE variant is described in
 **[BookStack_Common](BookStack_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: BookStack on Cloud Run](../labs/BookStack_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [BookStack on GKE Autopilot](BookStack_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [BookStack Common — Shared Application Configuration](BookStack_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [FreeScout on Google Cloud Run](FreeScout_CloudRun.md), [Fider on Google Cloud Run](Fider_CloudRun.md), [Gotify on Google Cloud Run](Gotify_CloudRun.md) in the **Customer Support Desk** solution.

@@ -454,3 +454,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Tandoor-specific application configuration shared
 with the Cloud Run variant is described in
 **[Tandoor_Common](Tandoor_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Tandoor on GKE Autopilot](../labs/Tandoor_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Tandoor on Google Cloud Run](Tandoor_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Tandoor Common — Shared Application Configuration](Tandoor_Common.md) — the configuration shared by both deployment targets.

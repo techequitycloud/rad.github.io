@@ -297,3 +297,12 @@ The module ships plan-time validation for the most damaging misconfigurations (f
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. ActualBudget-specific application configuration shared with the GKE variant is described in **[ActualBudget_Common](ActualBudget_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ActualBudget on Cloud Run](../labs/ActualBudget_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [ActualBudget on GKE Autopilot](ActualBudget_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [ActualBudget Common — Shared Application Configuration](ActualBudget_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Firefly III on Google Cloud Run](FireflyIII_CloudRun.md), [Ghostfolio on Google Cloud Run](Ghostfolio_CloudRun.md), [Wallos on Google Cloud Run](Wallos_CloudRun.md) in the **Finance & Wealth Tracking** solution.

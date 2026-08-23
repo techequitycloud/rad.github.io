@@ -521,3 +521,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 shared with the GKE variant — the admin credential, database bootstrap, container
 image build, core settings, and health probe defaults — is described in
 **[Flarum_Common](Flarum_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Flarum on Cloud Run](../labs/Flarum_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Flarum on GKE Autopilot](Flarum_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Flarum Common — Shared Application Configuration](Flarum_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Fider on Google Cloud Run](Fider_CloudRun.md), [Formbricks on Google Cloud Run](Formbricks_CloudRun.md), [LimeSurvey on Google Cloud Run](LimeSurvey_CloudRun.md), [Rallly on Google Cloud Run](Rallly_CloudRun.md) in the **Community & Voice of Customer** solution.

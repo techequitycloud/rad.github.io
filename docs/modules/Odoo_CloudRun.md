@@ -451,3 +451,12 @@ For the foundation behaviour referenced throughout — IAM, traffic management, 
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Odoo-specific application configuration shared with the
 GKE variant is described in **[Odoo_Common](Odoo_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Odoo on Cloud Run](../labs/Odoo_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Odoo on GKE Autopilot](Odoo_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Odoo Shared Application Configuration](Odoo_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Metabase on Google Cloud Run](Metabase_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md), [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) in the **Integrated ERP Platform** solution.

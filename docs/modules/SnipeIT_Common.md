@@ -261,3 +261,10 @@ For the Snipe-IT-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[SnipeIT_GKE](SnipeIT_GKE.md)** and
 **[SnipeIT_CloudRun](SnipeIT_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Snipe-IT on Google Cloud Run](SnipeIT_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Snipe-IT on GKE Autopilot](SnipeIT_GKE.md) — this configuration deployed on GKE.

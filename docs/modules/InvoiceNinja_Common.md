@@ -295,3 +295,10 @@ module "app_cloudrun" {
   # ... other inputs
 }
 ```
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Invoice Ninja GKE Module — Configuration Guide](InvoiceNinja_GKE.md) — this configuration deployed on GKE.

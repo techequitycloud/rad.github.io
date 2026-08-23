@@ -447,3 +447,11 @@ ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-S
 and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. LibreChat-specific application
 configuration shared with the GKE variant is described in
 **[LibreChat_Common](LibreChat_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LibreChat on Cloud Run](../labs/LibreChat_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LibreChat on GKE Autopilot](LibreChat_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [LibreChat Common — Shared Application Configuration](LibreChat_Common.md) — the configuration shared by both deployment targets.

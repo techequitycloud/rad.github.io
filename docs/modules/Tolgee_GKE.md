@@ -337,3 +337,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Tolgee-specific
 application configuration shared with the Cloud Run variant is described in
 **[Tolgee_Common](Tolgee_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Tolgee on GKE Autopilot](../labs/Tolgee_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Tolgee on Google Cloud Run](Tolgee_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Tolgee Common — Shared Application Configuration](Tolgee_Common.md) — the configuration shared by both deployment targets.

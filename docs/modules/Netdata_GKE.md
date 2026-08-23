@@ -390,3 +390,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Netdata-specific application configuration shared
 with the Cloud Run variant is described in
 **[Netdata_Common](Netdata_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Netdata on GKE Autopilot](../labs/Netdata_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Netdata on Google Cloud Run](Netdata_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Netdata Common — Shared Application Configuration](Netdata_Common.md) — the configuration shared by both deployment targets.

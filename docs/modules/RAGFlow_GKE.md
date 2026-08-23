@@ -509,3 +509,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. RAGFlow-specific application configuration shared with the
 Cloud Run variant is described in **[RAGFlow_Common](RAGFlow_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: RAGFlow on GKE Autopilot](../labs/RAGFlow_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [RAGFlow on Google Cloud Run](RAGFlow_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [RAGFlow Common — Shared Application Configuration](RAGFlow_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Elasticsearch on GKE Autopilot](Elasticsearch_GKE.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [Crawl4AI on Google Cloud Run](Crawl4AI_CloudRun.md) in the **Enterprise RAG & Document Intelligence** solution.

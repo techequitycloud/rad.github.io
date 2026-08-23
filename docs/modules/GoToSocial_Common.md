@@ -321,3 +321,10 @@ For the GoToSocial-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[GoToSocial_GKE](GoToSocial_GKE.md)** and
 **[GoToSocial_CloudRun](GoToSocial_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) — this configuration deployed on Cloud Run.
+- [GoToSocial on GKE Autopilot](GoToSocial_GKE.md) — this configuration deployed on GKE.

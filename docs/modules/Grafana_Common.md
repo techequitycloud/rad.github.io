@@ -148,3 +148,10 @@ and `gcs_volumes`.
 For the Grafana-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Grafana_GKE](Grafana_GKE.md)** and **[Grafana_CloudRun](Grafana_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Grafana on Google Cloud Run](Grafana_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Grafana on GKE Autopilot](Grafana_GKE.md) — this configuration deployed on GKE.

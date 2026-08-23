@@ -278,3 +278,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Spoolman-specific application configuration
 shared with the GKE variant is described in
 **[Spoolman_Common](Spoolman_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Spoolman on Cloud Run](../labs/Spoolman_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Spoolman on GKE Autopilot](Spoolman_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Spoolman Common — Shared Application Configuration](Spoolman_Common.md) — the configuration shared by both deployment targets.

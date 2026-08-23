@@ -193,3 +193,10 @@ Cloud Filestore mount for Fider attachment storage — see the platform guides.
 For the Fider-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Fider_GKE](Fider_GKE.md)** and **[Fider_CloudRun](Fider_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Fider on Google Cloud Run](Fider_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Fider on GKE Autopilot](Fider_GKE.md) — this configuration deployed on GKE.

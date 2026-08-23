@@ -214,3 +214,10 @@ For the Emby-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Emby_GKE](Emby_GKE.md)** and
 **[Emby_CloudRun](Emby_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Emby on Google Cloud Run](Emby_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Emby on GKE Autopilot](Emby_GKE.md) — this configuration deployed on GKE.

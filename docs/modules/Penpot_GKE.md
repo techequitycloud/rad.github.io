@@ -571,3 +571,11 @@ Setting `stateful_pvc_enabled = true` automatically selects `workload_type = "St
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes and prevent all pods from being scheduled — this affects all three Penpot services simultaneously. |
 | `enable_pod_disruption_budget` | `false` | **High** | Without a PDB, node maintenance can terminate all backend replicas simultaneously, disconnecting all active collaborators and potentially causing unsaved design changes to be lost. Enable for any production deployment with active users. |
 | `smtp_enabled` | `false` | **Medium** | Without SMTP, invitation emails cannot be sent. Team onboarding requires sharing login credentials manually or using an OIDC provider. Password reset is also unavailable without SMTP. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Penpot on GKE Autopilot](../labs/Penpot_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Penpot on Google Cloud Run](Penpot_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Penpot Common Shared Configuration Module](Penpot_Common.md) — the configuration shared by both deployment targets.

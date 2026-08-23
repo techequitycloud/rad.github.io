@@ -412,3 +412,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Firefly III-specific application configuration
 shared with the GKE variant is described in **[FireflyIII_Common](FireflyIII_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Firefly III on Cloud Run](../labs/FireflyIII_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Firefly III on GKE Autopilot](FireflyIII_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Firefly III Common — Shared Application Configuration](FireflyIII_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ghostfolio on Google Cloud Run](Ghostfolio_CloudRun.md), [Wallos on Google Cloud Run](Wallos_CloudRun.md), [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) in the **Finance & Wealth Tracking** solution.

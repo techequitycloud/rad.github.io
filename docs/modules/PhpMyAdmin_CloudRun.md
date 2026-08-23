@@ -364,3 +364,11 @@ Authorization, VPC-SC, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. phpMyAdmin-specific application configuration
 shared with the GKE variant is described in
 **[PhpMyAdmin_Common](PhpMyAdmin_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PhpMyAdmin on Cloud Run](../labs/PhpMyAdmin_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PhpMyAdmin on GKE Autopilot](PhpMyAdmin_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [PhpMyAdmin Common — Shared Application Configuration](PhpMyAdmin_Common.md) — the configuration shared by both deployment targets.

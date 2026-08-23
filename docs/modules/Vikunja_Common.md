@@ -176,3 +176,10 @@ For the Vikunja-specific, user-facing configuration (variables by group, outputs
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Vikunja_GKE](Vikunja_GKE.md)** and
 **[Vikunja_CloudRun](Vikunja_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Vikunja on Google Cloud Run](Vikunja_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Vikunja on GKE Autopilot](Vikunja_GKE.md) — this configuration deployed on GKE.

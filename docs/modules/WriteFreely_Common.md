@@ -216,3 +216,10 @@ For the WriteFreely-specific, user-facing configuration (variables by group, out
 and how to explore each service from the Console and CLI), see the platform guides:
 **[WriteFreely_GKE](WriteFreely_GKE.md)** and
 **[WriteFreely_CloudRun](WriteFreely_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [WriteFreely on Google Cloud Run](WriteFreely_CloudRun.md) — this configuration deployed on Cloud Run.
+- [WriteFreely on GKE Autopilot](WriteFreely_GKE.md) — this configuration deployed on GKE.

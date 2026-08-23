@@ -371,3 +371,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. LubeLogger-specific application configuration shared
 with the Cloud Run variant is described in
 **[LubeLogger_Common](LubeLogger_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LubeLogger on GKE Autopilot](../labs/LubeLogger_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LubeLogger on Google Cloud Run](LubeLogger_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [LubeLogger Common — Shared Application Configuration](LubeLogger_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Grocy on GKE Autopilot](Grocy_GKE.md), [Mealie on GKE Autopilot](Mealie_GKE.md), [Homebox on GKE Autopilot](Homebox_GKE.md), [Wallos on GKE Autopilot](Wallos_GKE.md) in the **Home & Life Management** solution.

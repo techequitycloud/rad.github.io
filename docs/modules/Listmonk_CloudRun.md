@@ -738,3 +738,12 @@ tofu destroy
 ```
 
 The second run will succeed once GCP has released the reserved addresses.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Listmonk on Cloud Run](../labs/Listmonk_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Listmonk GKE Module — Configuration Guide](Listmonk_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Listmonk Common Shared Configuration Module](Listmonk_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Twenty CRM on Google Cloud Run](Twenty_CloudRun.md), [Cal.com on Google Cloud Run](CalCom_CloudRun.md), [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md) in the **CRM & Sales Operations** solution.

@@ -520,3 +520,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Emby-specific application configuration shared with
 the Cloud Run variant is described in **[Emby_Common](Emby_Common.md)**. For
 a guided walkthrough, see the [Emby_GKE lab](../labs/Emby_GKE.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Emby on GKE Autopilot](../labs/Emby_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Emby on Google Cloud Run](Emby_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Emby Common — Shared Application Configuration](Emby_Common.md) — the configuration shared by both deployment targets.

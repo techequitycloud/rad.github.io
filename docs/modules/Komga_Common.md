@@ -184,3 +184,10 @@ are far happier on the GKE block PVC.
 For the Komga-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Komga_GKE](Komga_GKE.md)** and **[Komga_CloudRun](Komga_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Komga on Google Cloud Run](Komga_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Komga on GKE Autopilot](Komga_GKE.md) — this configuration deployed on GKE.

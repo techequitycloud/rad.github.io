@@ -186,3 +186,10 @@ created from the running app — they are separate from the platform's
 For the Firefly III-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[FireflyIII_GKE](FireflyIII_GKE.md)** and **[FireflyIII_CloudRun](FireflyIII_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Firefly III on Google Cloud Run](FireflyIII_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Firefly III on GKE Autopilot](FireflyIII_GKE.md) — this configuration deployed on GKE.

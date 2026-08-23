@@ -331,3 +331,12 @@ Plan-time validations catch several of these; the rest surface only at runtime.
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Plane-specific application configuration shared with the GKE variant is described in **[Plane_Common](Plane_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Plane on Cloud Run](../labs/Plane_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Plane on GKE Autopilot](Plane_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Plane Common — Shared Application Configuration](Plane_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Planka on Google Cloud Run](Planka_CloudRun.md), [Vikunja on Google Cloud Run](Vikunja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md) in the **Project & Task Delivery** solution.

@@ -252,3 +252,10 @@ Both are `STANDARD` storage class, `force_destroy = true`,
 
 For the platform-specific deployment details, defaults, and variable groupings,
 see [Passbolt_CloudRun](Passbolt_CloudRun.md) and [Passbolt_GKE](Passbolt_GKE.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Passbolt on GKE Autopilot](Passbolt_GKE.md) — this configuration deployed on GKE.

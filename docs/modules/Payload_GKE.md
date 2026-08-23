@@ -350,3 +350,11 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. Payload-specific application configuration
 shared with the Cloud Run variant is described in **[Payload_Common](Payload_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Payload CMS on GKE Autopilot](../labs/Payload_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Payload CMS on Google Cloud Run](Payload_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Payload Common — Shared Application Configuration](Payload_Common.md) — the configuration shared by both deployment targets.

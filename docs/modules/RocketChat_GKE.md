@@ -423,3 +423,10 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Rocket.Chat-specific
 application configuration shared with the Cloud Run variant is described in
 **[RocketChat_Common](RocketChat_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Rocket.Chat on GKE Autopilot](../labs/RocketChat_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Rocket.Chat Common — Shared Application Configuration](RocketChat_Common.md) — the configuration shared by both deployment targets.

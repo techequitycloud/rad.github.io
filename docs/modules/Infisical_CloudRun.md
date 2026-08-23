@@ -407,3 +407,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Infisical-specific application configuration
 shared with the GKE variant is described in
 **[Infisical_Common](Infisical_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Infisical on Cloud Run](../labs/Infisical_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Infisical on GKE Autopilot](Infisical_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Infisical Common — Shared Application Configuration](Infisical_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Keycloak on Google Cloud Run](Keycloak_CloudRun.md), [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) in the **SSO Foundation** solution.

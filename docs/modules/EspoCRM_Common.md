@@ -173,3 +173,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the EspoCRM-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[EspoCRM_GKE](EspoCRM_GKE.md)** and **[EspoCRM_CloudRun](EspoCRM_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [EspoCRM on Google Cloud Run](EspoCRM_CloudRun.md) — this configuration deployed on Cloud Run.
+- [EspoCRM on GKE Autopilot](EspoCRM_GKE.md) — this configuration deployed on GKE.

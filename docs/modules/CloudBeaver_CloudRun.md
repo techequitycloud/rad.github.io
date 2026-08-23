@@ -336,3 +336,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. CloudBeaver-specific application configuration
 shared with the GKE variant is described in
 **[CloudBeaver_Common](CloudBeaver_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: CloudBeaver on Cloud Run](../labs/CloudBeaver_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [CloudBeaver on GKE Autopilot](CloudBeaver_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [CloudBeaver Common — Shared Application Configuration](CloudBeaver_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Django on Cloud Run](Django_CloudRun.md), [Gitea on Google Cloud Run](Gitea_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Custom Application Starter** solution.

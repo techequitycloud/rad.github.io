@@ -344,3 +344,11 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. PocketBase-specific application configuration
 shared with the Cloud Run variant is described in **[PocketBase_Common](PocketBase_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PocketBase on GKE Autopilot](../labs/PocketBase_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PocketBase on Google Cloud Run](PocketBase_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [PocketBase Common — Shared Application Configuration](PocketBase_Common.md) — the configuration shared by both deployment targets.

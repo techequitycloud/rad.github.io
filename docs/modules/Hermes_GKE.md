@@ -374,3 +374,11 @@ ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Hermes-specific
 application configuration shared with the Cloud Run variant is described in
 **[Hermes_Common](Hermes_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Hermes Agent on GKE Autopilot](../labs/Hermes_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Hermes Agent on Google Cloud Run](Hermes_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Hermes Common — Shared Application Configuration](Hermes_Common.md) — the configuration shared by both deployment targets.

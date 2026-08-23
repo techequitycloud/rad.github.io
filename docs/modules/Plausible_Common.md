@@ -193,3 +193,9 @@ For the Plausible-specific, user-facing configuration (variables by group, outpu
 and how to explore each service from the Console and CLI), see the platform guide:
 **[Plausible_GKE](Plausible_GKE.md)**. The mandatory event store is documented in
 **[ClickHouse_GKE](ClickHouse_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Plausible Analytics on GKE Autopilot](Plausible_GKE.md) — this configuration deployed on GKE.

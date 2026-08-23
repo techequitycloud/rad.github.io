@@ -194,3 +194,10 @@ gcloud filestore instances list --project "$PROJECT"
 For the OpenEMR-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[OpenEMR_GKE](OpenEMR_GKE.md)** and **[OpenEMR_CloudRun](OpenEMR_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [OpenEMR on Google Cloud Run](OpenEMR_CloudRun.md) — this configuration deployed on Cloud Run.
+- [OpenEMR on GKE Autopilot](OpenEMR_GKE.md) — this configuration deployed on GKE.

@@ -295,3 +295,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. DokuWiki-specific
 application configuration shared with the Cloud Run variant is described in
 **[DokuWiki_Common](DokuWiki_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: DokuWiki on GKE Autopilot](../labs/DokuWiki_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [DokuWiki on Google Cloud Run](DokuWiki_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [DokuWiki Common — Shared Application Configuration](DokuWiki_Common.md) — the configuration shared by both deployment targets.

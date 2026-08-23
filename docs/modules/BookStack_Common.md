@@ -182,3 +182,10 @@ For the BookStack-specific, user-facing configuration (variables by group, outpu
 and how to explore each service from the Console and CLI), see the platform guides:
 **[BookStack_GKE](BookStack_GKE.md)** and
 **[BookStack_CloudRun](BookStack_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [BookStack on Google Cloud Run](BookStack_CloudRun.md) — this configuration deployed on Cloud Run.
+- [BookStack on GKE Autopilot](BookStack_GKE.md) — this configuration deployed on GKE.

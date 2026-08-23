@@ -394,3 +394,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Vaultwarden-specific application configuration
 shared with the GKE variant is described in
 **[Vaultwarden_Common](Vaultwarden_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Vaultwarden on Cloud Run](../labs/Vaultwarden_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Vaultwarden on GKE Autopilot](Vaultwarden_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Vaultwarden Common — Shared Application Configuration](Vaultwarden_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Synapse on Google Cloud Run](Synapse_CloudRun.md), [Element on Google Cloud Run](Element_CloudRun.md), [Headscale on Google Cloud Run](Headscale_CloudRun.md) in the **Secure Team Communications** solution.

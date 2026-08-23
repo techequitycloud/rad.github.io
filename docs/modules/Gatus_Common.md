@@ -172,3 +172,10 @@ healthy within seconds of boot.
 For the Gatus-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Gatus_GKE](Gatus_GKE.md)** and **[Gatus_CloudRun](Gatus_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Gatus on Google Cloud Run](Gatus_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Gatus on GKE Autopilot](Gatus_GKE.md) — this configuration deployed on GKE.

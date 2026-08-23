@@ -206,3 +206,10 @@ uses a 60-second initial delay, 30-second period, and failure threshold 3.
 For the Docmost-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Docmost_GKE](Docmost_GKE.md)** and **[Docmost_CloudRun](Docmost_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Docmost on Google Cloud Run](Docmost_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Docmost on GKE Autopilot](Docmost_GKE.md) — this configuration deployed on GKE.

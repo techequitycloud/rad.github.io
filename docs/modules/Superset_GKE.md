@@ -457,3 +457,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Superset-specific
 application configuration shared with the Cloud Run variant is described in
 **[Superset_Common](Superset_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Superset on GKE Autopilot](../labs/Superset_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Apache Superset on Google Cloud Run](Superset_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Superset Common — Shared Application Configuration](Superset_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [ClickHouse on GKE Autopilot](ClickHouse_GKE.md), [Kestra on GKE Autopilot](Kestra_GKE.md), [Metabase on GKE Autopilot](Metabase_GKE.md) in the **Analytics Warehouse** solution.

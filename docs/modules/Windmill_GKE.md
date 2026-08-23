@@ -381,3 +381,11 @@ These values are returned on a successful deployment and are the quickest way to
 ---
 
 For the foundation behaviour referenced throughout — IAM and Workload Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Windmill-specific application configuration shared with the Cloud Run variant is described in **[Windmill_Common](Windmill_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Windmill on GKE Autopilot](../labs/Windmill_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Windmill on Google Cloud Run](Windmill_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Windmill Common — Shared Application Configuration](Windmill_Common.md) — the configuration shared by both deployment targets.

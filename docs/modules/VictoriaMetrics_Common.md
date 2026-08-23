@@ -171,3 +171,9 @@ types; otherwise none is created.
 For the VictoriaMetrics-specific, user-facing configuration (variables by
 group, outputs, and how to explore each service from the Console and CLI),
 see the platform guide: **[VictoriaMetrics_GKE](VictoriaMetrics_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [VictoriaMetrics on GKE Autopilot](VictoriaMetrics_GKE.md) — this configuration deployed on GKE.

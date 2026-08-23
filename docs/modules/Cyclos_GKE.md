@@ -470,3 +470,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Cyclos-specific
 application configuration shared with the Cloud Run variant is described in
 **[Cyclos_Common](Cyclos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Cyclos on GKE Autopilot](../labs/Cyclos_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cyclos on Google Cloud Run](Cyclos_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Cyclos Common — Shared Application Configuration](Cyclos_Common.md) — the configuration shared by both deployment targets.

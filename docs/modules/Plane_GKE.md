@@ -452,3 +452,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 with the Cloud Run variant (all-in-one image wiring, secrets, RabbitMQ
 credentials, storage TODO) is described in
 **[Plane_Common](Plane_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Plane on GKE Autopilot](../labs/Plane_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Plane on Google Cloud Run](Plane_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Plane Common — Shared Application Configuration](Plane_Common.md) — the configuration shared by both deployment targets.

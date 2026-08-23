@@ -136,3 +136,9 @@ and bot detection on public deployments (see the platform guides' §Redis).
 For the LobeChat-specific, user-facing configuration (variables by group, outputs,
 and how to explore the service from the Console and CLI), see the platform guide:
 **[LobeChat_GKE](LobeChat_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LobeChat on GKE Autopilot](LobeChat_GKE.md) — this configuration deployed on GKE.

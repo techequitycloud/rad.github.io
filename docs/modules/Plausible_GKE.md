@@ -408,3 +408,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 entrypoint, database bootstrap) is described in
 **[Plausible_Common](Plausible_Common.md)**, and the event store in
 **[ClickHouse_GKE](ClickHouse_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Plausible Analytics on GKE Autopilot](../labs/Plausible_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Plausible Common — Shared Application Configuration](Plausible_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [ClickHouse on GKE Autopilot](ClickHouse_GKE.md), [PostHog on GKE Autopilot](PostHog_GKE.md), [Metabase on GKE Autopilot](Metabase_GKE.md) in the **Product Analytics** solution.

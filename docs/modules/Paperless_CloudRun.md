@@ -760,3 +760,12 @@ tofu destroy
 ```
 
 The second run will succeed once GCP has released the reserved addresses.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Paperless-ngx on Cloud Run](../labs/Paperless_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Paperless-ngx GKE Module — Configuration Guide](Paperless_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Paperless-ngx Common Shared Configuration Module](Paperless_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Odoo on Cloud Run](Odoo_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md), [Passbolt on Google Cloud Run](Passbolt_CloudRun.md) in the **Integrated ERP Platform** solution.

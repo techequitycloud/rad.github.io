@@ -216,3 +216,12 @@ ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Homebox-specific
 application configuration shared with the Cloud Run variant is described in
 **[Homebox_Common](Homebox_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Homebox on GKE Autopilot](../labs/Homebox_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Homebox on Google Cloud Run](Homebox_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Homebox Common — Shared Application Configuration](Homebox_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Grocy on GKE Autopilot](Grocy_GKE.md), [Mealie on GKE Autopilot](Mealie_GKE.md), [Wallos on GKE Autopilot](Wallos_GKE.md), [LubeLogger on GKE Autopilot](LubeLogger_GKE.md) in the **Home & Life Management** solution.

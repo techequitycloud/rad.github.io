@@ -178,3 +178,10 @@ storage to inspect for this application.
 For the Rallly-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Rallly_GKE](Rallly_GKE.md)** and **[Rallly_CloudRun](Rallly_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Rallly on Google Cloud Run](Rallly_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Rallly on GKE Autopilot](Rallly_GKE.md) — this configuration deployed on GKE.

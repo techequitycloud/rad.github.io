@@ -209,3 +209,10 @@ For the GoAlert-specific, user-facing configuration (variables by group, outputs
 and how to explore each service from the Console and CLI), see the platform
 guides: **[GoAlert_GKE](GoAlert_GKE.md)** and
 **[GoAlert_CloudRun](GoAlert_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [GoAlert on Google Cloud Run](GoAlert_CloudRun.md) — this configuration deployed on Cloud Run.
+- [GoAlert on GKE Autopilot](GoAlert_GKE.md) — this configuration deployed on GKE.

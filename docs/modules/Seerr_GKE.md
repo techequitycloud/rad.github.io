@@ -261,3 +261,12 @@ ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Seerr-specific
 application configuration shared with the Cloud Run variant is described in
 **[Seerr_Common](Seerr_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Seerr on GKE Autopilot](../labs/Seerr_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Seerr on Google Cloud Run](Seerr_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Seerr Common — Shared Application Configuration](Seerr_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Jellyfin on GKE Autopilot](Jellyfin_GKE.md), [Prowlarr on GKE Autopilot](Prowlarr_GKE.md), [Jellystat on GKE Autopilot](Jellystat_GKE.md), [Homepage on GKE Autopilot](Homepage_GKE.md) in the **Media Server** solution.

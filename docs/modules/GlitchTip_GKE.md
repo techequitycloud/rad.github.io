@@ -471,3 +471,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. GlitchTip-specific
 application configuration shared with the Cloud Run variant is described in
 **[GlitchTip_Common](GlitchTip_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: GlitchTip on GKE Autopilot](../labs/GlitchTip_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [GlitchTip Common — Shared Application Configuration](GlitchTip_Common.md) — the configuration shared by both deployment targets.

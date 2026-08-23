@@ -195,3 +195,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the FreeScout-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[FreeScout_GKE](FreeScout_GKE.md)** and **[FreeScout_CloudRun](FreeScout_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [FreeScout on Google Cloud Run](FreeScout_CloudRun.md) — this configuration deployed on Cloud Run.
+- [FreeScout on GKE Autopilot](FreeScout_GKE.md) — this configuration deployed on GKE.

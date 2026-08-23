@@ -205,3 +205,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Synapse-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Synapse_GKE](Synapse_GKE.md)** and **[Synapse_CloudRun](Synapse_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Synapse on Google Cloud Run](Synapse_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Synapse on GKE Autopilot](Synapse_GKE.md) — this configuration deployed on GKE.

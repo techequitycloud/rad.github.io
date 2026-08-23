@@ -311,3 +311,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Shlink-specific application configuration shared with the GKE variant is described in **[Shlink_Common](Shlink_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Shlink on Cloud Run](../labs/Shlink_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Shlink on GKE Autopilot](Shlink_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Shlink Common — Shared Application Configuration](Shlink_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Mautic on Google Cloud Run](Mautic_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Mixpost on Google Cloud Run](Mixpost_CloudRun.md) in the **Marketing Automation Suite** solution.

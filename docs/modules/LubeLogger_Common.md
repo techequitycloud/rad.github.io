@@ -166,3 +166,10 @@ For the LubeLogger-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[LubeLogger_GKE](LubeLogger_GKE.md)** and
 **[LubeLogger_CloudRun](LubeLogger_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [LubeLogger on Google Cloud Run](LubeLogger_CloudRun.md) — this configuration deployed on Cloud Run.
+- [LubeLogger on GKE Autopilot](LubeLogger_GKE.md) — this configuration deployed on GKE.

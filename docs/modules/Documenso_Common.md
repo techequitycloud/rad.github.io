@@ -302,3 +302,10 @@ For the Documenso-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Documenso_GKE](Documenso_GKE.md)** and
 **[Documenso_CloudRun](Documenso_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Documenso on Google Cloud Run](Documenso_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Documenso on GKE Autopilot](Documenso_GKE.md) — this configuration deployed on GKE.

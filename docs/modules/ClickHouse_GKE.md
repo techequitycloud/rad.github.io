@@ -481,3 +481,10 @@ locate and explore the running resources.
 For the foundation behaviour referenced throughout — IAM and Workload Identity,
 autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ClickHouse on GKE Autopilot](../labs/ClickHouse_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- Deployed alongside [Kestra on GKE Autopilot](Kestra_GKE.md), [Apache Superset on GKE Autopilot](Superset_GKE.md), [Metabase on GKE Autopilot](Metabase_GKE.md) in the **Analytics Warehouse** solution.

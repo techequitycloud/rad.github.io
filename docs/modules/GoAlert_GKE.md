@@ -360,3 +360,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. GoAlert-specific application configuration shared with
 the Cloud Run variant is described in **[GoAlert_Common](GoAlert_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: GoAlert on GKE Autopilot](../labs/GoAlert_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [GoAlert on Google Cloud Run](GoAlert_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [GoAlert Common — Shared Application Configuration](GoAlert_Common.md) — the configuration shared by both deployment targets.

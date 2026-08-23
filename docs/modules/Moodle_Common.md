@@ -151,3 +151,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Moodle-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Moodle_GKE](Moodle_GKE.md)** and **[Moodle_CloudRun](Moodle_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Moodle on Google Cloud Run](Moodle_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Moodle on GKE Autopilot](Moodle_GKE.md) — this configuration deployed on GKE.

@@ -178,3 +178,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Dify-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[Dify_GKE](Dify_GKE.md)** and **[Dify_CloudRun](Dify_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Dify on Google Cloud Run](Dify_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Dify on GKE Autopilot](Dify_GKE.md) — this configuration deployed on GKE.

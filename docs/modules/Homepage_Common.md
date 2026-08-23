@@ -160,3 +160,10 @@ UID/GID permission denied" finding referenced elsewhere in this repository).
 For the Homepage-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guide: **[Homepage_CloudRun](Homepage_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Homepage on Google Cloud Run](Homepage_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Homepage on GKE Autopilot](Homepage_GKE.md) — this configuration deployed on GKE.

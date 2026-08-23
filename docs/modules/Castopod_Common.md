@@ -192,3 +192,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~media"
 For the Castopod-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Castopod_GKE](Castopod_GKE.md)** and **[Castopod_CloudRun](Castopod_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Castopod on Google Cloud Run](Castopod_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Castopod on GKE Autopilot](Castopod_GKE.md) — this configuration deployed on GKE.

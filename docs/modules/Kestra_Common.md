@@ -155,3 +155,10 @@ contents as if they were local files.
 For the Kestra-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[Kestra_GKE](Kestra_GKE.md)** and **[Kestra_CloudRun](Kestra_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Kestra on Google Cloud Run](Kestra_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Kestra on GKE Autopilot](Kestra_GKE.md) — this configuration deployed on GKE.

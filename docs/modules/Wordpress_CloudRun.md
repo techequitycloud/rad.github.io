@@ -360,3 +360,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. WordPress-specific application configuration shared
 with the GKE variant is described in **[Wordpress_Common](Wordpress_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: WordPress on Cloud Run](../labs/Wordpress_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [WordPress on GKE Autopilot](Wordpress_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [WordPress Common — Shared Application Configuration](Wordpress_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Shlink on Google Cloud Run](Shlink_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) in the **Business Website & Blog** solution.

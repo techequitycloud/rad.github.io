@@ -359,3 +359,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Outline-specific application configuration shared with the GKE variant is described in **[Outline_Common](Outline_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Outline on Cloud Run](../labs/Outline_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Outline on GKE Autopilot](Outline_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Outline Common — Shared Application Configuration](Outline_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [Stirling-PDF on Google Cloud Run](StirlingPDF_CloudRun.md) in the **Knowledge Base & Documentation** solution.

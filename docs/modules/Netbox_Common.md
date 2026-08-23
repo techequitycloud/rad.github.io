@@ -202,3 +202,10 @@ For the NetBox-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Netbox_GKE](Netbox_GKE.md)** and
 **[Netbox_CloudRun](Netbox_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [NetBox on Google Cloud Run](Netbox_CloudRun.md) — this configuration deployed on Cloud Run.
+- [NetBox on GKE Autopilot](Netbox_GKE.md) — this configuration deployed on GKE.

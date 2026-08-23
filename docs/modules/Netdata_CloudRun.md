@@ -309,3 +309,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Netdata-specific application configuration shared
 with the GKE variant is described in **[Netdata_Common](Netdata_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Netdata on Cloud Run](../labs/Netdata_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Netdata on GKE Autopilot](Netdata_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Netdata Common — Shared Application Configuration](Netdata_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md), [Gatus on Google Cloud Run](Gatus_CloudRun.md), [Healthchecks on Google Cloud Run](Healthchecks_CloudRun.md), [Beszel on Google Cloud Run](Beszel_CloudRun.md) in the **Monitoring & NOC** solution.

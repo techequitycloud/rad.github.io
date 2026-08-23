@@ -422,3 +422,11 @@ shared with the Cloud Run variant (secrets, the `db-init`/`admin-create`
 jobs, and the storage service account) is described in
 **[GoToSocial_Common](GoToSocial_Common.md)** (module source:
 `modules/GoToSocial_Common`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: GoToSocial on GKE Autopilot](../labs/GoToSocial_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [GoToSocial Common — Shared Application Configuration](GoToSocial_Common.md) — the configuration shared by both deployment targets.

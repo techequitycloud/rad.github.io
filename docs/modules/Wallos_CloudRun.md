@@ -362,3 +362,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Wallos-specific application configuration
 shared with the GKE variant is described in
 **[Wallos_Common](Wallos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wallos on Cloud Run](../labs/Wallos_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wallos on GKE Autopilot](Wallos_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Wallos Common — Shared Application Configuration](Wallos_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Firefly III on Google Cloud Run](FireflyIII_CloudRun.md), [Ghostfolio on Google Cloud Run](Ghostfolio_CloudRun.md), [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) in the **Finance & Wealth Tracking** solution.

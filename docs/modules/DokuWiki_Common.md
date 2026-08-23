@@ -130,3 +130,10 @@ restarts. The two platform variants back it differently:
 For the DokuWiki-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[DokuWiki_GKE](DokuWiki_GKE.md)** and **[DokuWiki_CloudRun](DokuWiki_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [DokuWiki on Google Cloud Run](DokuWiki_CloudRun.md) — this configuration deployed on Cloud Run.
+- [DokuWiki on GKE Autopilot](DokuWiki_GKE.md) — this configuration deployed on GKE.

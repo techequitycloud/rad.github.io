@@ -597,3 +597,11 @@ gcloud secrets list \
 | `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, Mattermost's login page and API endpoints are exposed to brute-force and credential-stuffing attacks. Enable for any publicly reachable deployment. |
 | `enable_pod_disruption_budget` | `false` | **Medium** | Disabled by default. Without a PDB, GKE node upgrades can terminate all Mattermost pods simultaneously, causing a full outage. Enable for production. |
 | `startup_probe.failure_threshold` | `30` | **High** | Mattermost runs PostgreSQL schema migrations on first startup. Reducing `failure_threshold` below `20` on fresh deployments with large databases can cause Kubernetes to restart the pod before migrations complete, creating a restart loop. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Mattermost on GKE Autopilot](../labs/Mattermost_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Mattermost on Google Cloud Run](Mattermost_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Mattermost Common Shared Configuration Module](Mattermost_Common.md) — the configuration shared by both deployment targets.

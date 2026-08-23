@@ -341,3 +341,11 @@ autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. Wallabag-specific application
 configuration shared with the Cloud Run variant is described in
 **[Wallabag_Common](Wallabag_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wallabag on GKE Autopilot](../labs/Wallabag_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wallabag on Google Cloud Run](Wallabag_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Wallabag Common — Shared Application Configuration](Wallabag_Common.md) — the configuration shared by both deployment targets.

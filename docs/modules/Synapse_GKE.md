@@ -489,3 +489,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Synapse-specific
 application configuration shared with the Cloud Run variant is described in
 **[Synapse_Common](Synapse_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Synapse on GKE Autopilot](../labs/Synapse_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Synapse on Google Cloud Run](Synapse_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Synapse Common — Shared Application Configuration](Synapse_Common.md) — the configuration shared by both deployment targets.

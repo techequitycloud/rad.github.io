@@ -165,3 +165,10 @@ For the Node-RED-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[NodeRED_GKE](NodeRED_GKE.md)** and
 **[NodeRED_CloudRun](NodeRED_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Node-RED on Google Cloud Run](NodeRED_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Node-RED on GKE Autopilot](NodeRED_GKE.md) — this configuration deployed on GKE.

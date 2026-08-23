@@ -204,3 +204,10 @@ For the authentik-specific, user-facing configuration (variables by group, outpu
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Authentik_GKE](Authentik_GKE.md)** and
 **[Authentik_CloudRun](Authentik_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Authentik on Google Cloud Run](Authentik_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Authentik on GKE Autopilot](Authentik_GKE.md) — this configuration deployed on GKE.

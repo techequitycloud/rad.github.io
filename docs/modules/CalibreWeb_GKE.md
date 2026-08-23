@@ -400,3 +400,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Calibre-Web-specific application configuration shared across platform variants is
 described in **[CalibreWeb_Common](CalibreWeb_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Calibre-Web on GKE Autopilot](../labs/CalibreWeb_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Calibre-Web on Google Cloud Run](CalibreWeb_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Calibre-Web Common — Shared Application Configuration](CalibreWeb_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Komga on GKE Autopilot](Komga_GKE.md), [Kavita on GKE Autopilot](Kavita_GKE.md), [Audiobookshelf on GKE Autopilot](Audiobookshelf_GKE.md), [Navidrome on GKE Autopilot](Navidrome_GKE.md) in the **Digital Library** solution.

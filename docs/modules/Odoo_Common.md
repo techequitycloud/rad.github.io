@@ -206,3 +206,10 @@ For deployment variables and platform-specific options, see
 **[Odoo_CloudRun](Odoo_CloudRun.md)** or **[Odoo_GKE](Odoo_GKE.md)**. For the shared
 infrastructure that both platforms depend on, see the
 [Services_GCP platform guide](./Services_GCP.md).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Odoo on Cloud Run](Odoo_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Odoo on GKE Autopilot](Odoo_GKE.md) — this configuration deployed on GKE.

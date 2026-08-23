@@ -354,3 +354,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. GoAlert-specific application configuration
 shared with the GKE variant is described in
 **[GoAlert_Common](GoAlert_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: GoAlert on Cloud Run](../labs/GoAlert_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [GoAlert on GKE Autopilot](GoAlert_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [GoAlert Common — Shared Application Configuration](GoAlert_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [VictoriaMetrics on GKE Autopilot](VictoriaMetrics_GKE.md), [Loki on Google Cloud Run](Loki_CloudRun.md), [Grafana on Google Cloud Run](Grafana_CloudRun.md), [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md) in the **Observability & On-call** solution.

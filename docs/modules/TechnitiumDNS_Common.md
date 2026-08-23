@@ -125,3 +125,10 @@ Headscale, Kopia, and RocketChat modules.
 For the TechnitiumDNS-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[TechnitiumDNS_GKE](TechnitiumDNS_GKE.md)** and **[TechnitiumDNS_CloudRun](TechnitiumDNS_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [TechnitiumDNS on Google Cloud Run](TechnitiumDNS_CloudRun.md) — this configuration deployed on Cloud Run.
+- [TechnitiumDNS on GKE Autopilot](TechnitiumDNS_GKE.md) — this configuration deployed on GKE.

@@ -469,3 +469,12 @@ configuration shared with the GKE variant (secrets, the `db-init`/
 `admin-create` jobs, and the storage service account) is defined in
 **[GoToSocial_Common](GoToSocial_Common.md)** (module source:
 `modules/GoToSocial_Common`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: GoToSocial on Cloud Run](../labs/GoToSocial_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [GoToSocial on GKE Autopilot](GoToSocial_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [GoToSocial Common — Shared Application Configuration](GoToSocial_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ghost on Google Cloud Run](Ghost_CloudRun.md), [Castopod on Google Cloud Run](Castopod_CloudRun.md), [PeerTube on Google Cloud Run](PeerTube_CloudRun.md), [WriteFreely on Google Cloud Run](WriteFreely_CloudRun.md) in the **Creator & Media Publishing** solution.

@@ -387,3 +387,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Coder-specific application configuration shared
 with the Cloud Run variant is described in
 **[Coder_Common](Coder_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Coder on GKE Autopilot](../labs/Coder_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Coder on Google Cloud Run](Coder_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Coder Common — Shared Application Configuration](Coder_Common.md) — the configuration shared by both deployment targets.

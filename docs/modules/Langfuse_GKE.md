@@ -465,3 +465,11 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. Langfuse-specific application configuration
 shared with the Cloud Run variant is described in **[Langfuse_Common](Langfuse_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Langfuse on GKE Autopilot](../labs/Langfuse_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Langfuse on Google Cloud Run](Langfuse_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Langfuse Common — Shared Application Configuration](Langfuse_Common.md) — the configuration shared by both deployment targets.

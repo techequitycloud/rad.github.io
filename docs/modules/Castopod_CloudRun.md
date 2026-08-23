@@ -381,3 +381,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Castopod-specific application configuration shared with the GKE variant is described in
 **[Castopod_Common](Castopod_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Castopod on Cloud Run](../labs/Castopod_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Castopod on GKE Autopilot](Castopod_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Castopod Common — Shared Application Configuration](Castopod_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ghost on Google Cloud Run](Ghost_CloudRun.md), [PeerTube on Google Cloud Run](PeerTube_CloudRun.md), [WriteFreely on Google Cloud Run](WriteFreely_CloudRun.md), [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) in the **Creator & Media Publishing** solution.

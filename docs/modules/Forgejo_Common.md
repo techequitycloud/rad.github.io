@@ -247,3 +247,10 @@ For the Forgejo-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Forgejo_GKE](Forgejo_GKE.md)** and
 **[Forgejo_CloudRun](Forgejo_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Forgejo on Google Cloud Run](Forgejo_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Forgejo on GKE Autopilot](Forgejo_GKE.md) — this configuration deployed on GKE.

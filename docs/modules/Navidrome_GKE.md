@@ -361,3 +361,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Navidrome-specific application configuration shared with the Cloud Run variant is
 described in **[Navidrome_Common](Navidrome_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Navidrome on GKE Autopilot](../labs/Navidrome_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Navidrome on Google Cloud Run](Navidrome_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Navidrome Common — Shared Application Configuration](Navidrome_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md), [Komga on GKE Autopilot](Komga_GKE.md), [Kavita on GKE Autopilot](Kavita_GKE.md), [Audiobookshelf on GKE Autopilot](Audiobookshelf_GKE.md) in the **Digital Library** solution.

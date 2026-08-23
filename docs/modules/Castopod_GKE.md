@@ -403,3 +403,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Castopod-specific application configuration shared with the Cloud Run variant is
 described in **[Castopod_Common](Castopod_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Castopod on GKE Autopilot](../labs/Castopod_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Castopod on Google Cloud Run](Castopod_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Castopod Common — Shared Application Configuration](Castopod_Common.md) — the configuration shared by both deployment targets.

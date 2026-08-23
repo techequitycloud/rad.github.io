@@ -206,3 +206,10 @@ For the Linkwarden-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Linkwarden_GKE](Linkwarden_GKE.md)** and
 **[Linkwarden_CloudRun](Linkwarden_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Linkwarden on Google Cloud Run](Linkwarden_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Linkwarden on GKE Autopilot](Linkwarden_GKE.md) — this configuration deployed on GKE.

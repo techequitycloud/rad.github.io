@@ -344,3 +344,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Grocy-specific application configuration is
 described in **[Grocy_Common](Grocy_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Grocy on Cloud Run](../labs/Grocy_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Grocy on GKE Autopilot](Grocy_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Grocy Common — Shared Application Configuration](Grocy_Common.md) — the configuration shared by both deployment targets.

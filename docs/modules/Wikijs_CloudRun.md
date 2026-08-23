@@ -406,3 +406,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Wiki.js-specific application configuration shared
 with the GKE variant is described in **[Wikijs_Common](Wikijs_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wiki.js on Cloud Run](../labs/Wikijs_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wiki.js on GKE Autopilot](Wikijs_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Wikijs Common — Shared Application Configuration](Wikijs_Common.md) — the configuration shared by both deployment targets.

@@ -202,3 +202,9 @@ mount that most Common modules in this catalogue default to.
 For the Prowlarr-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guide: **[Prowlarr_GKE](Prowlarr_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Prowlarr on GKE Autopilot](Prowlarr_GKE.md) — this configuration deployed on GKE.

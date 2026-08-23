@@ -153,3 +153,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the n8n-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[N8N_GKE](N8N_GKE.md)** and **[N8N_CloudRun](N8N_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [n8n on Google Cloud Run](N8N_CloudRun.md) — this configuration deployed on Cloud Run.
+- [n8n on GKE Autopilot](N8N_GKE.md) — this configuration deployed on GKE.

@@ -118,3 +118,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~coder"
 
 For the Coder-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Coder_GKE](Coder_GKE.md)** and **[Coder_CloudRun](Coder_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Coder on Google Cloud Run](Coder_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Coder on GKE Autopilot](Coder_GKE.md) — this configuration deployed on GKE.

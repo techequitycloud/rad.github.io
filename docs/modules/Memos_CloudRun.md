@@ -386,3 +386,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Memos-specific application configuration
 shared with the GKE variant is described in
 **[Memos_Common](Memos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Memos on Cloud Run](../labs/Memos_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Memos on GKE Autopilot](Memos_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Memos Common — Shared Application Configuration](Memos_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Trilium on Google Cloud Run](Trilium_CloudRun.md), [Linkwarden on Google Cloud Run](Linkwarden_CloudRun.md), [Wallabag on Google Cloud Run](Wallabag_CloudRun.md), [FreshRSS on Google Cloud Run](FreshRSS_CloudRun.md) in the **Personal Knowledge & Reading** solution.

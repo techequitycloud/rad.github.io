@@ -184,3 +184,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the DocuSeal-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Docuseal_GKE](Docuseal_GKE.md)** and **[Docuseal_CloudRun](Docuseal_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Docuseal on Google Cloud Run](Docuseal_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Docuseal on GKE Autopilot](Docuseal_GKE.md) — this configuration deployed on GKE.

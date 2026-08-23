@@ -177,3 +177,10 @@ For the Healthchecks-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Healthchecks_GKE](Healthchecks_GKE.md)** and
 **[Healthchecks_CloudRun](Healthchecks_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Healthchecks on Google Cloud Run](Healthchecks_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Healthchecks on GKE Autopilot](Healthchecks_GKE.md) — this configuration deployed on GKE.

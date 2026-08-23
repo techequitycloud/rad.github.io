@@ -93,3 +93,10 @@ the setup/login screen and is not used for probing.
 For the Trilium-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Trilium_GKE](Trilium_GKE.md)** and **[Trilium_CloudRun](Trilium_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Trilium on Google Cloud Run](Trilium_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Trilium on GKE Autopilot](Trilium_GKE.md) — this configuration deployed on GKE.

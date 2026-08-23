@@ -121,3 +121,10 @@ Additional buckets can be defined in the platform module via `storage_buckets`, 
 ---
 
 For the Windmill-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides: **[Windmill_GKE](Windmill_GKE.md)** and **[Windmill_CloudRun](Windmill_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Windmill on Google Cloud Run](Windmill_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Windmill on GKE Autopilot](Windmill_GKE.md) — this configuration deployed on GKE.

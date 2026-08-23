@@ -354,3 +354,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Hermes-specific application configuration
 shared with the GKE variant is described in
 **[Hermes_Common](Hermes_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Hermes Agent on Cloud Run](../labs/Hermes_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Hermes Agent on GKE Autopilot](Hermes_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Hermes Common — Shared Application Configuration](Hermes_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [OpenClaw on Google Cloud Run](OpenClaw_CloudRun.md), [n8n on Google Cloud Run](N8N_CloudRun.md) in the **AI Agent Workspace** solution.

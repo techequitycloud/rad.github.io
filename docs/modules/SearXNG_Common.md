@@ -143,3 +143,10 @@ For the SearXNG-specific, user-facing configuration (variables by group, outputs
 and how to explore each service from the Console and CLI), see the platform guides:
 **[SearXNG_GKE](SearXNG_GKE.md)** and
 **[SearXNG_CloudRun](SearXNG_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [SearXNG on Google Cloud Run](SearXNG_CloudRun.md) — this configuration deployed on Cloud Run.
+- [SearXNG on GKE Autopilot](SearXNG_GKE.md) — this configuration deployed on GKE.

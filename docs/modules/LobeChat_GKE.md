@@ -324,3 +324,10 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, and image mirroring — see **[App_GKE](App_GKE.md)**. LobeChat-specific
 application configuration shared with the Cloud Run variant is described in
 **[LobeChat_Common](LobeChat_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LobeChat on GKE Autopilot](../labs/LobeChat_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LobeChat Common — Shared Application Configuration](LobeChat_Common.md) — the configuration shared by both deployment targets.

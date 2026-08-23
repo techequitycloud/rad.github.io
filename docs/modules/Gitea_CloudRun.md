@@ -334,3 +334,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Gitea-specific application configuration shared with the GKE variant is described in **[Gitea_Common](Gitea_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Gitea on Cloud Run](../labs/Gitea_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Gitea on GKE Autopilot](Gitea_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Gitea Common — Shared Application Configuration](Gitea_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Woodpecker CI on GKE Autopilot](Woodpecker_GKE.md), [Hoppscotch on Google Cloud Run](Hoppscotch_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Source Control & CI/CD** solution.

@@ -478,3 +478,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 ToolJet-specific application configuration shared with the Cloud Run variant is
 described in **[ToolJet_Common](ToolJet_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ToolJet on GKE Autopilot](../labs/ToolJet_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [ToolJet on Google Cloud Run](ToolJet_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [ToolJet Common — Shared Application Configuration](ToolJet_Common.md) — the configuration shared by both deployment targets.

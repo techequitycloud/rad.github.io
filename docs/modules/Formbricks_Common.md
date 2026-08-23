@@ -319,3 +319,10 @@ module "app_cloudrun" {
   # ... all other variables forwarded from var.*
 }
 ```
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Formbricks on Google Cloud Run](Formbricks_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Formbricks GKE Module — Configuration Guide](Formbricks_GKE.md) — this configuration deployed on GKE.

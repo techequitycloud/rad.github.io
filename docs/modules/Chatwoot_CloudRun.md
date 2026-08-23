@@ -518,3 +518,12 @@ module (`modules/Chatwoot_Common`); see
 **[Chatwoot_Common](Chatwoot_Common.md)** for secrets, DB bootstrap, the
 container image/entrypoint, health probes, and object storage, and
 [Chatwoot_GKE](Chatwoot_GKE.md) for the parallel GKE-side wiring notes.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Chatwoot on Cloud Run](../labs/Chatwoot_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Chatwoot on GKE Autopilot](Chatwoot_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Chatwoot Common — Shared Application Configuration](Chatwoot_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Twenty CRM on Google Cloud Run](Twenty_CloudRun.md), [Cal.com on Google Cloud Run](CalCom_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md) in the **CRM & Sales Operations** solution.

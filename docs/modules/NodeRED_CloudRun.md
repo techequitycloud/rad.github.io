@@ -413,3 +413,12 @@ and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Node-RED-specific application configuration
 shared with the GKE variant is described in **[NodeRED_Common](NodeRED_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: NodeRED on Cloud Run](../labs/NodeRED_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Node-RED on GKE Autopilot](NodeRED_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [NodeRED Common — Shared Application Configuration](NodeRED_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [n8n on Google Cloud Run](N8N_CloudRun.md), [Activepieces on Google Cloud Run](Activepieces_CloudRun.md), [Ntfy on Google Cloud Run](Ntfy_CloudRun.md), [EvolutionAPI on Google Cloud Run](EvolutionAPI_CloudRun.md) in the **Workflow Automation Hub** solution.

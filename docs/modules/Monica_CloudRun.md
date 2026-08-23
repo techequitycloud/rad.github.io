@@ -336,3 +336,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Monica-specific application configuration shared
 with the GKE variant is described in **[Monica_Common](Monica_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Monica on Cloud Run](../labs/Monica_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Monica on GKE Autopilot](Monica_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Monica Common — Shared Application Configuration](Monica_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Radicale on Google Cloud Run](Radicale_CloudRun.md), [Cal.diy on Google Cloud Run](CalDiy_CloudRun.md), [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) in the **Personal Organiser** solution.

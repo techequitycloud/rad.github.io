@@ -428,3 +428,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Komga-specific application configuration shared
 with the Cloud Run variant is described in
 **[Komga_Common](Komga_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Komga on GKE Autopilot](../labs/Komga_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Komga on Google Cloud Run](Komga_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Komga Common — Shared Application Configuration](Komga_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md), [Kavita on GKE Autopilot](Kavita_GKE.md), [Audiobookshelf on GKE Autopilot](Audiobookshelf_GKE.md), [Navidrome on GKE Autopilot](Navidrome_GKE.md) in the **Digital Library** solution.

@@ -253,3 +253,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Trilium-specific application configuration
 shared with the GKE variant is described in **[Trilium_Common](Trilium_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Trilium on Cloud Run](../labs/Trilium_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Trilium on GKE Autopilot](Trilium_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Trilium Common — Shared Application Configuration](Trilium_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Memos on Google Cloud Run](Memos_CloudRun.md), [Linkwarden on Google Cloud Run](Linkwarden_CloudRun.md), [Wallabag on Google Cloud Run](Wallabag_CloudRun.md), [FreshRSS on Google Cloud Run](FreshRSS_CloudRun.md) in the **Personal Knowledge & Reading** solution.

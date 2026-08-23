@@ -360,3 +360,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Komga-specific application configuration
 shared with the GKE variant is described in
 **[Komga_Common](Komga_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Komga on Cloud Run](../labs/Komga_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Komga on GKE Autopilot](Komga_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Komga Common — Shared Application Configuration](Komga_Common.md) — the configuration shared by both deployment targets.

@@ -149,3 +149,10 @@ For the Excalidraw-specific, user-facing configuration (variables by group, outp
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Excalidraw_GKE](Excalidraw_GKE.md)** and
 **[Excalidraw_CloudRun](Excalidraw_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Excalidraw on Google Cloud Run](Excalidraw_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Excalidraw on GKE Autopilot](Excalidraw_GKE.md) — this configuration deployed on GKE.

@@ -343,3 +343,11 @@ Identity, autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, and image mirroring — see
 **[App_GKE](App_GKE.md)**. UrBackup-specific application configuration is
 described in **[UrBackup_Common](UrBackup_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: UrBackup on GKE Autopilot](../labs/UrBackup_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [UrBackup Common — Shared Application Configuration](UrBackup_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Kopia on GKE Autopilot](Kopia_GKE.md), [Filebrowser on GKE Autopilot](Filebrowser_GKE.md) in the **Backup & Disaster Recovery** solution.

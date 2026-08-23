@@ -301,3 +301,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Healthchecks-specific application
 configuration shared with the GKE variant is described in
 **[Healthchecks_Common](Healthchecks_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Healthchecks on Cloud Run](../labs/Healthchecks_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Healthchecks on GKE Autopilot](Healthchecks_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Healthchecks Common — Shared Application Configuration](Healthchecks_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Loki on Google Cloud Run](Loki_CloudRun.md), [Grafana on Google Cloud Run](Grafana_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md), [GoAlert on Google Cloud Run](GoAlert_CloudRun.md) in the **Security Monitoring & Response** solution.

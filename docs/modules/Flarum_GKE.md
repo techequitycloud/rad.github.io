@@ -430,3 +430,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Flarum-specific application configuration shared
 with the Cloud Run variant is described in
 **[Flarum_Common](Flarum_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Flarum on GKE Autopilot](../labs/Flarum_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Flarum on Google Cloud Run](Flarum_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Flarum Common — Shared Application Configuration](Flarum_Common.md) — the configuration shared by both deployment targets.

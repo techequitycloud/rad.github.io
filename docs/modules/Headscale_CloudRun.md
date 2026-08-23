@@ -327,3 +327,12 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Headscale-specific application
 configuration shared with the GKE variant is described in
 **[Headscale_Common](Headscale_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Headscale on Cloud Run](../labs/Headscale_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Headscale on GKE Autopilot](Headscale_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Headscale Common — Shared Application Configuration](Headscale_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Synapse on Google Cloud Run](Synapse_CloudRun.md), [Element on Google Cloud Run](Element_CloudRun.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md) in the **Secure Team Communications** solution.

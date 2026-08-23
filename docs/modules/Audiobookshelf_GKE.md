@@ -293,3 +293,12 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Audiobookshelf-specific application configuration shared with the Cloud Run variant is
 described in **[Audiobookshelf_Common](Audiobookshelf_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Audiobookshelf on GKE Autopilot](../labs/Audiobookshelf_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Audiobookshelf on Google Cloud Run](Audiobookshelf_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Audiobookshelf Common — Shared Application Configuration](Audiobookshelf_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md), [Komga on GKE Autopilot](Komga_GKE.md), [Kavita on GKE Autopilot](Kavita_GKE.md), [Navidrome on GKE Autopilot](Navidrome_GKE.md) in the **Digital Library** solution.

@@ -201,3 +201,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the GlitchTip-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[GlitchTip_GKE](GlitchTip_GKE.md)** and **[GlitchTip_CloudRun](GlitchTip_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) — this configuration deployed on Cloud Run.
+- [GlitchTip on GKE Autopilot](GlitchTip_GKE.md) — this configuration deployed on GKE.

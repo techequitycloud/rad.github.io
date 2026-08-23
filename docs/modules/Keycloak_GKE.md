@@ -393,3 +393,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 with the Cloud Run variant (the custom image build, entrypoint DB/hostname
 mapping, secrets, and probe defaults) is described in
 **[Keycloak_Common](Keycloak_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Keycloak on GKE Autopilot](../labs/Keycloak_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Keycloak on Google Cloud Run](Keycloak_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Keycloak Common — Shared Application Configuration](Keycloak_Common.md) — the configuration shared by both deployment targets.

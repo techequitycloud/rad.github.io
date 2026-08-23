@@ -140,3 +140,10 @@ For the phpMyAdmin-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[PhpMyAdmin_GKE](PhpMyAdmin_GKE.md)** and
 **[PhpMyAdmin_CloudRun](PhpMyAdmin_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [PhpMyAdmin on Google Cloud Run](PhpMyAdmin_CloudRun.md) — this configuration deployed on Cloud Run.
+- [PhpMyAdmin on GKE Autopilot](PhpMyAdmin_GKE.md) — this configuration deployed on GKE.

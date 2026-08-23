@@ -342,3 +342,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. WriteFreely-specific application configuration
 shared with the GKE variant is described in
 **[WriteFreely_Common](WriteFreely_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: WriteFreely on Cloud Run](../labs/WriteFreely_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [WriteFreely on GKE Autopilot](WriteFreely_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [WriteFreely Common — Shared Application Configuration](WriteFreely_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ghost on Google Cloud Run](Ghost_CloudRun.md), [Castopod on Google Cloud Run](Castopod_CloudRun.md), [PeerTube on Google Cloud Run](PeerTube_CloudRun.md), [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) in the **Creator & Media Publishing** solution.

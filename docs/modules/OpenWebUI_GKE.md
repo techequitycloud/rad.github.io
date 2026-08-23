@@ -458,3 +458,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Open WebUI-specific application configuration shared with the
 Cloud Run variant is described in **[OpenWebUI_Common](OpenWebUI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenWebUI on GKE Autopilot](../labs/OpenWebUI_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Open WebUI Common — Shared Application Configuration](OpenWebUI_Common.md) — the configuration shared by both deployment targets.

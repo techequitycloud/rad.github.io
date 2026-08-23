@@ -448,3 +448,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Nextcloud-specific application configuration shared with the GKE variant is described
 in **[Nextcloud_Common](Nextcloud_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Nextcloud on Cloud Run](../labs/Nextcloud_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Nextcloud on GKE Autopilot](Nextcloud_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Nextcloud Common — Shared Application Configuration](Nextcloud_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md), [Invoice Ninja on Google Cloud Run](InvoiceNinja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md), [Docuseal on Google Cloud Run](Docuseal_CloudRun.md) in the **Small Business Suite** solution.

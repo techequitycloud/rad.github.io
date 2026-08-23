@@ -722,3 +722,12 @@ tofu destroy
 ```
 
 The second run will succeed once GCP has released the reserved addresses.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Formbricks on Cloud Run](../labs/Formbricks_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Formbricks GKE Module — Configuration Guide](Formbricks_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Formbricks Common Shared Configuration Module](Formbricks_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Flarum on Google Cloud Run](Flarum_CloudRun.md), [Fider on Google Cloud Run](Fider_CloudRun.md), [LimeSurvey on Google Cloud Run](LimeSurvey_CloudRun.md), [Rallly on Google Cloud Run](Rallly_CloudRun.md) in the **Community & Voice of Customer** solution.

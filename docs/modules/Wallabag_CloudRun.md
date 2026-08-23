@@ -401,3 +401,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Wallabag-specific application configuration
 shared with the GKE variant is described in
 **[Wallabag_Common](Wallabag_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wallabag on Cloud Run](../labs/Wallabag_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wallabag on GKE Autopilot](Wallabag_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Wallabag Common — Shared Application Configuration](Wallabag_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Memos on Google Cloud Run](Memos_CloudRun.md), [Trilium on Google Cloud Run](Trilium_CloudRun.md), [Linkwarden on Google Cloud Run](Linkwarden_CloudRun.md), [FreshRSS on Google Cloud Run](FreshRSS_CloudRun.md) in the **Personal Knowledge & Reading** solution.

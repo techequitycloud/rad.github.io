@@ -432,3 +432,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Navidrome-specific application configuration
 shared with the GKE variant is described in
 **[Navidrome_Common](Navidrome_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Navidrome on Cloud Run](../labs/Navidrome_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Navidrome on GKE Autopilot](Navidrome_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Navidrome Common — Shared Application Configuration](Navidrome_Common.md) — the configuration shared by both deployment targets.

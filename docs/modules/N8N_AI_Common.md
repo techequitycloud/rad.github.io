@@ -170,3 +170,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~n8n"
 For the n8n AI-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[N8N_AI_GKE](N8N_AI_GKE.md)** and **[N8N_AI_CloudRun](N8N_AI_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [N8N AI on Cloud Run](N8N_AI_CloudRun.md) — this configuration deployed on Cloud Run.
+- [N8N AI on GKE Autopilot](N8N_AI_GKE.md) — this configuration deployed on GKE.

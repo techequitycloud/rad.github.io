@@ -130,3 +130,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Mautic-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Mautic_GKE](Mautic_GKE.md)** and **[Mautic_CloudRun](Mautic_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Mautic on Google Cloud Run](Mautic_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Mautic on GKE Autopilot](Mautic_GKE.md) — this configuration deployed on GKE.

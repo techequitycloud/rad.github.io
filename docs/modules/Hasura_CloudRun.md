@@ -405,3 +405,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Hasura-specific application configuration shared
 with the GKE variant is described in **[Hasura_Common](Hasura_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Hasura on Cloud Run](../labs/Hasura_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Hasura on GKE Autopilot](Hasura_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Hasura Common — Shared Application Configuration](Hasura_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Supabase on GKE Autopilot](Supabase_GKE.md), [Directus on Cloud Run](Directus_CloudRun.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) in the **Application Backend Services** solution.

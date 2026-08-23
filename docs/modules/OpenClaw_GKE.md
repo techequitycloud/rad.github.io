@@ -430,3 +430,11 @@ ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 and image mirroring — see **[App_GKE](App_GKE.md)**. OpenClaw-specific application
 configuration shared with the Cloud Run variant is described in
 **[OpenClaw_Common](OpenClaw_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenClaw on GKE Autopilot](../labs/OpenClaw_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [OpenClaw on Google Cloud Run](OpenClaw_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [OpenClaw Common — Shared Application Configuration](OpenClaw_Common.md) — the configuration shared by both deployment targets.

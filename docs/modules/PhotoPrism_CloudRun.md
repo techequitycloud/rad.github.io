@@ -421,3 +421,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 shared with the GKE variant — the admin credential, the embedded-SQLite database
 engine, the storage layout, the container build, and the default health
 probes — is described in **[PhotoPrism_Common](PhotoPrism_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PhotoPrism on Cloud Run](../labs/PhotoPrism_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PhotoPrism on GKE Autopilot](PhotoPrism_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [PhotoPrism Common — Shared Application Configuration](PhotoPrism_Common.md) — the configuration shared by both deployment targets.

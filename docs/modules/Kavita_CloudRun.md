@@ -429,3 +429,11 @@ shared with the GKE variant — including why it has no generated secrets, no
 database, and how the `/kavita/config` state directory is mounted differently on
 each platform (GCS Fuse here vs. a block PVC on GKE) — is described in
 **[Kavita_Common](Kavita_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Kavita on Cloud Run](../labs/Kavita_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Kavita on GKE Autopilot](Kavita_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Kavita Common — Shared Application Configuration](Kavita_Common.md) — the configuration shared by both deployment targets.

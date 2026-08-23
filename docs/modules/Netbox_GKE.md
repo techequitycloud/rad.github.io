@@ -513,3 +513,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. NetBox-specific application configuration shared
 with the Cloud Run variant is described in **[Netbox_Common](Netbox_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: NetBox on GKE Autopilot](../labs/Netbox_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [NetBox on Google Cloud Run](Netbox_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [NetBox Common — Shared Application Configuration](Netbox_Common.md) — the configuration shared by both deployment targets.

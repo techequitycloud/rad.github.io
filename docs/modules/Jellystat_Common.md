@@ -170,3 +170,10 @@ For the Jellystat-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Jellystat_GKE](Jellystat_GKE.md)** and
 **[Jellystat_CloudRun](Jellystat_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Jellystat on Google Cloud Run](Jellystat_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Jellystat on GKE Autopilot](Jellystat_GKE.md) — this configuration deployed on GKE.

@@ -136,3 +136,10 @@ access prevention set to `inherited`. Additional buckets can be added through th
 For the Flowise-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Flowise_GKE](Flowise_GKE.md)** and **[Flowise_CloudRun](Flowise_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Flowise on Google Cloud Run](Flowise_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Flowise on GKE Autopilot](Flowise_GKE.md) — this configuration deployed on GKE.

@@ -347,3 +347,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Windmill-specific application configuration shared with the GKE variant is described in **[Windmill_Common](Windmill_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Windmill on Cloud Run](../labs/Windmill_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Windmill on GKE Autopilot](Windmill_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Windmill Common — Shared Application Configuration](Windmill_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Kestra on Google Cloud Run](Kestra_CloudRun.md), [Temporal on GKE Autopilot](Temporal_GKE.md), [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md) in the **Data & Workflow Orchestration** solution.

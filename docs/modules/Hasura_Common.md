@@ -178,3 +178,10 @@ storage.
 For the Hasura-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Hasura_GKE](Hasura_GKE.md)** and **[Hasura_CloudRun](Hasura_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hasura on Google Cloud Run](Hasura_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Hasura on GKE Autopilot](Hasura_GKE.md) — this configuration deployed on GKE.

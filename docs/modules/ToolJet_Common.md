@@ -199,3 +199,10 @@ still be declared per-platform via `storage_buckets` / `gcs_volumes` if needed.
 For the ToolJet-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[ToolJet_GKE](ToolJet_GKE.md)** and **[ToolJet_CloudRun](ToolJet_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [ToolJet on Google Cloud Run](ToolJet_CloudRun.md) — this configuration deployed on Cloud Run.
+- [ToolJet on GKE Autopilot](ToolJet_GKE.md) — this configuration deployed on GKE.

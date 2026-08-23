@@ -171,3 +171,10 @@ correctly on first boot:
 For the Netdata-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Netdata_GKE](Netdata_GKE.md)** and **[Netdata_CloudRun](Netdata_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Netdata on Google Cloud Run](Netdata_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Netdata on GKE Autopilot](Netdata_GKE.md) — this configuration deployed on GKE.

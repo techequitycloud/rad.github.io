@@ -450,3 +450,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. RAGFlow-specific application configuration shared
 with the GKE variant is described in **[RAGFlow_Common](RAGFlow_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: RAGFlow on Cloud Run](../labs/RAGFlow_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [RAGFlow on GKE Autopilot](RAGFlow_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [RAGFlow Common — Shared Application Configuration](RAGFlow_Common.md) — the configuration shared by both deployment targets.

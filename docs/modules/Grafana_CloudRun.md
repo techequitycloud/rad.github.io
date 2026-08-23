@@ -421,3 +421,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Grafana-specific application configuration shared
 with the GKE variant is described in **[Grafana_Common](Grafana_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Grafana on Cloud Run](../labs/Grafana_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Grafana on GKE Autopilot](Grafana_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Grafana Common — Shared Application Configuration](Grafana_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [VictoriaMetrics on GKE Autopilot](VictoriaMetrics_GKE.md), [Loki on Google Cloud Run](Loki_CloudRun.md), [Uptime Kuma on Google Cloud Run](UptimeKuma_CloudRun.md), [GlitchTip on Google Cloud Run](GlitchTip_CloudRun.md) in the **Observability & On-call** solution.

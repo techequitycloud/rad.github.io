@@ -359,3 +359,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. SearXNG-specific application configuration
 shared with the GKE variant is described in
 **[SearXNG_Common](SearXNG_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: SearXNG on Cloud Run](../labs/SearXNG_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [SearXNG on GKE Autopilot](SearXNG_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [SearXNG Common — Shared Application Configuration](SearXNG_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ollama on Google Cloud Run](Ollama_CloudRun.md), [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md) in the **Private AI Assistant** solution.

@@ -162,3 +162,10 @@ For the Homebox-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Homebox_GKE](Homebox_GKE.md)** and
 **[Homebox_CloudRun](Homebox_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Homebox on Google Cloud Run](Homebox_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Homebox on GKE Autopilot](Homebox_GKE.md) — this configuration deployed on GKE.

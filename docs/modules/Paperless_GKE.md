@@ -521,3 +521,11 @@ Setting `stateful_pvc_enabled = true` automatically selects `workload_type = "St
 | `backup_retention_days` | `7` | **Medium** | Insufficient for compliance-sensitive document archives. Increase to 30–90 days for legal or regulatory document management deployments. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes and prevent all pods from being scheduled. |
 | `enable_pod_disruption_budget` | `false` | **Medium** | PDB is disabled by default. Without a PDB, node maintenance can terminate all pods simultaneously, interrupting active OCR processing and causing documents to be re-queued or lost from the pipeline. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Paperless-ngx on GKE Autopilot](../labs/Paperless_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Paperless-ngx Common Shared Configuration Module](Paperless_Common.md) — the configuration shared by both deployment targets.

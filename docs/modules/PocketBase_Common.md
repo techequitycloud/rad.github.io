@@ -161,3 +161,10 @@ curl -s "$SERVICE_URL/api/health"      # {"code":200,"message":"API is healthy."
 For the PocketBase-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[PocketBase_GKE](PocketBase_GKE.md)** and **[PocketBase_CloudRun](PocketBase_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [PocketBase on Google Cloud Run](PocketBase_CloudRun.md) — this configuration deployed on Cloud Run.
+- [PocketBase on GKE Autopilot](PocketBase_GKE.md) — this configuration deployed on GKE.

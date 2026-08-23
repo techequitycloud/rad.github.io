@@ -1265,3 +1265,11 @@ When removing an App GKE deployment, the platform triggers a full resource teard
 
 **Known delay — static IP release:**
 After the Kubernetes LoadBalancer Service is removed, GCP may retain the external IP address on the VPC subnet for 20–30 minutes. If this occurs during cleanup, wait 20–30 minutes and retry. The second attempt will succeed once GCP releases the reserved address.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: App GKE](../labs/App_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [App CloudRun Module — Configuration Guide](App_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [App Common — Configuration Guide](App_Common.md) — the configuration shared by both deployment targets.

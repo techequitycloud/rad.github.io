@@ -188,3 +188,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Logto-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Logto_GKE](Logto_GKE.md)** and **[Logto_CloudRun](Logto_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Logto on Google Cloud Run](Logto_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Logto on GKE Autopilot](Logto_GKE.md) — this configuration deployed on GKE.

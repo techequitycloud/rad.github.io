@@ -169,3 +169,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Grocy-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guide:
 **[Grocy_CloudRun](Grocy_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Grocy on Google Cloud Run](Grocy_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Grocy on GKE Autopilot](Grocy_GKE.md) — this configuration deployed on GKE.

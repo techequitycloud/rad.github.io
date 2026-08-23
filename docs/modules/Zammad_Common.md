@@ -173,3 +173,10 @@ gcloud secrets versions access latest --secret=<database-password-secret> --proj
 For the Zammad-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Zammad_GKE](Zammad_GKE.md)** and **[Zammad_CloudRun](Zammad_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Zammad on Google Cloud Run](Zammad_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Zammad on GKE Autopilot](Zammad_GKE.md) — this configuration deployed on GKE.

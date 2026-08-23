@@ -403,3 +403,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Vikunja-specific application configuration
 shared with the GKE variant is described in
 **[Vikunja_Common](Vikunja_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Vikunja on Cloud Run](../labs/Vikunja_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Vikunja on GKE Autopilot](Vikunja_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Vikunja Common — Shared Application Configuration](Vikunja_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md), [Mattermost on Google Cloud Run](Mattermost_CloudRun.md), [Homepage on Google Cloud Run](Homepage_CloudRun.md) in the **Team Workspace** solution.

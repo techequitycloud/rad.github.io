@@ -229,3 +229,10 @@ For the Kimai-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Kimai_GKE](Kimai_GKE.md)** and
 **[Kimai_CloudRun](Kimai_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Kimai on Google Cloud Run](Kimai_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Kimai on GKE Autopilot](Kimai_GKE.md) — this configuration deployed on GKE.

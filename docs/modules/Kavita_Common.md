@@ -186,3 +186,10 @@ frequent metadata scans are far happier on the GKE block PVC.
 For the Kavita-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Kavita_GKE](Kavita_GKE.md)** and **[Kavita_CloudRun](Kavita_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Kavita on Google Cloud Run](Kavita_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Kavita on GKE Autopilot](Kavita_GKE.md) — this configuration deployed on GKE.

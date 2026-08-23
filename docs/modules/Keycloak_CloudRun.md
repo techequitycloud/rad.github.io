@@ -322,3 +322,12 @@ Returned on a successful deployment — the quickest way to locate and explore t
 ---
 
 For the foundation behaviour referenced throughout — service identity, scaling and concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Keycloak-specific application configuration shared with the GKE variant is described in **[Keycloak_Common](Keycloak_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Keycloak on Cloud Run](../labs/Keycloak_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Keycloak on GKE Autopilot](Keycloak_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Keycloak Common — Shared Application Configuration](Keycloak_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Passbolt on Google Cloud Run](Passbolt_CloudRun.md), [Infisical on Google Cloud Run](Infisical_CloudRun.md) in the **SSO Foundation** solution.

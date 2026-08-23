@@ -430,3 +430,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Qdrant-specific application configuration
 shared with the GKE variant is described in
 **[Qdrant_Common](Qdrant_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Qdrant on Cloud Run](../labs/Qdrant_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Qdrant on GKE Autopilot](Qdrant_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Qdrant Common — Shared Application Configuration](Qdrant_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Elasticsearch on GKE Autopilot](Elasticsearch_GKE.md), [MongoDB on GKE Autopilot](MongoDB_GKE.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) in the **Shared Data Services** solution.

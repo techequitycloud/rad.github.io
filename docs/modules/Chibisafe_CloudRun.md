@@ -449,3 +449,12 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 configuration shared with the GKE variant lives in the `Chibisafe_Common`
 module (`modules/Chibisafe_Common/README.md`); the GKE variant itself is
 documented in **[Chibisafe_GKE](Chibisafe_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Chibisafe on Cloud Run](../labs/Chibisafe_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Chibisafe on GKE Autopilot](Chibisafe_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Chibisafe Common — Shared Application Configuration](Chibisafe_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md), [Gokapi on Google Cloud Run](Gokapi_CloudRun.md), [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) in the **File Sharing & Transfer** solution.

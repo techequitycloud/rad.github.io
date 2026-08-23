@@ -356,3 +356,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, and VPC-SC — see **[App_GKE](App_GKE.md)**. phpMyAdmin-specific
 application configuration shared with the Cloud Run variant is described in
 **[PhpMyAdmin_Common](PhpMyAdmin_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PhpMyAdmin on GKE Autopilot](../labs/PhpMyAdmin_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PhpMyAdmin on Google Cloud Run](PhpMyAdmin_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [PhpMyAdmin Common — Shared Application Configuration](PhpMyAdmin_Common.md) — the configuration shared by both deployment targets.

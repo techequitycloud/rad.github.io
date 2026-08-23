@@ -337,3 +337,11 @@ autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and
 image mirroring — see **[App_GKE](App_GKE.md)**. Memos-specific application
 configuration shared with the Cloud Run variant is described in
 **[Memos_Common](Memos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Memos on GKE Autopilot](../labs/Memos_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Memos on Google Cloud Run](Memos_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Memos Common — Shared Application Configuration](Memos_Common.md) — the configuration shared by both deployment targets.

@@ -251,3 +251,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Radicale-specific application
 configuration shared with the GKE variant is described in
 **[Radicale_Common](Radicale_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Radicale on Cloud Run](../labs/Radicale_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Radicale on GKE Autopilot](Radicale_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Radicale Common — Shared Application Configuration](Radicale_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Monica on Google Cloud Run](Monica_CloudRun.md), [Cal.diy on Google Cloud Run](CalDiy_CloudRun.md), [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) in the **Personal Organiser** solution.

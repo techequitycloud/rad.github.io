@@ -410,3 +410,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Cyclos-specific
 application configuration shared with the GKE variant is described in
 **[Cyclos_Common](Cyclos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Cyclos on Cloud Run](../labs/Cyclos_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Cyclos on GKE Autopilot](Cyclos_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Cyclos Common — Shared Application Configuration](Cyclos_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [EspoCRM on Google Cloud Run](EspoCRM_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md) in the **Financial Inclusion & Community Banking** solution.

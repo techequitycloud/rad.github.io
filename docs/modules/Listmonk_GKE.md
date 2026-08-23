@@ -661,3 +661,11 @@ kubectl top nodes
 | `termination_grace_period_seconds` | `30` | **Medium** | Listmonk processes in-flight requests and may have active campaign send goroutines at shutdown. If Listmonk is mid-send on a large campaign batch, 30 seconds may not be enough to flush the queue. Consider increasing to `60` or `120` for large-volume sending workloads. |
 | `enable_auto_password_rotation` | `false` | **Low** | Disabled by default. When enabled, rotation restarts all Listmonk pods. Schedule rotations during maintenance windows to avoid interrupting active campaign sends. |
 | `enable_cloud_armor` | `false` | **Medium** | Without Cloud Armor, the Listmonk admin UI (`/`) is protected only by Listmonk's own authentication. Enable Cloud Armor and configure `admin_ip_ranges` for any publicly accessible production deployment. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Listmonk on GKE Autopilot](../labs/Listmonk_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Listmonk Common Shared Configuration Module](Listmonk_Common.md) — the configuration shared by both deployment targets.

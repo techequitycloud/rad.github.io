@@ -183,3 +183,10 @@ For the Meilisearch-specific, user-facing configuration (variables by group, out
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Meilisearch_GKE](Meilisearch_GKE.md)** and
 **[Meilisearch_CloudRun](Meilisearch_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Meilisearch on GKE Autopilot](Meilisearch_GKE.md) — this configuration deployed on GKE.

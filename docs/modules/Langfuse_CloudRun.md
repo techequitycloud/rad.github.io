@@ -411,3 +411,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Langfuse-specific application configuration shared with the GKE variant is described in
 **[Langfuse_Common](Langfuse_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Langfuse on Cloud Run](../labs/Langfuse_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Langfuse on GKE Autopilot](Langfuse_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Langfuse Common — Shared Application Configuration](Langfuse_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ollama on Google Cloud Run](Ollama_CloudRun.md), [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md) in the **Private AI Assistant** solution.

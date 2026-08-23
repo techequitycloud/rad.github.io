@@ -130,3 +130,10 @@ killed before its database initialisation completes.
 For the Wiki.js-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Wikijs_GKE](Wikijs_GKE.md)** and **[Wikijs_CloudRun](Wikijs_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Wiki.js on Google Cloud Run](Wikijs_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Wiki.js on GKE Autopilot](Wikijs_GKE.md) — this configuration deployed on GKE.

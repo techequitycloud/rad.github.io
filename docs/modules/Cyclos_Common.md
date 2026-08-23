@@ -160,3 +160,10 @@ Relevant files in `scripts/`:
 For the Cyclos-specific, user-facing configuration (variables by group, outputs, and how
 to explore each service from the Console and CLI), see the platform guides:
 **[Cyclos_GKE](Cyclos_GKE.md)** and **[Cyclos_CloudRun](Cyclos_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Cyclos on Google Cloud Run](Cyclos_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Cyclos on GKE Autopilot](Cyclos_GKE.md) — this configuration deployed on GKE.

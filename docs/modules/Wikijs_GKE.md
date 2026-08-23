@@ -471,3 +471,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Wiki.js-specific
 application configuration shared with the Cloud Run variant is described in
 **[Wikijs_Common](Wikijs_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wiki.js on GKE Autopilot](../labs/Wikijs_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wiki.js on Google Cloud Run](Wikijs_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Wikijs Common — Shared Application Configuration](Wikijs_Common.md) — the configuration shared by both deployment targets.

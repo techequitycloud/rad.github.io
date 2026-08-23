@@ -414,3 +414,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Azimutt-specific
 application configuration shared with the Cloud Run variant is described in
 **[Azimutt_Common](Azimutt_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Azimutt on GKE Autopilot](../labs/Azimutt_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Azimutt on Google Cloud Run](Azimutt_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Azimutt Common — Shared Application Configuration](Azimutt_Common.md) — the configuration shared by both deployment targets.

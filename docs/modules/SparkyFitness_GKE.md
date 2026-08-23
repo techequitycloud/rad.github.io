@@ -263,3 +263,12 @@ ingress, CI/CD, IAP, Binary Authorization, VPC-SC, backups, and image mirroring 
 see **[App_GKE](App_GKE.md)**. SparkyFitness-specific application configuration
 shared with the Cloud Run variant is described in
 **[SparkyFitness_Common](SparkyFitness_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: SparkyFitness on GKE Autopilot](../labs/SparkyFitness_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [SparkyFitness on Google Cloud Run](SparkyFitness_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [SparkyFitness Common — Shared Application Configuration](SparkyFitness_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Grocy on GKE Autopilot](Grocy_GKE.md), [Mealie on GKE Autopilot](Mealie_GKE.md), [Homebox on GKE Autopilot](Homebox_GKE.md), [Wallos on GKE Autopilot](Wallos_GKE.md) in the **Home & Life Management** solution.

@@ -415,3 +415,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Mautic-specific application configuration shared
 with the GKE variant is described in **[Mautic_Common](Mautic_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Mautic on Cloud Run](../labs/Mautic_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Mautic on GKE Autopilot](Mautic_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Mautic Common — Shared Application Configuration](Mautic_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Listmonk on Google Cloud Run](Listmonk_CloudRun.md), [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Shlink on Google Cloud Run](Shlink_CloudRun.md), [Mixpost on Google Cloud Run](Mixpost_CloudRun.md) in the **Marketing Automation Suite** solution.

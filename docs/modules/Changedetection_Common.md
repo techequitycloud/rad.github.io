@@ -162,3 +162,10 @@ For the changedetection.io-specific, user-facing configuration (variables by gro
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Changedetection_GKE](Changedetection_GKE.md)** and
 **[Changedetection_CloudRun](Changedetection_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Changedetection on Google Cloud Run](Changedetection_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Changedetection on GKE Autopilot](Changedetection_GKE.md) — this configuration deployed on GKE.

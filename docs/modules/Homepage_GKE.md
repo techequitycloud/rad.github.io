@@ -314,3 +314,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Homepage-specific application configuration
 shared with the Cloud Run variant is described in
 **[Homepage_Common](Homepage_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Homepage on GKE Autopilot](../labs/Homepage_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Homepage on Google Cloud Run](Homepage_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Homepage Common — Shared Application Configuration](Homepage_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Jellyfin on GKE Autopilot](Jellyfin_GKE.md), [Prowlarr on GKE Autopilot](Prowlarr_GKE.md), [Seerr on GKE Autopilot](Seerr_GKE.md), [Jellystat on GKE Autopilot](Jellystat_GKE.md) in the **Media Server** solution.

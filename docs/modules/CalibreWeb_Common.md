@@ -188,3 +188,10 @@ For the Calibre-Web-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[CalibreWeb_GKE](CalibreWeb_GKE.md)** and
 **[CalibreWeb_CloudRun](CalibreWeb_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Calibre-Web on Google Cloud Run](CalibreWeb_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Calibre-Web on GKE Autopilot](CalibreWeb_GKE.md) — this configuration deployed on GKE.

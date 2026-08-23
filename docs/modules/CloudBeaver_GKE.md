@@ -352,3 +352,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 CloudBeaver-specific application configuration shared with the Cloud Run variant is
 described in **[CloudBeaver_Common](CloudBeaver_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: CloudBeaver on GKE Autopilot](../labs/CloudBeaver_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [CloudBeaver on Google Cloud Run](CloudBeaver_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [CloudBeaver Common — Shared Application Configuration](CloudBeaver_Common.md) — the configuration shared by both deployment targets.

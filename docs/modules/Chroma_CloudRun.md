@@ -380,3 +380,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Chroma-specific application configuration shared
 with the GKE variant is described in **[Chroma_Common](Chroma_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Chroma on Cloud Run](../labs/Chroma_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Chroma on GKE Autopilot](Chroma_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Chroma Common — Shared Application Configuration](Chroma_Common.md) — the configuration shared by both deployment targets.

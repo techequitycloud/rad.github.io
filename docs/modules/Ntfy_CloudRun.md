@@ -337,3 +337,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. ntfy-specific application configuration shared
 with the GKE variant is described in **[Ntfy_Common](Ntfy_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Ntfy on Cloud Run](../labs/Ntfy_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Ntfy on GKE Autopilot](Ntfy_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Ntfy Common — Shared Application Configuration](Ntfy_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [EvolutionAPI on Google Cloud Run](EvolutionAPI_CloudRun.md), [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [n8n on Google Cloud Run](N8N_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) in the **Conversational Outreach** solution.

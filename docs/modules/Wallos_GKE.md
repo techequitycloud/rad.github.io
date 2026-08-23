@@ -397,3 +397,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Wallos-specific application configuration shared
 with the Cloud Run variant is described in
 **[Wallos_Common](Wallos_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Wallos on GKE Autopilot](../labs/Wallos_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Wallos on Google Cloud Run](Wallos_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Wallos Common — Shared Application Configuration](Wallos_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Grocy on GKE Autopilot](Grocy_GKE.md), [Mealie on GKE Autopilot](Mealie_GKE.md), [Homebox on GKE Autopilot](Homebox_GKE.md), [LubeLogger on GKE Autopilot](LubeLogger_GKE.md) in the **Home & Life Management** solution.

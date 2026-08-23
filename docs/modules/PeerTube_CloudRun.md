@@ -500,3 +500,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. PeerTube-specific application
 configuration is defined in **[PeerTube_Common](PeerTube_Common.md)** (module
 source: `modules/PeerTube_Common`).
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PeerTube on Cloud Run](../labs/PeerTube_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PeerTube on GKE Autopilot](PeerTube_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [PeerTube Common — Shared Application Configuration](PeerTube_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Ghost on Google Cloud Run](Ghost_CloudRun.md), [Castopod on Google Cloud Run](Castopod_CloudRun.md), [WriteFreely on Google Cloud Run](WriteFreely_CloudRun.md), [GoToSocial on Google Cloud Run](GoToSocial_CloudRun.md) in the **Creator & Media Publishing** solution.

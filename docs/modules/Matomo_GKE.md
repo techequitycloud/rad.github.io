@@ -395,3 +395,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Matomo-specific application configuration shared
 with the Cloud Run variant is described in
 **[Matomo_Common](Matomo_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Matomo on GKE Autopilot](../labs/Matomo_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Matomo on Google Cloud Run](Matomo_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Matomo Common — Shared Application Configuration](Matomo_Common.md) — the configuration shared by both deployment targets.

@@ -146,3 +146,10 @@ For the Mealie-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Mealie_GKE](Mealie_GKE.md)** and
 **[Mealie_CloudRun](Mealie_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Mealie on Google Cloud Run](Mealie_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Mealie on GKE Autopilot](Mealie_GKE.md) — this configuration deployed on GKE.

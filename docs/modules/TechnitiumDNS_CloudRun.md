@@ -309,3 +309,11 @@ For the foundation behaviour referenced throughout — service identity, scaling
 and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, backups, and image mirroring —
 see **[App_CloudRun](App_CloudRun.md)**. TechnitiumDNS-specific application configuration shared with the
 GKE variant is described in **[TechnitiumDNS_Common](TechnitiumDNS_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: TechnitiumDNS on Cloud Run](../labs/TechnitiumDNS_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [TechnitiumDNS on GKE Autopilot](TechnitiumDNS_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [TechnitiumDNS Common — Shared Application Configuration](TechnitiumDNS_Common.md) — the configuration shared by both deployment targets.

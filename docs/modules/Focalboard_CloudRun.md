@@ -334,3 +334,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 Focalboard-specific application configuration shared with the GKE variant is described in
 **[Focalboard_Common](Focalboard_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Focalboard on Cloud Run](../labs/Focalboard_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Focalboard on GKE Autopilot](Focalboard_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Focalboard Common — Shared Application Configuration](Focalboard_Common.md) — the configuration shared by both deployment targets.

@@ -438,3 +438,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. ToolJet-specific application configuration
 shared with the GKE variant is described in **[ToolJet_Common](ToolJet_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: ToolJet on Cloud Run](../labs/ToolJet_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [ToolJet on GKE Autopilot](ToolJet_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [ToolJet Common — Shared Application Configuration](ToolJet_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [NocoDB on Google Cloud Run](NocoDB_CloudRun.md), [Hasura on Google Cloud Run](Hasura_CloudRun.md), [Metabase on Google Cloud Run](Metabase_CloudRun.md) in the **Low-code Internal Tools** solution.

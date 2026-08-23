@@ -570,3 +570,11 @@ gcloud monitoring uptime list-configs \
 | `backup_retention_days` | `7` | **Medium** | Analytics data loss is difficult to recover from. Increase to 30+ days for production deployments where historical analytics data has business value. |
 | `enable_backup_import` | `false` | **High** | Setting this to `true` triggers a database restore on every apply. Only enable for the initial migration from an existing Umami instance; set back to `false` immediately after. |
 | `enable_vpc_sc` | `false` | **Medium** | VPC-SC perimeter is only active when `organization_id` is also set. Without both, `enable_vpc_sc = true` has no enforcement effect. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Umami on GKE Autopilot](../labs/Umami_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Umami on Google Cloud Run](Umami_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Umami Common Shared Configuration Module](Umami_Common.md) — the configuration shared by both deployment targets.

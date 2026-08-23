@@ -326,3 +326,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 PocketBase-specific application configuration shared with the GKE variant is described in
 **[PocketBase_Common](PocketBase_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PocketBase on Cloud Run](../labs/PocketBase_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PocketBase on GKE Autopilot](PocketBase_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [PocketBase Common — Shared Application Configuration](PocketBase_Common.md) — the configuration shared by both deployment targets.

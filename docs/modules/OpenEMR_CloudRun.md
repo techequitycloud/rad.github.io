@@ -457,3 +457,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 OpenEMR-specific application configuration shared with the GKE variant is described in
 **[OpenEMR_Common](OpenEMR_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: OpenEMR on Cloud Run](../labs/OpenEMR_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [OpenEMR on GKE Autopilot](OpenEMR_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [OpenEMR Common — Shared Application Configuration](OpenEMR_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Cal.com on Google Cloud Run](CalCom_CloudRun.md), [Docuseal on Google Cloud Run](Docuseal_CloudRun.md), [Paperless-ngx on Google Cloud Run](Paperless_CloudRun.md), [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md) in the **Clinic & Practice Management** solution.

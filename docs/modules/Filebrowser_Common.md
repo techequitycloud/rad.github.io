@@ -145,3 +145,10 @@ For the Filebrowser-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Filebrowser_GKE](Filebrowser_GKE.md)** and
 **[Filebrowser_CloudRun](Filebrowser_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Filebrowser on GKE Autopilot](Filebrowser_GKE.md) — this configuration deployed on GKE.

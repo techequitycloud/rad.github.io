@@ -227,3 +227,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Medusa-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform
 guides: **[Medusa_GKE](Medusa_GKE.md)** and **[Medusa_CloudRun](Medusa_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Medusa on Google Cloud Run](Medusa_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Medusa on GKE Autopilot](Medusa_GKE.md) — this configuration deployed on GKE.

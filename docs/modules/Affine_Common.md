@@ -108,3 +108,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~affine"
 
 For the AFFiNE-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Affine_GKE](Affine_GKE.md)** and **[Affine_CloudRun](Affine_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [AFFiNE on Google Cloud Run](Affine_CloudRun.md) — this configuration deployed on Cloud Run.
+- [AFFiNE on GKE Autopilot](Affine_GKE.md) — this configuration deployed on GKE.

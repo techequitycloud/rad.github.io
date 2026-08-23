@@ -512,3 +512,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image building — see **[App_GKE](App_GKE.md)**. LangFlow-specific
 application configuration shared with the Cloud Run variant is described in
 **[LangFlow_Common](LangFlow_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LangFlow on GKE Autopilot](../labs/LangFlow_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LangFlow on Google Cloud Run](LangFlow_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [LangFlow Common — Shared Application Configuration](LangFlow_Common.md) — the configuration shared by both deployment targets.

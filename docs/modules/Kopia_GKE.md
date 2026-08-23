@@ -385,3 +385,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Kopia-specific application configuration is described in
 **[Kopia_Common](Kopia_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Kopia on GKE Autopilot](../labs/Kopia_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Kopia Common — Shared Application Configuration](Kopia_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [UrBackup on GKE Autopilot](UrBackup_GKE.md), [Filebrowser on GKE Autopilot](Filebrowser_GKE.md) in the **Backup & Disaster Recovery** solution.

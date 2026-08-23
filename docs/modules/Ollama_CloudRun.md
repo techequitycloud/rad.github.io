@@ -354,3 +354,12 @@ For the foundation behaviour referenced throughout — service identity, scaling
 concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**. Ollama-specific
 shared application configuration is described in **[Ollama_Common](Ollama_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Ollama on Cloud Run](../labs/Ollama_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Ollama on GKE Autopilot](Ollama_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Ollama Common — Shared Application Configuration](Ollama_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [LiteLLM on Google Cloud Run](LiteLLM_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md), [Open WebUI on Google Cloud Run](OpenWebUI_CloudRun.md), [SearXNG on Google Cloud Run](SearXNG_CloudRun.md) in the **Private AI Assistant** solution.

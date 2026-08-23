@@ -207,3 +207,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Zitadel-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Zitadel_GKE](Zitadel_GKE.md)** and **[Zitadel_CloudRun](Zitadel_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Zitadel on Google Cloud Run](Zitadel_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Zitadel on GKE Autopilot](Zitadel_GKE.md) — this configuration deployed on GKE.

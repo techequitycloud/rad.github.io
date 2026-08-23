@@ -407,3 +407,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, and image mirroring — see
 **[App_GKE](App_GKE.md)**. Crawl4AI-specific shared application configuration is
 described in **[Crawl4AI_Common](Crawl4AI_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Crawl4AI on GKE Autopilot](../labs/Crawl4AI_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Crawl4AI on Google Cloud Run](Crawl4AI_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Crawl4AI Common — Shared Application Configuration](Crawl4AI_Common.md) — the configuration shared by both deployment targets.

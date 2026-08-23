@@ -362,3 +362,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Fider-specific
 application configuration shared with the Cloud Run variant is described in
 **[Fider_Common](Fider_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Fider on GKE Autopilot](../labs/Fider_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Fider on Google Cloud Run](Fider_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Fider Common — Shared Application Configuration](Fider_Common.md) — the configuration shared by both deployment targets.

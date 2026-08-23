@@ -387,3 +387,10 @@ gcloud sql users list \
   --project=PROJECT_ID \
   --format="table(name,host,type)"
 ```
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Listmonk GKE Module — Configuration Guide](Listmonk_GKE.md) — this configuration deployed on GKE.

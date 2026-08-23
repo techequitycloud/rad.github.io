@@ -152,3 +152,10 @@ gcloud artifacts docker tags list <region>-docker.pkg.dev/<project>/<repo>/chrom
 For the Chroma-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Chroma_GKE](Chroma_GKE.md)** and **[Chroma_CloudRun](Chroma_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Chroma on Google Cloud Run](Chroma_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Chroma on GKE Autopilot](Chroma_GKE.md) — this configuration deployed on GKE.

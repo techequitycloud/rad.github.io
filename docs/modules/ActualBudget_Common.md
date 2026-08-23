@@ -127,3 +127,10 @@ before that override.)
 
 For the ActualBudget-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[ActualBudget_GKE](ActualBudget_GKE.md)** and **[ActualBudget_CloudRun](ActualBudget_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [ActualBudget on Google Cloud Run](ActualBudget_CloudRun.md) — this configuration deployed on Cloud Run.
+- [ActualBudget on GKE Autopilot](ActualBudget_GKE.md) — this configuration deployed on GKE.

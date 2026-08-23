@@ -503,3 +503,12 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 configuration shared with the GKE variant (image, `APP_KEY` secret, init
 jobs) is described in `modules/SnipeIT_Common/README.md` — no standalone
 `docs/modules/SnipeIT_Common.md` guide exists yet.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: SnipeIT on Cloud Run](../labs/SnipeIT_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Snipe-IT on GKE Autopilot](SnipeIT_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Snipe-IT Common — Shared Application Configuration](SnipeIT_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [NetBox on Google Cloud Run](Netbox_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Homepage on Google Cloud Run](Homepage_CloudRun.md) in the **IT Asset & Infrastructure Records** solution.

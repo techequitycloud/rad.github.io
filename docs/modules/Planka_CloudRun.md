@@ -276,3 +276,12 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Planka-specific application configuration
 shared with the GKE variant is described in
 **[Planka_Common](Planka_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Planka on Cloud Run](../labs/Planka_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Planka on GKE Autopilot](Planka_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Planka Common — Shared Application Configuration](Planka_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Plane on Google Cloud Run](Plane_CloudRun.md), [Vikunja on Google Cloud Run](Vikunja_CloudRun.md), [Kimai on Google Cloud Run](Kimai_CloudRun.md) in the **Project & Task Delivery** solution.

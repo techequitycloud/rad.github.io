@@ -305,3 +305,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Beszel-specific application configuration shared with the Cloud Run variant is
 described in **[Beszel_Common](Beszel_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Beszel on GKE Autopilot](../labs/Beszel_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Beszel on Google Cloud Run](Beszel_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Beszel Common — Shared Application Configuration](Beszel_Common.md) — the configuration shared by both deployment targets.

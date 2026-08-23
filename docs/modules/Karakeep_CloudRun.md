@@ -273,3 +273,11 @@ Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. Karakeep-specific application configuration
 shared with the GKE variant is described in
 **[Karakeep_Common](Karakeep_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Karakeep on Cloud Run](../labs/Karakeep_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Karakeep on GKE Autopilot](Karakeep_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Karakeep Common — Shared Application Configuration](Karakeep_Common.md) — the configuration shared by both deployment targets.

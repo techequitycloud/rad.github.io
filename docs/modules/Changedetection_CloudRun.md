@@ -406,3 +406,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary Authori
 VPC-SC, backups, and image mirroring — see **[App_CloudRun](App_CloudRun.md)**.
 changedetection.io-specific application configuration shared with the GKE variant is
 described in **[Changedetection_Common](Changedetection_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Changedetection on Cloud Run](../labs/Changedetection_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Changedetection on GKE Autopilot](Changedetection_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Changedetection Common — Shared Application Configuration](Changedetection_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Umami on Google Cloud Run](Umami_CloudRun.md), [Shlink on Google Cloud Run](Shlink_CloudRun.md) in the **Privacy-first Web Analytics** solution.

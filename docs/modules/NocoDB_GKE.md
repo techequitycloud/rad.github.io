@@ -464,3 +464,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_GKE](App_GKE.md)**. NocoDB-specific application configuration shared with the
 Cloud Run variant is described in **[NocoDB_Common](NocoDB_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: NocoDB on GKE Autopilot](../labs/NocoDB_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [NocoDB on Google Cloud Run](NocoDB_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [NocoDB Common — Shared Application Configuration](NocoDB_Common.md) — the configuration shared by both deployment targets.

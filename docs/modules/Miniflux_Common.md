@@ -185,3 +185,10 @@ require it.
 For the Miniflux-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[Miniflux_GKE](Miniflux_GKE.md)** and **[Miniflux_CloudRun](Miniflux_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Miniflux on Google Cloud Run](Miniflux_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Miniflux on GKE Autopilot](Miniflux_GKE.md) — this configuration deployed on GKE.

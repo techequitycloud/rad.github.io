@@ -138,3 +138,10 @@ For the AdGuard-Home-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[AdGuardHome_GKE](AdGuardHome_GKE.md)** and
 **[AdGuardHome_CloudRun](AdGuardHome_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [AdGuard Home on Google Cloud Run](AdGuardHome_CloudRun.md) — this configuration deployed on Cloud Run.
+- [AdGuard Home on GKE Autopilot](AdGuardHome_GKE.md) — this configuration deployed on GKE.

@@ -443,3 +443,11 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image building — see
 **[App_CloudRun](App_CloudRun.md)**. LangFlow-specific application configuration shared
 with the GKE variant is described in **[LangFlow_Common](LangFlow_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: LangFlow on Cloud Run](../labs/LangFlow_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [LangFlow on GKE Autopilot](LangFlow_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [LangFlow Common — Shared Application Configuration](LangFlow_Common.md) — the configuration shared by both deployment targets.

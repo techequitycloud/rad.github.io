@@ -187,3 +187,10 @@ gcloud storage buckets list --project "$PROJECT"   # FreshRSS declares none of i
 For the FreshRSS-specific, user-facing configuration (variables by group, outputs,
 and how to explore each service from the Console and CLI), see the platform guides:
 **[FreshRSS_GKE](FreshRSS_GKE.md)** and **[FreshRSS_CloudRun](FreshRSS_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [FreshRSS on Google Cloud Run](FreshRSS_CloudRun.md) — this configuration deployed on Cloud Run.
+- [FreshRSS on GKE Autopilot](FreshRSS_GKE.md) — this configuration deployed on GKE.

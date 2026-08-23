@@ -189,3 +189,10 @@ For the Navidrome-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
 guides: **[Navidrome_GKE](Navidrome_GKE.md)** and
 **[Navidrome_CloudRun](Navidrome_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Navidrome on Google Cloud Run](Navidrome_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Navidrome on GKE Autopilot](Navidrome_GKE.md) — this configuration deployed on GKE.

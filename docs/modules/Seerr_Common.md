@@ -194,3 +194,10 @@ For the Seerr-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the
 platform guides: **[Seerr_GKE](Seerr_GKE.md)** and
 **[Seerr_CloudRun](Seerr_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Seerr on Google Cloud Run](Seerr_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Seerr on GKE Autopilot](Seerr_GKE.md) — this configuration deployed on GKE.

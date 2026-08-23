@@ -221,3 +221,9 @@ Group 0 (module metadata — `module_description`, `module_dependency`, `credit_
 | `quota_value_overrides` / `additional_quota_overrides` | Keep new caps below the shared org ceiling | **Medium** | A cap set at or above the org's own shared pool provides no real guardrail — the point of a self-imposed cap is to fail fast and cheap in *this* sandbox before starving every other concurrent sandbox project sharing the same org-level quota pool. |
 | `deploying_identity_bundle` (fixed role set, not itself a variable) | — | **Low** | Not yet validated against the full ~150-application-module catalog — a deploy that needs a permission outside the six roles in the bundle fails with a clear IAM `PERMISSION_DENIED`, not silently. Treat it as a candidate pending a real `/deploy-group-test` campaign, not a guaranteed-sufficient bundle. |
 | Destroying and reusing a `project_id` for a new user | Never — fresh-create only | **Critical** | This platform is not training-only; a project can hold real, non-reproducible user data. GCP's soft-delete is a 30-day safety net, not a fast-recycle mechanism (restore takes up to 36 hours/3 days) — it cannot back a "return this project to a pool" flow. |
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Project GCP](../labs/Project_GCP.md) — deploy it step by step, with the console screens and commands at each stage.

@@ -498,3 +498,10 @@ locate and explore the running resources.
 For the foundation behaviour referenced throughout — IAM and Workload Identity,
 autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Elasticsearch on GKE Autopilot](../labs/Elasticsearch_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- Deployed alongside [MongoDB on GKE Autopilot](MongoDB_GKE.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md) in the **Shared Data Services** solution.

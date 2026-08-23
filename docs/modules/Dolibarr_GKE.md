@@ -337,3 +337,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Dolibarr-specific application configuration shared with the Cloud Run variant is
 described in **[Dolibarr_Common](Dolibarr_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Dolibarr on GKE Autopilot](../labs/Dolibarr_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Dolibarr on Google Cloud Run](Dolibarr_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Dolibarr Common — Shared Application Configuration](Dolibarr_Common.md) — the configuration shared by both deployment targets.

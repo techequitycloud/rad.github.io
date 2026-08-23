@@ -131,3 +131,10 @@ The bucket name is in the `storage_buckets` output of the platform deployment.
 For the Directus-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[Directus_GKE](Directus_GKE.md)** and **[Directus_CloudRun](Directus_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Directus on Cloud Run](Directus_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Directus on GKE Autopilot](Directus_GKE.md) — this configuration deployed on GKE.

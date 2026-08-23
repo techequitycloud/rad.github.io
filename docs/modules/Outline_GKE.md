@@ -417,3 +417,11 @@ Binary Authorization, VPC-SC, backups, and image mirroring — see
 with the Cloud Run variant — the auto-generated secrets, default
 environment variables, `entrypoint.sh`/`Dockerfile`, and the `db-init` job —
 is described in **[Outline_Common](Outline_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Outline on GKE Autopilot](../labs/Outline_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Outline on Google Cloud Run](Outline_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Outline Common — Shared Application Configuration](Outline_Common.md) — the configuration shared by both deployment targets.

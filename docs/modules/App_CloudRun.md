@@ -1196,3 +1196,10 @@ The module exposes the following outputs after a successful deployment.
 
 When removing a Cloud Run deployment, GCP may retain serverless IPv4 addresses on the VPC subnet for 20–30 minutes after the Cloud Run service is removed. If this occurs during cleanup, wait 20–30 minutes and retry the removal. The second attempt will succeed once GCP releases the reserved addresses.
 
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: App CloudRun](../labs/App_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [App GKE Module — Configuration Guide](App_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [App Common — Configuration Guide](App_Common.md) — the configuration shared by both deployment targets.

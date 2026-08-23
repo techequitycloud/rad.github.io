@@ -104,3 +104,10 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~matomo-data"
 
 For the Matomo-specific, user-facing configuration (variables by group, outputs, and how to explore each service from the Console and CLI), see the platform guides:
 **[Matomo_GKE](Matomo_GKE.md)** and **[Matomo_CloudRun](Matomo_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Matomo on Google Cloud Run](Matomo_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Matomo on GKE Autopilot](Matomo_GKE.md) — this configuration deployed on GKE.

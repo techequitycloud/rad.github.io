@@ -460,3 +460,12 @@ load balancing, scaling and concurrency, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image lifecycle — see
 **[App_CloudRun](App_CloudRun.md)**. Moodle-specific shared configuration is
 described in **[Moodle_Common](Moodle_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Moodle on Cloud Run](../labs/Moodle_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Moodle on GKE Autopilot](Moodle_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Moodle Common — Shared Application Configuration](Moodle_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md), [OnlyOffice on Google Cloud Run](OnlyOffice_CloudRun.md), [Synapse on Google Cloud Run](Synapse_CloudRun.md), [Element on Google Cloud Run](Element_CloudRun.md) in the **Learning Management Platform** solution.

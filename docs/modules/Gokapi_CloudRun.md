@@ -448,3 +448,12 @@ shared with the GKE variant (image, storage bucket, optional API key, health
 probes) lives in the `Gokapi_Common` module (`modules/Gokapi_Common`), which has
 no standalone platform doc yet — see its `main.tf`/`variables.tf`/`README.md` for
 the underlying wiring.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Gokapi on Cloud Run](../labs/Gokapi_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Gokapi on GKE Autopilot](Gokapi_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [Gokapi Common — Shared Application Configuration](Gokapi_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md), [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md), [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) in the **File Sharing & Transfer** solution.

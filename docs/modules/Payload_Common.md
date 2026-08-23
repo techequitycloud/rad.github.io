@@ -162,3 +162,10 @@ GCS bucket) to the application in `scripts/`.
 For the Payload-specific, user-facing configuration (variables by group, outputs, and how to
 explore each service from the Console and CLI), see the platform guides:
 **[Payload_GKE](Payload_GKE.md)** and **[Payload_CloudRun](Payload_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Payload CMS on Google Cloud Run](Payload_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Payload CMS on GKE Autopilot](Payload_GKE.md) — this configuration deployed on GKE.

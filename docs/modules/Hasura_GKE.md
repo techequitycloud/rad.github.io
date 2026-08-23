@@ -429,3 +429,11 @@ autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary Authoriza
 VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**. Hasura-specific
 application configuration shared with the Cloud Run variant is described in
 **[Hasura_Common](Hasura_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Hasura on GKE Autopilot](../labs/Hasura_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Hasura on Google Cloud Run](Hasura_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [Hasura Common — Shared Application Configuration](Hasura_Common.md) — the configuration shared by both deployment targets.

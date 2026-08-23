@@ -517,3 +517,11 @@ application configuration shared with the Cloud Run variant is defined in
 `modules/PeerTube_Common`). See also the Cloud Run variant's guide,
 **[PeerTube_CloudRun](PeerTube_CloudRun.md)**, for the storage-bucket public-access
 story shared by both platforms.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: PeerTube on GKE Autopilot](../labs/PeerTube_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [PeerTube on Google Cloud Run](PeerTube_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
+- [PeerTube Common — Shared Application Configuration](PeerTube_Common.md) — the configuration shared by both deployment targets.

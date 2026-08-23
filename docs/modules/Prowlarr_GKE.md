@@ -304,3 +304,11 @@ ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC,
 backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 Prowlarr-specific application configuration is described in
 **[Prowlarr_Common](Prowlarr_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: Prowlarr on GKE Autopilot](../labs/Prowlarr_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
+- [Prowlarr Common — Shared Application Configuration](Prowlarr_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Jellyfin on GKE Autopilot](Jellyfin_GKE.md), [Seerr on GKE Autopilot](Seerr_GKE.md), [Jellystat on GKE Autopilot](Jellystat_GKE.md), [Homepage on GKE Autopilot](Homepage_GKE.md) in the **Media Server** solution.

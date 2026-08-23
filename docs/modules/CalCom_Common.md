@@ -185,3 +185,10 @@ gcloud storage buckets list --project "$PROJECT"
 For the Cal.com-specific, user-facing configuration (variables by group, outputs, and
 how to explore each service from the Console and CLI), see the platform guides:
 **[CalCom_GKE](CalCom_GKE.md)** and **[CalCom_CloudRun](CalCom_CloudRun.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Cal.com on Google Cloud Run](CalCom_CloudRun.md) — this configuration deployed on Cloud Run.
+- [Cal.com on GKE Autopilot](CalCom_GKE.md) — this configuration deployed on GKE.

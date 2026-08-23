@@ -383,3 +383,12 @@ concurrency, ingress and load balancing, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
 **[App_CloudRun](App_CloudRun.md)**. FreeScout-specific application configuration
 shared with the GKE variant is described in **[FreeScout_Common](FreeScout_Common.md)**.
+
+<!-- related-guides -->
+
+## Related guides
+
+- [Hands-on lab: FreeScout on Cloud Run](../labs/FreeScout_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
+- [FreeScout on GKE Autopilot](FreeScout_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
+- [FreeScout Common — Shared Application Configuration](FreeScout_Common.md) — the configuration shared by both deployment targets.
+- Deployed alongside [Chatwoot on Google Cloud Run](Chatwoot_CloudRun.md), [BookStack on Google Cloud Run](BookStack_CloudRun.md), [Fider on Google Cloud Run](Fider_CloudRun.md), [Gotify on Google Cloud Run](Gotify_CloudRun.md) in the **Customer Support Desk** solution.
