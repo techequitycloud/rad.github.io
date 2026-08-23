@@ -26,6 +26,11 @@ const config: Config = {
     locales: ['en'],
   },
 
+  // Consent-gated analytics. Not @docusaurus/plugin-google-gtag: that loads
+  // gtag.js on first paint with no consent gate, which would contradict the
+  // privacy policy covering this site and the two marketing sites.
+  clientModules: ['./src/clientModules/analytics.js'],
+
   presets: [
     [
       'classic',
