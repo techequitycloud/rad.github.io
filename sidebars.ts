@@ -62,6 +62,15 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
+          label: 'Data Analyst Agent',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/DataAnalyst_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/DataAnalyst_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
           label: 'Dify',
           collapsed: true,
           items: [
