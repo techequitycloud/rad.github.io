@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
 
-After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Revenue**, **Help**. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Revenue**, **Help**. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 

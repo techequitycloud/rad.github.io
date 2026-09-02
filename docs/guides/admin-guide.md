@@ -21,7 +21,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
 
-After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Sync, Deployments, Modules, Solutions, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Explore, Sync, Deployments, Modules, Solutions, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
