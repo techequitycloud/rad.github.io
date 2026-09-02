@@ -24,7 +24,9 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 1. Open the RAD sign-in page and click **Sign in with Google**.
 2. Choose your Google account.
 
-The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
+
+Where you land depends on your role. Finance opens on **Billing** and agents on **Revenue**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Custom Solutions** tab, so the first screen is what you can build rather than the list of what you built last time. If you have not composed a solution yet, the composer is open and waiting. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign out**.
 
@@ -83,7 +85,9 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 
 ### Deploying a module
 
-1. Click a module card to open its guided, multi-step **configuration form**. Fill in the fields, using **Next** to move through the steps. Required fields can't be left blank, and the form checks your entries before you continue.
+1. Click a module card, then choose how to configure it. The **Conversational Assistant** (the default) describes every setting in one message and proposes changes as you describe what you want; you apply each proposed change yourself, so nothing is set without your say-so. The **Configuration Form** is the guided, multi-step form — fill in the fields, using **Next** to move through the steps. You can switch between the two at any point, and both write the same configuration.
+
+   Two things the assistant deliberately will not do. It never sees or sets a **secret** (an API key, token or password): it tells you the field exists and you type the value into the highlighted box on the page — never into the chat, where it would be sent to the model and kept in the conversation. And it will not accept a value that breaks a field's own rule; it tells you what the rule is and asks for a corrected one rather than quietly changing what you typed.
 2. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
 3. Click **Deploy Module**. The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
@@ -106,6 +110,8 @@ Deployment statuses you may see include Queued, Pending, Working, Waiting (on a 
 ### Solutions
 
 The **Solutions** page is a catalog of ready-made **solutions** — bundles of modules that deploy together as one unit into a single project. Solutions are grouped into categories, and each card shows a combined credit cost and an average rating derived from the modules it contains.
+
+The Solutions page has two tabs. **Platform Solutions** is the catalog described above. **Custom Solutions** holds bundles you compose yourself: describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save — your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
 
 A solution's modules are grouped into **waves**, a rough deploy order — but what actually gates a member's start is its real configuration dependency on another member: it waits only for that specific producer to finish, not for its whole nominal wave, so members frequently provision concurrently both within and across waves. Provisioning a solution walks you through a single configuration form covering its members. The resulting **solution deployment** gets its own details page, where — as with a module deployment — you can update, delete, or purge it.
 

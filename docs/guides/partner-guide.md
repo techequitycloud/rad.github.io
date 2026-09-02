@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
 
-Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Revenue**, **Help**. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Revenue**, **Help**. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -67,7 +67,7 @@ Cloud costs and project invoices aren't available to Partners in the console —
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Modules** — browse the catalog, fill in the guided configuration form, and launch.
+- **Modules** — browse the catalog, configure with either the **Conversational Assistant** (the default) or the guided **Configuration Form**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
 

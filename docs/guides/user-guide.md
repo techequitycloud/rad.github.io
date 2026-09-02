@@ -18,7 +18,7 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Estimate your savings with the **ROI** calculator, on the **Credits** page.
 - Get help through the **Support** form.
 
-After you sign in you land on the **Deployments** page. Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Modules**, **Solutions**, and **Help**.
+After you sign in you land on **Solutions**, on the **Custom Solutions** tab — signing in opens on what you can build rather than the list of what you built last time. If you have not composed anything yet the composer is open and waiting; once you have solutions of your own, you land on that list instead. Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Modules**, **Solutions**, and **Help**.
 
 ## Finding a module
 
@@ -35,12 +35,25 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a module
 
-1. **Open the form.** Click a module card to open its guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action, once your credit balance covers the extra cost.
-2. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid. The form is generated from the module itself, so where the module declares a rule for a field — a naming pattern, a length limit — you see that module's own error as you type rather than several minutes into a failed build. Fields holding a secret (an API token, a password) are masked and stored in Google Secret Manager rather than saved with the rest of your configuration; because the value never comes back to the browser, such a field shows **Configured** or **Not configured** instead, and leaving a configured one blank keeps it rather than clearing it.
-3. **Confirm.** Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
-4. **Deploy.** Click **Deploy Module** to queue the deployment. If you don't have enough credits, RAD shows the module's credit cost against your current balance and prompts you to top up first.
+1. **Choose how to configure it.** Click a module card and pick **Conversational Assistant** (the default) or **Configuration Form**. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch to the form at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
+2. **Open the form.** The guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action, once your credit balance covers the extra cost.
+3. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid. The form is generated from the module itself, so where the module declares a rule for a field — a naming pattern, a length limit — you see that module's own error as you type rather than several minutes into a failed build. Fields holding a secret (an API token, a password) are masked and stored in Google Secret Manager rather than saved with the rest of your configuration; because the value never comes back to the browser, such a field shows **Configured** or **Not configured** instead, and leaving a configured one blank keeps it rather than clearing it.
+4. **Confirm.** Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
+5. **Deploy.** Click **Deploy Module** to queue the deployment. If you don't have enough credits, RAD shows the module's credit cost against your current balance and prompts you to top up first.
 
 **What happens next:** Your deployment is queued and then provisioned on Google Cloud. You can follow its progress on the **Deployments** page and in the deployment's details.
+
+## Deploying a solution
+
+A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. There are two tabs.
+
+**Platform Solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
+
+**Custom Solutions** are your own, composed in conversation. Describe what you want to build — "I need a marketing site with a blog and email campaigns" — and RAD suggests modules from the catalog with a short reason for each. Add the ones you want (up to 12), give it a name, and save it. Your custom solutions are private to you.
+
+- A saved solution shows **Draft** until you deploy it, then **Deployed**. A draft can be edited in place; once it has deployed, editing offers to copy it into a new draft instead, so the record of what you actually built stays accurate.
+- **Delete** removes the saved solution only. It never touches infrastructure you have already deployed — tear that down from the **Deployments** page.
+- RAD connects members to each other only where a known connection exists between those two applications. Where two members have no such connection, it says so on the card rather than guessing — they still deploy, you just wire them up yourself if they need to talk.
 
 ## Managing your deployments
 
