@@ -62,6 +62,24 @@ function RelatedLabs({permalink}: {permalink: string}) {
   );
 }
 
+// A reader who reaches the bottom of a module guide and finds it does not do what
+// they need is at the exact moment of wanting to ask for something. That is a far
+// better trigger than a site-wide banner, which asks everyone regardless of whether
+// they have a request. Deliberately a quiet line rather than a card: it should be
+// available to the person who wants it and invisible to the person who does not.
+const ROADMAP_URL =
+  'https://fider.radbusiness.dev/?utm_source=docs&utm_medium=doc-footer&utm_campaign=roadmap';
+
+function RoadmapAsk(): React.JSX.Element {
+  return (
+    <p className="doc-roadmap-ask">
+      Need RAD to do something it does not do yet?{' '}
+      <Link to={ROADMAP_URL}>Request it on the roadmap</Link>, or vote on what is
+      already there.
+    </p>
+  );
+}
+
 // Visible authorship (E-E-A-T): a compact byline as a credits line at the
 // bottom of every doc, linked to the /author profile page so the named
 // author is verifiable. The matching machine-readable author lives in the
@@ -74,6 +92,7 @@ export default function ContentWrapper(props: Props): React.JSX.Element {
       <CertTrackChip permalink={permalink} />
       <Content {...props} />
       <RelatedLabs permalink={permalink} />
+      <RoadmapAsk />
       <p className="doc-byline">
         By{' '}
         <Link to="/author" rel="author">
