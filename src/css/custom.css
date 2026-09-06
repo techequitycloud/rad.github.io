@@ -6,15 +6,39 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  /* Tech Equity brand. Seed #1d4ed8 is --brand from techequity.cloud's own stylesheet
+     (rad-website/css/styles.css); the ramp applies Infima's own lightness deltas to that hue,
+     so the scale keeps the rhythm the framework expects. 6.70:1 on white — WCAG AA. */
+  --ifm-color-primary: #1d4ed8;
+  --ifm-color-primary-dark: #1b48c8;
+  --ifm-color-primary-darker: #1a45c0;
+  --ifm-color-primary-darkest: #173da8;
+  --ifm-color-primary-light: #2557e2;
+  --ifm-color-primary-lighter: #2d5de3;
+  --ifm-color-primary-lightest: #456fe6;
+
+  /* Typography matches the marketing site: Fraunces display, Inter body, JetBrains Mono code.
+     Every family carries a real fallback so a blocked font request degrades rather than
+     silently reflowing into a default serif. */
+  --ifm-font-family-base: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-font-family: Fraunces, Georgia, serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Neutrals from the same source: --tx, --tx-2, --line. */
+  --ifm-font-color-base: #11162a;
+  --ifm-color-emphasis-600: #4a5168;
+  --ifm-toc-border-color: #e4e8f0;
+  --ifm-hr-border-color: #e4e8f0;
+
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(29, 78, 216, 0.10);
+}
+
+/* Fraunces is an optical-size variable font; unset it renders headings at body optical size
+   and reads unintentionally heavy. */
+h1, h2, h3, h4, h5, h6, .hero__title {
+  font-variation-settings: 'opsz' 96;
+  letter-spacing: -0.01em;
 }
 
 /* Tables: size columns to their content.
@@ -47,14 +71,19 @@
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  /* Dark mode seeds from --brand-2 (#3b82f6), not --brand: #1d4ed8 measures 2.1:1 on Infima's
+     dark surface and would fail contrast outright. #3b82f6 gives 4.68:1 — WCAG AA. */
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2a77f5;
+  --ifm-color-primary-darker: #2172f5;
+  --ifm-color-primary-darkest: #0b62f0;
+  --ifm-color-primary-light: #4c8df7;
+  --ifm-color-primary-lighter: #5592f7;
+  --ifm-color-primary-lightest: #6fa3f8;
+  --ifm-font-color-base: #e7eaf1;
+  --ifm-toc-border-color: #2b303c;
+  --ifm-hr-border-color: #2b303c;
+  --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.16);
 }
 
 /* --- Mobile UX (SEO audit Phase 2) ------------------------------------- */

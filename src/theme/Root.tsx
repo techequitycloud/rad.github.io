@@ -8,8 +8,8 @@ const SITE_URL = 'https://docs.radmodules.dev';
 // meta tags below for the matching background values), since this widget's
 // colors are fixed at mount time rather than reacting to a later theme toggle.
 const FLOWISE_THEME_BY_MODE = {
-  light: {primary: '#2e8555', background: '#ffffff', surface: '#f5f6f7', text: '#1c1e21'},
-  dark: {primary: '#25c2a0', background: '#1b1b1d', surface: '#242526', text: '#e3e3e3'},
+  light: {primary: '#1d4ed8', background: '#ffffff', surface: '#f7f8fb', text: '#11162a'},
+  dark: {primary: '#3b82f6', background: '#1b1b1d', surface: '#242526', text: '#e3e3e3'},
 };
 
 const FLOWISE_SCRIPT_ID = 'flowise-chatbot-95f80df9';
@@ -179,9 +179,9 @@ export default function Root({children}) {
             url: SITE_URL,
             logo: {
               '@type': 'ImageObject',
-              url: `${SITE_URL}/img/logo.svg`,
-              width: 200,
-              height: 200,
+              url: `${SITE_URL}/img/techequity-logo.png`,
+              width: 442,
+              height: 107,
             },
             description: 'Google Cloud certification training and hands-on lab platform',
             sameAs: [

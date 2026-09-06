@@ -7,6 +7,12 @@ const config: Config = {
   tagline: 'Hands-on Google Cloud certification training — from Associate to Professional',
   favicon: 'img/favicon.ico',
 
+  // Brand typography, matching techequity.cloud: Fraunces display, Inter body, JetBrains Mono.
+  stylesheets: [
+    { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap',
+      type: 'text/css' },
+  ],
+
   future: {
     v4: true,
   },
@@ -77,10 +83,13 @@ const config: Config = {
     navbar: {
       title: 'RAD Platform',
       logo: {
-        alt: 'RAD Platform Logo',
-        src: 'img/logo.svg',
+        alt: 'Tech Equity',
+        src: 'img/techequity-logo.png',
+        srcDark: 'img/techequity-logo-dark.png',
         // Explicit dimensions reserve layout space before CSS loads (CLS).
-        width: 32,
+        // Infima forces height:2rem (32px) on the navbar logo, so width must be what the
+        // 442x107 source implies at that height (4.13:1 -> 132) or the lockup is squashed.
+        width: 132,
         height: 32,
       },
       items: [

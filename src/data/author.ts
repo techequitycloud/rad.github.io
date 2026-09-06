@@ -45,8 +45,8 @@ export const PUBLISHER_JSONLD = {
   url: SITE_URL,
   logo: {
     '@type': 'ImageObject',
-    url: `${SITE_URL}/img/logo.svg`,
-    width: 200,
-    height: 200,
+    url: `${SITE_URL}/img/techequity-logo.png`,
+    width: 442,
+    height: 107,
   },
 };
