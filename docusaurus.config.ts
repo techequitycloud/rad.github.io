@@ -80,6 +80,17 @@ const config: Config = {
       defaultMode: 'light',
       respectPrefersColorScheme: true,
     },
+    announcementBar: {
+      id: 'live-sessions-2026-09',
+      content:
+        'Live, hands-on Google Cloud sessions &mdash; deploy a module end to end, or work a ' +
+        'certification as a live lab. Sixty minutes, free to attend. ' +
+        '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
+        '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>Register</b></a>',
+      backgroundColor: '#1d4ed8',
+      textColor: '#ffffff',
+      isCloseable: true,
+    },
     navbar: {
       title: 'RAD Platform',
       logo: {
