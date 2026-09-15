@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
 
-After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Modules**, **Solutions**, **Revenue**, **Help**. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Solutions**, **Revenue**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -29,7 +29,7 @@ Before you can sync anything, connect the repository that holds your modules. Op
 1. Under **RAD Module Sync App**, click **Install App** and install the **RAD Module Sync** GitHub App on the repository (or organization) that holds your modules. The App grants RAD read access — no personal access token is needed.
 2. Under **Partner Settings**, choose that repository from the **GitHub Repository** dropdown and click **Update Repo**.
 
-Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and the Modules page shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
+Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and the **Solution Modules** tab shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
 
 ## Syncing your modules
 
@@ -44,7 +44,7 @@ If a repository can't be read — the GitHub App isn't installed on it, or it ho
 
 ## How your modules appear to users
 
-On the **Modules** page you see two tabs:
+On the **Solution Modules** tab you see two sub-tabs:
 
 - **Partner modules** — the modules you've published from your own repository. This is your workspace for testing and iterating.
 - **Platform modules** — modules published by RAD, plus other partners' public modules.
@@ -67,7 +67,7 @@ Cloud costs and project invoices aren't available to Partners in the console —
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Modules** — browse the catalog, configure with either the **Conversational Assistant** (the default) or the guided **Configuration Form**, and launch.
+- **Solutions → Solution Modules** — browse the catalog, configure with either the **Conversational Assistant** (the default) or the guided **Configuration Form**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
 

@@ -64,7 +64,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Deploy the module and wait for healthy [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **Immich (GKE)** from
+1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Immich (GKE)** from
    the **Platform Modules** list, set `project_id`, and review the inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Immich_GKE)
    documents every input by group. Note that `enable_nfs`, `enable_redis`, and
