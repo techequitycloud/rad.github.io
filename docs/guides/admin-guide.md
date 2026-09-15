@@ -11,7 +11,7 @@ For administrators who run the RAD platform: managing users, roles, credits, mod
 
 ## What you can do
 
-As an admin you have superuser access. In addition to everything a standard user can do (browse the **Modules** catalog, configure and deploy modules, manage your own **Deployments**, use **Credits**, and the **ROI** calculator on the **Credits** page), you can:
+As an admin you have superuser access. In addition to everything a standard user can do (build a solution from a description, browse the module catalog on **Solutions → Solution Modules**, configure and deploy, manage your own **Deployments**, use **Credits**, and the **ROI** calculator on the **Credits** page), you can:
 
 - View, search, create, edit, activate/deactivate, and delete **Users**.
 - Edit any user's credits and role flags (User, Partner, Agent, Finance, Support, Admin).
@@ -21,7 +21,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
 
-After you sign in you land on **Solutions**, on the Custom Solutions tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Explore, Sync, Deployments, Modules, Solutions, and Help. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Explore, Sync, Deployments, Solutions, and Help. The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -94,7 +94,7 @@ Turn it on where an accidental rebuild is expensive — shared environments, cus
 
 ## Managing modules
 
-You are responsible for the catalog of **platform modules** that every user sees on the **Modules** page.
+You are responsible for the catalog of **platform modules** that every user sees on the **Solutions → Solution Modules** tab.
 
 **Sync platform modules.** Go to the **Sync** page to bring platform modules into the catalog. The page is a read-only sync console: it lists the modules found in the platform repository, and the **Sync Now** action refreshes the catalog from that repository. Modules themselves are managed in the repository, not edited on this page.
 

@@ -70,9 +70,9 @@ See the role guides at the end for the full task lists.
 
 ## Core concepts
 
-### The Modules catalog
+### The module catalog (Solutions → Solution Modules)
 
-The **Modules** page is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
+The **Solution Modules** tab on **Solutions** is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
 
 There are two kinds of modules:
 
@@ -125,7 +125,7 @@ Usage is metered in credits, held in three separate balances:
 
 Spending draws on awards first, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all three together and is checked before each deployment.
 
-Deploying a module costs that module's credit cost plus a build cost, metered from how long the build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only.
+Deploying a module costs that module's credit cost plus a build cost, metered from how long the build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only.
 
 The **Credits** page has:
 

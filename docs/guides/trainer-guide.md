@@ -30,7 +30,7 @@ If someone is missing from your selector, the roster is where to look first.
 
 ## Provisioning a cohort
 
-1. **Open a module** from the **Modules** catalog and fill in its configuration as usual.
+1. **Open a module** from the **Solutions → Solution Modules** catalog and fill in its configuration as usual.
 2. **Switch on "GCP Project on RAD".** The participant selector only appears once this is on. Deploying on someone's behalf into a project *you* brought would attribute their deployment to infrastructure they do not own, so RAD does not offer it.
 3. **Choose your participants** in **Deploy for participants**. You can pick from your roster and nothing else; administrators can search every account.
 4. **Deploy.** RAD creates **one deployment per participant**, each owned by that participant.

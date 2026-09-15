@@ -11,18 +11,38 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 
 ## What you can do
 
-- Browse the **Modules** catalog and deploy ready-made modules through a guided form.
+- Answer four plain questions on **Build Solution** and have RAD work out which applications you need, what the whole thing costs, and deploy them.
+- Browse the module catalog on **Solutions → Solution Modules** and deploy ready-made modules through a guided form.
 - Track and manage your own **Deployments** — view results and logs, update, and tear down.
 - Manage **Credits** — check your balance, review your transaction history, and buy more.
 - Subscribe to a recurring credit plan.
 - Estimate your savings with the **ROI** calculator, on the **Credits** page.
 - Get help through the **Support** form.
 
-After you sign in you land on **Solutions**, on the **Custom Solutions** tab — signing in opens on what you can build rather than the list of what you built last time. If you have not composed anything yet the composer is open and waiting; once you have solutions of your own, you land on that list instead. Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Modules**, **Solutions**, and **Help**.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — signing in opens on what you can build rather than the list of what you built last time.
+
+**Solutions** holds everything you can deploy, on four tabs:
+
+- **Build Solution** — four questions that end in a working, priced solution. Start here if you know what you want to achieve but not what it is called.
+- **Custom Solutions** — the bundles you have composed yourself.
+- **Platform Solutions** — ready-made bundles curated by RAD.
+- **Solution Modules** — the full catalog of individual applications.
+
+Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, and **Help**.
+
+## Building a solution from a description
+
+On **Solutions → Build Solution**, describe what you want people to be able to do — in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
+
+1. **Where should it run?** Either RAD creates and runs a Google Cloud project for you, or you point us at a project you already manage. If RAD runs it, you also say what the environment is for — trying things out, for your developers, or for your end users.
+2. **Where in the world?** Pick the location closest to the people who will use it.
+3. **What should we call it?** A name for your own reference, plus a short name used inside your cloud resources.
+
+A panel beside the questions shows **what you'll get** and **what it costs** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes. **Show the engineering detail** opens the same solution on the full configuration form if you would rather set everything yourself.
 
 ## Finding a module
 
-Click **Modules** in the top navigation to open the module catalog. Modules appear as cards.
+Open **Solutions** and choose the **Solution Modules** tab to browse the module catalog. Modules appear as cards.
 
 - **Browse:** You see a single combined catalog of public modules — both modules published by RAD and public modules published by partners.
 - **Search:** Use the search bar to find a module by name, then page through the results.
@@ -91,7 +111,11 @@ Your credits sit in three separate balances, and they behave differently:
 
 Spending draws on awards first, then subscription, then top-up — so the credits that expire soonest are used first, and the ones you bought outright are kept until last.
 
-Deploying a module charges the module's credit cost plus a build cost, metered from how long the build actually runs. The confirmation dialog shows both before you commit; the build cost is taken once the build finishes, so the final figure can differ a little from the estimate. Updating a deployment charges the build cost only.
+Deploying a module charges the module's credit cost plus a build cost, metered from how long the build actually runs.
+
+**The confirmation dialog quotes the whole chain, not just the application you picked.** Deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and those carry their own costs — the dialog lists them under *"RAD also sets these up for you"* with a combined total. It also separates what is taken when you confirm from what is metered as each build finishes, so the second charge is not a surprise. Build costs are estimates until the build completes, so the final figure can differ a little.
+
+Updating a deployment charges the build cost only.
 
 The Credits page has these tabs:
 
