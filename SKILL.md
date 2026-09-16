@@ -29,8 +29,8 @@ rad.github.io/
 │   ├── design/              # 3 platform design docs (capabilities, practices, excellence)
 │   ├── guides/               # 8 role-based guides (Using RAD, AI Tooling, User/Partner/
 │   │                        # Agent/Support/Admin/Finance)
-│   ├── labs/                 # 273 hands-on lab guides — flat, one file per module
-│   └── modules/               # 269 module configuration guides — flat, one file per module
+│   ├── labs/                 # 354 hands-on lab guides — flat, one file per module
+│   └── modules/               # 533 module configuration guides — flat, one file per module
 │                            # (plus a few platform/infra pages: Services_GCP,
 │                            # Migration_Center, Container_Migration, VMware_Engine)
 │                            # docs/ is updated directly from the source repos
@@ -79,6 +79,16 @@ Docs originate in three source repositories. When the same page exists in more t
 3. `partner-modules` — partner module content (highest priority)
 
 Edit the canonical source, then sync directly into `docs/` (§11). These are sibling checkouts of this repo, not an in-repo `updates/` staging directory.
+
+**Do not validate a page's existence against `partner-modules/modules/` alone.** Sixteen
+pages — `AKS_GKE`, `Bank_GKE`, `Container_Migration`, `EKS_GKE`, `Istio_GKE`,
+`MC_Bank_GKE`, `Migration_Center`, `VMware_Engine`, each as both a `docs/modules/` and a
+`docs/labs/` page — are sourced from **`rad-modules`**, whose eight modules exist in
+`rad-modules/modules/` and in no other catalogue. Commit `846fdf8` (2026-07-29) deleted
+all sixteen as "phantom published pages" on exactly that test, and they stayed unpublished
+until restored. A page is orphaned only when it is absent from **all three** source repos;
+check `rad-modules/modules/` and `rad-automation/` before concluding anything is a phantom.
+
 
 ### 3.4 Sidebar Navigation is Explicit
 
