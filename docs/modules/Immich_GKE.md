@@ -436,4 +436,4 @@ entrypoint, database bootstrap, probes) is described in
 
 - [Hands-on lab: Immich on GKE Autopilot](../labs/Immich_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
 - [Immich Common — Shared Application Configuration](Immich_Common.md) — the configuration shared by both deployment targets.
-- Deployed alongside [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md), [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md), [Kopia on GKE Autopilot](Kopia_GKE.md) in the **Personal Cloud** solution.
+- Deployed alongside [Nextcloud on Google Cloud Run](Nextcloud_CloudRun.md), [Filebrowser on GKE Autopilot](Filebrowser_GKE.md), [Vaultwarden on Google Cloud Run](Vaultwarden_CloudRun.md), [Kopia on GKE Autopilot](Kopia_GKE.md) in the **Personal Cloud** solution.

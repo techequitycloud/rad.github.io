@@ -7,16 +7,23 @@ description: "Shared configuration reference for the Filebrowser module — appl
 
 `Filebrowser_Common` is the **shared application layer** for File Browser. It is
 not deployed on its own; instead it supplies the Filebrowser-specific configuration
-that both [Filebrowser_GKE](Filebrowser_GKE.md) and
-[Filebrowser_CloudRun](Filebrowser_CloudRun.md) build on, so the two platform
-variants behave identically where it matters. End users never configure this layer
+that [Filebrowser_GKE](Filebrowser_GKE.md) builds on. It previously served a
+Cloud Run variant as well, which was retired in September 2026 — see the note
+below. End users never configure this layer
 directly — it has no deployment UI inputs of its own — but understanding what it
 provides explains the defaults you see in the platform docs.
 
 For the infrastructure that actually provisions and runs Filebrowser, see the
-platform guides ([Filebrowser_GKE](Filebrowser_GKE.md),
-[Filebrowser_CloudRun](Filebrowser_CloudRun.md)) and the foundation guides
-([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
+platform guide ([Filebrowser_GKE](Filebrowser_GKE.md)) and the foundation guides
+([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
+
+> **Filebrowser is GKE-only as of September 2026.** File Browser stores its users,
+> settings and share links in an embedded bbolt database, which holds an exclusive
+> lock for the entire life of the process. Cloud Run keeps a warm revision alive
+> even after traffic moves off it, so the outgoing revision never released that
+> lock and every later revision failed to start — the service could be deployed
+> once and never updated. GKE is unaffected: a StatefulSet stops the old pod
+> before starting the new one.
 
 ---
 
@@ -143,12 +150,10 @@ window, and the liveness probe uses a 30-second delay.
 
 For the Filebrowser-specific, user-facing configuration (variables by group,
 outputs, and how to explore each service from the Console and CLI), see the platform
-guides: **[Filebrowser_GKE](Filebrowser_GKE.md)** and
-**[Filebrowser_CloudRun](Filebrowser_CloudRun.md)**.
+guide: **[Filebrowser_GKE](Filebrowser_GKE.md)**.
 
 <!-- related-guides -->
 
 ## Related guides
 
-- [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md) — this configuration deployed on Cloud Run.
 - [Filebrowser on GKE Autopilot](Filebrowser_GKE.md) — this configuration deployed on GKE.
