@@ -32,13 +32,15 @@ Your top navigation shows **Credits** (when credits are enabled), **Deployments*
 
 ## Building a solution from a description
 
-On **Solutions → Build Solution**, describe what you want people to be able to do — in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
+On **Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
 
-1. **Where should it run?** Either RAD creates and runs a Google Cloud project for you, or you point us at a project you already manage. If RAD runs it, you also say what the environment is for — trying things out, for your developers, or for your end users.
-2. **Where in the world?** Pick the location closest to the people who will use it.
-3. **What should we call it?** A name for your own reference, plus a short name used inside your cloud resources.
+1. **Where should it run?** Your own Google Cloud project is the default: you keep the billing relationship, your organization's policies, and the project itself afterwards. Choosing a **RAD-managed project** instead puts the infrastructure inside RAD's own organization and billing account, and you then also say what the environment is for — trying things out, for your developers, or for your end users. A RAD-managed project also asks you to be holding a minimum balance of purchased credits, which the page states. That is a balance requirement, not a charge.
+2. **Where should it live?** Pick the location closest to the people who will use it. Your own project can use any Google Cloud region; a RAD-managed project offers the locations RAD supports — the cheapest in each part of the world.
+3. **What should we call it?** A name for your own reference, plus a short name (up to seven letters or numbers) used inside your cloud resources. Reuse that short name later to share the same cloud resources.
 
-A panel beside the questions shows **what you'll get** and **what it costs** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes. **Show the engineering detail** opens the same solution on the full configuration form if you would rather set everything yourself.
+If the applications RAD proposes aren't quite right, use **Not quite? Tell us what to change** underneath them — say what to add or drop, and RAD reworks the set instead of starting from scratch. You can also remove a single application, or **Start over** to clear your answers and the proposal together.
+
+A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes, alongside a build-duration estimate such as "about 1h 20m". **Build this** deploys it. **Show the engineering detail** opens the same solution on the full configuration form if you would rather set everything yourself.
 
 ## Finding a module
 
@@ -65,7 +67,7 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a solution
 
-A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. There are two tabs.
+A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. Two of its four tabs hold ready-to-deploy bundles — the other two are **Build Solution** and **Solution Modules**, described above.
 
 **Platform Solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
 

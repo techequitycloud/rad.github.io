@@ -26,7 +26,7 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 
 The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Finance opens on **Billing** and agents on **Revenue**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Custom Solutions** tab, so the first screen is what you can build rather than the list of what you built last time. If you have not composed a solution yet, the composer is open and waiting. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Finance opens on **Billing** and agents on **Revenue**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign out**.
 
@@ -43,7 +43,7 @@ There is no separate combined dashboard — each item in the top nav is its own 
 
 After you sign in, RAD takes you to the page that fits your role:
 
-- **Admin**, **Partner**, **User** → **Deployments**
+- **Admin**, **Partner**, **User**, **Support**, **Trainer** → **Solutions**, on the **Build Solution** tab
 - **Finance** → **Billing**
 - **Agent** → **Revenue**
 - No role assigned yet → **Help**
@@ -56,13 +56,13 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 
 | Role | What they do | Where they start |
 | :--- | :--- | :--- |
-| **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Deployments |
-| **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Deployments |
-| **Partner** | A user who also publishes their own modules and earns revenue from them | Deployments |
+| **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Solutions |
+| **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Solutions |
+| **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
 | **Agent** | Earns referral commission on activity from users they referred | Revenue |
 | **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
-| **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Deployments |
-| **Trainer** | Provisions lab deployments for an assigned roster of participants, one per participant, and sees what they provisioned | Deployments |
+| **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Solutions |
+| **Trainer** | Provisions lab deployments for an assigned roster of participants, one per participant, and sees what they provisioned | Solutions |
 
 See the role guides at the end for the full task lists.
 
@@ -109,9 +109,12 @@ Deployment statuses you may see include Queued, Pending, Working, Waiting (on a 
 
 ### Solutions
 
-The **Solutions** page is a catalog of ready-made **solutions** — bundles of modules that deploy together as one unit into a single project. Solutions are grouped into categories, and each card shows a combined credit cost and an average rating derived from the modules it contains.
+**Solutions** holds everything you can deploy, on four tabs — and it is where every role except finance and agents lands after signing in.
 
-The Solutions page has two tabs. **Platform Solutions** is the catalog described above. **Custom Solutions** holds bundles you compose yourself: describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save — your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
+- **Build Solution** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing, estimates how long it takes, and deploys it. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**.
+- **Custom Solutions** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
+- **Platform Solutions** — ready-made bundles of modules curated by RAD, grouped into categories. Each card shows a combined credit cost and an average rating derived from the modules it contains.
+- **Solution Modules** — the module catalog described above.
 
 A solution's modules are grouped into **waves**, a rough deploy order — but what actually gates a member's start is its real configuration dependency on another member: it waits only for that specific producer to finish, not for its whole nominal wave, so members frequently provision concurrently both within and across waves. Provisioning a solution walks you through a single configuration form covering its members. The resulting **solution deployment** gets its own details page, where — as with a module deployment — you can update, delete, or purge it.
 

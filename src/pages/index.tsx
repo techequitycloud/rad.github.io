@@ -18,8 +18,8 @@ function HomepageHeader() {
         </Heading>
         <p className={styles.heroIntro}>
           Seven certification study paths align every official exam domain with
-          hands-on deployment labs, built from 350+ open-source application
-          modules running on Cloud Run and GKE Autopilot. Each guide is
+          hands-on deployment labs, built from 190+ open-source applications
+          running on Cloud Run and GKE Autopilot. Each guide is
           authored by Google Cloud Authorized Trainers who hold certifications
           in the domains they teach — so you&apos;re learning from people
           who&apos;ve built and broken the same infrastructure you&apos;re
