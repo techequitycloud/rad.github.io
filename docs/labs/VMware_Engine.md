@@ -9,7 +9,7 @@ description: "Hands-on lab: provision Google Cloud VMware Engine in your own pro
 
 ## Overview
 
-**Estimated time:** 90–150 minutes (most of it waiting — private-cloud creation alone can take **~2 hours** for larger types; a single-node `TIME_LIMITED` cloud is usually ready in 30–90 minutes).
+**Estimated time:** 150–180 minutes (most of it waiting — private-cloud creation alone can take **~2 hours** for larger types; a single-node `TIME_LIMITED` cloud is usually ready in 30–90 minutes).
 
 Google Cloud VMware Engine (GCVE) runs a complete VMware Software-Defined Data Center — vSphere, vSAN, NSX-T, and HCX — on Google-managed bare-metal hardware, so your existing VMware tooling and skills carry over unchanged. This lab takes you through the full operational lifecycle of the **VMware Engine** module: deploy it, confirm the private cloud comes up and reach vCenter through the jump host, operate the environment day-to-day, observe it, diagnose common problems, and tear it down.
 
@@ -49,7 +49,7 @@ export ZONE="us-west2-a"        # the zone you deploy into (must be within REGIO
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Click **Deploy** in the RAD platform top navigation, open **VMware Engine** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs. Configure only what you need — the [Configuration Guide](https://docs.radmodules.dev/docs/modules/VMware_Engine) documents every input by group, with defaults. For a lab, keep `private_cloud_type = TIME_LIMITED` and `node_count = 1`. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
+1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **VMware Engine** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs. Configure only what you need — the [Configuration Guide](https://docs.radmodules.dev/docs/modules/VMware_Engine) documents every input by group, with defaults. For a lab, keep `private_cloud_type = TIME_LIMITED` and `node_count = 1`. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions the VMware Engine network, the private cloud (vCenter, vSAN, NSX-T, HCX), VPC peering into a Google Cloud peer VPC, the network policy, firewall rules, and a Windows Server 2022 jump host, then resets and prints the vCenter credentials. **Private-cloud creation dominates the time** — expect 30–90 minutes for a single-node `TIME_LIMITED` cloud, and up to **~2 hours** for larger types. The deployment will appear to sit still during this window; that is expected — do not interrupt it.
 
@@ -84,9 +84,9 @@ export ZONE="us-west2-a"        # the zone you deploy into (must be within REGIO
 3. **Generate a Windows password and find the jump host's external IP:**
 
    ```bash
-   JUMP=$(gcloud compute instances list --filter="name~jump-host" --project="$PROJECT" \
+   JUMP=$(gcloud compute instances list --filter="name~^altostrat-[0-9]+-jump-host$" --project="$PROJECT" \
      --format="value(name)")
-   gcloud compute instances list --filter="name~jump-host" --project="$PROJECT" \
+   gcloud compute instances list --filter="name~^altostrat-[0-9]+-jump-host$" --project="$PROJECT" \
      --format="table(name, status, networkInterfaces[0].accessConfigs[0].natIP)"
    gcloud compute reset-windows-password "$JUMP" --zone="$ZONE" --project="$PROJECT"
    ```
