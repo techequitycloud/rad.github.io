@@ -21,7 +21,7 @@ description: "Hands-on lab: deploy the Services GCP foundation module — VPC, n
 - Creates a custom-mode VPC network with subnets, Cloud NAT, and Private Service Connect peering
 - Provisions four IAM service accounts (Cloud Build, Cloud Deploy, Cloud Run, NFS/Redis) with all required role bindings
 - Creates a shared Artifact Registry Docker repository
-- Provisions Cloud SQL PostgreSQL (enabled by default) and optionally MySQL or AlloyDB instances with private IP, automated backups, and Secret Manager root passwords
+- Optionally provisions Cloud SQL PostgreSQL, MySQL or AlloyDB instances with private IP, automated backups, and Secret Manager root passwords (all off by default; this lab turns PostgreSQL on)
 - Optionally creates a Firestore Native (Enterprise edition) document database
 - Deploys a self-managed NFS + Redis VM as a Managed Instance Group with auto-healing and daily disk snapshots (enabled by default)
 - Optionally provisions Cloud Memorystore for Redis, Cloud Filestore NFS, GKE Autopilot/Standard cluster(s), CMEK, Binary Authorization, VPC Service Controls, Security Command Center, Workload Identity Federation, and Cloud Monitoring alert policies
@@ -100,7 +100,7 @@ Variables are configured in the module configuration form in the RAD platform be
 | `subnet_cidr_range` | `['10.0.0.0/24']` | CIDR ranges for VPC subnets, one per region (at least one per region is enforced). The VPC network name is derived automatically from the tenant — it is not a configurable variable. |
 | `support_users` | `[]` | Extra recipients for **billing budget** alerts only, and only when `create_billing_budget = true` (merged with `budget_alert_emails`). Grants no IAM and does not feed Cloud Monitoring alerts — those come from `notification_alert_emails` plus `configure_email_notification`. Inert while `create_billing_budget = false`. |
 | `resource_labels` | `{}` | Labels applied to all provisioned resources |
-| `create_postgres` | `true` | Provision a Cloud SQL PostgreSQL instance |
+| `create_postgres` | `false` | Provision a Cloud SQL PostgreSQL instance. Off by default — the lab tfvars below sets it explicitly. |
 | `postgres_database_version` | `POSTGRES_17` | PostgreSQL engine version (`POSTGRES_17`/`16`/`15`/`14` — validated) |
 | `postgres_database_availability_type` | `ZONAL` | `ZONAL` for dev/test; `REGIONAL` for high-availability production |
 | `postgres_tier` | `db-custom-1-3840` | Cloud SQL machine type (1 vCPU, 3.75 GB RAM) |
@@ -124,7 +124,7 @@ Variables are configured in the module configuration form in the RAD platform be
 
 This lab supports two configurations. Pick one based on how much of the module you want to exercise (and how much lab time/cost you can spend).
 
-**Path A — Minimal (fastest, ~20–35 min).** Accept the defaults: PostgreSQL + the self-managed NFS/Redis VM. This is enough to back a single Cloud Run application and to walk Phases 2–4 and 7. Set only `project_id` and `tenant_id`.
+**Path A — Minimal (fastest, ~20–35 min).** Keep the defaults, which include the self-managed NFS/Redis VM, and add PostgreSQL, which is off by default. This is enough to back a single Cloud Run application and to walk Phases 2–4 and 7. Set `project_id`, `tenant_id` and `create_postgres = true`.
 
 **Path B — Full-Feature (recommended for this lab, ~45–70 min with GKE).** Turn on a representative breadth of capabilities so every verification phase has something to demonstrate. Suggested configuration:
 
@@ -175,14 +175,14 @@ Deployment is initiated from the RAD platform: click **Deploy** in the top navig
 | VPC network, subnets, Cloud NAT, Private Service Connect | 2–4 min |
 | Artifact Registry repository + service accounts | 2–3 min |
 | NFS/Redis VM + Managed Instance Group | 3–5 min |
-| Cloud SQL PostgreSQL instance | 5–10 min |
+| Cloud SQL PostgreSQL instance (if enabled) | 5–10 min |
 | Cloud SQL MySQL instance (if enabled) | 3–5 min |
 | Cloud Memorystore Redis (if enabled) | 3–5 min |
 | Cloud Filestore NFS (if enabled) | 3–5 min |
 | GKE Autopilot cluster + Fleet registration (if enabled) | 10–20 min |
 | CMEK / Binary Authorization / VPC-SC (if enabled) | 2–5 min |
 | Cloud Monitoring alert policies | 1–2 min |
-| **Total (defaults: PostgreSQL + NFS VM)** | **20–35 min** |
+| **Total (Path A: PostgreSQL + NFS VM)** | **20–35 min** |
 | **Total (with GKE cluster)** | **35–55 min** |
 
 ### Step 1.3 — Record Outputs
@@ -363,7 +363,7 @@ In the Cloud Console, navigate to **Artifact Registry → Repositories** and con
 
 ## Phase 3 — Verify Databases [MANUAL]
 
-### Step 3.1 — Confirm Cloud SQL PostgreSQL Instance
+### Step 3.1 — Confirm Cloud SQL PostgreSQL Instance [`create_postgres = true`]
 
 ```bash
 gcloud sql instances describe ${PG_INSTANCE} \
