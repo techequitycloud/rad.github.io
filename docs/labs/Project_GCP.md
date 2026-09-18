@@ -226,8 +226,9 @@ gcloud projects get-iam-policy ${PROJECT} \
 ### Step 4.4 — Confirm the Quota-Write Deny Policy
 
 ```bash
-gcloud iam deny-policies describe deny-deploying-identity-quota-write \
-  --project=${PROJECT} \
+gcloud iam policies get deny-deploying-identity-quota-write \
+  --attachment-point=cloudresourcemanager.googleapis.com/projects/${PROJECT} \
+  --kind=denypolicies \
   --format="yaml(rules)"
 ```
 
