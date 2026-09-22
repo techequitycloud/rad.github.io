@@ -1,76 +1,115 @@
 ---
 title: "Trainer Guide"
-description: "RAD Platform trainer guide — provisioning lab environments for a course cohort, how the roster works, who pays, and what a trainer can and cannot see."
+description: "RAD Platform trainer guide — running lab sessions: creating a session, choosing who pays, onboarding participants, provisioning and starting environments, and how unused credits come back to you."
 ---
 
 # Trainer Guide
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/Trainer_Guide.png" alt="Trainer Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-For trainers who run a course on RAD and provision lab environments for their participants. New to RAD? Start with [Using RAD](using-rad.md).
+For trainers who run a course on RAD and give each participant their own lab environment in Google Cloud. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do
 
-- Deploy a lab environment **for each participant on your roster**, in one action, from the ordinary module form.
-- See the lab deployments you provisioned for them, on your own **Deployments** page.
-- Update or tear down anything you provisioned, so a finished course does not leave infrastructure behind.
+- Run **lab sessions** from the **Labs** page. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
+- Choose, per session, **who pays** for a participant's place: you, or each participant.
+- Build the same module or solution into every participant's environment in one action, start their clocks, add time or credits, and end environments early.
+- Get back every credit your participants did not use once the session settles. Those credits are yours to keep.
 
-Your top navigation is the same as a standard user's — Trainer adds no page of its own. What it adds is a **Deploy for participants** selector on the deployment form, and sight of the labs you created.
+You don't need a separate roster or a special deploy form. Everything happens on the **Labs** page. If you open an ordinary deploy form, it points you back there with **Open lab sessions**.
 
-## Your cohort roster
+## Getting access
 
-An administrator grants the Trainer role and fills in your **cohort roster**: the participant email addresses you may deploy for. The roster is stored on your own account and is capped at **30 participants**.
+You need the **Trainer** role, and an administrator must have switched **lab sessions** on for the platform. Once both are true, **Labs** appears in your navigation. If it doesn't, ask an administrator.
 
-Two things follow from that, and they are the ones people find surprising:
+Administrators and finance staff can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted.
 
-- **The roster is the grant.** Emptying it revokes your access completely, without removing the Trainer role. If a participant leaves the course, ask an administrator to take them off the roster.
-- **Each participant needs their own RAD account.** A cohort of twenty is twenty accounts, not one shared login. Participants sign up as ordinary users; your roster simply names them.
+## Creating a session
 
-If someone is missing from your selector, the roster is where to look first.
+On **Labs**, choose **New session**. The dialog asks for:
 
-## Provisioning a cohort
+- **Session name** — up to 100 characters.
+- **Participant emails** — paste a list. The dialog confirms how many addresses it recognised. An address it can't read stops the whole session from being created, so nothing is charged for a list that was only partly understood. How many participants a session may hold is set by your administrator.
+- **Credits per participant** — each participant's allowance. It can't be lower than the minimum a lab environment needs, or higher than the ceiling your administrator sets.
+- **Duration (minutes)** — how long each participant's environment runs once their clock starts, up to 24 hours.
+- **Countdown starts** — **By trainer** (you start the clocks) or **When ready** (each clock starts as soon as that environment is built).
+- **Region** — one of RAD's regions, fixed for the session.
+- **Overrun ceiling (%)** — how far above an allowance an environment may run before it is switched off (default 20%). You can change this while the session is open.
+- **Participants buy their own place** — who pays. See the next section.
 
-1. **Open a module** from the **Solutions → Solution Modules** catalog and fill in its configuration as usual.
-2. **Switch on "GCP Project on RAD".** The participant selector only appears once this is on. Deploying on someone's behalf into a project *you* brought would attribute their deployment to infrastructure they do not own, so RAD does not offer it.
-3. **Choose your participants** in **Deploy for participants**. You can pick from your roster and nothing else; administrators can search every account.
-4. **Deploy.** RAD creates **one deployment per participant**, each owned by that participant.
+You choose the module or solution later, on the session itself, not in this dialog.
 
-There is no separate cohort screen and no batch import — it is the same form everyone else uses, with one extra field.
+## Who pays
 
-### The tier is chosen for you
+You decide when you create the session. **That choice is fixed once the session exists.** To run a session the other way, create a new one.
 
-Selecting participants puts the deployment on the **lab** tier and hides the tier picker. That is not a restriction so much as a definition: the lab tier *is* the cohort case. It has its own Google Cloud folder, its own organization policies and its own budget, kept separate from the customer tiers so that a change made for customers cannot land in the middle of your course.
+**You pay (the default).** The whole cohort's allowance — participants × credits per participant — is reserved from your **purchased** credits when you create the session. Free credits you were given can't be used. The dialog shows what you hold, what is taken and what you'll have left. Adding participants or credits later is also paid from your purchased credits.
 
-Select no participants and you get the ordinary three tiers — sandbox, development and production — exactly as any other user does. `lab` is never offered by name on any picker.
+**Participants buy their own place.** Nothing is reserved from your credits. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
 
-### Who pays
+When does a participant's payment become yours? Only once **that participant's clock starts**, which is the moment they get access to their lab. Until then their payment is held. If they never get access — their environment was never built, or failed to build, or was never started — their payment is returned to them when the session settles.
 
-**Each participant pays for their own deployment.** Credits come out of the participant's balance, never yours, and every figure on the form — balance, affordability, the cost breakdown — follows the participant rather than your account.
+### What happens to unused credits
 
-A participant can only be selected once they hold enough **purchased** credits to cover the tier's minimum. Awarded credits do not count toward it. The selector shows each participant's top-up balance beside their address, and greys out anyone who is short, saying exactly how many more credits they need. That is deliberate: a participant hidden from the list looks like a roster mistake, whereas "needs 40 more purchased credits" is something you or they can act on.
+Whichever way the session is funded, whatever the participants did not use comes back to **you** when the session settles, into your top-up credits, which don't expire. In a session where participants pay, that remainder is your margin.
 
-Two behaviours worth expecting:
+If environments run beyond their allowance, the overrun is charged to your purchased credits, up to the ceiling you set.
 
-- Change the tier and eligibility is recalculated; anyone who no longer qualifies is dropped from your selection rather than left selected and greyed out.
-- Turn **GCP Project on RAD** back off and your participant selection is cleared, because the deployment is no longer one you can make on someone's behalf.
+### When a session settles
 
-## Managing what you provisioned
+Settlement waits until Google has reported the session's cloud costs. That usually takes up to a day after the last environment was switched off, because Google's billing data arrives late. Settling any earlier would pay you back credits the environments had in fact already used.
 
-The labs you created appear on your own **Deployments** page alongside your personal deployments, and you can **update** or **delete** them.
+The session's **Settlement** panel shows what was committed, consumed and refunded, plus any overrun charged to you. You also get an email, **"Lab session settled"**, unless you turned it off in your notification preferences. Every movement appears in your credit history as **Lab session escrow** and **Lab session refund** entries.
 
-Being able to destroy them is intentional. A cohort's environments otherwise outlive the course — thirty participants each tearing down their own lab does not reliably happen — and a visible row carrying a Delete button that always fails is worse than either answer.
+## Participants
 
-Note this differs from the Support role, which sees deployments but may never destroy them. The two roles sit on deliberately different lines.
+**Each participant needs their own RAD account**, under the exact email address you enrolled.
+
+- **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, but not more often than every 10 minutes.
+- **Participants who already have an account** are emailed to say they have been added.
+- **In a session where participants pay,** both emails tell them they must buy their place before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page.
+
+To add people to a running session, use **Add participants**. In a session you fund, the dialog shows what it will take from your credits before you confirm. An address already in the session — even one you removed earlier — can't be added again.
+
+To stop people, tick their rows. **End selected** switches their environments off. **Remove** also takes them off the session. Their unused allowance comes back to you at settlement.
+
+## Building and running environments
+
+1. **Choose what to build** on the session: **Module** or **Solution**, then search the catalogue. Fill in the module's first page of settings; the region always comes from the session.
+2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish.
+3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
+4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
+
+An environment that is built but never started can't wait for ever: by default, after a week unstarted it is torn down, not started.
+
+### When time runs out
+
+Participants are warned 15 and 5 minutes before their time ends. At the end, the environment's billing is switched off, the participant's access is removed and the lab project is deleted. An environment is also switched off early if it uses up its credits, or if its spending passes the overrun ceiling.
+
+Use **End now** to end the whole session at any time. A session nobody provisions is ended automatically after 14 days.
+
+## What your participants see
+
+Participants see a lab banner at the top of every RAD page. It shows:
+
+- when their environment is being built;
+- when it is ready and waiting for you to start their clock;
+- once it runs, their time and credits left, and a link to their project in the Google Cloud console.
+
+When their clock starts they get access to their project in the console. They can look at deployments, logs and storage, restart workloads and run existing jobs. They can't read secrets or create resources, and everything is deleted when the lab ends.
+
+Participants can't deploy anything themselves in a lab. Every lab deployment is yours.
 
 ## What a trainer can't do
 
-- **Read a deployment's secrets.** The **Outputs** tab and the deployment's configuration variables stay with the deployment's owner and administrators. If you need a generated password or connection string from a participant's lab, ask them for it — that is a conversation, not a platform read.
-- **See a participant's own deployments.** Your visibility covers the labs *you* provisioned, not everything that person owns. Someone on your roster who deploys something for themselves keeps it private from you.
-- **Add or remove people from your own roster.** Only an administrator can change it.
-- **Deploy for someone into your own project.** The participant selector is unavailable unless RAD manages the project.
-- **Act as a participant.** There is no impersonation anywhere in RAD.
+- **Change who pays** after creating a session. Create a new session instead.
+- **Read secrets** on lab deployments: their configuration variables, outputs and generated passwords stay with administrators.
+- **Use advanced settings** when updating a lab deployment. Only administrators can.
+- **See a participant's own deployments.** Your access covers the lab environments in your sessions, not anything a participant deploys for themselves.
+- **Force a teardown.** Only administrators can.
+- **Change a session's region, or edit a session once it has ended.**
 
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For anything about the roster, the tier, or a participant's credits, use the **Help** page's **Support** tab; administrators and finance staff work that queue.
+- For access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Support** tab. Administrators and finance staff work that queue.
