@@ -130,6 +130,8 @@ Spending draws on awards first, then subscription, then top-up, so the credits t
 
 Deploying a module costs that module's credit cost plus a build cost, metered from how long the build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only.
 
+What a **failed** deployment costs is a platform setting, not a fixed rule: Finance can choose, separately for the build cost and the module fee, whether either is charged when a new deployment fails or is cancelled. **In the current release neither is charged, so a failed deployment costs you nothing.** Failed updates and teardowns are not charged either.
+
 The **Credits** page has:
 
 - A **Credit Transactions** tab — your full history of awards, purchases, and spend, filterable by deployment and date, with **Export CSV**.

@@ -119,6 +119,8 @@ Deploying a module charges the module's credit cost plus a build cost, metered f
 
 Updating a deployment charges the build cost only.
 
+**Failed deployments.** Whether a deployment that fails is charged is a platform setting rather than a fixed rule: Finance decides, separately for the build cost and the module fee, whether either is taken when a new deployment fails or is cancelled. **In the current release neither is charged — a failed deployment costs you nothing.** A failed update or teardown is not charged either.
+
 The Credits page has these tabs:
 
 - **Credit Transactions** — your full history of awards, purchases, and spend, with an **Awards**, **Top-up**, and **Subscription** balance after each entry. Filter by deployment and by date, and use **Export CSV** to download a report.
