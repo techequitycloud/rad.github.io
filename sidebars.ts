@@ -1023,7 +1023,6 @@ const sidebars: SidebarsConfig = {
           label: 'Filebrowser',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'modules/Filebrowser_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Filebrowser_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Filebrowser_Common', label: 'Common'},
           ],
@@ -2724,15 +2723,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Cloudreve_GKE', label: 'GKE'},
           ],
         },
-        {
-          type: 'category',
-          label: 'Filebrowser',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'labs/Filebrowser_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'labs/Filebrowser_GKE', label: 'GKE'},
-          ],
-        },
+        {type: 'doc', id: 'labs/Filebrowser_GKE', label: 'Filebrowser GKE'},
         {
           type: 'category',
           label: 'FreshRSS',

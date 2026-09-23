@@ -456,4 +456,4 @@ the underlying wiring.
 - [Hands-on lab: Gokapi on Cloud Run](../labs/Gokapi_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
 - [Gokapi on GKE Autopilot](Gokapi_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
 - [Gokapi Common — Shared Application Configuration](Gokapi_Common.md) — the configuration shared by both deployment targets.
-- Deployed alongside [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md), [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md), [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) in the **File Sharing & Transfer** solution.
+- Deployed alongside [Chibisafe on Google Cloud Run](Chibisafe_CloudRun.md), [Cloudreve on Google Cloud Run](Cloudreve_CloudRun.md) in the **File Sharing & Transfer** solution.

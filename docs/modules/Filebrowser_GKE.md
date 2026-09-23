@@ -370,6 +370,5 @@ with the Cloud Run variant is described in
 ## Related guides
 
 - [Hands-on lab: Filebrowser on GKE Autopilot](../labs/Filebrowser_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
-- [Filebrowser on Google Cloud Run](Filebrowser_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
 - [Filebrowser Common — Shared Application Configuration](Filebrowser_Common.md) — the configuration shared by both deployment targets.
 - Deployed alongside [Kopia on GKE Autopilot](Kopia_GKE.md), [UrBackup on GKE Autopilot](UrBackup_GKE.md) in the **Backup & Disaster Recovery** solution.
