@@ -1,6 +1,6 @@
 ---
 title: "Agent Guide"
-description: "RAD Platform agent guide — supporting learners, managing deployments, and handling operational requests in the RAD console."
+description: "RAD Platform agent guide — sharing your referral link, earning cash commission on referred users' module fees, tracking it on Credits → My Commission, and how payouts work."
 ---
 
 # Agent Guide
