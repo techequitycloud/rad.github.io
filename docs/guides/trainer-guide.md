@@ -20,9 +20,11 @@ You don't need a separate roster or a special deploy form. Everything happens on
 
 ## Getting access
 
-You need the **Trainer** role, and an administrator must have switched **lab sessions** on for the platform. Once both are true, **Labs** appears in your navigation. If it doesn't, ask an administrator.
+Sign in with your Google account as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, **Labs** appears in your navigation. If it doesn't, ask an administrator.
 
-Administrators and finance staff can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**. **Credits** is where you buy the purchased credits a session you fund is paid from.
+
+Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
 ## Creating a session
 
@@ -35,7 +37,7 @@ On **Labs**, choose **New session**. The dialog asks for:
 - **Countdown starts** — **By trainer** (you start the clocks) or **When ready** (each clock starts as soon as that environment is built).
 - **Region** — one of RAD's regions, fixed for the session.
 - **Overrun ceiling (%)** — how far above an allowance an environment may run before it is switched off (default 20%). You can change this while the session is open.
-- **Participants buy their own place** — who pays. See the next section.
+- **Participants buy their own place** — who pays. It is **on** when the dialog opens; switch it off to fund every place yourself. See the next section.
 
 You choose the module or solution later, on the session itself, not in this dialog.
 
@@ -43,9 +45,9 @@ You choose the module or solution later, on the session itself, not in this dial
 
 You decide when you create the session. **That choice is fixed once the session exists.** To run a session the other way, create a new one.
 
-**You pay (the default).** The whole cohort's allowance — participants × credits per participant — is reserved from your **purchased** credits when you create the session. Free credits you were given can't be used. The dialog shows what you hold, what is taken and what you'll have left. Adding participants or credits later is also paid from your purchased credits.
+**You pay.** The whole cohort's allowance — participants × credits per participant — is reserved from your **purchased** credits when you create the session. Free credits you were given can't be used. The dialog shows what you hold, what is taken and what you'll have left. Adding participants or credits later is also paid from your purchased credits.
 
-**Participants buy their own place.** Nothing is reserved from your credits. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
+**Participants buy their own place (the default for a new session).** Nothing is reserved from your credits. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
 
 When does a participant's payment become yours? Only once **that participant's clock starts**, which is the moment they get access to their lab. Until then their payment is held. If they never get access — their environment was never built, or failed to build, or was never started — their payment is returned to them when the session settles.
 
@@ -107,9 +109,11 @@ Participants can't deploy anything themselves in a lab. Every lab deployment is 
 - **Use advanced settings** when updating a lab deployment. Only administrators can.
 - **See a participant's own deployments.** Your access covers the lab environments in your sessions, not anything a participant deploys for themselves.
 - **Force a teardown.** Only administrators can.
+- **Deploy for someone from the ordinary deploy form.** Only administrators can deploy on another person's behalf there; you provision for participants from a lab session.
+- **Purge a participant's environment before it is destroyed.** Deleting it destroys the resources; purging only the record first is for the environment's owner or an administrator.
 - **Change a session's region, or edit a session once it has ended.**
 
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Support** tab. Administrators and finance staff work that queue.
+- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Support** tab. Administrators and finance staff work that queue.
