@@ -26,7 +26,7 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 
 The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Finance opens on **Billing** and agents on **Revenue**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Finance opens on **Billing** and agents on **Credits → My Commission**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign out**.
 
@@ -45,7 +45,7 @@ After you sign in, RAD takes you to the page that fits your role:
 
 - **Admin**, **Partner**, **User**, **Support**, **Trainer** → **Solutions**, on the **Build Solution** tab
 - **Finance** → **Billing**
-- **Agent** → **Revenue**
+- **Agent** → **Credits**, on the **My Commission** tab
 - No role assigned yet → **Help**
 
 ---
@@ -59,7 +59,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Solutions |
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Solutions |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
-| **Agent** | Earns referral commission on activity from users they referred | Revenue |
+| **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission |
 | **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Solutions |
 | **Trainer** | Runs lab sessions from the **Labs** page — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
