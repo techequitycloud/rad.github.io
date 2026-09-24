@@ -34,7 +34,7 @@ Go to the **Users** page to manage everyone on the platform.
 **Edit roles.** Open a user's row and set:
 
 - **Active** status — see Activate/deactivate below.
-- **Role flags** — Admin, User, Partner, Support and Trainer are always shown. **Agent** and **Finance** appear only once **Enable Subscription** is switched on in **Setup** (see [Assigning roles](#assigning-roles)). Ticking **Trainer** also opens a cohort roster box for that user.
+- **Role flags** — Admin, User, Partner, Support and Trainer are always shown. **Agent** and **Finance** appear only once **Enable Subscription** is switched on in **Setup** (see [Assigning roles](#assigning-roles)).
 
 Save your changes to apply them.
 
@@ -64,11 +64,19 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 - **Agent** — earn referral commission from users they referred; uses the **Revenue** page.
 - **Finance** — financial reporting and payouts; uses the **Billing** page.
 - **Support** — help-desk triage of **Support Tickets** (a Help-page tab). A support agent sees deployments only for the customers whose open tickets are assigned to them, and never a deployment's variables or outputs. Resolving or closing the ticket ends that access.
-- **Trainer** — provisions lab environments for a cohort. Ticking **Trainer** opens a **cohort roster** beside the flag: the participant email addresses this account may deploy for and whose lab deployments it may see, one per line, up to 30. The roster is the grant, so emptying it revokes the access without removing the role. Unlike Support, a trainer may destroy what they provisioned — a cohort's deployments otherwise outlive the course — but never reads a deployment's secrets or outputs, and never sees a participant's own personal deployments.
+- **Trainer** — runs **lab sessions** from the **Labs** page: enrols a cohort of participants, funds them or has them buy their own place, and builds one lab environment per participant. The role is the whole grant — there is no roster to fill in — so unticking it removes the access. Deactivating an account also clears it, and reactivating does not restore it. A trainer is always treated as a user as well, so they keep the user's pages, including **Credits**, which funds their sessions. Unlike Support, a trainer may update and destroy the lab environments they provisioned, so a course does not leave infrastructure behind. A trainer never reads a lab deployment's secrets or outputs, never sees a participant's own personal deployments, and can't deploy on anyone's behalf from the ordinary deploy form.
 
 See the [Trainer Guide](trainer-guide.md) for the trainer's own view of this.
 
-**How cohort provisioning works.** A trainer deploys from the ordinary module form. Switching on **GCP Project on RAD** reveals a **Deploy for participants** selector; choosing participants provisions **one deployment each**, owned and charged to that participant rather than to the trainer, in a single action. Those deployments use the **lab** tier, which has its own folder, org policies and budget. The tier is selected automatically when participants are chosen and is not offered as a manual choice on any form.
+**How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, the **Labs** entry is hidden and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
+
+A trainer creates a session on **Labs** and chooses who pays:
+- **Participants buy their own place.** This is the default for a new session. Each participant pays from their own purchased credits before anything is built for them.
+- **The trainer pays.** The whole allowance is reserved from the trainer's purchased credits up front.
+
+Each participant gets **one environment** on the **lab** tier, which has its own folder, org policies and budget. The lab tier is never offered as a manual choice on any deploy form. Unused credits settle back to the trainer once Google has reported the session's costs.
+
+You can see and manage every trainer's sessions, and you alone can force a teardown. Finance can see every session and end one, but can't change it. Only you can deploy on someone else's behalf from the ordinary deploy form.
 
 ## Bulk credit awards and messaging users
 

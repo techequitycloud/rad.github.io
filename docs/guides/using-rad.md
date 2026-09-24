@@ -62,7 +62,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **Agent** | Earns referral commission on activity from users they referred | Revenue |
 | **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Solutions |
-| **Trainer** | Provisions lab deployments for an assigned roster of participants, one per participant, and sees what they provisioned | Solutions |
+| **Trainer** | Runs lab sessions from the **Labs** page — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
 
 See the role guides at the end for the full task lists.
 
