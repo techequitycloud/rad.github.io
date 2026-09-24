@@ -35,7 +35,7 @@ Your top navigation shows **Credits** (when credits are enabled), **Deployments*
 On **Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
 
 1. **Where should it run?** Your own Google Cloud project is the default: you keep the billing relationship, your organization's policies, and the project itself afterwards. Choosing a **RAD-managed project** instead puts the infrastructure inside RAD's own organization and billing account, and you then also say what the environment is for — trying things out, for your developers, or for your end users. A RAD-managed project also asks you to be holding a minimum balance of purchased credits, which the page states. That is a balance requirement, not a charge.
-2. **Where should it live?** Pick the location closest to the people who will use it. Your own project can use any Google Cloud region; a RAD-managed project offers the locations RAD supports — the cheapest in each part of the world.
+2. **Where should it live?** Pick the location closest to the people who will use it. Your own project can use any Google Cloud region; a RAD-managed project offers the locations RAD supports — the cheapest in each part of the world. RAD checks this again when you deploy: a location outside that list, in any location setting (including one that takes several locations), is refused before anything is reserved or built, and the message names the setting to change.
 3. **What should we call it?** A name for your own reference, plus a short name (up to seven letters or numbers) used inside your cloud resources. Reuse that short name later to share the same cloud resources.
 
 If the applications RAD proposes aren't quite right, use **Not quite? Tell us what to change** underneath them — say what to add or drop, and RAD reworks the set instead of starting from scratch. You can also remove a single application, or **Start over** to clear your answers and the proposal together.
@@ -79,6 +79,8 @@ A **solution** deploys several modules together as one unit, in the right order,
 
 **Platform Solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
 
+A solution with three or more members costs less than deploying the same modules one by one: its **module fees** are discounted by 15% for three or four members, 20% for five or six, and 25% for seven or more. The discount covers module fees only — build time, and a RAD-managed project's own costs, are charged as normal. The confirmation dialog shows the discount it applied.
+
 **Custom Solutions** are your own, composed in conversation. Describe what you want to build — "I need a marketing site with a blog and email campaigns" — and RAD suggests modules from the catalog with a short reason for each. Add the ones you want (up to 12), give it a name, and save it. Your custom solutions are private to you.
 
 - A saved solution shows **Draft** until you deploy it, then **Deployed**. A draft can be edited in place; once it has deployed, editing offers to copy it into a new draft instead, so the record of what you actually built stays accurate.
@@ -93,7 +95,7 @@ Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite
 
 Open a deployment to see its details, which has these tabs:
 
-- **Outputs** — the non-sensitive results of the deployment (such as application URLs, addresses, and endpoints exported by the module). These appear once the deployment succeeds.
+- **Outputs** — starts with the page to open: **First-time setup** when the application needs setting up before its first use, **Open application** otherwise, or — for a module with no web interface — the API address to connect to. Below that are the rest of the non-sensitive results (such as addresses and endpoints exported by the module). These appear once the deployment succeeds.
 - **Build Status** — live logs, useful for watching progress or troubleshooting a failure. Once the deployment has succeeded, **Explain this** opens a plain-English explanation of the Google Cloud resources it created, written for someone who does not read Terraform. It sends only the *kinds* of resource involved and how many of each — never your project ID, resource names, email addresses or any configured values. It also links the module's own documentation page, so the explanation is grounded in how that module actually works rather than in general knowledge. On a step that has *failed*, **Search for a fix** opens a search built from the actual error the step printed, and **Ask for help** raises a support request with that same output attached.
 - **Builds** — the build history for the deployment.
 
@@ -113,17 +115,18 @@ To **rate a module**, go back to the **Deployments** list and click the stars on
 
 Open the **Credits** page to manage your balance.
 
-Your credits sit in three separate balances, and they behave differently:
+Your credits sit in four separate balances, and they behave differently:
 
 - **Awards** — free credits: your signup grant, monthly grants, and referral rewards. These are reset each month.
+- **Event credits** — free credits you claimed with an event code (see below). They expire on their own date, shown when you claim them, rather than with the monthly reset.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits you bought outright as a one-off. These never expire.
 
-Spending draws on awards first, then subscription, then top-up — so the credits that expire soonest are used first, and the ones you bought outright are kept until last.
+Spending draws on awards first, then event credits, then subscription, then top-up — so the credits that expire soonest are used first, and the ones you bought outright are kept until last.
 
-Deploying a module charges the module's credit cost plus a build cost, metered from how long the build actually runs.
+Deploying a module charges two things. The **module fee** is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update. The **build cost** is metered from how long each build actually runs, at the platform's credits-per-build-hour rate, and charged as each build finishes.
 
-**The confirmation dialog quotes the whole chain, not just the application you picked.** Deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and those carry their own costs — the dialog lists them under *"RAD also sets these up for you"* with a combined total. It also separates what is taken when you confirm from what is metered as each build finishes, so the second charge is not a surprise. Build costs are estimates until the build completes, so the final figure can differ a little.
+**The confirmation dialog quotes the whole chain, not just the application you picked.** Deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and those carry their own costs — the dialog lists them under *"RAD also sets these up for you"* with a combined total. It also separates what is reserved when you confirm from what is metered as each build finishes, so the second charge is not a surprise. Build costs are estimates until the build completes, so the final figure can differ a little.
 
 Updating a deployment charges the build cost only.
 
@@ -139,7 +142,9 @@ The Credits page has these tabs:
 
 **To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
 
-Some deployments require *purchased* credits (subscription or top-up, not awarded) before you can start them — in that case, buy credits first even if you have an awarded balance.
+Some deployments require *purchased* credits (subscription or top-up, not awards or event credits) before you can start them — in that case, buy credits first even if you have a free balance.
+
+**Event codes.** A RAD partner event may give you a code for free credits. Enter it under **Have an event code?** on the **Credits** page, or open the link the event gave you, which fills the code in for you. Each code can be claimed once per account and needs a verified email address; some codes are limited to particular attendees or email domains, and every code has a closing date. Event credits pay for module fees and build time, but not for Google Cloud usage in a RAD-managed project, and they do not count toward the purchased-credit minimum a RAD-managed project asks for.
 
 ## Subscriptions
 
@@ -160,6 +165,12 @@ Open **Credits** and go to the **ROI** tab to use the interactive ROI calculator
 You can see your own spending two ways on the **Credits** page. **Credit Transactions** lists every award, purchase, and deployment charge on your account, filterable by deployment and date. **Project Transactions** — available whenever project credits are enabled — breaks the project side of that down per Google Cloud project, showing the credits debited and the underlying cloud cost for each one over a date range you choose.
 
 Platform-wide reporting is still restricted: the **Module Costs** and **Project Invoices** tabs and the whole **Billing** page are limited to administrators and finance users. If you need a formal invoice, ask through the Support form.
+
+## Email notifications
+
+Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.)
+
+Turning **Deployments** off stops all of those emails, including the warnings. Because RAD never permanently removes anything without warning you first, those removals are **held** while the setting is off: a RAD-managed project whose billing was switched off for lack of credits is not deleted, and a deployment removed from your list after the retention period is kept rather than permanently erased. If you turn deployment emails back on while a RAD-managed project is being held, the deletion warning is sent first — and the project can then be deleted as soon as the following day, so act on that warning straight away.
 
 ## Getting help
 
