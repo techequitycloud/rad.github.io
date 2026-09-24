@@ -28,7 +28,7 @@ After you sign in you land on **Credits**, on the **My Commission** tab. Your to
 
 ## Your referral link
 
-Your link and code are on the **Help** page, under the **Support** tab. The **Invite Friends** card shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off.
+Your link and code are on your **Profile** (open the profile menu, top right), in the **Refer and earn** section; the **Credits** page also has a **Get your referral link** shortcut to it. The **Invite Friends** card there shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off.
 
 Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
