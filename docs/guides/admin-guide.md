@@ -34,7 +34,7 @@ Go to the **Users** page to manage everyone on the platform.
 **Edit roles.** Open a user's row and set:
 
 - **Active** status — see Activate/deactivate below.
-- **Role flags** — Admin, User, Partner, Support and Trainer are always shown. **Agent** and **Finance** appear only once **Enable Subscription** is switched on in **Setup** (see [Assigning roles](#assigning-roles)).
+- **Role flags** — Admin, User, Partner, Agent, Support and Trainer are always shown. **Finance** appears only once **Enable Subscription** is switched on in **Setup**. The **Agent** box can be ticked only while users can pay (see [Assigning roles](#assigning-roles)).
 
 Save your changes to apply them.
 
@@ -61,7 +61,7 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 - **User** — the default. Deploy modules and manage their own deployments and credits.
 - **Admin** — full platform administration (this guide).
 - **Partner** — publish modules from their own repository and earn partner revenue. Granting Partner is manual; subscribing to a credit plan does not grant it.
-- **Agent** — earn referral commission from users they referred; uses the **Revenue** page.
+- **Agent** — a sales role: earns a cash commission on the module fees their referred users pay with purchased credits, tracked on **Credits → My Commission** (see the [Agent Guide](agent-guide.md)). It can be granted only while users can **buy credits or subscribe**, meaning credits are on and Stripe or Flutterwave is on. With payments off the box stays locked and a note says why. An existing agent can always be un-ticked, and keeps the role if payments are switched off later. **Deactivating** an agent's account stops their commission: nothing new is recorded, and what is already recorded is held back from payouts until the account is reactivated.
 - **Finance** — financial reporting and payouts; uses the **Billing** page.
 - **Support** — help-desk triage of **Support Tickets** (a Help-page tab). A support agent sees deployments only for the customers whose open tickets are assigned to them, and never a deployment's variables or outputs. Resolving or closing the ticket ends that access.
 - **Trainer** — runs **lab sessions** from the **Labs** page: enrols a cohort of participants, funds them or has them buy their own place, and builds one lab environment per participant. The role is the whole grant — there is no roster to fill in — so unticking it removes the access. Deactivating an account also clears it, and reactivating does not restore it. A trainer is always treated as a user as well, so they keep the user's pages, including **Credits**, which funds their sessions. Unlike Support, a trainer may update and destroy the lab environments they provisioned, so a course does not leave infrastructure behind. A trainer never reads a lab deployment's secrets or outputs, never sees a participant's own personal deployments, and can't deploy on anyone's behalf from the ordinary deploy form.
