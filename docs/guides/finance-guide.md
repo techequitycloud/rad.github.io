@@ -46,7 +46,7 @@ Configure the global parameters of the credit economy.
 1. Go to **Billing** > **Credit Settings**.
 2. Set the **credits-per-unit** value (how credits map to currency).
 3. Set the **revenue shares** — the percentage of revenue allocated to referring **agents** (Agent Revenue Share) and to module **partners** (Partner Revenue Share).
-4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator.
+4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Invite Friends** card disappears from Help), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap.
 5. Decide what a **failed deployment** is charged, on the **Failed Deployments** card. It has two independent switches, and each label states its own outcome ("Build cost charged" / "Build cost not charged", "Module fee charged" / "Module fee not charged"):
    - **Build cost** — whether the metered Cloud Build time of a new deployment that fails or is cancelled is charged.
    - **Module fee** — whether the module fee is charged for that deployment even though it never succeeded.
@@ -142,7 +142,7 @@ Managed-setup requests from users who want RAD to handle a deployment for them a
 
 Click **Help** in the navigation bar:
 
-- **Support** tab — a contact form that raises a support ticket and emails the support team.
+- **Support** tab — a contact form that raises a support ticket and emails the support team, with **My tickets** beneath it listing the tickets you have raised and their status.
 - **Setup Requests** tab — described above.
 - **Support Tickets** tab — the shared ticket queue. Because billing is one of its categories, you can triage it: Finance and admins may assign, reassign or clear a ticket's assignee to anyone, where support agents may only claim an unassigned ticket or release one they hold.
 

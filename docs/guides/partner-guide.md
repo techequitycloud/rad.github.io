@@ -67,7 +67,7 @@ Cloud costs and project invoices aren't available to Partners in the console —
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Solutions → Solution Modules** — browse the catalog, configure with either the **Conversational Assistant** (the default) or the guided **Configuration Form**, and launch.
+- **Solutions → Solution Modules** — browse the catalog, configure with either the guided **Configuration Form** (the default) or the **Conversational Assistant**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
 
