@@ -9,7 +9,7 @@ description: "RAD Platform finance guide — managing credits, billing, invoicin
 
 This guide is for people with the **Finance** role, who manage RAD's billing setup, run revenue and payout reports, and reconcile cloud costs. New to RAD? Start with [Using RAD](using-rad.md).
 
-When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing** and **Help**. (**Setup Requests** is a tab inside the Help page.)
+When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing**, **Labs** (when lab sessions are switched on), **Audit Log** and **Help**. (**Setup Requests** is a tab inside the Help page.)
 
 ## What you can do
 
@@ -21,6 +21,7 @@ When you sign in as Finance, you land on the **Billing** page. Your navigation b
 - Review org-wide GCP cloud costs (**Project Invoices**).
 - View all users and the full lists of agents and partners; make limited user edits.
 - Manage managed-setup requests (the **Setup Requests** tab on the Help page).
+- Review the money-related entries of the **Audit Log**.
 
 ## The Billing page
 
@@ -46,7 +47,7 @@ Configure the global parameters of the credit economy.
 1. Go to **Billing** > **Credit Settings**.
 2. Set the **credits-per-unit** value (how credits map to currency).
 3. Set the **revenue shares** — the percentage of revenue allocated to referring **agents** (Agent Revenue Share) and to module **partners** (Partner Revenue Share).
-4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator.
+4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Invite Friends** card disappears from Help), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap.
 5. Decide what a **failed deployment** is charged, on the **Failed Deployments** card. It has two independent switches, and each label states its own outcome ("Build cost charged" / "Build cost not charged", "Module fee charged" / "Module fee not charged"):
    - **Build cost** — whether the metered Cloud Build time of a new deployment that fails or is cancelled is charged.
    - **Module fee** — whether the module fee is charged for that deployment even though it never succeeded.
@@ -138,11 +139,21 @@ Managed-setup requests from users who want RAD to handle a deployment for them a
 3. Expand a request to work it: set its **status** (new, in-progress, completed or cancelled), choose an **Assigned Engineer** (only registered partners are accepted), record **Revenue Achieved**, and add internal notes. Click **Save** to apply.
 4. Saving a request as *completed* with revenue above zero is what calculates the split between platform and engineer revenue, so set the revenue figure before you mark it completed. **Export to CSV** gives you the loaded set for reporting.
 
+## Audit Log
+
+Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements. Administrators see every action.
+
+- The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
+- Select **Show all** on a row to see everything recorded with it, such as the balance before and after a change.
+- If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
+
+The log is read-only.
+
 ## Getting help
 
 Click **Help** in the navigation bar:
 
-- **Support** tab — a contact form that raises a support ticket and emails the support team.
+- **Support** tab — a contact form that raises a support ticket and emails the support team, with **My tickets** beneath it listing the tickets you have raised and their status.
 - **Setup Requests** tab — described above.
 - **Support Tickets** tab — the shared ticket queue. Because billing is one of its categories, you can triage it: Finance and admins may assign, reassign or clear a ticket's assignee to anyone, where support agents may only claim an unassigned ticket or release one they hold.
 

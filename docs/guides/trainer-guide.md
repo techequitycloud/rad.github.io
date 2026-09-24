@@ -69,11 +69,13 @@ The session's **Settlement** panel shows what was committed, consumed and refund
 
 - **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, but not more often than every 10 minutes.
 - **Participants who already have an account** are emailed to say they have been added.
-- **In a session where participants pay,** both emails tell them they must buy their place before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page.
+- **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page.
 
 To add people to a running session, use **Add participants**. In a session you fund, the dialog shows what it will take from your credits before you confirm. An address already in the session — even one you removed earlier — can't be added again.
 
 To stop people, tick their rows. **End selected** switches their environments off. **Remove** also takes them off the session. Their unused allowance comes back to you at settlement.
+
+If you remove someone before their environment was built, their banner tells them nothing was created. If they had paid for their place, it also tells them the payment is returned to their credits when the session settles, and then that it has been.
 
 ## Building and running environments
 
@@ -86,7 +88,11 @@ An environment that is built but never started can't wait for ever: by default, 
 
 ### When time runs out
 
-Participants are warned 15 and 5 minutes before their time ends. At the end, the environment's billing is switched off, the participant's access is removed and the lab project is deleted. An environment is also switched off early if it uses up its credits, or if its spending passes the overrun ceiling.
+Participants are emailed a warning before their time ends, by default at 15 and 5 minutes. The email states the time actually left. If you extend their time after a warning, they are warned again before the new end.
+
+At the end, the environment's billing is switched off, any build still running for it is cancelled, the participant's access to the project is removed and the lab project is deleted. An environment is also switched off early if it uses up its credits, or if its spending passes the overrun ceiling.
+
+Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 
 Use **End now** to end the whole session at any time. A session nobody provisions is ended automatically after 14 days.
 
@@ -98,7 +104,9 @@ Participants see a lab banner at the top of every RAD page. It shows:
 - when it is ready and waiting for you to start their clock;
 - once it runs, their time and credits left, and a link to their project in the Google Cloud console.
 
-When their clock starts they get access to their project in the console. They can look at deployments, logs and storage, restart workloads and run existing jobs. They can't read secrets or create resources, and everything is deleted when the lab ends.
+When their clock starts they get access to their project in the console. They can see what was deployed and its logs, read the files in its storage buckets, and connect to its Cloud SQL database. On Cloud Run they can delete an old revision and run existing jobs; on GKE they can restart pods, roll a deployment back and port-forward. They can't read Secret Manager or Kubernetes secrets, change configuration or images, scale, or create resources, and everything is deleted when the lab ends.
+
+**Don't put credentials in ordinary settings.** Participants can see a Cloud Run service's plain environment variables and the files in its buckets. A value a module marks as secret, such as an API key field, is stored in Secret Manager and stays hidden from them.
 
 Participants can't deploy anything themselves in a lab. Every lab deployment is yours.
 

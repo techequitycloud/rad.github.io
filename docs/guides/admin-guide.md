@@ -20,8 +20,9 @@ As an admin you have superuser access. In addition to everything a standard user
 - Sync **platform modules** into the catalog from their GitHub repository.
 - Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
+- Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Explore, Sync, Deployments, Solutions, and Help. The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Audit Log, Sync, Deployments, Solutions, and Help, plus **Credits** if your account also holds the User role. The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -108,15 +109,15 @@ You are responsible for the catalog of **platform modules** that every user sees
 
 **Update a module.** Change the module in the repository, then run **Sync Now** from the Sync page to refresh its definition (description, configuration fields, and credit cost) in the catalog.
 
-**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published.
+**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and on a module's own page, and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published.
 
 ## Setup Requests
 
-The **Setup Requests** tab on the **Help** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this tab; as an admin you have full visibility into all requests.
+The **Setup Requests** tab on the **Help** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this tab; as an admin you have full visibility into all requests. Support-role users do not see Setup Requests — the requests carry revenue and partner-payout figures.
 
 ## Support Tickets
 
-The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets.
+The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket from the **My tickets** list on their own Support tab, which shows the status you set but never your notes or who the ticket is assigned to.
 
 ## Visibility into revenue, costs, invoices, and payouts
 
@@ -127,6 +128,16 @@ You have platform-wide financial visibility:
 - **Payouts** — per-payee payout totals.
 
 These reports are the tabs of the **Billing** page. Two things to know before you go looking for them: your admin navigation has no Billing entry, so either grant yourself the Finance role as well (which adds it) or go to `/billing` directly; and every Billing tab requires **Enable Subscription** in **Setup**, so with that switched off the page opens with no tabs on it. Use them to monitor platform health, reconcile partner and agent earnings, and review project spending.
+
+## Audit log
+
+Open **Audit Log** from the navigation bar to review what has been done on the platform. It lists every recorded action, newest first: role and account changes, settings changes, credit grants and adjustments, forced deletions, credential reveals, payouts, and lab session activity. Each row shows when it happened, the action, and who performed it (**System** for scheduled jobs).
+
+- The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
+- Select **Show all** on a row to see everything recorded with it. Secret values are never recorded; a changed secret shows as redacted.
+- If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
+
+Finance also has an **Audit Log**, limited to the money-related actions. The log is read-only: nobody, admins included, can edit or delete an entry.
 
 ## Getting help
 
