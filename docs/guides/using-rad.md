@@ -60,7 +60,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Solutions |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
 | **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission |
-| **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
+| **Finance** | Financial reporting and payouts: subscription tiers, credit settings and grants, event codes, revenue, invoices; read-only lab oversight | Billing, Labs |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Solutions |
 | **Trainer** | Runs lab sessions from the **Labs** page — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
 
