@@ -18,9 +18,9 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Connect your own GitHub repository so RAD can read your modules.
 - **Sync** your modules into the catalog from your repository.
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
-- Earn a partner revenue share when others deploy your modules (statements provided by the Finance team).
+- Earn a partner revenue share when others deploy your modules, and see each payout Finance records for you.
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Explore**, **Sync**, **Deployments**, **Solutions**, **Revenue**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -30,6 +30,8 @@ Before you can sync anything, connect the repository that holds your modules. Op
 2. Under **Partner Settings**, choose that repository from the **GitHub Repository** dropdown and click **Update Repo**.
 
 Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and the **Solution Modules** tab shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
+
+> **Deploying your modules needs one step from an administrator.** The GitHub App lets RAD *read* your modules so they can be synced and listed. Building a deployment of one of your modules — by you or by anyone else — additionally needs deployment access to your repository, which an administrator sets up for each partner. Until they have, a deployment of your module stops before it starts with *"Deployment repository credentials are not configured"*. Ask an administrator to enable deployments for your repository when you are ready for your modules to be deployed.
 
 ## Syncing your modules
 
@@ -57,7 +59,21 @@ Deploying your own module waives the **module fee** — the module's own credit 
 
 You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing.
 
-Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more. Nothing appears there until you pick a start and an end date and click **Fetch Partner Revenue**; **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Partner Revenue**.
+Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more, and no referral tab for partners — partners earn on their modules, not on referrals. The dates open on the last 7 days; adjust them if you need to and click **Fetch Partner Revenue**. **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Partner Revenue**.
+
+The revenue shown there is worked out at the current revenue-share rate. Once Finance has paid you for a period, that payment is recorded with the rate and amount **as they were when you were paid**, so a later change to the rate never changes what you have already been paid.
+
+### Payouts
+
+Finance pays partners outside RAD, then records each payment in RAD. Below the revenue table on **Module Revenue**, the **Payouts** section lists every payment recorded for you: the period it covers, the module revenue and any setup-request earnings in it, the rate used, the payment reference, and the date it was paid. If a period you expected is missing, contact Finance through **Help → Support**.
+
+### Setup requests
+
+If Finance assigns you as the engineer on a customer's setup request, you earn a share of the revenue from that request when it is completed: **75%** by default, with the platform keeping 25% (Finance can set a different platform share). Your completed setup earnings appear in the **Payouts** section and are included when Finance records a payout.
+
+### Monthly partner credits
+
+An administrator or Finance can give you a monthly partner credit allowance. It is added to your **awarded** credits on the 1st of each month, appears in **Credit Transactions** labelled **Partner award**, and — like all awarded credits — expires at the next monthly reset.
 
 ## Costs and invoices
 

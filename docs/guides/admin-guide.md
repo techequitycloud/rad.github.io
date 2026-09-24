@@ -69,6 +69,16 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 
 See the [Trainer Guide](trainer-guide.md) for the trainer's own view of this.
 
+### Onboarding a partner
+
+Making someone a partner takes three steps, and the last one is yours:
+
+1. Tick **Partner** on their row on the **Users** page.
+2. The partner connects their GitHub repository from their **Profile** (installing the RAD Module Sync GitHub App, then choosing the repository). That lets RAD **read** their modules, so they can sync them and see them listed — see the [Partner Guide](partner-guide.md).
+3. **Enable deployments of their modules.** Building a deployment clones the partner's repository with a per-partner credential that only an administrator can create. In the RAD platform project's **Secret Manager**, create a secret named `partner-github-token-<partner's user ID>` — the ID is the partner's Firebase Authentication user ID, the same value stored as `partnerId` on their modules — with automatic replication, holding a GitHub token that can read that repository. Until it exists, any deployment of the partner's modules (by the partner or by a customer) is refused with *"Deployment repository credentials are not configured"*, so do this before the partner makes a module public.
+
+Revoking the Partner role, or deactivating the account, stops their monthly partner allotment. Delete the secret as well if the partner should no longer be deployable.
+
 **How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, the **Labs** entry is hidden and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
 
 A trainer creates a session on **Labs** and chooses who pays:

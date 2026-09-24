@@ -116,9 +116,19 @@ Creating a batch, marking it paid and reversing a commission each write an audit
 
 See per-payee payout totals across partners and agents. This tab is available to **finance and admin only**.
 
-1. Go to **Billing** > **Payout Summary**.
-2. Choose a start and an end date — both required, maximum 366 days — then click **Calculate Payouts**.
-3. Each row shows the payee's email, whether they're paid as an Agent, a Partner or both, the number of transactions, the purchased credits behind them, and the Amount Due in your billing currency. Period totals appear beneath the table, and **Export to CSV** gives you the same list to work from.
+1. Go to **Billing** > **Payout Summary**. It opens on the last 7 days and loads straight away.
+2. To report on another period, choose a start and an end date — both required, maximum 366 days — then click **Calculate Payouts**.
+3. Each row shows the payee's email, whether they're paid as an Agent, a Partner or both, the number of transactions, the purchased credits behind them, the **Setup Revenue** a partner earned as the engineer on completed setup requests, and the Amount Due in your billing currency. Period totals appear beneath the table, and **Export to CSV** gives you the same list to work from.
+
+#### Recording a partner payout
+
+RAD does not send money — you pay partners outside the platform — but once you have, record it so both you and the partner have a lasting record.
+
+1. Select the period the payment covers. **The period must have ended**: **Mark paid** stays disabled while the period includes today, because anything earned after you recorded it could never be paid.
+2. On the partner's row, optionally enter your payment reference, then click **Mark paid**.
+3. RAD recalculates the partner's amount for that period and **stores it with the rates in force at that moment**. That stored figure is the permanent record: if the revenue-share rate changes later, the live figure on this page moves but the recorded payment does not, and the row shows both when they differ.
+
+A period can be recorded once per partner; marking the same period again changes nothing, and a period that overlaps one already recorded for that partner is refused. Each recorded payout writes an audit entry, and the partner sees it in the **Payouts** section of their **Module Revenue** tab. Agent commission has its own payout flow on **Agent Revenue**.
 
 ### Project Invoices
 
@@ -141,7 +151,7 @@ As Finance you can see all users and the full lists of agents and partners.
 
 The only change you can make to a user account is to their **credit balances** (Awards, Purchases, and Monthly Partner Credits).
 
-All **roles** — including granting or revoking the **Partner** role — and a user's **active** status are **admin-only**. The Credit Management screen may display an "Is Partner?" checkbox next to the partner-credit field, but submitting a role change as Finance is rejected by the server (403).
+All **roles** — including granting or revoking the **Partner** role — and a user's **active** status are **admin-only**. On Credit Management the "Is Partner?" checkbox is shown read-only for Finance; you can still set the **Monthly Partner** allotment for someone who already holds the Partner role.
 
 ## Setup Requests
 
@@ -150,7 +160,17 @@ Managed-setup requests from users who want RAD to handle a deployment for them a
 1. Click **Help** in the navigation bar, then open the **Setup Requests** tab.
 2. Choose a status filter and a start and end date, then click **Load Requests** — nothing loads until a date range is set.
 3. Expand a request to work it: set its **status** (new, in-progress, completed or cancelled), choose an **Assigned Engineer** (only registered partners are accepted), record **Revenue Achieved**, and add internal notes. Click **Save** to apply.
-4. Saving a request as *completed* with revenue above zero is what calculates the split between platform and engineer revenue, so set the revenue figure before you mark it completed. **Export to CSV** gives you the loaded set for reporting.
+4. Saving a request as *completed* is what calculates the split between platform and engineer revenue, so set the revenue figure before you mark it completed. The engineer keeps **75%** and the platform **25%** by default; an administrator can set a different platform share (**Platform revenue share (setup requests)** in settings), and a share of 0 is honoured. The module **Partner Revenue Share** does not affect setup requests. Changing the revenue on a request that is already completed recalculates the split without changing its completion date. **Export to CSV** gives you the loaded set for reporting.
+
+## Audit Log
+
+Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements. Administrators see every action.
+
+- The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
+- Select **Show all** on a row to see everything recorded with it, such as the balance before and after a change.
+- If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
+
+The log is read-only.
 
 ## Audit Log
 
