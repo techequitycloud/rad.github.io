@@ -120,15 +120,18 @@ A solution's modules are grouped into **waves**, a rough deploy order — but wh
 
 ### Credits
 
-Usage is metered in credits, held in three separate balances:
+Usage is metered in credits, held in four separate balances:
 
 - **Awards** — free credits (signup, monthly, referral), reset each month.
+- **Event credits** — free credits claimed with a code from a RAD partner event. They expire on their own date.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits bought outright as a one-off. These never expire.
 
-Spending draws on awards first, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all three together and is checked before each deployment.
+Spending draws on awards first, then event credits, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all of them together and is checked before each deployment.
 
-Deploying a module costs that module's credit cost plus a build cost, metered from how long the build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only.
+Deploying a module costs that module's fee plus a build cost. The fee is reserved when you confirm and charged when the deployment first succeeds; the build cost is metered from how long each build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only. A solution of three or more modules gets a bundle discount on its module fees — 15% for three or four, 20% for five or six, 25% for seven or more.
+
+You choose which emails RAD sends on your **Profile** page. Turning **Deployments** emails off stops every deployment email, including the warning RAD sends before it permanently deletes something — so while they are off, those deletions are held rather than made without warning. See the [User Guide](user-guide.md#email-notifications).
 
 What a **failed** deployment costs is a platform setting, not a fixed rule: Finance can choose, separately for the build cost and the module fee, whether either is charged when a new deployment fails or is cancelled. **In the current release neither is charged, so a failed deployment costs you nothing.** Failed updates and teardowns are not charged either.
 
