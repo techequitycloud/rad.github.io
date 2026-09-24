@@ -57,7 +57,7 @@ Deploying your own module waives the **module fee** — the module's own credit 
 
 You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing.
 
-Track it on the **Revenue** page. It opens on **My Referral Revenue**, which belongs to the separate Agent referral feature and only has activity if you also hold the Agent role, so switch to **Module Revenue** for your partner-module earnings. Nothing appears there until you pick a start and an end date and click **Fetch Partner Revenue**; **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Partner Revenue**.
+Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more. Nothing appears there until you pick a start and an end date and click **Fetch Partner Revenue**; **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Partner Revenue**.
 
 ## Costs and invoices
 
@@ -67,7 +67,7 @@ Cloud costs and project invoices aren't available to Partners in the console —
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Solutions → Solution Modules** — browse the catalog, configure with either the **Conversational Assistant** (the default) or the guided **Configuration Form**, and launch.
+- **Solutions → Solution Modules** — browse the catalog, configure with either the guided **Configuration Form** (the default) or the **Conversational Assistant**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
 

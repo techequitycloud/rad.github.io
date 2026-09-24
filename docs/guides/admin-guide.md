@@ -34,7 +34,7 @@ Go to the **Users** page to manage everyone on the platform.
 **Edit roles.** Open a user's row and set:
 
 - **Active** status — see Activate/deactivate below.
-- **Role flags** — Admin, User, Partner, Support and Trainer are always shown. **Agent** and **Finance** appear only once **Enable Subscription** is switched on in **Setup** (see [Assigning roles](#assigning-roles)). Ticking **Trainer** also opens a cohort roster box for that user.
+- **Role flags** — Admin, User, Partner, Agent, Support and Trainer are always shown. **Finance** appears only once **Enable Subscription** is switched on in **Setup**. The **Agent** box can be ticked only while users can pay (see [Assigning roles](#assigning-roles)). Ticking **Trainer** also opens a cohort roster box for that user.
 
 Save your changes to apply them.
 
@@ -61,7 +61,7 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 - **User** — the default. Deploy modules and manage their own deployments and credits.
 - **Admin** — full platform administration (this guide).
 - **Partner** — publish modules from their own repository and earn partner revenue. Granting Partner is manual; subscribing to a credit plan does not grant it.
-- **Agent** — earn referral commission from users they referred; uses the **Revenue** page.
+- **Agent** — a sales role: earns a cash commission on the module fees their referred users pay with purchased credits, tracked on **Credits → My Commission** (see the [Agent Guide](agent-guide.md)). It can be granted only while users can **buy credits or subscribe**, meaning credits are on and Stripe or Flutterwave is on. With payments off the box stays locked and a note says why. An existing agent can always be un-ticked, and keeps the role if payments are switched off later. **Deactivating** an agent's account stops their commission: nothing new is recorded, and what is already recorded is held back from payouts until the account is reactivated.
 - **Finance** — financial reporting and payouts; uses the **Billing** page.
 - **Support** — help-desk triage of **Support Tickets** (a Help-page tab). A support agent sees deployments only for the customers whose open tickets are assigned to them, and never a deployment's variables or outputs. Resolving or closing the ticket ends that access.
 - **Trainer** — provisions lab environments for a cohort. Ticking **Trainer** opens a **cohort roster** beside the flag: the participant email addresses this account may deploy for and whose lab deployments it may see, one per line, up to 30. The roster is the grant, so emptying it revokes the access without removing the role. Unlike Support, a trainer may destroy what they provisioned — a cohort's deployments otherwise outlive the course — but never reads a deployment's secrets or outputs, and never sees a participant's own personal deployments.
@@ -104,11 +104,11 @@ You are responsible for the catalog of **platform modules** that every user sees
 
 ## Setup Requests
 
-The **Setup Requests** tab on the **Help** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this tab; as an admin you have full visibility into all requests.
+The **Setup Requests** tab on the **Help** page is where managed-setup requests are handled. Review incoming requests, track their status, and follow them through to completion. Finance also has access to this tab; as an admin you have full visibility into all requests. Support-role users do not see Setup Requests — the requests carry revenue and partner-payout figures.
 
 ## Support Tickets
 
-The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets.
+The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket from the **My tickets** list on their own Support tab, which shows the status you set but never your notes or who the ticket is assigned to.
 
 ## Visibility into revenue, costs, invoices, and payouts
 

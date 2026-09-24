@@ -24,9 +24,9 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 1. Open the RAD sign-in page and click **Sign in with Google**.
 2. Choose your Google account.
 
-The first time you sign in, your account is created automatically. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
+The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Finance opens on **Billing** and agents on **Revenue**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Finance opens on **Billing** and agents on **Credits → My Commission**, because each signs in to do a particular job. Everyone else — including admins and partners — opens on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign out**.
 
@@ -45,7 +45,7 @@ After you sign in, RAD takes you to the page that fits your role:
 
 - **Admin**, **Partner**, **User**, **Support**, **Trainer** → **Solutions**, on the **Build Solution** tab
 - **Finance** → **Billing**
-- **Agent** → **Revenue**
+- **Agent** → **Credits**, on the **My Commission** tab
 - No role assigned yet → **Help**
 
 ---
@@ -59,7 +59,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Solutions |
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Solutions |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
-| **Agent** | Earns referral commission on activity from users they referred | Revenue |
+| **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission |
 | **Finance** | Financial reporting and payouts: subscription tiers, revenue, invoices | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Solutions |
 | **Trainer** | Provisions lab deployments for an assigned roster of participants, one per participant, and sees what they provisioned | Solutions |
@@ -85,13 +85,13 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 
 ### Deploying a module
 
-1. Click a module card, then choose how to configure it. The **Conversational Assistant** (the default) describes every setting in one message and proposes changes as you describe what you want; you apply each proposed change yourself, so nothing is set without your say-so. The **Configuration Form** is the guided, multi-step form — fill in the fields, using **Next** to move through the steps. You can switch between the two at any point, and both write the same configuration.
+1. Click a module card, then choose how to configure it. The **Configuration Form** (the default) is the guided, multi-step form — fill in the fields, using **Next** to move through the steps. The **Conversational Assistant** describes every setting in one message and proposes changes as you describe what you want; you apply each proposed change yourself, so nothing is set without your say-so. You can switch between the two at any point, and both write the same configuration.
 
    Two things the assistant deliberately will not do. It never sees or sets a **secret** (an API key, token or password): it tells you the field exists and you type the value into the highlighted box on the page — never into the chat, where it would be sent to the model and kept in the conversation. And it will not accept a value that breaks a field's own rule; it tells you what the rule is and asks for a corrected one rather than quietly changing what you typed.
 2. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
 3. Click **Deploy Module**. The deployment is queued and provisioned, and you're taken to the **Deployments** page. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
-On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it, and can switch between **All deployments** and **My deployments**; everyone else sees their own. For support, "All deployments" is scoped to the customers whose open tickets are assigned to them, not the whole platform.
+On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it. Admins can switch between **All deployments** and **My deployments**; support has no switch and sees only the deployments of the customers whose open tickets are assigned to them, not the whole platform; everyone else sees their own.
 
 Click a deployment to open its details, which has three tabs:
 
@@ -162,7 +162,7 @@ Platform-wide reporting stays an administrator and finance view: the **Module Co
 
 ## Getting help
 
-The **Help** page's **Support** tab is a contact form that raises a support ticket and emails the support team. Depending on your role you may see more tabs there: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). Where referrals are enabled, the Support tab also carries your **Invite Friends** card with your referral link and code.
+The **Help** page's **Support** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up), and you can raise up to 5 in 24 hours. Under the form, **My tickets** lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**). Depending on your role you may see more tabs there: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). Where the referral program is on, the Support tab also carries your **Invite Friends** card with your referral link and code. (Administrators see a message form on the Support tab instead of the contact form, My tickets and the Invite card.)
 
 You can also reach Help from the **Contact us** link in the footer.
 

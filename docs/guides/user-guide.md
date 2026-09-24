@@ -42,6 +42,14 @@ If the applications RAD proposes aren't quite right, use **Not quite? Tell us wh
 
 A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes, alongside a build-duration estimate such as "about 1h 20m". **Build this** deploys it. **Show the engineering detail** opens the same solution on the full configuration form if you would rather set everything yourself.
 
+### Bringing your own Google Cloud project
+
+Deploying into a project you already own means RAD's deployment service account does the work inside it, so it needs access first. Before anything deploys, you grant that service account the **Owner** role on your project and confirm you own the project; the final confirmation step names the exact account and shows how to grant it. Free (awarded) credits can pay for a deployment into your own project.
+
+### What a RAD-managed project needs
+
+A RAD-managed project asks for two things before RAD can create it: a **verified email address**, and a minimum balance of **purchased** credits for the purpose you chose. Free (awarded) credits — such as the ones you receive when you sign up — do not count toward that minimum. The page shows how many purchased credits you have against what is needed, with a **Buy credits** link, as soon as you choose the option. The header shows your balance split into purchased and free credits for the same reason.
+
 ## Finding a module
 
 Open **Solutions** and choose the **Solution Modules** tab to browse the module catalog. Modules appear as cards.
@@ -57,7 +65,7 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a module
 
-1. **Choose how to configure it.** Click a module card and pick **Conversational Assistant** (the default) or **Configuration Form**. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch to the form at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
+1. **Choose how to configure it.** Click a module card and pick **Configuration Form** (the default) or **Conversational Assistant**. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch between the two at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
 2. **Open the form.** The guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action, once your credit balance covers the extra cost.
 3. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid. The form is generated from the module itself, so where the module declares a rule for a field — a naming pattern, a length limit — you see that module's own error as you type rather than several minutes into a failed build. Fields holding a secret (an API token, a password) are masked and stored in Google Secret Manager rather than saved with the rest of your configuration; because the value never comes back to the browser, such a field shows **Configured** or **Not configured** instead, and leaving a configured one blank keeps it rather than clearing it.
 4. **Confirm.** Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
@@ -129,7 +137,7 @@ The Credits page has these tabs:
 - **Buy Credits** (when enabled) — top up your balance.
 - **ROI** — the ROI calculator described below.
 
-**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The minimum top-up is $10 USD, shown converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
+**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
 
 Some deployments require *purchased* credits (subscription or top-up, not awarded) before you can start them — in that case, buy credits first even if you have an awarded balance.
 
@@ -155,4 +163,6 @@ Platform-wide reporting is still restricted: the **Module Costs** and **Project 
 
 ## Getting help
 
-Open **Help** and use the **Support** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. A **Contact us** link in the footer also takes you to the Help page.
+Open **Help** and use the **Support** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up); without any, the form shows a prompt to buy credits instead. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
+
+Your tickets are listed under **My tickets**, below the form, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list, and it updates by itself after you submit a ticket.

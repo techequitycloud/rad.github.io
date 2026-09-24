@@ -7,58 +7,82 @@ description: "RAD Platform agent guide — supporting learners, managing deploym
 
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/Agent_Guide.png" alt="Agent Guide" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-For referral partners who earn commission when the users they referred deploy modules on RAD. New to RAD? Start with [Using RAD](using-rad.md).
+For referral partners who earn a cash commission when the people they refer pay for module deployments on RAD. Agent is a sales role. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do
 
-As an Agent, your role is focused on referrals and commission:
+As an Agent your role is about referrals and commission:
 
-- Earn commission on the activity of users who signed up with your referral code.
-- Track your commission on the **Revenue** page.
-- See a read-only list of the users you referred and their module and cost activity.
-- If you also hold the **User** role, manage your own credits and billing like any other user.
+- Share your referral link. Everyone who signs up through it is linked to you.
+- Earn **commission in cash** on the module fees those users pay with credits they bought.
+- Earn **referral bonus credits** for every signup, with no monthly limit.
+- Track every commission, and every payout made to you, on **Credits → My Commission**.
 
-After you sign in, you land on the **Revenue** page. Your top navigation shows **Revenue** and **Help**.
+An agent's account usually also holds the **User** role, the one every signup starts with. If yours does, you keep everything a user has: deploying modules and solutions, your own credits and billing, and your deployments. See [Using RAD](using-rad.md).
 
-## How referrals work
+## Getting the Agent role
 
-When someone signs up for RAD using your referral link, they are linked to your account. Your link and code are on the **Help** page under the **Support** tab: the **Invite Friends** card shows your code, a QR code, and **Copy Link** and **Share** buttons, and appears whenever referral rewards are switched on.
+An administrator grants the role on the **Users** page. It can be granted only while people can pay on the platform, meaning buying credits or subscribing is switched on. With payments off there is nothing for an agent to earn from, so the checkbox stays locked. An existing agent keeps the role if payments are later switched off.
 
-From then on, the eligible activity of that referred user contributes to your commission. Self-referrals do not count.
+After you sign in you land on **Credits**, on the **My Commission** tab. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold.
 
-Referrals also earn you bonus credits: each new signup through your link adds referral credits to your balance, up to a monthly limit set by the platform. Past that limit you can still refer users and still earn commission on their activity, but no further referral credits are awarded until the limit resets at the start of the next month.
+## Your referral link
 
-## Tracking your commission on the Revenue page
+Your link and code are on the **Help** page, under the **Support** tab. The **Invite Friends** card shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off.
 
-The **Revenue** page is where you monitor what you've earned.
+Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
-1. Click **Revenue** in the top navigation. The page opens on the **My Referral Revenue** tab, which is the one described here; the second tab, **Module Revenue**, shows the same referral earnings without the referred-user picker.
-2. Your earnings are your **agent revenue share** of what your referred users spend on module deployments out of credits they paid for. Credits they were given free — signup, monthly and other awarded credits — earn you nothing, and build (time-based) charges are excluded entirely: only a module's own credit cost counts.
-3. Self-referrals are excluded.
+**Referral bonus credits.** Each signup through your link adds referral credits to your balance. Ordinary users only get these up to a monthly limit. **Agents have no monthly limit**, so the card shows how many rewards you earned this month with no cap or progress bar. These are *awarded* credits: you can spend them on deployments, but they are not commission and are never paid out.
 
-## Seeing your referred users and their activity
+## How commission works
 
-The **Revenue** page also gives you a read-only view of who and what is generating your commission:
+You earn a share of the **module fees** your referred users pay **with credits they bought** (from a subscription or a top-up).
 
-- See the users you referred, along with the modules they deployed and the credit cost of that activity. Only deployments that earned you commission are listed — one your referred user paid for entirely with free credits produces no row.
-- Set a start and an end date, then click **Fetch User Revenue**. Nothing loads until you do, and the range can't be longer than 366 days. You can narrow the results further by referred user and by module.
-- Export the report so you can review it offline.
+| Counts towards commission | Never counts |
+|---|---|
+| A module's own fee, including the fees of the Google Cloud project and shared-services modules RAD sets up alongside it | Build (time-based) charges, and Google Cloud project usage |
+| The part of a fee paid with purchased credits | The part paid with free or awarded credits (signup, monthly, referral, event codes) |
+| | The self-serve project surcharge |
+| | Anything spent inside a **lab** (training) session |
+| | Subscriptions and credit purchases themselves (you earn when the credits are *spent* on module fees) |
 
-This view is read-only. You can see your referred users' activity, but you cannot act on their accounts or deployments.
+- **Rate.** Set by Finance as the *Agent Revenue Share* (15% at the time of writing), fixed on each fee when it is charged. A later change to the rate never changes what you have already earned.
+- **Currency.** Commission is worked out in US dollars from the credits' list price. For example, a 100-credit fee paid with purchased credits, at 10 credits per dollar and 15%, earns **$1.50**.
+- **Timing.** Only fees charged **after** the person was referred, and **while you held the Agent role**, count. If your role is removed, you keep what you earned while you had it.
+- **Deactivated accounts earn nothing.** If your account is deactivated, no further commission is recorded for you, and commission already recorded is **held back from payouts**. It stays on your statement and is paid only if the account is reactivated.
 
-## Managing your own credits and billing
+## Tracking your commission: Credits → My Commission
 
-The Agent navigation itself has no **Credits** item. If you also hold the **User** role, you get the **Credits** page through that role and manage your own credits and billing like any other user — viewing your balance and transaction history, buying credits, and subscribing to a credit plan. See [Using RAD](using-rad.md) for how credits and billing work.
+The **My Commission** tab is your statement.
 
-## What agents can't do
+- **Totals** across the top: **Earned**, **Reversed**, **On hold**, **Payable**, **In payout** and **Paid**.
+- **One row per commission**: date, module, the module fee, the part paid with purchased credits, your rate, the commission, and its status.
+- **Status** tells you where each one stands:
+  - **On hold until** a date: every commission is held for **30 days** before it can be paid, so a refunded or disputed fee can be reversed first.
+  - **Payable**: past the hold, waiting for the next payout.
+  - **In payout**: included in a payout Finance is making.
+  - **Paid**: included in a payout Finance has marked as paid.
+  - **Reversed — not paid** / **Deducted from next payout**: Finance reversed it (for example, the fee was refunded), with the reason shown on the row.
+- **Your payouts** lists every payout batch that paid you, marked *paid* with a date or *being paid*.
 
-The Agent role is intentionally narrow. As an Agent you cannot:
+## How you get paid
 
-- Publish or manage modules.
-- Manage other user accounts (including changing credits, roles, or active status).
-- Change platform settings.
-- Run or process payouts.
-- Act on another user's behalf — there is no impersonation anywhere in the platform.
+Payouts are made by Finance in **batches**, in cash, **outside RAD** (by bank transfer or similar):
+
+1. Finance picks a cut-off date and creates a batch. It takes everything payable up to that date and nets off any reversals.
+2. You are included once your payable total reaches the **$50 minimum**. Anything smaller carries forward to the next batch; nothing is lost.
+3. Finance pays you and marks the batch paid with a payment reference. Your statement then shows those commissions as **Paid**.
+
+You don't request payouts yourself. If you think a payout is missing, raise a ticket from **Help → Support**.
+
+## What you can't do
+
+The Agent role is deliberately narrow. As an agent you cannot:
+
+- See the individual activity, deployments, balances or settings of the users you referred. Your statement shows the fee and the module, never their account.
+- Run or approve payouts, reverse commissions, or see other agents' figures.
+- Publish or manage modules, manage user accounts, or change platform settings.
+- Act on another user's behalf. There is no impersonation anywhere in RAD.
 
 ## Getting help
 
