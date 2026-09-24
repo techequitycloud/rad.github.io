@@ -20,8 +20,9 @@ As an admin you have superuser access. In addition to everything a standard user
 - Sync **platform modules** into the catalog from their GitHub repository.
 - Handle **Setup Requests** and **Support Tickets** (tabs on the **Help** page).
 - See all revenue, costs, invoices, and payouts across the platform.
+- Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Explore, Sync, Deployments, Solutions, and Help. The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing every non-finance, non-agent role gets, so the first screen is what can be built rather than the list of what was built last time. Your top navigation shows: Setup, Users, Audit Log, Sync, Deployments, Solutions, and Help, plus **Credits** if your account also holds the User role. The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -68,6 +69,16 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 
 See the [Trainer Guide](trainer-guide.md) for the trainer's own view of this.
 
+### Onboarding a partner
+
+Making someone a partner takes three steps, and the last one is yours:
+
+1. Tick **Partner** on their row on the **Users** page.
+2. The partner connects their GitHub repository from their **Profile** (installing the RAD Module Sync GitHub App, then choosing the repository). That lets RAD **read** their modules, so they can sync them and see them listed — see the [Partner Guide](partner-guide.md).
+3. **Enable deployments of their modules.** Building a deployment clones the partner's repository with a per-partner credential that only an administrator can create. In the RAD platform project's **Secret Manager**, create a secret named `partner-github-token-<partner's user ID>` — the ID is the partner's Firebase Authentication user ID, the same value stored as `partnerId` on their modules — with automatic replication, holding a GitHub token that can read that repository. Until it exists, any deployment of the partner's modules (by the partner or by a customer) is refused with *"Deployment repository credentials are not configured"*, so do this before the partner makes a module public.
+
+Revoking the Partner role, or deactivating the account, stops their monthly partner allotment. Delete the secret as well if the partner should no longer be deployable.
+
 **How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, the **Labs** entry is hidden and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
 
 A trainer creates a session on **Labs** and chooses who pays:
@@ -108,7 +119,7 @@ You are responsible for the catalog of **platform modules** that every user sees
 
 **Update a module.** Change the module in the repository, then run **Sync Now** from the Sync page to refresh its definition (description, configuration fields, and credit cost) in the catalog.
 
-**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published.
+**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and on a module's own page, and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published.
 
 ## Setup Requests
 
@@ -127,6 +138,16 @@ You have platform-wide financial visibility:
 - **Payouts** — per-payee payout totals.
 
 These reports are the tabs of the **Billing** page. Two things to know before you go looking for them: your admin navigation has no Billing entry, so either grant yourself the Finance role as well (which adds it) or go to `/billing` directly; and every Billing tab requires **Enable Subscription** in **Setup**, so with that switched off the page opens with no tabs on it. Use them to monitor platform health, reconcile partner and agent earnings, and review project spending.
+
+## Audit log
+
+Open **Audit Log** from the navigation bar to review what has been done on the platform. It lists every recorded action, newest first: role and account changes, settings changes, credit grants and adjustments, forced deletions, credential reveals, payouts, and lab session activity. Each row shows when it happened, the action, and who performed it (**System** for scheduled jobs).
+
+- The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
+- Select **Show all** on a row to see everything recorded with it. Secret values are never recorded; a changed secret shows as redacted.
+- If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
+
+Finance also has an **Audit Log**, limited to the money-related actions. The log is read-only: nobody, admins included, can edit or delete an entry.
 
 ## Getting help
 
