@@ -1,6 +1,6 @@
 ---
 title: "Administrator Guide"
-description: "RAD Platform administrator guide — managing users, roles, organizations, module catalogs, deployments, and platform settings."
+description: "RAD Platform administrator guide — managing users and roles, platform settings, the module catalogue, setup requests and support tickets, and oversight of revenue, costs and audit."
 ---
 
 # Administrator Guide

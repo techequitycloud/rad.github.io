@@ -1,6 +1,6 @@
 ---
 title: "Partner Guide"
-description: "RAD Platform partner guide — onboarding organizations, managing cohorts, and delivering Google Cloud certification training at scale."
+description: "RAD Platform partner guide — connecting your GitHub repository, publishing and syncing your own modules, and earning a revenue share when others deploy them."
 ---
 
 # Partner Guide
