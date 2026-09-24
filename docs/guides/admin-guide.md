@@ -39,7 +39,7 @@ Go to the **Users** page to manage everyone on the platform.
 
 Save your changes to apply them.
 
-**Editing credits is elsewhere.** Per-user balances live on the **Credit Management** tab of the **Billing** page, which edits Awards, Subscription and Top-up separately. Nobody — admins included — can change their own balance; ask another admin or finance user, so the record carries two identities.
+**Editing credits is elsewhere.** Per-user balances live on the **Credit Management** tab of the **Billing** page, which edits Awards, Subscription and Top-up separately. Nobody — admins included — can change their own balance; ask another admin or finance user, so the record carries two identities. For the same reason, admin and finance accounts cannot claim **event codes**, and nobody can claim a code they created.
 
 **Activate or deactivate.** Toggle a user's active status to grant or revoke access. Safeguards apply: you cannot deactivate an account that holds the Admin role.
 

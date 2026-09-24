@@ -1,6 +1,6 @@
 ---
 title: "Finance Guide"
-description: "RAD Platform finance guide — managing credits, billing, invoicing, and Google Cloud cost tracking for training deployments and cohorts."
+description: "RAD Platform finance guide — pricing and credit settings, credit grants and event codes, revenue and payouts, Google Cloud cost reconciliation, and lab-session oversight."
 ---
 
 # Finance Guide
@@ -9,24 +9,27 @@ description: "RAD Platform finance guide — managing credits, billing, invoicin
 
 This guide is for people with the **Finance** role, who manage RAD's billing setup, run revenue and payout reports, and reconcile cloud costs. New to RAD? Start with [Using RAD](using-rad.md).
 
-When you sign in as Finance, you land on the **Billing** page. Your navigation bar shows **Billing**, **Labs** (when lab sessions are switched on), **Audit Log** and **Help**. (**Setup Requests** is a tab inside the Help page.)
+Finance is granted by an administrator on top of an ordinary account, so you keep everything a signed-up user has. When you sign in as Finance you land on the **Billing** page. Your navigation bar shows **Billing**, **Labs** and **Audit Log** first, then the everyday items your account also holds — **Credits**, **Deployments** and **Solutions** for an ordinary user account — and **Help** last. (**Labs** appears only while lab sessions are switched on, and **Setup Requests** and **Support Tickets** are tabs inside the Help page.)
 
 ## What you can do
 
 - Create and edit subscription plans and their per-provider prices (**Subscription Tiers**).
-- Configure the credit economy — credits-per-unit and revenue shares (**Credit Settings**).
-- Adjust any user's credit balance (**Credit Management**).
-- Create event codes that give attendees of a partner event free credits (**Event Codes**).
-- Report on **Partner Revenue**, and review and pay agent commission (**Agent Revenue**).
+- Configure the credit economy — credits-per-unit, fees, discounts and revenue shares (**Credit Settings**).
+- Adjust any other user's credit balance (**Credit Management**).
+- Issue **Event Codes** that give event attendees free credits.
+- Report on **Module Revenue**, and review and pay agent commission (**Agent Revenue**).
+- Review every customer's RAD-managed project costs (**Project Transactions**) and org-wide GCP costs (**Project Invoices**).
 - See per-payee payout totals (**Payout Summary**).
-- Review org-wide GCP cloud costs (**Project Invoices**).
+- Oversee every trainer's lab sessions, and end one to stop its spending (**Labs**).
 - View all users and the full lists of agents and partners; make limited user edits.
-- Manage managed-setup requests (the **Setup Requests** tab on the Help page).
+- Work the managed-setup and support-ticket queues (tabs on the Help page).
 - Review the money-related entries of the **Audit Log**.
 
 ## The Billing page
 
-Open **Billing** from the navigation bar. The page is organized into these tabs — **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Event Codes**, **Module Revenue**, **Agent Revenue**, **Project Transactions**, **Project Invoices**, and **Payout Summary** — described below. **Event Codes** is always shown; the others need subscriptions enabled, and the two project tabs also need project credits enabled.
+Open **Billing** from the navigation bar. It has nine tabs, in this order: **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Event Codes**, **Module Revenue**, **Agent Revenue**, **Project Transactions**, **Project Invoices** and **Payout Summary**. Each is described below.
+
+Which tabs appear depends on two platform switches. Every tab except **Event Codes** needs **Subscriptions** switched on, and **Project Transactions** and **Project Invoices** also need **Project Credits**. The page always opens on the first tab you can use — with Subscriptions off, that is **Event Codes**, and it is the only tab shown.
 
 ### Subscription Tiers
 
@@ -70,6 +73,8 @@ Adjust an individual user's credit balances.
 
 Two things to expect. You cannot adjust your **own** balance: the save is rejected and you are told to ask another finance or admin user, which keeps two identities on every grant. And if someone else changed that user's balance while your edit form was open, your save is rejected, the form closes and the table refreshes — re-open it and make the change from the current figure.
 
+Only the balances you actually change are saved; the others are left exactly as they are, including a negative or part-credit balance. The edit form has no **Is Partner?** control for you: partner status is a role, and only administrators change roles.
+
 ### Event Codes
 
 Give the attendees of a partner event (a DevFest, a workshop) free credits they claim themselves by entering a code.
@@ -82,12 +87,14 @@ Give the attendees of a partner event (a DevFest, a workshop) free credits they 
 
 Each account can claim a code once, and only with a verified email address. The credits land in the user's **Event credits** balance: they are free (never counted as purchased), are spent after the monthly awards, do not pay for Google Cloud usage in a RAD-managed project, and expire on their own date rather than with the monthly reset. Once a code exists its credits and validity are fixed; you can still **Disable** or **Enable** it, move its closing date, or change its cap. **Details** lists who claimed it, and **Export claims (CSV)** downloads that list.
 
+**You cannot claim event codes yourself.** Finance and admin accounts — the accounts that create codes — are refused, and nobody can claim a code they created, even after losing the role. This is the same rule that stops you adjusting your own balance. The "Have an event code?" box on the Credits page is not shown to you for that reason.
+
 ### Module Revenue
 
-See revenue generated by partner-published modules and the share allocated to each partner.
+See the revenue deployments generate, and the share allocated to each partner or agent.
 
-1. Go to **Billing** > **Module Revenue**.
-2. Choose a start and an end date — both are required, and the range cannot exceed 366 days — then click **Fetch Partner Revenue**. Nothing loads until you do.
+1. Go to **Billing** > **Module Revenue**. It opens on the last 7 days and loads straight away.
+2. To change the period, choose a start and an end date — the range cannot exceed 366 days — and click **Refresh**.
 3. With no partner or agent selected you are looking at full platform revenue for that period. Select one or more partners (or agents) to narrow it to their revenue share, calculated from the percentage set in Credit Settings. You can also filter by module.
 4. Each row shows the date, module name, user email, credit cost and revenue. **Export to CSV** takes the full filtered set, not just the page on screen.
 
@@ -99,9 +106,9 @@ The tab has two parts.
 
 **The commission statement.**
 
-1. Go to **Billing** > **Agent Revenue** and pick an agent. You see their statement exactly as they do: totals (Earned, Reversed, On hold, Payable, In payout, Paid) and one row per commission.
+1. Go to **Billing** > **Agent Revenue** and pick an agent — current or former, since a demoted agent can still be owed commission. You see their statement exactly as they do: totals (Earned, Reversed, On hold, Payable, In payout, Paid) and one row per commission.
 2. Each commission is **on hold for 30 days** before it becomes payable, so a refunded or disputed fee can be dealt with first.
-3. To take a commission back, for example because its fee was refunded, use **Reverse** on its row and give a reason. The reversal is recorded as a new negative entry, never an edit. If the commission hasn't been paid yet, the pair nets to zero; if it has, the amount is deducted from that agent's next payout. The reason is shown to the agent and written to the audit log.
+3. To take a commission back, for example because its fee was refunded, use **Reverse** on its row and give a reason. The reversal is recorded as a new negative entry, never an edit. If the commission hasn't been paid yet, the pair nets to zero — and if it sits in a payout batch that isn't marked paid yet, that batch's total drops by the same amount. If it has been paid, the amount is deducted from that agent's next payout. The reason is shown to the agent and written to the audit log.
 
 **Agent payouts.**
 
@@ -112,13 +119,31 @@ The tab has two parts.
 
 Creating a batch, marking it paid and reversing a commission each write an audit-log entry.
 
+### Project Transactions
+
+Every customer's RAD-managed Google Cloud project costs, as they were charged.
+
+1. Go to **Billing** > **Project Transactions**. It opens on the last 7 days.
+2. Search by project ID or owner email, adjust the dates, and click **Search**.
+3. Each row shows the project, its owner and the credits charged. Every page of results is loaded, so totals and exports cover the whole period.
+
+### Project Invoices
+
+Reconcile actual Google Cloud spending.
+
+1. Go to **Billing** > **Project Invoices**. It opens on the current month and loads it.
+2. Pick another month to change it; **Fetch Project Invoice** reloads.
+3. Each row shows the project's name and ID, its owner, the **list cost in credits** (the cost at the credits-per-unit rate, before any project margin — so it is not the amount debited) and the total cost in your display currency. Totals beneath the table cover the page on screen and say so. **Export to CSV** exports every project for that month.
+
+Per-deployment **Module Costs** are not a Billing tab — they live on the **Credits** page.
+
 ### Payout Summary
 
 See per-payee payout totals across partners and agents. This tab is available to **finance and admin only**.
 
 1. Go to **Billing** > **Payout Summary**. It opens on the last 7 days and loads straight away.
 2. To report on another period, choose a start and an end date — both required, maximum 366 days — then click **Calculate Payouts**.
-3. Each row shows the payee's email, whether they're paid as an Agent, a Partner or both, the number of transactions, the purchased credits behind them, the **Setup Revenue** a partner earned as the engineer on completed setup requests, and the Amount Due in your billing currency. Period totals appear beneath the table, and **Export to CSV** gives you the same list to work from.
+3. Each row shows the payee's email, whether they're paid as an Agent, a Partner or both, the number of transactions, the purchased credits behind them, the **Setup Revenue** a partner earned as the engineer on completed setup requests, and the Amount Due in your billing currency. Agent figures come from the commission ledger, and the commission-basis total counts each spend once, even when it paid both an agent and a partner. Period totals appear beneath the table, and **Export to CSV** gives you the same list to work from.
 
 #### Recording a partner payout
 
@@ -130,28 +155,28 @@ RAD does not send money — you pay partners outside the platform — but once y
 
 A period can be recorded once per partner; marking the same period again changes nothing, and a period that overlaps one already recorded for that partner is refused. Each recorded payout writes an audit entry, and the partner sees it in the **Payouts** section of their **Module Revenue** tab. Agent commission has its own payout flow on **Agent Revenue**.
 
-### Project Invoices
-
-Reconcile actual Google Cloud spending.
-
-1. Go to **Billing** > **Project Invoices**.
-2. Select a month, then click **Fetch Project Invoice** — the data doesn't load until you do.
-3. Each row shows the project's name and ID, its owner, the credit debit, and the total cost in your display currency. Monthly totals appear beneath the table, and **Export to CSV** exports every project for that month.
-
-Per-deployment **Module Costs** are not a Billing tab — they live on the **Credits** page.
-
 ## Viewing users, agents, and partners
 
 As Finance you can see all users and the full lists of agents and partners.
 
 - See and search every account on **Billing** > **Credit Management** — the table lists all users and has a "Search by email" box. There is no separate Users page for Finance; that one is admin-only.
-- See the partners and agents on the platform through the pickers on **Partner Revenue**, **Agent Revenue**, and the Assigned Engineer field on Setup Requests.
+- See the partners and agents on the platform through the pickers on **Module Revenue**, **Agent Revenue**, and the Assigned Engineer field on Setup Requests.
 
 ### Limited user edits
 
-The only change you can make to a user account is to their **credit balances** (Awards, Purchases, and Monthly Partner Credits).
+The only change you can make to a user account is to their **credit balances** (Awards, Subscription, Top-up and the Monthly Partner allotment), and never on your own account.
 
-All **roles** — including granting or revoking the **Partner** role — and a user's **active** status are **admin-only**. On Credit Management the "Is Partner?" checkbox is shown read-only for Finance; you can still set the **Monthly Partner** allotment for someone who already holds the Partner role.
+All **roles** — including granting or revoking the **Partner** role — and a user's **active** status are **admin-only**, so the Credit Management screen shows you no role controls. You can still set the **Monthly Partner** allotment for someone who already holds the Partner role.
+
+## Labs
+
+Finance oversees lab sessions; it does not run them.
+
+1. Click **Labs** in the navigation bar (the same view is the **Lab Sessions** tab on Solutions). You see every trainer's sessions, with a date range, a status filter and a **Trainer** column.
+2. Open **Participants** on a session to see its settlement — committed, consumed, refundable, and anything absorbed by RAD — and its participants. **Export CSV** downloads the list.
+3. Each participant's environment opens a read-only deployment page: build status and logs, with secrets masked. The **Outputs** tab and generated passwords or keys are not shown to you; they belong to the participant and the trainer.
+
+The one change you can make is **End now**, which stops a session's spending straight away. It moves no money: the escrow settles later, once the session's Google Cloud usage has been metered. Everything else — creating or duplicating sessions, starting clocks, extending, adding or removing participants, resending invitations, provisioning and topping up — belongs to the session's trainer or an administrator, and those controls are not shown to you.
 
 ## Setup Requests
 
@@ -172,16 +197,6 @@ Open **Audit Log** from the navigation bar to see who changed what, and when, on
 
 The log is read-only.
 
-## Audit Log
-
-Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements. Administrators see every action.
-
-- The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
-- Select **Show all** on a row to see everything recorded with it, such as the balance before and after a change.
-- If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
-
-The log is read-only.
-
 ## Getting help
 
 Click **Help** in the navigation bar:
@@ -190,6 +205,6 @@ Click **Help** in the navigation bar:
 - **Setup Requests** tab — described above.
 - **Support Tickets** tab — the shared ticket queue. Because billing is one of its categories, you can triage it: Finance and admins may assign, reassign or clear a ticket's assignee to anyone, where support agents may only claim an unassigned ticket or release one they hold.
 
-The **ROI** calculator is not on Help — it's a tab on the **Credits** page, after Buy Credits. Credits appears in your navigation only if your account also holds the ordinary user role; otherwise go to `/credits` directly.
+The **ROI** calculator is not on Help — it's a tab on the **Credits** page, after Buy Credits. Credits appears in your navigation only if your account also holds the ordinary user role; otherwise go to `/credits` directly. Without the user role you have no credit ledger of your own, so the page does not offer **Credit Transactions** and opens on **Module Revenue** instead; **Module Costs** and **Project Invoices** are there as usual.
 
 A **Contact us** link in the footer also takes you to the Help page.
