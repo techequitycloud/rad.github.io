@@ -13,6 +13,7 @@ For trainers who run a course on RAD and give each participant their own lab env
 
 - Run **lab sessions** from the **Labs** page. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
 - Choose, per session, **who pays** for a participant's place: you, or each participant.
+- Pay for one participant's place yourself when they can't pay on RAD — for example, they paid you in cash, or their bank won't work with the payment provider.
 - Build the same module or solution into every participant's environment in one action, start their clocks, add time or credits, and end environments early.
 - Get back every credit your participants did not use once the session settles. Those credits are yours to keep.
 
@@ -51,6 +52,22 @@ You decide when you create the session. **That choice is fixed once the session 
 
 When does a participant's payment become yours? Only once **that participant's clock starts**, which is the moment they get access to their lab. Until then their payment is held. If they never get access — their environment was never built, or failed to build, or was never started — their payment is returned to them when the session settles.
 
+### Paying for a participant's place yourself
+
+Some participants can't pay on RAD: their bank won't work with the payment provider, or they have cash rather than a card. They can pay you however you agree, and you buy their place for them.
+
+1. Open the session and find the participant on the **Participants** list. A place that hasn't been paid for shows **Pay for place** next to **Remove**.
+2. Choose **Pay for place**. The dialog shows the price — the session's credits per participant — and says it comes from your credits.
+3. Optionally add a note about the payment, such as "Cash, receipt 0412" (up to 120 characters). It is kept with the place and shown when you hover over its badge.
+4. Choose **Pay** to confirm.
+
+The price is taken from your **purchased** credits (free credits can't be used) and paid into the session exactly as if the participant had bought the place. From then on the place works like any other: their environment is built, their allowance is spent, and what they don't use comes back to you at settlement. The row shows **Paid by trainer**, and the participant is emailed that their place is paid for, so they don't try to pay again.
+
+- **If the place is never used** — the session ends before their clock starts, or you remove them before their environment is built — the credits come back to **you**, not to the participant, when the session settles.
+- **RAD doesn't take, hold or check the payment made to you.** That's between you and the participant; RAD only records your note.
+- Only the session's own trainer can do this, because it spends your credits. An administrator looking after your session is not offered the button.
+- It isn't offered on a session you already fund: every place in it is already paid for.
+
 ### What happens to unused credits
 
 Whichever way the session is funded, whatever the participants did not use comes back to **you** when the session settles, into your top-up credits, which don't expire. In a session where participants pay, that remainder is your margin.
@@ -69,13 +86,13 @@ The session's **Settlement** panel shows what was committed, consumed and refund
 
 - **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, but not more often than every 10 minutes.
 - **Participants who already have an account** are emailed to say they have been added.
-- **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page.
+- **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page. If you pay for someone's place yourself, they get a separate email saying it is paid for.
 
 To add people to a running session, use **Add participants**. In a session you fund, the dialog shows what it will take from your credits before you confirm. An address already in the session — even one you removed earlier — can't be added again.
 
 To stop people, tick their rows. **End selected** switches their environments off. **Remove** also takes them off the session. Their unused allowance comes back to you at settlement.
 
-If you remove someone before their environment was built, their banner tells them nothing was created. If they had paid for their place, it also tells them the payment is returned to their credits when the session settles, and then that it has been.
+If you remove someone before their environment was built, their banner tells them nothing was created. If they had paid for their place, it also tells them the payment is returned to their credits when the session settles, and then that it has been. If **you** paid for their place, the credits come back to you instead, and they are not told otherwise.
 
 ## Building and running environments
 

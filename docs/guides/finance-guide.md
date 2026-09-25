@@ -189,7 +189,7 @@ Managed-setup requests from users who want RAD to handle a deployment for them a
 
 ## Audit Log
 
-Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements. Administrators see every action.
+Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements — including a place a trainer paid for on a participant's behalf (with the trainer's note about the offline payment, if they left one). Administrators see every action.
 
 - The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
 - Select **Show all** on a row to see everything recorded with it, such as the balance before and after a change.

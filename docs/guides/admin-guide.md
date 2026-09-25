@@ -82,7 +82,7 @@ Revoking the Partner role, or deactivating the account, stops their monthly part
 **How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, the **Labs** entry is hidden and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
 
 A trainer creates a session on **Labs** and chooses who pays:
-- **Participants buy their own place.** This is the default for a new session. Each participant pays from their own purchased credits before anything is built for them.
+- **Participants buy their own place.** This is the default for a new session. Each participant pays from their own purchased credits before anything is built for them. When one can't pay on RAD (a bank the payment provider won't accept, or cash), the trainer can pay for that one place from their own purchased credits with **Pay for place**; the row then shows **Paid by trainer**. Only the session's own trainer is offered this, because it spends their credits.
 - **The trainer pays.** The whole allowance is reserved from the trainer's purchased credits up front.
 
 Each participant gets **one environment** on the **lab** tier, which has its own folder, org policies and budget. The lab tier is never offered as a manual choice on any deploy form. Unused credits settle back to the trainer once Google has reported the session's costs.
