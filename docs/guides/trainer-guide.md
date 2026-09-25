@@ -96,7 +96,7 @@ If you remove someone before their environment was built, their banner tells the
 
 ## Building and running environments
 
-1. **Choose what to build** on the session: **Module** or **Solution**, then search the catalogue. Fill in the module's first page of settings; the region always comes from the session.
+1. **Choose what to build** on the session: **Module** or **Solution**, then search the catalogue. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
 2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish.
 3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
