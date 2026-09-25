@@ -56,8 +56,8 @@ These variables are consumed by the deployment platform rather than by the Terra
 | `module_documentation` | `"https://docs.radmodules.dev/docs/modules/App_CloudRun"` | URL string | Link to the external documentation for this module, shown in the platform UI as a help reference. Metadata only. |
 | `module_dependency` | `["Services_GCP"]` | List of module name strings | Other platform modules that must be deployed before this one. Used by the platform to enforce deployment ordering. Metadata only. |
 | `module_services` | `["Cloud Run", …]` | List of GCP service name strings | GCP services enabled or consumed by this module. Used for documentation and platform service visibility. Metadata only. |
-| `credit_cost` | `50` | Integer | Platform credits consumed when this module is deployed. Used by the platform billing system. Metadata only. |
-| `require_credit_purchases` | `false` | `true` / `false` | When `true`, enforces a credit balance check before deployment. Metadata only. |
+| `credit_cost` | `0` | Integer | Platform credits consumed when this module is deployed. Used by the platform billing system. Metadata only. |
+| `require_credit_purchases` | `false` | `true` / `false` | When `true`, the module fee can be paid only from purchased credits (subscription or top-up), not from free awarded or event credits. |
 | `enable_purge` | `true` | `true` / `false` | Permits full deletion of all module-managed resources on destroy. Set `false` to retain resources after the module is removed, protecting against accidental data loss. Metadata only. |
 | `public_access` | `true` | `true` / `false` | Controls whether this module is publicly listed in the platform catalogue. Metadata only. |
 | `require_services_gcp_module` | `true` | `true` / `false` | When `true`, the deployment fails at plan time with a clear error if no `Services_GCP`-managed VPC network is detected in the project. Set `false` to allow a standalone deployment with inline prerequisite resources. |

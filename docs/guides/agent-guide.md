@@ -22,13 +22,13 @@ An agent's account usually also holds the **User** role, the one every signup st
 
 ## Getting the Agent role
 
-An administrator grants the role on the **Users** page. It can be granted only while people can pay on the platform, meaning buying credits or subscribing is switched on. With payments off there is nothing for an agent to earn from, so the checkbox stays locked. An existing agent keeps the role if payments are later switched off.
+An administrator grants the role on the **Users** page. It can be granted only while people can pay on the platform, meaning the credit system is on and at least one payment provider (Stripe or Flutterwave) is switched on. With payments off there is nothing for an agent to earn from, so the checkbox stays locked. An existing agent keeps the role if payments are later switched off.
 
-After you sign in you land on **Credits**, on the **My Commission** tab. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold.
+After you sign in you land on **Credits**, on the **My Commission** tab. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold. (**Credits** is hidden while the platform's credit system is switched off.)
 
 ## Your referral link
 
-Your link and code are on your **Profile** (open the profile menu, top right), in the **Refer and earn** section; the **Credits** page also has a **Get your referral link** shortcut to it. The **Invite Friends** card there shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off.
+Your link and code are on your **Profile** (open the profile menu, top right), in the **Refer and earn** section. If your account also holds the User or Partner role, the **Credit Transactions** tab on **Credits** has a **Get your referral link** shortcut to it. The **Invite Friends** card there shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off, and it is never shown to administrator accounts.
 
 Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
@@ -73,7 +73,7 @@ Payouts are made by Finance in **batches**, in cash, **outside RAD** (by bank tr
 2. You are included once your payable total reaches the **$50 minimum**. Anything smaller carries forward to the next batch; nothing is lost.
 3. Finance pays you and marks the batch paid with a payment reference. Your statement then shows those commissions as **Paid**.
 
-You don't request payouts yourself. If you think a payout is missing, raise a ticket from **Help → Support**.
+You don't request payouts yourself. If you think a payout is missing, raise a ticket from the **Send Message** tab on **Help**.
 
 ## What you can't do
 
@@ -86,4 +86,4 @@ The Agent role is deliberately narrow. As an agent you cannot:
 
 ## Getting help
 
-Visit the **Help** page and use the **Support** tab to contact the support team. You can also reach Help from the **Contact us** link in the footer.
+Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact us** link in the footer.

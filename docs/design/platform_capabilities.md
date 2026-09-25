@@ -33,9 +33,10 @@ write, or maintain. For the business value these capabilities deliver, see
   persistent volumes, stable identities, or custom controllers run on Autopilot,
   billed per pod for the resources actually requested. Vertical Pod Autoscaling
   continuously right-sizes requests; StatefulSets, CronJobs, and Jobs are supported.
-- **Runtime choice per deployment.** Every solution ships in both a Cloud Run and a
-  GKE variant from a shared core, so the runtime is a deployment-time decision —
-  stateless apps default to Cloud Run, stateful apps to Autopilot.
+- **Runtime choice per deployment.** Most applications ship in both a Cloud Run and
+  a GKE variant from a shared core (a few are offered on one runtime only), so the
+  runtime is usually a deployment-time decision — stateless apps default to Cloud
+  Run, stateful apps to Autopilot.
 - **One-shot jobs.** Database initialisation, migrations, plugin and extension
   installs, custom SQL (`enable_custom_sql_scripts`), and backup/restore run as jobs
   billed only while executing, triggered automatically with each deployment.
@@ -227,6 +228,20 @@ write, or maintain. For the business value these capabilities deliver, see
 | AI | Pre-built AI solutions, vector stores, AI-aware runtime, inherited security/cost posture |
 | Portability | Open standards, portable Kubernetes, attached non-GCP clusters, federated identity, architectural multicloud readiness |
 | Delivery | Managed build, multi-stage promotion with approval gates |
+
+---
+
+## Your own project vs a RAD-managed project
+
+Everything above is available when you deploy into a Google Cloud project you
+bring yourself. When RAD creates the project for you (a RAD-managed project),
+it sits inside RAD's own organisation, so options that would reach past your
+project into that organisation are removed from the form: VPC Service Controls
+perimeters, Workload Identity Federation, Security Command Center and its
+notifications, and the fleet features (service mesh, Config Sync, Policy Controller,
+multiple clusters). AlloyDB is also not available there, and RAD-managed
+projects are limited to a set of low-cost regions. Use Cloud SQL for
+PostgreSQL in place of AlloyDB.
 
 ---
 

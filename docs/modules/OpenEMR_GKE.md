@@ -257,7 +257,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `module_description` / `module_documentation` / `module_dependency` / `module_services` | _(set)_ | Platform catalogue metadata. |
 | `credit_cost` | `300` | Platform credits consumed per deployment. |
-| `require_credit_purchases` | `false` | Require credit balance check before deploy. |
+| `require_credit_purchases` | `false` | When `true`, the module fee can be paid only from purchased credits (subscription or top-up), not from free awarded or event credits. |
 | `enable_purge` | `true` | Allow full resource deletion on destroy. |
 | `public_access` | `true` | Make the module visible in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected in the project. |

@@ -4,14 +4,14 @@
 
 Hands-on Google Cloud certification training by [Tech Equity Cloud](https://radmodules.dev):
 seven certification study paths that map every official exam section to
-deployment labs, drawn from 175+ open-source application modules on Cloud Run
+deployment labs, drawn from 180+ open-source applications on Cloud Run
 and GKE Autopilot — deployed into your own Google Cloud project.
 
 ## Start here
 
 - [Certification study paths](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide) — ACE, PCA, PCD, PCDE, PCNE, PDE, PSE lab maps
-- [Hands-on labs](https://docs.radmodules.dev/docs/labs/Services_GCP) — 354 guided deploy → verify → operate → tear-down walkthroughs
-- [Module reference](https://docs.radmodules.dev/docs/modules/Services_GCP) — 533 configuration guides
+- [Hands-on labs](https://docs.radmodules.dev/docs/labs/Services_GCP) — 353 guided deploy → verify → operate → tear-down walkthroughs
+- [Module reference](https://docs.radmodules.dev/docs/modules/Services_GCP) — 532 configuration guides
 - [AI Tooling on GCP](https://docs.radmodules.dev/docs/guides/ai-tooling-gcp) — the self-hosted LLM stack
 - [About the author](https://docs.radmodules.dev/author) — Dr Shiyghan Emmanuel Navti
 - [RAD Console](https://radmodules.dev) — the deployment portal behind these docs

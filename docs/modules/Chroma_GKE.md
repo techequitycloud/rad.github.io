@@ -220,7 +220,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `module_dependency` | _(set)_ | Specify the names of the modules this module depends on in the order in which they should be deployed. (e.g., ["Services_GCP"]) |
 | `module_services` | _(set)_ | Specify the module services. |
 | `credit_cost` | `75` | Specify the module cost. (e.g., 50) |
-| `require_credit_purchases` | `false` | Set to true to require credit purchases to deploy this module. |
+| `require_credit_purchases` | `false` | When `true`, the module fee can be paid only from purchased credits (subscription or top-up), not from free awarded or event credits. |
 | `enable_purge` | `true` | Set to true to enable the ability to purge this module. |
 | `public_access` | `true` | Set to true to enable the module to be available to all platform users. |
 | `require_services_gcp_module` | `true` | Enforces that the Services_GCP module is deployed before this module. When true, the deployment fails at plan time with a clear error if no Services_GCP-managed VPC network is detected in the project. Set to false to allow standalone deployment with inline prerequisite resources. |

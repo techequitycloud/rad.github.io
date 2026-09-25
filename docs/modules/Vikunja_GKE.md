@@ -222,7 +222,7 @@ Standard platform metadata (`module_description`, `module_documentation`,
 `resource_creator_identity`, `impersonation_service_account`,
 `job_execution_wait_timeout`) plus two variables declared but **not referenced** by
 this module — `explicit_secret_values` and `scripts_dir`. `credit_cost` defaults to
-`150`, higher than the Cloud Run variant.
+`75`, the same as the Cloud Run variant.
 
 ### Group 1 — Project & Identity
 

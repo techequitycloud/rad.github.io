@@ -5,7 +5,7 @@ description: "Privacy policy for the RAD Platform documentation site — what da
 
 # Privacy Policy
 
-_Last updated: July 2026_
+_Last updated: September 2026_
 
 This policy covers the **RAD Platform documentation site** (docs.radmodules.dev).
 The [RAD Console](https://radmodules.dev) application has its own terms and
@@ -13,9 +13,15 @@ privacy practices presented within the application.
 
 ## What this site collects
 
-This is a static documentation site. It does not require an account, does not
-set advertising or analytics cookies, and does not run third-party ad or
-tracking scripts.
+This is a static documentation site. It does not require an account and does
+not set advertising cookies or run third-party ad scripts.
+
+**Analytics (only if you accept).** On your first visit a banner asks whether
+the site may use analytics cookies. Google Analytics is not loaded at all
+unless you choose **Accept**; it then records which pages are read, with
+Google signals and ad personalisation turned off. Choosing **Decline** keeps
+it off and clears any Google Analytics cookies a previous acceptance set. Your
+choice is remembered in a `cookie_consent` cookie for a year.
 
 **Hosting.** The site is served by GitHub Pages (GitHub, Inc.) behind its CDN.
 Like any web server, the hosting infrastructure processes standard request
@@ -32,7 +38,7 @@ the chat, no messages are sent.
 ## What this site does not do
 
 - No account registration or login
-- No advertising, remarketing, or cross-site tracking
+- No advertising or remarketing, and no analytics without your consent
 - No sale or sharing of personal information
 
 ## Contact

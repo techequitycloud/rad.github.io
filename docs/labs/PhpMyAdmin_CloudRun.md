@@ -53,6 +53,8 @@ By the end of this lab you will be able to:
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 - Access to (or credentials for) a **MySQL/MariaDB server** you intend to administer —
   phpMyAdmin creates no database of its own.
@@ -74,8 +76,8 @@ export REGION="us-central1"          # the region you deploy into
    documents every input by group, with defaults. Decide up front whether you want
    `pma_arbitrary = "1"` (default — users type any MySQL host at login) or a fixed
    `pma_host` with `pma_arbitrary = "0"` (single pinned server, e.g. the platform's
-   Cloud SQL private IP). Review the estimated cost (if credits are enabled) and click
-   **Deploy**, which opens the deployment status page with real-time logs.
+   Cloud SQL private IP). Click **Deploy Module**, review the estimated cost in the confirmation
+   dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
 
 2. The platform builds the thin custom container image (`FROM phpmyadmin/phpmyadmin`),
    mirrors it into Artifact Registry, and provisions the Cloud Run service. There is
@@ -246,8 +248,8 @@ On the **Deployments** page, open the deployment and click the **Trash** icon
 (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment
 record is retained for history). If a deployment is stuck and the RAD platform can no
 longer manage it (for example after manual changes that conflict with the Terraform
-state), use **Purge** instead — it removes the deployment from RAD's records
-**without** destroying the cloud resources (it makes RAD forget the project). This
+state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records
+**without** destroying the cloud resources (it makes RAD forget the deployment). This
 removes everything the module created — the Cloud Run service and its Artifact
 Registry image. Because phpMyAdmin provisions no database, no Secret Manager secrets,
 and no storage bucket of its own, there is nothing else for this module to clean up —

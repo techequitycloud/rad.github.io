@@ -12,6 +12,8 @@ The PSE certification validates your ability to design and implement secure work
 ## How to use this guide
 
 - Deploy one of the profiles below from your deployment portal.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_vpc_sc`, `organization_id`, `enable_security_command_center` and `enable_scc_notifications`; deploy the profiles that set them into a Google Cloud project of your own.
 - Work through the matching section guide (`PSE_Section_<N>_Exploration_Guide.md`) topic by topic.
 - Use the coverage legend to know which exam topics you must study outside the platform — the section guides give concrete study pointers for every 🟡 and 📘 topic.
 
