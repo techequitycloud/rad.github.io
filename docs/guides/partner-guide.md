@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules, and see each payout Finance records for you.
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users and admins get. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users get. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -42,7 +42,7 @@ Go to the **Sync** page to bring your modules into the catalog. The page is a re
 - To update a module, change it in your repository and run **Sync Now** again — modules are managed in GitHub, not edited in RAD.
 - Removing a module from your repository and re-syncing removes it from the catalog. You can only affect your own modules — never another partner's or a platform module.
 
-If a repository can't be read — the GitHub App isn't installed on it, or it holds more module directories than the platform allows — the Sync page names the repository and explains why. Problems inside an individual module are quieter: a module whose `variables.tf` can't be parsed is skipped and left exactly as it was, and a directory that declares no `public_access` variable is treated as a helper and never listed. Neither is reported back to you, so if a module you expected doesn't appear after a sync, check its `variables.tf` in your repository.
+If a repository can't be read — the GitHub App isn't installed on it, or it holds more module directories than the platform allows — the Sync page names the repository and explains why. Problems inside an individual module are quieter: a module whose `variables.tf` can't be parsed is skipped and left exactly as it was, and a directory that declares no `public_access` variable is treated as a helper and never listed. A module whose name already belongs to another partner or to a platform module is not synced either, so it can never take over someone else's catalog entry. None of these is reported back to you, so if a module you expected doesn't appear after a sync, check its `variables.tf` and its name in your repository.
 
 ## How your modules appear to users
 
@@ -59,17 +59,17 @@ Deploying your own module waives the **module fee** — the module's own credit 
 
 You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing.
 
-Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more, and no referral tab for partners — partners earn on their modules, not on referrals. The dates open on the last 7 days; adjust them if you need to and click **Fetch Partner Revenue**. **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Partner Revenue**.
+Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more, and no referral tab for partners — partners earn on their modules, not on referrals. The dates open on the last 7 days and the table loads on its own; change them if you need to, and use the refresh button to reload. You see only your own modules — there is no partner picker. **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Module Revenue**.
 
 The revenue shown there is worked out at the current revenue-share rate. Once Finance has paid you for a period, that payment is recorded with the rate and amount **as they were when you were paid**, so a later change to the rate never changes what you have already been paid.
 
 ### Payouts
 
-Finance pays partners outside RAD, then records each payment in RAD. Below the revenue table on **Module Revenue**, the **Payouts** section lists every payment recorded for you: the period it covers, the module revenue and any setup-request earnings in it, the rate used, the payment reference, and the date it was paid. If a period you expected is missing, contact Finance through **Help → Support**.
+Finance pays partners outside RAD, then records each payment in RAD. Below the revenue table on **Module Revenue**, the **Payouts** section lists every payment recorded for you: the period it covers, the module revenue and any setup-request earnings in it, the rate used, the payment reference, and the date it was paid. If a period you expected is missing, contact Finance through **Help → Send Message**.
 
 ### Setup requests
 
-If Finance assigns you as the engineer on a customer's setup request, you earn a share of the revenue from that request when it is completed: **75%** by default, with the platform keeping 25% (Finance can set a different platform share). Your completed setup earnings appear in the **Payouts** section and are included when Finance records a payout.
+If Finance assigns you as the engineer on a customer's setup request, you earn a share of the revenue from that request when it is completed: **75%** by default, with the platform keeping 25% (Finance can set a different platform share). Your completed setup earnings appear in the **Setup support earnings** table beneath **Payouts** and are included when Finance records a payout. There is no partner screen for working setup requests themselves — Finance and administrators manage them and assign the engineer.
 
 ### Monthly partner credits
 
@@ -85,8 +85,8 @@ These work exactly as described in [Using RAD](using-rad.md):
 
 - **Solutions → Solution Modules** — browse the catalog, configure with either the guided **Configuration Form** (the default) or the **Conversational Assistant**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
-- **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits**, and manage subscriptions.
+- **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits** and manage subscriptions while the platform is selling credits.
 
 ## Getting help
 
-Open the **Help** page and use the **Support** tab to contact the support team. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help.
+Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help.

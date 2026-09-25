@@ -44,6 +44,8 @@ By the end of this lab you will be able to:
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -60,7 +62,7 @@ export REGION="us-central1"          # the region you deploy into
 1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Penpot (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Penpot_CloudRun)
-   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
 
 2. The platform provisions three coordinated Cloud Run services (backend, frontend,
    exporter), a Cloud SQL PostgreSQL database with its Secret Manager secrets, a GCS
@@ -222,7 +224,7 @@ gotchas (including `container_protocol = "h2c"` and JVM heap sizing).
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — all three Cloud Run
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the deployment). This removes everything the module created — all three Cloud Run
 services, the Cloud SQL PostgreSQL database, Secret Manager secrets, the GCS assets
 bucket, NFS, and Artifact Registry images. Resources owned by **Services_GCP** (the
 VPC, shared Cloud SQL, registry) are managed separately and are not removed here.

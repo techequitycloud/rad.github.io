@@ -13,16 +13,16 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 
 - Handle support tickets on the **Support Tickets** tab of the **Help** page — view tickets raised through the Help form, update their status, add notes, and claim them.
 - View the deployments of the customers whose open tickets are assigned to you, on the **Deployments** page.
-- Raise a ticket of your own through the **Help** page's **Support** form.
+- Raise a ticket of your own on the **Help** page's **Send Message** tab.
 
-Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
+After you sign in you land on the **Help** page. Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
 
 ## Handling support tickets
 
 The **Support Tickets** tab on the **Help** page is your main workspace.
 
 1. Click **Help** in the top navigation bar, then open the **Support Tickets** tab.
-2. Set a **From** and a **To** date, then click **Load Tickets**. Nothing is listed until you do: both dates are required, and the range cannot exceed 366 days. You get the 100 most recent tickets in that range, so narrow the dates if you think you are missing older ones. You can also filter by status and by assignee (**All assignees**, **Assigned to me**, **Unassigned**), and download what you are looking at with **Export CSV**. Each ticket captures what a user submitted through the Help form.
+2. The list opens on the last 7 days and loads straight away. To look further back, change the **From** and **To** dates and click **Load Tickets**; both dates are required, and the range cannot exceed 366 days. You get the 100 most recent tickets in that range, so narrow the dates if you think you are missing older ones. You can also filter by status and by assignee (**All assignees**, **Assigned to me**, **Unassigned**), and download what you are looking at with **Export CSV**. Each ticket captures what a user submitted through the Help form.
 3. Open a ticket to see its details.
 4. Update the ticket **status** as you work it:
    - **New** — just received, not yet picked up.
@@ -30,16 +30,16 @@ The **Support Tickets** tab on the **Help** page is your main workspace.
    - **Resolved** — the issue has been addressed.
    - **Closed** — the ticket is complete and needs no further action.
 5. **Add notes** to record what you found, what you advised, or any steps you took. Notes keep the ticket history clear for you and your teammates.
-6. **Claim** an unassigned ticket to take ownership of it, or **Release** one you hold if you picked it up by mistake. Claiming is also what gives you sight of that customer's deployments. You cannot take a ticket off another agent or hand one to a colleague — ask an administrator or the finance team to reassign it.
+6. **Claim** an unassigned ticket to take ownership of it, or **Release** one you hold if you picked it up by mistake. Claiming is also what gives you sight of that customer's deployments. You can claim only a ticket that is still open, and reopen only a ticket you hold. You cannot take a ticket off another agent or hand one to a colleague — ask an administrator or the finance team to reassign it. To be emailed when a ticket is assigned to you, switch on **Support ticket assigned to me** under your **Profile**'s notification settings.
 
 ## Where tickets come from
 
 Tickets are created from the **Help** page.
 
-- On the **Help** page, the **Support** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
-- The **Contact us** link in the footer also goes to the Help page's Support form.
+- On the **Help** page, the **Send Message** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
+- The **Contact us** link in the footer also goes to the Help page.
 
-When a user asks how to reach you, point them to **Help → Support** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale — a user without any is shown a prompt to buy credits instead — and each user can raise up to 5 tickets in 24 hours.
+When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Each user can raise up to 5 tickets in 24 hours.
 
 Users can follow up on their own tickets: the **My tickets** tab on the Help page shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
 

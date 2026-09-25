@@ -12,8 +12,10 @@ description: "Hands-on lab: deploy Chibisafe on GKE Autopilot in your own Google
 **Estimated time:** 45–90 minutes
 
 Chibisafe is a self-hosted file and image uploader with drag-and-drop uploads,
-albums, and a public API. This module deploys the **chibisafe-server backend
-only** (port 8000) as a single custom-built workload on **GKE Autopilot**, by
+albums, and a public API. This module deploys the **full Chibisafe stack** —
+the chibisafe-server backend, the Next.js web UI and a Caddy reverse proxy,
+combined in one custom-built image and listening on port 8000 — as a single
+workload on **GKE Autopilot**, by
 default a StatefulSet backed by a 20Gi block PersistentVolumeClaim mounted at
 `/data` — a better fit than GCS Fuse for a single-writer SQLite application.
 This lab takes you through the full operational lifecycle of the **Chibisafe
@@ -32,7 +34,7 @@ time.
 By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
-- Connect to the GKE cluster and access the running workload.
+- Connect to the GKE cluster and access the Chibisafe web UI.
 - Understand why the health probes target `/api/health` instead of `/`, and
   which probe variables actually control the deployed pod.
 - Perform day-2 operations — inspect the StatefulSet, manage the optional
@@ -52,6 +54,8 @@ By the end of this lab you will be able to:
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -68,8 +72,8 @@ export REGION="us-central1"           # the region you deploy into
 1. In the RAD platform, open **Chibisafe (GKE)**, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Chibisafe_GKE)
-   documents every input by group, with defaults. Review the estimated cost
-   (if credits are enabled) and click **Deploy**, which opens the deployment
+   documents every input by group, with defaults. Click **Deploy Module**, review
+   the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment
    status page with real-time logs.
 
 2. The platform builds and pushes the custom chibisafe-server image (pinned to
@@ -111,13 +115,15 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Health probe path — fixed, but know the layout.** `Chibisafe_GKE`'s
    `startup_probe`/`liveness_probe` variables (Group 10) default to
-   **`/api/health`**, matching the CloudRun variant, because the
-   chibisafe-server backend serves all routes under an `/api` prefix and has
-   **no root route** (`GET /` returns 404). A fresh deploy on a current module
+   **`/api/health`**, matching the CloudRun variant: it passes through the
+   in-container Caddy proxy to the backend and returns a literal 200
+   `{"status":"yes"}`, whereas `/` is served by the web UI and does not
+   exercise the backend. A fresh deploy on a current module
    version should reach `Ready` without any override. Two things to know:
    - This *was* a latent bug — an earlier version of `Chibisafe_GKE` left
-     `startup_probe`/`liveness_probe` at the inherited `/` default and pods
-     sat in a perpetual not-Ready / crash-restart loop. It has since been
+     `startup_probe`/`liveness_probe` at the inherited `/` default and, when
+     the image shipped the backend alone (no route at `/`), pods sat in a
+     perpetual not-Ready / crash-restart loop. It has since been
      fixed at the variable-default level; you should not need a workaround.
    - `health_check_config`/`startup_probe_config` (also in Group 10) still
      default to `/` and always will — they are declared for foundation
@@ -132,7 +138,7 @@ export REGION="us-central1"           # the region you deploy into
    ```bash
    kubectl describe pod -n "$NS" <pod-name>
    # Events will show: Readiness probe failed / Liveness probe failed:
-   # HTTP probe failed with statuscode: 404 (or similar non-200)
+   # HTTP probe failed with statuscode: <non-200>
    # -> compare against the pod spec's actual probe path:
    kubectl get pod -n "$NS" <pod-name> -o jsonpath='{.spec.containers[0].livenessProbe.httpGet.path}'
    ```
@@ -149,23 +155,24 @@ export REGION="us-central1"           # the region you deploy into
    echo "External IP: $EXTERNAL_IP"
    ```
 
-4. Verify the corrected health endpoint directly (from within the cluster or
-   once externally reachable):
+4. Verify the health endpoint (port 8000 is Caddy, which proxies `/api/*` to
+   the backend) and the web UI, from within the cluster or once externally
+   reachable:
 
    ```bash
    kubectl exec -n "$NS" <pod-name> -- wget -qO- http://localhost:8000/api/health
    # or, once externally reachable:
    curl -s "http://${EXTERNAL_IP}/api/health"   # expect HTTP 200, {"status":"yes"}
+   curl -s -o /dev/null -w '%{http_code}\n' "http://${EXTERNAL_IP}/"   # expect 200 — the Chibisafe web UI
    ```
 
-5. This module deploys the **backend API only** — Chibisafe's separate
-   SvelteKit front-end and Caddy reverse proxy are not part of this module.
-   Administer the instance through the backend's REST API, or point a
-   separately hosted Chibisafe front-end at the workload's address. By default
-   (`enable_api_key = false`) the backend seeds its first-run administrator
-   account with Chibisafe's well-known upstream default credential; redeploy
-   with `enable_api_key = true` to have the module generate and inject a
-   random `ADMIN_PASSWORD` instead.
+5. Open the workload's address in a browser — the Chibisafe web UI loads
+   (dashboard, login, uploads, albums). The REST API lives under `/api` (the
+   module's `api_url` output) and uploaded files are served by name. Log in as
+   `admin`: by default (`enable_api_key = false`) the first-run password is
+   Chibisafe's upstream default (`admin`) — change it immediately after first
+   login. Redeploy with `enable_api_key = true` to have the module generate a
+   random `ADMIN_PASSWORD` in Secret Manager instead.
 
 ---
 
@@ -240,8 +247,8 @@ platform-level diagnostics and do not change with Chibisafe releases.
 - **Pod stuck not-Ready / crash-restart loop:** `startup_probe`/`liveness_probe`
   default to `/api/health` (see Task 2), so this should not occur on a fresh
   deploy. If `kubectl describe pod` shows probe failures against path `/`,
-  something has overridden `startup_probe`/`liveness_probe` back to the root
-  route — check `environment_variables`/probe overrides in your deployment
+  something has overridden `startup_probe`/`liveness_probe` — revert them to
+  `/api/health`, which exercises the proxy and backend. Check `environment_variables`/probe overrides in your deployment
   config; do **not** bother overriding `health_check_config`/
   `startup_probe_config`, they are inert and never reach the pod spec.
   ```bash
@@ -273,7 +280,7 @@ variables).
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the StatefulSet workload
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the deployment). This removes everything the module created — the StatefulSet workload
 and namespace, its PVC, the Cloud Storage bucket, and the optional
 admin-password secret. There is no Cloud SQL database to remove — none was
 ever created. Resources owned by **Services_GCP** (the VPC, GKE cluster,
@@ -286,7 +293,7 @@ Artifact Registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds the custom image and deploys a StatefulSet with a 20Gi block PVC at `/data`, an unmounted GCS bucket, and an optional admin secret — no Cloud SQL |
-| 2 — Access & verify | Manual | Connect to the cluster; confirm the `/api/health` startup/liveness probes (fixed default) let the pod reach Ready |
+| 2 — Access & verify | Manual | Connect to the cluster; confirm the `/api/health` probes let the pod reach Ready; the Chibisafe web UI loads at `/`; log in as `admin` and change the password |
 | 3 — Operate | Manual | Inspect the StatefulSet/PVC, update version, manage the admin secret, inspect SQLite/uploads/logs on the PVC; never scale past 1 replica |
 | 4 — Observe | Manual | Query Cloud Logging; review pod/PVC metrics and optional uptime check |
 | 5 — Troubleshoot | Manual | Diagnose probe-path regressions, PVC/SSD quota, Gateway/certificate, and image-pull issues |

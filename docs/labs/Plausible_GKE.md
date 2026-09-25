@@ -47,6 +47,8 @@ By the end of this lab you will be able to:
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI**, **kubectl**, and **OpenTofu** installed.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 
 ## Task 1 — Prerequisites & authentication [Manual]
 
@@ -85,8 +87,8 @@ Plausible **cannot start without ClickHouse** — a plan-time validation in
 Plausible_GKE blocks the apply when `clickhouse_url` is empty. Deploy ClickHouse
 first and do not proceed until it is serving.
 
-1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (click **Deploy**,
-   open **ClickHouse (GKE)**, set `project_id`, click **Deploy**), or directly:
+1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (open **Solutions → Solution Modules**,
+   open **ClickHouse (GKE)**, set `project_id`, click **Deploy Module**), or directly:
 
    ```bash
    cd modules/ClickHouse_GKE
@@ -167,7 +169,7 @@ Notes on the wiring:
 ## Task 4 — Deploy the Plausible_GKE module [Automated]
 
 1. Deploy — from the RAD platform (open **Plausible (GKE)**, paste the four
-   ClickHouse values, click **Deploy**), or directly:
+   ClickHouse values, click **Deploy Module**), or directly:
 
    ```bash
    cd modules/Plausible_GKE

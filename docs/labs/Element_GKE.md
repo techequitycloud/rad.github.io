@@ -47,6 +47,8 @@ By the end of this lab you will be able to:
 - **gcloud CLI** and **kubectl** authenticated: `gcloud auth login`,
   `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 - A **Matrix homeserver** to connect to — either the public `matrix.org` (the
   default) or your own Synapse/Dendrite instance.
@@ -67,8 +69,8 @@ export NAMESPACE="<namespace>"       # from the deployment Outputs
    `homeserver_url` / `homeserver_name` to your Matrix homeserver (or leave them blank
    to use the public `matrix.org`). Review the remaining inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Element_GKE)
-   documents every input by group, with defaults. Review the estimated cost (if
-   credits are enabled) and click **Deploy**, which opens the deployment status page
+   documents every input by group, with defaults. Click **Deploy Module**, review the
+   estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page
    with real-time logs.
 
 2. The platform builds the custom Element image (a thin layer over
@@ -189,7 +191,7 @@ gotchas (including the binary-unit requirement for `quota_memory_*`).
 On the **Deployments** page, open the deployment and click the **Trash** icon
 (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment
 record is retained for history). If a deployment is stuck and the RAD platform can no
-longer manage it, use **Purge** instead — it removes the deployment from RAD's records
+longer manage it, use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records
 **without** destroying the cloud resources. This removes everything the module created
 — the GKE Deployment, Service, LoadBalancer IP, and Artifact Registry images.
 Resources owned by **Services_GCP** (the VPC, cluster, registry) are managed

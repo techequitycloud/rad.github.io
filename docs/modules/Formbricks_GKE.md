@@ -81,7 +81,7 @@ Platform/UI metadata read by the RAD platform for the catalogue listing, depende
 | `requires_services` | `{ create_postgres=true, create_network_filesystem=true, create_google_kubernetes_engine=true, ... }` | Tells the platform which `Services_GCP` `create_*` toggles must be enabled when auto-provisioning `Services_GCP` for this deployment. |
 | `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", ...]` | GCP services shown in the platform UI. |
 | `credit_cost` | `110` | Platform credits consumed per deployment. |
-| `require_credit_purchases` | `false` | Enforce a credit balance check before deployment. |
+| `require_credit_purchases` | `false` | When `true`, the module fee can be paid only from purchased credits (subscription or top-up), not from free awarded or event credits. |
 | `enable_purge` | `true` | Permit full resource deletion on destroy. |
 | `public_access` | `true` | List this module in the public catalogue. |
 | `require_services_gcp_module` | `true` | Fail at plan time if no `Services_GCP`-managed VPC is detected. Set `false` for standalone deployment with inline prerequisites. |

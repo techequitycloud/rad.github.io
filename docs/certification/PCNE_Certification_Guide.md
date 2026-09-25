@@ -12,6 +12,8 @@ The Professional Cloud Network Engineer certification validates the ability to d
 ## How to use this guide
 
 - Deploy one of the profiles below through your deployment portal, then work through the matching section exploration guide while the infrastructure is live.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_vpc_sc`, plus `gke_cluster_count` and `configure_cloud_service_mesh` for the multi-cluster variant; deploy the profiles that set them into a Google Cloud project of your own.
 - Use the coverage legend to plan your study time: ✅ topics can be learned hands-on in RAD; 📘 topics need official docs and a scratch project.
 - The PCNE exam is scenario-heavy. After each "Try it", ask yourself *why* the modules made each choice (e.g., why a /16 PSA range, why Dataplane V2, why a global external ALB).
 

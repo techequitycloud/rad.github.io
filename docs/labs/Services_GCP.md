@@ -88,7 +88,7 @@ export NFS_VM=$(gcloud compute instances list \
 
 ### Step 1.1 — Configure Variables
 
-Variables are configured in the module configuration form in the RAD platform before deploying. The table below covers the most commonly adjusted variables; the **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Services_GCP)** documents every variable, grouped exactly as the form presents them, with a *"Choosing…"* decision note for each group explaining the cost / availability / security trade-offs behind the choice.
+Variables are configured in the module configuration form in the RAD platform. The create form asks only for the first page of inputs (in a project RAD creates for you, little more than the tenant name and regions); everything else is set afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost. The table below covers the most commonly adjusted variables; the **[Configuration Guide](https://docs.radmodules.dev/docs/modules/Services_GCP)** documents every variable, grouped exactly as the form presents them, with a *"Choosing…"* decision note for each group explaining the cost / availability / security trade-offs behind the choice.
 
 > **Inputs are validated at plan time.** You do not have to get every combination right by memory — the module rejects invalid values (a malformed `tenant_id`, a Filestore capacity below the tier minimum, a budget threshold outside `0–1`) and invalid combinations (a read replica with no primary, an enforced VPC-SC perimeter with no allow-listed IPs, a GKE add-on with no cluster) *before* anything is created, with a message naming the offending variable. Treat a clean plan as confirmation that the value and combination rules passed — sizing and CIDR-topology choices are still yours to get right.
 
@@ -165,7 +165,7 @@ budget_alert_emails             = ["you@example.com"]
 
 ### Step 1.2 — Initiate Deployment
 
-Deployment is initiated from the RAD platform: click **Deploy** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, and click **Deploy**.
+Deployment is initiated from the RAD platform: open **Solutions → Solution Modules** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, click **Deploy Module**, and confirm in the dialog that follows. (When you deploy an application into a project that has no `Services GCP` yet, the platform chains this module in front of it automatically.)
 
 **Expected resource provisioning times:**
 

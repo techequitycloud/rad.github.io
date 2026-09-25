@@ -13,7 +13,7 @@ description: "Hands-on lab: deploy the Project GCP Tier-0 guardrails module — 
 
 `Project GCP` is the **Tier-0 guardrails module** — the only module in this catalog applied *before* `Services GCP`. It doesn't provision application infrastructure; it hardens the project itself: an allowlist of which Google Cloud APIs may be enabled, a set of self-imposed quota ceilings, and — optionally — creation of the sandbox project itself along with a least-privilege deploying identity to operate inside it.
 
-> **Audience: platform admins, not trainees.** Unlike every other lab in this catalog, this module is designed to be run by an identity with *organization or folder*-level IAM — a materially higher trust tier than the project-scoped identity every other module assumes. It is not meant to be reachable from the same pipeline or user action that deploys applications. If you are working through this lab as a trainee exercise rather than as a platform operator, read it for understanding rather than expecting to run every phase yourself — Phase 1's Path B (project creation) in particular requires organization-level roles most trainees will not hold.
+> **Audience: platform admins, not trainees.** Unlike every other lab in this catalog, this module is designed to be run by an identity with *organization or folder*-level IAM — a materially higher trust tier than the project-scoped identity every other module assumes. In the RAD platform you rarely deploy it by hand: when a deployment goes into a RAD-managed project, the platform chains `Project GCP` in front of `Services GCP` and the application automatically, and applies it by impersonating the elevated guardrails identity for that step only (the `guardrails_admin_identity_email` admin setting). If you are working through this lab as a trainee exercise rather than as a platform operator, read it for understanding rather than expecting to run every phase yourself — Phase 1's Path B (project creation) in particular requires organization-level roles most trainees will not hold.
 
 This lab focuses on operating **`Project GCP` and the guardrails it establishes**, not on anything downstream. For the complete variable reference and the full rationale behind the two-identity design, the additive-floor API allowlist, and the Cloud Quotas API usage, see the [Configuration Guide](https://docs.radmodules.dev/docs/modules/Project_GCP) — this lab deliberately does not duplicate that detail so it stays accurate over time.
 
@@ -41,7 +41,7 @@ This lab focuses on operating **`Project GCP` and the guardrails it establishes*
 ```bash
 # Set these variables at the start of each session
 export PROJECT="your-gcp-project-id"     # the project this module governs (existing, or the one it will create)
-export FOLDER="1024894257024"             # the folder ID you deployed with (default shown)
+export FOLDER="<your-folder-id>"          # the folder ID you deployed with (no default; the platform injects the tier's folder)
 export REGION="us-central1"               # the region your quota guardrails are scoped to
 export TOKEN=$(gcloud auth print-access-token)
 ```
@@ -52,7 +52,7 @@ export TOKEN=$(gcloud auth print-access-token)
 
 | Requirement | Detail |
 |---|---|
-| Elevated deploying identity | The identity running this module needs org/folder-level `orgpolicy.policyAdmin`/`iam.denyAdmin`-class roles bound at the **organization** level (GCP rejects both at folder scope), plus `serviceusage.serviceUsageAdmin`-class permissions to write the API allowlist and quota preferences. In this platform's own deployment this is `rad-guardrails-admin`, impersonation-only, never wired to a Cloud Build trigger. |
+| Elevated deploying identity | The identity running this module needs org/folder-level `orgpolicy.policyAdmin`/`iam.denyAdmin`-class roles bound at the **organization** level (GCP rejects both at folder scope), plus `serviceusage.serviceUsageAdmin`-class permissions to write the API allowlist and quota preferences. In this platform's own deployment this is `rad-guardrails-admin`, impersonation-only; the platform impersonates it automatically for self-serve `Project GCP` deployments (the `guardrails_admin_identity_email` admin setting). |
 | Folder already guardrail-configured | `rad-automation/scripts/02-setup-ui.sh` step 10 should already have been run once against the target folder — otherwise a newly created project inherits no folder-level org policies (see the Configuration Guide's "Folder-Level Org Policies" section). |
 | Billing account access (Path B only) | Required to link a newly created project to `billing_account_id`. |
 | `gcloud` CLI | Authenticated (`gcloud auth login`). |
@@ -71,7 +71,7 @@ export TOKEN=$(gcloud auth print-access-token)
 ```hcl
 project_id       = "<your-existing-project-id>"
 create_project   = false
-folder_id        = "1024894257024"   # only relevant if you also want org-policy inheritance verified in Phase 5
+folder_id        = "<tier-folder-id>"   # only relevant if you also want org-policy inheritance verified in Phase 5
 region           = "us-central1"
 ```
 
@@ -83,7 +83,7 @@ create_project             = true
 billing_account_id         = "<your-billing-account-id>"
 deploying_identity_email   = "<sa-that-will-run-Services_GCP-etc>@<host-project>.iam.gserviceaccount.com"
 deployed_by_email           = "<you>@example.com"
-folder_id                   = "1024894257024"
+folder_id                   = "<tier-folder-id>"
 region                       = "us-central1"
 ```
 
@@ -168,7 +168,7 @@ gcloud beta quotas preferences list \
   --format="table(name,service,quotaId,quotaConfig.preferredValue,reconciling)"
 ```
 
-**Expected result (default `tier = sandbox`):** 88 preferences are listed — seven capacity caps (`run.googleapis.com/CpuAllocPerProjectRegion` = `16000` **milli**-vCPU, i.e. 16 vCPU; `compute.googleapis.com/CPUS-per-project-region` = `24`; `compute.googleapis.com/GPUS-ALL-REGIONS-per-project` = `0`; `redis.googleapis.com/TotalCapacityPerProjectPerRegion` = `16`; and three `file.googleapis.com` Filestore tiers) plus 81 `aiplatform.googleapis.com` Vertex AI accelerator quotas all capped to `0`. `tier = development` swaps in higher values and adds a BigQuery `QueryUsagePerDay` cap; `tier = production` applies no capacity caps. — or your overridden values if you set `quota_value_overrides`. `reconciling: true` means GCP is still applying the requested cap; re-check after a few minutes.
+**Expected result (default `tier = sandbox`):** 88 preferences are listed — seven capacity caps (`run.googleapis.com/CpuAllocPerProjectRegion` = `16000` **milli**-vCPU, i.e. 16 vCPU; `compute.googleapis.com/CPUS-per-project-region` = `24`; `compute.googleapis.com/GPUS-ALL-REGIONS-per-project` = `0`; `redis.googleapis.com/TotalCapacityPerProjectPerRegion` = `16`; and three `file.googleapis.com` Filestore tiers) plus 81 `aiplatform.googleapis.com` Vertex AI accelerator quotas all capped to `0`. `tier = development` roughly doubles the capacity caps and raises the BigQuery `QueryUsagePerDay` cap to 1 TiB/day; `tier = production` takes the development set unchanged; `tier = lab` uses the sandbox set. — or your overridden values if you set `quota_value_overrides`. `reconciling: true` means GCP is still applying the requested cap; re-check after a few minutes.
 
 ### Step 3.2 — Describe a Specific Preference
 

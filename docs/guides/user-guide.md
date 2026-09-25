@@ -14,10 +14,11 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Answer four plain questions on **Build Solution** and have RAD work out which applications you need, what the whole thing costs, and deploy them.
 - Browse the module catalog on **Solutions → Solution Modules** and deploy ready-made modules through a guided form.
 - Track and manage your own **Deployments** — view results and logs, update, and tear down.
-- Manage **Credits** — check your balance, review your transaction history, and buy more.
-- Subscribe to a recurring credit plan.
-- Estimate your savings with the **ROI** calculator, on the **Credits** page.
-- Get help through the **Support** form.
+- Manage **Credits** — check your balance, review your transaction history, and buy more while the platform is selling credits.
+- Subscribe to a recurring credit plan, when plans are on offer.
+- Estimate your savings with **Calculate ROI**, on the **Credits** page.
+- Get help through the **Send Message** form on **Help**.
+- Invite others with your referral link, from **Profile → Refer and earn**.
 
 After you sign in you land on **Solutions**, on the **Build Solution** tab — signing in opens on what you can build rather than the list of what you built last time.
 
@@ -44,7 +45,7 @@ A panel beside the questions shows **what you'll get**, **what it costs** and **
 
 ### Bringing your own Google Cloud project
 
-Deploying into a project you already own means RAD's deployment service account does the work inside it, so it needs access first. Before anything deploys, you grant that service account the **Owner** role on your project and confirm you own the project; the final confirmation step names the exact account and shows how to grant it. Free (awarded) credits can pay for a deployment into your own project.
+Deploying into a project you already own means RAD's deployment service account does the work inside it, so it needs access first. Before anything deploys, you prove you control the project: choose **Get verification code**, run the commands shown as a project Owner (for example in Cloud Shell) — they add a verification label and give RAD read-only **Browser** access — then choose **Verify**; the code expires in one hour. You then grant the deployment service account the **Owner** role on the project; RAD names the exact account and shows the command. If another RAD account has already registered the same project, you are added to it as a collaborator. Free (awarded) credits can pay for a deployment into your own project.
 
 ### What a RAD-managed project needs
 
@@ -59,19 +60,19 @@ Open **Solutions** and choose the **Solution Modules** tab to browse the module 
 - **Filter by category:** Use the category list beside the grid to narrow the catalog to one category. Each entry shows how many modules it holds; **All** clears the filter.
 - **Pin:** Click the pin on a card to keep a favourite module at the top of your catalog for quick access.
 - **Read each card:** Every card shows the module description, a **documentation** link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
-- **Get help on a module:** Click **Help** on a card to open the Get Support dialog. It has three tabs: **End User Support** raises a support ticket about the module, **Module Implementation Support** requests paid help setting it up, and **Contact Publisher** emails the module's publisher with a question.
+- **Get help on a module:** Click **Help** on a card to open the Get Support dialog. It has three tabs: **End User Support** raises a support ticket about the module, **End User Training** requests paid help setting it up (RAD gets in touch within one business day), and **Contact Publisher** emails the module's publisher with a question.
 
 A stats strip at the top shows total deployments, your current credit balance (when credits are enabled), and how long deployment history is retained.
 
 ## Deploying a module
 
 1. **Choose how to configure it.** Click a module card and pick **Configuration Form** (the default) or **Conversational Assistant**. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch between the two at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
-2. **Open the form.** The guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action, once your credit balance covers the extra cost.
+2. **Open the form.** The guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action: tick **Enable advanced mode**, which is available once your credit balance covers the estimated cost of the update. Advanced mode carries no module fee — updates never do — and is not available on a lab environment.
 3. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid. The form is generated from the module itself, so where the module declares a rule for a field — a naming pattern, a length limit — you see that module's own error as you type rather than several minutes into a failed build. Fields holding a secret (an API token, a password) are masked and stored in Google Secret Manager rather than saved with the rest of your configuration; because the value never comes back to the browser, such a field shows **Configured** or **Not configured** instead, and leaving a configured one blank keeps it rather than clearing it.
-4. **Confirm.** Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
+4. **Confirm.** The **What will be deployed** panel at the top of the form lists everything this deployment builds — in a RAD-managed project that includes the Google Cloud project and shared services — and marks each one **Will be created**, **Will be updated first**, **Already exists, reused** (free) or **Needs attention first**; you cannot deploy while anything needs attention. Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
 5. **Deploy.** Click **Deploy Module** to queue the deployment. If you don't have enough credits, RAD shows the module's credit cost against your current balance and prompts you to top up first.
 
-**What happens next:** Your deployment is queued and then provisioned on Google Cloud. You can follow its progress on the **Deployments** page and in the deployment's details.
+**What happens next:** Your deployment is queued and then provisioned on Google Cloud. RAD opens the deployment's own page on its **Build Status** tab so you can follow its progress; it is also listed on the **Deployments** page.
 
 ## Deploying a solution
 
@@ -101,13 +102,15 @@ Open a deployment to see its details, which has these tabs:
 
 From the details view you can also:
 
-- **Update** — reopen the configuration form (pre-filled with the current values), change what you need, and re-apply. Available once a deployment has finished — succeeded, failed, timed out, been cancelled, or expired. Update also needs some *purchased* credits on your account: if you hold only awarded credits, RAD shows a "Credits required" prompt and sends you to **Buy Credits** instead of opening the form.
+- **Update** — reopen the configuration form (pre-filled with the current values), change what you need, and re-apply. Available once a deployment has finished — succeeded, failed, timed out, been cancelled, or expired. Update also needs some *purchased* credits on your account: if you hold only awarded credits, RAD shows a **Credits Required** prompt instead of opening the form, with a **Top Up Credits** button to **Buy Credits** while the platform is selling credits.
 
   Two things can stop an update before you get to the form. If this deployment depends on another one that has **failed**, been cancelled or timed out, RAD refuses and lists the deployments to start first — fix those, then retry. (A prerequisite that is still building is fine: the update is accepted and parked until it finishes.) And if you edit a setting that cannot be changed on a running deployment — a region, an encryption key, a toggle that creates a resource — RAD raises a confirmation naming exactly which settings will destroy and rebuild resources. Where your administrator has switched on **Enforce Update Safe**, those fields are read-only instead, and the only way to change one is to delete the deployment and create a new one.
 - **Cancel** — shown while a deployment is in Queued or Waiting, before it starts building. Cancelling releases it so you can try again, and a cancelled Waiting deployment also releases anything waiting behind it. The same button appears for a purge that has gone an hour without progress.
 - **Delete** — remove the deployment. You get two choices:
   - **Delete** runs a teardown that destroys the cloud resources the deployment created. This includes a RAD-managed GCP project (the "GCP Project on RAD" option): because deleting it takes the whole project with it, RAD refuses while any other deployment is still running in that project and lists the ones to delete first. Google keeps a deleted project recoverable for about 30 days.
   - **Purge** removes the deployment from RAD *without* destroying the cloud resources. Use Purge when a deployment is stuck or was changed outside RAD.
+
+  A deployment that is part of a solution can be deleted or purged only from the solution's page.
 
 To **rate a module**, go back to the **Deployments** list and click the stars on that deployment's row — the rating isn't set from the details page, and you can only rate deployments you made yourself.
 
@@ -136,9 +139,11 @@ The Credits page has these tabs:
 
 - **Credit Transactions** — your full history of awards, purchases, and spend, with an **Awards**, **Top-up**, and **Subscription** balance after each entry. Filter by deployment and by date, and use **Export CSV** to download a report.
 - **Project Transactions** (when project credits are enabled) — what each Google Cloud project cost you, one row per project, with a project search and a date range. A project charge lands on Credit Transactions as a single combined row covering all your projects at once; this tab is the breakdown of that charge.
-- **Subscriptions** (when enabled) — subscribe to a recurring credit plan, or cancel or reinstate the one you have.
-- **Buy Credits** (when enabled) — top up your balance.
-- **ROI** — the ROI calculator described below.
+- **Subscriptions** (only while the platform is selling credits) — subscribe to a recurring credit plan, or cancel or reinstate the one you have.
+- **Buy Credits** (only while the platform is selling credits) — top up your balance.
+- **Calculate ROI** — the ROI calculator described below, always the last tab.
+
+Whether credits can be bought at all is a single platform switch. While it is off there are no new subscriptions and no one-off top-ups, and the two tabs above are not shown; if you already have a subscription, a notice on **Credit Transactions** still lets you cancel it.
 
 **To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
 
@@ -158,7 +163,7 @@ A subscription only grants credits — it does not change your role on the platf
 
 ## ROI calculator
 
-Open **Credits** and go to the **ROI** tab to use the interactive ROI calculator. It comes pre-filled with your real recent activity (your deployments and spend) and lets you adjust assumptions — monthly deployments, manual deployment time, engineer hourly cost, and time-savings percentage — to estimate your labour cost, platform cost, net savings, and return on investment. It's an estimator only: it never deploys anything or charges your account.
+Open **Credits** and go to the **Calculate ROI** tab to use the interactive ROI calculator. It comes pre-filled with your real recent activity (your deployments and spend) and lets you adjust assumptions — monthly deployments, manual deployment time, engineer hourly cost, and time-savings percentage — to estimate your labour cost, platform cost, net savings, and return on investment. It's an estimator only: it never deploys anything or charges your account.
 
 ## Seeing what you've spent
 
@@ -174,6 +179,10 @@ Turning **Deployments** off stops all of those emails, including the warnings. B
 
 ## Getting help
 
-Open **Help** and use the **Support** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
+Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
 
-Your tickets are on the **My tickets** tab, next to the form, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
+Your tickets are on the **My tickets** tab, next to **Send Message**, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
+
+## Inviting others
+
+Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Get your referral link** shortcut). People who sign up through it are linked to your account, and you earn referral credits for them, subject to any monthly limit the platform sets. The section is hidden only when the platform has turned referral rewards off.

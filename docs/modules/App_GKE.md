@@ -58,8 +58,8 @@ These variables are consumed by the deployment platform rather than by the Terra
 | `module_documentation` | `string` | `"https://docs.radmodules.dev/docs/modules/App_GKE"` | Link to the external documentation for this module, shown in the platform UI as a help reference. Metadata only. |
 | `module_dependency` | `list(string)` | `["Services_GCP"]` | Other platform modules that must be deployed before this one. Used by the platform to enforce deployment ordering. Metadata only. |
 | `module_services` | `list(string)` | `["GKE Autopilot", …]` | GCP services enabled or consumed by this module. Used for documentation and platform service visibility. Metadata only. |
-| `credit_cost` | `number` | `150` | Platform credits consumed when this module is deployed. Used by the platform billing system. Metadata only. |
-| `require_credit_purchases` | `bool` | `false` | When `true`, enforces a credit balance check before deployment. Metadata only. |
+| `credit_cost` | `number` | `0` | Platform credits consumed when this module is deployed. Used by the platform billing system. Metadata only. |
+| `require_credit_purchases` | `bool` | `false` | When `true`, the module fee can be paid only from purchased credits (subscription or top-up), not from free awarded or event credits. |
 | `enable_purge` | `bool` | `true` | Permits full deletion of all module-managed resources on destroy. Set `false` to retain resources after the module is removed, protecting against accidental data loss. Metadata only. |
 | `public_access` | `bool` | `true` | Controls whether this module is publicly listed in the platform catalogue. Metadata only. |
 | `require_services_gcp_module` | `bool` | `true` | When `true`, the deployment fails at plan time with a clear error if no `Services_GCP`-managed VPC network is detected in the project. Set `false` to allow a standalone deployment with inline prerequisite resources. |

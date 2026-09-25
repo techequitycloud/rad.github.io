@@ -69,6 +69,8 @@ By the end of this lab you will be able to:
   this catalogue's own `Forgejo_GKE` module works. Without one, the
   deployment boots but pipelines cannot trigger (see Task 2).
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the
   project.
 
@@ -92,8 +94,8 @@ export REGION="us-central1"           # the region you deploy into
    `forge_url`/`forge_client_id`/`forge_client_secret` now to skip the
    Update round-trip in Task 2. Configure anything else you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Woodpecker_GKE)
-   documents every input by group, with defaults. Review the estimated cost
-   (if credits are enabled) and click **Deploy**, which opens the
+   documents every input by group, with defaults. Click **Deploy Module**, review
+   the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the
    deployment status page with real-time logs.
 
 2. The platform builds a custom container image (the official Woodpecker
@@ -356,9 +358,9 @@ On the **Deployments** page, open the deployment and click the **Trash**
 icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the
 deployment record is retained for history). If a deployment is stuck and the
 RAD platform can no longer manage it (for example after manual changes that
-conflict with the Terraform state), use **Purge** instead — it removes the
+conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the
 deployment from RAD's records **without** destroying the cloud resources (it
-makes RAD forget the project). This removes everything the module created —
+makes RAD forget the deployment). This removes everything the module created —
 the Kubernetes workload, namespace, RBAC `Role`/`RoleBinding`, the Cloud SQL
 database, and the `WOODPECKER_AGENT_SECRET` Secret Manager secret. Resources
 owned by **Services_GCP** (the VPC, GKE cluster, registry) are managed

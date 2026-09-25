@@ -18,6 +18,7 @@ The Professional Cloud DevOps Engineer certification validates your ability to b
 ## How to use this guide
 
 - Pick a deployment profile below and deploy it through your deployment portal.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
 - Work through the matching section guide (`PDE_Section_N_Exploration_Guide.md`) — each subsection has hands-on steps with real `gcloud`, `kubectl`, and `tofu` commands.
 - Use the coverage legend honestly: 📘 topics (most pure SRE theory and incident management process) must be studied outside the platform; the section guides give pointers.
 - The platform itself is part of the lab — Section 1 treats the deployment modules as the IaC artifact the exam expects you to reason about.

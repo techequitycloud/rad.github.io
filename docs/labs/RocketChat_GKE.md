@@ -45,6 +45,8 @@ By the end of this lab you will be able to:
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -62,7 +64,7 @@ export REGION="us-central1"           # the region you deploy into
    inputs. **Confirm `stateful_pvc_enabled = true`** — MongoDB requires a real block
    filesystem; `gcsfuse` corrupts WiredTiger. Configure only what else you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/RocketChat_GKE)
-   documents every input by group, with defaults. Review the estimated cost (if credits are enabled) and click **Deploy**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
 
 2. The platform builds a custom container image — the official `rocketchat/rocket.chat`
    image with a **single-node MongoDB 6.0 replica set (`rs0`) baked in** — provisions a
@@ -206,7 +208,7 @@ gotchas (including keeping `stateful_pvc_enabled = true`, `stateful_pvc_mount_pa
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Kubernetes StatefulSet
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the deployment). This removes everything the module created — the Kubernetes StatefulSet
 and namespace, the Persistent Disk PVC holding the MongoDB data, the Cloud Storage
 bucket, any Secret Manager API token, and Artifact Registry images. Resources owned by
 **Services_GCP** (the VPC, GKE cluster, registry) are managed separately and are not

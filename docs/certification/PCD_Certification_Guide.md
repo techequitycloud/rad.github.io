@@ -10,6 +10,8 @@ The Professional Cloud Developer certification validates your ability to design,
 ## How to use this guide
 
 - Deploy one of the profiles below through your deployment portal, then work through the matching section exploration guide.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_workload_identity_federation` and the other `wif_*` settings; deploy the profiles that set them into a Google Cloud project of your own.
 - Every section guide pairs portal variables with the GCP console views and `gcloud`/`kubectl` commands the exam expects you to know.
 - Use the coverage legend to plan study time: 🟡 and 📘 topics include a "Beyond the modules" block telling you what to practice outside the platform.
 - PCD is a *developer* exam: when working through the labs, always ask "what would my application code see?" — the env vars, the secret refs, the socket paths, the tokens.

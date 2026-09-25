@@ -12,9 +12,10 @@ description: "Hands-on lab: deploy Chibisafe on Cloud Run in your own Google Clo
 **Estimated time:** 45–90 minutes
 
 Chibisafe is a self-hosted file and image uploader with drag-and-drop uploads,
-albums, and a public API. This module deploys the **chibisafe-server backend
-only** (port 8000) as a single custom-built Cloud Run v2 service with no
-external database — SQLite, uploads, and logs all live on one Cloud Storage
+albums, and a public API. This module deploys the **full Chibisafe stack** —
+the chibisafe-server backend, the Next.js web UI and a Caddy reverse proxy,
+combined in one custom-built image and listening on port 8000 — as a single
+Cloud Run v2 service with no external database — SQLite, uploads, and logs all live on one Cloud Storage
 bucket mounted via GCS Fuse. This lab takes you through the full operational
 lifecycle of the **Chibisafe on Cloud Run** module: deploy it, access and
 verify it, run it day-to-day, observe it, diagnose common problems, and tear
@@ -32,7 +33,7 @@ time.
 By the end of this lab you will be able to:
 
 - Deploy the module from the RAD platform and locate the resources it provisions.
-- Access and verify the running backend through its health endpoint.
+- Access the Chibisafe web UI and verify the service through its health endpoint.
 - Perform day-2 operations — inspect revisions, manage the optional admin
   secret, and understand why the service is pinned to a single instance.
 - Inspect the SQLite/uploads/logs state on the Cloud Storage-backed volume.
@@ -49,6 +50,8 @@ By the end of this lab you will be able to:
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -65,8 +68,8 @@ export REGION="us-central1"          # the region you deploy into
 1. In the RAD platform, open **Chibisafe (Cloud Run)**, set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Chibisafe_CloudRun)
-   documents every input by group, with defaults. Review the estimated cost
-   (if credits are enabled) and click **Deploy**, which opens the deployment
+   documents every input by group, with defaults. Click **Deploy Module**, review
+   the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment
    status page with real-time logs.
 
 2. The platform builds and pushes the custom chibisafe-server image (pinned to
@@ -94,28 +97,26 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 2 — Access & verify [Manual]
 
-1. Confirm the backend is healthy. Chibisafe's backend serves all routes under
-   an `/api` prefix and has **no root route** — do not expect anything useful
-   from `$SERVICE_URL/`. Use the dedicated health endpoint instead:
+1. Confirm the service is healthy. Inside the container, Caddy routes
+   `/api/*` (and the `/docs` OpenAPI reference) to the backend, serves uploaded
+   files by name, and sends everything else to the web UI. The health endpoint
+   exercises both the proxy and the backend:
 
    ```bash
    curl -s "$SERVICE_URL/api/health"   # expect HTTP 200, {"status":"yes"}
-   curl -s -o /dev/null -w '%{http_code}\n' "$SERVICE_URL/"   # expect 404 — this is normal, not a bug
+   curl -s -o /dev/null -w '%{http_code}\n' "$SERVICE_URL/"   # expect 200 — the Chibisafe web UI (HTML)
    ```
 
-2. This module deploys the **backend API only** — Chibisafe's separate
-   SvelteKit front-end and Caddy reverse proxy are not part of this module, so
-   there is no bundled dashboard to browse to at `$SERVICE_URL`. Administer the
-   instance through the backend's REST API, or point a separately hosted
-   Chibisafe front-end at `$SERVICE_URL` as its API base.
+2. Open `$SERVICE_URL` in a browser — the Chibisafe web UI loads (dashboard,
+   login, uploads, albums). The REST API is at `$SERVICE_URL/api` (the module's
+   `api_url` output), which is what ShareX-style clients point at.
 
-3. **Admin credential:** by default (`enable_api_key = false`) the backend
-   seeds its first-run administrator account with Chibisafe's well-known
-   upstream default credential (consult upstream Chibisafe documentation for
-   the exact value) — change it immediately after first login. To avoid the
-   well-known default entirely, redeploy with `enable_api_key = true`; the
-   module then generates a random value and injects it as `ADMIN_PASSWORD`.
-   Retrieve it with:
+3. **Admin credential:** log in to the dashboard as `admin`. By default
+   (`enable_api_key = false`) the first-run administrator account uses
+   Chibisafe's upstream default password (`admin`) — change it immediately
+   after first login. To avoid the well-known default entirely, redeploy with
+   `enable_api_key = true`; the module then generates a random value, stores it
+   in Secret Manager and injects it as `ADMIN_PASSWORD`. Retrieve it with:
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~chibisafe AND name~api-key"
@@ -189,11 +190,16 @@ Durable techniques for the failure modes you are most likely to hit. These are
 platform-level diagnostics and do not change with Chibisafe releases.
 
 - **Revision unhealthy / restart loop:** the startup and liveness probes
-  correctly target `/api/health` on this module by default — if you have
-  overridden `startup_probe` / `liveness_probe` to `/` (matching the inert
-  `startup_probe_config` / `health_check_config` variables, or the GKE
-  variant's default), the backend 404s there and the container restart-loops.
-  Revert the path to `/api/health`.
+  target `/api/health` by default, which passes through Caddy to the backend
+  and returns a literal 200 `{"status":"yes"}`. Keep them there — `/` is served
+  by the web UI and does not exercise the backend. The container runs the
+  backend, web UI and Caddy under one supervisor that exits if any of them
+  dies, so a crash in any process shows up as a restart; the logs name which.
+  If you have overridden `startup_probe` / `liveness_probe`, revert the path
+  to `/api/health`.
+- **Uploads larger than 32 MiB fail:** Cloud Run caps HTTP/1 request bodies at
+  32 MiB, while Chibisafe's default upload chunk size is larger (~81 MB). Lower
+  **Chunk Size** in the dashboard's settings to below 32 MiB.
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
@@ -220,7 +226,7 @@ setting-specific gotchas (including the persistence-model risk, the
 
 ## Task 6 — Tear down [Automated]
 
-On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the project). This removes everything the module created — the Cloud Run service,
+On the **Deployments** page, open the deployment and click the **Trash** icon (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment record is retained for history). If a deployment is stuck and the RAD platform can no longer manage it (for example after manual changes that conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records **without** destroying the cloud resources (it makes RAD forget the deployment). This removes everything the module created — the Cloud Run service,
 the Cloud Storage data bucket (SQLite database, uploads, and logs), and the
 optional admin-password secret. There is no Cloud SQL database to remove — none
 was ever created. Resources owned by **Services_GCP** (the VPC, Artifact
@@ -233,8 +239,8 @@ Registry) are managed separately and are not removed here.
 | Task | Type | Outcome |
 |---|---|---|
 | 1 — Deploy | Automated | Module builds the custom image and provisions Cloud Run, a GCS data bucket (`/data` via GCS Fuse), and an optional admin secret — no Cloud SQL |
-| 2 — Access & verify | Manual | Health check at `/api/health` passes (`/` correctly 404s); administer via the API or an external front-end |
+| 2 — Access & verify | Manual | Health check at `/api/health` passes; the Chibisafe web UI loads at `/`; log in as `admin` and change the password |
 | 3 — Operate | Manual | Inspect revisions, update version, manage the admin secret, inspect SQLite/uploads/logs on the bucket; never scale past 1 instance |
 | 4 — Observe | Manual | Query Cloud Logging; review Cloud Monitoring metrics and optional uptime check |
-| 5 — Troubleshoot | Manual | Diagnose probe-path, GCS Fuse write-safety, ingress, IAM, and build issues |
+| 5 — Troubleshoot | Manual | Diagnose probe-path, upload-size, GCS Fuse write-safety, ingress, IAM, and build issues |
 | 6 — Tear down | Automated | Delete (Trash) removes the service, bucket, and optional secret |

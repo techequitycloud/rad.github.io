@@ -28,8 +28,8 @@ solved once and offered as self-service, so teams ship features instead of assem
 infrastructure.
 
 - **A catalogue of ready-to-run solutions.** Every supported application is available
-  as a turnkey deployment in two runtimes (serverless and Kubernetes), so launching a
-  new workload is a configuration exercise, not an engineering project.
+  as a turnkey deployment — most in both runtimes (serverless and Kubernetes) — so
+  launching a new workload is a configuration exercise, not an engineering project.
 - **Golden paths.** Opinionated, pre-hardened templates cover the common archetypes —
   stateless web services, stateful workloads, and AI/inference services — each wired
   with production-grade defaults.
@@ -57,8 +57,10 @@ controlled, reviewed, and reproducible.
   memory.
 - **Isolated state per deployment.** Each tenant and application has its own independent
   state, eliminating cross-deployment interference and lock contention.
-- **Drift detection.** Changes made outside the platform are detected and reconciled
-  back to the declared state, so reality and intent never silently diverge.
+- **Drift correction on apply.** Every update plans against the declared state, so
+  changes made outside the platform are surfaced and reconciled the next time the
+  deployment is updated. RAD accelerates deployment; it does not continuously watch
+  a deployment once it is running.
 - **Reproducibility.** Every deployment is pinned to an exact source version, so any
   prior state can be reconstructed and re-provisioned in another project or region.
 - **Push-button rollback.** Reverting a change converges infrastructure back to its
@@ -83,7 +85,10 @@ From a single change to a running deployment, automatically and safely.
 - **Validation before provisioning.** Misconfigurations are rejected up front, before
   any resource is created, so broken changes never reach your environment.
 - **Safety gates on destructive actions.** Teardown and other high-impact operations
-  require explicit human approval — they are never triggered automatically.
+  require explicit human confirmation. Two teardowns are scheduled: a lab
+  environment is removed when its training session ends, and a RAD-managed project
+  whose billing was switched off for lack of purchased credits is deleted once its
+  warning period has passed.
 - **Automated post-deployment steps.** Database initialisation, migrations, and
   plugin/extension installs run automatically with each deployment.
 - **Failure visibility.** Pipeline failures surface immediately through configurable
@@ -99,14 +104,15 @@ Security is built into every deployment from the first apply — not bolted on l
   setting, applied consistently across all deployments.
 - **Least-privilege identity.** Each application runs as its own identity with only the
   permissions it needs. External identity providers can be federated in without
-  long-lived keys.
+  long-lived keys (in a project you bring yourself).
 - **Zero-trust access.** Identity-aware access can front any application with a single
   switch (`enable_iap`), replacing VPNs with per-request identity checks.
 - **Managed secrets.** Credentials are stored in a managed secret store, injected at
   runtime, never hard-coded, and can rotate automatically on a schedule
   (`enable_auto_password_rotation`).
 - **Service perimeters.** Per-tenant perimeters (`enable_vpc_sc`, `vpc_sc_dry_run`)
-  isolate data and services, with a safe dry-run-first rollout.
+  isolate data and services, with a safe dry-run-first rollout. Offered in a project
+  you bring yourself, not in a RAD-managed project.
 - **Supply-chain integrity.** Signed-image admission (`enable_binary_authorization`),
   continuous vulnerability scanning, and software bill-of-materials generation ensure
   only trusted images run. Integrity extends to the deployment tooling itself: provider
@@ -121,7 +127,8 @@ Security is built into every deployment from the first apply — not bolted on l
   defend every workload.
 - **Policy-as-code across the fleet.** Organisation-wide guardrails are enforced from a
   single policy source applied to every cluster, with violations reported centrally —
-  so the same admission and configuration rules hold everywhere, not per deployment.
+  so the same admission and configuration rules hold everywhere, not per deployment
+  (a fleet feature, available in a project you bring yourself).
 - **Continuous audit.** A built-in security audit surfaces misconfiguration before it
   becomes an incident, and findings are aggregated in a single view.
 
@@ -180,10 +187,10 @@ tenant.
 - **Scale-to-zero economics.** Serverless workloads cost nothing when idle and bill per
   request and per second (`min_instance_count`); Kubernetes workloads are billed for
   the resources actually requested and continuously right-sized.
-- **Spot compute for interruptible work.** Interruption-tolerant or non-production
-  workloads can run on Spot capacity, cutting node costs by roughly 60–90% in exchange
-  for the possibility of short-notice preemption — a deliberate cost/durability
-  trade-off.
+- **Spot compute for interruptible work.** Selected GKE reference deployments (such as
+  the banking demonstrations) run on Spot capacity, cutting node costs by roughly
+  60–90% in exchange for the possibility of short-notice preemption — a deliberate
+  cost/durability trade-off.
 - **Automated lifecycle policies.** Old revisions, untagged images, and aged objects are
   pruned automatically (`max_revisions_to_retain`, plus image-retention and
   bucket-lifecycle controls), preventing storage-cost creep.

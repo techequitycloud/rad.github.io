@@ -60,7 +60,7 @@ This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) e
      --format="value(instanceType, settings.availabilityType)"
    ```
    Note what Terraform now thinks: the promoted instance has drifted from the declared state, and the next `tofu plan` will want to reconcile it — promotion is a break-glass action, not a managed workflow in these modules.
-5. **Prove reproducibility** — the automation claim of this section: re-run a plan over the unchanged deployment from your deployment portal (the platform runs `tofu plan` for you) and review the proposed changes.
+5. **Prove reproducibility** — the automation claim of this section: run a plan over the unchanged configuration and review the proposed changes. The portal has no plan-only action — an **Update** plans and then applies — so run `tofu plan` from the module directory against the deployment's state, or read the plan section of the **Update** build's logs.
 
    You know it worked when the failover operation completes with the primary in a new zone, the promoted instance reports `CLOUD_SQL_INSTANCE` (no longer a replica), and a fresh `tofu plan` over the *unmodified* configuration shows no unexpected changes (idempotence) — while the post-promotion plan visibly flags the drift.
 

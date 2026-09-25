@@ -275,7 +275,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `module_description` / `module_documentation` / `module_dependency` / `module_services` | _(set)_ | Catalogue listing text and dependency ordering. Read by the platform, not applied by Terraform. |
 | `requires_services` | `{ create_postgres = true, create_network_filesystem = true, ... }` | Tells the platform which `Services_GCP` `create_*` toggles to enable when auto-provisioning it for this module. |
-| `credit_cost` / `require_credit_purchases` | `50` / `false` | Platform billing metadata. |
+| `credit_cost` / `require_credit_purchases` | `75` / `false` | Platform billing metadata. |
 | `enable_purge` | `true` | Permits full resource deletion on destroy. |
 | `public_access` | `true` | Lists the module in the public catalogue. |
 | `require_services_gcp_module` | `true` | An `App_CloudRun` feature — fails the plan if no `Services_GCP` VPC exists — but this variable is **not forwarded** to `App_CloudRun` here, so it has no effect at this module's level. |

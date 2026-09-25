@@ -14,6 +14,8 @@ The Professional Cloud Database Engineer certification validates your ability to
 ## How to use this guide
 
 - Deploy one of the profiles below through your deployment portal, then work through the matching section guide while the infrastructure is live.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_alloydb`; deploy the profiles that set them into a Google Cloud project of your own.
 - Each section guide pairs a portal change with what to observe in the GCP console and a real `gcloud`/`psql`/`kubectl` command.
 - Use the coverage legend to know which exam topics must be studied outside the platform — Spanner, Bigtable, BigQuery, and Database Migration Service are *not* implemented by these modules, and the section guides say so plainly.
 - Destroy or scale down expensive profiles (REGIONAL Cloud SQL, AlloyDB) when you finish a study session.

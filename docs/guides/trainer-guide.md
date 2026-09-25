@@ -11,25 +11,25 @@ For trainers who run a course on RAD and give each participant their own lab env
 
 ## What you can do
 
-- Run **lab sessions** from the **Labs** page. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
+- Run **lab sessions** from the **Lab Sessions** tab on the **Solutions** page. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
 - Choose, per session, **who pays** for a participant's place: you, or each participant.
 - Pay for one participant's place yourself when they can't pay on RAD — for example, they paid you in cash, or their bank won't work with the payment provider.
 - Build the same module or solution into every participant's environment in one action, start their clocks, add time or credits, and end environments early.
 - Get back every credit your participants did not use once the session settles. Those credits are yours to keep.
 
-You don't need a separate roster or a special deploy form. Everything happens on the **Labs** page. If you open an ordinary deploy form, it points you back there with **Open lab sessions**.
+You don't need a separate roster or a special deploy form. Everything happens on the **Lab Sessions** tab. If you open an ordinary deploy form, it points you back there with **Open lab sessions**.
 
 ## Getting access
 
-Sign in with your Google account as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, **Labs** appears in your navigation. If it doesn't, ask an administrator.
+Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Lab Sessions** tab appears on **Solutions**, right after **Build Solution**. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
 
-A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**. **Credits** is where you buy the purchased credits a session you fund is paid from.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions → Build Solution** when you sign in, like any user. **Credits** is where you buy the purchased credits a session you fund is paid from.
 
 Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
 ## Creating a session
 
-On **Labs**, choose **New session**. The dialog asks for:
+On the **Lab Sessions** tab, choose **New session**. The dialog asks for:
 
 - **Session name** — up to 100 characters.
 - **Participant emails** — paste a list. The dialog confirms how many addresses it recognised. An address it can't read stops the whole session from being created, so nothing is charged for a list that was only partly understood. How many participants a session may hold is set by your administrator.
@@ -130,15 +130,15 @@ Participants can't deploy anything themselves in a lab. Every lab deployment is 
 ## What a trainer can't do
 
 - **Change who pays** after creating a session. Create a new session instead.
-- **Read secrets** on lab deployments: their configuration variables, outputs and generated passwords stay with administrators.
+- **Read secrets** on lab deployments: their configuration variables stay with administrators, and generated passwords with the participant and administrators. You can see a lab deployment's outputs, with sensitive values removed.
 - **Use advanced settings** when updating a lab deployment. Only administrators can.
 - **See a participant's own deployments.** Your access covers the lab environments in your sessions, not anything a participant deploys for themselves.
 - **Force a teardown.** Only administrators can.
 - **Deploy for someone from the ordinary deploy form.** Only administrators can deploy on another person's behalf there; you provision for participants from a lab session.
-- **Purge a participant's environment before it is destroyed.** Deleting it destroys the resources; purging only the record first is for the environment's owner or an administrator.
+- **Purge a participant's environment before it is destroyed.** Deleting it destroys the resources; purging only the record first is for an administrator. Once a lab has ended, you can still purge the record of an environment that has already been deleted.
 - **Change a session's region, or edit a session once it has ended.**
 
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Support** tab. Administrators and finance staff work that queue.
+- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Send Message** tab, and follow your ticket on **My tickets**. Support staff, administrators and finance work that queue.

@@ -47,6 +47,8 @@ By the end of this lab you will be able to:
 - **gcloud CLI** and **kubectl** installed; `gcloud auth login` and
   `gcloud auth application-default login` completed.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -70,7 +72,7 @@ export REGION="us-central1"           # the region you deploy into
    global static IP quota, when the only consumer is in-cluster (Plausible in the same
    cluster), set `service_type = "ClusterIP"`, `reserve_static_ip = false`, and
    `enable_custom_domain = false` so the database consumes no global static external IP.
-   Review the estimated cost (if credits are enabled) and click **Deploy**, which opens
+   Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens
    the deployment status page with real-time logs.
 
 2. The platform mirrors the `clickhouse/clickhouse-server` image into Artifact
@@ -226,7 +228,7 @@ On the **Deployments** page, open the deployment and click the **Trash** icon
 (**Delete**). Delete runs `terraform destroy` and is irreversible (the deployment
 record is retained for history). If a deployment is stuck and the RAD platform can no
 longer manage it (for example after manual changes that conflict with the Terraform
-state), use **Purge** instead — it removes the deployment from RAD's records
+state), use **Purge** instead (from the same **Delete** dialog) — it removes the deployment from RAD's records
 **without** destroying the cloud resources. Teardown removes everything the module
 created — the StatefulSet, namespace, **the PVC and all event data**, the Secret
 Manager password secret, and the mirrored Artifact Registry images. If a Plausible

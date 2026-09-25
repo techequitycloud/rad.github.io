@@ -71,7 +71,9 @@ industry do it.
 - **Data-exfiltration prevention.** A service perimeter around your cloud APIs stops
   data from being copied out of the project — even by a compromised credential — and
   keeps each tenant's data isolated. A safe observation mode lets you validate the
-  perimeter before enforcing it. *Configure with* `enable_vpc_sc`, `vpc_sc_dry_run`.
+  perimeter before enforcing it. Available in a project you bring yourself; it is
+  not offered in a RAD-managed project, where the perimeter would sit in RAD's own
+  organisation. *Configure with* `enable_vpc_sc`, `vpc_sc_dry_run`.
 - **Least privilege as standard.** Each deployment runs under a dedicated,
   narrowly-scoped identity rather than a broad default, uses keyless workload
   identity (no long-lived key files to leak), and encrypts data at rest with
@@ -96,11 +98,11 @@ industry do it.
   isolation, supply-chain integrity, network controls, audit logging, backup, and
   tenant isolation.
 - **Segregation of duties is built in** through clearly separated operational roles
-  (administrator, partner, support, finance, end-user) — the structural evidence
-  auditors look for.
-- **Drift is corrected automatically.** Re-applying a deployment's known-good
-  configuration reverts unauthorised changes, and validation blocks misconfigurations
-  before they ever take effect.
+  (administrator, user, partner, agent, finance, support, trainer) — the structural
+  evidence auditors look for.
+- **Drift can be corrected by re-applying.** Re-applying a deployment's known-good
+  configuration (an update) reverts unauthorised changes, and validation blocks
+  misconfigurations before they ever take effect.
 - **Per-tenant compliance** is supported through isolated perimeters, dedicated
   identities, and per-tenant cost and resource boundaries.
 
@@ -122,8 +124,8 @@ industry do it.
   applications cost nothing; you pay per request and per second, and the platform
   scales automatically with demand. *Configure with* `min_instance_count`,
   `max_instance_count`, `cpu_limit`, `memory_limit`.
-- **Spot compute for interruptible work.** Workloads that tolerate interruption —
-  batch jobs, non-production environments — can run on Spot capacity for roughly
+- **Spot compute for interruptible work.** Selected GKE reference deployments (such
+  as the banking demonstrations) run their nodes on Spot capacity for roughly
   **60–90%** lower node cost, in exchange for occasional short-notice preemption.
 - **Automated storage lifecycle.** Old application revisions and container images are
   pruned automatically, and object storage transitions to cheaper tiers over time —
@@ -138,8 +140,9 @@ industry do it.
   cost/performance choice — database machine sizes, standard vs high-availability
   cache, storage tiers, and the option to omit a shared file system entirely
   (`enable_nfs`).
-- **Ready-made cost/performance profiles** — *Low Cost*, *Low Latency*, and
-  *Balanced* — give you sensible starting points for any workload.
+- **Cost/performance patterns** — *Low Cost* (scale to zero), *Low Latency* (keep a
+  warm instance) and *Balanced* — are sensible starting points you apply through the
+  sizing options above.
 
 | Metric | Value |
 |---|---|
@@ -158,7 +161,7 @@ industry do it.
 
 - **A catalogue of ready-to-run solutions.** A growing library spans content
   management, ERP and business systems, healthcare, education, banking, search, AI
-  and LLM tooling, workflow automation, and application frameworks — each available
+  and LLM tooling, workflow automation, and application frameworks — most available
   for both serverless (Cloud Run) and Kubernetes (GKE) runtimes. Teams deploy a
   proven solution instead of building one.
 - **Self-service configuration.** A guided form organises every option into logical
@@ -220,15 +223,16 @@ industry do it.
 
 > **Practices applied:** learning tied to real, running systems.
 
-- **Certification-aligned learning.** Multiple Google Cloud certification tracks —
+- **Certification-aligned learning.** Seven Google Cloud certification tracks —
   Associate Cloud Engineer, Professional Cloud Architect, Professional Cloud
-  Developer, Professional Cloud DevOps Engineer, and Professional Security Engineer —
-  are tied directly to working solutions, so learners explore concepts hands-on
+  Developer, Professional Cloud Database Engineer, Professional Cloud Network
+  Engineer, Professional Cloud DevOps Engineer, and Professional Cloud Security
+  Engineer — are tied directly to working solutions, so learners explore concepts hands-on
   rather than in the abstract.
 - **Hands-on labs** walk a professional through deploying, operating, observing, and
   troubleshooting each solution on the platform.
-- **Role-based operating guides** for administrators, partners, support, finance, and
-  end-users make responsibilities and procedures clear.
+- **Role-based operating guides** for administrators, users, partners, agents,
+  finance, support, and trainers make responsibilities and procedures clear.
 - **Rapid onboarding.** Structured guides and reference solutions get a new
   contributor productive in hours instead of days.
 

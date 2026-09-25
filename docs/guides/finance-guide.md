@@ -29,7 +29,7 @@ Finance is granted by an administrator on top of an ordinary account, so you kee
 
 Open **Billing** from the navigation bar. It has nine tabs, in this order: **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Event Codes**, **Module Revenue**, **Agent Revenue**, **Project Transactions**, **Project Invoices** and **Payout Summary**. Each is described below.
 
-Which tabs appear depends on two platform switches. Every tab except **Event Codes** needs **Subscriptions** switched on, and **Project Transactions** and **Project Invoices** also need **Project Credits**. The page always opens on the first tab you can use — with Subscriptions off, that is **Event Codes**, and it is the only tab shown.
+Which tabs appear depends on two platform switches. Every tab except **Event Codes** needs **Enable Subscription** switched on, and **Project Transactions** and **Project Invoices** also need **Enable Project Credits**. The page always opens on the first tab you can use — with Subscriptions off, that is **Event Codes**, and it is the only tab shown.
 
 ### Subscription Tiers
 
@@ -51,7 +51,7 @@ Configure the global parameters of the credit economy.
 1. Go to **Billing** > **Credit Settings**.
 2. Set the **credits-per-unit** value (how credits map to currency).
 3. Set the **revenue shares** — the percentage of revenue allocated to referring **agents** (Agent Revenue Share) and to module **partners** (Partner Revenue Share).
-4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Refer and earn** section disappears from Profile, along with its shortcut on Credits), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap. **Solution bundle discounts** have no control on this tab: a solution's module fees are discounted 15% for three or four members, 20% for five or six and 25% for seven or more, and changing those tiers is an administrator's settings change (`solutionBundleDiscountTiers`), not a form here.
+4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the **Minimum Top-up** (the smallest one-off purchase in US dollars: $10 by default, between $1 and $1,000), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Refer and earn** section disappears from Profile, along with its shortcut on Credits), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap. **Solution bundle discounts** have no control on this tab: a solution's module fees are discounted 15% for three or four members, 20% for five or six and 25% for seven or more, and changing those tiers is an administrator's settings change (`solutionBundleDiscountTiers`), not a form here.
 5. Decide what a **failed deployment** is charged, on the **Failed Deployments** card. It has two independent switches, and each label states its own outcome ("Build cost charged" / "Build cost not charged", "Module fee charged" / "Module fee not charged"):
    - **Build cost** — whether the metered Cloud Build time of a new deployment that fails or is cancelled is charged.
    - **Module fee** — whether the module fee is charged for that deployment even though it never succeeded.
@@ -60,7 +60,7 @@ Configure the global parameters of the credit economy.
 
 This tab also holds **Adjust All Credits**, which applies the amount you enter to **every** user's balance at once — positive to grant, negative to deduct. Tick **Free** to move awarded credits, or leave it clear to move purchased credits. Large adjustments will not submit until you have given a reason and typed the confirmation phrase shown. Use Credit Management below to change one person instead.
 
-Note: the master Credits on/off toggle is **admin-only** (set on the Admin Setup page). As Finance you see and configure the billing UI, but you do not switch credits on or off platform-wide.
+Note: the platform switches — **Enable Credits**, **Enable Subscription** and **Enable Project Credits** — live on the administrator's **Setup** page, which Finance cannot open. **Enable Subscription** is the switch for every purchase: with it off there are no new subscriptions and no one-off top-ups on either provider, the buy and subscribe options disappear, and existing subscribers can still cancel their plan from the Credits page. As Finance you see and configure the billing UI, but you do not switch these on or off from it.
 
 ### Credit Management
 
@@ -183,7 +183,7 @@ The one change you can make is **End now**, which stops a session's spending str
 Managed-setup requests from users who want RAD to handle a deployment for them appear here.
 
 1. Click **Help** in the navigation bar, then open the **Setup Requests** tab.
-2. Choose a status filter and a start and end date, then click **Load Requests** — nothing loads until a date range is set.
+2. The tab opens on the last 7 days and loads straight away. To change it, choose a status filter and a start and end date, then click **Load Requests**.
 3. Expand a request to work it: set its **status** (new, in-progress, completed or cancelled), choose an **Assigned Engineer** (only registered partners are accepted), record **Revenue Achieved**, and add internal notes. Click **Save** to apply.
 4. Saving a request as *completed* is what calculates the split between platform and engineer revenue, so set the revenue figure before you mark it completed. The engineer keeps **75%** and the platform **25%** by default; an administrator can set a different platform share (**Platform revenue share (setup requests)** in settings), and a share of 0 is honoured. The module **Partner Revenue Share** does not affect setup requests. Changing the revenue on a request that is already completed recalculates the split without changing its completion date. **Export to CSV** gives you the loaded set for reporting.
 
@@ -201,10 +201,10 @@ The log is read-only.
 
 Click **Help** in the navigation bar:
 
-- **Send Message** tab — a contact form that raises a support ticket and emails the support team. The **My tickets** tab beside it lists the tickets you have raised and their status.
+- **Send Message** tab — a contact form that raises a support ticket and emails the support team. The **My tickets** tab beside it lists the tickets you have raised and their status. While purchases are switched on, raising a ticket needs purchased credits on your account; with purchases off anyone may raise one. Each account can raise up to 5 tickets in any 24 hours.
 - **Setup Requests** tab — described above.
 - **Support Tickets** tab — the shared ticket queue. Because billing is one of its categories, you can triage it: Finance and admins may assign, reassign or clear a ticket's assignee to anyone, where support agents may only claim an unassigned ticket or release one they hold.
 
-The **ROI** calculator is not on Help — it's a tab on the **Credits** page, after Buy Credits. Credits appears in your navigation only if your account also holds the ordinary user role; otherwise go to `/credits` directly. Without the user role you have no credit ledger of your own, so the page does not offer **Credit Transactions** and opens on **Module Revenue** instead; **Module Costs** and **Project Invoices** are there as usual.
+The **ROI** calculator is not on Help — it's the last tab on the **Credits** page, **Calculate ROI**. Credits appears in your navigation only if your account also holds the ordinary user role; otherwise go to `/credits` directly. Without the user role you have no credit ledger of your own, so the page does not offer **Credit Transactions** and opens on **Module Revenue** instead; **Module Costs** and **Project Invoices** are there as usual.
 
 A **Contact us** link in the footer also takes you to the Help page.

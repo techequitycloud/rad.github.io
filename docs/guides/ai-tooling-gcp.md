@@ -8,7 +8,7 @@ description: "Deploy a complete self-hosted LLM stack on Google Cloud: Ollama, O
 <img src="https://storage.googleapis.com/rad-public-2b65/guides/AI_Tooling.png" alt="AI Tooling" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 RAD Platform includes a complete self-hosted generative-AI stack you can
-deploy into your own Google Cloud project — model serving, chat UIs, agent
+deploy into your own Google Cloud project, or into a project RAD creates for you — model serving, chat UIs, agent
 builders, RAG pipelines, vector databases, gateways, and automation. This
 page groups those modules so you can assemble a working LLM stack
 layer by layer.

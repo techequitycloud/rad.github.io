@@ -48,6 +48,8 @@ By the end of this lab you will be able to:
 - A Google Cloud project with **billing enabled**.
 - **gcloud CLI** authenticated: `gcloud auth login` and `gcloud auth application-default login`.
 - **Project Owner** (or equivalent) IAM on the project.
+- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role. A project RAD creates for you needs neither.
+- **Advanced mode for later changes.** The create form asks only for the first page of inputs (and, in a project RAD creates for you, little more than the tenant name and region). Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -72,8 +74,8 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    ready, set `host` now (it becomes immutable once real ActivityPub content
    exists) — otherwise leave it empty and the deployment will derive a
    working federation domain from the predicted GKE service URL
-   automatically. Review the estimated cost (if credits are enabled) and
-   click **Deploy**, which opens the deployment status page with real-time
+   automatically. Click **Deploy Module**, review the estimated cost in the
+   confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time
    logs.
 
 2. The platform provisions the Kubernetes Deployment (or StatefulSet, if you
@@ -300,9 +302,9 @@ On the **Deployments** page, open the deployment and click the **Trash** icon
 (**Delete**). Delete runs `terraform destroy` and is irreversible (the
 deployment record is retained for history). If a deployment is stuck and the
 RAD platform can no longer manage it (for example after manual changes that
-conflict with the Terraform state), use **Purge** instead — it removes the
+conflict with the Terraform state), use **Purge** instead (from the same **Delete** dialog) — it removes the
 deployment from RAD's records **without** destroying the cloud resources (it
-makes RAD forget the project). Delete removes everything the module
+makes RAD forget the deployment). Delete removes everything the module
 created — the Kubernetes workload and Service (or StatefulSet + PVC, if
 used), the Cloud SQL database, Secret Manager secrets, the `videos` and
 `data` GCS buckets, and Artifact Registry images. Resources owned by
