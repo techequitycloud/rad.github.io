@@ -168,9 +168,9 @@ Platform-wide reporting is still restricted: the **Module Costs** and **Project 
 
 ## Email notifications
 
-Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.)
+Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.) One email ignores these settings: if a build costs more credits than you have, you are always told what you owe, because it explains why your next top-up gives you less.
 
-Turning **Deployments** off stops all of those emails, including the warnings. Because RAD never permanently removes anything without warning you first, those removals are **held** while the setting is off: a RAD-managed project whose billing was switched off for lack of credits is not deleted, and a deployment removed from your list after the retention period is kept rather than permanently erased. If you turn deployment emails back on while a RAD-managed project is being held, the deletion warning is sent first — and the project can then be deleted as soon as the following day, so act on that warning straight away.
+Turning **Deployments** off stops all of those emails, including the warnings. Because RAD never permanently removes anything without warning you first, those removals are **held** while the setting is off: a RAD-managed project whose billing was switched off for lack of credits is not deleted, and a deployment removed from your list after the retention period is kept rather than permanently erased. When you turn deployment emails back on, the warnings are sent. For a held deployment record, the full notice period starts from that warning. For a held RAD-managed project, the project can be deleted as soon as the following day, so act on that warning straight away.
 
 ## Getting help
 
