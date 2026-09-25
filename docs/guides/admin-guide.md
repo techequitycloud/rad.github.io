@@ -104,6 +104,8 @@ The **Setup** page is where you configure platform-wide behavior. Adjust setting
 
 Key controls available to you include turning **Credits** on or off for the whole platform. When credits are off, the Credits page and credit costs are hidden for users; when on, deployments are metered in credits as described in [Using RAD](using-rad.md).
 
+**Enable Subscription** is, despite its name, the switch for every purchase. Switched off, nobody can start a new subscription **or** a one-off top-up: both payment providers are switched off, the checkout routes refuse, the *Buy credits* and *Subscribe* links disappear across the app, and the public **Pricing** and sign-in pages stop listing plans. Payments already made are still credited, and existing subscribers are not cut off: their plan keeps renewing until they cancel it, which they can still do from the **Credits** page.
+
 **Enforce Update Safe** controls what happens when someone edits a setting that cannot be changed on a running deployment — a region, an encryption key, a toggle that creates or destroys a resource. Modules declare which of their settings are safe to change in place; everything else is treated as destructive.
 
 - **Off (the default)** — the field stays editable and changing it raises a confirmation naming exactly which settings will rebuild resources. The user decides.
