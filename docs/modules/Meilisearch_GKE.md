@@ -393,7 +393,7 @@ locate and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
-| `service_url` | URL to reach the Meilisearch REST API. |
+| `api_url` | URL to reach the Meilisearch REST API. |
 | `meilisearch_api_key_secret_id` | Secret Manager secret ID for the master key. Empty when `enable_api_key = false`. |
 | `statefulset_name` | Name of the StatefulSet (when workload type is StatefulSet). |
 | `storage_buckets` | Created Cloud Storage buckets. |
@@ -439,8 +439,7 @@ locate and explore the running resources.
 For the foundation behaviour referenced throughout — IAM and Workload Identity,
 autoscaling, ingress and certificates, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, backups, and image mirroring — see
-**[App_GKE](App_GKE.md)**. Meilisearch-specific application configuration shared
-with the Cloud Run variant is described in
+**[App_GKE](App_GKE.md)**. Meilisearch-specific application configuration is described in
 **[Meilisearch_Common](Meilisearch_Common.md)**.
 
 <!-- related-guides -->
@@ -448,5 +447,4 @@ with the Cloud Run variant is described in
 ## Related guides
 
 - [Hands-on lab: Meilisearch on GKE Autopilot](../labs/Meilisearch_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
-- [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) — the same application on Cloud Run, for when you need the other deployment target.
-- [Meilisearch Common — Shared Application Configuration](Meilisearch_Common.md) — the configuration shared by both deployment targets.
+- [Meilisearch Common — Shared Application Configuration](Meilisearch_Common.md) — the Meilisearch application configuration this module builds on.

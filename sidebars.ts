@@ -349,7 +349,6 @@ const sidebars: SidebarsConfig = {
           label: 'Meilisearch',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'modules/Meilisearch_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/Meilisearch_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/Meilisearch_Common', label: 'Common'},
           ],
@@ -2174,7 +2173,6 @@ const sidebars: SidebarsConfig = {
           label: 'Meilisearch',
           collapsed: true,
           items: [
-            {type: 'doc', id: 'labs/Meilisearch_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/Meilisearch_GKE', label: 'GKE'},
           ],
         },

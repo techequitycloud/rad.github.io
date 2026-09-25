@@ -151,7 +151,7 @@ write, or maintain. For the business value these capabilities deliver, see
   cross-tenant conflicts.
 - **Per-deployment isolation.** Each tenant deployment is independent, with its own
   lifecycle and upgrade cadence — no shared state between tenants.
-- **Per-tenant security perimeters** (`enable_vpc_sc`, `vpc_sc_dry_run`) keep each
+- **Per-tenant security perimeters** (`enable_vpc_sc`, `vpc_sc_dry_run`; when deploying into your own project) keep each
   tenant's databases, storage, and secrets isolated, backed by per-tenant identities,
   secrets, and buckets. Network ranges are derived automatically to avoid collisions.
 - **Tenant lifecycle.** Provision infrastructure with or without the application
@@ -176,7 +176,7 @@ write, or maintain. For the business value these capabilities deliver, see
   lifecycle policies are tuned for multi-gigabyte images (`deployment_timeout`).
 - **Inherited posture.** AI workloads automatically gain the platform's security and
   cost controls — managed secrets for provider API keys, identity-aware access,
-  service perimeters, image attestation, and scale-to-zero economics.
+  service perimeters (when deploying into your own project), image attestation, and scale-to-zero economics.
 
 ---
 
@@ -224,7 +224,7 @@ write, or maintain. For the business value these capabilities deliver, see
 | Networking | Private VPC, managed domains + SSL, CDN, WAF/DDoS, micro-segmentation, service mesh, multi-cluster |
 | Observability | Dashboards, alerting, centralised + audit logging, security findings, tracing, fleet visibility |
 | Resilience | Backups + PITR, workload backup, disruption budgets, fast rollback, re-provision-anywhere, multi-cluster HA |
-| Multi-tenancy | Tenant-aware naming, per-tenant isolation and perimeters, full tenant lifecycle |
+| Multi-tenancy | Tenant-aware naming, per-tenant isolation, perimeters (in your own project), full tenant lifecycle |
 | AI | Pre-built AI solutions, vector stores, AI-aware runtime, inherited security/cost posture |
 | Portability | Open standards, portable Kubernetes, attached non-GCP clusters, federated identity, architectural multicloud readiness |
 | Delivery | Managed build, multi-stage promotion with approval gates |
@@ -252,7 +252,7 @@ there is no infrastructure code to write. Representative controls include
 `min_instance_count` / `max_instance_count`, `cpu_limit` / `memory_limit`,
 `enable_redis`, `enable_nfs`, `enable_cloudsql_volume`,
 `enable_auto_password_rotation`, `enable_cdn`, `enable_cloud_armor`,
-`enable_network_segmentation`, `enable_vpc_sc`, `enable_pod_disruption_budget`,
+`enable_network_segmentation`, `enable_vpc_sc` (when deploying into your own project), `enable_pod_disruption_budget`,
 `enable_cloud_deploy`, and `application_domains`.
 
 ---

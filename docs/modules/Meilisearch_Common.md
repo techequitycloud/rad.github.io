@@ -1,21 +1,20 @@
 ---
 title: "Meilisearch Common \u2014 Shared Application Configuration"
-description: "Shared configuration reference for the Meilisearch module — application-layer settings consumed by both the Cloud Run and GKE Autopilot deployments."
+description: "Shared configuration reference for the Meilisearch module — application-layer settings consumed by the GKE Autopilot deployment."
 ---
 
 # Meilisearch Common — Shared Application Configuration
 
 `Meilisearch_Common` is the **shared application layer** for Meilisearch. It is
 not deployed on its own; instead it supplies the Meilisearch-specific configuration
-that both [Meilisearch_GKE](Meilisearch_GKE.md) and
-[Meilisearch_CloudRun](Meilisearch_CloudRun.md) build on, so the two platform
-variants behave identically where it matters. End users never configure this layer
+that [Meilisearch_GKE](Meilisearch_GKE.md) builds on. It previously served a
+Cloud Run variant as well, which was retired in September 2026 — see the note
+below. End users never configure this layer
 directly — it has no deployment UI inputs of its own — but understanding what it
 provides explains the defaults you see in the platform docs.
 
 For the infrastructure that actually provisions and runs Meilisearch, see the
-platform guides ([Meilisearch_GKE](Meilisearch_GKE.md),
-[Meilisearch_CloudRun](Meilisearch_CloudRun.md)) and the foundation guides
+platform guide ([Meilisearch_GKE](Meilisearch_GKE.md)) and the foundation guides
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -180,13 +179,21 @@ gcloud storage buckets list --project "$PROJECT"
 ---
 
 For the Meilisearch-specific, user-facing configuration (variables by group, outputs,
-and how to explore each service from the Console and CLI), see the platform guides:
-**[Meilisearch_GKE](Meilisearch_GKE.md)** and
-**[Meilisearch_CloudRun](Meilisearch_CloudRun.md)**.
+and how to explore each service from the Console and CLI), see the platform guide:
+**[Meilisearch_GKE](Meilisearch_GKE.md)**.
+
+> **Meilisearch_CloudRun was retired in September 2026.** Meilisearch stores its
+> index in LMDB, which holds an exclusive `flock` for the life of the process.
+> Cloud Run keeps a warm revision alive after traffic moves off it, so the
+> outgoing instance never releases that lock and every later revision fails its
+> startup probe with `Resource temporarily unavailable (os error 11)` — the
+> service could be deployed once and never reliably updated, while appearing
+> healthy. `min_instance_count = 0` makes an update possible on an idle service
+> but not on a trafficked one. GKE is unaffected: a StatefulSet fully stops the
+> old pod before starting the new one.
 
 <!-- related-guides -->
 
 ## Related guides
 
-- [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) — this configuration deployed on Cloud Run.
 - [Meilisearch on GKE Autopilot](Meilisearch_GKE.md) — this configuration deployed on GKE.

@@ -34,16 +34,15 @@ infrastructure.
   stateless web services, stateful workloads, and AI/inference services — each wired
   with production-grade defaults.
 - **Centralised governance, decentralised consumption.** Cross-cutting controls
-  (identity, encryption, perimeters, image policy) are defined once at the platform
-  level and inherited automatically by every deployment — roughly a 95% reduction in
-  per-application maintenance across a typical portfolio.
+  (identity, encryption, image policy) are defined once at the platform
+  level and inherited automatically by every deployment.
 - **Consistency by construction.** Every deployment follows the same naming, structure,
   and configuration model, so any solution is legible to any operator and resources are
   self-identifying in the console, billing, and audit logs.
 - **Multi-region ready.** The same solution can be deployed to additional regions for
   geo-redundancy or lower latency, fronted by global routing.
 - **Guided onboarding.** New teams start from the catalogue and a reference
-  implementation rather than a blank page, reaching a working deployment in minutes.
+  implementation rather than a blank page.
 
 ---
 
@@ -63,8 +62,6 @@ controlled, reviewed, and reproducible.
   a deployment once it is running.
 - **Reproducibility.** Every deployment is pinned to an exact source version, so any
   prior state can be reconstructed and re-provisioned in another project or region.
-- **Push-button rollback.** Reverting a change converges infrastructure back to its
-  previous state; application releases roll back independently in seconds.
 - **Reviewed change, with blast-radius-aware approval.** Higher-impact changes — those
   affecting shared foundations — require additional review before they are applied.
 
@@ -165,17 +162,12 @@ Reliability is defined, measured, and engineered — not hoped for.
 
 | Metric | How the platform helps |
 |---|---|
-| Deployment frequency | One-trigger deploys make frequent releases routine |
+| Deployment frequency | Guided, repeatable deploys make frequent releases routine |
 | Lead time for changes | Thin, standardised deployments turn changes around in minutes |
 | Change failure rate | Standardised foundations and up-front validation cut failures |
-| Mean time to recovery | Instant rollback and scripted restore shorten recovery |
+| Mean time to recovery | Scripted restore shortens recovery |
 
-- **Incident response and learning.** A runbook of known issue patterns speeds
-  diagnosis; significant incidents are followed by blameless post-mortems whose action
-  items feed back into the platform's safeguards.
-- **Resilience testing.** Failure is exercised deliberately — instance eviction, probe
-  failure, dependency loss, and cold-start behaviour — to confirm the system degrades
-  gracefully.
+- **Incident response.** A runbook of known issue patterns speeds diagnosis.
 
 ---
 
@@ -202,21 +194,14 @@ tenant.
 - **Explicit cost/performance profiles.** Documented Low-Cost, Low-Latency, and Balanced
   profiles make the trade-off a deliberate choice.
 - **Edge offload.** Caching at the global edge (`enable_cdn`) shifts read-heavy traffic
-  off compute, with projected savings of 30–50% on compute and egress.
-- **Proactive spend control.** Budget alerts, anomaly detection, and committed-use and
+  off compute, reducing compute and egress.
+- **Proactive spend control.** Budget alerts and committed-use and
   sustained-use discount guidance catch overspend early and capture savings on
   always-on components.
 - **Cross-boundary egress awareness.** When workloads span clouds or regions,
   cross-boundary traffic travels public paths and incurs egress charges on both sides;
   private interconnect or VPN gives predictable latency and lower egress for production
   multi-location topologies.
-- **Orphan detection.** Idle and abandoned resources are surfaced for cleanup so spend
-  tracks actual usage.
-
-**Quantified outcome.** For a representative ten-application portfolio, the model
-projects roughly 95% reductions in both provisioning time and ongoing maintenance
-effort, and six-figure annual operational savings. Adjust the inputs — portfolio size,
-team cost, baseline effort — to your own situation before presenting to stakeholders.
 
 ---
 
@@ -225,10 +210,10 @@ team cost, baseline effort — to your own situation before presenting to stakeh
 | Discipline | What the platform does for you |
 |---|---|
 | Platform Engineering | Self-service catalogue, golden paths, centralised governance, consistency by construction |
-| GitOps & IaC | Declarative, version-controlled, reproducible deployments with drift detection and instant rollback |
+| GitOps & IaC | Declarative, version-controlled, reproducible deployments with drift correction on update |
 | CI/CD | Managed build and progressive delivery, validation gates, approval on destructive actions |
-| DevSecOps | Least-privilege identity, managed secrets, perimeters, supply-chain integrity, policy-as-code, encryption, WAF |
-| SRE | SLOs and error budgets with burn-rate alerting, codified resilience, toil reduction, DORA gains, blameless learning |
+| DevSecOps | Least-privilege identity, managed secrets, perimeters (in your own project), supply-chain integrity, policy-as-code, encryption, WAF |
+| SRE | SLOs and error budgets with burn-rate alerting, codified resilience, toil reduction, DORA gains |
 | FinOps | Scale-to-zero, spot compute, lifecycle automation, per-tenant cost allocation, tiering, edge offload, spend alerts |
 
 ---
