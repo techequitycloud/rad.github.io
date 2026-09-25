@@ -330,4 +330,4 @@ configuration shared with the GKE variant is described in
 - [Hands-on lab: Payload CMS on Cloud Run](../labs/Payload_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
 - [Payload CMS on GKE Autopilot](Payload_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
 - [Payload Common — Shared Application Configuration](Payload_Common.md) — the configuration shared by both deployment targets.
-- Deployed alongside [Medusa on Google Cloud Run](Medusa_CloudRun.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md), [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) in the **E-commerce Storefront** solution.
+- Deployed alongside [Medusa on Google Cloud Run](Medusa_CloudRun.md), [Matomo on Google Cloud Run](Matomo_CloudRun.md), [Listmonk on Google Cloud Run](Listmonk_CloudRun.md) in the **E-commerce Storefront** solution.

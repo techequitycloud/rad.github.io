@@ -364,4 +364,4 @@ For the foundation behaviour referenced throughout — IAM and Workload Identity
 - [Hands-on lab: Directus on Cloud Run](../labs/Directus_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
 - [Directus on GKE Autopilot](Directus_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
 - [Directus Common — Shared Application Configuration](Directus_Common.md) — the configuration shared by both deployment targets.
-- Deployed alongside [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md), [Umami on Google Cloud Run](Umami_CloudRun.md) in the **Headless Content Platform** solution.
+- Deployed alongside [Umami on Google Cloud Run](Umami_CloudRun.md) in the **Headless Content Platform** solution.

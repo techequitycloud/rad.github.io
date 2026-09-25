@@ -656,4 +656,4 @@ The second run will succeed once GCP has released the reserved addresses.
 - [Hands-on lab: Umami on Cloud Run](../labs/Umami_CloudRun.md) — deploy it step by step, with the console screens and commands at each stage.
 - [Umami GKE Module — Configuration Guide](Umami_GKE.md) — the same application on Kubernetes, for when you need the other deployment target.
 - [Umami Common Shared Configuration Module](Umami_Common.md) — the configuration shared by both deployment targets.
-- Deployed alongside [Directus on Cloud Run](Directus_CloudRun.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md) in the **Headless Content Platform** solution.
+- Deployed alongside [Directus on Cloud Run](Directus_CloudRun.md) in the **Headless Content Platform** solution.

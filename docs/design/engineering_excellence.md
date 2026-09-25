@@ -103,12 +103,12 @@ industry do it.
 - **Drift can be corrected by re-applying.** Re-applying a deployment's known-good
   configuration (an update) reverts unauthorised changes, and validation blocks
   misconfigurations before they ever take effect.
-- **Per-tenant compliance** is supported through isolated perimeters, dedicated
-  identities, and per-tenant cost and resource boundaries.
+- **Per-tenant compliance** is supported through isolated perimeters (when deploying into your own project),
+  dedicated identities, and per-tenant cost and resource boundaries.
 
 | Area | Manual approach | With RAD |
 |---|---|---|
-| SOC 2 / ISO 27001 audit prep | 6–12 weeks of evidence collection | Pre-assembled control-evidence map; controls are configuration |
+| SOC 2 / ISO 27001 audit prep | Manual evidence collection | Pre-assembled control-evidence map; controls are configuration |
 | Audit trail | Assembled from scattered logs | Every change and deployment recorded, attributable, and exportable |
 | Secret rotation | Manual or bespoke scripting | Automated on a schedule |
 | Control drift | Periodic manual review | Re-apply reverts drift; validation blocks misconfiguration before apply |
@@ -131,7 +131,7 @@ industry do it.
   pruned automatically, and object storage transitions to cheaper tiers over time —
   so storage cost does not creep upward unattended.
 - **Content delivery offload.** Serving cacheable content from the global edge
-  reduces compute and egress by an estimated **30–50%** on read-heavy applications.
+  reduces compute and egress on read-heavy applications.
   *Configure with* `enable_cdn`.
 - **Cost allocation and chargeback.** A consistent resource-naming convention flows
   into billing labels, enabling per-tenant and per-application cost reporting with no
@@ -143,14 +143,6 @@ industry do it.
 - **Cost/performance patterns** — *Low Cost* (scale to zero), *Low Latency* (keep a
   warm instance) and *Balanced* — are sensible starting points you apply through the
   sizing options above.
-
-| Metric | Value |
-|---|---|
-| Provisioning time reduction | ~95% (3–5 days → under 2 hours) |
-| Cost per new application | $200 vs $3,200 manually |
-| Maintenance effort (10-app portfolio) | ~95% reduction (40 h → 2 h per cycle) |
-| Compute/egress savings on read-heavy apps | 30–50% via edge delivery |
-| Projected annual savings (mid-size portfolio) | over $100,000 |
 
 ---
 
@@ -168,18 +160,12 @@ industry do it.
   groups with clear ordering and help text, so a non-specialist can deploy a complex,
   secure stack confidently — without writing or maintaining any infrastructure.
 - **Opinionated, single-switch defaults.** Substantial cross-cutting capabilities —
-  identity-aware access, edge delivery, image attestation, service perimeters,
-  disruption budgets — are each a single setting away, pre-integrated and consistent.
+  identity-aware access, edge delivery, image attestation, service perimeters
+  (when deploying into your own project), disruption budgets — are each a single setting away, pre-integrated and consistent.
 - **Convention over configuration.** Every solution follows the same shape and the
   same option names, so once a team learns one, they know them all.
 - **A fast, safe path to production**, with automated build-and-deploy and consistent
   validation on every change.
-
-| Metric | Manual | With RAD | Improvement |
-|---|---|---|---|
-| Setup time per app | 3–5 days | under 2 hours | ~95% faster |
-| Cost per setup | $3,200 | $200 | $3,000 saved |
-| Maintenance for a 10-app fleet | 40 h / $4,000 | 2 h / $200 | ~95% reduction |
 
 ---
 
@@ -212,7 +198,7 @@ industry do it.
 - **Refactor to serverless** to remove the last pre-provisioned compute, paying only
   for what runs.
 - **Security uplift comes for free.** Modernised deployments inherit private
-  networking, identity-aware access, image attestation, service perimeters, edge
+  networking, identity-aware access, image attestation, edge
   protection, and customer-managed encryption automatically.
 - **Migration tooling** handles the data cutover (export, import, and database
   initialisation) so moving live data is routine.
@@ -240,7 +226,7 @@ industry do it.
 |---|---|---|
 | Certification preparation | Separate training; abstract study | Tracks tied to running infrastructure; hands-on exploration |
 | Developer onboarding | Days of unstructured docs and tribal knowledge | Structured guides and reference solutions; productive within hours |
-| Security knowledge transfer | Ad-hoc, expert-dependent | A repeatable security review encoding 30+ control checkpoints |
+| Security knowledge transfer | Ad-hoc, expert-dependent | A repeatable security review |
 
 ---
 
@@ -248,10 +234,10 @@ industry do it.
 
 | Dimension | Proven practice | What you get | Headline result |
 |---|---|---|---|
-| Security & Zero Trust | Zero trust, least privilege, defence in depth | VPN-free access, WAF/DDoS, encrypted secrets, signed images, data perimeters | Whole classes of attack eliminated by default |
-| Compliance & Governance | Auditable change, segregation of duties | Evidence-as-configuration for SOC 2 / ISO 27001 / HIPAA / GDPR | Audit prep cut from weeks to a pre-assembled map |
-| Cost Optimisation | FinOps — elasticity, right-sizing | Scale-to-zero, lifecycle automation, edge offload, chargeback | 30–50% savings on read-heavy apps; >$100k/yr potential |
-| Developer Productivity | Platform engineering, self-service | A catalogue of secure, ready-to-run solutions | ~95% faster setup; $3,000 saved per app |
+| Security & Zero Trust | Zero trust, least privilege, defence in depth | VPN-free access, WAF/DDoS, encrypted secrets, signed images | Whole classes of attack eliminated by default |
+| Compliance & Governance | Auditable change, segregation of duties | Evidence-as-configuration for SOC 2 / ISO 27001 / HIPAA / GDPR | A pre-assembled control-evidence map |
+| Cost Optimisation | FinOps — elasticity, right-sizing | Scale-to-zero, lifecycle automation, edge offload, chargeback | Idle applications cost nothing; storage cost does not creep |
+| Developer Productivity | Platform engineering, self-service | A catalogue of secure, ready-to-run solutions | Deploy a proven solution instead of building one |
 | Modernisation | Lift-and-shift → replatform → refactor | Landing zone, managed substitutions, migration tooling | Move and modernise without rewriting |
 | Education & Enablement | Learning on real systems | Certification tracks, labs, role-based guides | New contributors productive in hours |
 
@@ -264,7 +250,7 @@ entirely through configuration variables, with no infrastructure code to write o
 maintain. A few of the levers you control:
 
 - **Security posture:** `enable_iap`, `enable_cloud_armor`, `enable_binary_authorization`,
-  `enable_vpc_sc`, `enable_auto_password_rotation`, `admin_ip_ranges`.
+  `enable_vpc_sc` (when deploying into your own project), `enable_auto_password_rotation`, `admin_ip_ranges`.
 - **Cost and performance:** `min_instance_count`, `max_instance_count`, `cpu_limit`,
   `memory_limit`, `enable_cdn`, `enable_nfs`, and per-service tier choices.
 - **Access and delivery:** `iap_authorized_users`, `iap_authorized_groups`, custom

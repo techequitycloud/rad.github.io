@@ -450,7 +450,7 @@ locate and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services (Cloud Deploy). |
 | `service_external_ip` | External LoadBalancer IP. |
-| `service_url` | Service URL. |
+| `api_url` | Service URL. |
 | `statefulset_name` | Name of the StatefulSet resource. |
 | `storage_buckets` | Created Cloud Storage buckets (empty list — no buckets are provisioned). |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
@@ -504,4 +504,4 @@ VPC-SC, backups, and image mirroring — see **[App_GKE](App_GKE.md)**.
 ## Related guides
 
 - [Hands-on lab: Elasticsearch on GKE Autopilot](../labs/Elasticsearch_GKE.md) — deploy it step by step, with the console screens and commands at each stage.
-- Deployed alongside [MongoDB on GKE Autopilot](MongoDB_GKE.md), [Meilisearch on Google Cloud Run](Meilisearch_CloudRun.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md) in the **Shared Data Services** solution.
+- Deployed alongside [MongoDB on GKE Autopilot](MongoDB_GKE.md), [Meilisearch on GKE Autopilot](Meilisearch_GKE.md), [Qdrant on Google Cloud Run](Qdrant_CloudRun.md) in the **Shared Data Services** solution.
