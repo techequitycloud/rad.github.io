@@ -39,7 +39,7 @@ Tickets are created from the **Help** page.
 - On the **Help** page, the **Support** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
 - The **Contact us** link in the footer also goes to the Help page's Support form.
 
-When a user asks how to reach you, point them to **Help → Support** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) — a user without any is shown a prompt to buy credits instead — and each user can raise up to 5 tickets in 24 hours.
+When a user asks how to reach you, point them to **Help → Support** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale — a user without any is shown a prompt to buy credits instead — and each user can raise up to 5 tickets in 24 hours.
 
 Users can follow up on their own tickets: the **My tickets** list under the Support form shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
 

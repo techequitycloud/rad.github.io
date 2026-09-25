@@ -174,6 +174,6 @@ Turning **Deployments** off stops all of those emails, including the warnings. B
 
 ## Getting help
 
-Open **Help** and use the **Support** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up); without any, the form shows a prompt to buy credits instead. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
+Open **Help** and use the **Support** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
 
 Your tickets are listed under **My tickets**, below the form, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list, and it updates by itself after you submit a ticket.

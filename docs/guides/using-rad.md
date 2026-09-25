@@ -165,7 +165,7 @@ Platform-wide reporting stays an administrator and finance view: the **Module Co
 
 ## Getting help
 
-The **Help** page's **Support** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up), and you can raise up to 5 in 24 hours. Under the form, **My tickets** lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**). Depending on your role you may see more tabs there: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on the Support tab instead of the contact form and My tickets.)
+The **Help** page's **Support** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale, and you can raise up to 5 in 24 hours. Under the form, **My tickets** lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**). Depending on your role you may see more tabs there: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on the Support tab instead of the contact form and My tickets.)
 
 Your **referral link** is on your **Profile**, in the **Refer and earn** section — open the profile menu at the top right. It is shown whenever the referral program is on, including when referrals are unlimited, and the **Credits** page has a **Get your referral link** shortcut to it. Everyone who signs up through your link is linked to your account.
 
