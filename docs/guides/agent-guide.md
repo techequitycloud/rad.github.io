@@ -44,6 +44,7 @@ You earn a share of the **module fees** your referred users pay **with credits t
 | The part of a fee paid with purchased credits | The part paid with free or awarded credits (signup, monthly, referral, event codes) |
 | | The self-serve project surcharge |
 | | Anything spent inside a **lab** (training) session |
+| | Anything spent in a **client project** (a subscriber's managed service for their client) |
 | | Subscriptions and credit purchases themselves (you earn when the credits are *spent* on module fees) |
 
 - **Rate.** Set by Finance as the *Agent Revenue Share* (15% at the time of writing), fixed on each fee when it is charged. A later change to the rate never changes what you have already earned.

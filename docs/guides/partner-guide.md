@@ -57,7 +57,7 @@ Deploying your own module waives the **module fee** — the module's own credit 
 
 ## Earning revenue
 
-You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing.
+You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing. A deployment a subscriber makes for their client through **Client Projects** is paid from a wallet funded with purchased credits, so it earns you your share in full.
 
 Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more, and no referral tab for partners — partners earn on their modules, not on referrals. The dates open on the last 7 days and the table loads on its own; change them if you need to, and use the refresh button to reload. You see only your own modules — there is no partner picker. **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Module Revenue**.
 
