@@ -111,7 +111,7 @@ Deployment statuses you may see include Queued, Pending, Working, Waiting (on a 
 
 ### Solutions
 
-**Solutions** holds everything you can deploy, on four tabs — and it is where users, partners and trainers land after signing in. (Trainers and admins also see a **Lab Sessions** tab, second in the row, while lab sessions are enabled.)
+**Solutions** holds everything you can deploy, on four tabs — and it is where users, partners and trainers land after signing in. (While the platform offers them, a **Client Projects** tab comes first — see the [Client Projects Guide](client-projects-guide.md) — and trainers and admins also see a **Lab Sessions** tab straight after it while lab sessions are enabled.)
 
 - **Build Solution** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing, estimates how long it takes, and deploys it. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**.
 - **Custom Solutions** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.

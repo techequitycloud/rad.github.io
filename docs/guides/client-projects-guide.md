@@ -19,11 +19,11 @@ Your client never pays RAD for a client project. How your client pays you is agr
 
 ## Getting access
 
-Client Projects is for subscribers. Subscribe from **Credits → Subscriptions**, and **Client Projects** appears in the menu (while the feature is switched on for the platform). Anyone can open the page. Your clients use it to accept your invitation and to see the projects you run for them.
+Client Projects is for subscribers. Subscribe from **Credits → Subscriptions**. **Client Projects** is the first tab on **Solutions** (while the feature is switched on for the platform), and anyone can open it. Your clients use it to accept your invitation and to see the projects you run for them.
 
 ## Creating a client project
 
-On **Client Projects**, choose **New client project**:
+On **Solutions → Client Projects**, choose **New client project**:
 
 - **Project name**: up to 100 characters.
 - **Your client's email**: the address your client uses, or will use, for RAD. It can't be your own.
@@ -34,13 +34,13 @@ RAD emails your client an invitation. If it couldn't be sent, **Resend invitatio
 
 ## Your client accepts
 
-Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Client Projects** they see your invitation under **Invitations for you** and choose **Accept**.
+Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Solutions → Client Projects** they see your invitation under **Invitations for you** and choose **Accept**.
 
 Nothing can be deployed until they accept.
 
 ## Deploying for your client
 
-On a running project, choose **Deploy**. RAD opens **Solutions**, and a banner at the top of every page says you are deploying for that client, with the region and the wallet balance. Pick a module or solution and deploy it as usual. While the banner is showing:
+On a running project, choose **Deploy**. RAD switches to the **Solution Modules** tab (or pick a solution from **Platform Solutions** or **Custom Solutions**), and a banner at the top of every page says you are deploying for that client, with the region and the wallet balance. Pick a module or solution and deploy it as usual. While the banner is showing:
 
 - the deployment **belongs to your client**, and you manage it;
 - it goes into the project's own RAD-managed Google Cloud project, in the **production** environment, created the first time you deploy;

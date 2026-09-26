@@ -19,7 +19,7 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Estimate your savings with **Calculate ROI**, on the **Credits** page.
 - Get help through the **Send Message** form on **Help**.
 - Invite others with your referral link, from **Profile → Refer and earn**.
-- Run projects for your own clients as a subscriber, or accept one someone runs for you, on **Client Projects**. See [Client Projects](#client-projects).
+- Run projects for your own clients as a subscriber, or accept one someone runs for you, on **Solutions → Client Projects**. See [Client Projects](#client-projects).
 
 After you sign in you land on **Solutions**, on the **Build Solution** tab — signing in opens on what you can build rather than the list of what you built last time.
 
@@ -180,9 +180,9 @@ Turning **Deployments** off stops all of those emails, including the warnings. B
 
 ## Client projects
 
-When the platform offers it, **Client Projects** appears in the menu. It works from both sides.
+When the platform offers it, **Client Projects** is the first tab on **Solutions**. It works from both sides.
 
-**If someone runs a project for you.** A subscriber may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Client Projects** and choose **Accept** under **Invitations for you**.
+**If someone runs a project for you.** A subscriber may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Solutions → Client Projects** and choose **Accept** under **Invitations for you**.
 
 - The project then shows under **Projects run for you**, and what they deploy for you appears in your **Deployments**. It's yours: they build and run it.
 - You don't pay RAD for it. Its costs come from a balance the subscriber funds; anything between the two of you is agreed outside RAD.
