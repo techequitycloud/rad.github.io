@@ -19,6 +19,7 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Estimate your savings with **Calculate ROI**, on the **Credits** page.
 - Get help through the **Send Message** form on **Help**.
 - Invite others with your referral link, from **Profile → Refer and earn**.
+- Run projects for your own clients as a subscriber, or accept one someone runs for you, on **Solutions → Client Projects**. See [Client Projects](#client-projects).
 
 After you sign in you land on **Solutions**, on the **Build Solution** tab — signing in opens on what you can build rather than the list of what you built last time.
 
@@ -176,6 +177,20 @@ Platform-wide reporting is still restricted: the **Module Costs** and **Project 
 Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.) One email ignores these settings: if a build costs more credits than you have, you are always told what you owe, because it explains why your next top-up gives you less.
 
 Turning **Deployments** off stops all of those emails, including the warnings. Because RAD never permanently removes anything without warning you first, those removals are **held** while the setting is off: a RAD-managed project whose billing was switched off for lack of credits is not deleted, and a deployment removed from your list after the retention period is kept rather than permanently erased. When you turn deployment emails back on, the warnings are sent. For a held deployment record, the full notice period starts from that warning. For a held RAD-managed project, the project can be deleted as soon as the following day, so act on that warning straight away.
+
+## Client projects
+
+When the platform offers it, **Client Projects** is the first tab on **Solutions**. It works from both sides.
+
+**If someone runs a project for you.** A subscriber may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Solutions → Client Projects** and choose **Accept** under **Invitations for you**.
+
+- The project then shows under **Projects run for you**, and what they deploy for you appears in your **Deployments**. It's yours: they build and run it.
+- You don't pay RAD for it. Its costs come from a balance the subscriber funds; anything between the two of you is agreed outside RAD.
+- While they manage it you can see it, but only they can change or delete it. You can read its secret values, such as passwords and API keys; they can't.
+- If their balance runs low, the project may be paused (nothing is deleted) and you're emailed. If it isn't topped up in time it's deleted, and you're told.
+- At the end, they can **hand it over** to you. It then runs on your own credits, like anything you deploy yourself, and they no longer have access. You'll need enough purchased credits to keep a production project running.
+
+**If you run projects for your clients**, subscribe, then see the [Client Projects Guide](client-projects-guide.md).
 
 ## Getting help
 
