@@ -13,6 +13,7 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 
 - Handle support tickets on the **Support Tickets** tab of the **Help** page — view tickets raised through the Help form, update their status, add notes, and claim them.
 - View the deployments of the customers whose open tickets are assigned to you, on the **Deployments** page.
+- Restore a deployment's configuration that the retention policy has marked for removal, when its owner asks you to.
 - Raise a ticket of your own on the **Help** page's **Send Message** tab.
 
 After you sign in you land on the **Help** page. Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
@@ -54,6 +55,18 @@ The **Deployments** page lets you look up deployments when helping a user. You c
 
 Use the deployment ID a user gives you to find their specific deployment and review its status and logs. Opening another user's deployment status, build logs, or credit history is recorded in the platform audit trail against your account. That's expected while you're working their ticket — it's why the reads are worth keeping to the tickets you hold.
 
+## Restoring a configuration marked for removal
+
+When a deployment has been inactive for longer than the retention period, RAD marks its **configuration** (its saved settings and Terraform state) for removal and emails the owner. The email tells them to contact support if they want to keep it. Their cloud resources are not affected either way.
+
+To restore it:
+
+1. Claim the customer's ticket, so their deployments come into your view.
+2. Open the deployment the ticket names. A banner says **This deployment's configuration is scheduled for removal**.
+3. Select **Restore**, before the date in the customer's email.
+
+The configuration goes back to how it was, and stays in RAD for another full retention period. If the deployment's resources had already been deleted before it was marked, it stays a deleted deployment: restoring keeps its settings, it does not recreate anything. Each restore is recorded in the audit log against your account. Once the date has passed, the configuration is gone and cannot be restored.
+
 ## What support can't do
 
 To set expectations clearly, the Support role does **not** include:
@@ -61,7 +74,7 @@ To set expectations clearly, the Support role does **not** include:
 - Viewing or editing user accounts.
 - Changing anyone's credits or roles.
 - Connecting a GitHub repository or syncing modules.
-- Updating, deleting, purging, cancelling, restoring or re-deploying anyone else's deployment, or reading its configuration variables, outputs or generated credentials — those stay with the deployment's owner and administrators.
+- Updating, deleting, purging, cancelling or re-deploying anyone else's deployment, or reading its configuration variables, outputs or generated credentials — those stay with the deployment's owner and administrators. Restoring is limited to configurations the retention policy marked for removal (see above); a **purged** deployment can be restored only by an administrator.
 - Seeing deployments platform-wide — only those of the customers whose open tickets are assigned to you.
 - **Setup Requests** — administrators and Finance handle those.
 - Acting on another user's behalf — there is no impersonation anywhere in RAD.
