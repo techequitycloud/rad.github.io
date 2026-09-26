@@ -74,7 +74,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Prowlarr (GKE)**, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Prowlarr (GKE)** from the **Platform Modules** list, set `project_id`, and
    review the inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Prowlarr_GKE)
    documents every input by group, with defaults. **Set `service_type =

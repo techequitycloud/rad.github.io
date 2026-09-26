@@ -59,7 +59,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Vikunja (Cloud Run)**, set `project_id`, and review
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Vikunja (Cloud Run)** from the **Platform Modules** list, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Vikunja_CloudRun)
    documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.

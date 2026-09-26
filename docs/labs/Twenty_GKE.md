@@ -65,7 +65,7 @@ export REGION="us-central1"           # the region you deploy into
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Twenty_GKE)
    documents every input by group, with defaults. Note that `SERVER_URL` and
    `FRONT_BASE_URL` must be set via `environment_variables` before first use. Click
-   **Deploy**.
+   **Deploy Module**.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a
    Cloud SQL (PostgreSQL 15) database with its Secret Manager secrets, optional

@@ -62,7 +62,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **GoToSocial (Cloud Run)**, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **GoToSocial (Cloud Run)** from the **Platform Modules** list, set `project_id`, and
    set **`host`** to your real domain if you have one (this value is baked
    into every ActivityPub URI at creation time and is **immutable** once real
    accounts/posts exist — the placeholder `gotosocial.local` is fine for this

@@ -65,7 +65,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **PeerTube (GKE)**, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **PeerTube (GKE)** from the **Platform Modules** list, set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PeerTube_GKE)
    documents every input by group, with defaults. If your project has a

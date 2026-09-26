@@ -72,7 +72,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Hermes (Cloud Run)**, set `project_id`, and paste
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Hermes (Cloud Run)** from the **Platform Modules** list, set `project_id`, and paste
    your `anthropic_api_key`. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Hermes_CloudRun)
    documents every input by group, with defaults. Click **Deploy Module**, review the

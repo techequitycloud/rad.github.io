@@ -64,7 +64,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **RAGFlow (Cloud Run)**, set `project_id` and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **RAGFlow (Cloud Run)** from the **Platform Modules** list, set `project_id` and
    `elasticsearch_hosts` (the `elasticsearch_endpoint` output from your
    `Elasticsearch_GKE` deployment), and review the remaining inputs. Configure only
    what you need — the

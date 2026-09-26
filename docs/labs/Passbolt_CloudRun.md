@@ -69,7 +69,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Passbolt (Cloud Run)**, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Passbolt (Cloud Run)** from the **Platform Modules** list, set `project_id`, and
    review the inputs. Set `admin_email`, `admin_first_name`, and
    `admin_last_name` to your real details — these seed the one and only admin
    account. Configure only what you need — the

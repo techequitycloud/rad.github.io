@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
 1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Supabase (GKE)** from the **Platform Modules** list to start configuration, set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Supabase_GKE)
-   documents every input by group, with defaults. Click **Deploy**.
+   documents every input by group, with defaults. Click **Deploy Module**.
 
 2. The platform deploys the Kong gateway workload into the GKE Autopilot cluster,
    deploys the Supabase backend services — including an **in-namespace
