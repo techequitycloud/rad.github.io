@@ -339,7 +339,7 @@ Data persistence is critical — all ClickHouse event data lives in the PVC.
 | `stateful_pvc_size` | `30Gi` | PVC size. Leave headroom for background merges. |
 | `stateful_pvc_mount_path` | `/var/lib/clickhouse` | **Do not change** — the server's data directory. |
 | `stateful_pvc_storage_class` | `standard-rwo` | GKE Autopilot default; `premium-rwo` for heavier query loads. Cannot change after PVC creation. |
-| `stateful_fs_group` | `0` (declared) | Convention mirror only — the module's assembled config hard-sets fsGroup `101` (the image's UID/GID). |
+| `stateful_fs_group` | `101` | The `clickhouse/clickhouse-server` image's UID/GID. `main.tf` forwards this variable, and the module's assembled config in `clickhouse.tf` also hard-sets `101`, so the two agree. |
 
 ### Group 8 — Resource Quota
 
@@ -439,7 +439,7 @@ locate and explore the running resources.
 | `clickhouse_username` | ClickHouse username bootstrapped on first start. |
 | `clickhouse_password_secret_id` | Secret Manager secret ID holding the user password. Consuming modules pass this as `Plausible_GKE`'s `clickhouse_password_secret`. |
 | `service_name` / `namespace` | Kubernetes Service name / namespace. |
-| `service_cluster_ip` / `service_external_ip` / `service_url` | In-cluster IP, LoadBalancer IP, and URL. |
+| `service_cluster_ip` / `service_external_ip` / `api_url` | In-cluster IP, LoadBalancer IP, and URL. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services (Cloud Deploy). |
 | `statefulset_name` | Name of the StatefulSet resource. |
 | `storage_buckets` | Created Cloud Storage buckets (empty — none are provisioned). |

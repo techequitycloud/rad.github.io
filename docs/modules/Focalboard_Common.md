@@ -67,12 +67,14 @@ gcloud secrets versions access latest \
 ```
 
 **The database password is NOT the fleet-wide `database_password_secret`.** The
-Foundation's standard shared DB password (charset `override_special = "_%@"`) can
-contain a literal `%`, which crashes Focalboard's Go postgres driver: its
+Foundation's standard shared DB password once used the charset
+`override_special = "_%@"`, which can contain a literal `%` that crashes
+Focalboard's Go postgres driver: its
 `url.Parse`-based DSN validation gate and its actual `lib/pq` connector disagree on
 whether `%` is percent-decoded, so no single encoding of that password satisfies both.
-`Focalboard_Common` sidesteps this by generating a **second, dedicated, alnum-only
-password** —
+As of 2026-08-13 the shared generators use `override_special = "_@"`, so the
+fleet-wide password no longer contains `%`. `Focalboard_Common` nonetheless
+retains its **second, dedicated, alnum-only password** as defence-in-depth —
 `secret-<resource_prefix>-focalboard-safe-db-password` — and overriding the main
 SERVICE's `DB_PASSWORD` with it via the `secret_ids` output; the `db-init` job
 receives the same secret under its own env var, `FOCALBOARD_SAFE_DB_PASSWORD`, and

@@ -63,7 +63,9 @@ deployment wires together a small, focused set of Google Cloud services:
   mode, so do not scale beyond 1 pod.
 - **No admin password is auto-generated.** Gokapi has no mandatory secret — the
   administrator account is created interactively through Gokapi's own first-run
-  setup wizard the first time you open the service in a browser.
+  setup wizard at **`/setup`** (the `setup_url` output). Until it is completed,
+  every other page — `/` included — answers "Server is in maintenance mode,
+  please try again in a few minutes".
 - **Optional operator API key.** `enable_api_key` (default `false`) generates a
   32-character random token, stores it in Secret Manager, and injects it as
   `GOKAPI_API_KEY` via a native Kubernetes Secret (`explicit_secret_values`) rather
@@ -180,8 +182,9 @@ disabled by default).
   database to bootstrap. Only user-supplied jobs (for custom data loading or
   migration) will appear under Kubernetes Jobs.
 - **First-boot setup is entirely interactive.** There is no auto-install flag and
-  no generated admin password. The first time you open the service in a browser,
-  Gokapi's own setup wizard creates the administrator account.
+  no generated admin password. Open **`/setup`** on the service URL (the
+  `setup_url` output) and Gokapi's own wizard creates the administrator account;
+  `/` shows only "Server is in maintenance mode" until then.
 - **Where data physically persists.** With the default `stateful_pvc_enabled =
   true`, both `GOKAPI_CONFIG_DIR=/data/config` (the SQLite metadata DB and app
   config) and `GOKAPI_DATA_DIR=/data/data` (uploaded files) sit on the same
@@ -193,8 +196,8 @@ disabled by default).
   1` by default. Gokapi's SQLite database has no clustering/replication story, so
   do not raise `max_instance_count` above 1.
 - **Health probes hit the public root, no auth required.** Both the startup probe
-  and the liveness probe are **HTTP GET `/`** (Gokapi's login/setup page, 200,
-  unauthenticated) — startup: `initial_delay=15s, timeout=5s, period=10s,
+  and the liveness probe are **HTTP GET `/`** (Gokapi's public root, 200,
+  unauthenticated — before setup it is the maintenance notice, still 200) — startup: `initial_delay=15s, timeout=5s, period=10s,
   failure_threshold=10`; liveness: `initial_delay=30s, timeout=5s, period=30s,
   failure_threshold=3`.
 - **Container port is fixed at `53842`.** This is Gokapi's native port, wired via

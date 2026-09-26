@@ -434,7 +434,7 @@ and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
-| `service_url` | URL to reach Synapse. |
+| `api_url` | URL to reach Synapse. |
 | `database_instance_name` | Cloud SQL instance name. |
 | `database_name` | Application database name. |
 | `database_user` | Application database user. |
