@@ -61,7 +61,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Homebox (GKE)**, set `project_id`, and review
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Homebox (GKE)** from the **Platform Modules** list, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Homebox_GKE)
    documents every input by group, with defaults. Click **Deploy Module**, review

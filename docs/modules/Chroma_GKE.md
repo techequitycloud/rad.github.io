@@ -240,7 +240,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Select an existing project on the RAD platform or enter the project ID of an external GCP project. You must grant Owner role to the RAD GCP Project agent service account when deploying into an external project. (e.g., 'my-project-123') |
-| `tenant_id` | `demo` | Specify a unique tenant or deployment identifier. This uniquely identifies your application deployment and is used in resource naming (1-20 lowercase alphanumeric characters and hyphens). |
+| `tenant_id` | `demo` | Specify a unique tenant or deployment identifier. This uniquely identifies your application deployment and is used in resource naming (1-7 lowercase alphanumeric characters, no hyphens — the 7-character cap comes from GCP's 30-character service-account ID limit). |
 | `region` | `us-central1` | GCP region for resource deployment (e.g., 'us-central1'). Used as fallback when network discovery cannot determine the region from existing VPC subnets. |
 
 All other inputs in this group follow standard App_GKE behaviour.
@@ -316,7 +316,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 | `prereq_gke_pod_cidr_override` | `` | Override for the inline GKE pod secondary range CIDR. |
 | `prereq_gke_service_cidr_override` | `` | Override for the inline GKE service secondary range CIDR. |
 | `workload_type` | `null` | Kubernetes workload type. Use 'StatefulSet' (recommended for Chroma) for stable pod identity and orderly restarts, or 'Deployment' for stateless operation with GCS-backed storage. (e.g., 'Deployment' or 'StatefulSet') |
-| `service_type` | `ClusterIP` | Kubernetes Service type. Keep 'ClusterIP' (default) so Chroma is reachable only within the cluster — the service_url output is not accessible from outside the cluster with this setting. Set 'LoadBalancer' only if external access is needed, and enable IAP or enable_auth_token alongside it. |
+| `service_type` | `ClusterIP` | Kubernetes Service type. Keep 'ClusterIP' (default) so Chroma is reachable only within the cluster — the api_url output is not accessible from outside the cluster with this setting. Set 'LoadBalancer' only if external access is needed, and enable IAP or enable_auth_token alongside it. |
 | `session_affinity` | `None` | Session affinity mode for the Kubernetes Service. (e.g., 'None' or 'ClientIP') |
 | `enable_multi_cluster_service` | `false` | Enables Multi-Cluster Services (MCS) for the application. Not referenced — setting this variable has no effect. |
 | `extra_service_ports` | _(set)_ | Additional ports to expose on the Kubernetes Service, for a workload that speaks more than one protocol on the same pod. Mirrors the App_GKE variable to satisfy convention checks; declared but NOT forwarded by this module, so setting it has no effect here. Defaults to an empty list, which renders exactly the Service this module rendered before. |

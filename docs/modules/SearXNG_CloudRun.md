@@ -30,7 +30,7 @@ deployment wires together a minimal set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Python/Flask service, 1 vCPU / 512 MiB by default, request-based autoscaling |
-| Cache / rate limiting | Redis | Optional — disabled by default; enables rate limiting and bot detection |
+| Cache / rate limiting | Redis | Optional — disabled by default; backs the limiter's counters. Rate limiting also needs `enable_limiter = true` |
 | Secrets | Secret Manager | Auto-generated `SEARXNG_SECRET` (session key) injected at runtime |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL, optional external HTTPS load balancer + custom domain |
 
@@ -43,8 +43,12 @@ deployment wires together a minimal set of Google Cloud services:
 - **`min_instance_count` is fixed at 0 (scale-to-zero).** SearXNG cold starts are
   fast (under 5 seconds) because no database connections or migrations are
   performed on startup.
-- **Redis is disabled by default.** For public-facing deployments, enable Redis
-  to activate rate limiting and bot detection against upstream engine abuse.
+- **The limiter is disabled by default, and Redis alone does not enable it.** The RAD
+  image pins `server.limiter: false` so the JSON API stays usable by internal
+  server-to-server callers. For a publicly invokable deployment set BOTH
+  `enable_redis = true` and `enable_limiter = true`, and exempt trusted callers via
+  `limiter_pass_ips`, to get rate limiting and bot detection against upstream engine
+  abuse.
 - **`SEARXNG_SECRET` is generated automatically** and stored in Secret Manager.
   The same key is shared across all running instances — do not override it with a
   per-instance random value.
@@ -79,12 +83,56 @@ split across revisions for safe rollouts.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution
 environment, and traffic splitting.
 
+### Known limitation: the limiter cannot identify clients on Cloud Run
+
+`enable_limiter = true` genuinely enables the limiter (`/config` reports
+`limiter.enabled: true`), but on Cloud Run it currently blocks **every** caller,
+allowlisted ones included. SearXNG logs:
+
+```
+ERROR:searx.botdetection: X-Forwarded-For nor X-Real-IP header is set!
+```
+
+`botdetection.ProxyFix` resolves the client in the order X-Forwarded-For →
+X-Real-IP → `REMOTE_ADDR`, falling back to the black-hole address `100::` when it
+finds none. Neither proxy header reaches the container on Cloud Run, so every
+request resolves to that same fallback: one shared identity, one shared token
+bucket, and `limiter_pass_ips` can never match because the address it compares
+against is not the caller's.
+
+The failure is direction-dependent and easy to misread:
+
+- With `limiter_trusted_proxies` **empty**, `REMOTE_ADDR` (a link-local address)
+  is untrusted, the headers are discarded, and the resulting link-local client is
+  not rate-limited by default — so the limiter is on and **admits everyone**.
+- With private/link-local ranges **trusted**, the headers are consulted, found
+  absent, and everything collapses to `100::` — so the limiter **rejects everyone**.
+
+Verified live: 25/25 unauthenticated requests returned 429, and so did the
+allowlisted caller. Forged `X-Real-IP` and `X-Forwarded-For` headers were also
+rejected, so the allowlist is at least not spoofable.
+
+Until the proxy headers reach the container, a publicly invokable Cloud Run
+instance cannot be protected by the limiter. Restrict access instead — an internal
+HTTP load balancer with a serverless NEG and `ingress_settings =
+"internal-and-cloud-load-balancing"`, or IAP — and leave `enable_limiter = false`.
+The GKE variant is unaffected where an ingress controller sets X-Forwarded-For
+normally; set `limiter_trusted_proxies` to that controller's range.
+
 ### B. Redis cache (optional)
 
-When `enable_redis = true`, SearXNG uses Redis for per-IP rate limiting and bot
-detection. This is strongly recommended for public-facing deployments to prevent
-upstream search engine API quota exhaustion. When `redis_host` is left empty and
-Redis is enabled, the module defaults to `127.0.0.1`.
+`enable_redis = true` provisions the Redis backend the limiter keeps its per-IP
+counters in. It does **not** by itself turn rate limiting on: the RAD image ships
+`server.limiter: false` so the JSON API stays usable by internal server-to-server
+callers. Set `enable_limiter = true` as well to actually enable bot detection — the
+plan fails if you enable it without Redis. When `redis_host` is left empty and Redis
+is enabled, the module defaults to `127.0.0.1`.
+
+The limiter treats header-less API calls as bots, so list any trusted internal
+callers' source ranges in `limiter_pass_ips` or they will be throttled along with
+everyone else. Enable both on any instance reachable from the public internet:
+otherwise anyone who finds the URL can consume the upstream engine quotas it depends
+on.
 
 - **Console:** Memorystore → Redis (if using a managed instance).
 - **CLI:**
@@ -150,8 +198,14 @@ with optional uptime checks and alert policies.
   user sessions; avoid rotation in production unless required for security.
 - **`SEARXNG_BIND_ADDRESS` is injected automatically** as `0.0.0.0:8080` so
   SearXNG listens on all interfaces at its native port.
-- **`ENABLE_REDIS` and `REDIS_URL` are injected automatically** when
-  `enable_redis = true`. The URL is derived from `redis_host` and `redis_port`.
+- **`ENABLE_REDIS` is injected automatically**; **`REDIS_URL` only when
+  `enable_redis = true`** (it is omitted entirely otherwise, so a client cannot mistake
+  an empty value for a real endpoint). The URL is derived from `redis_host`,
+  `redis_port` and, when set, `redis_auth` — a Memorystore instance with AUTH enabled
+  rejects a password-less URL.
+- **`SEARXNG_LIMITER` and `SEARXNG_LIMITER_PASS_IPS` are injected automatically** from
+  `enable_limiter` and `limiter_pass_ips`; the entrypoint substitutes them into
+  `server.limiter` and writes `/etc/searxng/limiter.toml`.
 - **Health path.** Both the startup and liveness probes target `/healthz` (HTTP
   GET), which SearXNG answers once the application is fully initialised.
 - **Fast cold starts.** SearXNG starts in under 5 seconds — no database
@@ -291,7 +345,9 @@ Not applicable to SearXNG (no database). See
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Enable Redis for rate limiting and bot detection. Recommended for public-facing deployments. |
+| `enable_redis` | `false` | Provision the Redis backend the limiter needs. Does NOT enable rate limiting on its own. |
+| `enable_limiter` | `false` | Turn on the bot-detection limiter. Requires `enable_redis`. Set true on any publicly invokable instance. |
+| `limiter_pass_ips` | `[]` | Source CIDRs exempt from bot detection, for trusted internal callers such as n8n. |
 | `redis_host` | `""` | Redis endpoint. Leave empty to default to `127.0.0.1` when Redis is enabled; set to the Memorystore IP for a managed instance. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |

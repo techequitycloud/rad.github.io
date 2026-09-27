@@ -301,7 +301,7 @@ to locate and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
-| `service_url` | URL to reach Shlink. |
+| `api_url` | URL to reach Shlink. |
 | `health_check_url` | Ready-to-curl health-check URL (`/rest/health`) — use this, not `/`, which 404s. |
 | `database_instance_name` | Cloud SQL instance name. |
 | `database_name` / `database_user` | Application database name / user. |

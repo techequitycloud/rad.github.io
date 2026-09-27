@@ -306,7 +306,7 @@ resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `ollama_api_url` | Ollama REST API base URL — append `/api/generate`, `/api/chat`, etc. Constructed as `<service_url>/api`. |
+| `ollama_api_url` | Ollama REST API base URL — append `/api/generate`, `/api/chat`, etc. Constructed as `<api_url>/api`. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `models_bucket` | GCS bucket name where Ollama model weights are persisted. |

@@ -62,7 +62,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Element (Cloud Run)**, set `project_id`, and set
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Element (Cloud Run)** from the **Platform Modules** list, set `project_id`, and set
    `homeserver_url` / `homeserver_name` to your Matrix homeserver (or leave them blank
    to use the public `matrix.org`). Review the remaining inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Element_CloudRun)

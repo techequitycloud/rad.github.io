@@ -70,7 +70,7 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Homepage (GKE)**, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Homepage (GKE)** from the **Platform Modules** list, set `project_id`, and
    review the inputs. Most deployments need no changes to the defaults — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Homepage_GKE)
    documents every input by group. If your project's external-IP quota is

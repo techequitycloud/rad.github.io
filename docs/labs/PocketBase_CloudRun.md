@@ -59,7 +59,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **PocketBase (Cloud Run)**, set `project_id`, and review the
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **PocketBase (Cloud Run)** from the **Platform Modules** list, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PocketBase_CloudRun)
    documents every input by group, with defaults. Leave `max_instance_count` at `1` — the

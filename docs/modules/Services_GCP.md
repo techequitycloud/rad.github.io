@@ -88,6 +88,8 @@ gcloud compute firewall-rules list --project=PROJECT_ID \
 
 Provisions Cloud SQL PostgreSQL and/or MySQL instances in the primary region, with private IP only (no public endpoint), automated daily backups, and auto-resizing SSD storage. Both engines support `ZONAL` (single-zone) or `REGIONAL` (HA with automatic hot standby) availability, optional read replicas (cross-region when a second region is configured), a configurable maintenance window and update track, optional Query Insights, and optional Cloud SQL IAM database authentication. The root database password is generated and stored in Secret Manager.
 
+**In a RAD-managed project the instance is bounded three ways:** size (at most 2 vCPU), read replicas (at most 1 in a sandbox or lab project, 2 in development or production), and how far the disk may auto-grow (100 GB in sandbox and lab, 500 GB in development, 1 TB in production — Cloud SQL otherwise grows a disk without limit). The disk ceiling is set when an instance is created; an instance that already exists keeps the limit it has. A bring-your-own project is not bounded by any of these.
+
 **Console:** SQL → select the instance. Connections tab confirms Private IP enabled / Public IP disabled; Backups, Flags, and Maintenance tabs show the corresponding settings; read replicas appear under the primary on the SQL overview.
 
 ```bash
@@ -501,10 +503,10 @@ Variables are organised into groups that correspond to the sections shown in the
 |---|---|---|
 | `postgres_database_version` | `"POSTGRES_17"` | PostgreSQL engine version (`POSTGRES_17` / `POSTGRES_16` / `POSTGRES_15` / `POSTGRES_14`). Downgrading is not supported. |
 | `postgres_database_availability_type` | `"ZONAL"` | `ZONAL` (single-zone, dev/test) or `REGIONAL` (HA with automatic failover, recommended for production). |
-| `postgres_tier` | `"db-custom-1-3840"` | Machine type (vCPUs / memory) for the PostgreSQL instance. |
+| `postgres_tier` | `"db-custom-1-3840"` | Machine type (vCPUs / memory) for the PostgreSQL instance. **Capped at 2 vCPU in a RAD-managed project** (`gcp-rad-*`): a `lifecycle.precondition` in `pgsql.tf` admits only `db-f1-micro`, `db-g1-small`, `db-custom-1-*` and `db-custom-2-*`, and fails the plan otherwise. A bring-your-own project is untouched — you pick the size and pay for it. |
 | `postgres_database_flags` | `[{ name = "max_connections", value = "200" }]` | PostgreSQL server parameters. Some flag changes require an instance restart. |
 | `create_postgres_read_replica` | `false` | Provision read replicas for the PostgreSQL instance. |
-| `postgres_read_replica_count` | `1` | Number of PostgreSQL read replicas (cross-region when a second region is configured). |
+| `postgres_read_replica_count` | `1` | Number of PostgreSQL read replicas (cross-region when a second region is configured). Whole number 0-10; in a RAD-managed project at most 1 (sandbox, lab) or 2 (development, production). |
 | `enable_cloudsql_iam_auth` | `false` | Enable Cloud SQL IAM database authentication on all instances, eliminating password rotation. |
 
 **Cloud SQL — MySQL**
@@ -513,10 +515,10 @@ Variables are organised into groups that correspond to the sections shown in the
 |---|---|---|
 | `mysql_database_version` | `"MYSQL_8_4"` | MySQL engine version (`MYSQL_8_4` / `MYSQL_8_0` / `MYSQL_5_7`). Downgrading is not supported. |
 | `mysql_database_availability_type` | `"ZONAL"` | `ZONAL` (single-zone) or `REGIONAL` (HA). Recommended `REGIONAL` for production. |
-| `mysql_tier` | `"db-custom-1-3840"` | Machine type for the MySQL instance. |
+| `mysql_tier` | `"db-custom-1-3840"` | Machine type for the MySQL instance. **Capped at 2 vCPU in a RAD-managed project** (`gcp-rad-*`) by the matching `lifecycle.precondition` in `mysql.tf` — same permitted set as `postgres_tier`. |
 | `mysql_database_flags` | `[{ name = "max_connections", value = "200" }, { name = "local_infile", value = "off" }]` | MySQL server variables. The defaults disable `local_infile` as a security best practice. |
 | `create_mysql_read_replica` | `false` | Provision read replicas for the MySQL instance. |
-| `mysql_read_replica_count` | `1` | Number of MySQL read replicas (cross-region when a second region is configured). |
+| `mysql_read_replica_count` | `1` | Number of MySQL read replicas (cross-region when a second region is configured). Whole number 0-10; in a RAD-managed project at most 1 (sandbox, lab) or 2 (development, production). |
 
 **Cloud SQL — Shared Maintenance Settings**
 
@@ -607,7 +609,7 @@ Variables are organised into groups that correspond to the sections shown in the
 | `gke_node_initial_count` | `1` | Initial node count per zone (1–10), adjusted by the autoscaler. |
 | `gke_node_min_count` | `1` | Minimum nodes per zone the autoscaler maintains (0–10). |
 | `gke_node_max_count` | `5` | Maximum nodes per zone the autoscaler may scale to (1–100). |
-| `gke_node_disk_size_gb` | `100` | Boot disk size per node in GB (10–65536). |
+| `gke_node_disk_size_gb` | `50` | Boot disk size per node in GB (10–65536). Defaults to 50 rather than 100 to keep headroom under the development tier's `custom.devDiskSizeCeiling` org policy, which caps an individual disk at 100GB — the old default sat exactly on that ceiling, so any increase at all was rejected. |
 | `gke_node_disk_type` | `"pd-balanced"` | Boot disk type: `pd-balanced`, `pd-ssd`, or `pd-standard`. |
 
 **Fleet Add-ons**
@@ -779,7 +781,7 @@ Because `Services GCP` is the platform layer that every application module depen
 | `subnet_cidr_range` | `["10.0.0.0/24"]` — must not overlap GKE pod/service CIDRs | **High** | Overlap with `gke_pod_base_cidr` or `gke_service_base_cidr` fails GKE cluster creation with a CIDR conflict, blocking all GKE application modules. |
 | `gke_pod_base_cidr` | `"10.64.0.0/10"` — large enough for pod density | **High** | Too small for the expected pod count: GKE cannot schedule new pods once the pod CIDR is exhausted (`no available IP addresses`). |
 | `postgres_database_availability_type` | `"ZONAL"`; use `"REGIONAL"` for production | **High** | `"ZONAL"` in production has no hot standby — a zone outage causes complete database unavailability for all dependent application modules. |
-| `postgres_tier` | `"db-custom-1-3840"` | **High** | Under-provisioned: CPU throttling causes slow queries, connection queue buildup, and application timeouts. Upgrade when sustained CPU exceeds 70%. |
+| `postgres_tier` / `mysql_tier` | `"db-custom-1-3840"` | **High** (partly 🛡 plan-time) | Under-provisioned: CPU throttling causes slow queries, connection queue buildup, and application timeouts. Upgrade when sustained CPU exceeds 70% — but in a RAD-managed project (`gcp-rad-*`) the upgrade is bounded at **2 vCPU** by a plan-time precondition, so anything larger fails the plan with a named error rather than provisioning. This replaced the `custom.radSqlTierCeiling` org policy on 2026-08-19, which probing showed denied nothing. Sizing beyond that cap means deploying into your own project. |
 | `postgres_database_flags` | `max_connections = "200"` | **High** | Too low for the number of replicas: connection-pool exhaustion (`FATAL: sorry, too many clients already`) across all modules. |
 | `mysql_database_availability_type` | `"ZONAL"`; use `"REGIONAL"` for production | **High** | Same single-zone failure risk as PostgreSQL for MySQL-backed apps (WordPress, Moodle, OpenEMR). |
 | `network_filesystem_capacity` | `10` GB | **High** | Too small: the NFS disk fills and applications fail to write (`ENOSPC`). Capacity can only be increased — provision generously. |

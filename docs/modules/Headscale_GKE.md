@@ -277,7 +277,7 @@ to locate and explore the running resources.
 | `namespace` | Namespace the workload runs in. |
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `service_external_ip` | External LoadBalancer/reserved IP. |
-| `service_url` | URL to reach Headscale — this is what `server_url` predicts and what clients register against. |
+| `api_url` | URL to reach Headscale — this is what `server_url` predicts and what clients register against. |
 | `storage_buckets` | Created Cloud Storage buckets (the `storage` bucket — unused as a mount when `stateful_pvc_enabled = true`, the default). |
 | `statefulset_name` | Name of the StatefulSet (present with the default `workload_type = "StatefulSet"`). |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |

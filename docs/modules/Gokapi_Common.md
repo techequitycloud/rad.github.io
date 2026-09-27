@@ -149,7 +149,7 @@ Go binary:
   variable.
 - **No other baseline settings.** There is no queue mode, no telemetry flag,
   no execution-mode setting, and no sign-up toggle — Gokapi completes the rest
-  of its configuration through its own first-run setup wizard served at `/`,
+  of its configuration through its own first-run setup wizard served at `/setup`,
   not through environment variables.
 
 Platform-specific adjustments are minimal and live almost entirely outside
@@ -170,8 +170,8 @@ this Common layer:
 
 ## 6. Health probe behaviour
 
-The default probes both target `/` — Gokapi's public login/first-run setup
-page — which is unauthenticated and returns 200 once the binary is listening,
+The default probes both target `/` — Gokapi's public root (its UI, or before
+first-run setup the maintenance notice) — which is unauthenticated and returns 200 once the binary is listening,
 with no dependency on any external database (there being none):
 
 - **Startup probe** — HTTP GET `/`, `initial_delay_seconds = 15`,

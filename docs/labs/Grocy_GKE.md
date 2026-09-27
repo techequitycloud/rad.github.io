@@ -64,7 +64,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Grocy (GKE)**, set `project_id`, and review the
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Grocy (GKE)** from the **Platform Modules** list, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Grocy_GKE)
    documents every input by group, with defaults. Click **Deploy Module**, review the

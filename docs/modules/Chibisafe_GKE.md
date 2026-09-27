@@ -9,11 +9,17 @@ description: "Configuration reference for deploying Chibisafe on GKE Autopilot w
 
 Chibisafe is a self-hosted file and image uploader with a modern dashboard,
 drag-and-drop uploads, albums, and a public API. This module deploys the
-**chibisafe-server backend only** (port 8000) on **GKE Autopilot** on top of the
-[App_GKE](App_GKE.md) foundation, which provisions and manages the shared Google
-Cloud and Kubernetes infrastructure. Chibisafe's upstream project also ships a
-separate SvelteKit front-end and a Caddy reverse proxy; those are not deployed by
-this module.
+**complete Chibisafe stack** — the web UI at `/`, the REST API under `/api`, the
+OpenAPI reference at `/docs`, and uploaded files served by name — as one workload
+on **GKE Autopilot**, on top of the [App_GKE](App_GKE.md) foundation, which
+provisions and manages the shared Google Cloud and Kubernetes infrastructure.
+Upstream ships Chibisafe as three containers (the chibisafe-server backend, a
+Next.js front-end and a Caddy reverse proxy); this module combines them into one
+custom-built image.
+
+> **Status:** the full-stack image has not yet been built or deployed, so the
+> behaviour below is described from the module source and upstream's `v6.5.5`
+> release, not verified live.
 
 This guide focuses on the cloud services Chibisafe uses and how to explore and
 operate them from the Google Cloud Console and the command line. For the mechanics
@@ -26,12 +32,13 @@ rather than repeating them here.
 
 ## 1. Overview
 
-Chibisafe runs as a single Node.js backend workload with no external database. The
+Chibisafe runs as a single workload — one container with Caddy in front of two
+Node.js processes (backend and front-end) — with no external database. The
 deployment wires together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | chibisafe-server pod on port 8000, StatefulSet by default, 1 vCPU / 1 GiB by default |
+| Compute | GKE Autopilot | Full-stack pod (Caddy on port 8000 → backend + Next.js front-end on loopback), StatefulSet by default, 1 vCPU / 1 GiB by default |
 | Database | None | Chibisafe keeps its SQLite database, uploads, and logs on the persistent volume — no Cloud SQL instance is created |
 | Block storage | GKE StatefulSet PVC | Default 20Gi `standard-rwo` PVC mounted at `/data`, holding the SQLite DB, uploads, and logs |
 | Object storage | Cloud Storage | A `storage` bucket is always provisioned; only mounted as a GCS FUSE volume when the StatefulSet PVC is disabled |
@@ -51,19 +58,23 @@ deployment wires together a focused set of Google Cloud services:
   = 1` — Chibisafe is a single-writer SQLite app; do not scale beyond 1 without
   redesigning storage.
 - **Custom-build image with an app-specific version pin.** `image_source = "custom"`
-  wraps `chibisafe/chibisafe-server` in a thin Dockerfile. The build reads its own
-  `CHIBISAFE_VERSION` build arg (not the generic `APP_VERSION` the Foundation
-  injects); `application_version = "latest"` is pinned to `v6.5.5` at build time.
+  builds a Dockerfile based on `chibisafe/chibisafe-server` (backend at `/app`) that
+  copies in the `chibisafe/chibisafe` Next.js front-end (`/opt/chibisafe-web`) and a
+  static Caddy `2.11.4` binary. The build reads its own `CHIBISAFE_VERSION` build
+  arg (not the generic `APP_VERSION` the Foundation injects; one tag pins backend
+  and front-end); `application_version = "latest"` is pinned to `v6.5.5` at build
+  time.
 - **No Redis, ever.** The variant mirrors an `enable_redis` variable for Foundation
   convention parity, but `main.tf` always forwards `enable_redis = false` to
   App_GKE regardless of its value — Chibisafe has no Redis dependency.
 - **Custom domain is on by default.** Unlike most modules, `enable_custom_domain =
   true` out of the box; set `application_domains` for the managed certificate to
   actually attach to a hostname.
-- **No mandatory secrets.** `enable_api_key = false` by default — Chibisafe creates
-  and manages its own admin account and API keys through its first-run setup wizard
-  and Dashboard UI. Flip `enable_api_key` to `true` only to pre-seed a random
-  `ADMIN_PASSWORD` from Secret Manager instead of the well-known upstream default.
+- **No mandatory secrets.** `enable_api_key = false` by default — the backend
+  creates the first-run owner account `admin` with the well-known upstream
+  password `admin`; change it immediately after first login in the web UI. Flip
+  `enable_api_key` to `true` to pre-seed a random `ADMIN_PASSWORD` from Secret
+  Manager instead.
 - **All state lives under one mount.** The entrypoint symlinks the image's
   `/app/database`, `/app/uploads`, and `/app/logs` directories into subdirectories
   of the single persistent volume (`/data`), migrating any image-seeded contents on
@@ -190,26 +201,64 @@ wiring.
   default), migrating any image-seeded contents into the empty volume on first
   boot. This is idempotent across restarts — already-symlinked directories are left
   alone.
-- **Admin account.** Chibisafe creates its administrator account through its own
-  first-run setup wizard in the web UI (no generated username/password is baked in
-  by default). If `enable_api_key = true`, a random value is generated and injected
-  as `ADMIN_PASSWORD`, which the backend uses to seed the first-run admin credential
-  instead of the well-known upstream default.
+- **Admin account.** On first boot the backend creates the owner account `admin`.
+  If `enable_api_key = true`, a random value is generated and injected as
+  `ADMIN_PASSWORD`, which the backend uses as that account's password instead of
+  the well-known upstream default (`admin`); otherwise log in with `admin`/`admin`
+  and change it immediately. `ADMIN_PASSWORD` is passed only to the backend
+  process — the entrypoint strips it from the front-end's and Caddy's environment.
 - **No DB env-var aliasing.** `database_type = NONE` — there is no `DB_HOST`/
   `DB_USER` injection or aliasing to worry about; SQLite lives entirely on the
   `/data` volume.
-- **Container environment.** The backend listens on `0.0.0.0:8000`
-  (`HOST=0.0.0.0`, `NODE_ENV=production`); `PORT` is deliberately left unset by
-  `Chibisafe_Common` so the image's own default (`8000`, matching
-  `container_port`) is used consistently across platforms.
+- **Processes and ports.** `tini` is PID 1; the entrypoint (after the state
+  relocation above) starts three processes:
+
+  | Process | Listens on | Serves |
+  |---|---|---|
+  | Caddy | `0.0.0.0:8000` (`container_port`) | The only listener the Service routes to |
+  | chibisafe-server backend | `127.0.0.1:18000` (loopback only) | `/api/*`, `/docs*` |
+  | Next.js front-end | `127.0.0.1:18001` (loopback only) | The web UI |
+
+  They are supervised **fail-fast**: if any one exits, the others are stopped and
+  the container exits with status 1, so Kubernetes restarts it (chosen over
+  supervisord, which would keep a container looking healthy with a dead
+  front-end).
+- **Routing** (upstream's `v6.5.5` Caddyfile, same order): any path naming a file
+  under `/data/uploads` is served directly by Caddy (the backend does not serve
+  uploads in production); `/api/*` → backend (the REST API — see the `api_url`
+  output); `/docs*` → backend (the Scalar OpenAPI reference); everything else →
+  front-end (the web UI at `/`, e.g. `/dashboard`, `/login`). Two deviations from
+  upstream: the `Host` header is preserved, so the file links the backend builds
+  are correct without setting "Serve uploads from"; and `X-Forwarded-For`/
+  `X-Real-IP` are set to the client IP Caddy resolves itself (Google load-balancer
+  ranges trusted, strict rightmost selection), so a client cannot spoof them.
+- **Front-end → backend.** The front-end's server-side rendering calls the backend
+  directly at `BASE_API_URL=http://127.0.0.1:18000`, set by the entrypoint; the
+  browser calls the same-origin `/api`.
+- **Container environment.** `NODE_ENV=production` is the only container-wide
+  default; `HOST`/`HOSTNAME`/`PORT` for the two Node processes are set per process
+  by the entrypoint (`HOSTNAME` must be overridden because Kubernetes sets it to
+  the pod name). `PORT` is deliberately left unset by `Chibisafe_Common`; Caddy
+  falls back to `8000`, matching `container_port`.
+- **Uploads.** A LoadBalancer Service imposes no request-body cap, so Chibisafe's
+  default upload chunk size (about 81 MB) works as is — unlike
+  `Chibisafe_CloudRun`, where Cloud Run's 32 MiB limit requires lowering it.
+- **Memory.** The default `1Gi` now holds two Node processes plus Caddy; this has
+  not been measured live yet — raise `memory_limit` if the pod is OOM-killed.
+- **Updating an existing deployment.** An UPDATE of a deployment made with the
+  earlier backend-only version rebuilds the image automatically (the scripts
+  directory's content hash changes), keeps port `8000`, removes the container-wide
+  `HOST=0.0.0.0` env var (now set per process) and leaves the data on the `/data`
+  PVC untouched. `/` changes from a 404 JSON response to the web UI.
 - **Health path.** Both the startup and liveness probes are **HTTP**
   `GET /api/health` (`startup_probe`/`liveness_probe` default `path = "/api/health"`,
-  matching `Chibisafe_CloudRun`) — the backend has no root route (`GET /` 404s, since
-  the uploader UI is a separate frontend container this module does not ship), so it
-  returns `200 {"status":"yes"}` at `/api/health` once serving, no authentication
-  required. The alternate `health_check_config`/`startup_probe_config` variables
-  still default `path = "/"` but are inert — they are declared for foundation
-  mirroring only and are never forwarded to `App_GKE`.
+  matching `Chibisafe_CloudRun`), sent through Caddy to the backend, which returns a
+  literal `200 {"status":"yes"}` once serving, no authentication required — also
+  what the Gateway health check (mirroring the liveness probe) needs: exactly 200.
+  `/` is the web UI, whose status code is the front-end's choice rather than a
+  health signal. The alternate `health_check_config`/`startup_probe_config`
+  variables now also default `path = "/api/health"` but are superseded — the
+  foundation takes the probes from `startup_probe`/`liveness_probe`.
 - **Single-writer scaling constraint.** `min_instance_count = max_instance_count =
   1` by default; each StatefulSet pod owns its own PVC, so scaling beyond 1 without
   redesigning storage risks split SQLite writers.
@@ -241,9 +290,9 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | 1 vCPU default. |
-| `memory_limit` | `1Gi` | 1 GiB default. |
+| `memory_limit` | `1Gi` | 1 GiB default, shared by two Node processes and Caddy; not yet measured live. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Keep at 1 — Chibisafe is a single-writer SQLite app. |
-| `container_port` | `8000` | Fixed by `Chibisafe_Common`; this variable is not forwarded to App_GKE and changing it has no effect. |
+| `container_port` | `8000` | The Caddy proxy's port. Fixed by `Chibisafe_Common`; this variable is not forwarded to App_GKE and changing it has no effect. |
 | `enable_cloudsql_volume` | `false` | Chibisafe has no Cloud SQL database — leave `false`. |
 | `enable_image_mirroring` | `true` | Mirrors the built image into Artifact Registry. |
 
@@ -269,9 +318,9 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` / `liveness_probe` | `path = "/api/health"` | The live, effective probes (forwarded to `App_GKE` in `main.tf`). The backend has no root route (`GET /` 404s) — returns `200 {"status":"yes"}` at `/api/health`, no auth required. |
-| `health_check_config` / `startup_probe_config` | `path = "/"` | Inert — declared for foundation-variable mirroring only, never forwarded to `App_GKE`. Do not rely on these to change the deployed probe. |
-| `uptime_check_config` | `enabled = false` | Enable to add a public uptime check and alert once the endpoint is publicly reachable. |
+| `startup_probe` / `liveness_probe` | `path = "/api/health"` | The live, effective probes (forwarded to `App_GKE` in `main.tf`). Sent through the Caddy proxy to the backend — a literal `200 {"status":"yes"}`, no auth required. |
+| `health_check_config` / `startup_probe_config` | `path = "/api/health"` | Inert — declared for foundation-variable mirroring only, never forwarded to `App_GKE`. Do not rely on these to change the deployed probe. |
+| `uptime_check_config` | `enabled = false`, `path = "/api/health"` | Enable to add a public uptime check and alert once the endpoint is publicly reachable. |
 
 ### Group 14 — Cloud Storage
 
@@ -310,7 +359,8 @@ locate and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when `service_type = LoadBalancer` and a static IP is reserved). |
-| `service_url` | URL to reach Chibisafe. |
+| `service_url` | URL of the Chibisafe web UI (served at `/`). The same address serves the REST API under `/api`, the OpenAPI reference at `/docs` and uploaded files by name. External with a reserved LoadBalancer IP, otherwise the in-cluster URL. |
+| `api_url` | Base URL of the REST API (`<service_url>/api`), for upload clients and scripts; `GET <api_url>/health` returns `200 {"status":"yes"}`. |
 | `chibisafe_api_key_secret_id` | Secret Manager secret ID for the optional admin-password secret. Empty when `enable_api_key = false`. |
 | `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
@@ -347,9 +397,9 @@ locate and explore the running resources.
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are treated as bytes and block all pod scheduling in the namespace (only relevant if `enable_resource_quota = true`). |
 | `enable_custom_domain` | `true` with `application_domains` set | Medium | Left on with an empty `application_domains`, the Gateway/managed-certificate path has no hostname to attach to. |
 | `enable_redis` | any value (inert) | Low | `main.tf` always forwards `enable_redis = false` — changing this variable has no effect; do not rely on it to add Redis connectivity. |
-| `container_port` | `8000` (fixed) | Low | The variable is declared for convention parity but not forwarded to App_GKE; changing it does not change the backend's actual listening port. |
+| `container_port` | `8000` (fixed) | Low | The variable is declared for convention parity but not forwarded to App_GKE; changing it does not change the Caddy proxy's actual listening port. |
 | `database_type` / `db_*` variables | `NONE` / inert | Low | Chibisafe has no SQL database; these exist only for Foundation-variable mirroring and are silently ignored. |
-| `enable_api_key` | `false` unless pre-seeding is required | Low | Chibisafe manages its own admin account and API keys through its UI; the generated `ADMIN_PASSWORD` secret is only useful for automation that needs credentials before the UI is reachable. |
+| `enable_api_key` | `true` if the service is externally reachable; otherwise change the default password at first login | Medium | With it off, the `admin` account starts with the well-known upstream password `admin` — change it at first login, especially if the service is externally reachable. Per-request API keys are minted inside the app. |
 
 ---
 

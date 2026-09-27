@@ -30,7 +30,7 @@ together a minimal set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Python/Flask pods, 500m CPU / 512 MiB by default, horizontally autoscaled |
-| Cache / rate limiting | Redis | Optional — disabled by default; enables rate limiting and bot detection |
+| Cache / rate limiting | Redis | Optional — disabled by default; backs the limiter's counters. Rate limiting also needs `enable_limiter = true` |
 | Secrets | Secret Manager | Auto-generated `SEARXNG_SECRET` (session key) injected via the CSI driver |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
@@ -42,8 +42,12 @@ together a minimal set of Google Cloud services:
   files.
 - **`min_instance_count` is fixed at 1.** GKE does not support scale-to-zero;
   the module always keeps at least one pod running.
-- **Redis is disabled by default.** For public-facing deployments, enable Redis
-  to activate rate limiting and bot detection against upstream engine abuse.
+- **The limiter is disabled by default, and Redis alone does not enable it.** The RAD
+  image pins `server.limiter: false` so the JSON API stays usable by internal
+  server-to-server callers. For a publicly invokable deployment set BOTH
+  `enable_redis = true` and `enable_limiter = true`, and exempt trusted callers via
+  `limiter_pass_ips`, to get rate limiting and bot detection against upstream engine
+  abuse.
 - **`SEARXNG_SECRET` is generated automatically** and stored in Secret Manager.
   All pod replicas share the same value via the CSI driver — do not override it
   with a per-pod random value.
@@ -81,6 +85,12 @@ See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload
 type (Deployment vs StatefulSet) are managed.
 
 ### B. Redis cache (optional)
+
+`enable_redis = true` provisions the Redis backend the limiter keeps its per-IP
+counters in; `enable_limiter = true` is what actually turns bot detection on (the
+plan fails if you enable it without Redis), and `limiter_pass_ips` exempts trusted
+internal callers. Legacy note: Redis alone used to be described as sufficient — it
+never was, because the RAD image pinned `server.limiter: false`.
 
 When `enable_redis = true`, SearXNG uses Redis for per-IP rate limiting and bot
 detection. This is strongly recommended for public-facing deployments to prevent
@@ -155,8 +165,14 @@ Optional uptime checks and alert policies are available.
   security.
 - **`SEARXNG_BIND_ADDRESS` is injected automatically** as `0.0.0.0:8080` so
   SearXNG listens on all interfaces at its native port.
-- **`ENABLE_REDIS` and `REDIS_URL` are injected automatically** when
-  `enable_redis = true`. The URL is derived from `redis_host` and `redis_port`.
+- **`ENABLE_REDIS` is injected automatically**; **`REDIS_URL` only when
+  `enable_redis = true`** (it is omitted entirely otherwise, so a client cannot mistake
+  an empty value for a real endpoint). The URL is derived from `redis_host`,
+  `redis_port` and, when set, `redis_auth` — a Memorystore instance with AUTH enabled
+  rejects a password-less URL.
+- **`SEARXNG_LIMITER` and `SEARXNG_LIMITER_PASS_IPS` are injected automatically** from
+  `enable_limiter` and `limiter_pass_ips`; the entrypoint substitutes them into
+  `server.limiter` and writes `/etc/searxng/limiter.toml`.
 - **Health path.** Both the startup and liveness probes target `/healthz` (HTTP
   GET), which SearXNG answers once the application is fully initialised.
 - **Fast startups.** SearXNG starts in under 5 seconds — no database connections
@@ -286,7 +302,9 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `false` | Enable Redis for rate limiting and bot detection. Recommended for public-facing deployments. |
+| `enable_redis` | `false` | Provision the Redis backend the limiter needs. Does NOT enable rate limiting on its own. |
+| `enable_limiter` | `false` | Turn on the bot-detection limiter. Requires `enable_redis`. Set true on any publicly invokable instance. |
+| `limiter_pass_ips` | `[]` | Source CIDRs exempt from bot detection, for trusted internal callers such as n8n. |
 | `redis_host` | `""` | Redis endpoint. Leave empty to default to `127.0.0.1` when Redis is enabled; set to the Memorystore IP for a managed instance. |
 | `redis_port` | `6379` | Redis port. |
 | `redis_auth` | `""` | Optional Redis auth password (sensitive). |
@@ -382,7 +400,8 @@ locate and explore the running resources.
 | `SEARXNG_SECRET` (auto-generated) | auto-generated | Critical | If a custom per-pod secret is injected instead, each pod signs cookies with a different key, invalidating sessions across replicas. Always use the auto-generated Secret Manager value. |
 | `database_type` | `NONE` | Critical | Changing to a real DB type provisions an unused Cloud SQL instance and breaks startup. |
 | `quota_memory_requests` / `_limits` | binary units | Critical | Bare integers are read as bytes by Kubernetes and block all pod scheduling. |
-| `enable_redis` | `true` for public deployments | High | Without Redis, SearXNG has no rate limiting; public instances are vulnerable to scraping that exhausts upstream engine quotas. |
+| `enable_redis` | `true` for public deployments | High | Backs the limiter's counters. Necessary but NOT sufficient — pair it with `enable_limiter = true`. |
+| `enable_limiter` | `true` for public deployments | High | Without it the limiter stays off however Redis is configured, and a publicly invokable instance is open to scraping that exhausts upstream engine quotas. |
 | `redis_host` | Memorystore IP or explicit value | High | When `enable_redis = true` and `redis_host = ""`, the module defaults to `127.0.0.1` — there is no sidecar Redis in the default GKE setup, so rate limiting is silently disabled. |
 | `vpc_egress_setting` (via foundation) | ensure outbound internet access | High | SearXNG fetches results from external engines; outbound internet must not be blocked. |
 | `application_version` | pinned (not `latest`) | Medium | Using `latest` makes deployments non-reproducible; a new SearXNG release may change config schema. |

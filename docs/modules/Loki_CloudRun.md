@@ -302,7 +302,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `service_url` | Default `run.app` URL of the service. |
+| `api_url` | Default `run.app` URL of the service. |
 | `service_location` | Region the service runs in. |
 | `storage_buckets` | Created Cloud Storage buckets — includes the `storage` bucket Loki uses for chunks and the TSDB index. |
 | `database_instance_name` / `database_name` / `database_user` / `database_password_secret` | Always empty — `database_type = "NONE"`. |

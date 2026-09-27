@@ -352,7 +352,7 @@ explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services (Cloud Deploy). |
 | `service_external_ip` | External LoadBalancer IP (when `service_type = "LoadBalancer"` and a static IP is reserved). |
-| `service_url` | Service URL. |
+| `api_url` | Service URL. |
 | `models_bucket` | GCS bucket name where Ollama model weights are persisted. |
 | `storage_buckets` | All provisioned Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |

@@ -64,7 +64,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Authentik (GKE)**, set `project_id`, and review the
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Authentik (GKE)** from the **Platform Modules** list, set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Authentik_GKE)
    documents every input by group, with defaults. Click **Deploy Module**, review the

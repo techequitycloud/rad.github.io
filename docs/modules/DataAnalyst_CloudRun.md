@@ -196,9 +196,21 @@ dependency involved.
   and CPU-time (`RLIMIT_CPU`) limit before the generated code executes, bounded by
   `execute_code_memory_limit_mb` and the call's own timeout — independent of, and below, the
   container's overall `memory_limit`.
-- **Abuse/cost guards.** A per-connection message-length cap and rate limit bound how much
-  Vertex AI billing (and how many `execute_code` runs) an unauthenticated caller can drive if
-  `enable_iap` is left off.
+- **Abuse/cost guards.** A per-connection message-length cap and rate limit, plus a
+  per-instance cap on messages per minute across every connection (`INSTANCE_MAX_MESSAGES_PER_MINUTE`,
+  default 120, `0` to disable), bound how much Vertex AI billing (and how many `execute_code`
+  runs) an unauthenticated caller can drive if `enable_iap` is left off. The per-connection limit
+  alone is defeated by opening another connection; the per-instance one is not.
+- **An open service on a RAD-managed project is scale-bounded.** IAP cannot be the default (it
+  needs an OAuth consent screen in the project, which a freshly created RAD-managed project does
+  not have and can no longer be given by API), so while `enable_iap = false` and
+  `ingress_settings = "all"`, a RAD-managed project (billed to RAD) is held to
+  `max_instance_count <= 2` and `max_concurrent_requests <= 10` — the module defaults — and the plan
+  refuses larger values. Behind IAP, with `ingress_settings = "internal"`, or in your own project,
+  there is no such limit.
+- **Not available in a RAD-managed sandbox or lab project.** Vertex AI is not permitted in those
+  tiers, so the plan refuses the deployment up front with a message naming the way out (a
+  development or production RAD-managed project, or your own GCP project).
 
 ---
 
@@ -251,7 +263,7 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `ingress_settings` | `all` | Which networks may reach the service. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | How outbound traffic is routed through the VPC. |
-| `enable_iap` | `false` | **Strongly recommended `true`:** every message here is a real Vertex AI call AND can trigger code execution, so an unauthenticated endpoint is a meaningful cost/abuse exposure. |
+| `enable_iap` | `false` | **Strongly recommended `true`:** every message here is a real Vertex AI call AND can trigger code execution, so an unauthenticated endpoint is a meaningful cost/abuse exposure. Not the default because IAP needs an OAuth consent screen in the project; while it is off on a RAD-managed project, scale is bounded (see the abuse/cost guards above). |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
 
 ### Group 6 — Environment Variables & Secrets

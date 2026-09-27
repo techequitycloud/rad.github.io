@@ -327,7 +327,7 @@ locate and explore the running resources.
 | `service_cluster_ip` | In-cluster ClusterIP. |
 | `stage_service_cluster_ips` | Map of ClusterIPs for stage-specific services. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
-| `service_url` | URL to reach the gateway API server. |
+| `api_url` | URL to reach the gateway API server. |
 | `storage_buckets` | Created Cloud Storage buckets (none by default). |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, available regions. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |

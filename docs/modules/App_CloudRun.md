@@ -959,6 +959,45 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ---
 
+## Isolation in a Shared Project — Dedicated Account and Fence
+
+Apps that share a project have run as one tenant-shared service account (`cloudrun-sa-<tenant>`). That account holds project-wide rights to every secret and bucket, and to deploy over any Cloud Run service, so any app could read any other app's credentials and data. Two settings give an app a place of its own, without a project of its own.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `dedicated_service_account_id` | `""` | The app runs as its own service account, with only network, Cloud SQL client and logging roles project-wide, plus access to its own secrets, buckets and jobs. The app stops *needing* the shared account's rights. |
+| `fence_enabled` | `false` | Stops everyone else *having* those rights over what the app owns (`fence.tf`). Needs a dedicated account. |
+| `fence_administrators` | `[]` | People (emails) who may still reach the app's fenced resources: whoever deploys it, and break-glass administrators. |
+| `fence_secret_ids` | `[]` | Secrets the calling module creates for the app beyond its database password. Never list a secret another app also reads. |
+
+**What the fence does:**
+
+1. **Tags what the app owns.** A tag key scoped to the project, `fence-<service>` = `fenced`, is bound to:
+   - the app's Cloud Run service and every one of its jobs;
+   - its buckets, and through them their objects;
+   - its database password secret and `fence_secret_ids`.
+2. **Adds an IAM deny policy** named `fence-<service>` to the project. On anything carrying that tag, nobody but the app's dedicated account and `fence_administrators` may:
+   - read or change a secret;
+   - read or write an object;
+   - sign with a key;
+   - update, run or re-point the service or its jobs.
+
+   Deny overrides every allow, project-wide grants included.
+
+**Resources a calling module owns.** If the calling module creates other resources for the app (a KMS key ring, say), bind the output `fence_tag_value` to them once they exist, with `google_tags_location_tag_binding`. RadFarm_CloudRun does this for its signing-key ring in `console.tf`.
+
+**Adopting it, one app at a time:**
+
+1. Set `dedicated_service_account_id`, apply, and check the app still works. Every job and scheduler must run as the dedicated account: `gcloud run jobs describe` shows it.
+2. Set `fence_enabled = true` and `fence_administrators = ["you@example.com"]`, then apply. The deployer needs `roles/resourcemanager.tagAdmin` and `roles/iam.denyAdmin` on the project.
+3. Test from outside the fence. Impersonating the shared account, reading one of the app's secrets must fail with `PERMISSION_DENIED`.
+
+**What no single app can fence:** a credential several apps share.
+- **The shared Cloud SQL instance's root password**, which every app's database jobs use.
+- **Secrets several apps read**, such as an SMTP password.
+
+These stay outside every fence until each app stops needing them. For the database, that means each app's schema jobs running as its own database owner rather than as `root`.
+
 ## Deployment Prerequisites & Dependency Analysis
 
 This section summarises every external dependency for deploying `App CloudRun`. Dependencies are grouped by failure mode to help you identify what must be in place before deploying, what will silently not work, and what requires post-deployment manual action.

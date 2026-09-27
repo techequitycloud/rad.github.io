@@ -307,7 +307,7 @@ running resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `service_url` | Default `run.app` URL of the gateway API server. |
+| `api_url` | Default `run.app` URL of the gateway API server. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service details (Cloud Deploy). |
 | `storage_buckets` | Created Cloud Storage buckets (none by default). |

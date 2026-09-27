@@ -374,7 +374,7 @@ resources.
 | Output | Description |
 |---|---|
 | `service_name` | Cloud Run service name. |
-| `service_url` | Default `run.app` URL of the service. |
+| `api_url` | Default `run.app` URL of the service. |
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |

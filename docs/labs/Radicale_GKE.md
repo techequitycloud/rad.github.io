@@ -63,7 +63,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Radicale (GKE)**, set `project_id`, and review
+1. In the RAD platform, open **Solutions → Solution Modules**, then open **Radicale (GKE)** from the **Platform Modules** list, set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Radicale_GKE)
    documents every input by group, with defaults. **Set

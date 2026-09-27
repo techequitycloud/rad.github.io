@@ -308,7 +308,7 @@ running resources.
 | `service_name` | Kubernetes Service name. |
 | `namespace` | Namespace the workload runs in. |
 | `service_external_ip` | External LoadBalancer IP (when a static IP is reserved). |
-| `service_url` | URL to reach Loki. |
+| `api_url` | URL to reach Loki. |
 | `storage_buckets` | Created storage buckets — includes the `storage` bucket Loki uses for chunks and the TSDB index. |
 | `database_instance_name` / `database_name` / `database_user` / `database_password_secret` | Always empty — `database_type = "NONE"`. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
