@@ -21,9 +21,9 @@ You don't need a separate roster or a special deploy form. Everything happens on
 
 ## Getting access
 
-Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Lab Sessions** tab appears on **Solutions**, right after **Build Solution**. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
+Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Lab Sessions** tab appears on **Solutions**, as its last tab. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
 
-A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions → Build Solution** when you sign in, like any user. **Credits** is where you buy the purchased credits a session you fund is paid from.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Custom Solutions → Build Solution** once you have bought credits, otherwise on **Solution Modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
 
 Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
@@ -78,7 +78,7 @@ If environments run beyond their allowance, the overrun is charged to your purch
 
 Settlement waits until Google has reported the session's cloud costs. That usually takes up to a day after the last environment was switched off, because Google's billing data arrives late. Settling any earlier would pay you back credits the environments had in fact already used.
 
-The session's **Settlement** panel shows what was committed, consumed and refunded, plus any overrun charged to you. You also get an email, **"Lab session settled"**, unless you turned it off in your notification preferences. Every movement appears in your credit history as **Lab session escrow** and **Lab session refund** entries.
+The session's **Settlement** panel shows what was committed, consumed and refunded, plus any overrun charged to you. You also get an email, **"Lab session settled"**, unless you turned it off in your notification preferences. Every movement appears in your credit history as **Lab session escrow** and **Lab refund** entries.
 
 ## Participants
 
@@ -96,7 +96,7 @@ If you remove someone before their environment was built, their banner tells the
 
 ## Building and running environments
 
-1. **Choose what to build** on the session: **Module** or **Solution**, then search the catalogue. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
+1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Custom Solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
 2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish.
 3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
@@ -141,4 +141,4 @@ Participants can't deploy anything themselves in a lab. Every lab deployment is 
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Send Message** tab, and follow your ticket on **My tickets**. Support staff, administrators and finance work that queue.
+- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Send Message** tab, and follow your ticket on **My Tickets**. Support staff, administrators and finance work that queue.

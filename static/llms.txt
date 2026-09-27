@@ -2,7 +2,7 @@
 
 > RAD Platform (by Tech Equity Cloud) is a hands-on Google Cloud certification training platform. It deploys pre-configured, industry-realistic infrastructure ("modules") to a learner's own GCP project so exam candidates can map every certification exam objective to a real, inspectable cloud resource — not just slides or a sandbox. Not to be confused with generic "RAD" (Rapid Application Development) low-code tools; RAD here stands for Rapid Application **Deployment** of Google Cloud infrastructure.
 
-RAD Platform documentation covers Google Cloud Professional and Associate certification lab maps, platform design/architecture references, role-based user guides, and step-by-step deployment labs for 100+ application modules across Cloud Run and GKE. Note on acronyms: on this site **PDE means Professional Cloud DevOps Engineer** (Google's official cert name), not Professional Data Engineer as the abbreviation is sometimes used elsewhere; **PCDE means Professional Cloud Database Engineer**. All 321 pages are written by Dr Shiyghan Emmanuel Navti (https://docs.radmodules.dev/author), Google Cloud certified across ACE, PCA, PCD, PDE, PSE, and CDL. A single-fetch full-text export of every certification guide is available at https://docs.radmodules.dev/llms-full.txt.
+RAD Platform documentation covers Google Cloud Professional and Associate certification lab maps, platform design/architecture references, role-based user guides, and step-by-step deployment labs for 190+ open-source applications across Cloud Run and GKE. Note on acronyms: on this site **PDE means Professional Cloud DevOps Engineer** (Google's official cert name), not Professional Data Engineer as the abbreviation is sometimes used elsewhere; **PCDE means Professional Cloud Database Engineer**. All pages are written by Dr Shiyghan Emmanuel Navti (https://docs.radmodules.dev/author), Google Cloud certified across ACE, PCA, PCD, PDE, PSE, and CDL. A single-fetch full-text export of every certification guide is available at https://docs.radmodules.dev/llms-full.txt.
 
 ## Certification Guides
 - [Associate Cloud Engineer (ACE) Certification Lab Map](https://docs.radmodules.dev/docs/certification/ACE_Certification_Guide): Maps ACE exam domains to RAD deployment modules and hands-on labs; 4 section exploration guides.
@@ -23,19 +23,21 @@ Each certification also has per-section exploration guides at `.../docs/certific
 ## User & Role Guides
 - [Using RAD](https://docs.radmodules.dev/docs/guides/using-rad): Shared overview for all users — signing in, navigation, roles, modules, deployments, credits, billing.
 - [AI Tooling on GCP](https://docs.radmodules.dev/docs/guides/ai-tooling-gcp): The self-hosted LLM stack — Ollama, Open WebUI, Flowise, Dify, LiteLLM, RAGFlow, Qdrant, Chroma — grouped by layer with a suggested build order.
-- [Admin Guide](https://docs.radmodules.dev/docs/guides/admin-guide): Platform administration — users, roles, organizations, module catalog, and platform settings.
-- [Agent Guide](https://docs.radmodules.dev/docs/guides/agent-guide): Tasks for delivery agents running deployments on behalf of users.
-- [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide): Credits, costs, invoices, and org-wide billing views.
-- [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide): Running training cohorts and client deployments as a partner.
+- [Admin Guide](https://docs.radmodules.dev/docs/guides/admin-guide): Platform administration — users and roles, platform settings, the module catalogue, setup requests and support tickets, and oversight of revenue, costs and audit.
+- [Agent Guide](https://docs.radmodules.dev/docs/guides/agent-guide): The Agent sales role — sharing a referral link, earning cash commission on referred users' module fees, tracking it on Credits → My Commission, and how payouts work.
+- [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide): The Billing page — subscription tiers, credit settings and balances, event codes, module and agent revenue, project costs and invoices, payouts — plus lab oversight and the money-related audit log.
+- [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide): Connecting a GitHub repository, publishing and syncing your own modules, and earning a revenue share when others deploy them.
 - [Support Guide](https://docs.radmodules.dev/docs/guides/support-guide): Handling support tickets raised through the Help page.
-- [User Guide](https://docs.radmodules.dev/docs/guides/user-guide): Day-to-day tasks for regular users — deploying, monitoring, and tearing down modules.
+- [Trainer Guide](https://docs.radmodules.dev/docs/guides/trainer-guide): Running lab sessions from the Lab Sessions tab on Solutions — one lab environment per participant, who pays, provisioning, clocks and settlement.
+- [Client Projects Guide](https://docs.radmodules.dev/docs/guides/client-projects-guide): For subscribers running applications for their own clients — funding each project's wallet, inviting the client, deploying for them, pausing and handover.
+- [User Guide](https://docs.radmodules.dev/docs/guides/user-guide): Day-to-day tasks for regular users — building a solution from a plain description, deploying modules and solutions, managing deployments, and credits and subscriptions.
 
 ## Lab Guides (deployment modules, Cloud Run & GKE variants)
-- [Django on Cloud Run](https://docs.radmodules.dev/docs/labs/Django_CloudRun): Deploy, verify, operate, observe, troubleshoot, and tear down a Django module — the 6-task lab pattern used across all 109 indexed lab pages.
-- Full lab index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/labs/`, 109 pages)
+- [Django on Cloud Run](https://docs.radmodules.dev/docs/labs/Django_CloudRun): Deploy, verify, operate, observe, troubleshoot, and tear down a Django module — the 6-task lab pattern used across all 350+ lab pages.
+- Full lab index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/labs/`, 350+ pages)
 
 ## Module Reference
-- Full module reference index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/modules/`, 156 pages covering each supported application's Cloud Run, GKE, and Common-library configuration)
+- Full module reference index: https://docs.radmodules.dev/sitemap.xml (filter `/docs/modules/`, 520+ pages covering each supported application's Cloud Run, GKE, and Common-library configuration)
 
 ## Optional
 - [Full-text certification guides](https://docs.radmodules.dev/llms-full.txt): Single-fetch markdown export of all 7 certification lab maps and their 34 section exploration guides.

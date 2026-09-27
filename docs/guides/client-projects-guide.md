@@ -19,7 +19,7 @@ Your client never pays RAD for a client project. How your client pays you is agr
 
 ## Getting access
 
-Client Projects is for subscribers. Subscribe from **Credits → Subscriptions**. **Client Projects** is the first tab on **Solutions** (while the feature is switched on for the platform), and anyone can open it. Your clients use it to accept your invitation and to see the projects you run for them.
+Client Projects is for subscribers. Subscribe from **Credits → Subscriptions**. **Client Projects** is a tab on **Solutions**, after **Solution Modules** (while the feature is switched on for the platform), and anyone can open it. Your clients use it to accept your invitation and to see the projects you run for them.
 
 ## Creating a client project
 
@@ -40,14 +40,14 @@ Nothing can be deployed until they accept.
 
 ## Deploying for your client
 
-On a running project, choose **Deploy**. RAD switches to the **Solution Modules** tab (or pick a solution from **Platform Solutions** or **Custom Solutions**), and a banner at the top of every page says you are deploying for that client, with the region and the wallet balance. Pick a module or solution and deploy it as usual. While the banner is showing:
+On a running project, choose **Deploy**. RAD switches to the **Solution Modules** tab (or pick a solution from **Platform Solutions** or **Custom Solutions**). Pick a module or solution and deploy it as usual. For that deployment:
 
 - the deployment **belongs to your client**, and you manage it;
 - it goes into the project's own RAD-managed Google Cloud project, in the **production** environment, created the first time you deploy;
 - it runs in the project's region;
 - the cost estimate and every balance check use the **wallet**, not your own credits.
 
-Choose **Stop deploying for this client** on the banner when you're done. Otherwise the next thing you deploy is also for them.
+Choosing **Deploy** on a project covers **one** deployment: once it has been submitted successfully, RAD goes back to deploying for you, and opening **Client Projects** again also clears it. To deploy something else for the same client, choose **Deploy** on their project again.
 
 Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, but you can't read the secret values in them, such as passwords and API keys. Those are your client's.
 
@@ -63,12 +63,12 @@ Everything the project costs is taken from its wallet:
 
 A first build that fails is not charged. Google reports running costs a little late, so the wallet can go **below zero**; your next top-up covers that first.
 
-The wallet balance is shown on **Client Projects**. In your credit history, charges paid from a wallet are labelled **Client project wallet**, with no balance of your own beside them. Money you put into, or take out of, a wallet shows as **To / From client project wallet**.
+The wallet balance is shown on **Client Projects**. In your credit history, charges paid from a wallet are labelled **Client wallet**, with no balance of your own beside them. Money you put into, or take out of, a wallet shows as **To / From client wallet**.
 
 ### Topping up and withdrawing
 
 - **Top up**: adds credits from your purchased credits. Available whenever the project hasn't ended.
-- **Withdraw**: returns unused credits to your top-up credits, which never expire. Available while the project is waiting for your client or running, up to what the wallet holds.
+- **Withdraw**: returns unused credits to your top-up credits, which never expire. Available while the project is waiting for your client or running. Once the project has running costs, two days of them stay in the wallet: RAD pauses a project with a day or less left, so withdrawing more would switch your client's services off. With nothing running yet, you can withdraw everything.
 
 ## When the wallet runs low
 
@@ -106,4 +106,4 @@ Your client projects keep running on their wallets until the wallets run out, an
 
 ## Getting help
 
-Use **Help → Support** in RAD, or email the support address shown there.
+Open **Help** in RAD and use the **Send Message** tab; your tickets are on **My Tickets**.

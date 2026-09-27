@@ -4,7 +4,7 @@
 
 Hands-on Google Cloud certification training by [Tech Equity Cloud](https://radmodules.dev):
 seven certification study paths that map every official exam section to
-deployment labs, drawn from 180+ open-source applications on Cloud Run
+deployment labs, drawn from 190+ open-source applications on Cloud Run
 and GKE Autopilot — deployed into your own Google Cloud project.
 
 ## Start here

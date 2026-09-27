@@ -71,7 +71,7 @@ The **My Commission** tab is your statement.
 Payouts are made by Finance in **batches**, in cash, **outside RAD** (by bank transfer or similar):
 
 1. Finance picks a cut-off date and creates a batch. It takes everything payable up to that date and nets off any reversals.
-2. You are included once your payable total reaches the **$50 minimum**. Anything smaller carries forward to the next batch; nothing is lost.
+2. You are included once your payable total reaches the **$50 minimum** and RAD has received your invoice for it. Anything smaller carries forward to the next batch; nothing is lost.
 3. Finance pays you and marks the batch paid with a payment reference. Your statement then shows those commissions as **Paid**.
 
 You don't request payouts yourself. If you think a payout is missing, raise a ticket from the **Send Message** tab on **Help**.
@@ -87,4 +87,4 @@ The Agent role is deliberately narrow. As an agent you cannot:
 
 ## Getting help
 
-Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact us** link in the footer.
+Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My Tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact us** link in the footer.

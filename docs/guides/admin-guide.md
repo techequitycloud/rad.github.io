@@ -22,7 +22,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - See all revenue, costs, invoices, and payouts across the platform.
 - Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on the **Users** page. Your top navigation shows: Setup, Users, Audit Log, Sync, Deployments, Solutions, and Help, plus **Credits** if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -129,7 +129,7 @@ The **Setup Requests** tab on the **Help** page is where managed-setup requests 
 
 ## Support Tickets
 
-The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket on their own **My tickets** tab, which shows the status you set but never your notes or who the ticket is assigned to.
+The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket on their own **My Tickets** tab, which shows the status you set but never your notes or who the ticket is assigned to.
 
 ## Visibility into revenue, costs, invoices, and payouts
 
@@ -153,4 +153,4 @@ Finance also has an **Audit Log**, limited to the money-related actions. The log
 
 ## Getting help
 
-On the **Help** page your **Send Message** tab shows the message form described above, not the support request form other users see, so you have no My tickets tab; the Setup Requests and Support Tickets tabs sit next to it. **Calculate ROI** is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help. For sign-in, navigation, and core concepts like deploying modules and credits, see [Using RAD](using-rad.md).
+On the **Help** page your **Send Message** tab shows the message form described above, not the support request form other users see, so you have no My Tickets tab; the Setup Requests and Support Tickets tabs sit next to it. **Calculate ROI** is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help. For sign-in, navigation, and core concepts like deploying modules and credits, see [Using RAD](using-rad.md).

@@ -21,12 +21,12 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 
 ## Signing in
 
-1. Open the RAD sign-in page and click **Sign in with Google**.
-2. Choose your Google account.
+1. Open the RAD sign-in page and click **Sign in with Google**, or sign in with an email address and password.
+2. If you chose Google, pick your Google account.
 
-The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
+The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away; a new email-and-password account must verify its email address before the console opens (Google accounts count as verified). You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Admins open on **Users**, Finance on **Billing**, agents on **Credits → My Commission** and Support on **Help**, because each signs in to do a particular job. Users, partners and trainers open on **Solutions**, on the **Build Solution** tab, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Admins open on **Users**, Finance on **Billing**, agents on **Credits → My Commission** and Support on **Help**, because each signs in to do a particular job. Users, partners and trainers open on **Solutions**: on **Custom Solutions → Build Solution** once you have paid access (you are a partner, or you have bought credits), and on **Solution Modules** otherwise, so the first screen is what you can build rather than the list of what you built last time. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign Out**.
 
@@ -43,7 +43,7 @@ There is no separate combined dashboard — each item in the top nav is its own 
 
 After you sign in, RAD takes you to the page that fits your role:
 
-- **User**, **Partner**, **Trainer** → **Solutions**, on the **Build Solution** tab
+- **User**, **Partner**, **Trainer** → **Solutions**, on **Custom Solutions → Build Solution** with paid access (partners, and anyone who has bought credits), otherwise on **Solution Modules**
 - **Admin** → **Users**
 - **Finance** → **Billing**
 - **Agent** → **Credits**, on the **My Commission** tab
@@ -111,10 +111,11 @@ Deployment statuses you may see include Queued, Pending, Working, Waiting (on a 
 
 ### Solutions
 
-**Solutions** holds everything you can deploy, on four tabs — and it is where users, partners and trainers land after signing in. (While the platform offers them, a **Client Projects** tab comes first — see the [Client Projects Guide](client-projects-guide.md) — and trainers and admins also see a **Lab Sessions** tab straight after it while lab sessions are enabled.)
+**Solutions** holds everything you can deploy, on three tabs — and it is where users, partners and trainers land after signing in. (While the platform offers them, a **Client Projects** tab follows **Solution Modules** — see the [Client Projects Guide](client-projects-guide.md) — and trainers, finance and admins also see a **Lab Sessions** tab last while lab sessions are enabled.)
 
-- **Build Solution** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing, estimates how long it takes, and deploys it. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**.
-- **Custom Solutions** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
+- **Custom Solutions** — your own solutions, on two sub-tabs:
+  - **Build Solution** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing, estimates how long it takes, and deploys it. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**.
+  - **Solution Catalog** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a platform solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
 - **Platform Solutions** — ready-made bundles of modules curated by RAD, grouped into categories. Each card shows a combined credit cost and an average rating derived from the modules it contains.
 - **Solution Modules** — the module catalog described above.
 
@@ -170,7 +171,7 @@ Platform-wide reporting stays an administrator and finance view: the **Module Co
 
 ## Getting help
 
-The **Help** page's **Send Message** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale, and you can raise up to 5 in 24 hours. The **My tickets** tab beside it lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**) — sending a ticket takes you there, so you see the one you just raised. Depending on your role you may see more tabs: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on Send Message instead of the contact form, and have no My tickets tab.)
+The **Help** page's **Send Message** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale, and you can raise up to 5 in 24 hours. The **My Tickets** tab beside it lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**) — sending a ticket takes you there, so you see the one you just raised. Depending on your role you may see more tabs: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on Send Message instead of the contact form, and have no My Tickets tab.)
 
 Your **referral link** is on your **Profile**, in the **Refer and earn** section — open the profile menu at the top right. It is shown whenever the referral program is on, including when referrals are unlimited (it is never shown to administrators), and the **Credits** page has a **Get your referral link** shortcut to it. Everyone who signs up through your link is linked to your account.
 
