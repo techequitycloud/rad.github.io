@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules, and see each payout Finance records for you.
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — the same landing users get. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on **Custom Solutions → Build Solution** — the same landing users get once they have bought credits. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -89,4 +89,4 @@ These work exactly as described in [Using RAD](using-rad.md):
 
 ## Getting help
 
-Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help.
+Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My Tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help.

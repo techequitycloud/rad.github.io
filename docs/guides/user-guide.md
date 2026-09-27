@@ -21,12 +21,13 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Invite others with your referral link, from **Profile → Refer and earn**.
 - Run projects for your own clients as a subscriber, or accept one someone runs for you, on **Solutions → Client Projects**. See [Client Projects](#client-projects).
 
-After you sign in you land on **Solutions**, on the **Build Solution** tab — signing in opens on what you can build rather than the list of what you built last time.
+After you sign in you land on **Solutions** — on **Custom Solutions → Build Solution** once you have bought credits, and on **Solution Modules** until then — so signing in opens on what you can build rather than the list of what you built last time.
 
-**Solutions** holds everything you can deploy, on four tabs:
+**Solutions** holds everything you can deploy, on three tabs:
 
-- **Build Solution** — four questions that end in a working, priced solution. Start here if you know what you want to achieve but not what it is called.
-- **Custom Solutions** — the bundles you have composed yourself.
+- **Custom Solutions**, with two sub-tabs:
+  - **Build Solution** — four questions that end in a working, priced solution. Start here if you know what you want to achieve but not what it is called.
+  - **Solution Catalog** — the bundles you have composed yourself.
 - **Platform Solutions** — ready-made bundles curated by RAD.
 - **Solution Modules** — the full catalog of individual applications.
 
@@ -34,7 +35,7 @@ Your top navigation shows **Credits** (when credits are enabled), **Deployments*
 
 ## Building a solution from a description
 
-On **Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
+On **Solutions → Custom Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
 
 1. **Where should it run?** Your own Google Cloud project is the default: you keep the billing relationship, your organization's policies, and the project itself afterwards. Choosing a **RAD-managed project** instead puts the infrastructure inside RAD's own organization and billing account, and you then also say what the environment is for — trying things out, for your developers, or for your end users. A RAD-managed project also asks you to be holding a minimum balance of purchased credits, which the page states. That is a balance requirement, not a charge.
 2. **Where should it live?** Pick the location closest to the people who will use it. Your own project can use any Google Cloud region; a RAD-managed project offers the locations RAD supports — the cheapest in each part of the world. RAD checks this again when you deploy: a location outside that list, in any location setting (including one that takes several locations), is refused before anything is reserved or built, and the message names the setting to change.
@@ -77,7 +78,7 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a solution
 
-A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. Two of its four tabs hold ready-to-deploy bundles — the other two are **Build Solution** and **Solution Modules**, described above.
+A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. Ready-to-deploy bundles live on **Platform Solutions** and on **Custom Solutions → Solution Catalog**; **Build Solution** and **Solution Modules** are described above.
 
 **Platform Solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
 
@@ -180,7 +181,7 @@ Turning **Deployments** off stops all of those emails, including the warnings. B
 
 ## Client projects
 
-When the platform offers it, **Client Projects** is the first tab on **Solutions**. It works from both sides.
+When the platform offers it, **Client Projects** is a tab on **Solutions**, after **Solution Modules**. It works from both sides.
 
 **If someone runs a project for you.** A subscriber may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Solutions → Client Projects** and choose **Accept** under **Invitations for you**.
 
@@ -196,7 +197,7 @@ When the platform offers it, **Client Projects** is the first tab on **Solutions
 
 Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
 
-Your tickets are on the **My tickets** tab, next to **Send Message**, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
+Your tickets are on the **My Tickets** tab, next to **Send Message**, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
 
 ## Inviting others
 

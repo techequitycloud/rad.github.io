@@ -16,7 +16,7 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 - Restore a deployment's configuration that the retention policy has marked for removal, when its owner asks you to.
 - Raise a ticket of your own on the **Help** page's **Send Message** tab.
 
-After you sign in you land on the **Help** page. Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
+After you sign in you land on the **Help** page. Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My Tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
 
 ## Handling support tickets
 
@@ -42,7 +42,7 @@ Tickets are created from the **Help** page.
 
 When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Each user can raise up to 5 tickets in 24 hours.
 
-Users can follow up on their own tickets: the **My tickets** tab on the Help page shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
+Users can follow up on their own tickets: the **My Tickets** tab on the Help page shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
 
 ## Viewing deployments
 
@@ -84,4 +84,4 @@ If a request needs any of these, route it to an administrator (or to Finance for
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For your own questions, use the **Help** page: the **Send Message** tab raises a ticket, which lands on the same Support Tickets queue you work. Your own tickets are on the **My tickets** tab beside it.
+- For your own questions, use the **Help** page: the **Send Message** tab raises a ticket, which lands on the same Support Tickets queue you work. Your own tickets are on the **My Tickets** tab beside it.
