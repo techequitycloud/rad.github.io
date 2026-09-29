@@ -74,7 +74,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Modules**, then open **Prowlarr (GKE)** from the **Platform Modules** list, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Prowlarr (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and
    review the inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Prowlarr_GKE)
    documents every input by group, with defaults. **Set `service_type =
@@ -82,7 +82,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    (`ClusterIP`) leaves Prowlarr's web UI unreachable from outside the
    cluster. Leave `stateful_pvc_enabled = true` (the default) for a real
    block PVC backing the embedded SQLite database. Click **Deploy Module**,
-   review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the
+   review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the
    deployment status page with real-time logs.
 
 2. The platform provisions the Kubernetes workload (a StatefulSet with a

@@ -28,7 +28,7 @@ After you sign in you land on **Credits**, on the **My Commission** tab. Your to
 
 ## Your referral link
 
-Your link and code are on your **Profile** (open the profile menu, top right), in the **Refer and earn** section. If your account also holds the User or Partner role, the **Credit Transactions** tab on **Credits** has a **Get your referral link** shortcut to it. The **Invite Friends** card there shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off, and it is never shown to administrator accounts.
+Your link and code are on your **Profile** (open the profile menu, top right), in the **Refer and earn** section. If your account also holds the User or Partner role, the **Credit Transactions** tab on **Credits** has a **Referral link** button that takes you there. The **Invite Friends** card there shows your code, a QR code, and **Copy Link** and **Share** buttons. The card appears whenever the referral program is on, including when referrals are unlimited; it is hidden only when the platform has switched the program off, and it is never shown to administrator accounts.
 
 Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
@@ -87,4 +87,4 @@ The Agent role is deliberately narrow. As an agent you cannot:
 
 ## Getting help
 
-Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My Tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact us** link in the footer.
+Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My Tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact Us** link in the footer.

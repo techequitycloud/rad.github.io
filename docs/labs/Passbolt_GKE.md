@@ -70,8 +70,8 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Passbolt
-   (GKE)** from the **Platform Modules** list to start configuration, set
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **Passbolt
+   (GKE)** from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set
    `project_id`, and review the inputs. Set `admin_email`, `admin_first_name`,
    and `admin_last_name` to your real details — these seed the one and only
    admin account. Configure only what you need — the
@@ -80,7 +80,7 @@ export REGION="us-central1"           # the region you deploy into
    `Passbolt_CloudRun` instance in the same project, set
    `tenant_id = "gke"` (and `"cr"` on the Cloud Run deployment) so
    the two variants don't collide on shared resource names. Click **Deploy
-   Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens
+   Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens
    the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster,

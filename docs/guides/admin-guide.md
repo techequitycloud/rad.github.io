@@ -11,7 +11,7 @@ For administrators who run the RAD platform: managing users, roles, credits, mod
 
 ## What you can do
 
-As an admin you have superuser access. In addition to everything a standard user can do (build a solution from a description, browse the module catalog on **Solutions → Solution Modules**, configure and deploy, manage your own **Deployments**, use **Credits**, and the **Calculate ROI** tab on the **Credits** page), you can:
+As an admin you have superuser access. In addition to everything a standard user can do (build a solution from a description, browse the module catalog on **Solutions → Solution Catalog → RAD modules**, configure and deploy, manage your own **Deployments**, use **Credits**, and the **Calculate ROI** tab on the **Credits** page), you can:
 
 - View, search, create, edit, activate/deactivate, and delete **Users**.
 - Edit any user's role flags (User, Partner, Agent, Finance, Support, Trainer, Admin), and any other user's credit balances.
@@ -22,7 +22,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - See all revenue, costs, invoices, and payouts across the platform.
 - Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is the **Solution Modules** tab on Solutions; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is **RAD modules** on the Solutions **Solution Catalog** tab; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
@@ -65,7 +65,7 @@ Set a user's roles by editing their row on the **Users** page and toggling the r
 - **Agent** — a sales role: earns a cash commission on the module fees their referred users pay with purchased credits, tracked on **Credits → My Commission** (see the [Agent Guide](agent-guide.md)). It can be granted only while users can **buy credits or subscribe**, meaning credits are on and Stripe or Flutterwave is on. With payments off the box stays locked and a note says why. An existing agent can always be un-ticked, and keeps the role if payments are switched off later. **Deactivating** an agent's account stops their commission: nothing new is recorded, and what is already recorded is held back from payouts until the account is reactivated.
 - **Finance** — financial reporting and payouts; uses the **Billing** page.
 - **Support** — help-desk triage of **Support Tickets** (a Help-page tab). A support agent sees deployments only for the customers whose open tickets are assigned to them, and never a deployment's variables or outputs. Resolving or closing the ticket ends that access.
-- **Trainer** — runs **lab sessions** from the **Lab Sessions** tab on **Solutions**: enrols a cohort of participants, funds them or has them buy their own place, and builds one lab environment per participant. The role is the whole grant — there is no roster to fill in — so unticking it removes the access. Deactivating an account also clears it, and reactivating does not restore it. A trainer is always treated as a user as well, so they keep the user's pages, including **Credits**, which funds their sessions. Unlike Support, a trainer may update and destroy the lab environments they provisioned, so a course does not leave infrastructure behind. A trainer can see a lab environment's outputs (with sensitive values removed) but never its configuration variables or generated credentials, never sees a participant's own personal deployments, and can't deploy on anyone's behalf from the ordinary deploy form.
+- **Trainer** — runs **lab sessions** from **Solutions → Managed Environments**: enrols a cohort of participants, funds them or has them buy their own place, and builds one lab environment per participant. The role is the whole grant — there is no roster to fill in — so unticking it removes the access. Deactivating an account also clears it, and reactivating does not restore it. A trainer is always treated as a user as well, so they keep the user's pages, including **Credits**, which funds their sessions. Unlike Support, a trainer may update and destroy the lab environments they provisioned, so a course does not leave infrastructure behind. A trainer can see a lab environment's outputs (with sensitive values removed) but never its configuration variables or generated credentials, never sees a participant's own personal deployments, and can't deploy on anyone's behalf from the ordinary deploy form.
 
 See the [Trainer Guide](trainer-guide.md) for the trainer's own view of this.
 
@@ -79,9 +79,9 @@ Making someone a partner takes three steps, and the last one is yours:
 
 Revoking the Partner role, or deactivating the account, stops their monthly partner allotment. Delete the secret as well if the partner should no longer be deployable.
 
-**How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, the **Lab Sessions** tab on Solutions and Finance's **Labs** menu entry are hidden, and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
+**How lab sessions work.** Switch on **Enable Lab Sessions** in **Setup** first; while it is off, lab sessions are hidden from **Solutions → Managed Environments**, Finance's **Labs** menu entry is hidden, and every lab route answers *not found*. The same Setup variables set the ceilings a trainer works within: maximum participants, duration and credits per participant, plus provisioning concurrency.
 
-A trainer creates a session on the **Lab Sessions** tab and chooses who pays:
+A trainer creates a session on **Solutions → Managed Environments** (**Lab sessions → New lab session**) and chooses who pays:
 - **Participants buy their own place.** This is the default for a new session. Each participant pays from their own purchased credits before anything is built for them. When one can't pay on RAD (a bank the payment provider won't accept, or cash), the trainer can pay for that one place from their own purchased credits with **Pay for place**; the row then shows **Paid by trainer**. Only the session's own trainer is offered this, because it spends their credits.
 - **The trainer pays.** The whole allowance is reserved from the trainer's purchased credits up front.
 
@@ -115,13 +115,13 @@ Turn it on where an accidental rebuild is expensive — shared environments, cus
 
 ## Managing modules
 
-You are responsible for the catalog of **platform modules** that every user sees on the **Solutions → Solution Modules** tab.
+You are responsible for the catalog of **platform modules** that every user sees on **Solutions → Solution Catalog → RAD modules**.
 
 **Sync platform modules.** Go to the **Sync** page to bring platform modules into the catalog. The page is a read-only sync console: it lists the modules found in the platform repository, and the **Sync Now** action refreshes the catalog from that repository. Modules themselves are managed in the repository, not edited on this page.
 
 **Update a module.** Change the module in the repository, then run **Sync Now** from the Sync page to refresh its definition (description, configuration fields, and credit cost) in the catalog.
 
-**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and on a module's own page, and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published.
+**Removing a module.** Module management is read-only by default: the **Module Console Read-Only** setting on the **Setup** page ships switched on, which hides the delete action on module cards and on a module's own page, and makes the platform reject a console delete. To remove a module, delete it from its GitHub repository and let the next sync drop it from the catalog. Only if you turn that setting off does a delete action appear — and then you can delete any module, platform or partner-published. With it off, the **Sync** menu entry reads **Publish**.
 
 ## Setup Requests
 
@@ -153,4 +153,4 @@ Finance also has an **Audit Log**, limited to the money-related actions. The log
 
 ## Getting help
 
-On the **Help** page your **Send Message** tab shows the message form described above, not the support request form other users see, so you have no My Tickets tab; the Setup Requests and Support Tickets tabs sit next to it. **Calculate ROI** is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help. For sign-in, navigation, and core concepts like deploying modules and credits, see [Using RAD](using-rad.md).
+On the **Help** page your **Send Message** tab shows the message form described above, not the support request form other users see, so you have no My Tickets tab; the Setup Requests and Support Tickets tabs sit next to it. **Calculate ROI** is a tab on the **Credits** page. The **Contact Us** link in the footer also goes to Help. For sign-in, navigation, and core concepts like deploying modules and credits, see [Using RAD](using-rad.md).

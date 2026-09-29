@@ -21,6 +21,7 @@ Finance is granted by an administrator on top of an ordinary account, so you kee
 - Review every customer's RAD-managed project costs (**Project Transactions**) and org-wide GCP costs (**Project Invoices**).
 - See per-payee payout totals (**Payout Summary**).
 - Oversee every trainer's lab sessions, and end one to stop its spending (**Labs**).
+- See every client project on the platform — who runs it, for which client, its status and wallet — read-only, under **Solutions → Managed Environments → Client projects → All client projects** (while client projects are switched on).
 - View all users and the full lists of agents and partners; make limited user edits.
 - Work the managed-setup and support-ticket queues (tabs on the Help page).
 - Review the money-related entries of the **Audit Log**.
@@ -87,7 +88,7 @@ Give the attendees of a partner event (a DevFest, a workshop) free credits they 
 
 Each account can claim a code once, and only with a verified email address. The credits land in the user's **Event credits** balance: they are free (never counted as purchased), are spent after the monthly awards, do not pay for Google Cloud usage in a RAD-managed project, and expire on their own date rather than with the monthly reset. Once a code exists its credits and validity are fixed; you can still **Disable** or **Enable** it, move its closing date, or change its cap. **Details** lists who claimed it, and **Export claims (CSV)** downloads that list.
 
-**You cannot claim event codes yourself.** Finance and admin accounts — the accounts that create codes — are refused, and nobody can claim a code they created, even after losing the role. This is the same rule that stops you adjusting your own balance. The "Have an event code?" box on the Credits page is not shown to you for that reason.
+**You cannot claim event codes yourself.** Finance and admin accounts — the accounts that create codes — are refused, and nobody can claim a code they created, even after losing the role. This is the same rule that stops you adjusting your own balance. The event-code box on the Credits page (the **Claim credits** row) is not shown to you for that reason; while the referral program is on, you see a **Get your referral link** link there instead.
 
 ### Module Revenue
 
@@ -172,7 +173,7 @@ All **roles** — including granting or revoking the **Partner** role — and a 
 
 Finance oversees lab sessions; it does not run them.
 
-1. Click **Labs** in the navigation bar (the same view is the **Lab Sessions** tab on Solutions). You see every trainer's sessions, with a date range, a status filter and a **Trainer** column.
+1. Click **Labs** in the navigation bar (the same view is **Solutions → Managed Environments**). You see every trainer's sessions, with a date range, a status filter and a **Trainer** column.
 2. Open **Participants** on a session to see its settlement — committed, consumed, refundable, and anything absorbed by RAD — and its participants. **Export CSV** downloads the list.
 3. Each participant's environment opens a read-only deployment page: build status and logs, with secrets masked. The **Outputs** tab and generated passwords or keys are not shown to you; they belong to the participant and the trainer.
 
@@ -207,4 +208,4 @@ Click **Help** in the navigation bar:
 
 The **ROI** calculator is not on Help — it's the last tab on the **Credits** page, **Calculate ROI**. Credits appears in your navigation only if your account also holds the ordinary user role; otherwise go to `/credits` directly. Without the user role you have no credit ledger of your own, so the page does not offer **Credit Transactions** and opens on **Module Revenue** instead; **Module Costs** and **Project Invoices** are there as usual.
 
-A **Contact us** link in the footer also takes you to the Help page.
+A **Contact Us** link in the footer also takes you to the Help page.

@@ -87,8 +87,8 @@ Plausible **cannot start without ClickHouse** — a plan-time validation in
 Plausible_GKE blocks the apply when `clickhouse_url` is empty. Deploy ClickHouse
 first and do not proceed until it is serving.
 
-1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (open **Solutions → Solution Modules**,
-   open **ClickHouse (GKE)**, set `project_id`, click **Deploy Module**), or directly:
+1. Deploy the **ClickHouse (GKE)** module — from the RAD platform (open **Solutions → Solution Catalog → RAD modules**,
+   open **ClickHouse (GKE)**, choose **Configuration Form**, set `project_id`, click **Deploy Module**), or directly:
 
    ```bash
    cd modules/ClickHouse_GKE

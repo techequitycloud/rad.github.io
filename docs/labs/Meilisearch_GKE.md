@@ -63,14 +63,14 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Modules**, then open **Meilisearch (GKE)** from the **Platform Modules** list, set `project_id`, and set
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Meilisearch (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and set
    `stateful_pvc_enabled = true` for production-grade Persistent Disk storage. **Also
    set `stateful_pvc_mount_path = "/meili_data"`** — the variable's own default
    (`/meilisearch/storage`) does **not** match the fixed `MEILI_DB_PATH`
    (`/meili_data`), so leaving it at the default means the PVC never receives the
    index data (it appears empty on every restart). Review the remaining inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Meilisearch_GKE)
-   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform generates the `MEILI_MASTER_KEY` and stores it in Secret Manager
    (injecting it as a native Kubernetes Secret), builds and mirrors the

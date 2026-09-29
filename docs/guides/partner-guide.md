@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules, and see each payout Finance records for you.
 
-After you sign in you land on **Solutions**, on **Custom Solutions → Build Solution** — the same landing users get once they have bought credits. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on **Build Solution**, whatever your balance. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Catalog → RAD modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 
@@ -29,7 +29,7 @@ Before you can sync anything, connect the repository that holds your modules. Op
 1. Under **RAD Module Sync App**, click **Install App** and install the **RAD Module Sync** GitHub App on the repository (or organization) that holds your modules. The App grants RAD read access — no personal access token is needed.
 2. Under **Partner Settings**, choose that repository from the **GitHub Repository** dropdown and click **Update Repo**.
 
-Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and the **Solution Modules** tab shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
+Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and **Solutions → Solution Catalog → RAD modules** shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
 
 > **Deploying your modules needs one step from an administrator.** The GitHub App lets RAD *read* your modules so they can be synced and listed. Building a deployment of one of your modules — by you or by anyone else — additionally needs deployment access to your repository, which an administrator sets up for each partner. Until they have, a deployment of your module stops before it starts with *"Deployment repository credentials are not configured"*. Ask an administrator to enable deployments for your repository when you are ready for your modules to be deployed.
 
@@ -46,12 +46,12 @@ If a repository can't be read — the GitHub App isn't installed on it, or it ho
 
 ## How your modules appear to users
 
-On the **Solution Modules** tab you see two sub-tabs:
+On **Solutions → Solution Catalog → RAD modules** you see two sub-tabs:
 
 - **Partner modules** — the modules you've published from your own repository. This is your workspace for testing and iterating.
 - **Platform modules** — modules published by RAD, plus other partners' public modules.
 
-Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and a credit cost badge.
+Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and its price: the module fee (or **Free module** when there is none) plus an estimate of the build.
 
 Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. The build cost is still metered after the build and deducted from your balance exactly as it is for everyone else, so a self-deploy isn't entirely free.
 
@@ -83,10 +83,10 @@ Cloud costs and project invoices aren't available to Partners in the console —
 
 These work exactly as described in [Using RAD](using-rad.md):
 
-- **Solutions → Solution Modules** — browse the catalog, configure with either the guided **Configuration Form** (the default) or the **Conversational Assistant**, and launch.
+- **Solutions → Solution Catalog → RAD modules** — browse the catalog, configure with either the **Conversational Assistant** (your default) or the guided **Configuration Form**, and launch.
 - **Deployments** — track your deployments; open one for **Outputs**, **Build Status**, and build history; **Update**, **Delete**, or **Purge**; and rate modules.
 - **Credits** — view your balance and **Credit Transactions** (with **Export CSV**), **Buy Credits** and manage subscriptions while the platform is selling credits.
 
 ## Getting help
 
-Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My Tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact us** link in the footer also goes to Help.
+Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My Tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact Us** link in the footer also goes to Help.

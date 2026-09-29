@@ -68,15 +68,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **PostHog (GKE)** from the
-   **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **PostHog (GKE)** from the
+   **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and review the
    inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PostHog_GKE) documents
    every input by group, with defaults. If you have a `ClickHouse_GKE` instance already
    deployed, set `clickhouse_host` to its internal Service DNS/IP for a production-grade
    event store; otherwise leave `enable_inline_clickhouse = true` for the bundled
-   dev/test fallback. Click **Deploy Module**, review the estimated cost in the confirmation
-   dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   dev/test fallback. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a Cloud
    SQL (PostgreSQL 15) database for Django's own app metadata, its Secret Manager

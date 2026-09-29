@@ -16,7 +16,7 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 - Restore a deployment's configuration that the retention policy has marked for removal, when its owner asks you to.
 - Raise a ticket of your own on the **Help** page's **Send Message** tab.
 
-After you sign in you land on the **Help** page. Your top navigation shows: **Deployments** and **Help**. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My Tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
+After you sign in you land on the **Help** page. Your top navigation shows **Deployments** and **Help**, plus **Credits** and **Solutions** if your account also holds the User role. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My Tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
 
 ## Handling support tickets
 
@@ -38,11 +38,13 @@ The **Support Tickets** tab on the **Help** page is your main workspace.
 Tickets are created from the **Help** page.
 
 - On the **Help** page, the **Send Message** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
-- The **Contact us** link in the footer also goes to the Help page.
+- The **Contact Us** link in the footer also goes to the Help page.
 
-When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Each user can raise up to 5 tickets in 24 hours.
+When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact Us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Each user can raise up to 5 tickets in 24 hours.
 
 Users can follow up on their own tickets: the **My Tickets** tab on the Help page shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
+
+A user can also **withdraw** a ticket that isn't closed, to say no further work is needed. It closes straight away, and in **Support Tickets** the expanded ticket shows **Withdrawn by the customer** and when. Closing it ends the assigned agent's access to that customer's deployments, just as any close does.
 
 ## Viewing deployments
 

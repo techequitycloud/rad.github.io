@@ -12,30 +12,33 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 ## What you can do
 
 - Answer four plain questions on **Build Solution** and have RAD work out which applications you need, what the whole thing costs, and deploy them.
-- Browse the module catalog on **Solutions → Solution Modules** and deploy ready-made modules through a guided form.
+- Browse the module catalog on **Solutions → Solution Catalog → RAD modules** and deploy ready-made modules through a guided form.
 - Track and manage your own **Deployments** — view results and logs, update, and tear down.
 - Manage **Credits** — check your balance, review your transaction history, and buy more while the platform is selling credits.
 - Subscribe to a recurring credit plan, when plans are on offer.
 - Estimate your savings with **Calculate ROI**, on the **Credits** page.
 - Get help through the **Send Message** form on **Help**.
 - Invite others with your referral link, from **Profile → Refer and earn**.
-- Run projects for your own clients as a subscriber, or accept one someone runs for you, on **Solutions → Client Projects**. See [Client Projects](#client-projects).
+- Run projects for your own clients (starting one needs purchased credits), or accept one someone runs for you, on **Solutions → Managed Environments**. See [Client Projects](#client-projects).
 
-After you sign in you land on **Solutions** — on **Custom Solutions → Build Solution** once you have bought credits, and on **Solution Modules** until then — so signing in opens on what you can build rather than the list of what you built last time.
+After you sign in you land on **Solutions**: on **Build Solution** if you have purchased credits (a subscription or a top-up), otherwise on **Solution Catalog → RAD modules**. The tabs are, in order: **Build Solution**, **Solution Catalog**, then **Managed Environments**, which holds client projects (while the platform offers them) and, for trainers, finance and admins, lab sessions (while they are enabled).
 
-**Solutions** holds everything you can deploy, on three tabs:
+**Solutions** holds everything you can deploy, on two tabs:
 
-- **Custom Solutions**, with two sub-tabs:
-  - **Build Solution** — four questions that end in a working, priced solution. Start here if you know what you want to achieve but not what it is called.
-  - **Solution Catalog** — the bundles you have composed yourself.
-- **Platform Solutions** — ready-made bundles curated by RAD.
-- **Solution Modules** — the full catalog of individual applications.
+- **Build Solution** — four questions that end in a working, priced solution. Start here if you know what you want to achieve but not what it is called.
+- **Solution Catalog** — everything ready to deploy, with a type filter across the top and a **New solution** button beside it that opens **Build Solution**:
+  - **All** — every kind on one page, each under its own heading; a kind with nothing to show is left out.
+  - **My solutions** — the bundles you have composed yourself.
+  - **RAD solutions** — ready-made bundles curated by RAD.
+  - **RAD modules** — the full catalog of individual applications.
 
 Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, and **Help**.
 
 ## Building a solution from a description
 
-On **Solutions → Custom Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
+**Build Solution** and composing your own solutions need **purchased credits** (a top-up or a subscription; free signup, monthly and referral credits do not count). Partners always have them. Without purchased credits you still see both, with a note on what unlocks them, and any solutions you already saved stay listed: you can still deploy or delete them, but not edit them. Deploying for a client project you manage is the exception: the client's wallet pays, so it works whatever your own balance.
+
+On **Solutions → Build Solution** — also reachable directly at **/build** — describe what you want people to be able to do, in your own words, no app names needed. RAD works out which applications deliver it, then asks three short questions:
 
 1. **Where should it run?** Your own Google Cloud project is the default: you keep the billing relationship, your organization's policies, and the project itself afterwards. Choosing a **RAD-managed project** instead puts the infrastructure inside RAD's own organization and billing account, and you then also say what the environment is for — trying things out, for your developers, or for your end users. A RAD-managed project also asks you to be holding a minimum balance of purchased credits, which the page states. That is a balance requirement, not a charge.
 2. **Where should it live?** Pick the location closest to the people who will use it. Your own project can use any Google Cloud region; a RAD-managed project offers the locations RAD supports — the cheapest in each part of the world. RAD checks this again when you deploy: a location outside that list, in any location setting (including one that takes several locations), is refused before anything is reserved or built, and the message names the setting to change.
@@ -43,7 +46,7 @@ On **Solutions → Custom Solutions → Build Solution** — also reachable dire
 
 If the applications RAD proposes aren't quite right, use **Not quite? Tell us what to change** underneath them — say what to add or drop, and RAD reworks the set instead of starting from scratch. You can also remove a single application, or **Start over** to clear your answers and the proposal together.
 
-A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes, alongside a build-duration estimate such as "about 1h 20m". **Build this** deploys it. **Show the engineering detail** opens the same solution on the full configuration form if you would rather set everything yourself.
+A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes, alongside a build-duration estimate such as "about 1h 20m". **Build this** saves it under **My solutions** and opens its deploy page with your answers already filled in; review it there and choose **Deploy Solution**. **Show the engineering detail** saves it the same way but opens it on the full configuration form, if you would rather set everything yourself.
 
 ### Bringing your own Google Cloud project
 
@@ -55,20 +58,21 @@ A RAD-managed project asks for two things before RAD can create it: a **verified
 
 ## Finding a module
 
-Open **Solutions** and choose the **Solution Modules** tab to browse the module catalog. Modules appear as cards.
+Open **Solutions**, choose the **Solution Catalog** tab and select **RAD modules** in the type filter to browse the module catalog. Modules appear as cards.
 
 - **Browse:** You see a single combined catalog of public modules — both modules published by RAD and public modules published by partners.
-- **Search:** Use the search bar to find a module by name, then page through the results.
-- **Filter by category:** Use the category list beside the grid to narrow the catalog to one category. Each entry shows how many modules it holds; **All** clears the filter.
+- **Search:** The search bar above the tabs searches the whole **Solution Catalog** — your own solutions, RAD solutions and RAD modules alike. Every word you type must match; a match in the name ranks first, then matches found in a description or in what a solution contains. Your search stays in place as you switch between types, and the counts on **My solutions** and **RAD solutions** show how many matches each holds.
+- **Filter by category:** Use the category list beside the grid to narrow the catalog to one category. It appears when a single type (**RAD solutions** or **RAD modules**) is selected, and is hidden on **All**, because solutions and modules use different categories. Each entry shows how many modules it holds; **All** clears the filter.
 - **Pin:** Click the pin on a card to keep a favourite module at the top of your catalog for quick access.
-- **Read each card:** Every card shows the module description, a **documentation** link, an average star rating, how many times it has been deployed, and a **credit cost** badge.
+- **Read each card:** Every card shows the module description, a **documentation** link, an average star rating, how many times it has been deployed, and its **price**.
+- **Read the price:** Every catalogue card — module, platform solution or custom solution — shows its price the same way: the **fee** (charged once, when the deployment is created) plus an estimate of the **build** (metered on every build), for example `50 cr fee + ~19 cr build`. A module with no fee reads **Free module**; its build is still charged. A solution that qualifies for a bundle discount shows it: the fee before the discount is struck through beside the fee you pay. A deployment into a RAD-managed project may also set up a project and shared services first; that cost is shown before you deploy.
 - **Get help on a module:** Click **Help** on a card to open the Get Support dialog. It has three tabs: **End User Support** raises a support ticket about the module, **End User Training** requests paid help setting it up (RAD gets in touch within one business day), and **Contact Publisher** emails the module's publisher with a question.
 
 A stats strip at the top shows total deployments, your current credit balance (when credits are enabled), and how long deployment history is retained.
 
 ## Deploying a module
 
-1. **Choose how to configure it.** Click a module card and pick **Configuration Form** (the default) or **Conversational Assistant**. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch between the two at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
+1. **Choose how to configure it.** Click a module card and pick **Conversational Assistant** or **Configuration Form**. The assistant is the default if you have purchased credits (partners always do); without them you get the form, and the assistant is shown but locked until you buy credits. Arriving from **Build Solution**, a solution opens on the form, since the interview has just asked its questions. The assistant describes every setting in one go, then applies only the changes you accept — each proposed change is shown for you to apply individually, so nothing is set without your say-so. You can switch between the two at any time. Two things the assistant will not do: it never sees or sets a **secret** (an API key or password) — it tells you the field exists and you type the value into the highlighted box on the page, never into the chat — and it will not accept a value that breaks a field's own rule, telling you what the rule is and asking for a corrected one rather than quietly changing what you typed.
 2. **Open the form.** The guided configuration form. The first time you deploy a module, the form shows only the essential (mandatory) fields — administrative and internal fields are hidden from you, and optional advanced configuration is deferred. You can unlock the full set of configuration steps later, from the deployment's **Update** action: tick **Enable advanced mode**, which is available once your credit balance covers the estimated cost of the update. Advanced mode carries no module fee — updates never do — and is not available on a lab environment.
 3. **Fill in the configuration.** Complete the required fields on each step (for example, project and region). Move forward when each step is valid. The form is generated from the module itself, so where the module declares a rule for a field — a naming pattern, a length limit — you see that module's own error as you type rather than several minutes into a failed build. Fields holding a secret (an API token, a password) are masked and stored in Google Secret Manager rather than saved with the rest of your configuration; because the value never comes back to the browser, such a field shows **Configured** or **Not configured** instead, and leaving a configured one blank keeps it rather than clearing it.
 4. **Confirm.** The **What will be deployed** panel at the top of the form lists everything this deployment builds — in a RAD-managed project that includes the Google Cloud project and shared services — and marks each one **Will be created**, **Will be updated first**, **Already exists, reused** (free) or **Needs attention first**; you cannot deploy while anything needs attention. Before launching, a confirmation dialog may appear — for example when the module costs credits, has dependencies, or needs special permissions. Review the details, including how many credits the deployment will cost.
@@ -78,15 +82,16 @@ A stats strip at the top shows total deployments, your current credit balance (w
 
 ## Deploying a solution
 
-A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. Ready-to-deploy bundles live on **Platform Solutions** and on **Custom Solutions → Solution Catalog**; **Build Solution** and **Solution Modules** are described above.
+A **solution** deploys several modules together as one unit, in the right order, into a single tenant. Click **Solutions** in the top navigation. Ready-to-deploy bundles live on **Solution Catalog → RAD solutions** and **Solution Catalog → My solutions**; **Build Solution** and **Solution Catalog → RAD modules** are described above.
 
-**Platform Solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
+**RAD solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
 
 A solution with three or more members costs less than deploying the same modules one by one: its **module fees** are discounted by 15% for three or four members, 20% for five or six, and 25% for seven or more. The discount covers module fees only — build time, and a RAD-managed project's own costs, are charged as normal. The confirmation dialog shows the discount it applied.
 
-**Custom Solutions** are your own, composed in conversation. Describe what you want to build — "I need a marketing site with a blog and email campaigns" — and RAD suggests modules from the catalog with a short reason for each. Add the ones you want (up to 12), give it a name, and save it. Your custom solutions are private to you.
+Your own solutions (**Solution Catalog → My solutions**) are composed in conversation. Describe what you want to build — "I need a marketing site with a blog and email campaigns" — and RAD suggests modules from the catalog with a short reason for each. Add the ones you want (up to 12), give it a name, and save it. Your custom solutions are private to you.
 
 - A saved solution shows **Draft** until you deploy it, then **Deployed**. A draft can be edited in place; once it has deployed, editing offers to copy it into a new draft instead, so the record of what you actually built stays accurate.
+- **Pin** a solution you use often to keep it at the top of **My solutions**, just as you can pin a RAD solution or a module.
 - **Delete** removes the saved solution only. It never touches infrastructure you have already deployed — tear that down from the **Deployments** page.
 - RAD connects members to each other only where a known connection exists between those two applications. Where two members have no such connection, it says so on the card rather than guessing — they still deploy, you just wire them up yourself if they need to talk.
 
@@ -151,7 +156,7 @@ Whether credits can be bought at all is a single platform switch. While it is of
 
 Some deployments require *purchased* credits (subscription or top-up, not awards or event credits) before you can start them — in that case, buy credits first even if you have a free balance.
 
-**Event codes.** A RAD partner event may give you a code for free credits. Enter it under **Have an event code?** on the **Credits** page, or open the link the event gave you, which fills the code in for you. Each code can be claimed once per account and needs a verified email address; some codes are limited to particular attendees or email domains, and every code has a closing date. Event credits pay for module fees and build time, but not for Google Cloud usage in a RAD-managed project, and they do not count toward the purchased-credit minimum a RAD-managed project asks for.
+**Event codes.** A RAD partner event may give you a code for free credits. Type it into the event-code box at the top of the **Credit Transactions** tab on **Credits** and choose **Claim credits**, or open the link the event gave you, which fills the code in for you (you still choose **Claim credits**). Each code can be claimed once per account and needs a verified email address; some codes are limited to particular attendees or email domains, and every code has a closing date. Event credits pay for module fees and build time, but not for Google Cloud usage in a RAD-managed project, and they do not count toward the purchased-credit minimum a RAD-managed project asks for.
 
 ## Subscriptions
 
@@ -181,9 +186,11 @@ Turning **Deployments** off stops all of those emails, including the warnings. B
 
 ## Client projects
 
-When the platform offers it, **Client Projects** is a tab on **Solutions**, after **Solution Modules**. It works from both sides.
+When the platform offers it, client projects live on **Solutions → Managed Environments**, after the catalogues. It works from both sides.
 
-**If someone runs a project for you.** A subscriber may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Solutions → Client Projects** and choose **Accept** under **Invitations for you**.
+**Run for you.** Everything someone else has set up for you — a place in a trainer's lab session, or a client project a partner runs for you — is listed together under **Solutions → Managed Environments → Run for you**, whichever kind it is. The **Run for you** view appears only while something is being run for you, including an invitation you haven't accepted yet. While you have that view open, the lab banner at the top of the page steps aside, since the same details are shown there.
+
+**If someone runs a project for you.** A partner or another RAD user may invite you to a client project they run for you as a managed service. You'll get an email. Sign in with the **exact address it was sent to**, creating an account if you don't have one, and confirm your email address if RAD asks. Then open **Solutions → Managed Environments → Run for you** and choose **Accept** under **Invitations for you**.
 
 - The project then shows under **Projects run for you**, and what they deploy for you appears in your **Deployments**. It's yours: they build and run it.
 - You don't pay RAD for it. Its costs come from a balance the subscriber funds; anything between the two of you is agreed outside RAD.
@@ -191,14 +198,16 @@ When the platform offers it, **Client Projects** is a tab on **Solutions**, afte
 - If their balance runs low, the project may be paused (nothing is deleted) and you're emailed. If it isn't topped up in time it's deleted, and you're told.
 - At the end, they can **hand it over** to you. It then runs on your own credits, like anything you deploy yourself, and they no longer have access. You'll need enough purchased credits to keep a production project running.
 
-**If you run projects for your clients**, subscribe, then see the [Client Projects Guide](client-projects-guide.md).
+**If you run projects for your clients**, see the [Client Projects Guide](client-projects-guide.md). Starting one needs purchased credits; managing one you already run does not.
 
 ## Getting help
 
-Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact us** link in the footer also takes you to the Help page.
+Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact Us** link in the footer also takes you to the Help page.
 
 Your tickets are on the **My Tickets** tab, next to **Send Message**, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
 
+If you no longer need help with a ticket that isn't closed, expand it and choose **Withdraw ticket**, then confirm. The ticket is closed and shows as **Withdrawn**, and Support sees that you withdrew it, so nobody keeps working on it. It isn't deleted: it stays in your list. You can raise a new ticket at any time.
+
 ## Inviting others
 
-Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Get your referral link** shortcut). People who sign up through it are linked to your account, and you earn referral credits for them, subject to any monthly limit the platform sets. The section is hidden only when the platform has turned referral rewards off.
+Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Referral link** button that takes you there). People who sign up through it are linked to your account, and you earn referral credits for them, subject to any monthly limit the platform sets. The section is hidden only when the platform has turned referral rewards off.
