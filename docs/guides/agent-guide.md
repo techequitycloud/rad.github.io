@@ -24,7 +24,7 @@ An agent's account usually also holds the **User** role, the one every signup st
 
 An administrator grants the role on the **Users** page. It can be granted only while people can pay on the platform, meaning the credit system is on and at least one payment provider (Stripe or Flutterwave) is switched on. With payments off there is nothing for an agent to earn from, so the checkbox stays locked. An existing agent keeps the role if payments are later switched off.
 
-After you sign in you land on **Credits**, on the **My Commission** tab. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold. (**Credits** is hidden while the platform's credit system is switched off.)
+If Agent is your only role, you land on **Credits**, on the **My Commission** tab, when you sign in. If your account also holds the User or Trainer role, you land on **Solutions** like any user, and your commission is one click away on **Credits → My Commission**. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold. (**Credits** is hidden while the platform's credit system is switched off.)
 
 ## Your referral link
 

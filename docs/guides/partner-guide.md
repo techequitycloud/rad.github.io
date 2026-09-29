@@ -20,7 +20,7 @@ A Partner is always also a User, so everything in [Using RAD](using-rad.md) — 
 - Deploy your own modules for free, alongside platform modules and other partners' public modules.
 - Earn a partner revenue share when others deploy your modules, and see each payout Finance records for you.
 
-After you sign in you land on **Solutions**, on **Build Solution**, whatever your balance. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Catalog → RAD modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
+After you sign in you land on **Solutions**, on **Build Solution with AI**, whatever your balance. Your top navigation shows: **Credits**, **Sync**, **Deployments**, **Solutions**, **Help**. The module catalog lives on **Solutions → Solution Catalog → RAD modules**; it no longer has its own menu entry. **Sync** appears only once you have selected a module repository in your profile — until then it is hidden from the menu.
 
 ## Connecting your GitHub repository
 

@@ -23,7 +23,7 @@ You don't need a separate roster or a special deploy form. Everything happens on
 
 Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Managed Environments** tab appears on **Solutions**, as its last tab. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
 
-A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Build Solution** if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Solution Catalog** (its **All** view) if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
 
 Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
@@ -84,7 +84,7 @@ The session's **Settlement** panel shows what was committed, consumed and refund
 
 **Each participant needs their own RAD account**, under the exact email address you enrolled.
 
-- **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, but not more often than every 10 minutes.
+- **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, and **Resend to all not yet signed up** above the list does the same for everyone still waiting; neither sends to the same person more often than every 10 minutes. Until they sign up, **Provision** leaves them out.
 - **Participants who already have an account** are emailed to say they have been added.
 - **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page, or choose **Decline** there if they don't want the place. A declined place ends and comes off your roster; only you can offer it again. If you pay for someone's place yourself, they get a separate email saying it is paid for.
 
@@ -97,11 +97,11 @@ If you remove someone before their environment was built, their banner tells the
 ## Building and running environments
 
 1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Solution Catalog → My solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
-2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish.
+2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish. Participants who haven't signed up for RAD yet are left out and counted beneath the button ("N waiting to sign up"); provision again once they have.
 3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
 
-An environment that is built but never started can't wait for ever: by default, after a week unstarted it is torn down, not started.
+An environment that is built but never started can't wait for ever: by default, after a week unstarted it is torn down, not started. While any are waiting, **Keep waiting longer** gives them more time, up to the longest wait the platform allows.
 
 ### When time runs out
 
@@ -112,6 +112,13 @@ At the end, the environment's billing is switched off, any build still running f
 Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 
 Use **End now** to end the whole session at any time. A session nobody provisions is ended automatically after 14 days.
+
+### Exporting and reusing a session
+
+Above a session's **Participants** list:
+
+- **Export CSV** downloads the participants table: each participant's status, start and end times, modules and deployment IDs, and credits allocated, consumed and remaining.
+- **Duplicate session** opens **New lab session** filled in from this one: its settings, who pays, its participants (except those you removed) and the module or solution you chose, with its settings. Secret values are not copied, so enter them again. Creating it is an ordinary new session, paid for as usual.
 
 ## What your participants see
 

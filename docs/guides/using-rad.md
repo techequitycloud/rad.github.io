@@ -26,7 +26,7 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 
 The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Admins open on **Users**, Finance on **Billing**, agents on **Credits → My Commission** and Support on **Help**, because each signs in to do a particular job. Users, partners and trainers open on **Solutions**: on the **Build Solution** tab if you have purchased credits (partners always), otherwise on **Solution Catalog → RAD modules**. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Admins open on **Users**, Finance on **Billing** and Support on **Help**, because each signs in to do a particular job; so does an agent who holds no other role, on **Credits → My Commission**. Users and trainers open on **Solutions**: on **Solution Catalog** (its **All** view) if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. An agent who is also a user or trainer lands the same way. Partners open on **Build Solution with AI**. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign Out**.
 
@@ -43,10 +43,11 @@ There is no separate combined dashboard — each item in the top nav is its own 
 
 After you sign in, RAD takes you to the page that fits your role:
 
-- **User**, **Partner**, **Trainer** → **Solutions**, on **Build Solution** with purchased credits (partners always), otherwise on **Solution Catalog → RAD modules**
+- **User**, **Trainer** → **Solutions**, on **Solution Catalog → All** with purchased credits, otherwise on **Solution Catalog → RAD modules**
+- **Partner** → **Solutions**, on **Build Solution with AI**
 - **Admin** → **Users**
 - **Finance** → **Billing**
-- **Agent** → **Credits**, on the **My Commission** tab
+- **Agent** → **Credits**, on the **My Commission** tab — unless you are also a user or trainer, in which case you land as they do
 - **Support** → **Help**
 - No role assigned yet → **Help**
 
@@ -61,7 +62,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Solutions |
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Users |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
-| **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission |
+| **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission (Solutions if also a User or Trainer) |
 | **Finance** | Financial reporting and payouts: subscription tiers, credit settings and grants, event codes, revenue, invoices; read-only lab oversight | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Help |
 | **Trainer** | Runs lab sessions from **Solutions → Managed Environments** — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
@@ -89,7 +90,7 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 
 1. Click a module card, then choose how to configure it. The **Conversational Assistant** is the default for anyone with purchased credits (partners always); without them the **Configuration Form** is the default and the assistant is shown but locked until you buy credits. The **Configuration Form** is the guided, multi-step form — fill in the fields, using **Next** to move through the steps. The **Conversational Assistant** describes every setting in one message and proposes changes as you describe what you want; you apply each proposed change yourself, so nothing is set without your say-so. You can switch between the two at any point, and both write the same configuration.
 
-   Two things the assistant deliberately will not do. It never sees or sets a **secret** (an API key, token or password): it tells you the field exists and you type the value into the highlighted box on the page — never into the chat, where it would be sent to the model and kept in the conversation. And it will not accept a value that breaks a field's own rule; it tells you what the rule is and asks for a corrected one rather than quietly changing what you typed.
+   Two things the assistant deliberately will not do. It never sees or sets a **secret** (an API key, token or password): it tells you the field exists and you type the value into the highlighted box on the page — never into the chat, where it would be sent to the model and kept in the conversation. And it will not accept a value that breaks a field's own rule; it tells you what the rule is and asks for a corrected one rather than quietly changing what you typed. The same goes for a region a RAD-managed project cannot use: it says so and lists the regions that are allowed.
 2. The form opens with a **What will be deployed** panel listing everything the deployment builds — in a RAD-managed project, the Google Cloud project and shared services as well as the app — and whether each is created, updated first, or already exists and is reused for free. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
 3. Click **Deploy Module**. The deployment is queued and provisioned, and RAD opens the new deployment's own page on its **Build Status** tab so you can watch it run. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
@@ -98,7 +99,7 @@ On the **Deployments** page each row shows the module, the deployment ID, an edi
 Click a deployment to open its details, which has three tabs:
 
 - **Outputs** — the non-sensitive results (such as URLs and endpoints), shown once the deployment succeeds and has outputs to show.
-- **Build Status** — live logs as the deployment runs. Once it succeeds, **Explain this** opens a plain-English summary of what was created in your Google Cloud project; on a step that failed, **Search for a fix** and **Ask for help** both work from the error that step printed.
+- **Build Status** — live logs as the deployment runs. Once it succeeds, **Explain this** opens a plain-English summary of what was created in your Google Cloud project; on a step that failed, **Search for a fix** and **Ask for help** both work from the error that step printed. **Download** saves the whole log as a text file, with secrets masked.
 - **Builds** — the build history for that deployment.
 
 From the details view you can:
@@ -111,10 +112,10 @@ Deployment statuses you may see include Queued, Pending, Working, Waiting (on a 
 
 ### Solutions
 
-**Solutions** holds everything you can deploy, on two tabs — and it is where users, partners and trainers land after signing in: on **Build Solution** with purchased credits (partners always), otherwise on **Solution Catalog → RAD modules**. After those two tabs comes **Managed Environments**: client projects while the platform offers them (see the [Client Projects Guide](client-projects-guide.md)) and, for trainers, finance and admins, lab sessions while they are enabled. Its **All** view lists both; the **Lab sessions** and **Client projects** views each have their own create button (**New lab session**, **New client project**) for those allowed to create one.
+**Solutions** holds everything you can deploy, on two tabs — and it is where users, partners and trainers land after signing in (see [Signing in](#signing-in)). After those two tabs comes **Managed Environments**: client projects while the platform offers them (see the [Client Projects Guide](client-projects-guide.md)) and, for trainers, finance and admins, lab sessions while they are enabled. Its **All** view lists both; the **Lab sessions** and **Client projects** views each have their own create button (**New lab session**, **New client project**) for those allowed to create one.
 
-- **Build Solution** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing and estimates how long it takes. **Build this** saves it as one of your solutions and opens it ready to deploy. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**.
-- **Solution Catalog** — everything ready to deploy, with a type filter across the top (**All** · **My solutions** · **RAD solutions** · **RAD modules**) and a **New solution** button beside it that opens **Build Solution**. **All** shows every kind on one page, each under its own heading, leaving out any kind with nothing to show; the category list beside the grid appears only when a single type (**RAD solutions** or **RAD modules**) is selected, because solutions and modules use different categories. The search box above the tabs searches the whole Solution Catalog, and your query stays in place as you switch types.
+- **Build Solution with AI** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing and estimates how long it takes. **Build this** saves it as one of your solutions and opens it ready to deploy. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**. It needs purchased credits (partners always have access); without them the tab shows what it does, locked, with a **Buy credits** button while the platform is selling credits.
+- **Solution Catalog** — everything ready to deploy, with a type filter across the top (**All** · **My solutions** · **RAD solutions** · **RAD modules**) and a **New solution** button beside it that opens **Build Solution with AI**. **All** shows every kind on one page, each under its own heading, leaving out any kind with nothing to show; the category list beside the grid appears only when a single type (**RAD solutions** or **RAD modules**) is selected, because solutions and modules use different categories. The search box above the tabs searches the whole Solution Catalog, and your query stays in place as you switch types.
   - **My solutions** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a RAD solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
   - **RAD solutions** — ready-made bundles of modules curated by RAD, grouped into categories. Each card shows a combined credit cost and an average rating derived from the modules it contains.
   - **RAD modules** — the module catalog described above.

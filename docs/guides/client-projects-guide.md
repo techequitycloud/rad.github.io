@@ -34,7 +34,7 @@ RAD emails your client an invitation. If it couldn't be sent, **Resend invitatio
 
 ## Your client accepts
 
-Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Solutions → Managed Environments** they see your invitation under **Invitations for you** and choose **Accept**.
+Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Solutions → Managed Environments**, in the **Run for you** view, they see your invitation under **Invitations for you** and choose **Accept**.
 
 Nothing can be deployed until they accept.
 
