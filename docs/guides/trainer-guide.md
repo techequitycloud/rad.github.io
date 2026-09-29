@@ -11,25 +11,25 @@ For trainers who run a course on RAD and give each participant their own lab env
 
 ## What you can do
 
-- Run **lab sessions** from the **Lab Sessions** tab on the **Solutions** page. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
+- Run **lab sessions** from **Solutions → Managed Environments**, under **Lab sessions**. A session is a named cohort of participants that shares a time window, a per-participant credit allowance and a region.
 - Choose, per session, **who pays** for a participant's place: you, or each participant.
 - Pay for one participant's place yourself when they can't pay on RAD — for example, they paid you in cash, or their bank won't work with the payment provider.
 - Build the same module or solution into every participant's environment in one action, start their clocks, add time or credits, and end environments early.
 - Get back every credit your participants did not use once the session settles. Those credits are yours to keep.
 
-You don't need a separate roster or a special deploy form. Everything happens on the **Lab Sessions** tab. If you open an ordinary deploy form, it points you back there with **Open lab sessions**.
+You don't need a separate roster or a special deploy form. Everything happens on **Solutions → Managed Environments**. If you open an ordinary deploy form, it points you back there with **Open lab sessions**.
 
 ## Getting access
 
-Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Lab Sessions** tab appears on **Solutions**, as its last tab. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
+Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Managed Environments** tab appears on **Solutions**, as its last tab. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
 
-A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Custom Solutions → Build Solution** once you have bought credits, otherwise on **Solution Modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Build Solution** if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
 
 Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
 ## Creating a session
 
-On the **Lab Sessions** tab, choose **New session**. The dialog asks for:
+On **Solutions → Managed Environments**, filter to **Lab sessions** and choose **New lab session**. The dialog asks for:
 
 - **Session name** — up to 100 characters.
 - **Participant emails** — paste a list. The dialog confirms how many addresses it recognised. An address it can't read stops the whole session from being created, so nothing is charged for a list that was only partly understood. How many participants a session may hold is set by your administrator.
@@ -59,7 +59,7 @@ Some participants can't pay on RAD: their bank won't work with the payment provi
 1. Open the session and find the participant on the **Participants** list. A place that hasn't been paid for shows **Pay for place** next to **Remove**.
 2. Choose **Pay for place**. The dialog shows the price — the session's credits per participant — and says it comes from your credits.
 3. Optionally add a note about the payment, such as "Cash, receipt 0412" (up to 120 characters). It is kept with the place and shown when you hover over its badge.
-4. Choose **Pay** to confirm.
+4. Choose **Pay N credits** (the price) to confirm.
 
 The price is taken from your **purchased** credits (free credits can't be used) and paid into the session exactly as if the participant had bought the place. From then on the place works like any other: their environment is built, their allowance is spent, and what they don't use comes back to you at settlement. The row shows **Paid by trainer**, and the participant is emailed that their place is paid for, so they don't try to pay again.
 
@@ -78,7 +78,7 @@ If environments run beyond their allowance, the overrun is charged to your purch
 
 Settlement waits until Google has reported the session's cloud costs. That usually takes up to a day after the last environment was switched off, because Google's billing data arrives late. Settling any earlier would pay you back credits the environments had in fact already used.
 
-The session's **Settlement** panel shows what was committed, consumed and refunded, plus any overrun charged to you. You also get an email, **"Lab session settled"**, unless you turned it off in your notification preferences. Every movement appears in your credit history as **Lab session escrow** and **Lab refund** entries.
+The session's **Settlement** panel shows what was committed, consumed and refunded, plus any overrun charged to you. You also get an email, **"Lab session settled"**, unless you turned it off in your notification preferences. Every movement appears in your credit history as **Lab escrow** and **Lab refund** entries.
 
 ## Participants
 
@@ -86,7 +86,7 @@ The session's **Settlement** panel shows what was committed, consumed and refund
 
 - **Participants without an account** are emailed an invitation to sign up. A **Resend** button on their row sends it again, but not more often than every 10 minutes.
 - **Participants who already have an account** are emailed to say they have been added.
-- **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page. If you pay for someone's place yourself, they get a separate email saying it is paid for.
+- **In a session where participants pay,** both emails state the price of a place and tell them they must buy it before anything is built, and how to do it. They pay from the lab banner at the top of every RAD page, or choose **Decline** there if they don't want the place. A declined place ends and comes off your roster; only you can offer it again. If you pay for someone's place yourself, they get a separate email saying it is paid for.
 
 To add people to a running session, use **Add participants**. In a session you fund, the dialog shows what it will take from your credits before you confirm. An address already in the session — even one you removed earlier — can't be added again.
 
@@ -96,7 +96,7 @@ If you remove someone before their environment was built, their banner tells the
 
 ## Building and running environments
 
-1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Custom Solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
+1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Solution Catalog → My solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
 2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish.
 3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.

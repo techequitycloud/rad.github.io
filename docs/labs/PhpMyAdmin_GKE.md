@@ -71,15 +71,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **PhpMyAdmin (GKE)** from
-   the **Platform Modules** list to start configuration, set `project_id`, and review
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **PhpMyAdmin (GKE)** from
+   the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PhpMyAdmin_GKE)
    documents every input by group, with defaults. Decide up front whether you want
    `pma_arbitrary = "1"` (default — users type any MySQL host at login) or a fixed
    `pma_host` with `pma_arbitrary = "0"` (single pinned server, e.g. the platform's
-   Cloud SQL private IP). Click **Deploy Module**, review the estimated cost in the confirmation
-   dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   Cloud SQL private IP). Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform builds the thin custom container image (`FROM phpmyadmin/phpmyadmin`),
    mirrors it into Artifact Registry, and deploys the workload into the GKE Autopilot

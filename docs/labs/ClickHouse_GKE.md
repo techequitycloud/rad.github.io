@@ -62,8 +62,8 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **ClickHouse (GKE)** from
-   the **Platform Modules** list to start configuration, set `project_id`, and review
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **ClickHouse (GKE)** from
+   the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review
    the inputs. The defaults are production-sensible: a StatefulSet with a 30 GiB PVC at
    `/var/lib/clickhouse` (`stateful_pvc_enabled = true` by default — no need to set it),
    a pinned `24.12-alpine` image (`"latest"` is rejected at plan time), a bootstrapped
@@ -72,7 +72,7 @@ export REGION="us-central1"           # the region you deploy into
    global static IP quota, when the only consumer is in-cluster (Plausible in the same
    cluster), set `service_type = "ClusterIP"`, `reserve_static_ip = false`, and
    `enable_custom_domain = false` so the database consumes no global static external IP.
-   Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens
+   Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens
    the deployment status page with real-time logs.
 
 2. The platform mirrors the `clickhouse/clickhouse-server` image into Artifact

@@ -165,7 +165,7 @@ budget_alert_emails             = ["you@example.com"]
 
 ### Step 1.2 — Initiate Deployment
 
-Deployment is initiated from the RAD platform: open **Solutions → Solution Modules** in the top navigation, open **Services GCP** from the **Platform Modules** list, fill in the configuration form, click **Deploy Module**, and confirm in the dialog that follows. (When you deploy an application into a project that has no `Services GCP` yet, the platform chains this module in front of it automatically.)
+Deployment is initiated from the RAD platform: open **Solutions → Solution Catalog → RAD modules** in the top navigation, open **Services GCP** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), fill in the configuration form, click **Deploy Module**, and confirm in the dialog that follows. (When you deploy an application into a project that has no `Services GCP` yet, the platform chains this module in front of it automatically.)
 
 **Expected resource provisioning times:**
 

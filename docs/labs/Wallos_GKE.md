@@ -67,15 +67,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Wallos (GKE)**
-   from the **Platform Modules** list to start configuration, set `project_id`,
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **Wallos (GKE)**
+   from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`,
    and review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Wallos_GKE)
    documents every input by group, with defaults. Note that `min_instance_count`,
    `max_instance_count`, and `stateful_pvc_enabled` are all fixed at their
    sensible defaults (`1`, `1`, `true`) for a real reason — see Task 3 before
-   changing them. Click **Deploy Module**, review the estimated cost in the confirmation
-   dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   changing them. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster as a
    StatefulSet with an HDD block PVC (default) mounted at `/var/www/html/db` for

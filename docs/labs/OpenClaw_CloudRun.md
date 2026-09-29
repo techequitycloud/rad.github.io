@@ -59,11 +59,11 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **OpenClaw (Cloud Run)** from the **Platform Modules** list to start configuration, set `project_id`, and review the
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **OpenClaw (Cloud Run)** from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review the
    inputs. An Anthropic API key is required on the first deploy — set it in the
    corresponding input field. Configure only what else you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun)
-   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform builds a custom container image (layering `entrypoint.sh` onto the
    upstream OpenClaw image), creates a GCS workspace bucket mounted at `/data` via

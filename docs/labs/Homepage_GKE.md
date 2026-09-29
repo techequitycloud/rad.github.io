@@ -70,13 +70,13 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Modules**, then open **Homepage (GKE)** from the **Platform Modules** list, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Homepage (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and
    review the inputs. Most deployments need no changes to the defaults — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Homepage_GKE)
    documents every input by group. If your project's external-IP quota is
    constrained, set `service_type = "ClusterIP"` and `reserve_static_ip =
    false` (this is what this module's own live verification used). Click
-   **Deploy Module**, review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which
+   **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which
    opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster and

@@ -5,7 +5,7 @@ description: "RAD Platform client projects guide — running applications for yo
 
 # Client Projects Guide
 
-For subscribers who run applications on RAD **for their own clients**, as a managed service. New to RAD? Start with [Using RAD](using-rad.md).
+For partners and users with purchased credits who run applications on RAD **for their own clients**, as a managed service. New to RAD? Start with [Using RAD](using-rad.md).
 
 ## What you can do
 
@@ -19,11 +19,11 @@ Your client never pays RAD for a client project. How your client pays you is agr
 
 ## Getting access
 
-Client Projects is for subscribers. Subscribe from **Credits → Subscriptions**. **Client Projects** is a tab on **Solutions**, after **Solution Modules** (while the feature is switched on for the platform), and anyone can open it. Your clients use it to accept your invitation and to see the projects you run for them.
+Starting a client project needs **purchased credits** (a top-up or a subscription; free signup, monthly and referral credits do not count) — partners always have access. Buy credits from **Credits → Buy Credits**. Once a project exists you can go on managing it whatever your balance: deploying, topping up, withdrawing, handing over and ending all stay open to you. Client projects live on **Solutions → Managed Environments**, after **Solution Catalog** (while the feature is switched on for the platform), next to lab sessions, and anyone can open it. Your clients use it to accept your invitation and to see the projects you run for them.
 
 ## Creating a client project
 
-On **Solutions → Client Projects**, choose **New client project**:
+On **Solutions → Managed Environments**, filter to **Client projects** and choose **New client project**:
 
 - **Project name**: up to 100 characters.
 - **Your client's email**: the address your client uses, or will use, for RAD. It can't be your own.
@@ -34,20 +34,27 @@ RAD emails your client an invitation. If it couldn't be sent, **Resend invitatio
 
 ## Your client accepts
 
-Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Solutions → Client Projects** they see your invitation under **Invitations for you** and choose **Accept**.
+Your client signs in with the **exact address you invited**, creating an account if they don't have one, and confirms their email address if RAD asks. On **Solutions → Managed Environments** they see your invitation under **Invitations for you** and choose **Accept**.
 
 Nothing can be deployed until they accept.
 
+If they don't want it, they choose **Decline** instead. The project is closed, the whole wallet comes back to your top-up credits, and RAD emails you. You can invite them again with a new project.
+
 ## Deploying for your client
 
-On a running project, choose **Deploy**. RAD switches to the **Solution Modules** tab (or pick a solution from **Platform Solutions** or **Custom Solutions**). Pick a module or solution and deploy it as usual. For that deployment:
+Choose **Open / Deploy** on a running project. Its own page shows the wallet, what has been spent, roughly how many days the wallet covers at the current rate, and everything deployed for the client. Deploy from the **Deploy for** panel on the same page:
+
+- **Module**, **Platform solution** or **Custom solution**: pick one and choose **Configure**. The usual deploy form opens.
+- **Describe what they need instead (Build Solution)**: answer the questions in plain language. You aren't asked where it runs or where it lives, because a client project already decides both.
+
+That one deployment is for your client:
 
 - the deployment **belongs to your client**, and you manage it;
 - it goes into the project's own RAD-managed Google Cloud project, in the **production** environment, created the first time you deploy;
 - it runs in the project's region;
 - the cost estimate and every balance check use the **wallet**, not your own credits.
 
-Choosing **Deploy** on a project covers **one** deployment: once it has been submitted successfully, RAD goes back to deploying for you, and opening **Client Projects** again also clears it. To deploy something else for the same client, choose **Deploy** on their project again.
+The confirmation dialog names the client wallet that pays, so check it before you confirm. **Deploy** covers one deployment: once it is submitted, your next deploy is your own again. To deploy something else for the client, deploy from their project's page again. Coming back to **Managed Environments** without deploying also cancels it.
 
 Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, but you can't read the secret values in them, such as passwords and API keys. Those are your client's.
 
@@ -63,7 +70,7 @@ Everything the project costs is taken from its wallet:
 
 A first build that fails is not charged. Google reports running costs a little late, so the wallet can go **below zero**; your next top-up covers that first.
 
-The wallet balance is shown on **Client Projects**. In your credit history, charges paid from a wallet are labelled **Client wallet**, with no balance of your own beside them. Money you put into, or take out of, a wallet shows as **To / From client wallet**.
+The wallet balance is shown in the **Client projects** view and on the project's own page. In your credit history, everything to do with a wallet is labelled **Client wallet**: charges paid from it (with no balance of your own beside them), and the credits you put in or take out, where the sign shows the direction.
 
 ### Topping up and withdrawing
 
@@ -100,10 +107,24 @@ When the handover completes:
 
 Your client needs enough **purchased** credits to keep a production project running. If they don't have them, the handover is refused and RAD tells you how many they need, so ask them to buy credits first.
 
-## If your subscription ends
+## Ending a project
 
-Your client projects keep running on their wallets until the wallets run out, and then they pause and are deleted as above. While you have no active subscription you can't deploy, withdraw or hand over, but you **can** top up to keep a project running. Subscribe again and you manage them as before.
+To stop running a project without giving it to your client, choose **End project** on a project that is invited, running or paused, and confirm. It works like a lab's **End now**:
+
+1. The project becomes **Ending**. Nothing new can be deployed, and RAD starts removing its deployments: the apps first, then the shared services and the Google Cloud project itself. Nothing is kept.
+2. Choose **Finish ending** to move it along. Each time, RAD removes the next part or says what it is waiting for: a removal still running, or Google's final usage for the project, which usually arrives within a day. The removal builds are paid from the wallet, like any other build.
+3. When nothing is left and every cost is in, the project closes. Unused wallet credits go back to your top-up credits, and any shortfall is charged to your purchased credits.
+
+A project that was never deployed, such as one your client hasn't accepted yet, closes straight away. A pending handover must be cancelled before you can end the project.
+
+## If your balance runs out or your subscription ends
+
+Nothing changes for the projects you already run. Managing them does not depend on a subscription or on your own balance: each runs on its own wallet, and you can deploy, top up, withdraw, hand over and end it as before. You need purchased credits only to **start** a new client project.
+
+## Oversight
+
+Finance and administrators see every client project on the platform, read-only, under **All client projects** on the same tab: who runs it, for which client, its status and its wallet. They cannot change or end a project from there.
 
 ## Getting help
 
-Open **Help** in RAD and use the **Send Message** tab; your tickets are on **My Tickets**.
+Use **Help → Send Message** in RAD to raise a ticket, and follow it on the **My Tickets** tab beside it.

@@ -66,13 +66,13 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 2 — Deploy the module and wait for healthy [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **Immich (GKE)** from
-   the **Platform Modules** list, set `project_id`, and review the inputs — the
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **Immich (GKE)** from
+   the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review the inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Immich_GKE)
    documents every input by group. Note that `enable_nfs`, `enable_redis`, and
    `max_instance_count = 1` are enforced by plan-time validations — do not fight
    them. Click **Deploy Module**, review the estimated credit cost in the
-   confirmation dialog and click **Confirm**; the deployment status page streams
+   **Deployment Confirmation** dialog and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**); the deployment status page streams
    real-time logs.
 
 2. The platform builds the thin custom server image (over

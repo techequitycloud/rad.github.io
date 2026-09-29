@@ -65,15 +65,14 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. Open **Solutions → Solution Modules** in the RAD platform top navigation, open **PhotoPrism (GKE)** from
-   the **Platform Modules** list to start configuration, set `project_id`, and review
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **PhotoPrism (GKE)** from
+   the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review
    the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/PhotoPrism_GKE)
    documents every input by group, with defaults. Note that `stateful_pvc_storage_class`
    defaults to SSD-backed `standard-rwo`, which draws the tight `SSD_TOTAL_GB` quota —
    consider `standard` (HDD) if you are running this alongside other stateful modules
-   on a quota-constrained project. Click **Deploy Module**, review the estimated cost in
-   the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page with real-time logs.
+   on a quota-constrained project. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform deploys PhotoPrism into the GKE Autopilot cluster as a
    **StatefulSet** (pinned to exactly one replica, `min=1`, `max=1`) with a 20Gi block

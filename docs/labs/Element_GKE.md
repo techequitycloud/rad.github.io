@@ -65,12 +65,11 @@ export NAMESPACE="<namespace>"       # from the deployment Outputs
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Modules**, then open **Element (GKE)** from the **Platform Modules** list, set `project_id`, and set
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Element (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and set
    `homeserver_url` / `homeserver_name` to your Matrix homeserver (or leave them blank
    to use the public `matrix.org`). Review the remaining inputs — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Element_GKE)
-   documents every input by group, with defaults. Click **Deploy Module**, review the
-   estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the deployment status page
+   documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page
    with real-time logs.
 
 2. The platform builds the custom Element image (a thin layer over

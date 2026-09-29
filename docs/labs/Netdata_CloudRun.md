@@ -61,7 +61,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Modules**, then open **Netdata (Cloud Run)** from the **Platform Modules** list, set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Netdata (Cloud Run)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Netdata_CloudRun)
    documents every input by group, with defaults. **Pay close attention to
@@ -72,7 +72,7 @@ export REGION="us-central1"          # the region you deploy into
    dashboard has **no built-in login**, so out of the box the deployment is
    **publicly reachable and unauthenticated**. If this is not what you want,
    set `ingress_settings = "internal"` before deploying. Click **Deploy Module**,
-   review the estimated cost in the confirmation dialog (if credits are enabled) and click **Confirm**, which opens the
+   review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the
    deployment status page with real-time logs.
 
 2. The platform builds a thin custom image (`FROM netdata/netdata:<pinned
