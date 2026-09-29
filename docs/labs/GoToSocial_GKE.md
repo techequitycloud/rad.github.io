@@ -65,7 +65,7 @@ export REGION="us-central1"           # the region you deploy into
 ## Task 1 — Deploy the module [Automated]
 
 1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **GoToSocial
-   (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and set
+   (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and set
    **`host`** to your real domain if you have one (this value is baked into
    every ActivityPub URI at creation time and is **immutable** once real
    accounts/posts exist — the placeholder `gotosocial.local` is fine for this

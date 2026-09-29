@@ -51,7 +51,7 @@ On **Solutions → Solution Catalog → RAD modules** you see two sub-tabs:
 - **Partner modules** — the modules you've published from your own repository. This is your workspace for testing and iterating.
 - **Platform modules** — modules published by RAD, plus other partners' public modules.
 
-Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and its price: the module fee plus an estimate of the build, or **Free module** when there is no fee.
+Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and its price: the module fee (or **Free module** when there is none) plus an estimate of the build.
 
 Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. The build cost is still metered after the build and deducted from your balance exactly as it is for everyone else, so a self-deploy isn't entirely free.
 

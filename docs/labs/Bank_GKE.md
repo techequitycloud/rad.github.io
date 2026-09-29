@@ -45,7 +45,6 @@ By the end of this lab you will be able to:
 - **Project Owner** (or equivalent) IAM on the project.
 - **Your own project only.** This module hides the **GCP Project on RAD** option (`enable_rad_gcpproject = false`) because it enables APIs the RAD-managed tier policies deny, so it always deploys into a project you bring. Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role.
 - **Advanced mode for later changes.** The create form asks only for the first page of inputs. Every other input in the Configuration Guide — including the scaling and version inputs in the Day-2 tasks — is changed afterwards with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost (updates never carry a module fee). On a lab environment only an administrator can use Advanced mode.
-- **Bringing your own project?** Before the first deploy into it, the deployment confirmation dialog asks you to prove you control it (**Get verification code**, run the commands it shows as a project Owner, then **Verify**) and to give the RAD deployment service account the **Owner** role.
 - **RAD platform access** with permission to deploy modules into the project.
 
 Set these shell variables once; every task below reuses them:
@@ -62,7 +61,7 @@ export NS="bank-of-anthos"           # the application namespace
 ## Task 1 — Deploy the module [Automated]
 
 1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **Bank of Anthos (GKE)** from the
-   **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and review the inputs.
+   **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Bank_GKE) documents every
    input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.

@@ -61,7 +61,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Navidrome (Cloud Run)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Navidrome (Cloud Run)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and
    review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Navidrome_CloudRun)
    documents every input by group, with defaults. Note that the service defaults

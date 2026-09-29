@@ -63,7 +63,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Task 1 — Deploy the module [Automated]
 
-1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Meilisearch (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id`, and set
+1. In the RAD platform, open **Solutions → Solution Catalog → RAD modules**, then open **Meilisearch (GKE)** from the **Platform Modules** list, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`, and set
    `stateful_pvc_enabled = true` for production-grade Persistent Disk storage. **Also
    set `stateful_pvc_mount_path = "/meili_data"`** — the variable's own default
    (`/meilisearch/storage`) does **not** match the fixed `MEILI_DB_PATH`

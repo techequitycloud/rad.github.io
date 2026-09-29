@@ -88,7 +88,7 @@ Give the attendees of a partner event (a DevFest, a workshop) free credits they 
 
 Each account can claim a code once, and only with a verified email address. The credits land in the user's **Event credits** balance: they are free (never counted as purchased), are spent after the monthly awards, do not pay for Google Cloud usage in a RAD-managed project, and expire on their own date rather than with the monthly reset. Once a code exists its credits and validity are fixed; you can still **Disable** or **Enable** it, move its closing date, or change its cap. **Details** lists who claimed it, and **Export claims (CSV)** downloads that list.
 
-**You cannot claim event codes yourself.** Finance and admin accounts — the accounts that create codes — are refused, and nobody can claim a code they created, even after losing the role. This is the same rule that stops you adjusting your own balance. The event-code box on the Credits page (the **Claim credits** row) is not shown to you for that reason; you see a **Get your referral link** sentence there instead.
+**You cannot claim event codes yourself.** Finance and admin accounts — the accounts that create codes — are refused, and nobody can claim a code they created, even after losing the role. This is the same rule that stops you adjusting your own balance. The event-code box on the Credits page (the **Claim credits** row) is not shown to you for that reason; while the referral program is on, you see a **Get your referral link** link there instead.
 
 ### Module Revenue
 

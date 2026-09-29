@@ -22,7 +22,7 @@ As an admin you have superuser access. In addition to everything a standard user
 - See all revenue, costs, invoices, and payouts across the platform.
 - Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on the **Users** page. Your top navigation shows: Setup, Users, Audit Log, Sync, Deployments, Solutions, and Help, plus **Credits** if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is **RAD modules** on the Solutions **Solution Catalog** tab; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is **RAD modules** on the Solutions **Solution Catalog** tab; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 

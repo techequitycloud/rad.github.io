@@ -104,7 +104,7 @@ iap_support_email       = "<your-email>"
 
 ### Step 1.1 — Deploy
 
-1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **App (GKE)** from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits), set `project_id` and `tenant_id`, and review the inputs.
+1. Open **Solutions → Solution Catalog → RAD modules** in the RAD platform top navigation, open **App (GKE)** from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id` and `tenant_id`, and review the inputs.
    Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/App_GKE)
    documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
