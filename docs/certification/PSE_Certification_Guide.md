@@ -13,7 +13,7 @@ The PSE certification validates your ability to design and implement secure work
 
 - Deploy one of the profiles below from your deployment portal.
 - **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
-- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_vpc_sc`, `organization_id`, `enable_security_command_center` and `enable_scc_notifications`; deploy the profiles that set them into a Google Cloud project of your own.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means the VPC Service Controls settings (`enable_vpc_sc`, `vpc_sc_dry_run`, `vpc_cidr_ranges`, `organization_id`, and `Services_GCP`'s `admin_ip_ranges`), the Security Command Center pair (`enable_security_command_center`, `enable_scc_notifications`), Workload Identity Federation (`enable_workload_identity_federation` and the `wif_*` settings) and `configure_policy_controller`; deploy the profiles and labs that set them into a Google Cloud project of your own.
 - Work through the matching section guide (`PSE_Section_<N>_Exploration_Guide.md`) topic by topic.
 - Use the coverage legend to know which exam topics you must study outside the platform — the section guides give concrete study pointers for every 🟡 and 📘 topic.
 
@@ -29,7 +29,7 @@ The PSE certification validates your ability to design and implement secure work
 
 ### Profile: secure-platform
 *Purpose:* a hardened shared platform exercising CMEK, audit logging, SCC, vulnerability scanning, and Binary Authorization.
-*Modules:* `Services_GCP`.
+*Modules:* `Services_GCP`. The two SCC settings are offered only in a project you bring; in a RAD-managed project, deploy the rest of the profile without them.
 | Variable | Value |
 |---|---|
 | `create_postgres` | `true` (default) |
@@ -71,7 +71,7 @@ The PSE certification validates your ability to design and implement secure work
 *Estimated incremental cost:* high — the GKE Autopilot cluster is the dominant cost driver; the Gateway load balancer and Cloud Armor add a moderate increment.
 
 ### Profile: perimeter-lab
-*Purpose:* a VPC Service Controls perimeter in dry-run mode around the project's APIs. Requires a project in a GCP organization and org-level Access Context Manager permission.
+*Purpose:* a VPC Service Controls perimeter in dry-run mode around the project's APIs. Requires a project of your own (these settings are not offered in a RAD-managed project) in a GCP organization, and org-level Access Context Manager permission.
 *Modules:* any of `Services_GCP`, `App_CloudRun`, `App_GKE` (each can create its own perimeter).
 | Variable | Value |
 |---|---|
@@ -88,10 +88,10 @@ Identity and authorization is where the modules are strongest on the "workload i
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 1.1 Managing Cloud Identity | 📘 | identities consumed via `iap_authorized_users/groups`, `support_users` | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#11-managing-cloud-identity) |
-| 1.2 Managing service accounts | ✅ | purpose-built service accounts with Workload Identity; WIF via `enable_workload_identity_federation` + `wif_provider_type` | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#12-managing-service-accounts) |
+| 1.2 Managing service accounts | ✅ | purpose-built service accounts with Workload Identity; WIF via `enable_workload_identity_federation` + `wif_provider_type` (own project only) | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#12-managing-service-accounts) |
 | 1.3 Managing authentication | 🟡 | `enable_iap` on Cloud Run and GKE | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#13-managing-authentication) |
-| 1.4 Managing and implementing authorization controls | ✅ | the platform's resource-level IAM layer, per-secret/per-bucket IAM | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#14-managing-and-implementing-authorization-controls) |
-| 1.5 Defining the resource hierarchy | 📘 | org/folder/standalone detection in the VPC Service Controls layer is the nearest adjacency | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#15-defining-the-resource-hierarchy) |
+| 1.4 Managing and implementing authorization controls | ✅ | the platform's resource-level IAM layer, per-secret/per-bucket IAM; Access Context Manager access levels via `enable_vpc_sc` (own project only); IAM Conditions, deny policies, PAM and Policy Intelligence are 📘 | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#14-managing-and-implementing-authorization-controls) |
+| 1.5 Defining the resource hierarchy | 📘 | org/folder/standalone detection in the VPC Service Controls layer, and the folder policies a RAD-managed project inherits, are the nearest adjacencies | [Section 1 guide](PSE_Section_1_Exploration_Guide.md#15-defining-the-resource-hierarchy) |
 
 ## Section 2: Securing communications and establishing boundary protection (~22% of the exam)
 
@@ -99,19 +99,19 @@ The modules implement three distinct boundary layers you can deploy and break on
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 2.1 Designing and configuring perimeter security | ✅ | `enable_cloud_armor` on Cloud Run and GKE | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#21-designing-and-configuring-perimeter-security) |
-| 2.2 Configuring boundary segmentation | ✅ | `enable_vpc_sc`, `enable_network_segmentation` (Kubernetes NetworkPolicy), private-IP Cloud SQL | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#22-configuring-boundary-segmentation) |
-| 2.3 Establishing private connectivity | 🟡 | Direct VPC egress, Private Services Access, Cloud NAT | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#23-establishing-private-connectivity) |
+| 2.1 Designing and configuring perimeter security | ✅ | `enable_cloud_armor` on Cloud Run and GKE, IAP, the global HTTPS load balancer; Cloud NGFW policies / L7 inspection, Secure Web Proxy and Cloud DNS security are 📘 | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#21-designing-and-configuring-perimeter-security) |
+| 2.2 Configuring boundary segmentation | ✅ | `enable_vpc_sc` (own project only), `enable_network_segmentation` (Kubernetes NetworkPolicy), private-IP Cloud SQL | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#22-configuring-boundary-segmentation) |
+| 2.3 Establishing private connectivity | 🟡 | Direct VPC egress, Private Services Access, Private Google Access on the subnets, Cloud NAT; VPN / Interconnect / PSC are 📘 | [Section 2 guide](PSE_Section_2_Exploration_Guide.md#23-establishing-private-connectivity) |
 
 ## Section 3: Ensuring data protection (~23% of the exam)
 
-Secret Manager with automated dual-version rotation and CMEK with plan-time key recovery are the standout hands-on labs here. Sensitive Data Protection (DLP) and AI workload security are concept-only.
+Secret Manager with automated dual-version rotation and CMEK with plan-time key recovery are the standout hands-on labs here. Sensitive Data Protection and the AI-specific controls (Model Armor, Gemini Enterprise Agent Platform) are concept-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 3.1 Protecting sensitive data and preventing data loss | 🟡 | Secret Manager rotation pipeline, `enable_auto_password_rotation`; DLP is 📘 | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#31-protecting-sensitive-data-and-preventing-data-loss) |
-| 3.2 Managing encryption at rest, in transit, and in use | ✅ | `enable_cmek`, TLS at the LB; EKM/HSM/Confidential Computing are 📘 | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#32-managing-encryption-at-rest-in-transit-and-in-use) |
-| 3.3 Securing AI workloads | 📘 | not implemented by the foundation modules | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#33-securing-ai-workloads) |
+| 3.1 Protecting sensitive data and preventing data loss | 🟡 | Secret Manager rotation pipeline, `enable_auto_password_rotation`; OS Login + Shielded VM on the NFS server's instance template; Sensitive Data Protection is 📘 | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#31-protecting-sensitive-data-and-preventing-data-loss) |
+| 3.2 Managing encryption at rest, in transit, and in use | ✅ | `enable_cmek`, TLS at the LB, Cloud Storage lifecycle rules (`backup_retention_days`, `storage_buckets`); EKM/HSM/key import/Confidential Computing are 📘 | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#32-managing-encryption-at-rest-in-transit-and-in-use) |
+| 3.3 Securing AI workloads | 📘 | no AI-specific controls in the modules; self-hosted AI apps (e.g. `Ollama_GKE`, `LiteLLM_CloudRun`) inherit the generic controls | [Section 3 guide](PSE_Section_3_Exploration_Guide.md#33-securing-ai-workloads) |
 
 ## Section 4: Managing operations (~19% of the exam)
 
@@ -119,13 +119,13 @@ The supply-chain story is fully wired: Cloud Build → Artifact Registry scannin
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 4.1 Automating infrastructure and application security | ✅ | `enable_binary_authorization`, `enable_vulnerability_scanning`, CI/CD attestation | [Section 4 guide](PSE_Section_4_Exploration_Guide.md#41-automating-infrastructure-and-application-security) |
-| 4.2 Configuring logging, monitoring, and detection | 🟡 | `enable_audit_logging`, `enable_security_command_center` + `enable_scc_notifications`; flow logs / sinks / IDS are 📘 | [Section 4 guide](PSE_Section_4_Exploration_Guide.md#42-configuring-logging-monitoring-and-detection) |
+| 4.1 Automating infrastructure and application security | ✅ | `enable_binary_authorization`, `enable_vulnerability_scanning`, CI/CD attestation; security posture management and custom Security Health Analytics modules are 📘 | [Section 4 guide](PSE_Section_4_Exploration_Guide.md#41-automating-infrastructure-and-application-security) |
+| 4.2 Configuring logging, monitoring, and detection | 🟡 | `enable_audit_logging`, `enable_security_command_center` + `enable_scc_notifications` (own project only), load balancer request logs; flow logs / sinks / Cloud IDS / Packet Mirroring are 📘 | [Section 4 guide](PSE_Section_4_Exploration_Guide.md#42-configuring-logging-monitoring-and-detection) |
 
 ## Section 5: Supporting compliance requirements (~11% of the exam)
 
-The modules demonstrate the technical controls that compliance frameworks demand (CMEK, audit trails, least privilege, perimeters) and the shared-responsibility narrowing of GKE Autopilot — but framework mapping, Assured Workloads, and Access Transparency are study-only topics.
+The modules demonstrate the technical controls that compliance frameworks demand (CMEK, audit trails, least privilege, perimeters) and the shared-responsibility narrowing of GKE Autopilot — but framework mapping, Assured Workloads, Access Transparency and Access Approval are study-only topics.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 5.1 Adhering to regulatory and industry standards requirements for the cloud | 🟡 | composed controls across all four modules; Assured Workloads / Access Transparency are 📘 | [Section 5 guide](PSE_Section_5_Exploration_Guide.md#51-adhering-to-regulatory-and-industry-standards-requirements-for-the-cloud) |
+| 5.1 Adhering to regulatory and industry standards requirements for the cloud | 🟡 | composed controls across all four modules, regional placement; Assured Workloads / Access Transparency / Access Approval are 📘 | [Section 5 guide](PSE_Section_5_Exploration_Guide.md#51-adhering-to-regulatory-and-industry-standards-requirements-for-the-cloud) |

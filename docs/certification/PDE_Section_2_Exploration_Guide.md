@@ -3,13 +3,13 @@ title: "PDE Section 2 Prep: CI/CD Pipelines"
 description: "Prepare for the Professional Cloud DevOps Engineer (PDE) exam Section 2 — building and implementing CI/CD pipelines — with hands-on RAD labs on Google Cloud."
 ---
 
-# PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)
+# PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines, including continuous testing, for application, infrastructure, and machine learning workloads (~25% of the exam)
 
-<img src="https://storage.googleapis.com/rad-public-2b65/certification/pde_section2.png" alt="PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines (~25% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pde_section2.png" alt="PDE Certification Preparation Guide: Section 2 — Building and implementing CI/CD pipelines, including continuous testing, for application, infrastructure, and machine learning workloads (~25% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 > 📚 **Official exam guide:** [Professional Cloud DevOps Engineer certification](https://cloud.google.com/learn/certification/cloud-devops-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-This is the heaviest exam section and the RAD platform's strongest lab. The pipeline is implemented in `App_CloudRun` and `App_GKE` (an inline Cloud Build definition: Kaniko build → optional Binary Authorization attestation → deploy), with the shared `App_Common` building blocks providing the Cloud Deploy pipeline and the GitHub connection. Deploy the **Pipeline engineer** profile from the [Lab Map](PDE_Certification_Guide.md) before starting; subsection 2.2 also uses the **GKE release engineer** profile for the Kubernetes path.
+This section shares the largest exam weighting with Section 4 and is the RAD platform's strongest lab. The pipeline is implemented in `App_CloudRun` and `App_GKE` (an inline Cloud Build definition: Kaniko build → optional Binary Authorization attestation → deploy), with the shared `App_Common` building blocks providing the Cloud Deploy pipeline and the GitHub connection. Deploy the **Pipeline engineer** profile from the [Lab Map](PDE_Certification_Guide.md) before starting; subsection 2.2 also uses the **GKE release engineer** profile for the Kubernetes path.
 
 ---
 
@@ -66,6 +66,8 @@ A: `latest` is a moving pointer — a concurrent or later build changes what it 
 
 A: As a step *before* the Kaniko step (or a test stage in the Dockerfile). Any step exiting non-zero fails the whole Cloud Build execution, so nothing is pushed or deployed — the standard fail-fast CI contract.
 </details>
+
+**Beyond the modules** — The section title now names continuous testing and three workload types. The RAD pipeline builds and deploys an application container; it runs no tests, and it does not build infrastructure or ML artifacts. Study test stages in Cloud Build (unit tests before the build step, integration tests against a deployed stage), CI/CD for infrastructure (a `tofu plan` on pull request, `apply` on merge, or Infrastructure Manager), and ML pipelines (Vertex AI Pipelines, with models and containers versioned in Artifact Registry and Vertex AI Model Registry). Trigger types beyond a branch push (pull request, tag, manual, Pub/Sub, webhook) and approval flows on the Cloud Build trigger itself (`approvalConfig`) are also examinable; Cloud Deploy approvals are covered in [Section 1.4](PDE_Section_1_Exploration_Guide.md#14-managing-multiple-environments).
 
 **⚠️ Exam trap** — Artifact Registry KEEP policies beat DELETE policies: an image matched by the `most_recent_versions` KEEP rule is never deleted even if older than the age threshold. Reason about cleanup as "DELETE rules minus KEEP rules".
 
@@ -140,56 +142,11 @@ A: Traffic splitting is a *runtime* control on one service between revisions —
 A: A revision receiving any traffic percentage is live capacity; deleting it would break the traffic split (gcloud rejects the delete). Retention pruning must only ever remove fully drained revisions — the same reason you keep N known-good revisions as your rollback inventory.
 </details>
 
+**Beyond the modules** — Feature flags (decoupling release from deploy), the Cloud Deploy canary strategy with phase percentages and a `verify` job, and deployment verification or automated rollback driven by success metrics (error rate and latency from Cloud Monitoring, or model-quality telemetry from an ML pipeline) are not configured by the modules. For troubleshooting deployment issues, practise reading a failed Cloud Deploy rollout (`gcloud deploy rollouts describe`) and its linked Cloud Build render/deploy logs.
+
 **⚠️ Exam trap** — Blue/green ≠ canary: blue/green switches 100% of traffic between two complete environments at once (instant rollback, double capacity); canary shifts a small percentage first (gradual risk, no double capacity). Cloud Run's traffic splitting can express both, but the exam wants you to name the right strategy for the constraint given.
 
----
-
-## 2.3 Managing pipeline configuration and secrets
-
-> ⏱ ~45 min · 💰 no additional cost · ⚙️ Requires: Pipeline engineer profile
-
-**Why the exam cares** — Secrets in pipelines are a classic failure mode: tokens in source, passwords in Terraform state, plaintext in build logs. The exam tests where secrets should live (Secret Manager), how they reach runtime (references, not values), and how rotation happens without downtime.
-
-**How RAD implements it**
-
-- **The GitHub PAT never touches Terraform state**: `github_token` (sensitive) is required on first apply only; the platform writes it with `gcloud secrets versions add` (a provisioner, not a stored resource attribute) and the secret is abandoned rather than deleted on destroy. On later applies the stored token is reused — the trigger resolves the existing secret version rather than asking for the token again.
-- **Runtime secrets are references**: `secret_environment_variables` (map of env var → secret name) renders as Cloud Run secret references; the GKE engine syncs secrets via the Secret Manager CSI add-on into Kubernetes Secrets. The container sees a value; state and manifests see a reference.
-- **Generated, not chosen**: the database password is a randomly generated value of `database_password_length` (default `32`) chars stored straight into Secret Manager.
-- **Rotation**: `secret_rotation_period` (default `2592000s` = 30 days) configures Secret Manager rotation notifications to a Pub/Sub topic; `enable_auto_password_rotation` (default `false`) closes the loop with an Eventarc-dispatched rotation job that performs a dual-version, zero-downtime rotation (add new version → update DB user → disable old version after `rotation_propagation_delay_sec`, default `90`).
-- **Pipeline parameters that aren't secret** travel as Cloud Build substitutions (`cicd_trigger_config.substitutions`), visible in the trigger definition — the exam distinction between configuration and secrets.
-
-**Try it**
-1. List the module-created secrets and confirm no value is visible anywhere in IaC outputs:
-
-```bash
-gcloud secrets list --filter="name~<deployment-prefix>" \
-  --format="table(name,createTime)"
-gcloud secrets versions list <db-password-secret-name>
-```
-
-2. In **Console > Cloud Run > (service) > Revisions > (latest) > Variables & Secrets**, confirm `DB_PASSWORD` shows a secret *reference* (`.../versions/latest`), not a value.
-3. Enable `enable_auto_password_rotation = true` in the portal and apply; after the rotation flow runs, `gcloud secrets versions list` shows a new ENABLED version and the prior one DISABLED.
-4. Reason about the negative case: the GitHub PAT and the database password never appear in Terraform state — they are written directly to Secret Manager and consumed by reference, so state holds only the secret's *name*. A state inspection would never reveal the token value, which is the whole point of the reference-not-value design.
-5. You know it worked when secrets have multiple versions with only the newest enabled and the runtime resolves secrets purely by reference.
-
-**Check yourself**
-<details>
-<summary>Q1: Why is writing the GitHub token via a `gcloud secrets versions add` provisioner better than a managed Terraform secret-version resource?</summary>
-
-A: A managed secret-version resource stores the secret payload in state; anyone with state-read access reads the token. The provisioner pushes the value directly to Secret Manager so state holds only the secret's name. The trade-off (Terraform can't detect value drift) is acceptable for write-once credentials.
-</details>
-
-<details>
-<summary>Q2: During password rotation, why add the new secret version before disabling the old one instead of replacing in place?</summary>
-
-A: Running instances may hold connections authenticated with the old password and may re-read the old version until propagation completes. The dual-version window lets old and new credentials coexist (the DB user is updated, the old version stays readable), achieving zero-downtime rotation; the old version is disabled only after the propagation delay.
-</details>
-
-**⚠️ Exam trap** — Setting `secret_rotation_period` alone rotates *nothing*: Secret Manager rotation is a Pub/Sub notification schedule. Something must consume the notification and write a new version — here, that's the `enable_auto_password_rotation` machinery.
-
----
-
-## 2.4 Auditing and logging of code and configurations
+### Auditing and tracking deployments
 
 > ⏱ ~45 min · 💰 low–moderate (audit log ingestion) · ⚙️ Requires: Pipeline engineer profile + `enable_audit_logging = true`
 
@@ -239,3 +196,99 @@ A: (a) Admin Activity audit logs on `run.googleapis.com` show the out-of-band `R
 **Beyond the modules** — The modules don't configure log sinks or retention: study aggregated sinks to BigQuery/GCS for long-term audit retention, log bucket retention settings (`gcloud logging buckets update _Default --retention-days=...`), and SLSA provenance generated natively by Cloud Build (`gcloud artifacts docker images describe ... --show-provenance`) — the RAD pipeline's KMS attestation is a related but distinct mechanism.
 
 **⚠️ Exam trap** — Admin Activity audit logs are always on, unconfigurable, and free; Data Access logs are off by default (except BigQuery), must be enabled per service or via `allServices`, and can be expensive at volume. Questions that hinge on "why is there no log?" usually turn on this distinction.
+
+---
+
+## 2.3 Managing pipeline configuration and secrets
+
+> ⏱ ~45 min · 💰 no additional cost · ⚙️ Requires: Pipeline engineer profile
+
+**Why the exam cares** — Secrets in pipelines are a classic failure mode: tokens in source, passwords in Terraform state, plaintext in build logs. The exam tests where secrets should live (Secret Manager), how they reach runtime (references, not values), and how rotation happens without downtime.
+
+**How RAD implements it**
+
+- **The GitHub PAT never touches Terraform state**: `github_token` (sensitive) is required on first apply only; the platform writes it with `gcloud secrets versions add` (a provisioner, not a stored resource attribute) and the secret is abandoned rather than deleted on destroy. On later applies the stored token is reused — the trigger resolves the existing secret version rather than asking for the token again.
+- **Runtime secrets are references**: `secret_environment_variables` (map of env var → secret name) renders as Cloud Run secret references; the GKE engine syncs secrets via the Secret Manager CSI add-on into Kubernetes Secrets. The container sees a value; state and manifests see a reference.
+- **Generated, not chosen**: the database password is a randomly generated value of `database_password_length` (default `32`) chars stored straight into Secret Manager.
+- **Rotation**: `secret_rotation_period` (default `2592000s` = 30 days) configures Secret Manager rotation notifications to a Pub/Sub topic; `enable_auto_password_rotation` (default `false`) closes the loop with an Eventarc-dispatched rotation job that performs a dual-version, zero-downtime rotation (add new version → update DB user → disable old version after `rotation_propagation_delay_sec`, default `90`).
+- **Pipeline parameters that aren't secret** travel as Cloud Build substitutions (`cicd_trigger_config.substitutions`), visible in the trigger definition — the exam distinction between configuration and secrets.
+- **Build-time vs. runtime injection**: this pipeline injects no secret at build time. Docker build arguments are passed to Kaniko as plain `--build-arg` flags, visible in the trigger and build log, so they are for configuration only; every credential the application needs arrives at *runtime* as a secret reference. When a build genuinely needs a secret, Cloud Build's `availableSecrets` with `secretEnv` is the pattern to know.
+- **Key management**: the Binary Authorization signing key (`binauthz-signer`) is a Cloud KMS asymmetric key; `Services_GCP`'s `enable_cmek` (default `false`) creates a Cloud KMS key for customer-managed encryption of supported resources, rotated every `cmek_key_rotation_period` (default `7776000s` = 90 days).
+- **Certificates**: when `App_GKE` serves through the Gateway API, it issues Google-managed certificates through Certificate Manager and attaches them with a certificate map.
+- **Workload Identity Federation**: `Services_GCP`'s `enable_workload_identity_federation` (default `false`, with `wif_provider_type` of `github`, `gitlab` or `generic`) creates a pool and provider so external CI can call Google Cloud without a service account key. It is available only in a project you bring yourself; it is hidden for projects RAD creates for you.
+
+**Try it**
+1. List the module-created secrets and confirm no value is visible anywhere in IaC outputs:
+
+```bash
+gcloud secrets list --filter="name~<deployment-prefix>" \
+  --format="table(name,createTime)"
+gcloud secrets versions list <db-password-secret-name>
+```
+
+2. In **Console > Cloud Run > (service) > Revisions > (latest) > Variables & Secrets**, confirm `DB_PASSWORD` shows a secret *reference* (`.../versions/latest`), not a value.
+3. Enable `enable_auto_password_rotation = true` in the portal and apply; after the rotation flow runs, `gcloud secrets versions list` shows a new ENABLED version and the prior one DISABLED.
+4. Reason about the negative case: the GitHub PAT and the database password never appear in Terraform state — they are written directly to Secret Manager and consumed by reference, so state holds only the secret's *name*. A state inspection would never reveal the token value, which is the whole point of the reference-not-value design.
+5. You know it worked when secrets have multiple versions with only the newest enabled and the runtime resolves secrets purely by reference.
+
+**Check yourself**
+<details>
+<summary>Q1: Why is writing the GitHub token via a `gcloud secrets versions add` provisioner better than a managed Terraform secret-version resource?</summary>
+
+A: A managed secret-version resource stores the secret payload in state; anyone with state-read access reads the token. The provisioner pushes the value directly to Secret Manager so state holds only the secret's name. The trade-off (Terraform can't detect value drift) is acceptable for write-once credentials.
+</details>
+
+<details>
+<summary>Q2: During password rotation, why add the new secret version before disabling the old one instead of replacing in place?</summary>
+
+A: Running instances may hold connections authenticated with the old password and may re-read the old version until propagation completes. The dual-version window lets old and new credentials coexist (the DB user is updated, the old version stays readable), achieving zero-downtime rotation; the old version is disabled only after the propagation delay.
+</details>
+
+**Beyond the modules** — Parameter Manager (versioned, non-secret configuration that can reference Secret Manager secrets) is not used by the modules. Also study Cloud KMS key hierarchy (key ring, key, version) and the difference between automatic key rotation and secret rotation.
+
+**⚠️ Exam trap** — Setting `secret_rotation_period` alone rotates *nothing*: Secret Manager rotation is a Pub/Sub notification schedule. Something must consume the notification and write a new version — here, that's the `enable_auto_password_rotation` machinery.
+
+---
+
+## 2.4 Securing the deployment pipeline
+
+> ⏱ ~45 min · 💰 low (vulnerability scanning is billed per scanned image) · ⚙️ Requires: Pipeline engineer profile + `enable_vulnerability_scanning = true` in `Services_GCP`
+
+**Why the exam cares** — A pipeline is a privileged path to production, so the exam tests the controls that make its output trustworthy: scanning artifacts for known vulnerabilities, proving where an artifact came from (SLSA provenance, attestations), refusing to run anything that lacks that proof (Binary Authorization), and scoping each environment's IAM so a compromise of dev cannot reach prod.
+
+**How RAD implements it**
+
+- **Artifact Analysis and vulnerability scanning**: `enable_vulnerability_scanning` (default `false`) in `Services_GCP` turns on the Container Analysis and On-Demand Scanning APIs and sets the shared Artifact Registry repository's scanning to inherit the project setting, so each pushed image is scanned for known CVEs.
+- **Binary Authorization**: covered in [Section 1.3](PDE_Section_1_Exploration_Guide.md#13-designing-a-cicd-architecture-stack-in-google-cloud-hybrid-and-multi-cloud-environments). The pipeline signs the image *digest* with a Cloud KMS key held by the `pipeline-attestor` attestor, and `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"` makes the policy refuse any image without that attestation. In `Services_GCP` the policy is escalate-only: a later apply can raise it to `REQUIRE_ATTESTATION` but will not lower it, because other tenants may depend on it.
+- **Scanning does not gate signing.** The attestation step signs every image the build produces; it does not read the scan results first. Enabling both features therefore gives you scan findings *and* enforced provenance, but not "only vulnerability-free images may deploy". That gate is the pattern to know for the exam, and you would add it as a build step before signing.
+- **Least-privilege pipeline identity**: builds run as a dedicated Cloud Build SA granted only the roles it needs, such as `roles/clouddeploy.releaser` and signing rights on the one KMS key. The Cloud Deploy service agent holds the runtime deploy role (`roles/run.admin` or `roles/container.developer`).
+
+**Try it**
+1. With `enable_vulnerability_scanning = true`, push a commit, then list what the scanner found for the new image:
+
+```bash
+gcloud artifacts docker images list \
+  us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/<repo>/<app> \
+  --show-occurrences --occurrence-filter='kind="VULNERABILITY"' --limit=1
+```
+
+2. Set `binauthz_evaluation_mode = "REQUIRE_ATTESTATION"`, then try to deploy an unsigned image out of band (`gcloud run deploy <service> --image=us-docker.pkg.dev/cloudrun/container/hello --region=us-central1`) and read the denial.
+3. Compare what the pipeline proves with what Cloud Build can generate natively: `gcloud artifacts docker images describe <image>@<digest> --show-provenance`.
+4. You know it worked when the scan lists vulnerability occurrences for your image, the unsigned deploy is refused, and you can explain which of the two controls blocked it.
+
+**Check yourself**
+<details>
+<summary>Q1: Scanning is enabled and Binary Authorization enforces attestations, yet an image with a critical CVE reached production. How?</summary>
+
+A: The attestation was created without consulting the scan. Enforcement proves an image came through the pipeline, not that it is safe. To block known-vulnerable images, the pipeline must evaluate the scan (or use a vulnerability-based attestation policy) *before* it signs, so a failing image never receives an attestation.
+</details>
+
+<details>
+<summary>Q2: Dev and prod share one project and one build service account. What is the risk, and what is the recommended structure?</summary>
+
+A: Anyone who can change the dev pipeline can act with the permissions prod deployments need. Put environments in separate projects, give each its own deploy identity with roles granted only in that environment, and grant promotion into prod through Cloud Deploy approval rather than direct IAM on the prod runtime.
+</details>
+
+**Beyond the modules** — The SLSA framework levels and what Cloud Build's native provenance satisfies; Binary Authorization continuous validation for GKE; vulnerability-based attestation policies; and per-environment IAM conditions. The lab runs all stages in one project, so environment-scoped IAM is a study item rather than a hands-on one.
+
+**⚠️ Exam trap** — An attestation is a statement about provenance, not about safety. Scanning finds problems; only a policy that refuses to attest (or deploy) on those findings stops them.

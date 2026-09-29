@@ -5,13 +5,13 @@ description: "Map every Professional Cloud Developer (PCD) exam domain to hands-
 
 # Professional Cloud Developer (PCD) Certification Lab Map
 
-The Professional Cloud Developer certification validates your ability to design, build, test, deploy, and integrate scalable applications on Google Cloud — with a strong emphasis on Cloud Run, GKE, Cloud Build, Artifact Registry, Cloud Deploy, runtime secrets, service authentication, and observability. The RAD platform's four foundation modules (`Services_GCP`, `App_CloudRun`, `App_GKE`, `App_Common`) give you a live lab for exactly these skills: `Services_GCP` provisions the shared platform (VPC, Cloud SQL, Redis, GKE Autopilot, Artifact Registry, Binary Authorization, Workload Identity Federation), `App_CloudRun` and `App_GKE` are full-featured deployment engines for Cloud Run v2 services and Kubernetes workloads, and `App_Common` supplies the shared submodules they both use (secrets and rotation, Cloud Build container builds, Cloud Deploy pipelines, IAM, storage, monitoring). Application wrapper modules (Django, Wordpress, etc.) exist on the platform but everything in these guides uses the foundation modules directly.
+The Professional Cloud Developer certification validates your ability to design, build, test, deploy, and integrate scalable, secure applications on Google Cloud — with a strong emphasis on Cloud Run, GKE, Cloud Build, Artifact Registry, runtime secrets, service authentication, event-driven integration, and observability. The current exam guide also expects fluency with AI-powered development tooling (AI coding assistants such as Gemini Code Assist, Gemini Cloud Assist, MCP servers, AI-assisted observability); none of that is implemented by the modules, so those objectives are marked 📘 below. The RAD platform's four foundation modules (`Services_GCP`, `App_CloudRun`, `App_GKE`, `App_Common`) give you a live lab for exactly these skills: `Services_GCP` provisions the shared platform (VPC, Cloud SQL, Redis, GKE Autopilot, Artifact Registry, Binary Authorization, Workload Identity Federation), `App_CloudRun` and `App_GKE` are full-featured deployment engines for Cloud Run v2 services and Kubernetes workloads, and `App_Common` supplies the shared submodules they both use (secrets and rotation, Cloud Build container builds, Cloud Deploy pipelines, IAM, storage, monitoring). Application wrapper modules (Django, Wordpress, etc.) exist on the platform but everything in these guides uses the foundation modules directly.
 
 ## How to use this guide
 
 - Deploy one of the profiles below through your deployment portal, then work through the matching section exploration guide.
 - **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
-- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_workload_identity_federation` and the other `wif_*` settings; deploy the profiles that set them into a Google Cloud project of your own.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_workload_identity_federation` and the other `wif_*` settings, `enable_alloydb`, `configure_cloud_service_mesh`/`configure_service_mesh`, and the Security Command Center settings; deploy the profiles that set them into a Google Cloud project of your own.
 - Every section guide pairs portal variables with the GCP console views and `gcloud`/`kubectl` commands the exam expects you to know.
 - Use the coverage legend to plan study time: 🟡 and 📘 topics include a "Beyond the modules" block telling you what to practice outside the platform.
 - PCD is a *developer* exam: when working through the labs, always ask "what would my application code see?" — the env vars, the secret refs, the socket paths, the tokens.
@@ -90,50 +90,58 @@ The Professional Cloud Developer certification validates your ability to design,
 
 *Estimated incremental cost:* moderate — the global external Application Load Balancer forwarding rule and the 1 GB Memorystore instance bill continuously even when the Cloud Run service is idle. IAP alone (without Cloud Armor) adds no LB cost.
 
-## Section 1: Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
+## Section 1: Designing highly scalable, secure, and reliable cloud-native applications (~32% of the exam)
 
-The largest section. The modules demonstrate platform selection (Cloud Run vs GKE), scaling behavior, revision-based traffic splitting, runtime secrets, IAP, Binary Authorization, and storage selection. API management products and application messaging are study-only.
+The largest section. The modules demonstrate platform selection (Cloud Run vs GKE), scaling behavior, revision-based traffic splitting, runtime secrets, IAP, Binary Authorization, and storage selection. API management products (Apigee, API Gateway), application messaging, and Workflows/Cloud Tasks orchestration are study-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 1.1 Platform choice, scaling, cold starts | ✅ | `min_instance_count`, `max_instance_count`, `cpu_always_allocated`, `execution_environment` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
 | 1.1 Traffic splitting, canary, rollback | ✅ | `traffic_split`, `max_revisions_to_retain` (App_CloudRun) | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
-| 1.1 Caching, CDN, session affinity | 🟡 | `create_redis`, `enable_redis`, `enable_cdn`; session affinity hardcoded on | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
-| 1.1 REST/gRPC APIs, API management, async messaging | 🟡 | `container_protocol = "h2c"` enables end-to-end HTTP/2 (gRPC-ready) on Cloud Run and `appProtocol kubernetes.io/h2c` on the GKE Service; API management and messaging are study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
+| 1.1 Load balancers, caching, CDN, session affinity | 🟡 | `enable_cloud_armor` (global HTTPS LB), `enable_custom_domain` (GKE Gateway), `create_redis`, `enable_redis`, `enable_cdn`; session affinity hardcoded on (Cloud Run), `session_affinity` (App_GKE) | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
+| 1.1 REST/gRPC APIs, API management (Apigee, API Gateway), Eventarc/Pub/Sub integration | 🟡 | `container_protocol = "h2c"` enables end-to-end HTTP/2 (gRPC-ready) on Cloud Run and `appProtocol kubernetes.io/h2c` on the GKE Service; API management and application messaging are study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
+| 1.1 Zonal/regional failover, data replication | 🟡 | `postgres_database_availability_type = "REGIONAL"`, `create_postgres_read_replica` (cross-region when `availability_regions` has a second region), `redis_tier = "STANDARD_HA"` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
+| 1.1 Orchestration (Workflows, Eventarc, Cloud Tasks, Cloud Scheduler) | 🟡 | `cron_jobs` (Cloud Run jobs triggered by Cloud Scheduler); Workflows and Cloud Tasks are study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#11-designing-high-performing-applications-and-apis) |
 | 1.2 Secrets at runtime + rotation | ✅ | `secret_environment_variables`, `enable_auto_password_rotation`, `secret_rotation_period` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
 | 1.2 End-user auth (IAP), supply-chain security | ✅ | `enable_iap`, `enable_binary_authorization`, `enable_vulnerability_scanning` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
 | 1.2 CMEK, audit logs, network segmentation | 🟡 | `enable_cmek`, `enable_audit_logging`, `enable_network_segmentation` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
+| 1.2 Data retention (Object Lifecycle Management, retention lock) | 🟡 | `storage_buckets[].lifecycle_rules`; bucket retention policies/lock are study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
+| 1.2 Resolving vulnerabilities (Artifact Analysis, Security Command Center) | 🟡 | `enable_vulnerability_scanning`, `enable_security_command_center`, `enable_scc_notifications` surface findings; remediation is yours | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
+| 1.2 Secure service-to-service communication | 🟡 | `vpc_egress_setting` (Direct VPC egress), private service access for Cloud SQL/Redis, `enable_network_segmentation`, `configure_cloud_service_mesh` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#12-designing-secure-applications) |
 | 1.3 Relational/object/cache storage selection | ✅ | `create_postgres`, `create_mysql`, `storage_buckets`, `create_redis`, `enable_alloydb` | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#13-storing-and-accessing-data) |
-| 1.3 Firestore, Spanner, Bigtable, BigQuery, signed URLs | 📘 | `create_firestore` provisions the DB only — SDK usage is study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#13-storing-and-accessing-data) |
+| 1.3 Firestore, Spanner, Bigtable schemas; writing to BigQuery for analytics/AI; signed URLs | 📘 | `create_firestore` provisions the DB only — SDK usage, schema design, and BigQuery writes are study-only | [Section 1 guide](PCD_Section_1_Exploration_Guide.md#13-storing-and-accessing-data) |
 
 ## Section 2: Building and testing applications (~23% of the exam)
 
-The build pipeline is the strongest coverage in the repo: every deployment runs real Cloud Build jobs (Kaniko or Docker), pushes to Artifact Registry with cleanup policies, and can sign images for Binary Authorization. Local tooling and emulators are study-only.
+The build pipeline is the strongest coverage in the repo: every deployment runs real Cloud Build jobs (Kaniko or Docker), pushes to Artifact Registry with cleanup policies, and can sign images for Binary Authorization. Local tooling, emulators, and AI-assisted development (coding assistants, Gemini Cloud Assist, MCP servers) are study-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 2.1 Local dev environment, emulators, Cloud Code/Shell/Workstations | 📘 | nearest: per-tenant isolated deployments via `tenant_id` | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#21-setting-up-your-development-environment) |
+| 2.1 Gemini Cloud Assist, IDE AI tooling (coding assistants, MCP servers) | 📘 | not implemented — study-only | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#21-setting-up-your-development-environment) |
 | 2.2 Cloud Build container builds | ✅ | `container_image_source = "custom"`, `container_build_config` | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
-| 2.2 Artifact Registry, image lifecycle, mirroring | ✅ | `max_images_to_retain`, `image_retention_days`, `delete_untagged_images`, Crane digest-aware mirroring | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
-| 2.2 CI triggers, Kaniko, attestation | ✅ | `enable_cicd_trigger`, `cicd_trigger_config`, Kaniko v1.23.2, pipeline image signing | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
-| 2.3 Unit/integration testing in CI | 🟡 | generated build pipeline is extensible; no test step ships by default | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#23-testing) |
+| 2.2 Artifact Registry, image lifecycle, mirroring | ✅ | `enable_image_retention` (Services_GCP shared repo), `max_images_to_retain`/`image_retention_days`/`delete_untagged_images` (inline repo only), Crane digest-aware mirroring | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
+| 2.2 CI triggers, Kaniko, provenance/attestation (Binary Authorization) | ✅ | `enable_cicd_trigger`, `cicd_trigger_config`, Kaniko v1.23.2, pipeline image signing | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#22-building) |
+| 2.3 Automated integration tests in Cloud Build | 🟡 | generated build pipeline is extensible; no test step ships by default |
+| 2.3 Writing unit tests with AI coding assistants | 📘 | not implemented — study-only | [Section 2 guide](PCD_Section_2_Exploration_Guide.md#23-testing) |
 
-## Section 3: Deploying applications (~20% of the exam)
+## Section 3: Configuring cloud-native applications for deployment (~24% of the exam)
 
-Both deployment targets are fully implemented. `App_CloudRun` covers revisions, scaling, probes, volumes, jobs, and Cloud Deploy promotion; `App_GKE` covers Deployments/StatefulSets, HPA/VPA, probes, quotas, PDBs, and the Gateway API.
+Both deployment targets are fully implemented. `App_CloudRun` covers source-to-service builds, revisions, scaling, probes, volumes, jobs, and Cloud Deploy promotion; `App_GKE` covers Deployments/StatefulSets, HPA/VPA, probes, quotas, PDBs, and the Gateway API. Event-driven invocation (Eventarc, Pub/Sub triggers and receivers) and Apigee are study-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 3.1 Cloud Run service configuration (scaling, CPU, gen2, timeout) | ✅ | `min/max_instance_count`, `cpu_always_allocated`, `execution_environment`, `timeout_seconds` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
-| 3.1 Revisions, traffic management, rollback | ✅ | `traffic_split`, `max_revisions_to_retain` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
-| 3.1 Cloud Deploy progressive delivery | ✅ | `enable_cloud_deploy`, `cloud_deploy_stages`, `cicd_enable_cloud_deploy` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
-| 3.1 Cloud Run jobs (migrations, init) | ✅ | `initialization_jobs`, `cron_jobs` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
-| 3.2 GKE workloads, resources, probes | ✅ | `workload_type`, `container_resources`, `startup_probe_config`, `health_check_config` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#32-deploying-containers-to-gke) |
-| 3.2 HPA/VPA, quotas, PDBs, exposure | ✅ | `min/max_instance_count`, `enable_vertical_pod_autoscaling`, `enable_resource_quota`, `enable_custom_domain` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#32-deploying-containers-to-gke) |
+| 3.1 Deploying from source code | 🟡 | `container_image_source = "custom"` + `enable_cicd_trigger` build from your repo in Cloud Build; `gcloud run deploy --source` is study-only | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
+| 3.1 Invoking via triggers; event receivers (Eventarc, Pub/Sub) | 📘 | Eventarc/Pub/Sub are used only internally (secret rotation) — study-only | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
+| 3.1 Versioning, exposing, and securing APIs (Apigee) | 🟡 | revision `tag` URLs, `ingress_settings`, `enable_iap`, `enable_cloud_armor`; Apigee is study-only | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
+| Supporting: revisions, Cloud Deploy, Cloud Run jobs | ✅ | `traffic_split`, `enable_cloud_deploy`, `cloud_deploy_stages`, `initialization_jobs` — traffic splitting is now examined under 1.1; Cloud Deploy is no longer a named objective | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#31-deploying-applications-to-cloud-run) |
+| 3.2 GKE workloads, resources, health checks (probes) | ✅ | `workload_type`, `container_resources`, `startup_probe_config`, `health_check_config` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#32-deploying-containers-to-gke) |
+| 3.2 Horizontal Pod Autoscaler, VPA, quotas, PDBs, exposure | ✅ | `min/max_instance_count`, `enable_vertical_pod_autoscaling`, `enable_resource_quota`, `enable_custom_domain` | [Section 3 guide](PCD_Section_3_Exploration_Guide.md#32-deploying-containers-to-gke) |
 
 ## Section 4: Integrating applications with Google Cloud services (~21% of the exam)
 
-Database connectivity (Cloud SQL Auth Proxy on both platforms), runtime configuration injection, Workload Identity, and alerting are demonstrated live. Client-library coding, tracing, and profiling are study-only.
+Database connectivity (Cloud SQL Auth Proxy on both platforms), runtime configuration injection, Workload Identity, and alerting are demonstrated live. Client-library coding (batching, pagination, backoff), tracing, Error Reporting, and AI-assisted observability are study-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
@@ -142,7 +150,9 @@ Database connectivity (Cloud SQL Auth Proxy on both platforms), runtime configur
 | 4.1 Pub/Sub & Firestore application code | 📘 | only rotation/SCC topics exist — no app messaging | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#41-integrating-applications-with-data-and-storage-services) |
 | 4.2 Service accounts, ADC, Workload Identity | ✅ | per-app SAs, KSA annotation `iam.gke.io/gcp-service-account`, `additional_cloudrun_sa_roles` | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#42-consuming-google-cloud-apis) |
 | 4.2 Workload Identity Federation (keyless CI) | ✅ | `enable_workload_identity_federation`, `wif_provider_type` | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#42-consuming-google-cloud-apis) |
+| 4.2 Enabling services; API call patterns (client libraries, REST, gRPC, batching, pagination, backoff) | 📘 | the platform enables its own APIs; calling code is study-only | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#42-consuming-google-cloud-apis) |
 | 4.2 Service-to-service auth (ID tokens) | 🟡 | `roles/run.invoker` bindings (IAP agent, allUsers); calling code is study-only | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#42-consuming-google-cloud-apis) |
 | 4.3 Logging, metrics, alerting, dashboards | ✅ | `support_users`, `alert_policies` (the platform's monitoring and dashboard layers) | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#43-troubleshooting-and-observability) |
 | 4.3 Uptime checks | ✅ | `uptime_check_config` creates a `<service>-uptime-check` + alert policy on publicly reachable endpoints | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#43-troubleshooting-and-observability) |
-| 4.3 Trace, Profiler, Error Reporting | 📘 | not implemented — study-only | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#43-troubleshooting-and-observability) |
+| 4.3 Instrumentation, trace IDs across services, Error Reporting | 📘 | not implemented — study-only |
+| 4.3 AI-assisted observability (Gemini Cloud Assist) | 📘 | not implemented — study-only | [Section 4 guide](PCD_Section_4_Exploration_Guide.md#43-troubleshooting-and-observability) |

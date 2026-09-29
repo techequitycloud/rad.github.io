@@ -7,7 +7,7 @@ description: "Map every Professional Cloud Database Engineer (PCDE) exam domain 
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-The Professional Cloud Database Engineer certification validates your ability to design, manage, migrate, and deploy scalable, highly available database solutions on Google Cloud. The RAD foundation modules — `Services_GCP`, `App_CloudRun`, `App_GKE`, and `App_Common` — serve as a live lab for the bulk of this exam: `Services_GCP` provisions Cloud SQL (PostgreSQL and MySQL), AlloyDB, Firestore Enterprise, and Memorystore Redis behind a private VPC, while `App_CloudRun` and `App_GKE` demonstrate how real applications connect, authenticate, back up, monitor, and rotate credentials against those databases — all driven by infrastructure-as-code, which is itself the exam's "automate database instance provisioning" objective made concrete.
+The Professional Cloud Database Engineer certification validates your ability to design, manage, migrate, and deploy scalable, highly available database solutions on Google Cloud. The RAD foundation modules — `Services_GCP`, `App_CloudRun`, `App_GKE`, and `App_Common` — serve as a live lab for the bulk of this exam: `Services_GCP` provisions Cloud SQL (PostgreSQL and MySQL), Firestore Enterprise, and Memorystore Redis behind a private VPC (AlloyDB only in a Google Cloud project you bring — it is not available on RAD-managed projects), while `App_CloudRun` and `App_GKE` demonstrate how real applications connect, authenticate, back up, monitor, and rotate credentials against those databases — all driven by infrastructure-as-code, which is itself the exam's "automate database instance provisioning" objective made concrete.
 
 > **Abbreviation note:** in this repository **PDE** refers to the Professional Cloud **DevOps** Engineer guides. This certification — Professional Cloud **Database** Engineer — uses the abbreviation **PCDE** throughout.
 
@@ -15,10 +15,10 @@ The Professional Cloud Database Engineer certification validates your ability to
 
 - Deploy one of the profiles below through your deployment portal, then work through the matching section guide while the infrastructure is live.
 - **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
-- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_alloydb`; deploy the profiles that set them into a Google Cloud project of your own.
+- **Some settings need a project you bring.** When a deployment goes into a RAD-managed project (one RAD creates for you), the deploy form leaves out every setting a module marks as unavailable there — settings that reach past the project into RAD's organisation, or need an API the RAD-managed tiers do not allow. In this guide that means `enable_alloydb` (the AlloyDB API is not permitted on any RAD-managed tier, so RAD does not deploy AlloyDB there) and `enable_vpc_sc`; deploy the profiles that set them into a Google Cloud project of your own.
 - Each section guide pairs a portal change with what to observe in the GCP console and a real `gcloud`/`psql`/`kubectl` command.
 - Use the coverage legend to know which exam topics must be studied outside the platform — Spanner, Bigtable, BigQuery, and Database Migration Service are *not* implemented by these modules, and the section guides say so plainly.
-- Destroy or scale down expensive profiles (REGIONAL Cloud SQL, AlloyDB) when you finish a study session.
+- Destroy or scale down expensive profiles (REGIONAL Cloud SQL, and AlloyDB in a project you bring) when you finish a study session.
 
 **Coverage legend**
 
@@ -79,7 +79,7 @@ The Professional Cloud Database Engineer certification validates your ability to
 
 ### Profile: alloydb-ai
 *Purpose:* Sections 1.1, 1.4, and 2.4 — an AlloyDB cluster with a primary and a horizontally scalable read pool, for analytics/vector-workload study.
-*Modules:* `Services_GCP`.
+*Modules:* `Services_GCP`, **in a Google Cloud project you bring only**. AlloyDB is not available on RAD-managed projects — the deploy form omits `enable_alloydb` there and the tier folders' API allowlist refuses it at apply. Without a project of your own, treat AlloyDB as 📘 and study it from the docs.
 
 | Variable | Value |
 |---|---|
@@ -112,10 +112,10 @@ The heaviest section. `Services_GCP` is the star: every design decision the exam
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 1.1 Database capacity and usage planning | ✅ | `postgres_tier`, `alloydb_cpu_count`, `redis_memory_size_gb`, disk autoresize | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#11-analyze-relevant-variables-to-perform-database-capacity-and-usage-planning) |
+| 1.1 Database capacity and usage planning | ✅ | `postgres_tier`, `redis_memory_size_gb`, disk autoresize (`alloydb_cpu_count` in a project you bring) | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#11-analyze-relevant-variables-to-perform-database-capacity-and-usage-planning) |
 | 1.2 HA and DR options | ✅ | `postgres_database_availability_type`, `create_postgres_read_replica`, PITR/backup settings, `sql_maintenance_window_day`/`_hour` + `sql_maintenance_update_track` | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#12-evaluate-database-high-availability-and-disaster-recovery-options-given-the-requirements) |
 | 1.3 Application connectivity, encryption, auditing | ✅ | private IP via PSA, `ssl_mode`, `enable_cmek`, `enable_cloudsql_volume`, Auth Proxy sidecar (App_GKE), `enable_audit_logging` (session poolers 📘) | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#13-determine-how-applications-will-connect-to-the-database) |
-| 1.4 Evaluating database solutions (SQL/NoSQL/vector, managed vs unmanaged, gen-AI) | 🟡 | Cloud SQL vs AlloyDB vs Firestore Enterprise (MongoDB compat) vs Redis vs self-managed Redis VM; Spanner/Bigtable/BigQuery 📘 | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#14-evaluate-appropriate-database-solutions-on-google-cloud) |
+| 1.4 Evaluating database solutions (SQL/NoSQL/vector, managed vs unmanaged, gen-AI) | 🟡 | Cloud SQL vs Firestore Enterprise (MongoDB compat) vs Redis vs self-managed Redis VM (AlloyDB in a project you bring only); Spanner/Bigtable/BigQuery, Bare Metal Solution, partner offerings, org-policy constraints 📘 | [Section 1 guide](PCDE_Section_1_Exploration_Guide.md#14-evaluate-appropriate-database-solutions-on-google-cloud) |
 
 ## Section 2: Manage a solution that can span multiple database technologies (~25% of the exam)
 
@@ -126,7 +126,7 @@ Day-2 operations: users and IAM, monitoring, backup/recovery, scaling, and autom
 | 2.1 Connectivity and access management (IAM, database users) | ✅ | `enable_cloudsql_iam_auth`, `roles/cloudsql.instanceUser` grants, the db-init user-creation script, per-secret IAM | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#21-determine-database-connectivity-and-access-management-considerations) |
 | 2.2 Monitoring and troubleshooting | ✅ | Cloud SQL CPU/memory/disk alert policies (Services_GCP), `alert_policies` + `uptime_check_config` in App modules, `enable_query_insights` (Services_GCP); slow-query analysis 📘 | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#22-configure-database-monitoring-and-troubleshooting-options) |
 | 2.3 Backup and recovery (RTO/RPO/PITR, retention) | ✅ | managed backup configuration, PITR + 7-day log retention, export/import jobs, `backup_retention_days` | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#23-design-database-backup-and-recovery-solutions) |
-| 2.4 Cost and performance optimization | ✅ | scale up (`postgres_tier`, `alloydb_cpu_count`) vs out (`postgres_read_replica_count`, `alloydb_read_pool_node_count`), `postgres_database_flags`; query optimization 📘 | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#24-optimize-database-cost-and-performance) |
+| 2.4 Optimize database cost and performance in Google Cloud | ✅ | scale up (`postgres_tier`) vs out (`postgres_read_replica_count`), `postgres_database_flags` (AlloyDB equivalents in a project you bring); query optimization 📘 | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#24-optimize-database-cost-and-performance-in-google-cloud) |
 | 2.5 Automating common database tasks | ✅ | Cloud Scheduler export job, `db-export` CronJob (GKE), the password-rotation pipeline, scheduled maintenance via `sql_maintenance_window_*`; managed upgrades 📘 | [Section 2 guide](PCDE_Section_2_Exploration_Guide.md#25-automate-common-database-tasks) |
 
 ## Section 3: Migrate data solutions (~23% of the exam)

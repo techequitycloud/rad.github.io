@@ -98,25 +98,26 @@ The Professional Cloud DevOps Engineer certification validates your ability to b
 
 ## Section 1: Bootstrapping and maintaining a Google Cloud organization (~20% of the exam)
 
-The exam opens with organization-level design: resource hierarchy, IaC discipline, CI/CD architecture choices, and multi-environment management. The RAD modules are themselves the IaC artifact, and the Cloud Deploy stage model is the multi-environment lab.
+The exam opens with organization-level design: resource hierarchy, IaC discipline, CI/CD architecture choices, multi-environment management, and secure cloud development environments. The RAD modules are themselves the IaC artifact, and the Cloud Deploy stage model is the multi-environment lab.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 1.1 Designing the overall resource hierarchy | 📘 | project-scoped only; `resource_labels` for governance labels | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#11-designing-the-overall-resource-hierarchy) |
+| 1.1 Designing the overall resource hierarchy for an organization | 📘 | project-scoped only; `resource_labels` for governance labels; private services access peering in `Services_GCP` | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#11-designing-the-overall-resource-hierarchy-for-an-organization) |
 | 1.2 Managing infrastructure | ✅ | the deployment modules themselves; `tofu plan` drift detection; Cloud Deploy owns the container image while IaC owns the rest; IaC CI checks | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#12-managing-infrastructure) |
-| 1.3 Designing a CI/CD architecture stack | ✅ | inline Cloud Build trigger, Cloud Deploy delivery pipeline, Binary Authorization | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#13-designing-a-cicd-architecture-stack) |
-| 1.4 Managing multiple environments | ✅ | `cloud_deploy_stages` (dev/staging/prod), per-stage services and namespaces | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#14-managing-multiple-environments) |
+| 1.3 Designing a CI/CD architecture stack in Google Cloud, hybrid, and multi-cloud environments | ✅ | inline Cloud Build trigger, Cloud Deploy delivery pipeline, Binary Authorization; hybrid/multi-cloud and third-party tooling 📘 | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#13-designing-a-cicd-architecture-stack-in-google-cloud-hybrid-and-multi-cloud-environments) |
+| 1.4 Managing multiple environments | ✅ | `cloud_deploy_stages` (dev/staging/prod), per-stage services and namespaces; GKE release channel and Cloud SQL maintenance track; fleets only in a project you bring | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#14-managing-multiple-environments) |
+| 1.5 Enabling secure cloud development environments | 🟡 | `CodeServer_*` / `Coder_*` wrappers as a self-hosted analogue; Cloud Workstations, Cloud Shell and Gemini 📘 | [Section 1 guide](PDE_Section_1_Exploration_Guide.md#15-enabling-secure-cloud-development-environments) |
 
-## Section 2: Building and implementing CI/CD pipelines (~25% of the exam)
+## Section 2: Building and implementing CI/CD pipelines, including continuous testing, for application, infrastructure, and machine learning workloads (~25% of the exam)
 
-The heaviest exam section and the strongest area of the RAD lab: an inline Cloud Build pipeline (Kaniko → attestation → deploy), Artifact Registry with cleanup policies, Binary Authorization, and a real Cloud Deploy pipeline with approvals, automation rules, and rollback.
+Tied with Section 4 as the heaviest exam section, and the strongest area of the RAD lab: an inline Cloud Build pipeline (Kaniko → attestation → deploy), Artifact Registry with cleanup policies, Binary Authorization, and a real Cloud Deploy pipeline with approvals, automation rules, and rollback. The title's continuous testing and its infrastructure and ML workloads are 📘: the RAD pipeline runs no test stage and builds only application containers.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 2.1 Designing pipelines | ✅ | `enable_cicd_trigger`, Kaniko v1.23.2 build step, Artifact Registry cleanup policies | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#21-designing-pipelines) |
-| 2.2 Implementing and managing pipelines | ✅ | `cloud_deploy_stages`, `traffic_split`, `kubectl set image` direct path, revision pruning | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#22-implementing-and-managing-pipelines) |
-| 2.3 Managing pipeline configuration and secrets | ✅ | `github_token` (never in state), `secret_environment_variables`, `enable_auto_password_rotation` | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#23-managing-pipeline-configuration-and-secrets) |
-| 2.4 Auditing and logging of code and configurations | ✅ | Data Access audit logging, Binary Authorization attestations, Cloud Deploy release history | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#24-auditing-and-logging-of-code-and-configurations) |
+| 2.2 Implementing and managing pipelines | ✅ | `cloud_deploy_stages`, `traffic_split`, `kubectl set image` direct path, revision pruning; deployment auditing via `enable_audit_logging` and Cloud Deploy release history | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#22-implementing-and-managing-pipelines) |
+| 2.3 Managing pipeline configuration and secrets | ✅ | `github_token` (never in state), `secret_environment_variables`, `enable_auto_password_rotation`, Cloud KMS, Certificate Manager on the GKE Gateway; Parameter Manager 📘 | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#23-managing-pipeline-configuration-and-secrets) |
+| 2.4 Securing the deployment pipeline | 🟡 | `enable_vulnerability_scanning`, Binary Authorization attestations, dedicated build SA; scan-gated signing, SLSA and per-environment IAM 📘 | [Section 2 guide](PDE_Section_2_Exploration_Guide.md#24-securing-the-deployment-pipeline) |
 
 ## Section 3: Applying site reliability engineering practices (~18% of the exam)
 
@@ -130,13 +131,15 @@ SLO/error-budget theory is mostly 📘 — the modules emit the metrics SLIs are
 
 ## Section 4: Implementing observability practices and troubleshooting issues (~25% of the exam)
 
-The second-heaviest section. The modules provision notification channels, fixed and custom alert policies, per-platform dashboards, GKE workload logging, managed Prometheus, synthetic uptime checks (`uptime_check_config` — created for publicly reachable endpoints, with a `check_passed` alert policy), and (optionally) full data-access audit logs.
+Tied with Section 2 as the heaviest section. The modules provision notification channels, fixed and custom alert policies, per-platform dashboards, GKE workload logging, managed Prometheus, synthetic uptime checks (`uptime_check_config` — created for publicly reachable endpoints, with a `check_passed` alert policy), and (optionally) full data-access audit logs. Log routing and retention, distributed tracing, and Gemini Cloud Assist are 📘.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
 | 4.1 Instrumenting and collecting telemetry | 🟡 | GKE workload logging/monitoring + managed Prometheus on the Services_GCP cluster; `enable_audit_logging`; `uptime_check_config` synthetic checks | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#41-instrumenting-and-collecting-telemetry) |
-| 4.2 Troubleshooting and analyzing issues | 🟡 | Logs Explorer over module-deployed workloads; revision/Pod diagnostics; Cloud Logging build logs | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#42-troubleshooting-and-analyzing-issues) |
-| 4.3 Managing metrics, dashboards, and alerts | ✅ | the monitoring layer (90% CPU/memory alerts, renotify 1800s), `alert_policies`, auto-generated dashboards, Services_GCP threshold alerts | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#43-managing-metrics-dashboards-and-alerts) |
+| 4.2 Managing and analyzing logs | 🟡 | labelled workloads and `CLOUD_LOGGING_ONLY` build logs to query in Logs Explorer; sinks, retention, PII redaction and Gemini Cloud Assist 📘 | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#42-managing-and-analyzing-logs) |
+| 4.3 Managing metrics, dashboards, and alerts | ✅ | the monitoring layer (90% CPU/memory alerts, renotify 1800s), `alert_policies`, auto-generated dashboards, Services_GCP threshold alerts, `create_billing_budget`; third-party channels 📘 | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#43-managing-metrics-dashboards-and-alerts) |
+| 4.4 Capturing and analyzing distributed traces | 📘 | no tracing configured; Cloud Run propagates trace context for instrumented apps | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#44-capturing-and-analyzing-distributed-traces) |
+| 4.5 Troubleshooting issues | 🟡 | revision conditions, Pod events, Cloud Logging build logs over module-deployed workloads | [Section 4 guide](PDE_Section_4_Exploration_Guide.md#45-troubleshooting-issues) |
 
 ## Section 5: Optimizing performance and cost (~12% of the exam)
 
@@ -144,5 +147,5 @@ Performance tuning (execution environment, CPU allocation, resource requests) is
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 5.1 Collecting performance information in Google Cloud | 🟡 | `execution_environment`, `cpu_always_allocated`, `container_resources`, managed Prometheus; Trace/Profiler 📘 | [Section 5 guide](PDE_Section_5_Exploration_Guide.md#51-collecting-performance-information-in-google-cloud) |
-| 5.2 Implementing FinOps practices for optimizing resource utilization and costs | 🟡 | scale-to-zero, request-only CPU, VPA, AR cleanup policies, GKE cost allocation; billing export/Recommender 📘 | [Section 5 guide](PDE_Section_5_Exploration_Guide.md#52-implementing-finops-practices-for-optimizing-resource-utilization-and-costs) |
+| 5.1 Collecting performance information in Google Cloud | 🟡 | `execution_environment`, `cpu_always_allocated`, `container_resources`, managed Prometheus; Trace/Profiler and Active Assist 📘 | [Section 5 guide](PDE_Section_5_Exploration_Guide.md#51-collecting-performance-information-in-google-cloud) |
+| 5.2 Implementing FinOps practices for optimizing resource utilization and costs | 🟡 | scale-to-zero, request-only CPU, VPA, AR cleanup policies, GKE cost allocation, `create_billing_budget`; billing export, recommenders, CUDs/SUDs, Spot VMs 📘 | [Section 5 guide](PDE_Section_5_Exploration_Guide.md#52-implementing-finops-practices-for-optimizing-resource-utilization-and-costs) |

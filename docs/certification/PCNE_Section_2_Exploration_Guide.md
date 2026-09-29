@@ -76,7 +76,7 @@ A: Those are Google's central health-check prober ranges for most load balancer 
 A: By design the module degrades gracefully: VPC-SC is skipped (with a warning) if the project has no discoverable organization, if `admin_ip_ranges` is empty (lockout prevention), or if the caller fails the `gcloud access-context-manager policies list` permission probe. Check the apply log for the WARNING lines from the VPC-SC validators.
 </details>
 
-**Beyond the modules** — Not implemented: **Shared VPC** (`gcloud compute shared-vpc enable`, `associated-projects add`, subnet-level `roles/compute.networkUser` grants), **VPC Peering between consumer VPCs** (only the PSA producer peering exists), **private pools** for Cloud Build inside the perimeter, and global **network firewall policies** (the modules use classic per-network VPC firewall rules — see Section 6.2). Study "Provision Shared VPC" and "Migrate firewall rules to network firewall policies".
+**Beyond the modules** — Not implemented: **Shared VPC** (`gcloud compute shared-vpc enable`, `associated-projects add`, subnet-level `roles/compute.networkUser` grants), **VPC Peering between consumer VPCs** (only the PSA producer peering exists), **private pools** for Cloud Build inside the perimeter, **public interfaces** for Google APIs as the alternative to Private Google Access, and global **network firewall policies** (the modules use classic per-network VPC firewall rules — see Section 6.2). Study "Provision Shared VPC" and "Migrate firewall rules to network firewall policies".
 
 **⚠️ Exam trap** — A VPC-SC perimeter is not a firewall: it controls access to Google *APIs* (who can call `storage.googleapis.com` for project data), not packet flow between VMs. Conversely, firewall rules can't stop an exfiltration via `gsutil cp` to an attacker-owned bucket — that's exactly what VPC-SC is for.
 
@@ -133,7 +133,7 @@ A: Via the NVA. Longest-prefix match wins before priority is even considered (/1
 A: GKE secondary (alias-IP) ranges propagate as *subnet routes*, and custom-route export covers only custom static/dynamic routes. The misleadingly named subnet-routes-with-public-IP flags control export/import of subnet routes across the peering; without exporting them, the producer VPC has no return path to pod IPs. This distinction — custom vs subnet route exchange over peering — is precisely sub-topic 2.2's "configuring custom route import/export".
 </details>
 
-**Beyond the modules** — Study: **network tags on routes** (`gcloud compute routes create --tags` restricts a route to tagged instances — RAD uses tags only on firewall rules), **policy-based routes** (`gcloud network-connectivity policy-based-routes create`, match on protocol/src/dst, steer to an internal LB), **internal passthrough LB as next hop** for HA NVAs, and **regional vs global dynamic routing** effects on Cloud Router advertisements. None exist in the modules.
+**Beyond the modules** — Study: **network tags on routes** (`gcloud compute routes create --tags` restricts a route to tagged instances — RAD uses tags only on firewall rules), **policy-based routes** (`gcloud network-connectivity policy-based-routes create`, match on protocol/src/dst, steer to an internal LB), **internal passthrough LB as next hop** for HA NVAs, **route priorities under global dynamic routing** (inter-region cost added to learned-route priority, and how policy-based routes take precedence over dynamic routes), and **custom route import/export over NCC** as well as VPC Network Peering. None exist in the modules.
 
 **⚠️ Exam trap** — Deleting the default route (`0.0.0.0/0 → default-internet-gateway`) does *not* block access to Google APIs if Private Google Access is on — the PGA path still works. But it does break Cloud NAT egress, which depends on that default route.
 
@@ -174,11 +174,11 @@ A: NCC with all three as VPC spokes on one hub (mesh topology) — peering is no
 A: Star when branch VPCs should reach only the center (shared services) and *not* each other — e.g., per-customer VPCs that must stay mutually isolated while consuming central services. Mesh gives any-to-any.
 </details>
 
-**Beyond the modules** — Study "Network Connectivity Center overview": spoke types (VPC, hybrid VPN/Interconnect, router appliance, producer VPC), star vs mesh, Private NAT at the hub for overlapping spokes, PSC propagation through NCC, and the monitoring story (hub route tables, spoke status). Know that hybrid spokes enable *site-to-site data transfer* only in supported regions.
+**Beyond the modules** — Study "Network Connectivity Center overview": spoke types (VPC spoke, hybrid spoke — VPN, VLAN attachment, or router appliance — and producer VPC spoke), star vs mesh, IP/CIDR range include/exclude export filters on spokes, Private NAT at the hub for overlapping spokes, PSC propagation through NCC, and the monitoring story (hub route tables, spoke status). Know that hybrid spokes enable *site-to-site data transfer* only in supported regions.
 
 ---
 
-## 2.4 Configuring and maintaining Google Kubernetes Engine clusters
+## 2.4 Configuring and maintaining GKE clusters
 
 > ⏱ ~75 min · 💰 Autopilot cluster cost · ⚙️ Requires: GKE Network Lab profile (`enable_network_segmentation = true` on App_GKE)
 

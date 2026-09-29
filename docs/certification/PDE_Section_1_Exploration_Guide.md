@@ -13,13 +13,15 @@ This guide covers exam Section 1 using the RAD platform as a lab. The foundation
 
 ---
 
-## 1.1 Designing the overall resource hierarchy
+## 1.1 Designing the overall resource hierarchy for an organization
 
 > ⏱ ~30 min · 💰 no additional cost · ⚙️ Requires: default deployment
 
 **Why the exam cares** — DevOps engineers inherit the org → folder → project → resource hierarchy and must know where to attach what: organization policies and IAM at folders for environment-wide guardrails, billing accounts outside the hierarchy, projects as the isolation and quota boundary. Exam scenarios test whether you put a constraint at the right level (e.g., a folder-level policy instead of repeating it per project) and whether you isolate environments by project rather than by naming convention.
 
 **How RAD implements it** — Not meaningfully: all four foundation modules operate inside a single existing project; no folders, organization policies, or project-factory resources are created. The nearest adjacent capability is governance labeling — `resource_labels` (default `{}`) in both application engines is merged into a common label set (which always adds `application`, `deployment`, `tenant`, and `managed-by` keys) and stamped on every resource, which is the foundation for label-based cost attribution and log filtering.
+
+Two other 1.1 considerations have an observable footprint in the lab. *Shared networking*: `Services_GCP` builds one VPC per project and reaches Google-managed private-IP services such as Cloud SQL through private services access, which is a VPC Network Peering (`google_service_networking_connection`); the application engines discover that VPC by label instead of creating their own. *Service accounts*: builds run as a dedicated per-deployment Cloud Build SA (`cloudbuild-sa-*`, see 1.3), not a broad default identity. Shared VPC, Private Service Connect endpoints, multi-project monitoring, and data residency controls are not configured by the modules.
 
 **Try it**
 1. In the portal, set `resource_labels = { team = "payments", env = "lab" }` on a deployed application module and apply.
@@ -47,7 +49,7 @@ A: Attach a `constraints/gcp.resourceLocations` organization policy to a `non-pr
 A: Labels are queryable in billing exports, log filters, and asset inventory, while names are free-form strings. Labels give you cost showback and operational grouping across heterogeneous resource types — the same mechanism the exam expects for chargeback in a multi-team organization.
 </details>
 
-**Beyond the modules** — Study the resource hierarchy and organization policy docs directly: practice `gcloud resource-manager folders list --organization=<ORG_ID>`, `gcloud org-policies list --project=<PROJECT>`, and review the Cloud Foundation Fabric/FAST landing-zone blueprints for how enterprises bootstrap folders, billing, and IAM with Terraform. Also know that a billing account is linked to projects but lives outside the hierarchy.
+**Beyond the modules** — Study the resource hierarchy and organization policy docs directly: practice `gcloud resource-manager folders list --organization=<ORG_ID>`, `gcloud org-policies list --project=<PROJECT>`, and review the Cloud Foundation Fabric/FAST landing-zone blueprints for how enterprises bootstrap folders, billing, and IAM with Terraform. Also know that a billing account is linked to projects but lives outside the hierarchy. For the rest of the 1.1 list: Shared VPC (host and service projects) vs. VPC Network Peering vs. Private Service Connect; multi-project monitoring through a Cloud Monitoring metrics scope and aggregated log sinks or log buckets; service account hygiene (dedicated per-workload SAs, no user-managed keys, `iam.disableServiceAccountKeyCreation`); and data residency through the `gcp.resourceLocations` constraint and regional log buckets.
 
 **⚠️ Exam trap** — Organization policies are *not* IAM: denying a permission in IAM and constraining a resource configuration (e.g., `disableServiceAccountKeyCreation`) are different control planes, and the exam likes answers that combine both.
 
@@ -91,11 +93,13 @@ A: Either route all image changes through the pipeline that Terraform delegates 
 A: Validation and unit tests run without credentials or a live project (`-backend=false`), so they catch syntax, type, and precondition violations cheaply on every commit. Plans against live state are slower, need secrets, and belong to the deployment pipeline, not the code-review gate.
 </details>
 
+**Beyond the modules** — The exam names more IaC tooling than this lab uses: Infrastructure Manager (Google's managed Terraform runner), Cloud Foundation Toolkit blueprints, Config Connector (Google Cloud resources as Kubernetes objects), Helm, and GitOps controllers. The GitOps pattern is partly visible here: in a project you bring yourself, `Services_GCP`'s `configure_config_management = true` registers the cluster in a fleet and enables Config Sync, but it syncs Google's public quickstart sample repository, not a repo you control, and the option is hidden for projects RAD creates for you. Also practise scripting against Google Cloud with the Python or Go client libraries, since "automation with scripting" is its own bullet.
+
 **⚠️ Exam trap** — `terraform plan` detects drift only for *attributes Terraform manages*. Resources created entirely outside Terraform are invisible to it; finding those requires Cloud Asset Inventory or config scanning, not a plan.
 
 ---
 
-## 1.3 Designing a CI/CD architecture stack
+## 1.3 Designing a CI/CD architecture stack in Google Cloud, hybrid, and multi-cloud environments
 
 > ⏱ ~45 min · 💰 low (Cloud Build minutes) · ⚙️ Requires: Pipeline engineer profile
 
@@ -144,6 +148,8 @@ A: Design — a plan-time precondition rejects `enable_cloud_deploy = true` with
 A: Kaniko builds OCI images entirely in userspace inside the build container — no privileged Docker daemon socket — which shrinks the attack surface of the build environment and is the recommended pattern in Cloud Build.
 </details>
 
+**Beyond the modules** — The lab is Google Cloud only. For the hybrid and multi-cloud half of the title, study how Cloud Deploy reaches GKE attached clusters and custom targets, and where widely used third-party tools fit: Jenkins or GitHub Actions as an alternative CI, Argo CD as a pull-based GitOps CD, Packer for VM images, and kpt for package-based Kubernetes configuration. The module-generated Skaffold configs deploy raw manifests (`rawYaml`); Kustomize, which Cloud Deploy also renders through Skaffold, is not used. For security of CI/CD tooling, know private pools for Cloud Build, least-privilege build service accounts, and Workload Identity Federation for external CI in place of service account keys.
+
 **⚠️ Exam trap** — `binauthz_evaluation_mode = "ALWAYS_ALLOW"` (the default here) means Binary Authorization is *configured but not enforcing*. Attestations being created in the pipeline does nothing until the policy says `REQUIRE_ATTESTATION`.
 
 ---
@@ -165,6 +171,12 @@ A: Kaniko builds OCI images entirely in userspace inside the build container —
 ```
 
 Each stage becomes a Cloud Deploy target (with `require_approval` mapped directly) and a stage-suffixed runtime: Cloud Run services named `<service>-<stage>`, or GKE namespaces per stage passed to Skaffold via the `NAMESPACE` deploy parameter. Stages with `auto_promote = true` get a Cloud Deploy automation with an advance-rollout rule, so a successful rollout advances automatically. Terraform provisions only the *first* stage's service/namespace; later stages materialize when Cloud Deploy promotes into them — the same rendered release, same image digest, no rebuild. Per-stage overrides (`project_id`, `region`, `service_name`) exist on each stage object, so cross-project promotion is expressible, though the lab runs all stages in one project.
+
+The other 1.4 considerations, and where the lab touches them:
+
+- **Ephemeral environments**: every deployment is created and destroyed through the portal, so a short-lived test environment is a deploy followed by a delete. The modules do not expire one automatically.
+- **Safe patching and upgrading**: the `Services_GCP` GKE cluster is enrolled in the `REGULAR` release channel, so Google upgrades it automatically; Cloud SQL maintenance is scheduled with `sql_maintenance_window_day` (default `7`), `sql_maintenance_window_hour` (default `3`) and `sql_maintenance_update_track` (default `stable`; `canary` receives updates roughly a week earlier, which is how a pre-production project sees a maintenance problem before production does).
+- **Fleets and policy**: in a project you bring yourself, `Services_GCP` registers its cluster in a GKE fleet when you set `configure_config_management`, `configure_policy_controller` (OPA Gatekeeper constraints), `configure_cloud_service_mesh`, or `gke_cluster_count` above `1`. These options are hidden for projects RAD creates for you.
 
 **Try it**
 1. With the Pipeline engineer profile deployed, promote the current release out of dev:
@@ -201,6 +213,43 @@ A: No — Cloud Deploy promotes the *release*, which pins image digests at relea
 A: Set `auto_promote = true` on the dev stage — the module then creates a Cloud Deploy automation with an advance-rollout rule scoped to the dev target. Prod keeps `require_approval = true`, so automation never bypasses the human gate.
 </details>
 
-**Beyond the modules** — The lab keeps all stages in one project. For exam completeness, study per-environment *project* isolation (separate IAM, quotas, VPCs per environment), Cloud Deploy deploy parameters and custom targets, and post-deployment verification (`verify` in Skaffold profiles), none of which the modules configure.
+**Beyond the modules** — The lab keeps all stages in one project. For exam completeness, study per-environment *project* isolation (separate IAM, quotas, VPCs per environment), Cloud Deploy deploy parameters and custom targets, and post-deployment verification (`verify` in Skaffold profiles), none of which the modules configure. Also study fleet-wide management at enterprise scale (fleet scopes, team namespaces, Config Sync from your own repository, fleet-level Policy Controller bundles), GKE maintenance windows and exclusions, and surge upgrades for node pools.
 
 **⚠️ Exam trap** — `require_approval` gates the *rollout into the target*, not release creation. A release can exist and sit unpromoted forever; approval is per-target, which is why only prod's target carries the flag.
+
+---
+
+## 1.5 Enabling secure cloud development environments
+
+> ⏱ ~45 min · 💰 low (one Cloud Run service while it runs) · ⚙️ Requires: a `CodeServer_CloudRun` deployment (optional)
+
+**Why the exam cares** — Developer environments are part of the delivery system: a laptop with long-lived credentials and hand-installed tools is both a security risk and a source of "works on my machine" drift. The exam tests managed alternatives (Cloud Workstations, Cloud Shell), how an environment is bootstrapped with the right tooling (custom images, IDE, Cloud SDK), and where AI assistance fits in development and operations: Gemini Code Assist in the IDE, Gemini Cloud Assist in the console, and the Gemini CLI in the terminal.
+
+**How RAD implements it** — Only by analogy. No module provisions Cloud Workstations or configures Gemini. The nearest adjacent capability is the `CodeServer_CloudRun` / `CodeServer_GKE` wrappers (and the `Coder_CloudRun` / `Coder_GKE` wrappers, which deploy the Coder workspace platform), which run a browser-based VS Code on the same foundation engines as any other application:
+
+- **Custom image**: the image is built from a one-line Dockerfile (`FROM codercom/code-server`). That is where a team would bake in the Cloud SDK and its own tooling; the module does not add any.
+- **Access control**: `enable_password` (default `true`) generates a random editor password and stores it in Secret Manager; `enable_iap` (default `false`) with `iap_authorized_users` puts Identity-Aware Proxy in front of the editor, so access requires a Google identity.
+- **Persistence**: on Cloud Run, the home directory is backed by a Cloud Storage bucket declared by the module.
+
+**Try it**
+1. Deploy `CodeServer_CloudRun`, then set `enable_iap = true` and `iap_authorized_users = ["user:you@example.com"]` with **Update**.
+2. Open the service URL in a private browser window and confirm you are sent to a Google sign-in before the editor loads.
+3. Compare with the managed product in a scratch project: **Console > Cloud Workstations**, create a workstation configuration from a predefined image, and note what Google manages for you (image patching, idle shutdown, no public IP).
+4. You know it worked when an unauthenticated request never reaches the editor, and you can name two things Cloud Workstations manages that the self-hosted editor leaves to you.
+
+**Check yourself**
+<details>
+<summary>Q1: Contractors need a consistent, pre-configured IDE with access to private resources in a VPC, and security forbids source code on personal laptops. Which Google Cloud service fits?</summary>
+
+A: Cloud Workstations. Workstation configurations define a container image (predefined or custom, with your tooling baked in), run inside your VPC, and can be restricted to private endpoints, so source code stays in Google Cloud. Cloud Shell is a personal, ephemeral environment with a small persistent home directory, not a governed team environment.
+</details>
+
+<details>
+<summary>Q2: An on-call engineer wants a plain-language summary of why a Cloud Run service's error rate rose, without writing a log query first. Which AI tool is designed for that?</summary>
+
+A: Gemini Cloud Assist, which works inside the Google Cloud console on your project's resources, logs and metrics. Gemini Code Assist is aimed at writing code in the IDE, and the Gemini CLI brings the model to the terminal.
+</details>
+
+**Beyond the modules** — Study Cloud Workstations configurations (predefined vs. custom images, idle and running timeouts, private clusters, persistent disks), Cloud Shell (5 GB persistent home, preinstalled Cloud SDK, ephemeral VM), and the three Gemini surfaces named in the exam guide: Gemini Code Assist, Gemini Cloud Assist, and the Gemini CLI. None are provisioned or configured by the RAD modules.
+
+**⚠️ Exam trap** — A self-hosted browser IDE is not a Cloud Workstations equivalent just because it runs on Google Cloud. The managed service is the answer when a question stresses centrally governed images, VPC-private access, or no source code on endpoints.

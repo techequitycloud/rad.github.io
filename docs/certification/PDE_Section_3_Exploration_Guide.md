@@ -54,7 +54,7 @@ A: The SLO is the internal target with consequences you control (release freezes
 A: Burn-rate alerting scales urgency to budget impact: a 14× burn over an hour threatens the monthly budget and deserves a page, while a slow 1.5× burn is a ticket. Raw-threshold alerts either page too often (noise) or too late (budget already gone) — the multiwindow, multi-burn-rate pattern from the SRE Workbook fixes both.
 </details>
 
-**Beyond the modules** — Study: Cloud Monitoring SLO monitoring (request-based vs. windows-based SLIs), the SRE Workbook chapters on alerting on SLOs and error-budget policy, and toil measurement. In a scratch project, try `gcloud monitoring services create` / the SLO REST API to script what you clicked in the console — the exam may reference SLO definitions in JSON form.
+**Beyond the modules** — Study: Cloud Monitoring SLO monitoring (request-based vs. windows-based SLIs), the SRE Workbook chapters on alerting on SLOs and error-budget policy, and toil measurement. In a scratch project, try `gcloud monitoring services create` / the SLO REST API to script what you clicked in the console — the exam may reference SLO definitions in JSON form. Also know how Cloud Service Mesh fits the error-budget bullet: mesh workloads appear automatically as services in Cloud Monitoring, with request-based availability and latency SLIs ready to attach SLOs to. `Services_GCP` can enable the mesh (`configure_cloud_service_mesh`, default `false`) only in a project you bring yourself; the option is hidden for projects RAD creates for you.
 
 **⚠️ Exam trap** — 99.9% monthly ≈ 43 minutes of downtime, 99.99% ≈ 4.3 minutes. Exam answers often hinge on whether a proposed maintenance window or recovery time even *fits* in the stated SLO's budget.
 
@@ -78,6 +78,8 @@ A: Burn-rate alerting scales urgency to budget impact: a 14× burn over an hour 
 | Liveness | `health_check_config` (30s period, 3 failures → restart) | `health_check_config` (15s delay/30s period) |
 
 Two wiring details worth knowing: the GKE HPA is created only when `max_instance_count > 1` **and** VPA is disabled — the module never runs HPA and VPA together on the same workload; and the HPA carries a plan-time precondition that `min_instance_count <= max_instance_count`.
+
+Capacity planning also has a quota side. When RAD creates a project for you, `Project_GCP` sets Cloud Quotas preferences on it: Compute Engine CPUs capped at 24 per region (Autopilot nodes draw from this pool), Cloud Run CPU allocation at 16 vCPU per region, and GPUs at zero. `max_instance_count` above what those quotas allow does not buy capacity, and `gcloud beta quotas preferences list --project=$GOOGLE_PROJECT_ID` shows what the project may actually use.
 
 **Try it**
 1. On GKE, inspect the module's autoscaling stack:
@@ -112,7 +114,7 @@ A: VPA (or manually raising `container_resources` memory): the per-pod allocatio
 A: It caps blast radius in both directions: runaway cost under a traffic spike or retry storm, and overload protection for downstream fixed-capacity dependencies (Cloud SQL `max_connections` is 200 by default in `Services_GCP`) that unlimited Cloud Run scaling would exhaust.
 </details>
 
-**Beyond the modules** — Cloud Run concurrency tuning (requests per instance) isn't exposed as a module variable; study how concurrency interacts with CPU allocation and instance count (`gcloud run services update --concurrency=...` in a scratch project). Also study GKE cluster-level autoscaling concepts (node auto-provisioning) even though Autopilot abstracts them away.
+**Beyond the modules** — Cloud Run concurrency tuning (requests per instance) isn't exposed as a module variable; study how concurrency interacts with CPU allocation and instance count (`gcloud run services update --concurrency=...` in a scratch project). Also study GKE cluster-level autoscaling concepts (node auto-provisioning) even though Autopilot abstracts them away. The 3.2 list also names managed instance group autoscaling (`Services_GCP`'s NFS server runs in a regional MIG, but a fixed-size one with no autoscaler), Compute Engine reservations, Dynamic Workload Scheduler for obtaining scarce accelerators, requesting quota increases ahead of a launch, and the planning and retirement stages of a service's lifecycle, none of which the modules configure.
 
 **⚠️ Exam trap** — HPA percentage targets are relative to the *request*, not the limit. A pod with a low CPU request hits "70% utilization" almost immediately; wrong requests make HPA behavior look broken.
 
@@ -131,6 +133,7 @@ A: It caps blast radius in both directions: runaway cost under a traffic spike o
 - **Workload rollback (GKE)**: `kubectl rollout undo` reverts to the previous ReplicaSet; the direct CI/CD path (`kubectl set image`) keeps rollout history intact.
 - **Availability under disruption**: `enable_pod_disruption_budget` (default `true`) creates a PDB with `pdb_min_available` (default `"1"`) — automatically skipped when `max_instance_count = 1`, where a PDB would block node drains forever; created per Cloud Deploy stage namespace too. `enable_topology_spread` (default `false`) spreads replicas across zones.
 - **Failure containment at the edge**: `enable_cloud_armor` (default `false`) fronts Cloud Run with a global load balancer whose policy includes per-IP rate limiting — 500 requests/60s, exceed → deny with HTTP 429 and a 300s ban — plus OWASP preconfigured WAF rules and Adaptive Protection for L7 DDoS. When enabled, `ingress_settings` is forced to `internal-and-cloud-load-balancing` so the WAF can't be bypassed via the direct `*.run.app` URL.
+- **Adding capacity**: raising `max_instance_count` (and `min_instance_count`, to pre-warm instances before a known surge) is the capacity lever on both engines; on GKE the HPA's `maxReplicas` follows it. It only helps while the project's quotas have headroom (see 3.2).
 - **Self-healing probes**: liveness failures restart containers (3 consecutive failures on Cloud Run's `health_check_config`); startup probes keep traffic off instances that aren't ready.
 
 **Try it**

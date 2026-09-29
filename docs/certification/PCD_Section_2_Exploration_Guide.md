@@ -9,7 +9,7 @@ description: "Prepare for the Professional Cloud Developer (PCD) exam Section 2 
 
 > 📚 **Official exam guide:** [Professional Cloud Developer certification](https://cloud.google.com/learn/certification/cloud-developer) — always confirm section weightings against the current Google Cloud exam guide.
 
-This section maps to the RAD platform's build machinery: the platform's Cloud Build container builds, the Cloud Build CI trigger (present in both App_CloudRun and App_GKE), Artifact Registry management, and image mirroring. Deploy the **Delivery pipeline** profile from the [Lab Map](PCD_Certification_Guide.md). Local development tooling (2.1) and test authoring (2.3) are mostly study-only — honest pointers are given.
+This section maps to the RAD platform's build machinery: the platform's Cloud Build container builds, the Cloud Build CI trigger (present in both App_CloudRun and App_GKE), Artifact Registry management, and image mirroring. Deploy the **Delivery pipeline** profile from the [Lab Map](PCD_Certification_Guide.md). Local development tooling and AI-assisted development (2.1), and test authoring with AI coding assistants (2.3), are study-only — honest pointers are given.
 
 ---
 
@@ -17,7 +17,7 @@ This section maps to the RAD platform's build machinery: the platform's Cloud Bu
 
 > ⏱ ~45 min (mostly outside the platform) · 💰 no additional cost · ⚙️ Requires: any deployed profile + a workstation or Cloud Shell
 
-**Why the exam cares** — The exam tests whether you know the developer toolchain: `gcloud` auth flows (user credentials vs Application Default Credentials), local emulators for unit testing without cloud cost, Cloud Code/Cloud Shell/Cloud Workstations trade-offs, and how to reproduce a cloud environment locally (e.g., Cloud SQL Auth Proxy on your laptop).
+**Why the exam cares** — The exam tests whether you know the developer toolchain: `gcloud` auth flows (user credentials vs Application Default Credentials), local emulators started from the Google Cloud CLI for unit testing without cloud cost, Cloud Code/Cloud Shell/Cloud Workstations trade-offs, Gemini Cloud Assist in the console, IDE integrations including AI tooling (coding assistants, MCP servers), and how to reproduce a cloud environment locally (e.g., Cloud SQL Auth Proxy on your laptop).
 
 **How RAD implements it** — Not directly: the foundation modules run server-side and assume the portal performs the deploy. The nearest adjacent capabilities are real and useful, though:
 
@@ -63,7 +63,7 @@ A: On Cloud Run the client library resolves Application Default Credentials from
 A: The local emulators (`gcloud beta emulators pubsub start`, the Firestore emulator) with the `PUBSUB_EMULATOR_HOST` / `FIRESTORE_EMULATOR_HOST` environment variables set so client libraries transparently target them. Emulators need no credentials, which is exactly what hermetic CI wants.
 </details>
 
-**Beyond the modules** — Study Cloud Code (IDE deploy/debug for Cloud Run and GKE, including a local Cloud Run emulator), Cloud Shell (ephemeral, pre-authenticated, 5 GB persistent home), and Cloud Workstations (managed, persistent, IAP-fronted dev VMs for regulated teams) — know which to recommend for a given constraint. Also practice `gcloud run deploy --source .` (Buildpacks-based source deploy) since the RAD pipeline always builds an explicit container instead.
+**Beyond the modules** — Study Cloud Code (IDE deploy/debug for Cloud Run and GKE, including a local Cloud Run emulator), Cloud Shell (ephemeral, pre-authenticated, 5 GB persistent home), and Cloud Workstations (managed, persistent, IAP-fronted dev VMs for regulated teams) — know which to recommend for a given constraint. The current guide adds AI tooling: **Gemini Cloud Assist** (console-integrated help for designing, operating, and troubleshooting resources), **Gemini Code Assist** and other AI coding assistants in the IDE (install via Cloud Code or the IDE marketplace; know context sources and enterprise controls), and **MCP servers** that let an assistant call tools such as `gcloud` or Google Cloud APIs — understand what credentials such a server runs with and why least privilege applies to it too. None of this is provisioned by the platform. Also practice `gcloud run deploy --source .` (Buildpacks-based source deploy) since the RAD pipeline always builds an explicit container instead.
 
 **⚠️ Exam trap** — `gcloud auth login` and `gcloud auth application-default login` are different credentials: the first authorizes the `gcloud` CLI, the second writes the ADC file client libraries read. Tests that pass for CLI commands but 401 in code usually mean the second was skipped.
 
@@ -73,14 +73,14 @@ A: The local emulators (`gcloud beta emulators pubsub start`, the Firestore emul
 
 > ⏱ ~75 min · 💰 low — Cloud Build per-minute billing plus Artifact Registry storage · ⚙️ Requires: Delivery pipeline profile (`enable_cicd_trigger = true`, `github_repository_url` set)
 
-**Why the exam cares** — PCD expects fluency in the container supply chain: building images in Cloud Build (and why a daemonless builder like Kaniko or Buildpacks beats `docker build` in CI), tagging strategy (mutable `latest` vs immutable commit-SHA tags), Artifact Registry storage and cleanup, and attaching provenance (attestations) so Binary Authorization can gate deploys.
+**Why the exam cares** — PCD expects fluency in the container supply chain: building images from source code in Cloud Build and storing them in Artifact Registry (and why a daemonless builder like Kaniko or Buildpacks beats `docker build` in CI), tagging strategy (mutable `latest` vs immutable commit-SHA tags), Artifact Registry storage and cleanup, and configuring provenance in Cloud Build (build provenance plus attestations) so Binary Authorization can gate deploys.
 
 **How RAD implements it** — Two distinct build paths, both real Cloud Build:
 
 1. **Terraform-driven build** (every deploy with `container_image_source = "custom"`, the default): the platform renders a build config and runs `gcloud builds submit`. Kaniko builds with layer caching (`--cache=true`, `--cache-ttl=24h`) and pushes three tags: the app version, `latest`, and the commit SHA. Rebuilds are *hash-triggered*: the platform hashes the build context files, the Dockerfile (or inline `dockerfile_content`), and `build_args`, so an unchanged source tree never rebuilds.
 2. **Git-driven CI trigger** (`enable_cicd_trigger`, default `false`): the platform creates a Cloud Build trigger bound to `github_repository_url`, filtered by `cicd_trigger_config` (`branch_pattern` default `"^main$"`, plus `included_files`/`ignored_files`/`substitutions`). The generated pipeline runs Kaniko `v1.23.2`, optionally signs the image (`gcloud beta container binauthz attestations sign-and-create` against the `pipeline-attestor` using the `binauthz-signer` KMS key in `{project}-binauthz-keyring`), then either runs `gcloud run services update --image=...:$COMMIT_SHA` directly or creates a Cloud Deploy release (Section 3.1).
 
-Registry management: the module discovers the `Services_GCP` shared repository or creates one, and applies cleanup policies — `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), `image_retention_days` (default `30`), scoped to this deployment's package names. `enable_image_mirroring` (default `true`) copies external base images into Artifact Registry using Crane digest comparison, comparing source/target SHA256 digests and only copying (or overwriting a stale tag) when digests differ — protecting you from registry rate limits and tag drift. `enable_vulnerability_scanning` (Services_GCP) makes Artifact Analysis scan everything pushed.
+Registry management: the module discovers the `Services_GCP` shared repository or, when `Services_GCP` is absent, creates its own. Cleanup policies depend on which: on the **shared** repository they are owned by `Services_GCP` — `enable_image_retention` (default `false`), `image_retention_keep_count` (default `10`), `image_retention_days` (default `90`), and `image_retention_dry_run` (default `true`, report-only); on an **inline** repository the app module applies `max_images_to_retain` (default `7`), `delete_untagged_images` (default `true`), and `image_retention_days` (default `30`), scoped to this deployment's package names. The app-module settings have no effect on the shared repository. `enable_image_mirroring` (default `true`) copies external base images into Artifact Registry using Crane digest comparison, comparing source/target SHA256 digests and only copying (or overwriting a stale tag) when digests differ — protecting you from registry rate limits and tag drift. `enable_vulnerability_scanning` (Services_GCP) makes Artifact Analysis scan everything pushed.
 
 **Try it**
 
@@ -127,7 +127,7 @@ A: It uses Kaniko, which builds OCI images entirely in userspace from the Docker
 <details>
 <summary>Q3: Artifact Registry storage costs are growing without bound in a busy repo. Which three RAD controls address it?</summary>
 
-A: `delete_untagged_images = true` removes dangling layers, `image_retention_days = 30` ages out old images, and `max_images_to_retain = 7` keeps the most recent N regardless of age (a keep-guard, not a deleter). Together they implement the recommended AR cleanup-policy pattern: delete-by-age plus keep-most-recent.
+A: On a module-created repository: `delete_untagged_images = true` removes dangling layers, `image_retention_days = 30` ages out old images, and `max_images_to_retain = 7` keeps the most recent N regardless of age (a keep-guard, not a deleter). On the `Services_GCP` shared repository the same pattern is `enable_image_retention = true` with `image_retention_days` and `image_retention_keep_count` (and `image_retention_dry_run = false` to actually delete). Either way it is the recommended AR cleanup-policy pattern: delete-by-age plus keep-most-recent.
 </details>
 
 **Beyond the modules** — The exam also covers Buildpacks/source deploys, build provenance and SLSA levels (Cloud Build generates SLSA provenance viewable under a build's **Security insights** tab), private pools, and build substitutions/secrets in a Cloud Build config (try `gcloud builds submit --substitutions=_FOO=bar` in a scratch repo). The RAD trigger supports GitHub only (token or App installation) — know that Cloud Build also connects GitLab and Bitbucket repos.
@@ -140,7 +140,7 @@ A: `delete_untagged_images = true` removes dangling layers, `image_retention_day
 
 > ⏱ ~45 min · 💰 low (extra Cloud Build minutes) · ⚙️ Requires: Delivery pipeline profile + write access to the app repository
 
-**Why the exam cares** — Tests must run *inside* the pipeline so a failure blocks promotion: unit tests early (cheap, hermetic, emulator-backed), integration tests against real or staged services after build, and smoke tests after deploy to a non-prod stage. The exam tests where each belongs and what a failing step does to the pipeline.
+**Why the exam cares** — The current guide names two skills: writing unit tests with the help of AI coding assistants, and executing automated integration tests in Cloud Build. Tests must run *inside* the pipeline so a failure blocks promotion: unit tests early (cheap, hermetic, emulator-backed), integration tests against real or staged services after build, and smoke tests after deploy to a non-prod stage. The exam tests where each belongs and what a failing step does to the pipeline.
 
 **How RAD implements it** — Honestly: the generated pipelines contain **no test step by default** — the CI flow is build → (optional attestation) → deploy/release. The hooks for adding tests are real, though:
 
@@ -187,6 +187,6 @@ A: Deploy a separate tenant (`tenant_id = "ci"`) so the pipeline gets its own is
 A: After the rollout to a non-prod target (dev/staging) — run them against that stage's URL, and gate `prod` with `require_approval = true` (the RAD default) so a human (or an automated verification you wire in) confirms before promotion. A failed rollout or withheld approval keeps the release from advancing.
 </details>
 
-**Beyond the modules** — Practice writing emulator-backed unit tests (Pub/Sub, Firestore, Spanner emulators), Cloud Build test reporting, and load testing against Cloud Run revisions (e.g., `hey`/`k6` against a tagged canary URL). Cloud Deploy *verify* (post-deploy verification jobs declared in the Skaffold config) is the managed version of step 2's smoke-test idea and worth reading about — the RAD Cloud Deploy configs use hooks for IAM and jobs, not verification.
+**Beyond the modules** — Practice generating unit tests with an AI coding assistant (e.g., Gemini Code Assist's test generation in the IDE) and then reviewing them — check that generated tests assert behaviour rather than mirror the implementation, and cover edge cases the assistant skipped. Also practice writing emulator-backed unit tests (Pub/Sub, Firestore, Spanner emulators), Cloud Build test reporting, and load testing against Cloud Run revisions (e.g., `hey`/`k6` against a tagged canary URL). Cloud Deploy *verify* (post-deploy verification jobs declared in the Skaffold config) is the managed version of step 2's smoke-test idea and worth reading about — the RAD Cloud Deploy configs use hooks for IAM and jobs, not verification.
 
 **⚠️ Exam trap** — Cloud Build steps share the `/workspace` volume but are otherwise isolated containers; a test step can't reach a server started in a previous step unless you background it within the *same* step or use the `docker` network. "Why can't step 4 see the service step 3 started?" is a recurring question shape.

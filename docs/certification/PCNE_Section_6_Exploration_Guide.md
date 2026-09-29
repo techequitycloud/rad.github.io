@@ -7,15 +7,15 @@ description: "Prepare for the Professional Cloud Network Engineer (PCNE) exam Se
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pcne_section6.png" alt="PCNE Certification Preparation Guide: Section 6 — Configuring, implementing and managing a cloud network security solution (~13% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Network security is RAD's strongest suit in this exam after GKE networking. Both deployment engines build a production-shaped **Cloud Armor** policy (preconfigured OWASP rules, Adaptive Protection, rate-based banning), the platform VPC implements **tag-based firewall micro-segmentation**, and **Cloud NAT** handles all internet egress for private workloads. NGFW policies, Secure Web Proxy, NVAs, and Packet Mirroring are study-only. Deploy the **Global Edge** profile for 6.1 and the **VPC Foundation** profile for 6.2–6.4. Modules exercised: `App_CloudRun`, `App_GKE`, `Services_GCP`.
+Network security is RAD's strongest suit in this exam after GKE networking. Both deployment engines build a production-shaped **Cloud Armor** policy (preconfigured OWASP rules, Adaptive Protection, rate-based banning), the platform VPC implements **tag-based firewall micro-segmentation**, and **Cloud NAT** handles all internet egress for private workloads. Cloud NGFW policies, Secure Web Proxy, NVAs, Packet Mirroring, and Network Security Integration are study-only. Deploy the **Global Edge** profile for 6.1 and the **VPC Foundation** profile for 6.2–6.4. Modules exercised: `App_CloudRun`, `App_GKE`, `Services_GCP`.
 
 ---
 
-## 6.1 Implementing and managing Google Cloud Armor
+## 6.1 Configuring Google Cloud Armor policies
 
 > ⏱ ~60 min · 💰 Cloud Armor policy + per-request charges · ⚙️ Requires: Global Edge profile (`enable_cloud_armor = true`)
 
-**Why the exam cares** — Cloud Armor questions test rule mechanics (priority, preconfigured WAF expressions, custom CEL), the edge-policy vs backend-policy split, rate limiting (`throttle` vs `rate_based_ban`), Adaptive Protection for L7 DDoS, and bot management.
+**Why the exam cares** — Cloud Armor questions test rule mechanics (priority, preconfigured WAF expressions, custom CEL), the edge-policy vs backend-policy split, rate limiting (`throttle` vs `rate_based_ban`), Adaptive Protection for L7 DDoS, advanced network DDoS protection, bot management, and Google Threat Intelligence.
 
 **How RAD implements it** — Both engines create the same verified Cloud Armor policy shape:
 
@@ -74,13 +74,13 @@ A: Edge policies evaluate at Google's edge before the cache, so they can filter 
 A: Cloud Armor enforces only on traffic that traverses the load balancer. The default Cloud Run URL (`*.run.app`) would bypass it, so the module overrides ingress to `internal-and-cloud-load-balancing` — the standard exam-grade companion control. The same logic appears as "use `internal-and-cloud-load-balancing` + LB" whenever WAF/CDN/IAP-on-LB must not be bypassable.
 </details>
 
-**Beyond the modules** — Study: rate limiting variants (throttle vs RAD's rate-based ban; enforce-on-key options beyond IP — HTTP header, cookie, XFF-IP), preconfigured rule *sensitivity levels* and opt-out fields (`evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})`), bot management with reCAPTCHA action-tokens and redirect actions, Google Threat Intelligence expressions (`evaluateThreatIntelligence('iplist-known-malicious-ips')`), and Adaptive Protection's *granular models* + automatic rule deployment (RAD enables detection; triage of its suggested rules is manual).
+**Beyond the modules** — Study: the remote file inclusion rule (`rfi-v33-stable`) — the exam lists SQLi, XSS, and RFI, and RAD's policy covers SQLi, XSS, LFI, and RCE but not RFI; **advanced network DDoS protection** (network edge security policies for passthrough Network LBs, protocol forwarding, and VMs with public IPs — Cloud Armor Enterprise); rate limiting variants (throttle vs RAD's rate-based ban; enforce-on-key options beyond IP — HTTP header, cookie, XFF-IP), preconfigured rule *sensitivity levels* and opt-out fields (`evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})`), bot management with reCAPTCHA action-tokens and redirect actions, Google Threat Intelligence expressions (`evaluateThreatIntelligence('iplist-known-malicious-ips')`), and Adaptive Protection's *granular models* + automatic rule deployment (RAD enables detection; triage of its suggested rules is manual).
 
 **⚠️ Exam trap** — Rule priority 0 is the *highest*; the default rule lives at 2147483647. A "deny all then allow" design that puts the deny at a low number blocks everything — order your allows above (numerically below) the deny.
 
 ---
 
-## 6.2 Configuring NGFW policies and VPC firewall rules
+## 6.2 Configuring and managing NGFW policies and VPC Firewall rules
 
 > ⏱ ~45 min · 💰 no additional cost (NGFW Enterprise endpoints would cost; not created) · ⚙️ Requires: VPC Foundation profile; GKE Network Lab for the NetworkPolicy layer
 
@@ -139,13 +139,13 @@ A: Service accounts (or IAM-governed *secure tags* in NGFW policies). Classic ne
 A: A hierarchical firewall policy at the org/folder node with a deny rule — hierarchical rules evaluate *before* network policies and VPC rules, and `goto_next` vs `allow`/`deny` controls delegation. Per-project VPC rules (RAD's mechanism) cannot enforce this centrally.
 </details>
 
-**Beyond the modules** — Study: evaluation order (hierarchical → global network policy → regional network policy → VPC rules, modulated by the network's `firewall_policy_enforcement_order`), migration tooling from VPC rules to network policies, NGFW tiers (Essentials = policies/secure tags; Standard adds FQDN/geo/Threat Intelligence objects; Enterprise adds TLS-inspecting L7 IPS via firewall endpoints), and NGFW with GKE/Cloud LB traffic. Docs: "Cloud NGFW overview", "Hierarchical firewall policies", "Migrate VPC firewall rules".
+**Beyond the modules** — Study: firewall strategy (VPC rules vs Cloud NGFW policies vs hierarchical policies vs third-party NVAs), evaluation order (hierarchical → global network policy → regional network policy → VPC rules, modulated by the network's `firewall_policy_enforcement_order`) and reading the *effective* result (`gcloud compute networks get-effective-firewalls`), migration tooling from VPC rules to network policies, NGFW tiers (Essentials = policies/secure tags; Standard adds FQDN/geo/Threat Intelligence objects; Enterprise adds TLS-inspecting L7 IPS via firewall endpoints), and NGFW with GKE/Cloud LB traffic. Docs: "Cloud NGFW overview", "Hierarchical firewall policies", "Migrate VPC firewall rules".
 
 **⚠️ Exam trap** — The implied rules: every VPC has implied egress-allow and ingress-deny at priority 65535. "We never wrote an egress rule, so egress is blocked" is backwards — and RAD's NetworkPolicy layer exists partly because VPC firewalls alone leave *egress* wide open.
 
 ---
 
-## 6.3 Controlling internet egress traffic with Cloud NAT and Secure Web Proxy
+## 6.3 Configuring and securing internet egress traffic using Public Cloud NAT and Secure Web Proxy
 
 > ⏱ ~30 min · 💰 NAT gateway hourly + per-GB · ⚙️ Requires: VPC Foundation profile
 
@@ -198,7 +198,7 @@ A: Secure Web Proxy — NAT is L3/L4 and cannot filter by hostname/URL. SWP is a
 
 ---
 
-## 6.4 Implementing a self-managed network virtual appliance and Packet Mirroring
+## 6.4 Configuring self-managed network virtual appliance and Packet Mirroring
 
 > ⏱ ~30 min study · 💰 none unless you build the scratch lab · ⚙️ Requires: VPC Foundation profile for the analogue only
 
@@ -246,6 +246,6 @@ A: Each NIC attaches to a different VPC (NICs are fixed at VM creation), making 
 A: Packet Mirroring — it clones entire packets (headers + payload) to a collector ILB backed by IDS instances. Flow logs are sampled 5-tuple metadata; firewall logs record rule decisions. Mirroring filters (CIDR/protocol/direction) keep collector volume manageable; mirrored traffic is charged egress.
 </details>
 
-**Beyond the modules** — Study "Packet Mirroring overview" (policy scoping by subnet/tag/instance, collector must be an internal passthrough LB with `--is-mirroring-collector` on the forwarding rule, same region), "Internal TCP/UDP load balancer as next hop" (symmetric hashing, no health-check-based failover to a different region), policy-based routes for NVA insertion with `--next-hop-ilb` and skip-rules for the appliance's own subnet, and the managed alternative positioning: Cloud IDS / NGFW Enterprise vs self-managed NVAs.
+**Beyond the modules** — Study "Packet Mirroring overview" (policy scoping by subnet/tag/instance, collector must be an internal passthrough LB with `--is-mirroring-collector` on the forwarding rule, same region), "Internal TCP/UDP load balancer as next hop" (symmetric hashing, no health-check-based failover to a different region), policy-based routes for NVA insertion with `--next-hop-ilb` and skip-rules for the appliance's own subnet, an **out-of-band Network Security Integration** strategy (Google-managed mirroring that delivers copies of selected traffic to a third-party security appliance, a producer/consumer model built on mirroring deployment groups and endpoint groups, versus self-managed Packet Mirroring to your own collector), and the managed alternative positioning: Cloud IDS / NGFW Enterprise vs self-managed NVAs.
 
 **⚠️ Exam trap** — A custom static route's next-hop *instance* must have IP forwarding enabled (`--can-ip-forward`, set at creation) or packets are dropped silently. It's the most common "NVA routing doesn't work" cause — before blaming routes or firewalls, check `canIpForward` on the appliance.

@@ -60,7 +60,7 @@ A: `min_instance_count = 0` (scale-to-zero eliminates idle compute cost) and `en
 A: A billing budget with multiple alert thresholds — here `budget_alert_thresholds = [0.5, 0.9, 1.0]` notifies at 50% and 90% of `budget_amount`, before the 100% mark. Budgets alert but do not stop spending; pair them with `max_instance_count` caps if hard limits matter.
 </details>
 
-**Beyond the modules** — The exam also tests business analysis the modules cannot show: defining KPIs and success measures, CapEx-vs-OpEx framing, total cost of ownership, and build/buy/modify/deprecate workload disposition. Study the Google Cloud pricing calculator, "Cloud Billing reports" docs, and the Architecture Framework's cost optimization pillar. Try `gcloud billing accounts list` and explore **Billing > Reports** grouped by SKU in a scratch project.
+**Beyond the modules** — The exam also tests business analysis the modules cannot show: separating functional from non-functional requirements, defining KPIs and success measures (ROI, metrics), CapEx-vs-OpEx framing, total cost of ownership, business continuity planning, integration patterns with external systems, and build/buy/modify/deprecate workload disposition. Study the Google Cloud pricing calculator, "Cloud Billing reports" docs, and the Well-Architected Framework's cost optimization pillar. Try `gcloud billing accounts list` and explore **Billing > Reports** grouped by SKU in a scratch project.
 
 **⚠️ Exam trap** — Budgets never *stop* spending; they only notify. If a scenario demands spend *enforcement*, the answer involves quotas, instance caps, or programmatic budget-response automation — not the budget alone.
 
@@ -123,6 +123,8 @@ A: Move to `STANDARD_HA`, which adds a replica and automatic failover — exactl
 
 A: A PDB with `minAvailable: 1` on a single-replica workload would make the one pod unevictable, blocking node drains and GKE upgrades indefinitely. PDBs only make sense when spare replicas can keep serving during voluntary disruption — a validation in App_GKE also requires `pdb_min_available` to be less than `max_instance_count` (percentages exempt).
 </details>
+
+**Beyond the modules** — Two 1.2 objectives have no module analogue. (1) **The Google Cloud Well-Architected Framework** — the current guide calls familiarity with it a key requirement; read the six pillars (operational excellence, security, reliability, performance optimization, cost optimization, sustainability) and be able to name which pillar a scenario's constraint belongs to. (2) **Gemini Cloud Assist** — Google's AI assistant for designing, operating, troubleshooting, and optimizing Google Cloud workloads; know what it is for so you recognize it as an answer option, and try it from the Gemini panel in the console of a scratch project.
 
 **⚠️ Exam trap** — Backups ≠ PITR ≠ HA. Backups recover to a snapshot time, PITR replays transaction logs to any moment within retention, and REGIONAL HA prevents the outage in the first place. A scenario asking to "recover the database to 14:32 yesterday" needs PITR; "no downtime during zone failure" needs REGIONAL; neither solves the other.
 
@@ -192,7 +194,11 @@ A: NFS and GCS Fuse volume mounts require Cloud Run's gen2 execution environment
 A: GKE with a StatefulSet — per-replica PVCs (`volumeClaimTemplates`) and stable pod identities are StatefulSet features. Cloud Run instances are ephemeral and share-nothing; its volume options (Cloud SQL socket, NFS, GCS Fuse) are shared, not per-instance block storage.
 </details>
 
-**Beyond the modules** — Not implemented here: Shared VPC host/service projects, VPC Network Peering between VPCs, Cloud DNS, internal load balancers, Spanner, Bigtable, and BigQuery. For the exam, be able to place each: Spanner for globally consistent relational scale, Bigtable for high-throughput wide-column time series, BigQuery for analytics. Read "Choose a storage option" and "Compare Google Cloud database services" in the official docs.
+**Beyond the modules** — Not implemented here: Shared VPC host/service projects, VPC Network Peering between VPCs, Private Service Connect, Cloud DNS, internal load balancers, Spanner, Bigtable, and BigQuery. For the exam, be able to place each: Spanner for globally consistent relational scale, Bigtable for high-throughput wide-column time series, BigQuery for analytics. Read "Choose a storage option" and "Compare Google Cloud database services" in the official docs.
+
+The compute bullets reach past the modules too: Cloud Run functions (event-driven, single-purpose code — no module deploys them), and Compute Engine choices such as Spot VMs (deep discount, preemptible at any time — fit for fault-tolerant batch) and custom machine types (exact vCPU/memory ratios). The modules choose among predefined machine types only (`gke_node_machine_type` for Standard GKE nodes).
+
+The **Google Cloud AI and machine learning solutions** bullet (Gemini LLMs and models, Agent Builder, Model Garden, AI Hypercomputer) is 📘 as well. The nearest thing on the platform is the `DataAnalyst_CloudRun` application module, which calls a Gemini model through Vertex AI (`agent_model`, default `gemini-2.5-flash`; `vertex_region`) using its Cloud Run service account's `roles/aiplatform.user` grant rather than an API key — an example of *consuming* a managed model, not of designing an ML platform. Study when to call a Gemini model directly, when to build an agent with Agent Builder, when to deploy an open or third-party model from Model Garden, and when a training/serving workload needs AI Hypercomputer (GPUs/TPUs).
 
 **⚠️ Exam trap** — "NoSQL" is not one answer. Firestore (the only NoSQL engine deployable here) suits document data with mobile/web sync; Bigtable suits petabyte time series; Memorystore is a cache, not a system of record — especially with persistence `DISABLED`, the default.
 
@@ -231,7 +237,7 @@ A: Transfer Appliance (offline hardware). At 100 Mbps, 400 TB takes roughly a ye
 A: Rehost (lift-and-shift) stateless, low-dependency workloads first for quick wins; refactor strategically valuable apps where cloud-native gains justify the effort; defer tightly coupled legacy systems until dependencies are mapped. The exam rewards "assess and map dependencies before moving anything."
 </details>
 
-**Beyond the modules** — Study Migration Center (discovery and assessment), Migrate to Virtual Machines, Database Migration Service (continuous replication into Cloud SQL with minimal downtime), and Storage Transfer Service vs Transfer Appliance selection. Also review the network prerequisites for migration — HA VPN and Cloud Interconnect — none of which the modules provision. Walk the **Migration Center** console flow in a scratch project.
+**Beyond the modules** — Study Migration Center (discovery, assessment, and TCO), Migrate to Virtual Machines, Database Migration Service (continuous replication into Cloud SQL with minimal downtime), and Storage Transfer Service vs Transfer Appliance selection. Also review the network prerequisites for migration — HA VPN and Cloud Interconnect — none of which the modules provision. The objective also covers workload testing and dependency planning during migration, and determining software license implications (bring-your-own-license vs pay-as-you-go, sole-tenant nodes for licenses tied to physical cores) and their financial impact. Walk the **Migration Center** console flow in a scratch project.
 
 ---
 
@@ -263,4 +269,4 @@ gcloud compute networks subnets list \
 A: Discovery with inline fallback — probe for tagged/labeled shared resources at plan time and provision local equivalents only when absent, exactly as App_CloudRun does for VPC, SQL, NFS, and Artifact Registry. A policy flag (`require_services_gcp_module`) converts the fallback into a hard requirement for production.
 </details>
 
-**Beyond the modules** — Study the evolution mechanisms the modules do not show: event-driven decoupling with Pub/Sub and Eventarc, strangler-fig migration off monoliths, API versioning behind API Gateway/Apigee, and tracking Google Cloud release notes ("What's new") as ongoing architectural input.
+**Beyond the modules** — Study the evolution mechanisms the modules do not show: event-driven decoupling with Pub/Sub and Eventarc, strangler-fig migration off monoliths, API versioning behind API Gateway/Apigee, and tracking Google Cloud release notes ("What's new") as ongoing architectural input. The guide also lists a **cloud-first design approach** — defaulting new work to managed, cloud-native services rather than recreating on-premises patterns — and the renewal exam adds **enablement and advocacy** (bringing teams and stakeholders along with the architecture).

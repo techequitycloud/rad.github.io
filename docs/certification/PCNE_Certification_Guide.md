@@ -83,8 +83,8 @@ The modules demonstrate a complete single-VPC design: custom subnet mode, determ
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 1.1 Designing an overall network architecture | 🟡 | `enable_cloud_armor` LB choice, PSA peering, Direct VPC egress; tiers/DNS/quotas 📘 | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#11-designing-an-overall-network-architecture) |
-| 1.2 Designing VPC networks | 🟡 | custom-mode VPC, `subnet_cidr_range`, PSA /16; Shared VPC/NCC/PSC/IPv6/MTU 📘 | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#12-designing-vpc-networks) |
+| 1.1 Designing an overall network architecture | 🟡 | `enable_cloud_armor` LB choice, PSA peering, Direct VPC egress; tiers/DNS/network IAM roles/quotas 📘 | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#11-designing-an-overall-network-architecture) |
+| 1.2 Designing VPC networks | 🟡 | custom-mode VPC, `subnet_cidr_range`, PSA /16; Shared VPC/NCC/PSC/IPv6/MTU/IPAM automation 📘 | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#12-designing-vpc-networks) |
 | 1.3 Designing a resilient and performant hybrid and multi-cloud network | 📘 | Not implemented (Cloud Router exists only as a NAT anchor) | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#13-designing-a-resilient-and-performant-hybrid-and-multi-cloud-network) |
 | 1.4 Designing for Google Kubernetes Engine | ✅ | deterministically computed secondary ranges, Autopilot/Standard, public endpoint | [Section 1 guide](PCNE_Section_1_Exploration_Guide.md#14-designing-for-google-kubernetes-engine) |
 
@@ -97,7 +97,7 @@ This is the strongest section for hands-on work: every deployment creates (or di
 | 2.1 Configuring VPCs | ✅ | VPC/subnets/firewall, PSA range, VPC-SC perimeters; Shared VPC 📘 | [Section 2 guide](PCNE_Section_2_Exploration_Guide.md#21-configuring-vpcs) |
 | 2.2 Configuring VPC routing | 🟡 | Cloud Router (NAT-only, ASN 64514), peering route import/export; policy-based routing/ILB next hop 📘 | [Section 2 guide](PCNE_Section_2_Exploration_Guide.md#22-configuring-vpc-routing) |
 | 2.3 Configuring Network Connectivity Center | 📘 | Not implemented | [Section 2 guide](PCNE_Section_2_Exploration_Guide.md#23-configuring-network-connectivity-center) |
-| 2.4 Configuring and maintaining GKE clusters | ✅ | VPC-native + Dataplane V2, Kubernetes NetworkPolicy; private clusters / Cloud DNS for GKE 📘 | [Section 2 guide](PCNE_Section_2_Exploration_Guide.md#24-configuring-and-maintaining-google-kubernetes-engine-clusters) |
+| 2.4 Configuring and maintaining GKE clusters | ✅ | VPC-native + Dataplane V2, private nodes, Kubernetes NetworkPolicy; private endpoint / DNS-based endpoint / Cloud DNS for GKE 📘 | [Section 2 guide](PCNE_Section_2_Exploration_Guide.md#24-configuring-and-maintaining-gke-clusters) |
 
 ## Section 3: Configuring managed network services (~16% of the exam)
 
@@ -107,7 +107,7 @@ Both deployment engines build a global external Application Load Balancer — on
 |---|---|---|---|
 | 3.1 Configuring load balancing | ✅ | Cloud Run serverless NEG chain; GKE Gateway API; ALB traffic management 📘 | [Section 3 guide](PCNE_Section_3_Exploration_Guide.md#31-configuring-load-balancing) |
 | 3.2 Configuring Cloud CDN | 🟡 | `enable_cdn` on the Cloud Run backend service (real); App_GKE flag provisions the Gateway but does not enable CDN | [Section 3 guide](PCNE_Section_3_Exploration_Guide.md#32-configuring-cloud-cdn) |
-| 3.3 Configuring Cloud DNS | 📘 | Not implemented (nip.io wildcard DNS used instead) | [Section 3 guide](PCNE_Section_3_Exploration_Guide.md#33-configuring-cloud-dns) |
+| 3.3 Configuring Cloud DNS | 📘 | Not implemented (nip.io wildcard DNS used instead); includes migrating to Cloud DNS | [Section 3 guide](PCNE_Section_3_Exploration_Guide.md#33-configuring-cloud-dns) |
 
 ## Section 4: Configuring and implementing hybrid and multicloud network interconnectivity (~16% of the exam)
 
@@ -128,18 +128,18 @@ The modules enable LB request logging (sample rate 1.0) and rich health-check/au
 |---|---|---|---|
 | 5.1 Logging and monitoring with Google Cloud Observability | 🟡 | LB request logging on the Cloud Run backend; alert policies/uptime checks; flow/NAT/DNS logs 📘 | [Section 5 guide](PCNE_Section_5_Exploration_Guide.md#51-logging-and-monitoring-with-google-cloud-observability) |
 | 5.2 Maintaining and troubleshooting connectivity | 🟡 | NFS MIG TCP health checks + auto-healing; VPN/Interconnect troubleshooting 📘 | [Section 5 guide](PCNE_Section_5_Exploration_Guide.md#52-maintaining-and-troubleshooting-connectivity-issues) |
-| 5.3 Monitoring, maintaining, and troubleshooting latency and traffic flow | 📘 | Run Network Intelligence Center tools *against* RAD resources | [Section 5 guide](PCNE_Section_5_Exploration_Guide.md#53-monitoring-maintaining-and-troubleshooting-latency-and-traffic-flow) |
+| 5.3 Using Network Intelligence Center to monitor and troubleshoot common networking issues | 📘 | Run Network Intelligence Center tools *against* RAD resources | [Section 5 guide](PCNE_Section_5_Exploration_Guide.md#53-using-network-intelligence-center-to-monitor-and-troubleshoot-common-networking-issues) |
 
 ## Section 6: Configuring, implementing and managing a cloud network security solution (~13% of the exam)
 
-Cloud Armor is the flagship ✅ here — both engines create a full WAF policy with preconfigured OWASP rules, Adaptive Protection, and rate limiting. Classic VPC firewall rules with tag-based micro-segmentation and Cloud NAT are also live; NGFW policies, Secure Web Proxy, and Packet Mirroring are study-only.
+Cloud Armor is the flagship ✅ here — both engines create a full WAF policy with preconfigured OWASP rules, Adaptive Protection, and rate limiting. Classic VPC firewall rules with tag-based micro-segmentation and Cloud NAT are also live; Cloud NGFW policies, Secure Web Proxy, Packet Mirroring, and Network Security Integration are study-only.
 
 | Exam topic | Coverage | Where in RAD | Guide |
 |---|---|---|---|
-| 6.1 Implementing and managing Google Cloud Armor | ✅ | both app modules: OWASP v33 rules, Adaptive Protection, rate limiting | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#61-implementing-and-managing-google-cloud-armor) |
-| 6.2 Configuring NGFW policies and VPC firewall rules | 🟡 | Tag-based VPC rules + K8s NetworkPolicy; hierarchical/NGFW tiers 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#62-configuring-ngfw-policies-and-vpc-firewall-rules) |
-| 6.3 Controlling internet egress traffic with Cloud NAT and Secure Web Proxy | 🟡 | Cloud NAT (`ALL_SUBNETWORKS_ALL_IP_RANGES`, auto IPs); Secure Web Proxy 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#63-controlling-internet-egress-traffic-with-cloud-nat-and-secure-web-proxy) |
-| 6.4 Implementing a self-managed network virtual appliance and Packet Mirroring | 📘 | Nearest analogue: self-managed NFS VM in a MIG; multi-NIC NVAs / Packet Mirroring 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#64-implementing-a-self-managed-network-virtual-appliance-and-packet-mirroring) |
+| 6.1 Configuring Google Cloud Armor policies | ✅ | both app modules: OWASP v33 rules (SQLi/XSS/LFI/RCE), Adaptive Protection, rate limiting; edge policies, RFI, advanced network DDoS, bot management, Threat Intelligence 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#61-configuring-google-cloud-armor-policies) |
+| 6.2 Configuring and managing NGFW policies and VPC Firewall rules | 🟡 | Tag-based VPC rules + K8s NetworkPolicy; Cloud NGFW policies/tiers (Essentials, Standard, Enterprise), migration, rule logging 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#62-configuring-and-managing-ngfw-policies-and-vpc-firewall-rules) |
+| 6.3 Configuring and securing internet egress traffic using Public Cloud NAT and Secure Web Proxy | 🟡 | Cloud NAT (`ALL_SUBNETWORKS_ALL_IP_RANGES`, auto IPs); manual IPs/port allocation tuning, Secure Web Proxy 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#63-configuring-and-securing-internet-egress-traffic-using-public-cloud-nat-and-secure-web-proxy) |
+| 6.4 Configuring self-managed network virtual appliance and Packet Mirroring | 📘 | Nearest analogue: self-managed NFS VM in a MIG; multi-NIC NVAs / Packet Mirroring / Network Security Integration 📘 | [Section 6 guide](PCNE_Section_6_Exploration_Guide.md#64-configuring-self-managed-network-virtual-appliance-and-packet-mirroring) |
 
 ## Suggested study sequence
 

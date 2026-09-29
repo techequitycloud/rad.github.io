@@ -9,7 +9,7 @@ description: "Prepare for the PCA exam Section 2 — managing and provisioning a
 
 > 📚 **Official exam guide:** [Professional Cloud Architect certification](https://cloud.google.com/learn/certification/cloud-architect) — always confirm section weightings against the current Google Cloud exam guide.
 
-This section tests whether you can actually stand infrastructure up — network topology, storage configuration, compute provisioning — and the two Vertex AI subsections added to the current exam guide. The modules exercised are `Services_GCP` (network, databases, GKE) and the two deployment engines. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md), then enable GKE (**GKE architecture** profile) before 2.3. Subsections 2.4 and 2.5 are study-only.
+This section tests whether you can actually stand infrastructure up — network topology, storage configuration, compute provisioning — and the two Gemini Enterprise Agent Platform subsections of the current exam guide. The modules exercised are `Services_GCP` (network, databases, GKE) and the two deployment engines. Deploy the **Lean baseline** profile from the [Lab Map](PCA_Certification_Guide.md), then enable GKE (**GKE architecture** profile) before 2.3. Subsections 2.4 and 2.5 are study-only.
 
 ---
 
@@ -65,7 +65,7 @@ A: Cloud SQL instances run in a Google-managed producer VPC, not yours. Private 
 A: IAP TCP forwarding — the `fw-allow-iap-ssh` rule admits tcp:22 only from Google's IAP range `35.235.240.0/20`, and admins use `gcloud compute ssh --tunnel-through-iap`. Identity is verified by IAP before any packet reaches the VM.
 </details>
 
-**Beyond the modules** — Not implemented: Shared VPC, VPC peering between customer VPCs, Cloud VPN / Cloud Interconnect (hybrid), Network Connectivity Center, Cloud DNS, VPC flow logs, and hierarchical firewall policies. These are heavily examined — study "Choosing a Network Connectivity product" (Dedicated vs Partner Interconnect vs HA VPN decision tree, 99.99% SLA requires HA VPN or redundant Interconnect attachments), and Shared VPC host/service project IAM. In a scratch project, try `gcloud compute networks subnets update <subnet> --enable-flow-logs`.
+**Beyond the modules** — Not implemented: Shared VPC, VPC peering between customer VPCs, Cloud VPN / Cloud Interconnect (hybrid), Cross-Cloud Interconnect (multicloud), Network Connectivity Center, Cloud DNS, VPC flow logs, hierarchical firewall policies, and intrusion protection (Cloud NGFW Enterprise / Cloud IDS). These are heavily examined — study "Choosing a Network Connectivity product" (Dedicated vs Partner Interconnect vs HA VPN decision tree, 99.99% SLA requires HA VPN or redundant Interconnect attachments), and Shared VPC host/service project IAM. In a scratch project, try `gcloud compute networks subnets update <subnet> --enable-flow-logs`.
 
 **⚠️ Exam trap** — Private Google Access, private services access, and Private Service Connect are three different things. This module uses private *services* access (VPC peering to managed-service producers). Don't pick PSC endpoints when the scenario describes Cloud SQL private IP via an allocated peering range.
 
@@ -164,36 +164,44 @@ A: Pod resource *requests* (`container_resources`) — Autopilot bills what pods
 A: When workloads need explicit node control: a specific machine series (`gke_node_machine_type`), disk types, or scheduling behavior Autopilot constrains. The module then provisions a single explicit node pool with autoscaling 1–5 nodes and Shielded VM protections — operational burden traded for hardware control.
 </details>
 
+**Beyond the modules** — Not provisioned here: Compute Engine instance templates and managed instance groups for application tiers, Spot vs standard provisioning (the "compute volatility" bullet — Spot VMs and Spot pods trade preemption for price), Google Cloud VMware Engine and its networking, and patch management at fleet scale (VM Manager / OS patch management). The NFS VM is the only Compute Engine workload the modules create. Study the Spot VMs docs and create a Spot VM with `gcloud compute instances create ... --provisioning-model=SPOT` in a scratch project.
+
 **⚠️ Exam trap** — Autopilot ≠ "no capacity planning." You still set requests/limits, and HPA/quota math still applies — App_GKE's `quota_memory_requests`-style values must use binary suffixes (`"4Gi"`), because a bare `"4"` is parsed by Kubernetes as 4 *bytes* and blocks all scheduling.
 
 ---
 
-## 2.4 Leveraging Vertex AI for end-to-end ML workflows
+## 2.4 Leveraging Gemini Enterprise Agent Platform for end-to-end ML workflows
 
 > ⏱ ~study only · 💰 no platform cost · ⚙️ Requires: nothing deployable
 
-**Why the exam cares** — The current PCA guide tests Vertex AI workflow architecture: pipelines for orchestration, feature consistency between training and serving, and choosing infrastructure (GPUs/TPUs, on-demand vs reserved) for training and inference.
+**Why the exam cares** — The current PCA guide tests ML workflow architecture on Gemini Enterprise Agent Platform: using Agent Platform Pipelines to automate and orchestrate the ML lifecycle, preparing data for integration with the platform, and using AI Hypercomputer — integrating GPUs and TPUs for model training and serving, choosing among consumption models, and running large-scale training.
 
-**How RAD implements it** — Not implemented by the foundation modules. The closest adjacency is architectural: a trained model served as a container would deploy on these modules like any other workload (Cloud Run for spiky low-ops inference, GKE for GPU-backed or high-throughput serving).
+**How RAD implements it** — Not implemented by the foundation modules. The closest adjacency is architectural: a trained model served as a container would deploy on these modules like any other workload (Cloud Run for spiky low-ops inference, GKE for high-throughput serving) — but neither App_CloudRun nor App_GKE exposes GPU or TPU settings.
 
-**Beyond the modules** — Study Vertex AI Pipelines (Kubeflow Pipelines / TFX as pipeline definitions), Vertex AI Feature Store (online vs batch serving, preventing training-serving skew), BigQuery as the training data source and BigQuery ML for in-warehouse models, and accelerator selection (GPU vs TPU, on-demand vs reservations). In a scratch project, run the Vertex AI "Hello custom training" quickstart and `gcloud ai custom-jobs list` to see the job lifecycle.
+**Beyond the modules** — Study Agent Platform Pipelines (pipeline definitions orchestrating data preparation, training, evaluation, and deployment), how training data is brought in (BigQuery and Cloud Storage as sources, feature management to keep training and serving consistent), and AI Hypercomputer: GPU vs TPU selection, and consumption models such as on-demand, Spot, and reservations for large-scale training. The exam guide's example also pairs AI Hypercomputer with Cloud Run functions and Agent Platform for ML/AI workloads. Product names in this area have changed recently (Vertex AI features now appear under Gemini Enterprise Agent Platform), so read the current product docs rather than older study material.
 
 **Check yourself**
 <details>
-<summary>Q1: A model performs well offline but degrades in production; investigation shows features are computed differently at serving time. Which Vertex AI component addresses this?</summary>
+<summary>Q1: A model performs well offline but degrades in production; investigation shows features are computed differently at serving time. What is the problem, and what is the architectural fix?</summary>
 
-A: Vertex AI Feature Store — it centralizes feature definitions and serves the same feature values for training (batch) and prediction (online), eliminating training-serving skew caused by duplicated feature logic.
+A: Training-serving skew. Centralize feature definitions so the same computed values feed both training (batch) and prediction (online) — a managed feature store, or one shared pipeline step — instead of duplicating feature logic in the serving path.
+</details>
+
+<details>
+<summary>Q2: A research team needs weeks of TPU capacity for a large training run and must not be interrupted. Which consumption model fits, and which does not?</summary>
+
+A: Reserved capacity (a reservation or committed capacity) — it guarantees the accelerators for the run. Spot capacity is far cheaper but can be reclaimed at any time, which suits fault-tolerant, checkpointed jobs, not an uninterruptible run.
 </details>
 
 ---
 
-## 2.5 Configuring prebuilt solutions or APIs with Vertex AI
+## 2.5 Configuring prebuilt solutions or APIs with Agent Platform
 
 > ⏱ ~study only + 20 min secret-handling lab · 💰 no platform cost · ⚙️ Requires: default App_CloudRun deployment
 
-**Why the exam cares** — You must select the right pre-trained API per use case (Vision, Video Intelligence, Speech-to-Text/Text-to-Speech, Dialogflow, Vertex AI Search, Gemini models via Model Garden) versus training a custom model — and integrate them *securely*.
+**Why the exam cares** — You must differentiate the Google AI APIs (Search, Conversation, Vision, Image, Video, and Audio) and pick the right one per use case rather than training a custom model, integrate Gemini Enterprise features (AI agents and NotebookLM) into business workflows, and integrate models from Model Garden into a solution — *securely*.
 
-**How RAD implements it** — The AI APIs themselves are not provisioned, but the secure-integration pattern is fully demonstrated: `secret_environment_variables` injects credentials into Cloud Run via Secret Manager references (never plaintext env vars), and App_GKE materializes secrets through the GKE Secret Manager CSI add-on (`SecretProviderClass` + secret sync). An application calling Gemini or Vision would receive its API key exactly this way.
+**How RAD implements it** — The AI APIs themselves are not provisioned, but the secure-integration pattern is fully demonstrated: `secret_environment_variables` injects credentials into Cloud Run via Secret Manager references (never plaintext env vars), and App_GKE materializes secrets through the GKE Secret Manager CSI add-on (`SecretProviderClass` + secret sync). An application calling an AI API with a key would receive it exactly this way. The keyless alternative appears in the `DataAnalyst_CloudRun` application module: it calls a Gemini model through Vertex AI as its Cloud Run service account, granted `roles/aiplatform.user` via `additional_cloudrun_sa_roles` (a validation refuses a list without it), so there is no API key to store or rotate.
 
 **Try it**
 
@@ -209,9 +217,15 @@ gcloud run services describe <service-name> --region=us-central1 \
 
 **Check yourself**
 <details>
-<summary>Q1: A product needs OCR on scanned invoices and a conversational support agent. Which pre-trained APIs, and when would you switch to custom training?</summary>
+<summary>Q1: A product needs OCR on scanned invoices and a conversational support agent. Which prebuilt capabilities, and when would you switch to custom training?</summary>
 
-A: Cloud Vision API (OCR/document text detection) and Dialogflow CX (conversational agents). Switch to custom training (Vertex AI) only when the pre-trained model's quality on your domain data is insufficient — e.g. specialized invoice layouts needing Document AI custom processors or fine-tuned models. Pre-trained first is the exam's default posture.
+A: A Vision capability (OCR/document text detection, or Document AI for structured invoices) and a Conversation capability (a conversational agent). Switch to custom training or tuning only when the prebuilt model's quality on your domain data is insufficient. Prebuilt first is the exam's default posture.
 </details>
 
-**Beyond the modules** — Study the official API categories (Vision, Imagen, Video Intelligence, Speech, Dialogflow, Vertex AI Search), Model Garden deployment options, and grounding/RAG patterns with Vertex AI Search. Try `gcloud ml vision detect-text <image-path>` in a scratch project for a two-minute taste of a pre-trained API.
+<details>
+<summary>Q2: An application calls a Gemini model from Cloud Run. Why prefer the service account's IAM role over an API key in Secret Manager?</summary>
+
+A: The service account receives short-lived credentials automatically, so there is no long-lived secret to leak, rotate, or scope — access is granted and revoked with IAM (`roles/aiplatform.user`) and shows up in audit logs under a named identity. An API key in Secret Manager is safe at rest but is still a bearer credential.
+</details>
+
+**Beyond the modules** — Study the Google AI API categories named in the guide (Search, Conversation, Vision, Image, Video, Audio) and what each is for, Gemini Enterprise's AI agents and NotebookLM as workflow tools for business users, Model Garden deployment options (Google, open, and partner models; managed API vs self-deployed endpoint), and grounding/RAG patterns. Try `gcloud ml vision detect-text <image-path>` in a scratch project for a two-minute taste of a prebuilt API.

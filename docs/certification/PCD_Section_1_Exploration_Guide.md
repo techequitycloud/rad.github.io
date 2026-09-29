@@ -3,9 +3,9 @@ title: "PCD Section 1 Prep: Scalable Cloud-Native App Design"
 description: "Prepare for the PCD exam Section 1 (Scalable Cloud-Native App Design) with hands-on RAD deployment labs on Google Cloud."
 ---
 
-# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)
+# PCD Certification Preparation Guide: Section 1 — Designing highly scalable, secure, and reliable cloud-native applications (~32% of the exam)
 
-<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcd_section1.png" alt="PCD Certification Preparation Guide: Section 1 — Designing highly scalable, available, and reliable cloud-native applications (~36% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/pcd_section1.png" alt="PCD Certification Preparation Guide: Section 1 — Designing highly scalable, secure, and reliable cloud-native applications (~32% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 This guide covers the largest PCD exam section using the RAD platform foundation modules. You will exercise `App_CloudRun` (Cloud Run v2 service design), `App_GKE` (Kubernetes workload design), and `Services_GCP` (the shared database, cache, and security infrastructure). Deploy the **Serverless baseline** profile from the [Lab Map](PCD_Certification_Guide.md) before starting; add the **Hardened edge** profile for 1.1 (caching/CDN) and 1.2 (IAP, rotation).
 
@@ -28,7 +28,7 @@ This guide covers the largest PCD exam section using the RAD platform foundation
 
 Cloud Run-specific performance levers:
 
-- `cpu_always_allocated` (default `false`, i.e. request-based billing) — set `true` to keep CPU allocated between requests (schedulers, queue workers, WebSocket servers). Startup CPU boost is always on, and session affinity is always on for the service. NOTE: line 59 of the same file ("keep `cpu_always_allocated = true`") is phrased as an override and stays correct only if reworded from "keep" to "set".
+- `cpu_always_allocated` (default `false`, i.e. request-based billing) — set `true` to keep CPU allocated between requests (schedulers, queue workers, WebSocket servers). Startup CPU boost is always on, and session affinity is always on for the service.
 - `execution_environment` (default `"gen2"`) — plan-time validations require gen2 for NFS (`enable_nfs`) and GCS Fuse (`gcs_volumes`) mounts.
 - `traffic_split` (default `[]` = 100% to latest) takes a list of `{ type, revision, percent, tag }` entries where `type` is `TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST` or `TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION`; validation enforces that percents sum to exactly 100. The optional `tag` gives a revision a stable preview URL.
 - `max_revisions_to_retain` (default `7`) prunes old revisions automatically; revisions serving traffic are never deleted.
@@ -38,6 +38,12 @@ Cloud Run-specific performance levers:
 On GKE, the platform creates a HorizontalPodAutoscaler only when `max_instance_count > 1` **and** `enable_vertical_pod_autoscaling = false`, targeting 70% CPU and 80% memory utilization.
 
 Caching: `Services_GCP` provisions Memorystore with `create_redis` (default `false`), `redis_tier` (default `BASIC` vs `STANDARD_HA`), `redis_memory_size_gb` (default `1`), AUTH enabled. On the app side, `enable_redis` (App_CloudRun default `true`) injects `REDIS_HOST`/`REDIS_PORT` (and `REDIS_URL` when derivable) env vars — set `redis_host` to the Memorystore IP, otherwise the module falls back to the shared NFS VM's Redis. CDN: `enable_cdn` (default `false`) forces the service behind a global external Application Load Balancer (ingress is auto-overridden to `internal-and-cloud-load-balancing`).
+
+Load balancing and session affinity: Cloud Run needs no load balancer for basic serving; the modules add a global external Application Load Balancer only when you need edge features (`enable_cloud_armor`, `enable_cdn`, custom domains). On GKE the Service is a `LoadBalancer` by default and `enable_custom_domain` switches to a Gateway API global L7 load balancer. Session affinity is hardcoded on for the Cloud Run service and set by `session_affinity` (default `"ClientIP"`) on the GKE Service — know that Cloud Run affinity is best-effort (cookie-based), not a guarantee.
+
+Failover and replication: `Services_GCP` exposes the zonal-vs-regional choice directly — `postgres_database_availability_type = "REGIONAL"` (synchronous standby in another zone, automatic failover), `create_postgres_read_replica` (asynchronous replicas, placed in the second region of `availability_regions` when one is listed — cross-region read locality and DR), and `redis_tier = "STANDARD_HA"` (replicated Memorystore). Cloud Run itself is a regional service that spreads instances across zones automatically; Autopilot clusters are regional.
+
+Orchestration: `cron_jobs` (App_CloudRun) deploys each entry as a Cloud Run job with a Cloud Scheduler trigger (cron `schedule`, `paused` to suspend) — the Cloud Scheduler leg of the objective. Workflows and Cloud Tasks are not provisioned by the modules, and Eventarc appears only inside the secret-rotation machinery (see 1.2).
 
 **Try it**
 
@@ -61,7 +67,7 @@ Caching: `Services_GCP` provisions Memorystore with `create_redis` (default `fal
 <details>
 <summary>Q1: A latency-sensitive API on Cloud Run shows 4-second p99 spikes after idle periods. Which two settings fix this, and what is the cost trade-off?</summary>
 
-A: Set `min_instance_count >= 1` to keep a warm instance (eliminates cold starts, bills the idle instance continuously) and keep `cpu_always_allocated = true` so background initialization isn't throttled between requests. The trade-off is paying for instance time even with zero traffic — the opposite of the scale-to-zero default.
+A: Set `min_instance_count >= 1` to keep a warm instance (eliminates cold starts, bills the idle instance continuously) and set `cpu_always_allocated = true` so background initialization isn't throttled between requests. The trade-off is paying for instance time even with zero traffic — the opposite of the scale-to-zero default.
 </details>
 
 <details>
@@ -76,7 +82,7 @@ A: Deploy the change as a new revision and use revision-based traffic splitting 
 A: When the workload needs stable per-pod storage (StatefulSet via `stateful_pvc_enabled`), Kubernetes-native controls (NetworkPolicy, ResourceQuota, PDB, topology spread), long-lived non-HTTP protocols, or sidecars you define yourself. Cloud Run wins for bursty stateless HTTP because of scale-to-zero and per-request billing.
 </details>
 
-**Beyond the modules** — The exam also tests API design and async patterns the modules don't implement: REST versioning and OpenAPI specs behind **API Gateway** or **Apigee** (try `gcloud api-gateway gateways list` in a scratch project), gRPC application code (the platform side is covered — `container_protocol = "h2c"` is the module equivalent of `gcloud run deploy --use-http2` — but writing the gRPC service/client is study-only), **Pub/Sub** publish/subscribe and push-vs-pull decisions, **Cloud Tasks** for rate-limited dispatch, **Workflows** for multi-step orchestration, and **Eventarc** triggers (the modules use Eventarc only internally for secret rotation). Also study Cloud Run concurrency tuning (`--concurrency`) since the modules pin the default of 80.
+**Beyond the modules** — The exam also tests API design and async patterns the modules don't implement: REST versioning and OpenAPI specs behind **API Gateway** or **Apigee**, including their rate limiting (quotas/spike arrest), API-key/JWT authentication, and API analytics (try `gcloud api-gateway gateways list` in a scratch project), gRPC application code (the platform side is covered — `container_protocol = "h2c"` is the module equivalent of `gcloud run deploy --use-http2` — but writing the gRPC service/client is study-only), **Pub/Sub** publish/subscribe and push-vs-pull decisions, **Cloud Tasks** for rate-limited dispatch, **Workflows** for multi-step orchestration, and **Eventarc** triggers (the modules use Eventarc only internally for secret rotation). Know when each orchestrator fits: Cloud Scheduler for time-based triggers, Cloud Tasks for explicit per-task dispatch with retries and rate control, Eventarc for reacting to events, Workflows for sequencing calls with state and error handling. Also study traffic splitting on **GKE** (Gateway API weighted `backendRefs` across two Services, or a mesh — the module's HTTPRoute targets a single backend), and Cloud Run concurrency tuning (`--concurrency`) since the modules pin the default of 80.
 
 **⚠️ Exam trap** — "Min instances = 0" plus "CPU always allocated" is a contradiction candidates miss: with `min_instance_count = 0` you still pay full instance time while instances exist if CPU is always allocated. Scale-to-zero only saves money between requests if instances actually terminate.
 
@@ -98,7 +104,13 @@ A: When the workload needs stable per-pod storage (StatefulSet via `stateful_pvc
 
 *Supply chain.* `enable_binary_authorization` with `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`, options include `REQUIRE_ATTESTATION` and `ALWAYS_DENY`) creates a KMS-backed attestor; the CI pipeline signs images (see Section 2). `enable_vulnerability_scanning` (Services_GCP, default `false`) turns on Artifact Analysis scanning for the shared repository.
 
-*Edge protection.* `enable_cloud_armor` (default `false`) deploys a WAF policy (`{service}-waf-policy`) with preconfigured OWASP rules (SQLi/XSS/LFI/RCE), Adaptive Protection, and a 500 req/min/IP rate limit behind a global HTTPS LB. **`application_domains` is optional** — with none set, the module derives a zero-config `<ip-dashed>.nip.io` Google-managed certificate so the LB always has a hostname. The live constraint runs the *other* way: `enable_cdn = true` requires `enable_cloud_armor = true`, because the CDN attaches to the load balancer Cloud Armor provisions. Hardening extras: `enable_cmek` (Services_GCP, default `false`) for customer-managed keys with `cmek_key_rotation_period` default `7776000s` (90 days), `enable_audit_logging` (default `false`) for DATA_READ/DATA_WRITE audit logs, and `enable_network_segmentation` (App_GKE, default `false`) for namespace-scoped NetworkPolicies.
+*Edge protection.* `enable_cloud_armor` (default `false`) deploys a WAF policy (`{service}-waf-policy`) with preconfigured OWASP rules (SQLi/XSS/LFI/RCE), Adaptive Protection, and a 500 req/min/IP rate limit behind a global HTTPS LB. **`application_domains` is optional** — with none set, the module derives a zero-config `<ip-dashed>.nip.io` Google-managed certificate so the LB always has a hostname. The live constraint runs the *other* way: `enable_cdn = true` requires `enable_cloud_armor = true`, because the CDN attaches to the load balancer Cloud Armor provisions. Cloud Armor's rate limit is the modules' nearest equivalent to the application rate limiting the exam associates with Apigee/API Gateway (1.1). Hardening extras: `enable_cmek` (Services_GCP, default `false`) for customer-managed keys with `cmek_key_rotation_period` default `7776000s` (90 days), `enable_audit_logging` (default `false`) for DATA_READ/DATA_WRITE audit logs, and `enable_network_segmentation` (App_GKE, default `false`) for namespace-scoped NetworkPolicies.
+
+*Data retention.* `storage_buckets` entries accept `lifecycle_rules` (age, newer-version and storage-class-transition conditions) — Object Lifecycle Management, rendered by the platform's object-storage layer. Bucket **retention policies** and **retention-policy lock** (WORM) are not exposed by the modules.
+
+*Vulnerability response.* `enable_vulnerability_scanning` (Services_GCP) turns on Artifact Analysis for the shared repository, and `enable_security_command_center` / `enable_scc_notifications` (Services_GCP, default `false`, bring-your-own project only) enable Security Command Center and route its findings to a Pub/Sub topic. The modules surface findings; *resolving* them — rebuilding on a patched base image, bumping a dependency, redeploying — is the developer skill the exam tests.
+
+*Service-to-service communication.* Cloud Run egress uses **Direct VPC egress** (`vpc_egress_setting`, default `"PRIVATE_RANGES_ONLY"`; no Serverless VPC Access connector), Cloud SQL and Memorystore are reached over **private service access** (no public IP), `enable_network_segmentation` (App_GKE) adds Kubernetes NetworkPolicies, and `configure_cloud_service_mesh` (Services_GCP) with `configure_service_mesh` (App_GKE) enable Cloud Service Mesh with sidecar injection — the mesh settings need a bring-your-own project (the GKE Enterprise APIs are not allowed in RAD-managed projects). Every workload runs as a dedicated, least-privilege service account (Section 4.2).
 
 **Try it**
 
@@ -145,7 +157,7 @@ The validation that once required a domain here was **removed** — `App_CloudRu
 The constraint that *does* exist runs the other way: **`enable_cdn = true` requires `enable_cloud_armor = true`** (precondition 26). Cloud CDN attaches to the Global HTTPS Load Balancer that Cloud Armor provisions; without it there is no backend to attach the CDN to.
 </details>
 
-**Beyond the modules** — Study Identity Platform (end-user/CIAM auth — the modules only do IAP for Google identities), OAuth 2.0/OIDC token flows and the difference between access tokens and ID tokens, signed URLs vs IAM for object access, and Web Security Scanner. VPC Service Controls exist in the modules (`enable_vpc_sc`, dry-run by default, with graceful permission-probe skips) but perimeter design questions go deeper — read the VPC-SC ingress/egress rules documentation.
+**Beyond the modules** — Study Identity Platform (end-user/CIAM auth — the modules only do IAP for Google identities), OAuth 2.0/OIDC token flows, JWT validation, and the difference between access tokens and ID tokens, the AlloyDB Auth Proxy (the modules connect only Cloud SQL through an auth proxy), Cloud Storage bucket retention policies and retention lock, signed URLs vs IAM for object access, and Web Security Scanner. VPC Service Controls exist in the modules (`enable_vpc_sc`, dry-run by default, with graceful permission-probe skips) but perimeter design questions go deeper — read the VPC-SC ingress/egress rules documentation.
 
 **⚠️ Exam trap** — `secret_rotation_period` alone rotates nothing. It only schedules a Pub/Sub *notification*. Something must consume that notification and write a new version — in RAD that's `enable_auto_password_rotation`; on the exam it's "a rotation function/job you implement".
 
@@ -165,7 +177,7 @@ The constraint that *does* exist runs the other way: **`enable_cdn = true` requi
 | `postgres_database_availability_type` | `ZONAL` | set `REGIONAL` for an HA standby with automatic failover |
 | `create_postgres_read_replica` | `false` | read replica(s) (`postgres_read_replica_count` default `1`) for read scaling |
 | `create_mysql` | `false` | MySQL (`MYSQL_8_4`), binlog-based recovery (no PITR config) |
-| `enable_alloydb` | `false` | AlloyDB cluster + primary; `enable_alloydb_read_pool` adds a read pool |
+| `enable_alloydb` | `false` | AlloyDB cluster + primary; `enable_alloydb_read_pool` adds a read pool (bring-your-own project only; the app modules do not connect to it) |
 | `create_firestore` | `false` | Firestore Native (Enterprise edition) database — provisioning only |
 | `create_redis` | `false` | Memorystore Redis; persistence `redis_persistence_mode` default `DISABLED` |
 | `create_filestore_nfs` | `false` | Filestore (`filestore_tier` default `BASIC_HDD`, `filestore_capacity_gb` default `1024`) |
@@ -214,6 +226,6 @@ A: First add Memorystore caching (`create_redis = true` + app-side `enable_redis
 A: Fuse lets unmodified code use filesystem semantics (good for legacy apps, ML model files, static assets at startup) at the cost of object-storage performance characteristics and POSIX edge cases. The client library is the right answer for high-throughput object I/O, signed URLs, and metadata operations. Fuse requires `execution_environment = "gen2"` on Cloud Run — validated at plan time.
 </details>
 
-**Beyond the modules** — Spanner (interleaved tables, avoiding hotspotting primary keys), Bigtable (row-key design, single-index model, eventual consistency across replicated clusters), BigQuery write paths (Storage Write API vs batch loads), and signed URL generation (`blob.generate_signed_url`, requires `roles/iam.serviceAccountTokenCreator` or a key) are all absent from the modules and all examined. The Firestore database can be created here (`create_firestore = true`) but SDK usage — documents, composite indexes, real-time listeners, transactions — must be practiced with the client libraries or the emulator.
+**Beyond the modules** — Spanner (interleaved tables, avoiding hotspotting primary keys, strong external consistency), Bigtable (row-key design, single-index model, eventual consistency across replicated clusters), AlloyDB schema design and read-pool consistency, Cloud Storage's strong read-after-write consistency, BigQuery write paths for analytics and AI/ML workloads (Storage Write API vs streaming vs batch loads), and signed URL generation (`blob.generate_signed_url`, requires `roles/iam.serviceAccountTokenCreator` or a key) are all absent from the modules and all examined. The Firestore database can be created here (`create_firestore = true`) but SDK usage — documents, composite indexes, real-time listeners, transactions — must be practiced with the client libraries or the emulator.
 
 **⚠️ Exam trap** — Backups ≠ PITR. Daily backups restore to a snapshot moment; PITR replays transaction logs to an arbitrary timestamp. The RAD Postgres instance has both; the RAD MySQL instance relies on binary logging and has no PITR configuration — a distinction the exam loves.

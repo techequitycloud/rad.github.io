@@ -9,7 +9,7 @@ description: "Prepare for the PCDE exam Section 4 — deploy scalable and highly
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) exam — and it is the section where this repository *is* the answer key. "Automate database instance provisioning" is literally what `Services_GCP` does: every Cloud SQL, AlloyDB, Redis, and Firestore deployment in the platform is declarative infrastructure-as-code applied through your deployment portal or Cloud Build. The HA, replica, and monitoring machinery comes from `Services_GCP`; application failover behavior is observed through `App_CloudRun`/`App_GKE`. Deploy the **ha-production** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting.
+This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) exam — and it is the section where this repository *is* the answer key. "Automate database instance provisioning" is literally what `Services_GCP` does: every Cloud SQL, Redis, and Firestore deployment in the platform (and AlloyDB, in a project you bring) is declarative infrastructure-as-code applied through your deployment portal or Cloud Build. The HA, replica, and monitoring machinery comes from `Services_GCP`; application failover behavior is observed through `App_CloudRun`/`App_GKE`. Deploy the **ha-production** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md) before starting.
 
 ---
 
@@ -28,7 +28,7 @@ This guide covers Section 4 of the Professional Cloud Database Engineer (PCDE) e
 | HA primary | `postgres_database_availability_type` (`ZONAL`) → `REGIONAL` | A Cloud SQL primary instance with synchronous standby + automatic failover (same for `mysql_database_availability_type`) |
 | Read replicas | `create_postgres_read_replica` (`false`), `postgres_read_replica_count` (`1`) | A Cloud SQL read replica instance (type `READ_REPLICA_INSTANCE`), always ZONAL |
 | Cross-region placement | `availability_regions` (`["us-central1"]`) | With ≥2 regions, replicas land in the second region; otherwise they stay in the primary region |
-| Read-pool scale-out | `enable_alloydb_read_pool` (`false`), `alloydb_read_pool_node_count` (`1`, 1–20) | An AlloyDB read-pool instance (type `READ_POOL`) |
+| Read-pool scale-out (project you bring only) | `enable_alloydb_read_pool` (`false`), `alloydb_read_pool_node_count` (`1`, 1–20) | An AlloyDB read-pool instance (type `READ_POOL`) |
 | Cache HA | `redis_tier` (`BASIC`) → `STANDARD_HA` | Memorystore with automatic failover replica; the platform *blocks* BASIC at plan time when `resource_labels.environment = "production"` |
 
 *Automated provisioning.* This is infrastructure-as-code end to end: `tofu init → plan → apply` (run by the platform's create/update pipeline in CI), idempotent re-application, dependency sequencing (instances are gated on the Service Networking connection; a 120 s delay separates the two Cloud SQL instances), and discovery-not-duplication in the app layer (App_Common finds the platform instance by its `managed-by = services-gcp` label; `App_CloudRun` provisions an equivalent inline ZONAL PostgreSQL 17 instance only when none exists). Replica lifecycle is also codified: replicas are rebuilt if the primary is replaced.

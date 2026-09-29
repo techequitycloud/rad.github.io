@@ -132,7 +132,7 @@ A: Sustained high CPU and read IOPS with slow specific queries; confirm with Que
 
 **How RAD implements it** — Three independent layers:
 
-*Managed backups + PITR* (Services_GCP): the PostgreSQL primary is fixed to enabled automated backups with point-in-time recovery on, 7 days of transaction-log retention, 7 retained backups (count-based), a 04:00 start time, and the backup location set to the primary region. MySQL keeps 7 daily backups at 04:00 and enables binary logging — the binlog mechanism MySQL PITR relies on — but sets no PITR-specific attribute. AlloyDB gets a weekly automated backup (Sunday 04:00 UTC, a one-hour backup window, quantity-based retention of 7). Redis persistence is opt-in (`redis_persistence_mode`, default `DISABLED`; `RDB` with `redis_rdb_snapshot_period` default `ONE_HOUR`, or `AOF` — STANDARD_HA tier only), but *enforced* for production: a plan-time precondition rejects `DISABLED` persistence on a `STANDARD_HA` instance labeled `environment = "production"`.
+*Managed backups + PITR* (Services_GCP): the PostgreSQL primary is fixed to enabled automated backups with point-in-time recovery on, 7 days of transaction-log retention, 7 retained backups (count-based), a 04:00 start time, and the backup location set to the primary region. MySQL keeps 7 daily backups at 04:00 and enables binary logging — the binlog mechanism MySQL PITR relies on — but sets no PITR-specific attribute. AlloyDB (project you bring only) gets a weekly automated backup (Sunday 04:00 UTC, a one-hour backup window, quantity-based retention of 7). Redis persistence is opt-in (`redis_persistence_mode`, default `DISABLED`; `RDB` with `redis_rdb_snapshot_period` default `ONE_HOUR`, or `AOF` — STANDARD_HA tier only), but *enforced* for production: a plan-time precondition rejects `DISABLED` persistence on a `STANDARD_HA` instance labeled `environment = "production"`.
 
 *Logical exports* (App_CloudRun, App_GKE): a `db-clients` job image (Debian 12 with `postgresql-client-14`–`17` and the MySQL 8.0 client, built by `App_Common`) runs the export script, which picks a *version-matched* `pg_dump`/`mysqldump` and writes `backup-<timestamp>.tar.gz` to the dedicated GCS backup bucket. Scheduling is `backup_schedule` (default `"0 2 * * *"`); bucket retention is `backup_retention_days` (default `7`) via an object lifecycle delete rule.
 
@@ -185,9 +185,9 @@ A: When you need portability: restoring into a different major version, a differ
 
 ---
 
-## 2.4 Optimize database cost and performance
+## 2.4 Optimize database cost and performance in Google Cloud
 
-> ⏱ ~45 min · 💰 experiments scale cost up — revert when done · ⚙️ Requires: relational-baseline; ha-production and alloydb-ai for scale-out
+> ⏱ ~45 min · 💰 experiments scale cost up — revert when done · ⚙️ Requires: relational-baseline; ha-production for scale-out (alloydb-ai only in a project you bring)
 
 **Why the exam cares** — "Scale up or scale out?" is the section's signature question: vertical scaling (bigger tier) fixes CPU/memory-bound *write* workloads but has a ceiling and a restart; horizontal read scaling (replicas/read pools) fixes read-heavy fan-out but does nothing for writes and introduces replication lag. Cost questions test right-sizing, committed-use thinking, and knowing which HA/replica choices double spend.
 
@@ -197,7 +197,7 @@ A: When you need portability: restoring into a different major version, a differ
 |---|---|---|
 | Scale up (writes) | `postgres_tier` / `mysql_tier` / `alloydb_cpu_count` | In-place patch; brief restart |
 | Scale out (reads), Cloud SQL | `create_postgres_read_replica` + `postgres_read_replica_count` (default `1`) | Replica private IPs published as `<replica-name>-host` secrets so apps can route reads; replicas get a fixed `max_connections=30000` flag |
-| Scale out (reads), AlloyDB | `enable_alloydb_read_pool` + `alloydb_read_pool_node_count` (1–20) | One endpoint load-balanced across nodes — no per-replica routing needed |
+| Scale out (reads), AlloyDB (project you bring only) | `enable_alloydb_read_pool` + `alloydb_read_pool_node_count` (1–20) | One endpoint load-balanced across nodes — no per-replica routing needed |
 | Engine tuning | `postgres_database_flags` / `mysql_database_flags` / `alloydb_database_flags` | Defaults: `max_connections=200` (PG), `max_connections=200` + `local_infile=off` (MySQL) |
 | Cost floor | `ZONAL` default availability, `BASIC` default Redis tier, 10 GB autoresizing disk | The defaults *are* the cost-optimization lesson: HA, replicas, STANDARD_HA Redis, and CMEK are opt-in |
 

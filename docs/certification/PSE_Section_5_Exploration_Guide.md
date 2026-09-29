@@ -17,7 +17,7 @@ This guide covers Section 5 of the Professional Cloud Security Engineer exam. No
 
 > ⏱ ~2 h · 💰 no additional cost beyond the underlying profiles · ⚙️ Requires: secure-platform; SCC enabled for posture findings
 
-**Why the exam cares** — The exam tests three skills: (1) reasoning with the shared responsibility / shared fate model across service tiers (IaaS → GKE Standard → Autopilot → Cloud Run), (2) mapping a regulatory requirement (PCI-DSS, HIPAA, GDPR) to the specific Google Cloud control that satisfies it, and (3) scoping — knowing that compliance applies to the projects/services touching regulated data, not the whole organization.
+**Why the exam cares** — The exam tests three skills: (1) reasoning with the shared responsibility / shared fate model across service tiers (IaaS → GKE Standard → Autopilot → Cloud Run), (2) mapping a regulatory requirement (PCI-DSS, HIPAA, GDPR) to the specific Google Cloud control that satisfies it, (3) scoping — knowing that compliance applies to the projects/services touching regulated data, not the whole organization — and (4) determining the technical needs a regime places on compute, data, network, and storage, then configuring the controls that meet them (Assured Workloads, organization policies, Access Transparency, Access Approval, regionalization of data and services, network and access segmentation, audit log coverage).
 
 **How RAD implements it** — The modules are a compliance *control library* you can point an auditor at:
 
@@ -33,7 +33,7 @@ This guide covers Section 5 of the Professional Cloud Security Engineer exam. No
 | Continuous misconfiguration detection | `enable_security_command_center` + findings to Pub/Sub | the SCC enrollment and findings topic |
 | Public-exposure prevention | public access prevention enforced + uniform bucket-level access on the backup bucket | the backup bucket |
 | Backup/retention | Cloud SQL PITR (7-day txn logs, 7 daily backups), `backup_retention_days` bucket lifecycle | the Cloud SQL instance and backup bucket |
-| Data residency (regional pinning) | all resources placed in the selected `availability_regions` | the VPC and per-resource region settings |
+| Data residency (regional pinning) | all resources placed in the selected `availability_regions`; in a RAD-managed project the tier folder's `gcp.resourceLocations` organization policy also limits which regions can be chosen | the VPC and per-resource region settings |
 
 Shared responsibility is observable, not just theoretical: GKE Autopilot clusters (`gke_cluster_mode` default `AUTOPILOT`) hand node OS hardening, patching (auto-repair/auto-upgrade on the `REGULAR` release channel), and node configuration to Google, while STANDARD mode shows the line moving back to you — the module must then manage the node pool itself, with Shielded-node settings (Secure Boot and integrity monitoring) made explicit on the nodes. Cloud Run narrows your scope further: no nodes at all, just code, IAM, and network posture.
 
@@ -53,7 +53,7 @@ gcloud container binauthz policy export
 gcloud sql instances describe <instance> --format="value(region)"
 gcloud storage buckets list --format="table(name, location)"
 ```
-2. In **Console > Security > Security Command Center > Findings**, filter by your project and treat each ACTIVE finding as an audit exception: identify the violated control and which portal variable remediates it.
+2. In **Console > Security > Security Command Center > Findings** (requires SCC, which the platform enables only in a project you bring), filter by your project and treat each ACTIVE finding as an audit exception: identify the violated control and which portal variable remediates it.
 3. In **Kubernetes Engine > Clusters**, open an Autopilot cluster's **Security** posture panel and list which controls show as Google-managed — that list *is* your responsibility-narrowing evidence.
 4. You know it worked when you can present, for one framework requirement of your choice, the variable, the resource, and the CLI-verifiable evidence in one line each.
 
@@ -78,8 +78,9 @@ A: Scope down. PCI-DSS applies to the cardholder data environment; applying maxi
 
 **Beyond the modules** — Not implemented, study separately:
 - **Assured Workloads** — compliance-regime folders (FedRAMP, EU Sovereign Controls) that pre-enforce location and personnel constraints: `gcloud assured workloads list --organization=ORG_ID --location=us-central1` (**Console > Compliance > Assured Workloads**).
-- **Access Transparency & Access Approval** — logs of *Google staff* actions on your content, and an approval gate before such access; filter Logs Explorer on `cloudaudit.googleapis.com%2Faccess_transparency`. Transparency = passive record, Approval = active control; both require Premium/Enterprise support tiers.
+- **Access Transparency & Access Approval** — logs of *Google staff* actions on your content, and an approval gate before such access; filter Logs Explorer on `cloudaudit.googleapis.com%2Faccess_transparency`. Transparency = passive record, Approval = active control; Access Approval requires Access Transparency, and both depend on an eligible support or organization subscription (check current eligibility).
 - **SCC compliance posture reporting** — mapping findings to CIS GCP Foundations, PCI-DSS, NIST 800-53, ISO 27001 in SCC Premium (**SCC > Compliance**).
+- **Organization policies for compliance** — e.g. `constraints/gcp.resourceLocations` for regionalization and `constraints/gcp.restrictServiceUsage` to keep out-of-scope services out of a regulated folder; set on the folder that holds in-scope projects so every project inherits them.
 - **Compliance documentation** — Google's compliance reports portal (SOC 2, ISO certificates), the HIPAA BAA process and the eligible-services list, and data residency / data processing terms. The exam expects you to know that you inherit Google's certifications for infrastructure but must still certify your own configuration and processes.
 
 **⚠️ Exam trap** — "Google Cloud is PCI-DSS / HIPAA compliant, therefore my application is" is always wrong. Compliance is inherited only for the layers Google operates; your IAM, network, encryption, and logging configuration — exactly the variables this platform exposes — remain your responsibility, and a misconfigured bucket fails the audit no matter what certificates Google holds.

@@ -9,7 +9,7 @@ description: "Prepare for the PCDE exam Section 1 (Scalable Database Solution De
 
 > 📚 **Official exam guide:** [Professional Cloud Database Engineer certification](https://cloud.google.com/learn/certification/cloud-database-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
-This guide covers Section 1 of the Professional Cloud Database Engineer (PCDE) exam — the largest section, weighted at roughly a third of the questions. It exercises `Services_GCP` (which provisions Cloud SQL PostgreSQL/MySQL, AlloyDB, Firestore Enterprise, and Memorystore Redis) with supporting connectivity patterns from `App_CloudRun` and `App_GKE`. Before starting, deploy the **relational-baseline** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md); subsections 1.2 and 1.4 additionally use the **ha-production**, **multi-engine**, and **alloydb-ai** profiles.
+This guide covers Section 1 of the Professional Cloud Database Engineer (PCDE) exam — the largest section, weighted at roughly a third of the questions. It exercises `Services_GCP` (which provisions Cloud SQL PostgreSQL/MySQL, Firestore Enterprise, and Memorystore Redis — plus AlloyDB, but only in a Google Cloud project you bring, never on a RAD-managed project) with supporting connectivity patterns from `App_CloudRun` and `App_GKE`. Before starting, deploy the **relational-baseline** profile from the [PCDE Lab Map](PCDE_Certification_Guide.md); subsections 1.2 and 1.4 additionally use the **ha-production** and **multi-engine** profiles, and the **alloydb-ai** profile if you have a project of your own to deploy it into.
 
 ---
 
@@ -25,7 +25,7 @@ This guide covers Section 1 of the Professional Cloud Database Engineer (PCDE) e
 |---|---|---|
 | `postgres_tier` / `mysql_tier` | `db-custom-1-3840` | Cloud SQL machine: `db-custom-<vCPUs>-<RAM MiB>` — the default is 1 vCPU / 3.75 GB |
 | `postgres_database_flags` | `[{ name = "max_connections", value = "200" }]` | Connection capacity, tunable per workload |
-| `alloydb_cpu_count` | `2` (validated: 2, 4, 8, 16, 32, 64) | AlloyDB primary *and* read-pool node size |
+| `alloydb_cpu_count` | `2` (validated: 2, 4, 8, 16, 32, 64) | AlloyDB primary *and* read-pool node size (project you bring only) |
 | `redis_memory_size_gb` | `1` (validated 1–300) | Memorystore working-set capacity |
 
 Storage is deliberately *not* a variable: the PostgreSQL instance is fixed to a PD_SSD disk starting at 10 GB with disk autoresize enabled and no upper limit (unlimited), so the disk grows automatically as data arrives — a managed answer to "size storage for growth". The instance edition is fixed to Enterprise. The same shape applies to MySQL.
@@ -133,7 +133,7 @@ A: Via the instance's maintenance window (`gcloud sql instances patch <name> --m
 
 **How RAD implements it** — three layers:
 
-*Network path.* The platform allocates a /16 internal range reserved for VPC peering and establishes a private services access (PSA) connection to the Service Networking service. Every database then attaches privately: PostgreSQL and MySQL disable the public IPv4 address and bind to the VPC's private network and allocated range; AlloyDB attaches to the same VPC; Redis uses the VPC as its authorized network with `redis_connect_mode` (default `DIRECT_PEERING`). There is no public IP on any database.
+*Network path.* The platform allocates a /16 internal range reserved for VPC peering and establishes a private services access (PSA) connection to the Service Networking service. Every database then attaches privately: PostgreSQL and MySQL disable the public IPv4 address and bind to the VPC's private network and allocated range; AlloyDB (project you bring only) attaches to the same VPC; Redis uses the VPC as its authorized network with `redis_connect_mode` (default `DIRECT_PEERING`). There is no public IP on any database.
 
 *In-transit encryption.* PostgreSQL enforces SSL mode `ENCRYPTED_ONLY`; MySQL is relaxed to `ALLOW_UNENCRYPTED_AND_ENCRYPTED` (a deliberate engine-by-engine difference worth noticing).
 
@@ -178,7 +178,7 @@ A: The proxy adds IAM-checked, certificate-based TLS without managing client cer
 
 ## 1.4 Evaluate appropriate database solutions on Google Cloud
 
-> ⏱ ~75 min · 💰 moderate-to-high while multi-engine and alloydb-ai profiles are up — tear down after · ⚙️ Requires: multi-engine + alloydb-ai profiles
+> ⏱ ~75 min · 💰 moderate-to-high while multi-engine and alloydb-ai profiles are up — tear down after · ⚙️ Requires: multi-engine profile (+ alloydb-ai in a project you bring)
 
 **Why the exam cares** — Solution-evaluation questions give you workload adjectives — relational, global, wide-column, document, cache, vector/semantic search, analytical — plus constraints (lift-and-shift compatibility, licensing, ops headcount, compliance) and ask which product fits. The discriminators to internalize: compatibility (Cloud SQL/AlloyDB run real PostgreSQL/MySQL), horizontal write scale (Spanner/Bigtable), document model (Firestore), sub-millisecond cache (Memorystore), analytics (BigQuery), and managed-vs-self-managed cost of ownership.
 
@@ -188,12 +188,12 @@ A: The proxy adds IAM-checked, certificate-based TLS without managing client cer
 |---|---|---|
 | Cloud SQL PostgreSQL 17 | `create_postgres` (`true`) | Managed relational default; structured/transactional |
 | Cloud SQL MySQL 8.4 | `create_mysql` (`false`) | Engine choice driven by app compatibility (e.g. WordPress-class apps) |
-| AlloyDB for PostgreSQL | `enable_alloydb` (`false`) | PostgreSQL-compatible, built for mixed OLTP/analytics and AI — it provides a columnar engine and pgvector-with-ScaNN support; read pool via `enable_alloydb_read_pool` |
+| AlloyDB for PostgreSQL (project you bring only) | `enable_alloydb` (`false`) | PostgreSQL-compatible, built for mixed OLTP/analytics and AI — it provides a columnar engine and pgvector-with-ScaNN support; read pool via `enable_alloydb_read_pool` |
 | Firestore Enterprise | `create_firestore` (`false`) | Document/semi-structured NoSQL; the platform creates a named Firestore Native database in the Enterprise edition, then enables MongoDB-compatible data access via the REST API — MongoDB wire compatibility for lift-and-shift document apps |
 | Memorystore Redis | `create_redis` (`false`) | In-memory cache/session store; tier and persistence tradeoffs |
 | Self-managed Redis + NFS VM | `create_network_filesystem` (`true`) | Redis runs on an e2-small managed instance group you patch, snapshot, and health-check yourself — the "unmanaged" half of the managed-vs-unmanaged comparison |
 
-For the generative-AI angle: AlloyDB is the module's designated vector platform, and on Cloud SQL the application modules can install PostgreSQL extensions (including `vector`) through the extensions job that installs them (`CREATE EXTENSION` as the postgres user — see Section 2.5). Regulatory levers that influence engine *configuration* are also here: `enable_cmek`, `enable_audit_logging`, and `enable_vpc_sc` apply uniformly to whichever engines you enable. Note the platform even encodes a real-world multi-engine ops detail: a 120-second delay between creating the two Cloud SQL instances to avoid Service Networking conflicts.
+For the generative-AI angle: AlloyDB is the module's designated vector platform where you can deploy it (a project you bring), and on Cloud SQL — available everywhere — the application modules can install PostgreSQL extensions (including `vector`) through the extensions job that installs them (`CREATE EXTENSION` as the postgres user — see Section 2.5). Regulatory levers that influence engine *configuration* are also here: `enable_cmek`, `enable_audit_logging`, and `enable_vpc_sc` (a project you bring only) apply uniformly to whichever engines you enable. Note the platform even encodes a real-world multi-engine ops detail: a 120-second delay between creating the two Cloud SQL instances to avoid Service Networking conflicts.
 
 **Try it**
 1. Apply the multi-engine profile, then inventory what one project now runs:
@@ -203,7 +203,7 @@ For the generative-AI angle: AlloyDB is the module's designated vector platform,
    gcloud redis instances list --region=us-central1
    gcloud firestore databases list --format="table(name, type, locationId)"
    ```
-2. Apply the alloydb-ai profile and inspect the cluster:
+2. If you have a project of your own, apply the alloydb-ai profile there and inspect the cluster (RAD-managed projects cannot run AlloyDB — skip this step and read the AlloyDB overview instead):
 
    ```bash
    gcloud alloydb clusters describe alloydb-<prefix>-cluster --region=us-central1
@@ -211,7 +211,7 @@ For the generative-AI angle: AlloyDB is the module's designated vector platform,
      --region=us-central1 --format="table(name, instanceType, machineConfig.cpuCount)"
    ```
 3. In **Console > Firestore > Databases**, open the named database (Enterprise edition does not support `(default)` — the module generates `firestore-<prefix>-db` when `firestore_database_id` is empty) and note the MongoDB compatibility setting.
-4. You know it worked when the AlloyDB list shows a `PRIMARY` and a `READ_POOL` instance and Firestore shows edition Enterprise in the chosen location.
+4. You know it worked when Firestore shows edition Enterprise in the chosen location (and, in a project you bring, the AlloyDB list shows a `PRIMARY` and a `READ_POOL` instance).
 
 **Check yourself**
 <details>
@@ -221,7 +221,7 @@ A: Firestore Enterprise with MongoDB-compatible data access (exactly what the pl
 </details>
 
 <details>
-<summary>Q2: When would you pick AlloyDB over Cloud SQL for PostgreSQL, given both are PostgreSQL-compatible and both appear in this module?</summary>
+<summary>Q2: When would you pick AlloyDB over Cloud SQL for PostgreSQL, given both are PostgreSQL-compatible and both appear in this module (AlloyDB only in a project you bring)?</summary>
 
 A: When the workload mixes OLTP with heavy analytical reads or vector search: AlloyDB adds a columnar engine, ScaNN-indexed pgvector, scale-out read pools (1–20 nodes here), and higher per-instance performance — at a higher floor cost (minimum 2 vCPU, no shared-core tier, as the `alloydb_cpu_count` validation shows). Pure lightweight CRUD on a budget → Cloud SQL; HTAP/AI or aggressive read scaling → AlloyDB.
 </details>
@@ -232,6 +232,6 @@ A: When the workload mixes OLTP with heavy analytical reads or vector search: Al
 A: `enable_cmek = true` (CMEK on Cloud SQL and AlloyDB via the shared `cloudsql` KMS key) and `enable_audit_logging = true` (DATA_READ/DATA_WRITE audit logs for all services). Remaining concern: organization policy constraints (e.g. `constraints/gcp.restrictNonCmekServices`, location restrictions) are *not* managed by these modules — they live at the org/folder level and the exam expects you to know they override anything a project-level module does.
 </details>
 
-**Beyond the modules** — Not implemented, and all examinable: **Spanner** (horizontal write scaling, external consistency, multi-region configs), **Bigtable** (wide-column, time-series, single-digit-ms at scale), **BigQuery** (analytics; also *federated queries* to Cloud SQL — study `EXTERNAL_QUERY()` for the "multiple database solutions / federation" subtopic), **Memorystore for Memcached**, and **Vertex AI Vector Search** for embedding retrieval beyond pgvector. Try in a scratch project: `gcloud spanner instances create test --config=regional-us-central1 --nodes=1 --description=test` and a BigQuery federated query via `bq query --use_legacy_sql=false 'SELECT * FROM EXTERNAL_QUERY("<connection>", "SELECT 1;")'`. For decision practice, the "Google Cloud database options" decision tree page is the single highest-value read.
+**Beyond the modules** — Not implemented, and all examinable: **Spanner** (horizontal write scaling, external consistency, multi-region configs), **Bigtable** (wide-column, time-series, single-digit-ms at scale), **BigQuery** (analytics; also *federated queries* to Cloud SQL — study `EXTERNAL_QUERY()` for the "multiple database solutions / federation" subtopic), **Memorystore for Memcached**, and **Vertex AI Vector Search** for embedding retrieval beyond pgvector. The 1.4 managed-vs-unmanaged bullet also names **bare metal** (Bare Metal Solution, typically for Oracle workloads that cannot move to a managed engine) and **partner database offerings** (third-party databases from Google Cloud Marketplace, and Oracle Database@Google Cloud) — know when each beats a Google-managed engine. Assessing **application and database dependencies**, the effect of **organization policies** (resource-location and CMEK constraints narrow which engines and regions you may choose), and **hybrid** designs that span technologies (exports, federation, on-premises plus cloud) are likewise docs-only here. Try in a scratch project: `gcloud spanner instances create test --config=regional-us-central1 --nodes=1 --description=test` and a BigQuery federated query via `bq query --use_legacy_sql=false 'SELECT * FROM EXTERNAL_QUERY("<connection>", "SELECT 1;")'`. For decision practice, the "Google Cloud database options" decision tree page is the single highest-value read.
 
 **⚠️ Exam trap** — "PostgreSQL-compatible" appears three times in the Google catalog: Cloud SQL (actual PostgreSQL), AlloyDB (PostgreSQL-compatible, Google storage engine), and Spanner's PostgreSQL interface (PostgreSQL *dialect*, not wire-compatible with every driver/extension). Questions that mention existing PostgreSQL extensions or exotic drivers usually eliminate Spanner's PG interface.

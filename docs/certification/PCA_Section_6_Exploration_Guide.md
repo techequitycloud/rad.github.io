@@ -17,7 +17,7 @@ Day-2 operations: observing systems, releasing safely, controlling quality, and 
 
 > ⏱ ~30 min reading + console review · 💰 no additional cost · ⚙️ Requires: default deployment
 
-**Why the exam cares** — The Architecture Framework's operational excellence pillar — automate everything, make changes safely, prepare for failure, continuously improve — frames many scenario answers. The exam rewards recognizing operational toil and replacing it with automation.
+**Why the exam cares** — The Well-Architected Framework's operational excellence pillar — automate everything, make changes safely, prepare for failure, continuously improve — frames many scenario answers. The exam rewards recognizing operational toil and replacing it with automation.
 
 **How RAD implements it** — The pillar is visible as a set of automations that remove human toil: the NFS VM is a managed instance group with TCP health checks and auto-healing plus daily disk snapshots (no pager for a hung file server); the platform restores disabled or destruction-scheduled CMEK key versions at *plan* time (self-healing before the failure manifests); orphaned Cloud Run jobs and old revisions are cleaned automatically; secret rotation is event-driven and zero-downtime; and the entire platform is declaratively reproducible, so environment rebuilds are an apply, not a runbook.
 
@@ -39,7 +39,7 @@ gcloud compute resource-policies list --format="table(name,snapshotSchedulePolic
 A: A managed instance group with TCP health checks (ports 2049/6379) and auto-healing — an unresponsive instance is automatically recreated with its stateful data disk reattached — plus a daily snapshot schedule with 7-day retention for the corruption case. The runbook becomes infrastructure; the exam calls this eliminating toil through automation.
 </details>
 
-**Beyond the modules** — Read the official "Google Cloud Architecture Framework: Operational excellence" pillar end to end — its principles (automate deployments, manage incidents, plan for DR) are quoted nearly verbatim in exam options. The framework's sustainability and performance pillars are also fair game and have no module analogue.
+**Beyond the modules** — Read the official "Google Cloud Well-Architected Framework: Operational excellence" pillar end to end — its principles (automate deployments, manage incidents, plan for DR) are quoted nearly verbatim in exam options. The framework's other pillars (security, reliability, performance optimization, cost optimization, sustainability) are also fair game; the sustainability and performance pillars have no module analogue.
 
 ---
 
@@ -249,6 +249,6 @@ A: The startup probe window is too short — it must cover worst-case boot time 
 A: It cannot deliver that: the NFS server is a single zonal VM — auto-healing and daily snapshots reduce MTTR but recovery still takes minutes, and a zone outage takes the share down. For higher availability you change architecture, not tuning: managed Filestore (or, beyond this platform, a regional/Enterprise file tier). Recognizing when an SLO requires an architectural change is core PCA material.
 </details>
 
-**Beyond the modules** — Not demonstrated: chaos engineering (fault injection), load testing at scale, multi-region failover with global traffic management, and formal SLO/error-budget operations. Study the SRE workbook's "Implementing SLOs," and practice a load test (e.g. `hey` or the distributed load-testing reference architecture) against a scratch deployment while watching the HPA respond.
+**Beyond the modules** — Not demonstrated: chaos engineering (fault injection), penetration testing (Google's policy allows testing your own resources without notifying Google, within the Acceptable Use Policy), load testing at scale, multi-region failover with global traffic management, and formal SLO/error-budget operations. Study the SRE workbook's "Implementing SLOs," and practice a load test (e.g. `hey` or the distributed load-testing reference architecture) against a scratch deployment while watching the HPA respond.
 
 **⚠️ Exam trap** — A PDB protects only against *voluntary* disruptions (drains, upgrades, autoscaler consolidation). Node crashes and zone outages ignore it entirely — those require replica count, topology spread, and multi-zone/multi-region design. "We had a PDB, why did the zone outage hurt us?" is exactly the confusion the exam probes.

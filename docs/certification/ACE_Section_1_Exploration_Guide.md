@@ -3,9 +3,9 @@ title: "ACE Section 1 Prep: Cloud Solution Environment Setup"
 description: "Prepare for the Associate Cloud Engineer (ACE) exam Section 1 — setting up a cloud solution environment — with hands-on RAD labs on Google Cloud."
 ---
 
-# ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)
+# ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~20% of the exam)
 
-<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section1.png" alt="ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~23% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
+<img src="https://storage.googleapis.com/rad-public-2b65/certification/ace_section1.png" alt="ACE Certification Preparation Guide: Section 1 — Setting up a cloud solution environment (~20% of the exam)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 > 📚 **Official exam guide:** [Associate Cloud Engineer certification](https://cloud.google.com/learn/certification/cloud-engineer) — always confirm section weightings against the current Google Cloud exam guide.
 
@@ -17,7 +17,7 @@ This guide covers exam Section 1 using the RAD platform foundation modules as a 
 
 > ⏱ ~60 min · 💰 no additional cost beyond the baseline profile · ⚙️ Requires: default Baseline platform deployment
 
-**Why the exam cares** — The exam tests whether you understand the project as the fundamental billing, IAM, and API boundary: how projects relate to folders and organizations, why APIs must be enabled before resources can be created, how identities (users, groups, service accounts) are granted roles, and how to check quotas before they bite you. Scenario questions often hinge on knowing that a project ID is immutable, that APIs are enabled per project, and that groups are preferred over individual user bindings.
+**Why the exam cares** — The exam tests whether you understand the project as the fundamental billing, IAM, and API boundary: how projects relate to folders and organizations, why APIs must be enabled before resources can be created, how identities (users, groups, service accounts) are granted roles, and how to check quotas before they bite you. The current guide also lists organization policies, standalone organizations, Cloud Identity user/group management (manual and automated), setting up networking and Google Cloud Observability, checking product availability by region/zone, Cloud Asset Inventory with Gemini Cloud Assist, and Workforce Identity Federation. Scenario questions often hinge on knowing that a project ID is immutable, that APIs are enabled per project, and that groups are preferred over individual user bindings.
 
 **How RAD implements it** — Every module deploys into an *existing* project named by `project_id` (required, no default); the modules never create projects, folders, or organizations. On apply, `Services_GCP` enables roughly 45 service APIs when `enable_services` (default `true`) is set — the list includes `compute.googleapis.com`, `run.googleapis.com`, `container.googleapis.com`, `sqladmin.googleapis.com`, `secretmanager.googleapis.com`, `cloudkms.googleapis.com`, and more; `additional_apis` (default `[]`) appends your own. Identity wiring:
 
@@ -31,7 +31,7 @@ This guide covers exam Section 1 using the RAD platform foundation modules as a 
 | `resource_labels` | `{}` | Labels merged onto every module-managed resource |
 | `resource_creator_identity` | platform deployer SA | Service account Terraform runs as |
 
-`Services_GCP` creates five dedicated service accounts per deployment — `cloudbuild-sa-{prefix}`, `clouddeploy-sa-{prefix}`, `cloudrun-sa-{prefix}`, `nfs-sa-{prefix}`, and `gke-sa-{prefix}` — each bound to predefined roles only. Organization context is auto-discovered: the platform reads `org_id` from the project data source, and org-dependent features (VPC-SC, SCC notifications) skip gracefully when the project has no organization or the caller lacks org-level permission.
+`Services_GCP` creates five dedicated service accounts per deployment — `cloudbuild-sa-{prefix}`, `clouddeploy-sa-{prefix}`, `cloudrun-sa-{prefix}`, `nfs-sa-{prefix}`, and `gke-sa-{prefix}` — bound to predefined roles, with one exception worth spotting: `cloudbuild-sa-{prefix}` also holds the basic role `roles/viewer` at project level. The same module also builds the project's network (custom-mode VPC, subnets, Cloud NAT — see [Section 2.3](ACE_Section_2_Exploration_Guide.md#23-planning-and-implementing-networking-resources)) and its first Cloud Monitoring alerts and notification channels (see [Section 3.4](ACE_Section_3_Exploration_Guide.md#34-monitoring-and-logging)). Organization context is auto-discovered: the platform reads `org_id` from the project data source, and org-dependent features (VPC-SC, SCC notifications) skip gracefully when the project has no organization or the caller lacks org-level permission.
 
 **Try it**
 1. In the portal, set `resource_labels = { environment = "dev", team = "platform" }` and redeploy. In the console go to **Cloud SQL > your instance** and confirm the labels appear under the instance details.
@@ -50,7 +50,7 @@ This guide covers exam Section 1 using the RAD platform foundation modules as a 
      --format="table(bindings.role)"
    ```
 4. Check a quota your deployment consumes: **IAM & Admin > Quotas & System Limits**, filter by *Cloud SQL Admin API*. CLI equivalent: `gcloud compute regions describe us-central1 --format="table(quotas.metric,quotas.usage,quotas.limit)"` for Compute quotas.
-5. You know it worked when the IAM policy query returns only narrow predefined roles (no `roles/editor`) and the enabled-services list contains the APIs above.
+5. You know it worked when the IAM policy query returns no `roles/owner` or `roles/editor` (run the same query for `cloudbuild-sa` to find the one basic role, `roles/viewer`) and the enabled-services list contains the APIs above.
 
 **Check yourself**
 <details>
@@ -73,9 +73,13 @@ A: The project ID is a globally unique, immutable, human-chosen string used in A
 
 **Beyond the modules** — The exam also tests things the modules deliberately do not do:
 - *Creating projects and hierarchy:* practice `gcloud projects create my-lab-project --folder=FOLDER_ID` and browse **IAM & Admin > Manage Resources** to see Organization → Folder → Project inheritance.
-- *Cloud Identity:* user and group lifecycle is managed in admin.google.com, not in GCP. Know that IAM policies can bind `user:`, `group:`, `serviceAccount:`, and `domain:` principals.
+- *Standalone organizations:* know how an organization resource comes into being (a Cloud Identity or Google Workspace domain) and what changes for projects created with no organization above them.
+- *Cloud Identity:* user and group lifecycle is managed in admin.google.com, not in GCP — manually in the Admin console, or automated (e.g. Google Cloud Directory Sync from an existing directory, or the Cloud Identity APIs). Know that IAM policies can bind `user:`, `group:`, `serviceAccount:`, and `domain:` principals.
+- *Workforce Identity Federation:* lets users from an external IdP (OIDC or SAML) access Google Cloud without Cloud Identity accounts, via a workforce pool created at the organization level. Not to be confused with *Workload* Identity Federation (for workloads — see Section 4.2), which `Services_GCP` does implement.
 - *Quota increases:* find a quota in **IAM & Admin > Quotas & System Limits** and walk through (without submitting) the **Edit Quotas** increase request flow; quota increases are requests, not instant changes.
-- *Org policies:* browse **IAM & Admin > Organization Policies** (e.g. `constraints/compute.vmExternalIpAccess`). The modules do not manage org policy constraints.
+- *Org policies:* browse **IAM & Admin > Organization Policies** (e.g. `constraints/compute.vmExternalIpAccess`). The modules do not manage org policy constraints, but they are written to pass some: the NFS VM's instance template sets `enable-oslogin = true` and Shielded VM options precisely because `constraints/compute.requireOsLogin` and `constraints/compute.requireShieldedVm` may be enforced above the project.
+- *Product availability by location:* not every product or machine type exists in every region/zone. Check with `gcloud compute zones list`, `gcloud compute machine-types list --filter="zone:us-central1-a"`, and the product's locations page before choosing `availability_regions`.
+- *Cloud Asset Inventory and Gemini Cloud Assist:* search and export resource metadata across projects (`gcloud asset search-all-resources --scope=projects/$GOOGLE_CLOUD_PROJECT`, `gcloud asset export`), and ask Gemini Cloud Assist in the console to summarize or analyze those resources. Neither is configured by the modules — try both against the resources your deployment created.
 
 **⚠️ Exam trap** — Enabling an API and granting IAM permission are independent: a user with `roles/run.admin` still cannot deploy to Cloud Run if `run.googleapis.com` is disabled in the project, and enabling the API grants no one any access.
 
@@ -85,7 +89,7 @@ A: The project ID is a globally unique, immutable, human-chosen string used in A
 
 > ⏱ ~40 min · 💰 the budget itself is free; alert emails are free · ⚙️ Requires: `create_billing_budget = true` (Operations & security add-ons profile)
 
-**Why the exam cares** — The exam expects you to link projects to billing accounts, create budgets with threshold alerts, and export billing data for analysis. Decision criteria: budgets *notify*, they never stop spending; billing exports to BigQuery are the only way to analyze historical cost by label; the Billing Account Administrator role is separate from project IAM.
+**Why the exam cares** — The exam expects you to create billing accounts, link projects to them, create budgets with threshold alerts, and export billing data for analysis. Decision criteria: budgets *notify*, they never stop spending; billing exports to BigQuery are the only way to analyze historical cost by label; the Billing Account Administrator role is separate from project IAM.
 
 **How RAD implements it** — `Services_GCP` creates a real Cloud Billing budget when `create_billing_budget` (default `false`) is enabled. The billing account is *auto-discovered* from the project — there is no billing-account variable, and the module never links or unlinks projects. The budget is scoped with a `budget_filter` to the current project only.
 
@@ -123,6 +127,7 @@ A: (1) Consistent `resource_labels` (e.g. `team = "platform"`) on every resource
 </details>
 
 **Beyond the modules** — Not implemented by the foundation modules; practice these directly:
+- *Creating billing accounts:* **Billing > Manage billing accounts > Create account** — know that a billing account can pay for many projects, and that creating one under an organization needs the Billing Account Creator role (`roles/billing.creator`).
 - *Linking a project to a billing account:* `gcloud billing projects link my-project --billing-account=0X0X0X-0X0X0X-0X0X0X` (requires Billing Account User on the account + Project Billing Manager or Owner on the project).
 - *Billing exports:* enable the BigQuery export (standard usage cost) under **Billing > Billing export**; there is no Terraform in this repo doing it.
 - *Billing IAM:* know `roles/billing.admin`, `roles/billing.user` (can link projects), and `roles/billing.viewer` and that they live on the billing account, not the project.

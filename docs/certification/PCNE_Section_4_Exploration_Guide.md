@@ -151,7 +151,7 @@ A: Inbound to Google: on-prem influences Google's choice via MED it sends; Googl
 A: Enable BFD on both BGP peers (`gcloud compute routers update-bgp-peer --bfd-session-initialization-mode=ACTIVE --bfd-min-transmit-interval=...`). BGP hold timers alone are tens of seconds; BFD detects dataplane failure in hundreds of milliseconds and tears the route down immediately.
 </details>
 
-**Beyond the modules** — Study "Cloud Router overview": ASN rules (private 64512–65534/4200000000+ ranges; Google's side of PSA-style peering vs your `--asn`), regional vs global dynamic routing and how it changes which subnets the router advertises, MD5 authentication on BGP sessions, and legacy vs standard best-path selection modes. Also note each NAT-only router (RAD's case) still counts against router quotas.
+**Beyond the modules** — Study "Cloud Router overview": ASN rules (private 64512–65534/4200000000+ ranges; Google's side of PSA-style peering vs your `--asn`), regional vs global dynamic routing and how it changes which subnets the router advertises, MD5 authentication on BGP sessions, link-local BGP addressing, **custom learned routes** (`gcloud compute routers update-bgp-peer --set-custom-learned-route-ranges`, routes applied as if learned from the peer), and legacy vs standard best-path selection modes. Also note each NAT-only router (RAD's case) still counts against router quotas.
 
 **⚠️ Exam trap** — Cloud Router advertises *subnet* routes (per routing mode) by default; **custom routes, peering ranges (like RAD's PSA /16), and secondary ranges outside the mode's scope require CUSTOM advertisement mode**. "It's in the VPC so it's advertised" fails for PSA ranges.
 

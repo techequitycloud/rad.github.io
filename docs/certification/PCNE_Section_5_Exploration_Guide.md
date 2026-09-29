@@ -73,7 +73,7 @@ A: Firewall rules logging on the relevant rules (`gcloud compute firewall-rules 
 A: Attachment: `interconnect.googleapis.com/network/attachment/sent_bytes_count` (vs configured capacity). VPN: `vpn.googleapis.com/network/sent_bytes_count` per tunnel against the ~3 Gbps-per-tunnel ceiling — the standard answer for "VPN slow under load" is adding tunnels (ECMP), not resizing a tunnel.
 </details>
 
-**Beyond the modules** — Study the per-product logging pages: "VPC Flow Logs" (sampling, aggregation, metadata annotations, cost levers), "Firewall Rules Logging", "Cloud NAT logging" (TRANSLATIONS_ONLY vs ERRORS_ONLY), "Cloud DNS logging" (query logs via server policies for private zones; public-zone query logging on the zone), VPC-SC audit logs (denials appear in the *org-level* policy audit log), and NCC/Cloud Router logs (`bgp_routes` status via `get-status`, router task logs). Also Firewall Insights and Flow Analyzer (5.3).
+**Beyond the modules** — Study the per-product logging pages: "VPC Flow Logs" (sampling, aggregation, metadata annotations, cost levers), "Firewall Rules Logging", "Cloud NAT logging" (TRANSLATIONS_ONLY vs ERRORS_ONLY), "Cloud DNS logging" (query logs via server policies for private zones; public-zone query logging on the zone), VPC-SC audit logs (denials appear in the *org-level* policy audit log), **Cloud NGFW** logs (firewall policy rule logging and NGFW Enterprise threat logs), and NCC/Cloud Router logs (`bgp_routes` status via `get-status`, router task logs). For metrics, add Cloud Armor (`networksecurity.googleapis.com` policy request counts, allowed vs blocked) to the VPN/Interconnect/Router/LB/NAT list. Also Firewall Insights and Flow Analyzer (5.3).
 
 **⚠️ Exam trap** — VPC Flow Logs capture only VM-attached flows in the subnet (including GKE nodes); they do not capture traffic to *global* LB frontends (use LB logs) or PSA producer-side flows. Picking "enable flow logs" to debug an LB 502 is wrong — backend service logs and health checks are the tools.
 
@@ -128,11 +128,11 @@ A: Link-local interface/peer IPs mismatched between the Cloud Router interface a
 
 ---
 
-## 5.3 Monitoring, maintaining, and troubleshooting latency and traffic flow
+## 5.3 Using Network Intelligence Center to monitor and troubleshoot common networking issues
 
 > ⏱ ~40 min · 💰 Connectivity Tests are free in moderate use · ⚙️ Requires: VPC Foundation profile (any deployment gives you test targets)
 
-**Why the exam cares** — Network Intelligence Center's five tools each answer a specific question: **Network Topology** (what talks to what, with throughput), **Connectivity Tests** (would/does a 5-tuple reach its destination, and which rule/route decides), **Performance Dashboard** (zone-to-zone latency/loss baselines), **Firewall Insights** (shadowed/overly-permissive/unused rules), **Network Analyzer** (continuous config checks — IP exhaustion, route conflicts, misconfigured PSA), plus **Flow Analyzer** over VPC Flow Logs.
+**Why the exam cares** — Network Intelligence Center's five tools each answer a specific question: **Network Topology** (what talks to what, with throughput), **Connectivity Tests** (would/does a 5-tuple reach its destination, and which rule/route decides), **Performance Dashboard** (latency/packet loss, in both a Google-wide view and a project-scoped view), **Firewall Insights** (shadowed/overly-permissive/unused rules), **Network Analyzer** (continuous config checks — IP exhaustion, route conflicts, misconfigured PSA), plus **Flow Analyzer** over VPC Flow Logs.
 
 **How RAD implements it** — Not implemented as resources (nothing to configure), but every tool can be pointed *at* the deployed estate, which is the realistic exam skill. The RAD VPC offers ready-made test cases: VM→Cloud SQL private IP through PSA, VM→VM under the intra-VPC rules, internet→LB frontend, and pod-range→NFS paths.
 
