@@ -1,6 +1,8 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import {copyFile, access} from 'node:fs/promises';
+import path from 'node:path';
 
 const config: Config = {
   title: 'RAD Platform',
@@ -43,6 +45,29 @@ const config: Config = {
   // gtag.js on first paint with no consent gate, which would contradict the
   // privacy policy covering this site and the two marketing sites.
   clientModules: ['./src/clientModules/analytics.js'],
+
+  plugins: [
+    // The section landing pages (/docs/labs, /docs/modules, /docs/certification)
+    // build to <section>.html, but each section is also a FOLDER of pages, and
+    // GitHub Pages gives a folder precedence: /docs/labs redirects to /docs/labs/
+    // and looks for labs/index.html (the reason static/docs/index.html exists).
+    // Copy each landing page into its folder so both forms serve it. Runs once
+    // per locale (outDir is build/ or build/fr/).
+    () => ({
+      name: 'section-index-pages',
+      async postBuild({outDir}) {
+        for (const section of ['labs', 'modules', 'certification']) {
+          const page = path.join(outDir, 'docs', `${section}.html`);
+          try {
+            await access(page);
+          } catch {
+            continue;
+          }
+          await copyFile(page, path.join(outDir, 'docs', section, 'index.html'));
+        }
+      },
+    }),
+  ],
 
   presets: [
     [
