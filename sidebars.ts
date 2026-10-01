@@ -90,6 +90,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Flowise_Common', label: 'Common'},
           ],
         },
+        {type: 'doc', id: 'modules/Gemini_Enterprise', label: 'Gemini Enterprise'},
         {
           type: 'category',
           label: 'Hermes',
@@ -1952,6 +1953,7 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Flowise_GKE', label: 'GKE'},
           ],
         },
+        {type: 'doc', id: 'labs/Gemini_Enterprise', label: 'Gemini Enterprise'},
         {
           type: 'category',
           label: 'Hermes',
