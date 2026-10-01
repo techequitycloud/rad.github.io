@@ -5262,5 +5262,17 @@
   "sidebar.designSidebar.doc.design/engineering_excellence": {
     "message": "L'excellence d'ingénierie",
     "description": "The label for the doc item 'Engineering Excellence' in sidebar 'designSidebar', linking to the doc design/engineering_excellence"
+  },
+  "sidebar.modulesSidebar.doc.modules/index": {
+    "message": "Vue d’ensemble",
+    "description": "The label for the doc item 'Overview' in sidebar 'modulesSidebar', linking to the doc modules/index"
+  },
+  "sidebar.labsSidebar.doc.labs/index": {
+    "message": "Vue d’ensemble",
+    "description": "The label for the doc item 'Overview' in sidebar 'labsSidebar', linking to the doc labs/index"
+  },
+  "sidebar.certificationSidebar.doc.certification/index": {
+    "message": "Toutes les certifications",
+    "description": "The label for the doc item 'All certifications' in sidebar 'certificationSidebar', linking to the doc certification/index"
   }
 }

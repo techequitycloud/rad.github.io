@@ -14,6 +14,7 @@ const sidebars: SidebarsConfig = {
     {type: 'doc', id: 'guides/client-projects-guide', label: 'Client Projects Guide'},
   ],
   modulesSidebar: [
+    {type: 'doc', id: 'modules/index', label: 'Overview'},
     {
       type: 'category',
       label: 'Foundation Services',
@@ -1892,6 +1893,7 @@ const sidebars: SidebarsConfig = {
     },
   ],
   labsSidebar: [
+    {type: 'doc', id: 'labs/index', label: 'Overview'},
     {
       type: 'category',
       label: 'Foundation Services',
@@ -3486,6 +3488,7 @@ const sidebars: SidebarsConfig = {
     },
   ],
   certificationSidebar: [
+    {type: 'doc', id: 'certification/index', label: 'All certifications'},
     {
       type: 'category',
       label: 'Associate Cloud Engineer',
