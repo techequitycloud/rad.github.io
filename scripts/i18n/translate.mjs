@@ -4,7 +4,14 @@
 //   ANTHROPIC_API_KEY=... node scripts/i18n/translate.mjs docs/labs/Ghost_CloudRun.md ...
 //   ... --from-stale [--include-missing] [--max N]     take the list from stale.mjs
 //
-// Env: TRANSLATE_MODEL (default claude-sonnet-5), TRANSLATE_CONCURRENCY (default 4).
+// Providers (TRANSLATE_PROVIDER):
+//   vertex     Gemini on Vertex AI (default). Env: VERTEX_PROJECT, VERTEX_LOCATION
+//              (default us-central1), TRANSLATE_MODEL (default gemini-2.5-flash).
+//              Auth: GOOGLE_ACCESS_TOKEN if set, else `gcloud auth print-access-token`
+//              (refreshed every 45 minutes) -- in CI, gcloud is signed in through
+//              Workload Identity Federation, so no key is stored anywhere.
+//   anthropic  Claude. Env: ANTHROPIC_API_KEY, TRANSLATE_MODEL (default claude-sonnet-5).
+// TRANSLATE_CONCURRENCY (default 4).
 //
 // Each page is translated with scripts/i18n/prompt.md as the system prompt,
 // stamped with its provenance marker, then run through the validator. A page
@@ -17,9 +24,12 @@ import path from 'node:path';
 import {ROOT, frenchFor, readText, sha12, markerLine, writeMarker, headCommit, splitFences, analyse, englishIds} from './lib.mjs';
 import {checkFile} from './check.mjs';
 
-const MODEL = process.env.TRANSLATE_MODEL || 'claude-sonnet-5';
+const PROVIDER = process.env.TRANSLATE_PROVIDER || 'vertex';
+const MODEL = process.env.TRANSLATE_MODEL || (PROVIDER === 'vertex' ? 'gemini-2.5-flash' : 'claude-sonnet-5');
 const CONCURRENCY = Number(process.env.TRANSLATE_CONCURRENCY || 4);
 const KEY = process.env.ANTHROPIC_API_KEY;
+const VERTEX_PROJECT = process.env.VERTEX_PROJECT;
+const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
 const CHUNK_WORDS = 4500;
 const RULES = readFileSync(path.join(ROOT, 'scripts/i18n/prompt.md'), 'utf8');
 
@@ -29,6 +39,68 @@ const SYSTEM = `${RULES}
 Return ONLY the translated markdown of the part you are given: no preamble, no
 commentary, and do not wrap it in a code fence. Do not write the provenance
 marker; the tooling adds it.`;
+
+/** One model call: the provider's streamed text for this prompt. */
+const callModel = (user) => (PROVIDER === 'vertex' ? callGemini(user) : callClaude(user));
+
+let token = null;
+let tokenAt = 0;
+function googleToken() {
+  if (process.env.GOOGLE_ACCESS_TOKEN) return process.env.GOOGLE_ACCESS_TOKEN;
+  if (!token || Date.now() - tokenAt > 45 * 60 * 1000) {
+    token = execFileSync('gcloud', ['auth', 'print-access-token'], {stdio: ['ignore', 'pipe', 'pipe']}).toString().trim();
+    tokenAt = Date.now();
+  }
+  return token;
+}
+
+/** Read a server-sent-event stream, calling onData with each event's parsed JSON. */
+async function readSse(res, onData) {
+  const decoder = new TextDecoder();
+  let buf = '';
+  for await (const chunk of res.body) {
+    buf += decoder.decode(chunk, {stream: true}).replace(/\r\n/g, '\n');
+    let i;
+    while ((i = buf.indexOf('\n\n')) >= 0) {
+      const event = buf.slice(0, i);
+      buf = buf.slice(i + 2);
+      const data = event.split('\n').find((l) => l.startsWith('data: '));
+      if (data) onData(JSON.parse(data.slice(6)));
+    }
+  }
+}
+
+async function callGemini(user) {
+  const url = `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}/locations/${VERTEX_LOCATION}/publishers/google/models/${MODEL}:streamGenerateContent?alt=sse`;
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {authorization: `Bearer ${googleToken()}`, 'content-type': 'application/json'},
+      body: JSON.stringify({
+        systemInstruction: {parts: [{text: SYSTEM}]},
+        contents: [{role: 'user', parts: [{text: user}]}],
+        // Translation needs no reasoning: thinking off keeps the whole budget
+        // for output and the cost to output tokens. Low temperature for a
+        // faithful rather than creative rendering.
+        generationConfig: {maxOutputTokens: 65535, temperature: 0.2, thinkingConfig: {thinkingBudget: 0}},
+      }),
+    });
+    if ((res.status === 429 || res.status >= 500) && attempt < 6) {
+      await new Promise((r) => setTimeout(r, 2 ** attempt * 2000));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Vertex ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    let text = '';
+    let finish = null;
+    await readSse(res, (msg) => {
+      const cand = msg.candidates?.[0];
+      for (const p of cand?.content?.parts ?? []) if (p.text) text += p.text;
+      if (cand?.finishReason) finish = cand.finishReason;
+    });
+    if (finish && finish !== 'STOP') throw new Error(`Gemini stopped early: ${finish}`);
+    return text.replace(/^\s*```(?:markdown|md)?\n([\s\S]*?)\n```\s*$/, '$1');
+  }
+}
 
 async function callClaude(user) {
   for (let attempt = 1; ; attempt++) {
@@ -90,6 +162,45 @@ function chunk(text) {
   return parts;
 }
 
+/**
+ * Take code out of the model's hands. Every fenced block and inline code span
+ * becomes a placeholder (⟦Cn⟧ / ⟦In⟧) before the text is sent, and is put back
+ * byte for byte afterwards. Models "helpfully" translate code comments and
+ * string defaults -- the first Gemini pilot did on two pages of three -- and a
+ * placeholder cannot be translated. It also shrinks the request.
+ */
+function maskCode(text) {
+  const saved = [];
+  const put = (kind, s) => `⟦${kind}${saved.push(s) - 1}⟧`;
+  const lines = text.split('\n');
+  const out = [];
+  let fence = null;
+  let buf = [];
+  for (const line of lines) {
+    const open = line.match(/^\s*(`{3,}|~{3,})/);
+    if (!fence && open) {
+      fence = open[1];
+      buf = [line];
+      continue;
+    }
+    if (fence) {
+      buf.push(line);
+      if (line.trim().startsWith(fence) && line.trim().replace(/[`~]/g, '') === '') {
+        out.push(put('C', buf.join('\n')));
+        fence = null;
+      }
+      continue;
+    }
+    out.push(line.replace(/`[^`\n]+`/g, (m) => put('I', m)));
+  }
+  if (fence) out.push(put('C', buf.join('\n')));
+  return {masked: out.join('\n'), saved};
+}
+
+function unmaskCode(text, saved) {
+  return text.replace(/⟦([CI])(\d+)⟧/g, (m, _k, n) => (saved[Number(n)] !== undefined ? saved[Number(n)] : m));
+}
+
 async function translatePage(enRel, feedback) {
   const en = readText(enRel);
   const ids = englishIds(analyse(en).headings);
@@ -99,17 +210,19 @@ async function translatePage(enRel, feedback) {
   for (let p = 0; p < parts.length; p++) {
     const partHeadings = analyse(parts[p]).headings.length;
     const partIds = ids.slice(idOffset, idOffset + partHeadings);
+    const masked = maskCode(parts[p]);
     idOffset += partHeadings;
     const user = [
       `Translate this English page${parts.length > 1 ? ` (part ${p + 1} of ${parts.length}; translate only this part)` : ''} into French, following the rules.`,
       `Source file: ${enRel}`,
       partIds.length ? `Its headings, in order, must carry exactly these ids: ${partIds.map((i) => `{#${i}}`).join(' ')}` : '',
+      'Tokens like ⟦C3⟧ and ⟦I12⟧ stand for code that is restored after translation: copy every one exactly, once, in the same place, and never translate or drop one.',
       feedback ? `A previous attempt failed validation. Fix these problems:\n${feedback}` : '',
       '<english>',
-      parts[p],
+      masked.masked,
       '</english>',
     ].filter(Boolean).join('\n\n');
-    out.push((await callClaude(user)).replace(/\s+$/, ''));
+    out.push(unmaskCode((await callModel(user)).replace(/\s+$/, ''), masked.saved));
   }
   return out.join('\n\n') + '\n';
 }
@@ -165,8 +278,12 @@ if (args.includes('--dry-run')) {
   }
   process.exit(0);
 }
-if (!KEY) {
+if (PROVIDER === 'anthropic' && !KEY) {
   console.error('ANTHROPIC_API_KEY is not set');
+  process.exit(2);
+}
+if (PROVIDER === 'vertex' && !VERTEX_PROJECT) {
+  console.error('VERTEX_PROJECT is not set');
   process.exit(2);
 }
 const commit = headCommit();
@@ -182,5 +299,5 @@ await Promise.all(
     }
   }),
 );
-console.log(JSON.stringify({model: MODEL, requested: pages.length, translated: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok)}, null, 2));
+console.log(JSON.stringify({provider: PROVIDER, model: MODEL, requested: pages.length, translated: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok)}, null, 2));
 process.exit(results.some((r) => !r.ok) ? 1 : 0);
