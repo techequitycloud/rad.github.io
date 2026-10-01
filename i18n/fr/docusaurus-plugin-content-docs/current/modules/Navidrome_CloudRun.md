@@ -39,7 +39,7 @@ ensemble ciblé de services Google Cloud :
 | Entrée | URL Cloud Run / Cloud Load Balancing | `internal` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 | Livraison des images | Artifact Registry | L'image `deluan/navidrome` y est dupliquée avant le déploiement |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Il n'y a pas de base de données externe.** Navidrome stocke l'intégralité de son état — la
   base de données SQLite, le cache de métadonnées et l'index de recherche — dans un seul
@@ -214,7 +214,7 @@ facultatifs.
   variante GKE avec PVC en mode bloc.
 - **L'image personnalisée est une fine surcouche.** Le Dockerfile est
   `ARG NAVIDROME_VERSION=0.54.3` / `FROM deluan/navidrome:${NAVIDROME_VERSION}` ; ainsi
-  `image_source = "custom"` et le socle la duplique dans Artifact Registry
+  `image_source = "custom"` et le socle la met en miroir dans Artifact Registry
   (`enable_image_mirroring = true`). `application_version = "latest"` se résout en la version
   épinglée `0.54.3` via l'argument de build propre à l'application `NAVIDROME_VERSION` — il
   n'est **pas** écrasé par l'injection générique `APP_VERSION` du socle.
@@ -250,7 +250,7 @@ standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -348,7 +348,7 @@ conservés pour la compatibilité avec le socle. Ce groupe héberge aussi `nfs_i
 | `database_password_length` | `32` | Sans effet ; transmis pour la compatibilité avec le socle. |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Non applicable — aucune base de données SQL. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -372,7 +372,7 @@ conservés pour la compatibilité avec le socle. Ce groupe héberge aussi `nfs_i
 d'attente ; `redis_host` / `redis_port` / `redis_auth` sont sans effet. Laissez les valeurs par
 défaut.
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -397,7 +397,7 @@ ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `/data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (vide pour un déploiement Navidrome par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -411,14 +411,14 @@ Manager (`secret-<prefix>-navidrome-admin-password`, voir § 2 / § 4.D).
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, un `container_port`/`backup_retention_days`/`timeout_seconds` hors plage. Une garde propre à Navidrome rejette en outre `ingress_settings = "all"` sauf si `enable_admin_password = true`, ainsi que `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Bucket GCS `/data` | Ne jamais le supprimer ni le faire pointer ailleurs | Critical | Le bucket `/data` contient la base SQLite, les utilisateurs et les playlists ; le supprimer efface tout le serveur. |
 | `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
@@ -437,7 +437,7 @@ Manager (`secret-<prefix>-navidrome-admin-password`, voir § 2 / § 4.D).
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à
 l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Navidrome partagée
 avec la variante GKE est décrite dans **[Navidrome_Common](Navidrome_Common.md)**.
 

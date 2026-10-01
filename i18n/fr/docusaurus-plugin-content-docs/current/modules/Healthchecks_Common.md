@@ -30,10 +30,10 @@ consultez les guides des plateformes ([Healthchecks_GKE](Healthchecks_GKE.md),
 |---|---|---|
 | Secret cryptographique | Génère la `SECRET_KEY` de Django (chaîne aléatoire de 50 caractères) et la stocke dans **Secret Manager** | Injectée automatiquement ; récupérable via Secret Manager (voir ci-dessous) |
 | Mot de passe administrateur initial | Génère un mot de passe aléatoire de 24 caractères, défini une seule fois par le job `admin-bootstrap` | Injecté automatiquement ; récupérable via Secret Manager |
-| Image de conteneur | Image officielle préconstruite `healthchecks/healthchecks` — aucun build personnalisé | Output `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** et définit explicitement `DB = "postgres"` | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit `db-init` (création de la base + du rôle) et `admin-bootstrap` (migration + création du superutilisateur) | Output `initialization_jobs` |
-| Stockage objet | Aucun — Healthchecks stocke tout son état dans PostgreSQL | Output `storage_buckets` (`[]`) |
+| Image de conteneur | Image officielle préconstruite `healthchecks/healthchecks` — aucun build personnalisé | Sortie `container_image` du déploiement de la plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** et définit explicitement `DB = "postgres"` | §Base de données dans les guides des plateformes |
+| Amorçage de la base de données | Définit `db-init` (création de la base + du rôle) et `admin-bootstrap` (migration + création du superutilisateur) | Sortie `initialization_jobs` |
+| Stockage objet | Aucun — Healthchecks stocke tout son état dans PostgreSQL | Sortie `storage_buckets` (`[]`) |
 | Paramètres de base | Définit l'environnement de base de Healthchecks : `DB`, `DEBUG=False`, `SITE_ROOT`, `SITE_NAME`, `ALLOWED_HOSTS="*"`, `DEFAULT_FROM_EMAIL` | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/` | §Observabilité dans les guides des plateformes |
 
@@ -143,7 +143,7 @@ amont `docker/Dockerfile` et `docker/uwsgi.ini`
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Healthchecks_Common` établit l'environnement de base afin que l'application
 démarre correctement et en toute sécurité au premier démarrage :
@@ -180,7 +180,7 @@ rompue renverrait une erreur 500 au lieu de l'afficher).
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Aucun. Healthchecks stocke tout son état (vérifications, pings, utilisateurs,
 configuration des alertes) dans PostgreSQL — il n'existe pas de répertoire de

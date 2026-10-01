@@ -81,9 +81,9 @@ Les pods Evolution API sont planifiés sur Autopilot, qui facture le CPU et la m
 effectivement demandés par les pods. La charge de travail s'exécute en un seul
 réplica par conception.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Evolution API pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -135,7 +135,7 @@ reçoit l'accès. Des buckets supplémentaires peuvent être déclarés via
 
 Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
-### D. Redis (cache) {#d-redis-cache}
+### D. Cache Redis {#d-redis-cache}
 
 Redis est **activé par défaut** (`enable_redis = true`). Evolution API l'utilise pour
 mettre en cache les instances et les messages (`CACHE_REDIS_URI`, index de base Redis
@@ -159,7 +159,7 @@ Un secret cryptographique est généré automatiquement et stocké dans Secret M
 montée via le pilote Secret Store CSI. Le mot de passe de la base de données est géré
 séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~api-key"
@@ -178,7 +178,7 @@ WhatsApp restent attachées à l'unique pod qui détient son socket. Un domaine
 personnalisé avec un certificat géré par Google peut être activé, et une IP statique
 peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -196,8 +196,8 @@ et Cloud SQL sont envoyées à Cloud Monitoring. Le point d'entrée émet des ma
 de données, de Redis et de l'URL. Des tests de disponibilité et des règles d'alerte
 facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -349,7 +349,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

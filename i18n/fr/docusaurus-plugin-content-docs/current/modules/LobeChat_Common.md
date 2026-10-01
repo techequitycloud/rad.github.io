@@ -79,7 +79,7 @@ EXPOSE 3210
 ```
 
 `LOBECHAT_VERSION` est un ARG de build **propre à l'application** (et non l'`APP_VERSION` générique,
-que Foundation injecte dans `build_args` et remplacerait par `latest`).
+que le socle injecte dans `build_args` et remplacerait par `latest`).
 `LobeChat_Common` le définit à partir de `application_version`, en transmettant `"latest"` tel quel
 vers le véritable tag glissant `lobehub/lobe-chat:latest` — une image dotée d'un shell,
 de sorte que `latest` se déploie sans problème.

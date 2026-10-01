@@ -38,7 +38,7 @@ ciblé de services Google Cloud :
 | Cache et sessions | Redis (facultatif) | Requis pour les déploiements multi-instances afin de garantir la cohérence des sessions |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de Cloud SQL.** LibreChat utilise MongoDB. Par défaut, `mongodb_uri` pointe vers un **sidecar
   `mongo:7` dans le pod** (`mongodb://127.0.0.1:27017/LibreChat`), ajouté comme entrée `additional_containers`
@@ -200,7 +200,7 @@ tests de disponibilité et des règles d'alerte facultatifs.
 ## 3. Comportement de l'application LibreChat {#3-librechat-application-behaviour}
 
 - **Aucune tâche de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
-  aucune tâche d'initialisation distincte n'est nécessaire.
+  aucun job d'initialisation distinct n'est nécessaire.
 - **Sidecar MongoDB dans le pod par défaut.** `mongodb_uri` vaut par défaut
   `mongodb://127.0.0.1:27017/LibreChat` et pointe vers un conteneur officiel `mongo:7` ajouté comme
   entrée `additional_containers` dans le même service Cloud Run ; son répertoire de données réside sur le
@@ -289,7 +289,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `enable_image_mirroring` | `true` | Met en miroir l'image GHCR dans Artifact Registry — évite les limites de débit. |
 | `traffic_split` | `[]` | Répartition du trafic canary / blue-green entre les révisions. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -325,7 +325,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `nfs_instance_name` / `nfs_instance_base_name` | _(définies)_ | Instance NFS existante / nom de base d'une instance créée en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(définies)_ | Instance NFS existante / nom de base d'une instance créée en mode intégré (inline). |
 
 ### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
@@ -357,7 +357,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `firestore_mongodb_username` | `""` | Nom d'utilisateur SCRAM pour l'authentification Firestore. |
 | `firestore_mongodb_password` | `""` | Mot de passe SCRAM (sensible). Généré automatiquement s'il n'est pas défini. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -382,7 +382,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -418,12 +418,12 @@ en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critical | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
 | `mongodb_uri` | conserver la valeur par défaut (sidecar) ou la définir explicitement | Critical | LibreChat nécessite MongoDB. Le sidecar `mongo:7` dans le pod par défaut a besoin de NFS pour son répertoire de données ; vider `mongodb_uri` (`""`) avec une configuration Firestore/Atlas défaillante fait planter le conteneur au démarrage, qui ne sert alors aucun trafic. |

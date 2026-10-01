@@ -11,7 +11,7 @@ description: "Lab pratique : déployez LiteLLM sur GKE Autopilot dans votre prop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 LiteLLM est un proxy LLM et une passerelle IA open source qui fournit une API unifiée
 compatible OpenAI pour plus de 100 fournisseurs. Ce lab vous fait parcourir le cycle de vie
@@ -30,12 +30,12 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -74,7 +74,7 @@ export REGION="us-central1"           # the region you deploy into
    job ponctuel d'initialisation de la base de données. Les premiers déploiements prennent environ **20 à 35 minutes**
    (la création de Cloud SQL domine).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -139,7 +139,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module détient la spécification de la charge de travail, la mise à l'échelle est donc une modification de configuration et non un
-   `kubectl scale` manuel (une modification manuelle serait annulée lors de l'application suivante).
+   `kubectl scale` manuel (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
@@ -167,7 +167,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -197,7 +197,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a bien été matérialisé dans le namespace, et que `enable_cloudsql_volume = true`
+  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms, et que `enable_cloudsql_volume = true`
   (le sidecar Auth Proxy est requis ; le désactiver rompt la connexion à la base de données).
 - **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
@@ -214,10 +214,10 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL, les secrets Secret Manager et les images
+et l'espace de noms, la base de données Cloud SQL, les secrets Secret Manager et les images
 Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé,
 le registre) sont gérées séparément et ne sont pas supprimées ici.
 
@@ -232,4 +232,4 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets et le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

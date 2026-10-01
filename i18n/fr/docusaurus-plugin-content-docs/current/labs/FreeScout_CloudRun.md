@@ -31,14 +31,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris le compte administrateur créé automatiquement au premier lancement.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Démonter proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -54,7 +54,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -72,12 +72,12 @@ export REGION="us-central1"          # the region you deploy into
    avec les journaux en temps réel.
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL
-   pour **MySQL 8.0** avec ses secrets Secret Manager (la clé Laravel `APP_KEY`,
+   for **MySQL 8.0** avec ses secrets Secret Manager (la clé Laravel `APP_KEY`,
    le mot de passe `ADMIN_PASS` initial et le mot de passe de la base de
    données), un montage NFS Filestore pour les pièces jointes (activé par
    défaut), un bucket Cloud Storage pour les fichiers téléversés, construit
    l'image de conteneur personnalisée minimale (`FROM tiredofit/freescout`) et
-   exécute une tâche ponctuelle d'initialisation de la base de données. Les
+   exécute un job ponctuel d'initialisation de la base de données. Les
    premiers déploiements prennent environ **20–35 minutes** (la création de
    Cloud SQL représente l'essentiel de ce temps).
 
@@ -141,7 +141,7 @@ export REGION="us-central1"          # the region you deploy into
    déploiement — le module est propriétaire de la spécification du service : la
    mise à l'échelle est donc une modification de configuration, et non une
    modification manuelle via `gcloud` (une modification manuelle serait annulée
-   lors de l'application suivante). FreeScout utilise par défaut
+   lors du prochain apply). FreeScout utilise par défaut
    `min_instance_count = 0` (mise à l'échelle jusqu'à zéro ; les démarrages à
    froid ajoutent plusieurs secondes) et `max_instance_count = 1` — conservez
    le maximum à 1 tant que la gestion du stockage partagé et des sessions entre
@@ -185,7 +185,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour Logs Explorer :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez
@@ -214,7 +214,7 @@ qui ne changent pas d'une version de FreeScout à l'autre.
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Échecs de migration au démarrage :** `php artisan migrate --force`
-  s'exécute à chaque démarrage du conteneur (il n'existe pas de tâche de
+  s'exécute à chaque démarrage du conteneur (il n'existe pas de job de
   migration distincte) ; une migration en échec se manifeste par une boucle de
   plantage sur la révision la plus récente — lisez les journaux du conteneur
   ci-dessus pour trouver l'erreur Laravel/PDO.
@@ -222,7 +222,7 @@ qui ne changent pas d'une version de FreeScout à l'autre.
   SQL est `RUNNABLE` et joignable — Cloud Run s'y connecte via l'**adresse IP
   privée de l'instance sur le port TCP 3306** (`enable_cloudsql_volume = false`
   par défaut), et non via un socket Unix.
-- **Échec de la tâche db-init :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job db-init :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -241,7 +241,7 @@ après le premier démarrage, et la raison pour laquelle `database_type` doit re
 
 ---
 
-## Tâche 6 — Démonter [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS et
@@ -259,5 +259,5 @@ supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Le contrôle d'état réussit ; se connecter avec le compte administrateur créé automatiquement et changer le mot de passe |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets et les sauvegardes (ne jamais faire tourner `APP_KEY`), accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de migration, de base de données, de tâche d'initialisation, de build et d'IAM |
-| 6 — Démonter | Automatisé | La suppression (Trash) retire toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de migration, de base de données, de job d'initialisation, de build et d'IAM |
+| 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

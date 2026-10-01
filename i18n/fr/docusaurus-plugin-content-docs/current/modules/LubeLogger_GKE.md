@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer LubeLogger sur GKE Aut
 LubeLogger est un outil gratuit et open source de suivi de l'entretien des véhicules
 et de la consommation de carburant, construit sur ASP.NET Core (.NET) et livré sous
 la forme d'une image de conteneur unique avec une base de données LiteDB intégrée.
-Ce module déploie LubeLogger sur **GKE Autopilot** en s'appuyant sur la fondation
+Ce module déploie LubeLogger sur **GKE Autopilot** en s'appuyant sur le socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
@@ -21,7 +21,7 @@ de les explorer et de les exploiter depuis la console Google Cloud et la ligne d
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -32,7 +32,7 @@ que **StatefulSet doté d'un véritable PVC de stockage bloc**. Le déploiement 
 un ensemble minimal de services Google Cloud — la configuration par défaut ne
 comporte aucune base de données gérée :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod ASP.NET Core, 1 vCPU / 1 GiB par défaut, fixé à un seul réplica |
 | Base de données | Aucune (par défaut) | Le mode par défaut de LubeLogger utilise un fichier de base de données LiteDB intégré — aucune instance Cloud SQL n'est créée |
@@ -78,7 +78,7 @@ comporte aucune base de données gérée :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail LubeLogger {#a-gke-autopilot--the-lubelogger-workload}
@@ -116,7 +116,7 @@ chemin fixe `/root/.aspnet/DataProtection-Keys`, indépendamment du PVC.
 Voir [App_GKE](App_GKE.md) pour les options de StorageClass, de CMEK et de montage
 GCS Fuse.
 
-### C. Réseau et ingress {#c-networking--ingress}
+### C. Réseau et entrée {#c-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing
 externe. Un domaine personnalisé avec un certificat géré par Google peut être
@@ -231,7 +231,7 @@ comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Nombre de secondes d'attente après la création d'un secret avant de poursuivre. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -259,10 +259,10 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans le namespace de l'application. |
+| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans l'espace de noms de l'application. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Exige un suffixe binaire (par ex. `4Gi`, `8192Mi`) par convention lorsqu'il est défini. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -309,7 +309,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` (valeur par défaut de la fondation) | Transmise pour compatibilité ; `LubeLogger_GKE` la force à `false` — LubeLogger n'a pas besoin de Redis. |
+| `enable_redis` | `true` (valeur par défaut du socle) | Transmise pour compatibilité ; `LubeLogger_GKE` la force à `false` — LubeLogger n'a pas besoin de Redis. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
@@ -342,7 +342,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL permettant d'atteindre LubeLogger. |
@@ -366,7 +366,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -379,13 +379,13 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Chemin de `startup_probe`/`liveness_probe` | `/Login` | Critical | Pointer les sondes sur `/` (ou sur tout chemin protégé par `[Authorize]`) fait échouer la sonde sur un pod par ailleurs en bonne santé — il ne devient jamais Ready. |
 | `workload_type` | laisser `null` (auto) | High | Définir `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` échoue au moment du plan — un modèle de PVC exige un StatefulSet. |
 | `database_type` | `NONE` (par défaut) | High | Le mode par défaut de LubeLogger ignore entièrement ce paramètre ; le modifier ne connecte pas LubeLogger à une instance Cloud SQL — utilisez plutôt `POSTGRES_CONNECTION` pour l'option Postgres externe facultative. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods du namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods de l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
 | `service_type` | `LoadBalancer` (par défaut) | Medium | La valeur `ClusterIP` rend l'interface web publique injoignable depuis l'extérieur du cluster. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à LubeLogger,

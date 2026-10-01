@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Spoolman sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 45 minutes
+**Durée estimée :** 30–45 minutes
 
 Spoolman est un outil open source de suivi de l'inventaire et de la consommation des bobines de filament
 pour l'impression 3D. Ce lab vous fait parcourir le cycle de vie opérationnel complet du
@@ -30,12 +30,12 @@ durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour et gérer les secrets.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -76,7 +76,7 @@ export REGION="us-central1"           # the region you deploy into
    à attendre (Spoolman effectue lui-même ses migrations au démarrage). Les premiers déploiements prennent environ
    **15 à 25 minutes** (la création de Cloud SQL représente l'essentiel de ce temps).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -154,7 +154,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -183,7 +183,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est
-  `RUNNABLE` et que le secret du mot de passe de la base a bien été matérialisé dans le namespace.
+  `RUNNABLE` et que le secret du mot de passe de la base a bien été matérialisé dans l'espace de noms.
   Comme il n'y a pas de job d'initialisation, cette catégorie de défaillance apparaît directement dans les
   journaux de démarrage du pod lui-même.
 - **L'application fonctionne mais affiche un inventaire vide, en utilisant SQLite au lieu de Postgres :**
@@ -203,7 +203,7 @@ pièges propres à chaque paramètre (y compris l'absence d'authentification int
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -212,7 +212,7 @@ plateforme RAD ne peut plus le gérer (par exemple après des modifications manu
 conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le
 déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD
 oublie le déploiement). Cela supprime tout ce que le module a créé —
-la charge de travail Kubernetes et son namespace, la base de données Cloud SQL et les secrets
+la charge de travail Kubernetes et son espace de noms, la base de données Cloud SQL et les secrets
 Secret Manager. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le
 Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées ici.
 
@@ -227,4 +227,4 @@ Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas suppr
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de repli du moteur de base de données et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

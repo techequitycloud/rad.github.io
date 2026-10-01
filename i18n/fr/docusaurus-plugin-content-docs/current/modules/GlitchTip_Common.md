@@ -33,10 +33,10 @@ Sentry ; GlitchTip les stocke, les regroupe et déclenche des alertes.
 | Domaine | Fourni par GlitchTip_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère la `SECRET_KEY` Django (50 caractères) et le mot de passe initial du superutilisateur (24 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Enveloppe l'image officielle `glitchtip/glitchtip:<version>` (`latest` par défaut) avec un point d'entrée cloud ; build via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe l'image officielle `glitchtip/glitchtip:<version>` (`latest` par défaut) avec un point d'entrée cloud ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit deux jobs de premier déploiement (`db-init`, `glitchtip-migrate`) qui créent la base/l'utilisateur, exécutent les migrations Django et créent le superutilisateur | Output `initialization_jobs` |
-| Stockage d'objets | Déclare le bucket de données **Cloud Storage** (suffixe `storage`) | Output `storage_buckets` |
+| Amorçage de la base de données | Définit deux jobs de premier déploiement (`db-init`, `glitchtip-migrate`) qui créent la base/l'utilisateur, exécutent les migrations Django et créent le superutilisateur | Sortie `initialization_jobs` |
+| Stockage d'objets | Déclare le bucket de données **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement de référence de GlitchTip : `SERVER_ROLE=all_in_one`, état de l'inscription, rétention des événements, Valkey/Redis désactivé | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit dans son output `config` une `readiness_probe` (`/_health/`) qu'aucun des deux modules du socle n'utilise (configuration morte) ; les sondes de démarrage/vivacité réelles proviennent de variables propres à chaque variante, qui remplacent la valeur par défaut `/_health/` de cette couche par `/` | §Observabilité dans les guides des plateformes |
 
@@ -151,7 +151,7 @@ au moment de l'apply et prennent effet à l'apply suivant sans reconstruction.
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `GlitchTip_Common` établit l'environnement de référence de GlitchTip afin que
 l'application démarre correctement dès le premier lancement :

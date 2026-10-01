@@ -87,7 +87,7 @@ Les noms de l'instance, de la base de données et de l'utilisateur figurent dans
 
 ---
 
-## 4. Paramètres applicatifs de base {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Directus_Common` définit l'environnement de base de Directus afin que l'application démarre correctement dès le premier lancement :
 

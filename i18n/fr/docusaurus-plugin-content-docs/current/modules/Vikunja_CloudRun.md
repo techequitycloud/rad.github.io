@@ -11,8 +11,7 @@ description: "Référence de configuration pour déployer Vikunja sur Google Clo
 
 Vikunja est une application open source et auto-hébergée de gestion de tâches et de projets —
 listes, tableaux kanban, diagrammes de Gantt, calendriers, rappels et partage en équipe, via une
-API REST et une interface web. Ce module déploie Vikunja sur **Cloud Run v2** au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
+API REST et une interface web. Ce module déploie Vikunja sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Vikunja et sur la manière de les explorer et
@@ -20,7 +19,7 @@ de les exploiter depuis la Google Cloud Console et la ligne de commande. Pour le
 communs à toutes les applications Cloud Run — identité du service, entrée et équilibrage
 de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -29,7 +28,7 @@ VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-v
 Vikunja s'exécute sous la forme d'un unique conteneur Go sur Cloud Run v2. Le déploiement relie
 un ensemble ciblé de services Google Cloud :
 
-| Fonction | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go, 1 vCPU / 512 MiB par défaut, instance unique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Vikunja ne prend pas en charge MySQL dans ce module |
@@ -122,7 +121,7 @@ vers Artifact Registry.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `VIKUNJA_SERVICE_JWTSECRET` (utilisé pour signer les JWT de session des utilisateurs). Le mot de passe de la base de données
-est géré séparément par la fondation.
+est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -252,7 +251,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `cpu_always_allocated` | `true` | Garde le CPU alloué pour que le planificateur de rappels intégré s'exécute entre les requêtes. |
 | `execution_environment` | `gen2` | Gen2 est requis pour le minimum de 512Mi et les montages NFS/GCS. |
 | `enable_cloudsql_volume` | `true` | Socket Auth Proxy pour le job `db-init` ; l'application elle-même utilise l'IP privée. |
-| `enable_image_mirroring` | `true` | Duplique l'image d'enveloppe dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image d'enveloppe dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
@@ -381,7 +380,7 @@ ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -399,9 +398,9 @@ ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — identité du service, mise à l'échelle et
+Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Vikunja
 partagée avec la variante GKE est décrite dans
 **[Vikunja_Common](Vikunja_Common.md)**.

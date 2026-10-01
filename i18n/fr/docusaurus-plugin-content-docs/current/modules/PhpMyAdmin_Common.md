@@ -35,7 +35,7 @@ guides des plateformes ([PhpMyAdmin_GKE](PhpMyAdmin_GKE.md),
 
 | Domaine | Fourni par PhpMyAdmin_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Un **build personnalisé** minimal `FROM phpmyadmin/phpmyadmin`, dupliqué dans Artifact Registry, avec le tag de base épinglé via un ARG de build propre à l'application | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Un **build personnalisé** minimal `FROM phpmyadmin/phpmyadmin`, mis en miroir dans Artifact Registry, avec le tag de base épinglé via un ARG de build propre à l'application | Sortie `container_image` du déploiement de la plateforme |
 | Épinglage de la version de l'image | Fait correspondre `application_version = "latest"` à un tag éprouvé (`5.2.2`) afin que le build ne référence jamais un tag inexistant | `container_build_config.build_args.PHPMYADMIN_VERSION` |
 | Moteur de base de données | Fixe **`database_type = "NONE"`** — phpMyAdmin n'a pas de base de données propre | §Base de données dans les guides des plateformes |
 | Secrets cryptographiques | **Aucun** — `secret_ids` et `secret_values` sont des maps vides | n/a |
@@ -58,7 +58,7 @@ FROM phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
 EXPOSE 80
 ```
 
-Ce build existe **uniquement** pour dupliquer l'image amont `phpmyadmin/phpmyadmin`
+Ce build existe **uniquement** pour mettre en miroir l'image amont `phpmyadmin/phpmyadmin`
 dans Artifact Registry et épingler le tag de base — il n'y a **ni fichier de
 configuration à l'exécution, ni point d'entrée personnalisé**. L'image standard est
 entièrement pilotée par l'environnement et hérite sans modification de son propre

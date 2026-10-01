@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Uptime Kuma sur GKE Autopilot dans votre 
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Uptime Kuma est un outil auto-hébergé de supervision de disponibilité pour les sites web, les API, les ports TCP et les enregistrements DNS, avec des pages d'état et plus de 90 canaux de notification. Ce lab vous fait parcourir le cycle de vie opérationnel complet du module **Uptime Kuma on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le supprimer.
 
@@ -21,13 +21,13 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, trouver la charge de travail Uptime Kuma et vérifier qu'elle est saine.
 - Expliquer pourquoi ce module n'a ni instance Cloud SQL ni entrée Secret Manager, et pourquoi tout l'état durable réside sur un unique partage Filestore (NFS).
 - Effectuer les opérations du jour 2 — inspecter la charge de travail, comprendre pourquoi elle doit rester à un seul réplica, mettre à jour la version et vérifier les données stockées sur NFS.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, y compris le correctif du mode de journalisation SQLite sur NFS que ce module applique par défaut.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -62,7 +62,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme planifie la charge de travail sur le cluster GKE Autopilot, ne provisionne aucune
    instance Cloud SQL (`database_type = "NONE"`), ne crée aucune entrée Secret Manager
-   et n'exécute aucune tâche d'initialisation de base de données — Uptime Kuma stocke tout dans une
+   et n'exécute aucun job d'initialisation de base de données — Uptime Kuma stocke tout dans une
    base de données SQLite intégrée qu'il crée lui-même au premier démarrage. La plateforme
    monte un partage Filestore (NFS) sur le chemin fixe du conteneur `/app/data`. Comme
    `container_image_source = "custom"` (la valeur par défaut), une étape Cloud Build
@@ -150,7 +150,7 @@ export REGION="us-central1"           # the region you deploy into
    le même fichier SQLite simultanément. Attendez-vous à une courte interruption de la couverture de supervision
    pendant la mise à jour, et non à un remplacement progressif sans coupure.
 
-4. **Confirmez qu'il n'y a ni secrets ni tâches d'initialisation à gérer** — ce module ne crée
+4. **Confirmez qu'il n'y a ni secrets ni jobs d'initialisation à gérer** — ce module ne crée
    ni les uns ni les autres :
 
    ```bash
@@ -189,7 +189,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -264,7 +264,7 @@ propres à chaque paramètre (notamment la raison pour laquelle `enable_nfs`, `n
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
 et l'espace de noms, ainsi que le partage NFS Filestore (y compris la base de données SQLite avec toutes
@@ -279,9 +279,9 @@ partagée, le registre) sont gérées séparément et ne sont pas supprimées ic
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE avec un montage NFS Filestore sur `/app/data` et construit/met en miroir une image personnalisée corrigée pour un SQLite sûr sur NFS — sans Cloud SQL, secrets ni tâches d'initialisation |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE avec un montage NFS Filestore sur `/app/data` et construit/met en miroir une image personnalisée corrigée pour un SQLite sûr sur NFS — sans Cloud SQL, secrets ni jobs d'initialisation |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification de santé réussit ; créer le compte administrateur initial sur la page de configuration initiale |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, maintenir le nombre de réplicas à 1, mettre à jour la version (stratégie Recreate), vérifier et sauvegarder l'état SQLite stocké sur NFS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les redémarrages de pods et le CPU/la mémoire ; surveiller le superviseur (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de montage NFS, de corruption SQLite sur NFS, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

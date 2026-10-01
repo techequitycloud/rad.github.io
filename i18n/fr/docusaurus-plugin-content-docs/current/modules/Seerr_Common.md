@@ -39,10 +39,10 @@ l'ancien `ghcr.io/fallenbagel/jellyseerr`, désormais remplacé.
 
 | Domaine | Fourni par Seerr_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | L'image réellement préconstruite `ghcr.io/seerr-team/seerr` — aucun build personnalisé | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | L'image réellement préconstruite `ghcr.io/seerr-team/seerr` — aucun build personnalisé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | PostgreSQL 15, avec la variable d'environnement `DB_TYPE=postgres` définie sans condition | §3 ci-dessous |
-| Authentification | **Aucun identifiant amorcé** — le premier administrateur de Seerr provient de son propre assistant de configuration web | Output `secret_ids` (vide, `{}`) |
-| Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sous-tend `/app/config`, avec un correctif de permissions propre à GKE | Output `storage_buckets` ; §5 ci-dessous |
+| Authentification | **Aucun identifiant amorcé** — le premier administrateur de Seerr provient de son propre assistant de configuration web | Sortie `secret_ids` (vide, `{}`) |
+| Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sous-tend `/app/config`, avec un correctif de permissions propre à GKE | Sortie `storage_buckets` ; §5 ci-dessous |
 | Vérifications de santé | Fournit les sondes de démarrage et de vivacité par défaut ciblant `/api/v1/status` | §6 ci-dessous |
 
 ## 3. Le piège DB_TYPE {#3-the-db_type-trap}

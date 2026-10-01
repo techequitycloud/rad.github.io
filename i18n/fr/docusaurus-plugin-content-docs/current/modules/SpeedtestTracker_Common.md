@@ -111,7 +111,7 @@ Speedtest Tracker est déployé à partir de l'image préconstruite officielle d
 **LinuxServer.io**, `linuxserver/speedtest-tracker:<version>` — il n'y a **aucun
 Cloud Build personnalisé**. Les modules Application transmettent
 `container_image_source = "prebuilt"` (et `container_build_config.enabled = false`) ;
-la plateforme duplique donc l'image dans Artifact Registry
+la plateforme met en miroir donc l'image dans Artifact Registry
 (`enable_image_mirroring = true`) et la déploie directement.
 
 **Solution de repli :** l'image LinuxServer utilise s6-overlay comme PID 1. Si elle se

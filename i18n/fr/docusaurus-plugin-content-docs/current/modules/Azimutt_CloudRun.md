@@ -158,7 +158,7 @@ produit l'image enveloppée, qui est mise en miroir dans Artifact Registry
   gcloud artifacts docker images list <region>-docker.pkg.dev/$PROJECT/<repo> --include-tags
   ```
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est joignable par défaut via son URL `run.app`. Un équilibreur de charge HTTPS externe
 avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'ingress
@@ -190,8 +190,8 @@ indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT`.
 
 ## 3. Comportement de l'application Azimutt {#3-azimutt-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche d'initialisation exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle crée de manière idempotente le rôle applicatif
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il crée de manière idempotente le rôle applicatif
   (`LOGIN CREATEDB`) et la base de données, accorde `ALL` sur la base de données et le schéma `public`,
   et modifie (`ALTER`) le propriétaire du schéma — Azimutt a besoin de droits DDL complets car il
   exécute ses propres migrations. La tâche peut être réexécutée sans risque.
@@ -212,7 +212,7 @@ indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT`.
   fournit un délai initial de 60 secondes plus une fenêtre de nouvelles tentatives).
 - **Configuration initiale.** Ouvrez l'URL du service et créez le premier compte Azimutt
   via la page d'inscription. L'inscription est ouverte par défaut — restreignez l'accès ensuite.
-- **Inspecter l'exécution de la tâche d'initialisation :**
+- **Inspecter l'exécution du job d'initialisation :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -228,7 +228,7 @@ propres à Azimutt ou notables pour lui sont listés ; toutes les autres entrée
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
@@ -237,17 +237,17 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `azimutt` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Azimutt` | Nom lisible affiché dans l'interface de la plateforme. |
@@ -257,7 +257,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par instance. |
@@ -270,9 +270,9 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Ingress public ; définissez `internal` pour le restreindre au VPC/à l'équilibreur de charge. |
 | `enable_iap` | `false` | Exige une connexion Google devant Azimutt. |
@@ -281,7 +281,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. `PHX_SERVER`, `FILE_STORAGE_ADAPTER`, `PORT`, `PHX_HOST` et `DATABASE_URL` sont définis automatiquement — ne les remplacez pas. |
 | `secret_environment_variables` | `{}` | Table de correspondance variable d'environnement → nom de secret Secret Manager. `SECRET_KEY_BASE` est injecté automatiquement. |
@@ -290,7 +290,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisionne et monte un partage NFS Filestore sur `nfs_mount_path` (`/opt/azimutt/storage`). Avec la valeur par défaut `FILE_STORAGE_ADAPTER = local`, Azimutt écrit toujours les téléversements dans son propre répertoire de travail éphémère plutôt que sur ce montage. |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse facultatifs (nécessite gen2). |
@@ -299,16 +299,16 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `db_name` | `azimutt` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `azimutt` | Utilisateur applicatif de la base de données. Mot de passe généré automatiquement dans Secret Manager. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
 
@@ -316,7 +316,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` délai 60s | Sonde de démarrage ; prévoyez du temps pour les migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/` | Sonde de vivacité. |
@@ -325,7 +325,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 21 — Cache et file d'attente Redis {#group-21--redis-cache--queue}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les tâches d'arrière-plan, et non Redis. |
 | `redis_host` | `""` | Point de terminaison Redis (uniquement si une fonctionnalité en aval l'exige). |
@@ -358,7 +358,7 @@ ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -371,23 +371,23 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critique | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
-| `container_port` | `4000` | Critique | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
-| `application_version` | Épingler une version | Élevé | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `memory_limit` | `4Gi` | Élevé | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
-| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
-| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Moyen | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
-| `min_instance_count` | `0` (ou `1` pour les tâches d'arrière-plan) | Moyen | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les tâches Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
-| `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critical | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
+| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
+| `container_port` | `4000` | Critical | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | High | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
+| `application_version` | Épingler une version | High | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `memory_limit` | `4Gi` | High | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
+| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | High | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
+| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Medium | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
+| `min_instance_count` | `0` (ou `1` pour les tâches d'arrière-plan) | Medium | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les tâches Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
+| `enable_redis` | `false` | Low | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 

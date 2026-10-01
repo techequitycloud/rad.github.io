@@ -32,13 +32,13 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods du binaire Rust, 500m CPU / 512 Mi par défaut, mise à l'échelle automatique horizontale |
-| Base de données | Cloud SQL for PostgreSQL 15 (par défaut) ou MySQL 8.0 | Moteur configurable ; la tâche d'initialisation s'adapte automatiquement |
+| Base de données | Cloud SQL for PostgreSQL 15 (par défaut) ou MySQL 8.0 | Moteur configurable ; le job d'initialisation s'adapte automatiquement |
 | Stockage par pod | PersistentVolumeClaim Kubernetes | 10 Gi sur `/data` pour les données du coffre-fort, les clés RSA et les pièces jointes |
 | Stockage d'objets | Cloud Storage | Un bucket `vaultwarden-attachments` dédié |
 | Secrets | Secret Manager | Mot de passe de la base de données ; Vaultwarden gère lui-même son jeton d'administration en interne |
 | Entrée | Cloud Load Balancing | LoadBalancer externe ; domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Un StatefulSet avec un PVC de 10 Gi est la valeur par défaut.** Les données du
   coffre-fort (`/data`) persistent lors des redémarrages et des mises à niveau des
@@ -76,9 +76,9 @@ soutient le répertoire `/data`, afin que les données du coffre-fort survivent 
 redémarrages et aux mises à niveau des pods. L'autoscaling horizontal des pods
 dimensionne la charge de travail entre les nombres minimal et maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Vaultwarden pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa,pvc -n "$NAMESPACE"
@@ -96,7 +96,7 @@ Vaultwarden stocke toutes les données du coffre-fort dans une instance Cloud SQ
 gérée. Le moteur par défaut est **PostgreSQL 15** ; définissez
 `database_type = "MYSQL_8_0"` pour utiliser MySQL à la place. Les pods se connectent
 de manière privée via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix ; aucune
-IP publique n'est donc exposée. Lors du premier déploiement, une tâche
+IP publique n'est donc exposée. Lors du premier déploiement, un job
 d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les
@@ -123,7 +123,7 @@ signature RSA, les métadonnées des pièces jointes et la configuration 2FA) so
 les pièces jointes ; le compte de service de la charge de travail y reçoit l'accès
 automatiquement.
 
-- **Console :** Kubernetes Engine → Stockage → PersistentVolumeClaims ; Cloud
+- **Console :** Kubernetes Engine → Storage → PersistentVolumeClaims ; Cloud
   Storage → Buckets pour le bucket des pièces jointes.
 - **CLI :**
   ```bash
@@ -142,7 +142,7 @@ et injecté dans les pods à l'exécution. Vaultwarden gère lui-même son jeton
 d'administration interne et ses clés de signature RSA dans le volume `/data` —
 ceux-ci ne sont pas stockés dans Secret Manager.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -161,7 +161,7 @@ et une IP statique peut être réservée afin que l'adresse survive aux redéplo
 Cloud Armor est vivement recommandé pour protéger les points de terminaison de
 connexion de Vaultwarden contre les attaques par force brute.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -177,8 +177,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Un test de disponibilité
 ciblant `/alive` peut être activé.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -189,14 +189,14 @@ ciblant `/alive` peut être activé.
 
 ## 3. Comportement de l'application Vaultwarden {#3-vaultwarden-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation crée la base de données et l'utilisateur Vaultwarden et accorde
-  les privilèges avant le démarrage de l'application. Elle est idempotente et peut
-  être relancée sans risque. L'image de tâche appropriée est sélectionnée
+  les privilèges avant le démarrage de l'application. Il est idempotent et peut
+  être relancé sans risque. L'image de tâche appropriée est sélectionnée
   automatiquement : `postgres:15-alpine` pour PostgreSQL, `mysql:8.0-debian` pour
   MySQL.
 - **Aucune migration de schéma au démarrage.** Vaultwarden gère automatiquement
-  l'évolution de son schéma interne. La tâche d'initialisation crée seulement la base
+  l'évolution de son schéma interne. Le job d'initialisation crée seulement la base
   de données et l'utilisateur ; aucune commande de migration n'est nécessaire.
 - **Aucune tâche planifiée requise.** Contrairement à de nombreuses applications web,
   Vaultwarden n'a aucune tâche cron obligatoire. Toutes les opérations du coffre-fort
@@ -317,7 +317,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/alive`, délai de 30 s, 6 échecs | Chemin de santé dédié de Vaultwarden ; 30 s correspond au démarrage rapide en Rust. |
-| `health_check_config` | HTTP `/alive`, délai de 30 s, 3 échecs | Sonde d'activité. |
+| `health_check_config` | HTTP `/alive`, délai de 30 s, 3 échecs | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif ciblant `/alive`. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
@@ -354,7 +354,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | `POSTGRES_15` (par défaut) ou `MYSQL_8_0`. L'image de la tâche d'initialisation est sélectionnée automatiquement. |
+| `database_type` | `POSTGRES_15` | `POSTGRES_15` (par défaut) ou `MYSQL_8_0`. L'image du job d'initialisation est sélectionné automatiquement. |
 | `application_database_name` | `vaultwarden` | Nom de la base de données. Immuable après le premier déploiement. |
 | `application_database_user` | `vaultwarden` | Utilisateur de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
@@ -399,7 +399,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -442,12 +442,12 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `signups_allowed` | `false` | Critical | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
 | `enable_cloudsql_volume` | `true` | Critical | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation provoque immédiatement un CrashLoopBackOff. |
@@ -471,7 +471,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Vaultwarden partagée
 avec la variante Cloud Run est décrite dans
 **[Vaultwarden_Common](Vaultwarden_Common.md)**.

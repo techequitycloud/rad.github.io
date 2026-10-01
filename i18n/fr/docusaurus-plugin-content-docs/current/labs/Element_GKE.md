@@ -28,11 +28,11 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Faire pointer Element vers un homeserver Matrix et vérifier la charge de travail en cours d'exécution.
-- Effectuer les opérations du jour 2 (day-2) — inspecter les pods, mettre à l'échelle les réplicas, mettre à jour la version et
+- Effectuer les opérations du jour 2 — inspecter les pods, mettre à l'échelle les réplicas, mettre à jour la version et
   changer le homeserver cible.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
@@ -122,7 +122,7 @@ export NAMESPACE="<namespace>"       # from the deployment Outputs
 
 2. **Ajustez le plafond de mise à l'échelle** en modifiant `max_instance_count` et en cliquant sur **Update** — le
    module est propriétaire de la spécification de la charge de travail : la mise à l'échelle est donc une modification de configuration, et non un
-   `kubectl scale` manuel (une modification manuelle serait annulée lors de l'application suivante). **`min_instance_count`
+   `kubectl scale` manuel (une modification manuelle serait annulée lors du prochain apply). **`min_instance_count`
    est fixé à 1, et pas seulement plafonné par le bas à 1 :** `element.tf` fixe en dur la valeur déployée à
    la valeur littérale `1` lors de la fusion de configuration, en ignorant la valeur donnée à `var.min_instance_count` —
    l'augmenter à 2 ou 3 via la plateforme n'a donc aucun effet sur le nombre réel de

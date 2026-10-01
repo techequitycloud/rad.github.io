@@ -36,7 +36,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
   serveur en HTTP (`curl`) et avec le client natif `clickhouse-client`.
 - Effectuer les opérations du jour 2 — lire les journaux, redémarrer le pod, prouver la persistance du PVC et
   comprendre l'épinglage de version.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -53,7 +53,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -224,7 +224,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 4 — Supprimer [Automatisé] {#task-4--tear-down-automated}
+## Tâche 4 — Démanteler [Automatisé] {#task-4--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -232,7 +232,7 @@ du déploiement est conservé pour l'historique). Si un déploiement est bloqué
 plus le gérer (par exemple après des modifications manuelles en conflit avec l'état
 Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD
 **sans** détruire les ressources cloud. La suppression retire tout ce que le module a
-créé — le StatefulSet, le namespace, **le PVC et toutes les données d'événements**, le secret
+créé — le StatefulSet, l'espace de noms, **le PVC et toutes les données d'événements**, le secret
 de mot de passe Secret Manager et les images Artifact Registry répliquées. Si un déploiement Plausible
 consomme cette instance, supprimez ou redirigez d'abord Plausible — son historique
 d'événements réside ici. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE,
@@ -240,11 +240,11 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | StatefulSet ClickHouse à nœud unique avec un PVC de 30 GiB, un LoadBalancer sur 8123 et un mot de passe géré par Secret Manager |
 | 2 — Se connecter et interroger | Manuel | Ping, authentification et requêtes via `curl` et `clickhouse-client` avec le mot de passe de Secret Manager ; création d'une ligne marqueur |
 | 3 — Exploiter | Manuel | Lire les journaux, redémarrer le pod, prouver que la ligne marqueur survit (persistance du PVC), vérifier l'épinglage de la version 24.12-alpine |
-| 4 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et ses données |
+| 4 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et ses données |

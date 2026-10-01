@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Azimutt sur Cloud Run dans votre propre p
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Azimutt est un outil open source de nouvelle génération pour explorer les schémas de bases de données et
 produire des ERD (diagrammes entité-association) sur des bases de données réelles, construit avec
@@ -32,12 +32,12 @@ durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et créer le premier compte Azimutt.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et la base de données.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -168,7 +168,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer. Les lignes `cloud-entrypoint`
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer). Les lignes `cloud-entrypoint`
    indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT` :
 
    ```bash
@@ -221,7 +221,7 @@ après le premier déploiement).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, le bucket GCS et les images Artifact Registry.
@@ -239,4 +239,4 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

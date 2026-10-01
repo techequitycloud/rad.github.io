@@ -15,11 +15,11 @@ description: "Lab pratique : déployer AFFiNE sur GKE Autopilot dans votre propr
 
 AFFiNE est une base de connaissances open source, respectueuse de la vie privée, qui réunit documents, tableaux blancs et bases de données dans un même espace de travail — une alternative auto-hébergeable à Notion et Miro. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **AFFiNE on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit AFFiNE. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Affine_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit AFFiNE. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Affine_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -43,7 +43,7 @@ Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Googl
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -82,7 +82,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -184,7 +184,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -201,7 +201,7 @@ export REGION="us-central1"           # the region you deploy into
 Des techniques durables pour les modes de défaillance que vous rencontrerez le plus probablement. Il s'agit de
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'AFFiNE.
 
-- **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. La sonde de liveness
+- **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. La sonde de vivacité
   cible `/` ; un échec de connexion à PostgreSQL (via le sidecar Cloud SQL Auth
   Proxy sur `127.0.0.1:5432`) ou à Redis empêchera le pod de devenir
   Ready.
@@ -256,7 +256,7 @@ et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), le stockage de blobs NFS, un bucket GCS, les secrets, et exécute db-init + affine-migrate |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le premier compte inscrit devient l'administrateur du serveur |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le premier compte inscrit devient l'administrateur du serveur |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage/les jobs, vérifier la base et Redis |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de Redis, de planification et de récupération d'image |

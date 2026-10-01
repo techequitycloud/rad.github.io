@@ -17,7 +17,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement OpenEMR, consultez les guides
 de plateforme ([OpenEMR_GKE](OpenEMR_GKE.md), [OpenEMR_CloudRun](OpenEMR_CloudRun.md)) et
-les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -52,7 +52,7 @@ gcloud secrets versions access latest \
   --secret=<admin-password-secret-id> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans la sortie de déploiement `database_password_secret`
 (injecté sous la forme `MYSQL_PASS`). Consultez [App_Common](App_Common.md) pour le modèle
 partagé de secrets et de Workload Identity.
@@ -89,7 +89,7 @@ gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `OpenEMR_Common` établit l'environnement de base d'OpenEMR afin que l'application démarre
 correctement dès le premier lancement :
@@ -195,7 +195,7 @@ stockage persistant le plus critique. Il contient :
 - `sites/default/onsite_portal_documents/` — documents du portail patient
 - Les caches de modèles Twig et Smarty
 
-Comme ce répertoire est partagé entre toutes les réplicas via le NFS, les documents des
+Comme ce répertoire est partagé entre tous les réplicas via le NFS, les documents des
 patients téléversés sur un pod sont immédiatement visibles par tous les autres. Listez les
 instances NFS :
 

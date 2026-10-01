@@ -51,7 +51,7 @@ qui ne peut pas atteindre l'URL publique, exclusivement HTTPS, d'un service Clou
 | Secrets | Secret Manager | `SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `SPARKY_FITNESS_APP_DB_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run | URL `run.app` par défaut sur le conteneur frontend ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Aucun autre moteur n'est pris en charge.
 - **Deux rôles de base de données, dont un seul géré par Terraform.** `db_user` (par
@@ -161,9 +161,9 @@ pour les isoler.
 
 ## 3. Comportement de l'application SparkyFitness {#3-sparkyfitness-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une unique tâche
+- **Configuration de la base de données au premier déploiement.** Un unique job
   d'initialisation `db-init` (utilisant `postgres:15-alpine`) crée le rôle
-  d'**administration** (`db_user`) et la base de données (`db_name`). Elle ne crée pas
+  d'**administration** (`db_user`) et la base de données (`db_name`). Il ne crée pas
   `app_db_user` — le backend s'en charge lui-même.
 - **Les migrations s'exécutent à chaque démarrage.** Le backend applique ses propres
   migrations de schéma au démarrage à l'aide des identifiants d'administration de
@@ -253,7 +253,7 @@ avec leur comportement standard.
 | `db_name` | `sparkyfitness_db` | Nom de la base de données. Immuable après le premier déploiement. |
 | `db_user` | `sparky` | Rôle d'administration/de migration — le backend exécute ses propres migrations avec ce rôle. |
 
-### Groupe 15 — Tâches et tâches planifiées {#group-15--jobs--scheduled-tasks}
+### Groupe 15 — Jobs et tâches planifiées {#group-15--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -288,12 +288,12 @@ avec leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critical | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
 | `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critical | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
@@ -308,7 +308,7 @@ avec leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 SparkyFitness partagée avec la variante GKE est décrite dans
 **[SparkyFitness_Common](SparkyFitness_Common.md)**.

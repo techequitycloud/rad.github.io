@@ -11,7 +11,7 @@ description: "Lab pratique : exécutez la découverte et l'évaluation Google Cl
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 60 à 120 minutes
+**Durée estimée :** 60–120 minutes
 
 Google Cloud Migration Center est la plateforme gratuite de Google Cloud dédiée à la *phase d'évaluation* d'une
 migration — découvrir les charges de travail existantes, constituer un inventaire, estimer leur coût sur
@@ -28,7 +28,7 @@ ne duplique volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vérifier que le service Migration Center et les VM sources d'exemple (hôte Windows MCDCv6 + cibles
@@ -55,7 +55,7 @@ ne duplique volontairement pas ce détail afin de rester exact dans le temps.
   en lecture seule et à portée restreinte) et le **CLI `aws`** disponible dans l'environnement de déploiement.
   Laissez les paramètres AWS vides pour ignorer entièrement AWS et importer à la place un fichier CSV d'exemple préparé à l'avance.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"

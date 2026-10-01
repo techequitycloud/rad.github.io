@@ -89,7 +89,7 @@ l'autre avant le démarrage de l'application :
    stabilisation lorsqu'elle démarre.
 
 3. **`twenty-verify`** — une tâche de garde qui attend la fin de `twenty-migrate`.
-   Un échec de tâche d'initialisation NE fait PAS échouer à lui seul l'apply du
+   Un échec de job d'initialisation NE fait PAS échouer à lui seul l'apply du
    module ; un `twenty-migrate` concurrent ou échoué pourrait donc sinon laisser un
    service apparemment sain pointant vers une base de données **vide** — chaque
    requête backend échoue alors avec `relation "core.keyValuePair" does not exist`,
@@ -112,7 +112,7 @@ sorties du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres applicatifs de base {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Twenty_Common` établit l'environnement Twenty de base afin que l'application
 démarre correctement dès le premier démarrage :
@@ -136,7 +136,7 @@ démarre correctement dès le premier démarrage :
   les invitations par e-mail ne peuvent pas être générées.
 - **Migrations désactivées** — `DISABLE_DB_MIGRATIONS=true` et
   `DISABLE_CRON_JOBS_REGISTRATION=true` sont définis dans le conteneur principal,
-  de sorte que la tâche d'initialisation `twenty-migrate` est la seule voie pour les
+  de sorte que le job d'initialisation `twenty-migrate` est la seule voie pour les
   modifications de schéma.
 
 ---
@@ -150,7 +150,7 @@ de données est saine :
 - **Sonde de démarrage** — HTTP GET `/healthz`, délai initial de 120 secondes,
   période d'interrogation de 15 secondes, seuil de 40 échecs. Cela laisse jusqu'à
   ~10 minutes au total pour les migrations du premier démarrage (qui s'exécutent via
-  la tâche d'initialisation `twenty-migrate` avant le démarrage du pod, mais avec
+  le job d'initialisation `twenty-migrate` avant le démarrage du pod, mais avec
   une marge pour les variations). GKE et Cloud Run utilisent la même sonde HTTP, car
   Twenty n'émet pas de redirections HTTP→HTTPS sur le chemin de santé.
 - **Sonde de vivacité** — HTTP GET `/healthz`, délai initial de 30 secondes, période

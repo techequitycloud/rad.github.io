@@ -21,7 +21,7 @@ documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement GoToSocial,
 consultez les guides de plateforme ([GoToSocial_GKE](GoToSocial_GKE.md),
-[GoToSocial_CloudRun](GoToSocial_CloudRun.md)) et les guides de fondation
+[GoToSocial_CloudRun](GoToSocial_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -46,7 +46,7 @@ consultez les guides de plateforme ([GoToSocial_GKE](GoToSocial_GKE.md),
 Trois secrets sont générés automatiquement et stockés dans Secret Manager :
 
 - **`SUPERUSER_PASSWORD`** — une chaîne aléatoire de 24 caractères
-  (`random_password`, `special = false`). Utilisé uniquement par la tâche
+  (`random_password`, `special = false`). Utilisé uniquement par le job
   d'initialisation `admin-create`, qui le transmet à
   `gotosocial admin account create --password`. C'est le mot de passe du
   premier compte (propriétaire) de l'instance.
@@ -58,10 +58,10 @@ Trois secrets sont générés automatiquement et stockés dans Secret Manager :
 **Un piège réel qui mérite d'être signalé en évidence.** L'objet `config` de
 `GoToSocial_Common` définit `secret_environment_variables = var.secret_environment_variables`
 — un passage direct destiné à l'opérateur — et ce champ est une **opération
-sans effet de la fondation**. Vérifié dans le code source
+sans effet du socle**. Vérifié dans le code source
 d'`App_CloudRun`/`App_GKE` : `secret_environment_variables` ne fait jamais
 que fusionner la variable de premier niveau `var.secret_environment_variables`
-avec les préréglages propres à la fondation ; il ne lit **jamais**
+avec les préréglages propres au socle ; il ne lit **jamais**
 `local.selected_module.secret_environment_variables` (le champ de l'objet de
 configuration propre à l'application) — bien que des générations antérieures
 de l'échafaudage de ce module (héritées de Synapse, lui-même cloné de Zammad)
@@ -90,8 +90,8 @@ gcloud secrets list --project "$PROJECT" --filter="name~superuser-password OR na
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la
-fondation ; le nom de son secret est indiqué dans les sorties du déploiement
+Le mot de passe de la base de données est généré et géré séparément par le
+socle ; le nom de son secret est indiqué dans les sorties du déploiement
 de la plateforme (`database_password_secret`).
 
 ---
@@ -103,7 +103,7 @@ une contrainte d'exécution stricte que la plupart des applications de ce
 catalogue reposant sur Postgres n'ont pas : la base de données doit être créée
 avec **`LC_COLLATE='C'` et `LC_CTYPE='C'`** — il refuse de démarrer avec toute
 autre collation (« Database has incorrect collation ... GoToSocial now
-requires 'C' collation »). L'étape générique `db-create` de la fondation ne
+requires 'C' collation »). L'étape générique `db-create` du socle ne
 définit pas ce paramètre ; `GoToSocial_Common` fournit donc une tâche
 `db-init` dédiée (`scripts/db-init.sh`, image `postgres:15-alpine`) qui, de
 manière idempotente :
@@ -113,7 +113,7 @@ manière idempotente :
 3. Crée la base de données de l'application avec
    `ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0`, détenue
    par le rôle applicatif — en recréant une base vide à la mauvaise collation
-   si la fondation en a créé une d'abord (aucun risque de perte de données,
+   si le socle en a créé une d'abord (aucun risque de perte de données,
    puisque cela ne se produit que lors d'un déploiement réellement neuf),
 4. Accorde tous les privilèges sur la base de données au rôle applicatif,
 5. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter (`POST
@@ -145,8 +145,7 @@ Le propre `ENTRYPOINT` de l'image officielle Docker Hub
 (`/gotosocial/gotosocial server start`) lit nativement des variables
 d'environnement `GTS_*` distinctes — vérifié dans le Dockerfile amont (base
 `alpine:3.21`, utilisateur non root `1000:1000`). Aucun wrapper de point
-d'entrée n'est nécessaire pour traduire les noms génériques `DB_*` de la
-fondation, car le module Application appelant les associe directement à
+d'entrée n'est nécessaire pour traduire les noms génériques `DB_*` du socle, car le module Application appelant les associe directement à
 `GTS_DB_*` via `db_host_env_var_name`/`db_user_env_var_name`/etc. dans son
 propre `main.tf` (voir §Base de données dans les guides de plateforme pour
 l'asymétrie de mode TLS entre Cloud Run et GKE à laquelle se heurte cet
@@ -154,7 +153,7 @@ alias).
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `GoToSocial_Common` établit l'environnement GoToSocial de référence
 (`local.environment_variables` dans `main.tf`) :
@@ -244,7 +243,7 @@ Kopia) — la sonde de démarrage seule y suffit.
 
 L'objet `config` de `GoToSocial_Common` déclare également un `readiness_probe`
 distinct et codé en dur (`type = "HTTP"`, `path = "/readyz"`) — une
-construction de niveau fondation distincte de `startup_probe`/`liveness_probe` ;
+construction de niveau du socle distincte de `startup_probe`/`liveness_probe` ;
 les sondes qui conditionnent réellement le trafic sur les deux plateformes
 déployées sont la paire TCP ci-dessus.
 
@@ -259,8 +258,8 @@ doit envoyer un en-tête `User-Agent` explicite, sous peine de recevoir un
 
 Un bucket **Cloud Storage** dédié (suffixe de nom `storage`, classe
 `STANDARD`, `force_destroy = true`, sans gestion des versions, `public_access_prevention =
-"enforced"`) est déclaré ici et provisionné par la
-fondation. Un compte de service associé (`gotosocial_storage`, ID de compte
+"enforced"`) est déclaré ici et provisionné par le
+socle. Un compte de service associé (`gotosocial_storage`, ID de compte
 `gts-store-<hex_suffix>`) détient une paire de clés HMAC
 (`GTS_STORAGE_S3_ACCESS_KEY` / `GTS_STORAGE_S3_SECRET_KEY`, §2) et reçoit le
 rôle `roles/storage.objectAdmin` sur le bucket de la part du module
@@ -281,7 +280,7 @@ joindre son backend S3 (`error opening storage backend: ... Access Denied`) ;
 le module Application câble donc l'attribution `roles/storage.objectAdmin`
 sur `module.app_cloudrun.storage_buckets["storage"]` /
 `module.app_gke.storage_buckets["storage"]` (une sortie du propre sous-module
-de stockage de la fondation) plutôt que sur `depends_on = [module.app_cloudrun]` /
+de stockage du socle) plutôt que sur `depends_on = [module.app_cloudrun]` /
 `depends_on = [module.app_gke]` (le module entier, y compris le
 Deployment/Service). Cette dernière option provoquerait un interblocage : le
 Deployment attend un pod sain, qui a besoin de l'attribution IAM, laquelle
@@ -314,7 +313,7 @@ once before creating users`.
 `GoToSocial_Common` définit la tâche `admin-create` avec `execute_on_apply =
 false`. C'est délibéré, et non un oubli :
 
-- **Sur Cloud Run**, les tâches d'initialisation s'exécutent toujours
+- **Sur Cloud Run**, les jobs d'initialisation s'exécutent toujours
   strictement avant même que la première révision du service n'existe —
   `admin-create` ne peut donc structurellement pas réussir pendant le même
   `apply` qui crée le service. La ressource de tâche est tout de même créée

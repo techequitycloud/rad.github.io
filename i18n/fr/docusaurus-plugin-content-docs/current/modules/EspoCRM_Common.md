@@ -16,7 +16,7 @@ comprendre ce qu'elle fournit explique les valeurs par défaut que vous voyez da
 
 Pour l'infrastructure qui provisionne et exécute réellement EspoCRM, consultez les guides
 de plateforme ([EspoCRM_GKE](EspoCRM_GKE.md), [EspoCRM_CloudRun](EspoCRM_CloudRun.md)) et
-les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -58,7 +58,7 @@ gcloud secrets versions access latest \
   --secret="secret-<resource_prefix>-espocrm-admin-password" --project "$PROJECT"
 ```
 
-Le **mot de passe de la base de données** est généré et géré séparément par la fondation ; le
+Le **mot de passe de la base de données** est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans les sorties du déploiement de la plateforme (`database_password_secret`).
 Consultez [App_Common](App_Common.md) pour le modèle partagé des secrets et de Workload Identity.
 
@@ -104,11 +104,11 @@ officielle en variante Apache). Le Dockerfile reste en `root` (l'image amont att
 sur le `docker-entrypoint.sh apache2-foreground` amont.
 
 - **ARG de version propre à l'application.** Le tag de base est dérivé d'un ARG de build propre à l'application,
-  `ESPOCRM_VERSION` — **et non** de l'`APP_VERSION` générique que la fondation injecte
+  `ESPOCRM_VERSION` — **et non** de l'`APP_VERSION` générique que le socle injecte
   et qui l'emporte lors de la fusion. `EspoCRM_Common` fait correspondre `application_version = "latest"` à un
   tag apache figé et éprouvé (`10.0.2`), afin qu'un build ne casse jamais à cause d'un tag mouvant ou
   absent.
-- **Fait correspondre `DB_*` → `ESPOCRM_DATABASE_*`.** La fondation injecte les variables propres au tenant
+- **Fait correspondre `DB_*` → `ESPOCRM_DATABASE_*`.** Le socle injecte les variables propres au tenant
   `DB_HOST`, `DB_IP`, `DB_NAME`, `DB_USER`, `DB_PORT` (et `DB_PASSWORD` sous forme de secret).
   `cloud-entrypoint.sh` exporte les variables natives d'EspoCRM `ESPOCRM_DATABASE_HOST/PORT/NAME/USER/PASSWORD`
   et `ESPOCRM_DATABASE_PLATFORM = "Mysql"`. Comme la connexion PDO MySQL d'EspoCRM nécessite
@@ -117,7 +117,7 @@ sur le `docker-entrypoint.sh apache2-foreground` amont.
   n'impose pas SSL sur le TCP en IP privée ; aucun câblage TLS supplémentaire n'est donc nécessaire.
 - **Résout `ESPOCRM_SITE_URL`.** EspoCRM construit les liens absolus et les vérifications de son propre installateur
   à partir de `siteUrl` ; celle-ci doit donc être l'hôte accessible du service, et non `localhost`. Le
-  point d'entrée privilégie une valeur explicite, puis les URL prévues par la fondation
+  point d'entrée privilégie une valeur explicite, puis les URL prévues par le socle
   (`APP_URL` → `CLOUDRUN_SERVICE_URL` → `GKE_SERVICE_URL`).
 - **Passe la main au point d'entrée amont.** Après avoir exporté les variables `ESPOCRM_*`, il exécute
   `exec "$@"`, laissant `docker-entrypoint.sh` installer ou migrer automatiquement l'application.
@@ -161,7 +161,7 @@ les sondes ciblent donc `/` :
 
 Un bucket de données **Cloud Storage** dédié (suffixe de nom `espocrm-data`, c'est-à-dire
 `gcs-espocrm<tenant-prefix>-espocrm-data`, `force_destroy = true`) est
-déclaré ici et provisionné par la fondation, qui accorde également l'accès au compte de service
+déclaré ici et provisionné par le socle, qui accorde également l'accès au compte de service
 de la charge de travail. Sur GKE, la plateforme monte en outre un volume **NFS** partagé sur
 `/var/www/html/data` pour les pièces jointes envoyées et les données d'exécution d'EspoCRM. Listez le bucket
 avec :

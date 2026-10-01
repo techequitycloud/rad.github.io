@@ -34,13 +34,13 @@ le guide de plateforme ([Plausible_GKE](Plausible_GKE.md)) et les guides du socl
 | Domaine | Fourni par Plausible_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère `SECRET_KEY_BASE` (64 caractères) et `TOTP_VAULT_KEY` (exactement 32 octets, en base64) et les stocke dans **Secret Manager** sous des noms propres au service | Injectés automatiquement ; récupérables via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Build personnalisé léger `FROM ghcr.io/plausible/community-edition` avec un point d'entrée cloud ; construit via Cloud Build. `"latest"` est épinglé sur la version `v3.2.1` via l'ARG de build propre à l'application `PLAUSIBLE_VERSION` | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Build personnalisé léger `FROM ghcr.io/plausible/community-edition` avec un point d'entrée cloud ; construit via Cloud Build. `"latest"` est épinglé sur la version `v3.2.1` via l'ARG de build propre à l'application `PLAUSIBLE_VERSION` | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** — UNIQUEMENT pour la configuration des comptes/sites ; tous les événements d'analyse résident dans ClickHouse | Section Base de données du guide de plateforme |
-| Amorçage de la base de données | Définit le job `db-init` du premier déploiement (`postgres:15-alpine` + `create-db-and-user.sh`) qui crée le rôle et la base de données Postgres | Output `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement (`postgres:15-alpine` + `create-db-and-user.sh`) qui crée le rôle et la base de données Postgres | Sortie `initialization_jobs` |
 | Raccordement à ClickHouse | Expose `clickhouse_url`/`clickhouse_db`/`clickhouse_user` sous forme de variables d'environnement `PLATFORM_CLICKHOUSE_*` afin que le point d'entrée compose `CLICKHOUSE_DATABASE_URL` | Comportement de l'application dans le guide de plateforme |
 | Paramètres de base | `HTTP_PORT = 8000`, 1 vCPU / 1Gi de mémoire (valeur par défaut propre à ce module ; `Plausible_GKE` ramène la mémoire à 512Mi — voir ci-dessous), min 1 / max 10 réplicas, sidecar Cloud SQL Auth Proxy activé | Valeurs par défaut dans le guide de plateforme |
 | Contrôles de santé | Sondes de démarrage/vivacité par défaut ciblant HTTP `GET /api/health` (non authentifié) | Section Observabilité du guide de plateforme |
-| Stockage d'objets | Aucun — `storage_buckets` est vide ; aucun NFS n'est nécessaire | Output `storage_buckets` |
+| Stockage d'objets | Aucun — `storage_buckets` est vide ; aucun NFS n'est nécessaire | Sortie `storage_buckets` |
 
 ---
 
@@ -161,7 +161,7 @@ de l'apply et ne nécessite aucun nouveau build.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Plausible_Common` établit l'environnement de base afin que l'application
 démarre correctement dès le premier lancement :
@@ -203,9 +203,9 @@ authentifiée) :
 
 ---
 
-## 7. Outputs {#7-outputs}
+## 7. Sorties {#7-outputs}
 
-| Output | Type | Description |
+| Sortie | Type | Description |
 |---|---|---|
 | `config` | `object` | Configuration complète de l'application (image, configuration de build, variables d'environnement, paramètres de base de données, sondes, job `db-init`) utilisée par le module socle. |
 | `secret_ids` | `map(string)` | `{ SECRET_KEY_BASE = <secret_id>, TOTP_VAULT_KEY = <secret_id> }`. |

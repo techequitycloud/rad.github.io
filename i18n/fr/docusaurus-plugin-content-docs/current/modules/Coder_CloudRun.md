@@ -28,7 +28,7 @@ Coder s'exécute sous forme d'un binaire Go unique (`coder server`) dans un cont
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement — Coder n'a besoin d'aucun secret applicatif propre |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Coder exige PostgreSQL 13+ ; une validation au moment du plan rejette les moteurs MySQL.
 - **Le plan de contrôle est sans état.** Tout l'état — modèles, espaces de travail, utilisateurs, sessions, file d'attente des builds et clés de signature auto-générées par Coder — réside dans PostgreSQL. Pas de NFS, pas de Redis, pas de secret applicatif géré par Common.
@@ -64,7 +64,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurr
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Coder stocke tout — utilisateurs, organisations, modèles, état des espaces de travail, file d'attente des tâches de provisionnement et ses clés de signature — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte par IP privée avec `sslmode=require` (le DSN sous forme d'URL de Coder ne peut pas contenir le chemin du socket Unix) ; la Job `db-init` crée la base de données et le rôle de l'application au premier déploiement.
+Coder stocke tout — utilisateurs, organisations, modèles, état des espaces de travail, file d'attente des tâches de provisionnement et ses clés de signature — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte par IP privée avec `sslmode=require` (le DSN sous forme d'URL de Coder ne peut pas contenir le chemin du socket Unix) ; le Job `db-init` crée la base de données et le rôle de l'application au premier déploiement.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -91,7 +91,7 @@ Un bucket **Cloud Storage** dédié (suffixe `storage`) est provisionné automat
 
 `container_image_source = "custom"` déclenche un Cloud Build qui encapsule `ghcr.io/coder/coder:<version>` avec le point d'entrée cloud et pousse le résultat vers Artifact Registry (l'image de base est d'abord mise en miroir, `enable_image_mirroring = true`).
 
-- **Console :** Cloud Build → Historique ; Artifact Registry → Dépôts.
+- **Console :** Cloud Build → History ; Artifact Registry → Repositories.
 - **CLI :**
   ```bash
   gcloud builds list --project "$PROJECT" --limit 5
@@ -102,7 +102,7 @@ Un bucket **Cloud Storage** dédié (suffixe `storage`) est provisionné automat
 
 Le mot de passe de la base de données est le seul secret du déploiement — stocké dans Secret Manager et injecté à l'exécution sous la forme `DB_PASSWORD`, puis encodé pour URL dans l'URL de connexion par le point d'entrée. Coder génère lui-même ses clés de signature et les conserve dans PostgreSQL ; il n'existe donc aucun secret de session ou applicatif à gérer.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -115,7 +115,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de ro
 
 Le service est accessible par défaut à son URL `run.app` ; le point d'entrée exporte cette URL sous la forme `CODER_ACCESS_URL`, à partir de laquelle Coder construit les URL de connexion des espaces de travail et des agents. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être ajoutés ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -128,7 +128,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux du conteneur (structurés, vers STDOUT) sont envoyés à Cloud Logging ; les métriques de Cloud Run et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -138,7 +138,7 @@ Les journaux du conteneur (structurés, vers STDOUT) sont envoyés à Cloud Logg
 
 ## 3. Comportement de l'application Coder {#3-coder-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une Job `db-init` (`postgres:15-alpine`) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente, crée le rôle Coder (`LOGIN CREATEDB`), crée la base de données, accorde tous les privilèges et réattribue la propriété du schéma `public` au rôle de l'application (les migrations de Coder y créent tous les objets). La tâche s'exécute à chaque apply et peut être relancée sans risque.
+- **Configuration de la base de données au premier déploiement.** Un Job `db-init` (`postgres:15-alpine`) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente, crée le rôle Coder (`LOGIN CREATEDB`), crée la base de données, accorde tous les privilèges et réattribue la propriété du schéma `public` au rôle de l'application (les migrations de Coder y créent tous les objets). La tâche s'exécute à chaque apply et peut être relancée sans risque.
 - **Les migrations s'exécutent au démarrage.** Coder applique ses propres migrations de schéma à chaque démarrage de `coder server` — les mises à niveau de version ne nécessitent aucune étape de migration manuelle. Le premier démarrage sur une base de données vierge prend plus de temps ; la sonde de démarrage accorde jusqu'à ~8 minutes avant d'abandonner.
 - **Assemblage du DSN à l'exécution.** Le point d'entrée cloud construit `CODER_PG_CONNECTION_URL` à partir de `DB_HOST`/`DB_IP`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` : sur Cloud Run, il privilégie l'IP privée avec `sslmode=require` (le chemin du socket Cloud SQL ne peut pas figurer dans la partie autorité d'une URL) ; le mot de passe est encodé en pourcentage afin que les caractères spéciaux ne cassent jamais l'URL. Un `CODER_PG_CONNECTION_URL` fourni explicitement a la priorité.
 - **URL d'accès.** `CODER_ACCESS_URL` est défini à partir de `CLOUDRUN_SERVICE_URL` injecté. Coder en dérive les URL de connexion des espaces de travail et des agents ainsi que les URI de redirection OAuth — si vous placez un domaine personnalisé devant le service, définissez `CODER_ACCESS_URL` sur ce domaine dans `environment_variables`.
@@ -204,7 +204,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -246,7 +246,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -301,14 +301,14 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 Les validations au moment du plan dans `validation.tf` détectent tôt les pires combinaisons : ordre entre minimum et maximum d'instances, Redis sans hôte, moteurs autres que PostgreSQL, et side-car de proxy Cloud SQL avec `database_type = "NONE"`.
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Coder exige PostgreSQL 13+ ; MySQL est rejeté au moment du plan. |
 | `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les modèles, espaces de travail, utilisateurs et clés de signature. |

@@ -11,7 +11,7 @@ description: "Lab pratique : déployez GoAlert sur Cloud Run dans votre propre p
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 GoAlert est une plateforme open source de planification des astreintes et d’escalade des alertes
 d’incident, conçue à l’origine par Target, avec des politiques d’escalade, des rotations/plannings
@@ -39,7 +39,7 @@ durée.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants, y compris
   l’ordre des jobs d’initialisation, dont tout dépend.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -126,7 +126,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspecter le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -192,7 +192,7 @@ export REGION="us-central1"          # the region you deploy into
    ```
 
    Cherchez une véritable ligne « listening and serving HTTP » confirmant que le serveur a bien
-   ouvert son port. Filtre de l’explorateur de journaux :
+   ouvert son port. Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -232,8 +232,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   ```
   Relancez ensuite la chaîne dans l’ordre (`db-init` → `db-migrate` → `admin-bootstrap`) —
   chaque job est idempotent et peut être réexécuté manuellement sans risque via
-  `gcloud run jobs execute <job-name>` si vous devez le forcer en dehors d’une
-  application Terraform complète.
+  `gcloud run jobs execute <job-name>` si vous devez le forcer en dehors d’un
+  apply Terraform complet.
 - **Le build de l’image a échoué :** consultez l’historique Cloud Build pour lire le journal du build en échec.
   Une cause fréquente lorsque vous reprenez le modèle de ce module pour une application similaire : le
   shell de l’image de base amont est BusyBox, et non GNU/bash — vérifiez que toute modification de script
@@ -246,7 +246,7 @@ leurs valeurs par défaut pour que le moteur d’escalade de GoAlert fonctionne 
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du
@@ -270,4 +270,4 @@ gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l’échelle (en gardant le CPU toujours alloué), mettre à jour la version, gérer les secrets, accès à la base, gérer plannings/politiques d’escalade |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, d’ordre des migrations et de build |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

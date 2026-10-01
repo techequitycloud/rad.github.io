@@ -20,7 +20,7 @@ Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du modu
 on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier,
 l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google
 Cloud**, et non sur les fonctionnalités d'édition de tableau de bord propres à Homepage. Pour la
 liste complète des services provisionnés et de chaque paramètre de configuration
 (organisés par groupe), consultez le
@@ -30,7 +30,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -55,7 +55,7 @@ dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -101,7 +101,7 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse. Si
    `service_type = LoadBalancer` :
@@ -180,11 +180,11 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
    ```
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances puis en cliquant sur
-   **Update**. Dans le mode de stockage GCS FUSE par défaut, passer au-delà d'une
-   réplique est réellement sans risque — chaque pod lit le même bucket partagé, sans
+   **Update**. Dans le mode de stockage GCS FUSE par défaut, passer au-delà d'un
+   réplica est réellement sans risque — chaque pod lit le même bucket partagé, sans
    cache en processus. **Si `stateful_pvc_enabled = true`, conservez
    `max_instance_count = 1`** — chaque ordinal de pod du StatefulSet reçoit son propre
-   PVC distinct ; plusieurs répliques maintiendraient donc chacune une configuration divergeant
+   PVC distinct ; plusieurs réplicas maintiendraient donc chacune une configuration divergeant
    indépendamment, plutôt qu'un tableau de bord partagé.
 
 3. **Mettez à jour le tag de version de l'application** via le flux **Update** de la plateforme
@@ -218,7 +218,7 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
    kubectl logs -n "$NAMESPACE" $(kubectl get pods -n "$NAMESPACE" -o jsonpath='{.items[0].metadata.name}') --tail=100
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -259,10 +259,10 @@ echo "Cluster: $CLUSTER   Namespace: $NAMESPACE"
   cache côté serveur à invalider ; un affichage obsolète vient donc presque toujours d'un onglet
   de navigateur obsolète ou d'une mauvaise cible de stockage, et non d'un problème de raccordement.
 
-- **Au-delà de 1 réplique en mode PVC en mode bloc, des modifications de configuration sont « perdues » sur
+- **Au-delà de 1 réplica en mode PVC en mode bloc, des modifications de configuration sont « perdues » sur
   certaines requêtes.** C'est attendu, et non un bug — chaque ordinal de pod du StatefulSet
   possède son propre PVC indépendant. Définissez `max_instance_count = 1`, ou
-  revenez au mode GCS FUSE par défaut si vous avez besoin de plusieurs répliques.
+  revenez au mode GCS FUSE par défaut si vous avez besoin de plusieurs réplicas.
 
 - **Pod en attente (Pending) / pas d'adresse IP externe :** consultez les événements de `kubectl describe pod` pour
   détecter des problèmes de ressources ou de quota, et vérifiez que le Service LoadBalancer a une
@@ -297,8 +297,8 @@ gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE et son stockage (bucket GCS FUSE par défaut, ou un PVC en mode bloc avec `stateful_pvc_enabled = true`) — sans base de données, sans Redis, sans secrets |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ou utiliser le port-forward ; `/api/healthcheck` renvoie `200 "up"` ; le tableau de bord s'affiche sans assistant de configuration ; une modification directe de la configuration prouve le raccordement du stockage |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (sans risque au-delà d'une réplique uniquement en mode GCS FUSE), mettre à jour la version, sauvegarder la configuration |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ou utiliser le port-forward ; `/api/healthcheck` renvoie `200 "up"` ; le tableau de bord s'affiche sans assistant de configuration ; une modification directe de la configuration prouve le raccordement du stockage |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (sans risque au-delà d'un réplica uniquement en mode GCS FUSE), mettre à jour la version, sauvegarder la configuration |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer la santé des pods, `HOMEPAGE_ALLOWED_HOSTS`, la confusion sur la cible de stockage et les problèmes de mise à l'échelle avec PVC |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le stockage de la configuration |

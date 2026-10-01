@@ -95,7 +95,7 @@ Trois secrets sont générés automatiquement et stockés dans Secret Manager :
 - **`COOKIE_SECRET`** — une chaîne alphanumérique aléatoire de 32 caractères, tout aussi
   obligatoire que `JWT_SECRET`.
 - **Mot de passe administrateur** — une chaîne alphanumérique aléatoire de 20 caractères,
-  utilisée directement par la tâche d'initialisation `medusa-admin-create` (et non injectée
+  utilisée directement par le job d'initialisation `medusa-admin-create` (et non injectée
   comme variable d'environnement d'exécution dans le conteneur principal). Récupérez-le avec :
 
 ```bash
@@ -138,7 +138,7 @@ principal — quatre tâches séquentielles s'exécutent à la place, chacune d�
    script: predeploy`, ce qui n'a pu être découvert que lors d'une véritable exécution Cloud Build + Job
    Cloud Run/GKE (les tests locaux avec de faux identifiants de base de données n'allaient jamais aussi loin).
    Corrigé en invoquant directement la CLI `medusa`.
-3. **`medusa-verify`** (`postgres:15-alpine`) — une tâche de garde. Un échec de tâche
+3. **`medusa-verify`** (`postgres:15-alpine`) — une tâche de garde. Un échec de job
    d'initialisation ne fait **pas** échouer à lui seul l'apply du module dans ce socle, si bien
    qu'une `medusa-migrate` en concurrence ou en échec pourrait sinon laisser un service apparemment
    sain pointer vers une base de données **vide**. `medusa-verify` se connecte après `medusa-migrate`,
@@ -163,7 +163,7 @@ Les noms de l'instance, de la base de données et de l'utilisateur figurent dans
 ## 5. `entrypoint.sh` {#5-entrypointsh}
 
 L'`ENTRYPOINT` de l'image d'exécution s'exécute avant que `exec "$@"` ne passe la main à `CMD` (ou
-aux `args` d'une tâche d'initialisation) :
+aux `args` d'un job d'initialisation) :
 
 - **Construit `DATABASE_URL`** à partir de `DB_HOST` / `DB_IP` /
   `DB_USER` / `DB_PASSWORD` / `DB_NAME` / `DB_PORT` injectés par la plateforme. Un `DB_HOST`

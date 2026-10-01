@@ -17,7 +17,7 @@ fournit explique les valeurs par défaut que vous voyez dans la documentation de
 
 Pour l'infrastructure qui provisionne et exécute réellement Vikunja, consultez les
 guides des plateformes ([Vikunja_GKE](Vikunja_GKE.md),
-[Vikunja_CloudRun](Vikunja_CloudRun.md)) et les guides des fondations
+[Vikunja_CloudRun](Vikunja_CloudRun.md)) et les guides des socles
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -57,13 +57,13 @@ gcloud secrets list --project "$PROJECT" --filter="name~jwt-secret"
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le nom de son
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le nom de son
 secret figure dans les sorties du déploiement de la plateforme (`database_password_secret`).
 Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Vikunja nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL ou d'autres
 moteurs ne sont pas pris en charge. Lors du premier déploiement, un job ponctuel (`db-init`) s'exécute
@@ -88,7 +88,7 @@ Les noms de l'instance, de la base de données et de l'utilisateur figurent dans
 
 ---
 
-## 4. Image du conteneur et point d'entrée {#4-container-image-and-entrypoint}
+## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image amont `vikunja/vikunja` est **basée sur `scratch`** : elle ne contient que le
 binaire statique `/app/vikunja/vikunja`, sans shell ni `/etc/passwd`. Pour exécuter un
@@ -103,7 +103,7 @@ le Dockerfile personnalisé est multi-étapes :
   appartenant à root et ne peut pas le créer avec `mkdir` au démarrage. Pour des pièces jointes durables, montez NFS sur
   ce chemin.
 - Construit avec un ARG de build propre à l'application, `VIKUNJA_VERSION` — **et non** le générique
-  `APP_VERSION`, que la fondation injecte dans `build_args` et qui l'emporterait sinon
+  `APP_VERSION`, que le socle injecte dans `build_args` et qui l'emporterait sinon
   lors de la fusion en résolvant `vikunja:latest` (un tag inexistant). `"latest"` correspond
   à une version récente épinglée (`2.3.0`).
 

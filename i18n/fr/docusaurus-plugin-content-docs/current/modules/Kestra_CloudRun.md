@@ -33,7 +33,7 @@ Kestra s'exécute comme un conteneur Java/JVM sur Cloud Run v2 en mode autonome
 (serveur, worker et planificateur dans un seul conteneur). Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Java/JVM, 2 vCPU / 4 Gio par défaut, mode autonome à instance unique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — stocke la file d'attente, le référentiel et l'historique des exécutions |
@@ -41,7 +41,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe administrateur Kestra et mot de passe de la base de données générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Kestra utilise PostgreSQL à la fois pour sa
   file d'attente interne et pour son référentiel de flux. MySQL n'est pas pris en
@@ -99,7 +99,7 @@ exécutions, déclencheurs, espaces de noms et file d'attente interne des tâche
 dans une instance gérée Cloud SQL for PostgreSQL 15. Le service se connecte via
 le **Cloud SQL Auth Proxy** par un socket Unix ; `entrypoint.sh` relie ce socket
 à TCP pour que le pilote Java JDBC puisse se connecter (aucune IP publique n'est
-exposée). Lors du premier déploiement, une tâche d'initialisation crée la base de
+exposée). Lors du premier déploiement, un job d'initialisation crée la base de
 données et l'utilisateur Kestra, et accorde les privilèges requis.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
@@ -140,7 +140,7 @@ Le mot de passe administrateur de Kestra et le mot de passe de la base de
 données sont stockés dans Secret Manager et injectés dans le service à
 l'exécution. Aucune valeur en clair n'apparaît dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -159,8 +159,7 @@ charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut
 être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la
 connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -177,8 +176,8 @@ terminaison `/health` de Kestra. Des tests de disponibilité et des règles
 d'alerte facultatifs sont disponibles (le test de disponibilité est désactivé
 par défaut — activez-le pour la surveillance en production).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord
-  / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards
+  / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -188,7 +187,7 @@ par défaut — activez-le pour la surveillance en production).
 
 ## 3. Comportement de l'application Kestra {#3-kestra-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement.** Une tâche
+- **Initialisation de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`) utilise `postgres:15-alpine` pour se connecter via
   le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et
   l'utilisateur Kestra, accorde les privilèges et réinitialise le schéma public
@@ -340,12 +339,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 | `database_password_length` | `32` | Longueur du mot de passe généré (16 à 64). |
 | `enable_cloudsql_volume` | `true` | Requis pour le pont JDBC par socket Unix. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. Fournissez une liste non vide pour la remplacer entièrement. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes déclenchées par Cloud Scheduler. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run complémentaires déployés aux côtés du service Kestra principal. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -353,7 +352,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health`, délai de 30 s, période de 20 s, 40 échecs | Sonde de démarrage applicative — accorde jusqu'à environ 14 minutes au démarrage de la JVM. |
-| `liveness_probe` | HTTP `/health`, délai de 180 s, période de 30 s, 5 échecs | Sonde d'activité applicative. |
+| `liveness_probe` | HTTP `/health`, délai de 180 s, période de 30 s, 5 échecs | Sonde de vivacité applicative. |
 | `startup_probe_config` | TCP, sans chemin | Sonde de démarrage au niveau de l'infrastructure (ne suit pas les redirections HTTP). |
 | `uptime_check_config` | désactivé, chemin `/health` | Test de disponibilité Cloud Monitoring. Activez-le pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
@@ -365,7 +364,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 | `enable_iap` | `false` | Exige une connexion Google via Identity-Aware Proxy. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -406,12 +405,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `db_name` | `kestra` — défini une fois pour toutes | Critical | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, ce qui fait perdre tous les flux, l'historique des exécutions, les déclencheurs et les espaces de noms. |
 | `application_name` | `kestra` — défini une fois pour toutes | Critical | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne leur recréation complète avec perte de données. |

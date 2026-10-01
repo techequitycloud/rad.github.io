@@ -21,7 +21,7 @@ Ce guide se concentre sur les services Google Cloud que le module met en œuvre 
 
 Le module met en place une plateforme multi-cluster complète à partir de rien, puis y déploie l'application bancaire :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot (Standard en option) | Un cluster par région ; `cluster_size` clusters, 2 par défaut |
 | Gestion multi-cluster | GKE Fleet (Hub) | Chaque cluster est enregistré comme membre de la Fleet |
@@ -63,7 +63,7 @@ kubectl config rename-context "gke_${PROJECT}_${REGION2}_gke-cluster-2" cluster2
 kubectl config get-contexts
 ```
 
-Le namespace de l'application est `bank-of-anthos` sur chaque cluster.
+L'espace de noms de l'application est `bank-of-anthos` sur chaque cluster.
 
 ### A. Clusters GKE — la trame de calcul {#a-gke-clusters--the-compute-fabric}
 
@@ -104,7 +104,7 @@ MCS est activé en tant que fonctionnalité de la Fleet afin que les services pu
 
 ### D. Cloud Service Mesh (multi-primaire) {#d-cloud-service-mesh-multi-primary}
 
-Le maillage est activé à l'échelle de la Fleet avec gestion automatique — Google exécute le plan de contrôle Istio de chaque cluster. Le namespace `bank-of-anthos` porte le label de révision CSM correspondant à la release channel du cluster — `istio.io/rev=asm-managed` pour `REGULAR`, `-rapid`/`-stable` pour les deux autres — si bien que chaque pod reçoit un sidecar Envoy (chaque pod applicatif affiche `2/2` prêts). Un label désignant une révision que la channel ne sert pas ne provoque aucune erreur ; l'injection est silencieusement ignorée et les pods démarrent sans sidecar. Tous les clusters partagent un même domaine de confiance : le maillage est donc multi-primaire et le trafic entre clusters est mutuellement authentifié.
+Le maillage est activé à l'échelle de la Fleet avec gestion automatique — Google exécute le plan de contrôle Istio de chaque cluster. L'espace de noms `bank-of-anthos` porte le label de révision CSM correspondant à la release channel du cluster — `istio.io/rev=asm-managed` pour `REGULAR`, `-rapid`/`-stable` pour les deux autres — si bien que chaque pod reçoit un sidecar Envoy (chaque pod applicatif affiche `2/2` prêts). Un label désignant une révision que la channel ne sert pas ne provoque aucune erreur ; l'injection est silencieusement ignorée et les pods démarrent sans sidecar. Tous les clusters partagent un même domaine de confiance : le maillage est donc multi-primaire et le trafic entre clusters est mutuellement authentifié.
 
 - **Console :** Kubernetes Engine → Service Mesh affiche la topologie combinée, les signaux clés (golden signals) et l'état mTLS de tous les clusters.
 - **CLI :**
@@ -169,7 +169,7 @@ Les journaux des pods sont acheminés vers Cloud Logging ; les métriques GKE et
 
 Bank of Anthos est une simulation de banque de détail : inscription, connexion, consultation des soldes et virements. Elle comprend un `frontend`, `userservice`, `contacts`, `ledgerwriter`, `balancereader`, `transactionhistory`, un `loadgenerator` (trafic synthétique continu) et les bases de données PostgreSQL `accounts-db` / `ledger-db`. Le générateur de charge maintient un flux de trafic constant, si bien que les tableaux de bord et les traces du maillage affichent immédiatement des données en direct. L'authentification utilise une paire de clés JWT stockée dans le Secret Kubernetes `jwt-key`.
 
-- **Console :** Kubernetes Engine → Workloads (filtré sur le namespace `bank-of-anthos`), pour chaque cluster.
+- **Console :** Kubernetes Engine → Workloads (filtré sur l'espace de noms `bank-of-anthos`), pour chaque cluster.
 - **CLI :**
   ```bash
   kubectl --context cluster1 get deploy,statefulset,svc -n bank-of-anthos
@@ -182,7 +182,7 @@ Bank of Anthos est une simulation de banque de détail : inscription, connexion,
 
 **Ce qui est déployé à l'apply.** Le module active les API de projet requises, crée (ou réutilise) le VPC partagé et les sous-réseaux/NAT/pare-feu par cluster, puis crée `cluster_size` clusters GKE dans les régions choisies. Chaque cluster est enregistré dans la Fleet et le module attend que chaque membre atteigne l'état `READY` (interrogé pendant environ 10 minutes au maximum) avant de poursuivre. Si le maillage est activé, il l'est au niveau de la Fleet et pour chaque membre en mode de gestion automatique, et le module attend que le maillage soit configuré sur chaque cluster.
 
-**Déploiement de l'application sur les clusters.** Avec `deploy_application = true`, le module télécharge la version épinglée de Bank of Anthos (v0.6.10), crée le namespace `bank-of-anthos` (labellisé pour l'injection de sidecar) sur chaque cluster, applique le secret JWT, puis applique les manifestes des charges de travail :
+**Déploiement de l'application sur les clusters.** Avec `deploy_application = true`, le module télécharge la version épinglée de Bank of Anthos (v0.6.10), crée l'espace de noms `bank-of-anthos` (labellisé pour l'injection de sidecar) sur chaque cluster, applique le secret JWT, puis applique les manifestes des charges de travail :
 
 - Sur le **cluster principal** (`cluster1`), l'ensemble complet des manifestes est appliqué, **y compris** les StatefulSets `accounts-db` et `ledger-db`.
 - Sur **tous les autres clusters**, les mêmes manifestes sont appliqués mais les StatefulSets de bases de données en sont retirés — les services sans état ainsi que les Services/ConfigMaps des bases de données sont tout de même créés pour que les autres pods puissent les résoudre, et ils sont conçus pour utiliser les bases de données du cluster principal à travers la Fleet. Tout StatefulSet de base de données préexistant sur un cluster non principal est supprimé.
@@ -272,4 +272,4 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ---
 
-Il s'agit d'un module pédagogique autonome qui construit son propre VPC, ses clusters, sa Fleet, son maillage et son équilibreur de charge global — il ne dépend d'aucun module de fondation distinct. Pour l'application amont, consultez le [dépôt Bank of Anthos](https://github.com/GoogleCloudPlatform/bank-of-anthos).
+Il s'agit d'un module pédagogique autonome qui construit son propre VPC, ses clusters, sa Fleet, son maillage et son équilibreur de charge global — il ne dépend d'aucun module socle distinct. Pour l'application amont, consultez le [dépôt Bank of Anthos](https://github.com/GoogleCloudPlatform/bank-of-anthos).

@@ -38,7 +38,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_PASSWORD` et `NEXTAUTH_SECRET` générés automatiquement ; `SMTP_PWD` facultatif ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   couche applicative partagée ; choisir un autre moteur empêche le démarrage. Tout
@@ -339,14 +339,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, `enable_cloudsql_volume = true` avec `database_type = NONE`, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SECRET_PASSWORD` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critical | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
 | `NEXTAUTH_SECRET` (généré automatiquement) | N'en faire la rotation que pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
@@ -365,7 +365,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Rallly
 partagée avec la variante GKE est décrite dans **[Rallly_Common](Rallly_Common.md)**.
 

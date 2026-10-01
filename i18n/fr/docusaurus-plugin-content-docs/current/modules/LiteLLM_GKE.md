@@ -64,7 +64,7 @@ ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail LiteLLM {#a-gke-autopilot--the-litellm-workload}
@@ -156,7 +156,7 @@ injectées en référençant des secrets préexistants via `secret_environment_v
 Le nom du secret du mot de passe de la base de données figure dans les [sorties](#5-outputs). Voir
 [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une adresse IP Cloud Load Balancing externe.
 Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP statique
@@ -175,7 +175,7 @@ les IP statiques.
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
 Les flux stdout/stderr des pods sont envoyés à Cloud Logging ; les métriques de GKE et de Cloud SQL sont envoyées à Cloud
-Monitoring. Des contrôles de disponibilité et des stratégies d'alerte facultatifs sont disponibles.
+Monitoring. Des tests de disponibilité et des stratégies d'alerte facultatifs sont disponibles.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -240,7 +240,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -298,7 +298,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 | `enable_resource_quota` | `false` | Déclarée pour la cohérence avec les conventions ; non référencée par le déploiement de ce module (aucun ResourceQuota n'est créé). |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Non référencées par ce module. Si elles sont branchées via un autre module, elles doivent utiliser des unités binaires (`4Gi`, `8192Mi`) — les entiers nus sont interprétés comme des octets et bloquent la planification. |
 
-### Groupe 9 — Stratégies de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -312,7 +312,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 |---|---|---|
 | `startup_probe` | `/health/readiness` | Sonde HTTP ; valide la connectivité à la base de données et les migrations Prisma avant d'acheminer le trafic. |
 | `liveness_probe` | `/health/liveliness` | Sonde HTTP ; confirme que le processus du proxy est en cours d'exécution. |
-| `uptime_check_config` | désactivé | Contrôle de disponibilité Cloud Monitoring facultatif. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Stratégies d'alerte sur métriques facultatives. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
@@ -419,7 +419,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Association des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP du LoadBalancer externe (lorsqu'une IP statique est réservée). |
@@ -432,7 +432,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

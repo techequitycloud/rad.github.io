@@ -144,7 +144,7 @@ L'image personnalisée (`Infisical_Common/scripts/Dockerfile`) encapsule
 
 ---
 
-## 5. Paramètres applicatifs principaux {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Infisical_Common` établit l'environnement Infisical de base afin que
 l'application démarre correctement dès le premier lancement :
@@ -186,7 +186,7 @@ connexion à la base de données et (si activé) Redis sont tous sains.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 La propre sortie `storage_buckets` d'`Infisical_Common` est toujours une liste vide —
 Infisical stocke tout son état persistant dans PostgreSQL et n'a besoin d'aucun stockage objet

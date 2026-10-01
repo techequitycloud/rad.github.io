@@ -90,7 +90,7 @@ démarrage), ce qui permet de transmettre des arguments de build personnalisés 
 **Ce paramètre `"custom"` ne fait pas autorité par défaut.** `SearXNG_CloudRun` et
 `SearXNG_GKE` déclarent chacun leur propre variable `container_image_source`, dont la
 valeur par défaut est `"prebuilt"`, et la transmettent à `App_CloudRun`/
-`App_GKE`. La logique de priorité du module de socle
+`App_GKE`. La logique de priorité du module socle
 (`final_container_image_source = var.container_image_source != "" ?
 var.container_image_source : local.module_container_image_source` —
 `App_CloudRun/modules.tf`, équivalent dans `App_GKE/modules.tf`) fait que la variable de
@@ -101,7 +101,7 @@ Build décrit ci-dessus n'est donc **pas utilisé** — SearXNG déploie à la p
 s'exécute jamais. Définissez `container_image_source = "custom"` sur le module
 `SearXNG_CloudRun`/`SearXNG_GKE` appelant pour réellement choisir l'image personnalisée.
 
-L'indicateur `enable_image_mirroring` (valeur par défaut `true`) duplique l'image amont
+L'indicateur `enable_image_mirroring` (valeur par défaut `true`) met en miroir l'image amont
 dans Artifact Registry avant le déploiement, ce qui évite les limites de débit de
 Docker Hub.
 
@@ -114,7 +114,7 @@ gcloud artifacts docker images list \
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `SearXNG_Common` assemble l'environnement SearXNG de base :
 

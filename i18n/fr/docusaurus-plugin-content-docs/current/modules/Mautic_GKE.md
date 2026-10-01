@@ -39,7 +39,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe administrateur et mot de passe de la base de données générés automatiquement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé facultatif + certificat géré |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixe ; choisir
   PostgreSQL ou `NONE` empêche le démarrage.
@@ -59,7 +59,7 @@ assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Mautic {#a-gke-autopilot--the-mautic-workload}
@@ -175,7 +175,7 @@ et l'IP statique.
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
 Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriques de GKE
-et de Cloud SQL sont envoyées à Cloud Monitoring. Des contrôles de disponibilité et des
+et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests de disponibilité et des
 règles d'alerte facultatifs sont disponibles.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -242,7 +242,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -287,7 +287,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets du namespace. |
+| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers sans suffixe sont lus comme des octets et bloquent la planification. |
 
 ### Groupe 8 — Règles de fiabilité {#group-8--reliability-policies}
@@ -303,7 +303,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | Remplacées par HTTP `/healthz` | Le module détourne les deux sondes de la page de connexion de Mautic : `/index.php/s/login` renvoie HTTP 500 (redirection vers l'installateur) tant que la base de données n'est pas configurée ; les kube-probes ciblent donc plutôt le fichier statique `/healthz`, qui renvoie 200 quel que soit l'état de l'application. |
-| `uptime_check_config` | désactivé | Contrôle de disponibilité Cloud Monitoring facultatif. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
 ### Groupe 10 — Jobs et tâches planifiées {#group-10--jobs--scheduled-tasks}
@@ -419,7 +419,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL permettant d'accéder à Mautic. |
@@ -431,7 +431,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -442,12 +442,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé : service dégradé) —
 > **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible : mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
 | `cron_jobs` | configurés (§3) | Critical | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
@@ -469,7 +469,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — voir
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Mautic partagée avec
 la variante Cloud Run est décrite dans **[Mautic_Common](Mautic_Common.md)**.
 

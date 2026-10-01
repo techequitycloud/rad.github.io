@@ -11,7 +11,7 @@ description: "Référence de configuration pour déployer Zitadel sur GKE Autopi
 
 Zitadel est une plateforme open source et cloud-native de gestion des identités et des accès (IAM)
 qui fournit OpenID Connect, OAuth 2.0, SAML ainsi que la gestion des utilisateurs et des organisations. Ce
-module déploie Zitadel sur **GKE Autopilot** en s'appuyant sur la fondation [App_GKE](App_GKE.md),
+module déploie Zitadel sur **GKE Autopilot** en s'appuyant sur le socle [App_GKE](App_GKE.md),
 qui provisionne et gère l'infrastructure Google Cloud et Kubernetes
 partagée.
 
@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud qu'utilise Zitadel et sur la maniè
 depuis la console Google Cloud et la ligne de commande. Pour les mécanismes
 communs à toutes les applications GKE — Workload Identity, entrée (ingress), autoscaling, CI/CD, Cloud
 Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les
+déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que de les
 répéter ici.
 
 ---
@@ -29,7 +29,7 @@ répéter ici.
 Zitadel s'exécute comme une unique charge de travail web en Go. Le déploiement assemble un ensemble ciblé
 de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Go, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Zitadel ne prend en charge que PostgreSQL ; MySQL est rejeté au moment du plan |
@@ -38,7 +38,7 @@ de services Google Cloud :
 | Secrets | Secret Manager | `ZITADEL_MASTERKEY` et mot de passe administrateur initial générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec affinité `ClientIP` ; domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** `database_type = POSTGRES_15` par défaut ; une garde de validation
   au moment du plan rejette MySQL et tout moteur autre que Postgres. PostgreSQL 13/14 sont également
@@ -74,7 +74,7 @@ de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Zitadel {#a-gke-autopilot--the-zitadel-workload}
@@ -100,7 +100,7 @@ ou StatefulSet).
 Zitadel stocke toutes les données applicatives (organisations, utilisateurs, projets, applications,
 sessions, clés) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent
 de manière privée via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1` ; aucune IP publique n'est
-exposée. Lors du premier déploiement, une tâche d'initialisation crée la base de données applicative et un
+exposée. Lors du premier déploiement, un job d'initialisation crée la base de données applicative et un
 rôle doté de `CREATEDB`/`CREATEROLE` ; Zitadel crée ensuite son propre schéma via
 `start-from-init`.
 
@@ -137,7 +137,7 @@ Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 Deux secrets sont générés automatiquement et stockés dans Secret Manager : `ZITADEL_MASTERKEY`
 (chiffre toutes les données au repos) et le mot de passe administrateur initial (initialise l'humain de la première instance
 au démarrage). Ils sont fournis au pod via le pilote Secret Store CSI. Le
-mot de passe de la base de données est géré séparément par la fondation.
+mot de passe de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -187,8 +187,8 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 
 ## 3. Comportement de l'application Zitadel {#3-zitadel-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche d'initialisation exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle se connecte via le sidecar Cloud SQL Auth Proxy et
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il se connecte via le sidecar Cloud SQL Auth Proxy et
   crée de manière idempotente la base de données applicative et un rôle doté de `LOGIN CREATEDB
   CREATEROLE`, accorde les privilèges sur la base de données et le schéma `public`, puis signale au
   proxy de s'arrêter afin que le pod de la tâche se termine. La tâche peut être réexécutée sans risque et ne crée **pas**
@@ -268,7 +268,7 @@ propres à Zitadel ou notables pour lui sont listés ; toutes les autres entrée
 | `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE en conserve ≥ 1 (pas de mise à zéro). |
 | `max_instance_count` | `5` | Nombre maximal de réplicas ; peut être augmenté sans risque — tout l'état est dans PostgreSQL. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy (laissez `true` sur GKE). |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -287,7 +287,7 @@ propres à Zitadel ou notables pour lui sont listés ; toutes les autres entrée
 | `service_type` | `LoadBalancer` | LoadBalancer externe pour la Console et les points de terminaison OIDC. |
 | `workload_type` | `null` → Deployment | Deployment sans état ; Zitadel conserve tout son état dans PostgreSQL. |
 | `session_affinity` | `ClientIP` | Routage persistant pour le parcours de session de l'interface Console. |
-| `namespace_name` | `""` (généré automatiquement) | Namespace Kubernetes de la charge de travail. |
+| `namespace_name` | `""` (généré automatiquement) | Espace de noms Kubernetes de la charge de travail. |
 | `termination_grace_period_seconds` | `60` | Nombre de secondes d'attente après SIGTERM avant SIGKILL. |
 | `enable_network_segmentation` | `false` | Crée des ressources Kubernetes NetworkPolicy. |
 
@@ -313,7 +313,7 @@ propres à Zitadel ou notables pour lui sont listés ; toutes les autres entrée
 | `uptime_check_config` | _(défini)_ | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -389,7 +389,7 @@ Zitadel n'utilise pas Redis (tout l'état est dans PostgreSQL). `enable_redis` v
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -409,7 +409,7 @@ et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -435,14 +435,14 @@ et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `database_type` autre que Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage et `quota_memory_*` sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `database_type` autre que Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage et `quota_memory_*` sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critical | La renouveler rend définitivement illisibles toutes les données chiffrées auparavant (secrets client, éléments de clé). |
 | `database_type` | `POSTGRES_15` | Critical | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté au moment du plan, et un mauvais moteur empêche le démarrage. |
@@ -454,7 +454,7 @@ et d'explorer les ressources en cours d'exécution.
 | `enable_iap` | uniquement pour les consoles privées | High | IAP bloque toutes les requêtes non authentifiées, y compris les clients OIDC/machine et les points de terminaison de jetons. |
 | `session_affinity` | `ClientIP` | High | Sans persistance, les sessions de l'interface Console peuvent basculer d'un pod à l'autre en cours de parcours. |
 | `container_port` | `8080` | High | Zitadel écoute sur 8080 ; un port incohérent empêche la charge de travail de passer à l'état Ready. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers sans unité sont interprétés en octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers sans unité sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
 | `application_version` | Figer une version | High | `latest` correspond aujourd'hui à un tag figé, mais le figer explicitement évite des migrations inattendues lors d'un redéploiement. |
 | `enable_nfs` | `false` (inutilisé) | Low | Activé par défaut alors que Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
 | `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
@@ -462,9 +462,9 @@ et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload Identity,
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration
 applicative propre à Zitadel et partagée avec la variante Cloud Run est décrite dans
 **[Zitadel_Common](Zitadel_Common.md)**.
 

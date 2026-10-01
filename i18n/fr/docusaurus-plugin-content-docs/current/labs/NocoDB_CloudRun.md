@@ -11,7 +11,7 @@ description: "Lab pratique : déployez NocoDB sur Cloud Run dans votre propre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 NocoDB est une plateforme de base de données no-code open source — une alternative à Airtable — qui
 transforme n'importe quelle base de données SQL en tableur collaboratif doté d'une interface no-code,
@@ -30,12 +30,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -137,7 +137,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -183,7 +183,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, le bucket GCS des fichiers téléversés et les images Artifact Registry.
@@ -201,4 +201,4 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets et les sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build, d'IAM et de sessions multi-instances |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

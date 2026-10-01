@@ -30,12 +30,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
 - Terminer l'assistant de configuration initiale d'Emby et ajouter une médiathèque.
-- Effectuer les opérations du jour 2 (day-2) — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -192,7 +192,7 @@ vérifier que vous pouvez la parcourir.
    (relevez `cpu_limit` au-delà de la valeur par défaut `1000m` et `memory_limit` au-delà de `1Gi` pour
    le transcodage en direct) plutôt que le nombre d'instances. Appliquez les modifications en éditant les paramètres et en cliquant sur
    **Update** — le module est propriétaire de la spécification du service : une modification manuelle avec `gcloud` serait
-   annulée lors de l'application suivante.
+   annulée lors du prochain apply.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme RAD
    et en l'appliquant via **Update** ; une nouvelle image est buildée et une nouvelle révision est déployée.
@@ -220,7 +220,7 @@ vérifier que vous pouvez la parcourir.
 
 ## Tâche 5 — Observer : journalisation et surveillance [Manuel] {#task-5--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50

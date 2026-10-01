@@ -49,7 +49,7 @@ Cloud :
 | Secrets | Secret Manager | `ADMIN_PASSWORD` facultatif (contrôlé par `enable_api_key`, désactivé par défaut) |
 | Entrée | Kubernetes Gateway / Cloud Load Balancing | Domaine personnalisé + certificat géré activés **par défaut** (`enable_custom_domain = true`) |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **SQLite est la seule « base de données ».** `database_type` est fixé à `NONE`
   par `Chibisafe_Common` ; les nombreuses variables `database_*`/`db_*` reprises
@@ -106,9 +106,9 @@ réellement demandés par les pods. Avec la valeur par défaut
 gestion des pods `OrderedReady` et un PVC stable par pod — mieux adapté qu'un
 Deployment pour une application SQLite à rédacteur unique.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
   de travail Chibisafe pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services et entrées affiche l'adresse IP externe (le cas
+  Kubernetes Engine → Services & Ingress affiche l'adresse IP externe (le cas
   échéant).
 - **CLI :**
   ```bash
@@ -133,7 +133,7 @@ du StatefulSet est désactivé (`enable_gcs_storage_volume` est calculé comme
 `!stateful_pvc_enabled` dans `main.tf`) — ce qui évite un double montage sur le
 même chemin.
 
-- **Console :** Kubernetes Engine → Stockage → PersistentVolumeClaims pour le PVC ;
+- **Console :** Kubernetes Engine → Storage → PersistentVolumeClaims pour le PVC ;
   Cloud Storage → Buckets pour le bucket `storage` toujours créé.
 - **CLI :**
   ```bash
@@ -157,7 +157,7 @@ habituel Secret Manager → SecretSync), injecté comme variable d'environnement
 de premier démarrage avec cette valeur au lieu de la valeur par défaut amont bien
 connue.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~chibisafe"
@@ -175,8 +175,8 @@ Kubernetes Gateway dotée d'un certificat géré par Google dès que
 par défaut ; passez `service_type` à `LoadBalancer` pour obtenir une adresse IP
 externe directe au lieu du chemin Gateway (ou en complément).
 
-- **Console :** Services réseau → Gateways, ou Équilibrage de charge (si `service_type =
-  LoadBalancer`) ; Réseau VPC → Adresses IP pour l'adresse IP statique réservée.
+- **Console :** Network services → Gateways, ou Équilibrage de charge (si `service_type =
+  LoadBalancer`) ; VPC network → IP addresses pour l'adresse IP statique réservée.
 - **CLI :**
   ```bash
   kubectl get svc,gateway,httproute -n "$NAMESPACE"
@@ -193,7 +193,7 @@ GKE sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règl
 d'alerte facultatifs sont disponibles mais désactivés par défaut
 (`uptime_check_config.enabled = false`).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -207,7 +207,7 @@ disponibilité et le câblage des alertes.
 
 ## 3. Comportement de l'application Chibisafe {#3-chibisafe-application-behaviour}
 
-- **Aucune tâche d'initialisation ni de migration.** Chibisafe gère son propre
+- **Aucun job d'initialisation ni de migration.** Chibisafe gère son propre
   stockage SQLite ; `Chibisafe_Common` n'injecte par défaut aucune tâche
   `db-init` ni de migration. La variable `initialization_jobs` n'est disponible
   que pour des tâches de chargement de données personnalisées.
@@ -281,7 +281,7 @@ disponibilité et le câblage des alertes.
   défaut `path = "/api/health"`, comme `Chibisafe_CloudRun`), envoyées via Caddy
   au backend, qui renvoie un `200 {"status":"yes"}` littéral dès qu'il répond,
   sans authentification requise — c'est aussi ce dont a besoin le contrôle de
-  santé de la Gateway (qui reflète la sonde d'activité) : exactement un 200.
+  santé de la Gateway (qui reflète la sonde de vivacité) : exactement un 200.
   `/` est l'interface web, dont le code d'état relève du front-end plutôt que d'un
   signal de santé. Les variables alternatives `health_check_config`/`startup_probe_config`
   ont désormais aussi `path = "/api/health"` par défaut, mais sont supplantées —
@@ -323,7 +323,7 @@ standard.
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Laissez à 1 — Chibisafe est une application SQLite à rédacteur unique. |
 | `container_port` | `8000` | Le port du proxy Caddy. Fixé par `Chibisafe_Common` ; cette variable n'est pas transmise à App_GKE et la modifier n'a aucun effet. |
 | `enable_cloudsql_volume` | `false` | Chibisafe n'a pas de base de données Cloud SQL — laissez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -397,7 +397,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées. |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
 | `statefulset_name` | Nom du StatefulSet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub de la CI/CD. |
@@ -408,33 +408,33 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — l'association de `workload_type = "Deployment"` avec `stateful_pvc_enabled = true`, des `quota_memory_*` exprimés en entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critique | Le désactiver revient à un montage GCS FUSE sur `/data`, dont le comportement de verrouillage de fichiers POSIX n'est pas sûr pour SQLite et expose à une corruption de la base de données. |
-| `stateful_pvc_mount_path` | `/data` | Critique | Les liens symboliques de relocalisation du point d'entrée (`/app/database`, `/app/uploads`, `/app/logs`) sont codés en dur vers ce montage ; le modifier sans mettre aussi à jour l'image rompt la persistance de l'état. |
-| `workload_type` | `null` (→ `StatefulSet`) | Critique | Forcer `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan ; le forcer plutôt via `stateful_pvc_enabled = false` sacrifie l'intégrité de SQLite au profit du risque GCS FUSE (voir ci-dessus). |
-| `max_instance_count` | `1` | Élevé | Chibisafe est une application SQLite à rédacteur unique ; dépasser 1 pod expose à des rédacteurs divergents et à un état corrompu, même si chaque réplica du StatefulSet obtient son propre PVC. |
-| `stateful_fs_group` | `3000` | Élevé | Un `fsGroup` incohérent ou non défini laisse le montage du PVC sans accès en écriture de groupe pour l'UID du conteneur, ce qui provoque des échecs d'écriture pour la base SQLite et les fichiers téléversés. |
-| `stateful_pvc_storage_class` | `standard-rwo` (remplacer par `standard` en cas de contrainte) | Moyen | `standard-rwo`, sur SSD, consomme le quota serré `SSD_TOTAL_GB` ; une série d'applications avec état peut l'épuiser. La mise à l'échelle à zéro ne libère **pas** le PVC — seule la suppression le fait. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (pertinent uniquement si `enable_resource_quota = true`). |
-| `enable_custom_domain` | `true` avec `application_domains` défini | Moyen | Laissé activé avec un `application_domains` vide, le chemin Gateway/certificat géré n'a aucun nom d'hôte auquel s'associer. |
-| `enable_redis` | n'importe quelle valeur (inerte) | Faible | `main.tf` transmet toujours `enable_redis = false` — modifier cette variable n'a aucun effet ; ne comptez pas sur elle pour ajouter une connectivité Redis. |
-| `container_port` | `8000` (fixe) | Faible | La variable est déclarée par souci de cohérence avec les conventions, mais n'est pas transmise à App_GKE ; la modifier ne change pas le port d'écoute réel du proxy Caddy. |
-| Variables `database_type` / `db_*` | `NONE` / inertes | Faible | Chibisafe n'a pas de base de données SQL ; ces variables n'existent que pour refléter celles du socle et sont ignorées sans avertissement. |
-| `enable_api_key` | `true` si le service est accessible de l'extérieur ; sinon, changer le mot de passe par défaut à la première connexion | Moyen | Lorsqu'elle est désactivée, le compte `admin` démarre avec le mot de passe amont bien connu `admin` — changez-le à la première connexion, surtout si le service est accessible de l'extérieur. Les clés d'API par requête sont générées au sein de l'application. |
+| `stateful_pvc_enabled` | `true` | Critical | Le désactiver revient à un montage GCS FUSE sur `/data`, dont le comportement de verrouillage de fichiers POSIX n'est pas sûr pour SQLite et expose à une corruption de la base de données. |
+| `stateful_pvc_mount_path` | `/data` | Critical | Les liens symboliques de relocalisation du point d'entrée (`/app/database`, `/app/uploads`, `/app/logs`) sont codés en dur vers ce montage ; le modifier sans mettre aussi à jour l'image rompt la persistance de l'état. |
+| `workload_type` | `null` (→ `StatefulSet`) | Critical | Forcer `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan ; le forcer plutôt via `stateful_pvc_enabled = false` sacrifie l'intégrité de SQLite au profit du risque GCS FUSE (voir ci-dessus). |
+| `max_instance_count` | `1` | High | Chibisafe est une application SQLite à rédacteur unique ; dépasser 1 pod expose à des rédacteurs divergents et à un état corrompu, même si chaque réplica du StatefulSet obtient son propre PVC. |
+| `stateful_fs_group` | `3000` | High | Un `fsGroup` incohérent ou non défini laisse le montage du PVC sans accès en écriture de groupe pour l'UID du conteneur, ce qui provoque des échecs d'écriture pour la base SQLite et les fichiers téléversés. |
+| `stateful_pvc_storage_class` | `standard-rwo` (remplacer par `standard` en cas de contrainte) | Medium | `standard-rwo`, sur SSD, consomme le quota serré `SSD_TOTAL_GB` ; une série d'applications avec état peut l'épuiser. La mise à l'échelle à zéro ne libère **pas** le PVC — seule la suppression le fait. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (pertinent uniquement si `enable_resource_quota = true`). |
+| `enable_custom_domain` | `true` avec `application_domains` défini | Medium | Laissé activé avec un `application_domains` vide, le chemin Gateway/certificat géré n'a aucun nom d'hôte auquel s'associer. |
+| `enable_redis` | n'importe quelle valeur (inerte) | Low | `main.tf` transmet toujours `enable_redis = false` — modifier cette variable n'a aucun effet ; ne comptez pas sur elle pour ajouter une connectivité Redis. |
+| `container_port` | `8000` (fixe) | Low | La variable est déclarée par souci de cohérence avec les conventions, mais n'est pas transmise à App_GKE ; la modifier ne change pas le port d'écoute réel du proxy Caddy. |
+| Variables `database_type` / `db_*` | `NONE` / inertes | Low | Chibisafe n'a pas de base de données SQL ; ces variables n'existent que pour refléter celles du socle et sont ignorées sans avertissement. |
+| `enable_api_key` | `true` si le service est accessible de l'extérieur ; sinon, changer le mot de passe par défaut à la première connexion | Medium | Lorsqu'elle est désactivée, le compte `admin` démarre avec le mot de passe amont bien connu `admin` — changez-le à la première connexion, surtout si le service est accessible de l'extérieur. Les clés d'API par requête sont générées au sein de l'application. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Chibisafe,
 partagée avec la variante Cloud Run, est décrite dans le module Chibisafe_Common
 (`modules/Chibisafe_Common/README.md`).

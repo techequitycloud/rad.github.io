@@ -29,7 +29,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier, et effectuer la configuration initiale du compte
   de Documenso.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -129,7 +129,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max puis en cliquant sur **Update** sur la page de détails du déploiement —
    le module est propriétaire de la spécification du service, la mise à l'échelle est donc un changement de configuration, et non une
-   modification manuelle via `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle via `gcloud` (une modification manuelle serait annulée lors du prochain apply).
    Documenso utilise par défaut `min_instance_count = 0` (mise à l'échelle jusqu'à zéro, ce qui ajoute
    une latence de démarrage à froid à la première requête après une période d'inactivité) et
    `max_instance_count = 1`.
@@ -168,7 +168,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -180,7 +180,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
    requêtes, la latence des requêtes (P50/P95/P99), le nombre d'instances (comportement de mise à l'échelle) et
    l'utilisation du CPU / de la mémoire. Le `uptime_check_config` de Documenso est désactivé par
-   défaut ; activez-le via **Update** si vous souhaitez un uptime check dans Monitoring → Uptime checks et
+   défaut ; activez-le via **Update** si vous souhaitez un test de disponibilité (uptime check) dans Monitoring → Uptime checks et
    la règle d'alerte associée.
 
 ---
@@ -235,6 +235,6 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), des secrets, un bucket de téléversements, Filestore, et exécute l'initialisation de la base de données |
 | 2 — Accéder et vérifier | Manuel | Le service répond ; création du compte propriétaire initial dans l'interface ; prise en compte de la réserve sur le certificat auto-signé |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, brancher un certificat de signature de production, accès à la base de données |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et l'uptime check (facultatif) |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de `enable_cloudsql_volume`, de job d'initialisation, de build et d'IAM |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

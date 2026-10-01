@@ -393,7 +393,7 @@ Les comportements suivants sont appliqués automatiquement par `Formbricks Cloud
 
 ---
 
-## 10. Exploration avec la console GCP {#10-exploring-with-the-gcp-console}
+## 10. Explorer avec la console GCP {#10-exploring-with-the-gcp-console}
 
 Après le déploiement, utilisez la console GCP pour observer et exploiter le déploiement Formbricks.
 
@@ -440,7 +440,7 @@ Après le déploiement, utilisez la console GCP pour observer et exploiter le d�
 
 ---
 
-## 11. Exploration avec gcloud {#11-exploring-with-gcloud}
+## 11. Explorer avec gcloud {#11-exploring-with-gcloud}
 
 Les commandes suivantes sont utiles pour l'exploitation quotidienne d'un déploiement Formbricks sur Cloud Run. Remplacez `PROJECT_ID`, `REGION` et `DEPLOYMENT_ID` par vos valeurs.
 
@@ -680,11 +680,11 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `webapp_url` | `""` (calculée automatiquement) | **Medium** | Lorsqu'elle est laissée vide, `main.tf` calcule une URL de service Cloud Run déterministe et l'injecte sous la forme `WEBAPP_URL`/`NEXTAUTH_URL` — Formbricks ne se rabat donc pas réellement sur `localhost:3000` sur cette plateforme. Définissez `webapp_url` explicitement pour faire pointer les URI de redirection OAuth et les liens des e-mails vers un domaine personnalisé plutôt que vers l'URL `run.app` prévue. |
@@ -705,7 +705,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 
 ---
 
-## Suppression des ressources {#destroying-resources}
+## Destruction des ressources {#destroying-resources}
 
 ### Problème de suppression connu : libération des adresses IPv4 sans serveur {#known-deletion-issue-serverless-ipv4-address-release}
 

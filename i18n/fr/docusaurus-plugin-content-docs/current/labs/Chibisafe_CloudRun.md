@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Chibisafe sur Cloud Run dans votre propre
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Chibisafe est un outil auto-hébergé de téléversement de fichiers et d'images, avec téléversement par glisser-déposer,
 albums et API publique. Ce module déploie la **pile Chibisafe complète** —
@@ -32,7 +32,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à l'interface web de Chibisafe et vérifier le service via son endpoint de santé.
@@ -56,7 +56,7 @@ temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -173,7 +173,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez

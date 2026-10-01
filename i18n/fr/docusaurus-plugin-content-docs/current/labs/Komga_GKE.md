@@ -20,7 +20,7 @@ cycle de vie opérationnel du module **Komga on GKE Autopilot** sur Google Cloud
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Komga. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Komga_GKE) — ce
@@ -28,7 +28,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, accéder à la charge de travail en cours d'exécution et terminer l'assistant de configuration initiale.
@@ -52,7 +52,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -75,7 +75,7 @@ export REGION="us-central1"           # the region you deploy into
    par pod monté sur `/config`, déploie l'image officielle préconstruite
    `gotson/komga` (éventuellement mise en miroir dans Artifact Registry) et
    l'expose via la Gateway API avec une IP statique réservée. Il n'y a **ni
-   base de données à provisionner ni tâche d'initialisation à attendre** — Komga gère sa propre
+   base de données à provisionner ni job d'initialisation à attendre** — Komga gère sa propre
    base de données SQLite embarquée. Les premiers déploiements se terminent généralement en **8–12 minutes**.
 
 3. Connectez-vous au cluster et repérez l'espace de noms avec un filtre indépendant des noms :
@@ -91,7 +91,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le pod s'exécute et trouvez l'adresse externe :
 
@@ -181,7 +181,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/<service-name> --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -245,8 +245,8 @@ avant de supprimer.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie un StatefulSet avec un PVC bloc monté sur `/config` ; sans base de données ni tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; terminer l'assistant de configuration initiale pour créer le compte administrateur, puis ajouter une bibliothèque |
+| 1 — Déployer | Automatisé | Le module déploie un StatefulSet avec un PVC bloc monté sur `/config` ; sans base de données ni job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; terminer l'assistant de configuration initiale pour créer le compte administrateur, puis ajouter une bibliothèque |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, maintenir les réplicas à 1, mettre à jour la version, gérer la classe de stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité facultatif |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC/quota, de mémoire, de planification et de récupération d'image |

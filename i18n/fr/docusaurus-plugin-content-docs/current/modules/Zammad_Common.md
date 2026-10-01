@@ -37,7 +37,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 ---
 
-## 2. Image du conteneur et point d'entrée personnalisé {#2-container-image-and-custom-entrypoint}
+## 2. Image de conteneur et point d'entrée personnalisé {#2-container-image-and-custom-entrypoint}
 
 L'image officielle `zammad/zammad` attend directement des variables d'environnement
 `POSTGRESQL_*`. Les modules socles GCP injectent les identifiants de la base de

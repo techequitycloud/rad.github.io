@@ -29,7 +29,7 @@ documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement AdGuard Home,
 consultez les guides de plateforme ([AdGuardHome_GKE](AdGuardHome_GKE.md),
-[AdGuardHome_CloudRun](AdGuardHome_CloudRun.md)) et les guides de fondation
+[AdGuardHome_CloudRun](AdGuardHome_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
@@ -70,7 +70,7 @@ encapsule `adguard/adguardhome:<version>` avec un point d'entrée shell léger
   complète.
 
 Le tag de base est piloté par un ARG de build spécifique à l'application,
-`ADGUARDHOME_VERSION`, et non par l'`APP_VERSION` générique (que la fondation
+`ADGUARDHOME_VERSION`, et non par l'`APP_VERSION` générique (que le socle
 injecte dans `build_args` et qui l'emporterait sinon lors de la fusion).
 AdGuard Home publie des tags de version semver simples (sans combinaisons
 `latest-<suffix>`), de sorte que `application_version = "latest"` se résout
@@ -108,7 +108,7 @@ de ce catalogue qui placent un binaire et son répertoire de données au même
 endroit.
 
 Les deux entrées `gcs_volumes` sont déclarées avec `bucket_name = null`, de
-sorte que la fondation résout automatiquement le nom réel du bucket en faisant
+sorte que le socle résout automatiquement le nom réel du bucket en faisant
 correspondre le `name` du volume avec le `name_suffix` de la sortie
 `storage_buckets` — aucune chaîne de nom de bucket calculée à la main n'est
 nécessaire (et aucune ne peut se désynchroniser).

@@ -29,7 +29,7 @@ Directus s'exécute sous la forme d'un conteneur Node.js sur Cloud Run entièrem
 | Secrets | Secret Manager | KEY, SECRET, ADMIN_PASSWORD et URL de connexion REDIS générés automatiquement |
 | Entrée | Cloud Load Balancing | HTTPS via un NEG serverless + domaine personnalisé et certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Directus impose en dur `DB_CLIENT = "pg"`. Passer à MySQL ou à `NONE` empêche le démarrage.
 - **GCS est le pilote de stockage de fichiers par défaut.** `Directus_Common` injecte automatiquement `STORAGE_GCS_DRIVER`, `STORAGE_GCS_BUCKET` et `STORAGE_LOCATIONS = "gcs"`, de sorte que tous les téléversements aboutissent dans le bucket Cloud Storage dédié.
@@ -106,7 +106,7 @@ Redis sert de support à la mise en cache des réponses d'API de Directus et à 
 
 Quatre secrets sont générés et stockés automatiquement : `KEY` (chiffrement des données), `SECRET` (signature des JWT), `ADMIN_PASSWORD` (compte administrateur initial) et `REDIS` (URL de connexion Redis lorsque Redis est activé). Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -122,7 +122,7 @@ Le nom `database_password_secret` figure dans les [sorties](#5-outputs). Consult
 
 Le service Cloud Run est placé derrière un groupe de points de terminaison du réseau (NEG) serverless rattaché à un équilibreur de charge Cloud global. HTTPS est géré automatiquement. Un domaine personnalisé avec un certificat géré par Google peut être activé, et une adresse IP statique peut être réservée.
 
-- **Console :** Services réseau → Équilibrage de charge ; Cloud Run → service → onglet Mise en réseau.
+- **Console :** Network services → Load balancing ; Cloud Run → service → onglet Mise en réseau.
 - **CLI :**
   ```bash
   gcloud run services describe "$SERVICE_NAME" --project "$PROJECT" --region "$REGION" \
@@ -136,7 +136,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails sur les domaines per
 
 Les sorties stdout/stderr des conteneurs sont envoyées vers Cloud Logging. Les métriques Cloud Run et les tests de disponibilité facultatifs sont envoyés vers Cloud Monitoring.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read \
@@ -264,12 +264,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez [A
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` fournie par `Directus_Common`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes (p. ex. purge du cache, synchronisation des données). |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents (p. ex. purge du cache, synchronisation des données). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -288,7 +288,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez [A
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). L'URL de connexion complète est stockée dans Secret Manager. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -331,33 +331,33 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | Directus nécessite PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
-| `application_name` | à définir une seule fois | Critique | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions actives et tous les JWT sont immédiatement invalidés. |
-| `tenant_id` | à définir une seule fois | Critique | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouvelles KEY/SECRET, invalidant toutes les sessions. |
-| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critique | La rotation de KEY déconnecte tous les utilisateurs. La rotation de SECRET invalide tous les jetons d'API. N'effectuez de rotation que pendant une fenêtre de maintenance planifiée. |
-| Variable d'environnement `ADMIN_EMAIL` | une adresse e-mail réelle | Élevé | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse e-mail facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
-| `enable_nfs` | `true` | Élevé | Sans NFS partagé, les ressources téléversées écrites par une instance sont invisibles pour les autres et perdues lors d'une réduction d'échelle (sauf si GCS est utilisé exclusivement). |
-| `enable_redis` | `true` en multi-instances | Élevé | Sans Redis, chaque instance dispose d'un cache isolé ; la limitation de débit s'applique par instance et la mise en cache de Directus ne fonctionne plus entre les réplicas. |
-| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
-| `startup_probe.failure_threshold` | `10` au premier déploiement | Élevé | Trop bas : les migrations de Directus peuvent prendre 1 à 3 minutes sur une base de données vierge ; l'instance est arrêtée avant la fin des migrations. |
-| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance l'importation à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
-| `memory_limit` | `2Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou de la transformation d'images. |
-| `min_instance_count` | `1` en production | Moyen | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête d'API après une période d'inactivité. |
-| `max_instance_count` | à adapter au trafic | Moyen | `1` bloque la mise à l'échelle horizontale et provoque la mise en file d'attente des requêtes sous charge. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les usages d'administration | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
-| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer avec `vpc_sc_dry_run = true` | Critique | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
+| `database_type` | `POSTGRES_15` | Critical | Directus nécessite PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
+| `application_name` | à définir une seule fois | Critical | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions actives et tous les JWT sont immédiatement invalidés. |
+| `tenant_id` | à définir une seule fois | Critical | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouvelles KEY/SECRET, invalidant toutes les sessions. |
+| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critical | La rotation de KEY déconnecte tous les utilisateurs. La rotation de SECRET invalide tous les jetons d'API. N'effectuez de rotation que pendant une fenêtre de maintenance planifiée. |
+| Variable d'environnement `ADMIN_EMAIL` | une adresse e-mail réelle | High | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse e-mail facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
+| `enable_nfs` | `true` | High | Sans NFS partagé, les ressources téléversées écrites par une instance sont invisibles pour les autres et perdues lors d'une réduction d'échelle (sauf si GCS est utilisé exclusivement). |
+| `enable_redis` | `true` en multi-instances | High | Sans Redis, chaque instance dispose d'un cache isolé ; la limitation de débit s'applique par instance et la mise en cache de Directus ne fonctionne plus entre les réplicas. |
+| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
+| `startup_probe.failure_threshold` | `10` au premier déploiement | High | Trop bas : les migrations de Directus peuvent prendre 1 à 3 minutes sur une base de données vierge ; l'instance est arrêtée avant la fin des migrations. |
+| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance l'importation à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
+| `memory_limit` | `2Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou de la transformation d'images. |
+| `min_instance_count` | `1` en production | Medium | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête d'API après une période d'inactivité. |
+| `max_instance_count` | à adapter au trafic | Medium | `1` bloque la mise à l'échelle horizontale et provoque la mise en file d'attente des requêtes sous charge. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les usages d'administration | Medium | Sinon, l'interface d'administration est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
+| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer avec `vpc_sc_dry_run = true` | Critical | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Directus partagée avec la variante GKE est décrite dans **[Directus_Common](Directus_Common.md)**.
+Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Directus partagée avec la variante GKE est décrite dans **[Directus_Common](Directus_Common.md)**.
 
 <!-- related-guides -->
 

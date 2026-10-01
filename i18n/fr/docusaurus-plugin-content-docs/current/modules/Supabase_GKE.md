@@ -47,7 +47,7 @@ services Google Cloud suivants :
 | Secrets | Secret Manager | Secret de signature JWT (généré automatiquement), anon key, service role key, publishable key, secret key et secret_key_base |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé ; tout
   autre moteur empêche le démarrage.
@@ -99,9 +99,9 @@ Les services Supabase supplémentaires (GoTrue, PostgREST, Realtime, Storage, St
 sont déployés comme Deployments Kubernetes distincts dans le même espace de noms via
 `additional_services`.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez une charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez une charge de
   travail pour voir les pods, les événements et les métriques. Kubernetes Engine →
-  Services et entrées affiche l'IP externe.
+  Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -126,7 +126,7 @@ du schéma `public`.
 > au redémarrage du pod — acceptable pour un déploiement de lab ou de test ; un
 > déploiement de production nécessite un PVC bloc par pod.
 
-- **Console :** Kubernetes Engine → Charges de travail → le Deployment `postgres`.
+- **Console :** Kubernetes Engine → Workloads → le Deployment `postgres`.
 - **CLI :**
   ```bash
   kubectl get deploy,svc -n "$NAMESPACE" | grep postgres
@@ -171,7 +171,7 @@ Manager :
 Le mot de passe de la base de données est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans les Sorties (`database_password_secret`).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -190,7 +190,7 @@ Par défaut, la passerelle Kong est exposée via une IP externe Cloud Load Balan
 Un domaine personnalisé avec certificat géré par Google peut être activé, et une IP
 statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -206,8 +206,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de disponibilité et
 des règles d'alerte sont disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -226,7 +226,7 @@ des règles d'alerte sont disponibles en option.
   `storage`, `_realtime` et `realtime` avec leurs droits, et définit les GUC de base
   de données `app.settings.jwt_secret`/`jwt_exp`. Elle s'exécute de manière non
   bloquante (`execute_on_apply = false`) avec sa propre boucle d'attente
-  `pg_isready`, car le socle crée les tâches d'initialisation avant les services
+  `pg_isready`, car le socle crée les jobs d'initialisation avant les services
   supplémentaires. Elle peut être relancée sans risque.
 - **Remplacement des JWT provisoires.** Après le premier déploiement, les secrets de
   l'anon key et de la service role key contiennent des chaînes provisoires. Ils
@@ -281,7 +281,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -451,7 +451,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -482,7 +482,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image Kong déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -495,12 +495,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `jwt_secret` | généré automatiquement ou fixé au premier déploiement | Critical | Le modifier après le déploiement invalide tous les JWT émis ; toutes les connexions clientes cessent de fonctionner. `anon_key` et `service_role_key` doivent être régénérées ensemble. |
 | `anon_key` / `service_role_key` | JWT signés (remplacer les valeurs provisoires) | Critical | Les valeurs provisoires font renvoyer une 401 à chaque appel d'API Supabase. Les trois identifiants JWT doivent être régénérés comme un ensemble atomique. |
@@ -525,7 +525,7 @@ Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workl
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Supabase,
-partagée entre les secrets, le build de l'image Kong et la tâche d'initialisation de
+partagée entre les secrets, le build de l'image Kong et le job d'initialisation de
 la base de données, est décrite dans **[Supabase_Common](Supabase_Common.md)**.
 
 <!-- related-guides -->

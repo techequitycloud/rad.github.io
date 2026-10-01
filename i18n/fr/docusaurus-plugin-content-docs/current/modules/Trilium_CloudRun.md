@@ -39,7 +39,7 @@ Cloud :
 | Secrets | Secret Manager | Aucun secret généré — Trilium n'a aucun identifiant défini par variable d'environnement |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucun moteur de base de données à gérer.** `database_type = "NONE"` — il n'y a
   ni instance Cloud SQL, ni chaîne de connexion, ni rien à sauvegarder séparément du
@@ -113,7 +113,7 @@ CMEK.
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge
 HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -127,8 +127,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Run sont envoyées vers Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -181,7 +181,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -203,9 +203,9 @@ avec leur comportement standard.
 | `min_instance_count` / `max_instance_count` | `1` / `1` | **Gardez les deux à 1** — la base de données SQLite intégrée ne prend pas en charge plusieurs rédacteurs. |
 | `container_port` | `8080` | Port HTTP par défaut de Trilium. |
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages GCS Fuse. |
-| `enable_image_mirroring` | `true` | Duplique l'image Trilium dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Trilium dans Artifact Registry. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -231,7 +231,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/health-check`, délai de 15s | Sonde de démarrage. |
-| `liveness_probe` | HTTP `/api/health-check`, délai de 30s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/health-check`, délai de 30s | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/api/health-check`. |
 
 ---
@@ -251,12 +251,12 @@ avec leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents — aucune protection n'existe contre cela au niveau de la couche de requêtes. |
 | mount_options du bucket de données / de `gcs_volumes` | `uid=1000,gid=1000` | Critical | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer et renvoie une erreur de permission. |
@@ -269,8 +269,7 @@ avec leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Trilium partagée avec la variante GKE est décrite dans
 **[Trilium_Common](Trilium_Common.md)**.
 

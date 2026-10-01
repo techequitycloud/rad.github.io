@@ -36,10 +36,10 @@ alertes configurables.
 | Domaine | Fourni par Beszel_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | **Aucun n'est injecté.** Beszel n'a aucune variable d'environnement secrète applicative ; les outputs `secret_ids` et `secret_values` se résolvent en maps vides. Le premier compte administrateur est créé via l'interface web au premier lancement. | n/a |
-| Image de conteneur | Encapsule l'image officielle du hub `henrygd/beszel` dans un `Dockerfile` minimal (`FROM henrygd/beszel:${BESZEL_VERSION}`) ; construite via Cloud Build (Kaniko) et dupliquée dans Artifact Registry | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule l'image officielle du hub `henrygd/beszel` dans un `Dockerfile` minimal (`FROM henrygd/beszel:${BESZEL_VERSION}`) ; construite via Cloud Build (Kaniko) et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** (`database_type = "NONE"`). Beszel intègre sa propre base PocketBase/SQLite sous `/beszel_data` ; aucune instance Cloud SQL n'est provisionnée | §Comportement de l'application dans les guides des plateformes |
-| Amorçage de la base de données | **Pas de job d'initialisation.** Beszel crée et migre son propre schéma SQLite au premier démarrage | Output `initialization_jobs` (vide) |
-| Stockage objet | Déclare un bucket de données **Cloud Storage** (suffixe `storage`), monté via FUSE sur `/beszel_data` sur Cloud Run pour la persistance | Output `storage_buckets` |
+| Amorçage de la base de données | **Pas de job d'initialisation.** Beszel crée et migre son propre schéma SQLite au premier démarrage | Sortie `initialization_jobs` (vide) |
+| Stockage objet | Déclare un bucket de données **Cloud Storage** (suffixe `storage`), monté via FUSE sur `/beszel_data` sur Cloud Run pour la persistance | Sortie `storage_buckets` |
 | Modèle de persistance | Cloud Run : bucket GCS FUSE sur `/beszel_data` ; GKE : PVC bloc (StatefulSet) sur `/beszel_data` | §Persistance dans les guides des plateformes |
 | Paramètres principaux | Fixe `container_port = 8090` et un profil à instance unique (`min = max = 1`) — un seul écrivain SQLite, pas de mise à l'échelle horizontale | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/health` (200, non authentifiée) | §Observabilité dans les guides des plateformes |
@@ -89,7 +89,7 @@ FROM henrygd/beszel:${BESZEL_VERSION}
 - **Construite, pas seulement référencée.** `image_source = "custom"` avec
   `container_build_config.enabled = true` : le socle exécute un Cloud Build (Kaniko)
   qui construit la surcouche et la pousse dans Artifact Registry, puis la charge de
-  travail s'exécute à partir de l'image dupliquée.
+  travail s'exécute à partir de l'image mise en miroir.
 
 Inspectez l'image déployée et le registre :
 

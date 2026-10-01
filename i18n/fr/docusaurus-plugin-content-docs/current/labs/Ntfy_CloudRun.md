@@ -20,7 +20,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer,
 diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit ntfy. Pour la liste complète des services
 provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Ntfy_CloudRun) —
@@ -28,7 +28,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, notamment par un test rapide de publication/abonnement.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -71,7 +71,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne un unique service Cloud Run v2 exécutant le binaire Go
    de ntfy et construit l'image du conteneur. Aucune base de données, aucun cache ni aucun bucket
    de stockage d'objets n'est provisionné — ntfy conserve son cache de messages dans un fichier SQLite local.
-   Il n'y a aucune tâche d'initialisation de base de données à attendre ; un premier déploiement est donc
+   Il n'y a aucun job d'initialisation de base de données à attendre ; un premier déploiement est donc
    généralement bien plus rapide que pour un module adossé à une base de données (environ **5–10 minutes**,
    l'essentiel étant consacré au build de l'image).
 
@@ -89,7 +89,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Le point de terminaison de santé de ntfy répond dès que le
    serveur s'est lié à son port — il n'y a aucune dépendance de base de données à attendre :
@@ -165,7 +165,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
    ntfy journalise son adresse d'écoute et le chemin résolu de son cache au démarrage — vérifiez ici
    en premier si le cache s'est rabattu sur `/tmp/ntfy`.
@@ -185,7 +185,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de ntfy.
 
 - **Révision en mauvaise santé / le service ne répond pas :** inspectez la dernière révision et ses
-  journaux à la recherche d'erreurs de démarrage. Les sondes de démarrage et de liveness ciblent toutes deux
+  journaux à la recherche d'erreurs de démarrage. Les sondes de démarrage et de vivacité ciblent toutes deux
   `/v1/health`, qui doit renvoyer `200` quelques secondes après le démarrage — ntfy n'a aucune
   base de données à attendre ; une sonde lente ou en échec indique donc généralement un problème de build du
   conteneur ou de configuration plutôt qu'une dépendance en aval.
@@ -227,7 +227,7 @@ pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne un unique service Cloud Run exécutant ntfy ; aucune base de données ni aucun bucket de stockage |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; le test rapide de publication/abonnement confirme la remise en temps réel |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; le test rapide de publication/abonnement confirme la remise en temps réel |
 | 3 — Exploiter | Manuel | Inspecter les révisions, maintenir le maximum d'instances à 1, mettre à jour la version, gérer les secrets, activer NFS pour la durabilité |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de persistance du cache, d'accès et de build |

@@ -33,7 +33,7 @@ L'image `onlyoffice/documentserver` est « tout compris » : elle embarque ses p
 convertisseurs, nginx et RabbitMQ (AMQP) sous `supervisord`. Ce module externalise
 PostgreSQL (Cloud SQL) et Redis ; le RabbitMQ embarqué reste interne sur localhost.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods StatefulSet sur le port 80, 2 vCPU / 4Gi de mémoire par défaut |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — seuls `POSTGRES_13`/`14`/`15` (ou `NONE`) passent une garde au moment du plan |
@@ -44,7 +44,7 @@ PostgreSQL (Cloud SQL) et Redis ; le RabbitMQ embarqué reste interne sur localh
 | Secrets | Secret Manager | `JWT_SECRET` généré automatiquement (48 caractères) ; mot de passe de la base de données géré séparément |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé + certificat géré activés par défaut |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type` vaut par défaut `POSTGRES_15` ; une
   garde au moment du plan rejette toute valeur autre que `POSTGRES_13`/`14`/`15`/`NONE` — MySQL
@@ -125,7 +125,7 @@ modèle de connexion, les sauvegardes automatiques et la rotation du mot de pass
 
 ### C. Redis externe, stockage bloc (PVC) et Cloud Filestore (NFS) {#c-external-redis-block-storage-pvc--cloud-filestore-nfs}
 
-Redis conserve l'état de session/d'édition qui doit être partagé entre toutes les réplicas
+Redis conserve l'état de session/d'édition qui doit être partagé entre tous les réplicas
 OnlyOffice — le RabbitMQ embarqué reste interne, mais Redis est externalisé et
 **obligatoire** (une garde au moment du plan fait échouer le déploiement si `enable_redis = false`).
 Si `redis_host` est laissé vide, le socle injecte l'IP du Redis colocalisé sur la VM NFS
@@ -243,7 +243,7 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
   défaut ; `session_affinity = "ClientIP"`. Chaque pod du StatefulSet dispose de son propre
   PVC bloc indépendant — les réplicas ne partagent pas le PVC, si bien que la mise à l'échelle horizontale est sûre tant
   que Postgres et Redis (l'état partagé) sont joignables par chaque pod.
-- **Inspecter la tâche d'initialisation et la configuration en cours :**
+- **Inspecter le job d'initialisation et la configuration en cours :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -374,14 +374,14 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` forcé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. OnlyOffice ajoute ses propres gardes (`database_type` limité à PostgreSQL, `enable_redis` obligatoire, couplage `redis_host`/`enable_nfs`). Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par le Document Server. |
 | `enable_redis` | `true` | Critical | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état de session/d'édition ne peut pas être coordonné entre les pods. |
@@ -403,7 +403,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez **[App_GKE](App_GKE.md)**.
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à OnlyOffice partagée avec la variante Cloud Run est
 décrite dans **[OnlyOffice_Common](OnlyOffice_Common.md)**.
 

@@ -21,7 +21,7 @@ cycle de vie opérationnel du module **Wallos on Cloud Run** sur Google Cloud :
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Wallos. Pour la liste complète des services
 provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Wallos_CloudRun) —
@@ -30,7 +30,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris la connexion administrateur par défaut.
@@ -55,7 +55,7 @@ temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -84,7 +84,7 @@ export REGION="us-central1"          # the region you deploy into
    `/var/www/html/images/uploads/logos` contenant les logos personnalisés des fournisseurs (un bucket `db`
    est tout de même créé mais n'est pas monté par défaut),
    et récupère l'image préconstruite `bellamy/wallos`. Il n'y a ni instance Cloud SQL,
-   ni secret applicatif dans Secret Manager, ni tâche d'initialisation de la base de données —
+   ni secret applicatif dans Secret Manager, ni job d'initialisation de la base de données —
    Wallos est autonome. Les premiers déploiements se terminent généralement en **5–10 minutes**.
 
 3. Une fois l'opération terminée, repérez les ressources avec des filtres indépendants des noms (afin que les
@@ -101,7 +101,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Wallos ne documente aucun point de terminaison de santé dédié ;
    la sonde (et cette vérification) interroge donc la page de connexion sur `/` :
@@ -173,7 +173,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
@@ -241,8 +241,8 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, le volume NFS de la base de données et le bucket GCS FUSE `uploads` ; pas de Cloud SQL, pas de tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; se connecter avec l'identifiant initialisé `admin`/`admin` et changer immédiatement le mot de passe |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, le volume NFS de la base de données et le bucket GCS FUSE `uploads` ; pas de Cloud SQL, pas de job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; se connecter avec l'identifiant initialisé `admin`/`admin` et changer immédiatement le mot de passe |
 | 3 — Exploiter | Manuel | Inspecter les révisions, conserver `min = max = 1` + `cpu_always_allocated = true`, mettre à jour la version, ajuster l'ingress, inspecter l'état NFS/GCS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, d'ingress, de NFS/GCS FUSE, de démon cron et d'IAM |

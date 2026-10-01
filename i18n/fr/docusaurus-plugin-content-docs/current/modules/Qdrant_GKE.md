@@ -68,7 +68,7 @@ Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Qdrant {#a-gke-autopilot--the-qdrant-workload}
 
@@ -142,7 +142,7 @@ gRPC à transmettre `api-key: <key>` dans les en-têtes de requête.
   gcloud secrets versions access latest --secret=<api-key-secret> --project "$PROJECT"
   ```
 
-L'ID du secret de la clé d'API est indiqué dans les [Outputs](#5-outputs) sous
+L'ID du secret de la clé d'API est indiqué dans les [sorties](#5-outputs) sous
 `qdrant_api_key_secret_id`. Consultez [App_GKE](App_GKE.md) pour l'intégration
 Secret Store CSI et la rotation.
 
@@ -228,7 +228,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -250,7 +250,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `min_instance_count` | `1` | Nombre minimal de réplicas. Conservez ≥ 1 pour éviter les démarrages à froid pendant le chargement des index. |
 | `max_instance_count` | `1` | Nombre maximal de réplicas. Conservez 1 — Qdrant est un stockage à rédacteur unique. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources (désactive le HPA CPU/mémoire). |
-| `enable_image_mirroring` | `true` | Duplique l'image Qdrant dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Qdrant dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `timeout_seconds` | `300` | Délai d'expiration des requêtes en secondes (0–3600). Augmentez-le pour les upserts par lots volumineux ou les opérations de snapshot. |
 | `termination_grace_period_seconds` | `60` | Nombre de secondes pendant lesquelles Kubernetes attend, après SIGTERM, que Qdrant vide ses écritures WAL. |
 
@@ -263,7 +263,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Nombre de secondes d'attente après la création d'un secret avant de poursuivre. |
 | `secret_rotation_period` | `2592000s` | Période de rappel de rotation Secret Manager (30 jours par défaut). |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -388,12 +388,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -406,7 +406,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -421,32 +421,32 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / interruption / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_api_key` | `true` (tout déploiement externe) | Critique | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
-| `stateful_pvc_enabled` | `true` en production | Critique | Sans PVC, les données résident dans le système de fichiers éphémère du pod ; tout redémarrage efface définitivement toutes les collections. |
-| `stateful_pvc_mount_path` | `/qdrant/storage` (valeur par défaut) | Critique | Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. Une incohérence stocke les données dans la couche éphémère et les perd au redémarrage. |
-| `application_name` | à définir une seule fois | Critique | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le stockage, et fait perdre toutes les collections. |
-| `max_instance_count` | `1` | Élevé | Plusieurs pods Qdrant partageant un même PVC (RWO) ou bucket GCS corrompent les collections. Faites évoluer verticalement, pas horizontalement. |
-| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | Élevé | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des pods à chaque chargement d'une grande collection depuis le disque. |
-| `memory_limit` | ≥ `4Gi` en production | Élevé | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index. |
-| `stateful_pvc_size` | généreux (20 Gi+) | Élevé | Un PVC sous-dimensionné se remplit à mesure que les collections grossissent ; un disque plein fait planter Qdrant. La capacité d'un PVC ne peut pas être réduite après sa création. |
-| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Moyen | Ne peut pas être modifiée après la création du PVC sans migration des données ; choisissez-la d'emblée en fonction des besoins en IOPS. |
-| `application_version` | épingler une version semver en production | Moyen | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
-| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis le disque à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | Élevé | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant à l'intérieur du réseau. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_api_key` | `true` (tout déploiement externe) | Critical | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
+| `stateful_pvc_enabled` | `true` en production | Critical | Sans PVC, les données résident dans le système de fichiers éphémère du pod ; tout redémarrage efface définitivement toutes les collections. |
+| `stateful_pvc_mount_path` | `/qdrant/storage` (valeur par défaut) | Critical | Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. Une incohérence stocke les données dans la couche éphémère et les perd au redémarrage. |
+| `application_name` | à définir une seule fois | Critical | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le stockage, et fait perdre toutes les collections. |
+| `max_instance_count` | `1` | High | Plusieurs pods Qdrant partageant un même PVC (RWO) ou bucket GCS corrompent les collections. Faites évoluer verticalement, pas horizontalement. |
+| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | High | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des pods à chaque chargement d'une grande collection depuis le disque. |
+| `memory_limit` | ≥ `4Gi` en production | High | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index. |
+| `stateful_pvc_size` | généreux (20 Gi+) | High | Un PVC sous-dimensionné se remplit à mesure que les collections grossissent ; un disque plein fait planter Qdrant. La capacité d'un PVC ne peut pas être réduite après sa création. |
+| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Medium | Ne peut pas être modifiée après la création du PVC sans migration des données ; choisissez-la d'emblée en fonction des besoins en IOPS. |
+| `application_version` | épingler une version semver en production | Medium | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
+| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis le disque à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont des octets et bloquent toute planification. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | High | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant à l'intérieur du réseau. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Qdrant, partagée
 avec la variante Cloud Run, est décrite dans **[Qdrant_Common](Qdrant_Common.md)**.
 

@@ -31,7 +31,7 @@ Rocket.Chat s'exécute comme un **StatefulSet** Node.js/Meteor dont le stockage 
 est intégré au même pod. Le déploiement assemble un ensemble ciblé de services Google
 Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Node.js/Meteor, 1 vCPU / 2 GiB par défaut ; un seul réplica de StatefulSet |
 | Stockage de données | Replica set MongoDB 6.0 intégré | Intégré à l'image — pas de Cloud SQL. Replica set à nœud unique (`rs0`) via `127.0.0.1` |
@@ -39,7 +39,7 @@ Cloud :
 | Secrets | Secret Manager | Jeton d'API facultatif (`enable_api_key`) |
 | Entrée | LoadBalancer / Cloud Load Balancing | Externe par défaut (application de chat publique) ; domaine personnalisé + certificat géré + Gateway facultatifs |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MongoDB est intégré, pas géré.** La réactivité en temps réel de Meteor suit l'oplog
   MongoDB, que seul un **replica set** fournit. Aucun stockage de données géré ici ne
@@ -310,15 +310,15 @@ valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/info` délai 60s, 40 échecs | Sonde de démarrage. Prévoyez quelques minutes au premier démarrage. |
-| `liveness_probe` | HTTP `/api/info` délai 30s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/info` délai 30s | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/api/info`. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche d'initialisation par défaut — la base MongoDB intégrée est amorcée par le point d'entrée. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut — la base MongoDB intégrée est amorcée par le point d'entrée. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes (par exemple, sauvegardes `mongodump`). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Rocket.Chat. |
 
@@ -376,7 +376,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -417,14 +417,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `workload_type = "Deployment"` avec `stateful_pvc_enabled = true`, IAP sans identités autorisées, des unités de quota non binaires, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` | Critical | Sur `gcsfuse` (la valeur par défaut lorsqu'il n'est pas défini), le jeu de données WiredTiger de MongoDB se corrompt — l'espace de travail est irrécupérable. |
 | `stateful_pvc_mount_path` | `/data/db` | Critical | Tout autre chemin signifie que le PVC ne contient pas le jeu de données MongoDB ; les données résident sur le système de fichiers éphémère du pod et sont perdues au redémarrage. |

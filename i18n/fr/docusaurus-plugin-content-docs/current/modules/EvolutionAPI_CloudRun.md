@@ -133,7 +133,7 @@ déclarés via `storage_buckets`.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
-### D. Redis (cache) {#d-redis-cache}
+### D. Cache Redis {#d-redis-cache}
 
 Redis est **activé par défaut** (`enable_redis = true`). Evolution API l'utilise pour
 mettre en cache les instances et les messages (`CACHE_REDIS_URI`, index de base Redis
@@ -158,7 +158,7 @@ Un secret cryptographique est généré automatiquement et stocké dans Secret M
 injectée comme variable d'environnement secrète. Le mot de passe de la base de
 données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~api-key"
@@ -175,7 +175,7 @@ nécessaire aux rappels de webhook WhatsApp et à l'interface de gestion. Un
 Armor peut être ajouté par-dessus ; les paramètres d'entrée et la sortie VPC
 contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -192,8 +192,8 @@ règles d'alerte facultatifs. Le point d'entrée émet des marqueurs
 `[cloud-entrypoint]` qui confirment au démarrage la configuration résolue de la base
 de données, de Redis et de l'URL.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -368,7 +368,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

@@ -159,7 +159,7 @@ Le mot de passe de la base de données est stocké dans Secret Manager et inject
 le service à l'exécution. Zammad gère ses propres clés de signature internes — ce
 module ne génère automatiquement aucun secret au niveau de l'application.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -175,7 +175,7 @@ HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
 par-dessus. Lorsque vous utilisez Memorystore for Redis, `vpc_egress_setting` doit
 valoir `"ALL_TRAFFIC"` afin que les connexions Redis soient acheminées via le VPC.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -190,7 +190,7 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -211,7 +211,7 @@ disponibilité et des règles d'alerte en option.
 - **Pont entre variables.** Le module socle injecte les identifiants de la base de
   données sous la forme `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. Le `entrypoint.sh`
   personnalisé les fait correspondre à la convention `POSTGRESQL_*` de Zammad et
-  utilise `DB_IP` (adresse IP privée de Cloud SQL) pour la vérification de
+  utilise `DB_IP` (adresse IP privée de Cloud SQL) pour le test de
   disponibilité TCP, car le `DB_HOST` de Cloud Run est un chemin de socket Unix.
 - **Connectivité WebSocket — la diffusion en temps réel ne fonctionne pas réellement
   sur Cloud Run.** Le processus `zammad-websocket` (ActionCable) démarre sur le port
@@ -286,7 +286,7 @@ comportement standard.
 | `min_instance_count` | `0` | Nombre minimal d'instances (mise à l'échelle à zéro). Définissez ≥ 1 pour éviter les démarrages à froid sur un helpdesk de production. |
 | `max_instance_count` | `5` | Nombre maximal d'instances (plafond de coût). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. Ne le désactivez pas. |
-| `enable_image_mirroring` | `true` | Réplique l'image Docker Hub de Zammad dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Docker Hub de Zammad dans Artifact Registry avant le déploiement. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
@@ -330,7 +330,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Domaine, CDN, Cloud Armor et conservation des images {#group-10--domain-cdn-cloud-armor--image-retention}
+### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -455,7 +455,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images —
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Zammad, partagée avec la variante GKE, est décrite dans
 **[Zammad_Common](Zammad_Common.md)**.

@@ -15,7 +15,7 @@ auto-hébergée à Retool. La Community Edition est livrée sous la forme d'un
 unique conteneur « fat » qui embarque une MongoDB, un Redis, le backend Java et
 le client React derrière nginx, et conserve tout l'état de l'application sous
 `/appsmith-stacks`. Ce module déploie Appsmith sur **GKE Autopilot** au-dessus
-de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
+du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
 Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Appsmith et sur la
@@ -23,7 +23,7 @@ façon de les explorer et de les exploiter depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
+déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md)
 plutôt que de les répéter ici.
 
 ---
@@ -68,7 +68,7 @@ ensemble ciblé de services Google Cloud :
   véritable piège.
 - **L'image « fat » est récupérée préconstruite depuis Docker Hub.**
   `container_image_source` vaut `"prebuilt"` par défaut
-  (`appsmith/appsmith-ce`), correctement transmis à la fondation App_GKE — il
+  (`appsmith/appsmith-ce`), correctement transmis au socle App_GKE — il
   n'y a ni Dockerfile ni build personnalisé pour ce module.
   `enable_image_mirroring = true` copie l'image dans Artifact Registry pour
   éviter les limites de débit de Docker Hub.
@@ -82,7 +82,7 @@ ensemble ciblé de services Google Cloud :
 - **`enable_redis` et `database_type` sont des leurres pour cette application.**
   Appsmith CE embarque en interne son propre Redis et sa propre Mongo ; il ne
   lit pas les variables d'environnement génériques `REDIS_HOST`/`REDIS_URL` que
-  la fondation App_GKE injecterait si `enable_redis` était activé, et
+  le socle App_GKE injecterait si `enable_redis` était activé, et
   `database_type` est fixé à `NONE`. Laissez les deux à leurs valeurs par
   défaut.
 - **Le routage par domaine personnalisé est activé par défaut.** Contrairement à
@@ -99,7 +99,7 @@ ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
 autres identifiants sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
@@ -182,7 +182,7 @@ dans le pod via le pilote Secret Store CSI.
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et le
 renouvellement.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load
 Balancing (`service_type = LoadBalancer`, `reserve_static_ip = true` pour que
@@ -281,7 +281,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `container_image_source` | `prebuilt` | Récupère l'image « fat » officielle `appsmith/appsmith-ce` depuis Docker Hub. Correctement transmis à la fondation App_GKE. |
+| `container_image_source` | `prebuilt` | Récupère l'image « fat » officielle `appsmith/appsmith-ce` depuis Docker Hub. Correctement transmis au socle App_GKE. |
 | `container_port` | `80` | Appsmith CE sert sur le port 80 via son nginx interne. |
 | `container_resources` | `cpu_limit=2000m`, `memory_limit=2Gi` | L'image « fat » embarque MongoDB, Redis et un backend Java dans un seul conteneur ; 2Gi ou plus sont donc recommandés. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | **Laissez les deux à 1.** La MongoDB embarquée et le PVC par pod ne supportent pas plusieurs réplicas ; `max_instance_count` n'est pas bloqué au-dessus de 1 au moment du plan. |
@@ -347,7 +347,7 @@ d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -356,7 +356,7 @@ d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide sauf si `storage_buckets` est renseigné par l'appelant). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des éventuels jobs de configuration/d'import fournis par l'appelant (vides par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -371,12 +371,12 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
+> Risque : **Critical** (perte de données / panne / sécurité) — **High**
+> (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low**
 > (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
-> configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide
+> configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide
 > les valeurs *et leurs combinaisons* au moment du plan — un `container_port`
 > invalide, un conflit `StatefulSet`/`Deployment`, IAP activé sans identifiants
 > OAuth, des `quota_memory_*` donnés sous forme d'entiers nus. Ce module déclare
@@ -390,21 +390,21 @@ d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critique | Pas bloqué au moment du plan au-dessus de 1, mais chaque pod du StatefulSet reçoit son propre PVC **vide** — un second réplica exécute une MongoDB embarquée divergente et non synchronisée, sans mise en cluster, ce qui rompt l'hypothèse d'une source de vérité unique. |
-| `stateful_pvc_enabled` | `true` | Critique | Le désactiver supprime le PVC — tout l'état (Mongo embarquée, Redis, téléversements, configuration des applications connectées à Git) devient éphémère et est perdu au redémarrage/à la replanification du pod. |
-| `APPSMITH_ENCRYPTION_PASSWORD` / `APPSMITH_ENCRYPTION_SALT` (générés automatiquement) | Ne jamais modifier après le premier démarrage | Critique | Renouveler l'un ou l'autre indépendamment d'une réinitialisation complète des données rend définitivement illisibles les identifiants de sources de données et les clés SSH Git déjà chiffrés. |
-| `database_type` | `NONE` | Critique | Appsmith CE n'a pas d'intégration de base de données externe ; définir un moteur Cloud SQL provisionne une instance inutilisée et n'apporte rien à l'application. |
-| `enable_cloudsql_volume` | `false` | Élevé | Bloqué au moment du plan lorsque `database_type = "NONE"` — il n'y a pas d'instance Cloud SQL vers laquelle servir de proxy. |
-| `enable_redis` | `false` | Moyen | Appsmith CE embarque Redis en interne et ne lit pas les variables d'environnement génériques `REDIS_HOST`/`REDIS_URL` que ce paramètre injecte — l'activer ajoute des variables d'environnement inertes et, si on le prend à tort pour une vraie dépendance, une fausse confiance dans un cache externe qui n'est pas utilisé. |
-| `stateful_pvc_size` | `20Gi` (à augmenter si nécessaire) | Moyen | Un sous-dimensionnement impose plus tard une extension manuelle du PVC ; la Mongo embarquée et les ressources téléversées partagent ce même volume. |
-| Délais de `startup_probe_config` | `initial_delay_seconds=120`, `failure_threshold=40` | Moyen | Le conteneur « fat » (Mongo + Redis + Java) démarre lentement ; une fenêtre plus courte peut signaler comme défaillant un pod sain encore en démarrage et déclencher une boucle de redémarrage. |
-| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout domaine personnalisé configuré. |
-| `stateful_pvc_storage_class` | `""` (SSD) ou `standard` (HDD) | Faible–Moyen | Le SSD (`standard-rwo`) puise dans le quota régional `SSD_TOTAL_GB`, plus restreint ; remplacez par le HDD `standard` sur les projets limités en quota — une application à pod unique n'a aucun besoin d'IOPS qui exige du SSD. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
+| `max_instance_count` | `1` | Critical | Pas bloqué au moment du plan au-dessus de 1, mais chaque pod du StatefulSet reçoit son propre PVC **vide** — un second réplica exécute une MongoDB embarquée divergente et non synchronisée, sans mise en cluster, ce qui rompt l'hypothèse d'une source de vérité unique. |
+| `stateful_pvc_enabled` | `true` | Critical | Le désactiver supprime le PVC — tout l'état (Mongo embarquée, Redis, téléversements, configuration des applications connectées à Git) devient éphémère et est perdu au redémarrage/à la replanification du pod. |
+| `APPSMITH_ENCRYPTION_PASSWORD` / `APPSMITH_ENCRYPTION_SALT` (générés automatiquement) | Ne jamais modifier après le premier démarrage | Critical | Renouveler l'un ou l'autre indépendamment d'une réinitialisation complète des données rend définitivement illisibles les identifiants de sources de données et les clés SSH Git déjà chiffrés. |
+| `database_type` | `NONE` | Critical | Appsmith CE n'a pas d'intégration de base de données externe ; définir un moteur Cloud SQL provisionne une instance inutilisée et n'apporte rien à l'application. |
+| `enable_cloudsql_volume` | `false` | High | Bloqué au moment du plan lorsque `database_type = "NONE"` — il n'y a pas d'instance Cloud SQL vers laquelle servir de proxy. |
+| `enable_redis` | `false` | Medium | Appsmith CE embarque Redis en interne et ne lit pas les variables d'environnement génériques `REDIS_HOST`/`REDIS_URL` que ce paramètre injecte — l'activer ajoute des variables d'environnement inertes et, si on le prend à tort pour une vraie dépendance, une fausse confiance dans un cache externe qui n'est pas utilisé. |
+| `stateful_pvc_size` | `20Gi` (à augmenter si nécessaire) | Medium | Un sous-dimensionnement impose plus tard une extension manuelle du PVC ; la Mongo embarquée et les ressources téléversées partagent ce même volume. |
+| Délais de `startup_probe_config` | `initial_delay_seconds=120`, `failure_threshold=40` | Medium | Le conteneur « fat » (Mongo + Redis + Java) démarre lentement ; une fenêtre plus courte peut signaler comme défaillant un pod sain encore en démarrage et déclencher une boucle de redémarrage. |
+| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout domaine personnalisé configuré. |
+| `stateful_pvc_storage_class` | `""` (SSD) ou `standard` (HDD) | Low–Medium | Le SSD (`standard-rwo`) puise dans le quota régional `SSD_TOTAL_GB`, plus restreint ; remplacez par le HDD `standard` sur les projets limités en quota — une application à pod unique n'a aucun besoin d'IOPS qui exige du SSD. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à

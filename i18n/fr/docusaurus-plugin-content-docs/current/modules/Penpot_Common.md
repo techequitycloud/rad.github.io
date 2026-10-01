@@ -338,7 +338,7 @@ penpot_flags = "disable-registration enable-oidc-google disable-demo-users"
 
 ---
 
-## 10. Schéma de mise en œuvre {#10-implementation-pattern}
+## 10. Modèle d'implémentation {#10-implementation-pattern}
 
 L'exemple suivant montre comment `Penpot_CloudRun` instancie `Penpot_Common` et transmet ses sorties à `App_CloudRun` :
 

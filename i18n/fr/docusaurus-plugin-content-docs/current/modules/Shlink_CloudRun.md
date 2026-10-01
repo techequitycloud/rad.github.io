@@ -19,7 +19,7 @@ Ce guide porte sur les services cloud qu'utilise Shlink et sur la manière de le
 
 Shlink s'exécute sous forme de conteneur PHP (RoadRunner) sur Cloud Run v2. Le déploiement assemble un ensemble volontairement restreint de services Google Cloud — Shlink conserve **tout** son état dans PostgreSQL, il n'y a donc ni partage NFS ni bucket de stockage d'objets à gérer :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | 1 vCPU / 512 MiB par défaut, mise à l'échelle à zéro (`min_instance_count = 0`) |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — contient les URL courtes, les visites, les tags et les clés d'API |
@@ -28,7 +28,7 @@ Shlink s'exécute sous forme de conteneur PHP (RoadRunner) sur Cloud Run v2. Le 
 | Cache / verrous | Redis (facultatif) | Désactivé par défaut ; utile uniquement pour le cache/verrouillage multi-instances |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le moteur pris en charge** (`database_type = "POSTGRES_15"`, `DB_DRIVER = "postgres"`). Shlink se connecte via le socket Unix du Cloud SQL Auth Proxy — libpq accepte le répertoire du socket comme hôte, aucune configuration TCP/SSL n'est donc nécessaire.
 - **`DB_USER` / `DB_NAME` sont injectés par le socle** avec des noms propres au tenant et ne sont volontairement *pas* définis par le module — la tâche `db-init` crée ce même utilisateur et cette même base de données, si bien que tout concorde automatiquement.
@@ -77,7 +77,7 @@ Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de 
 
 Deux secrets sont gérés automatiquement : le **mot de passe de la base de données** (créé par le socle, injecté sous le nom `DB_PASSWORD`) et la **clé d'API initiale** (créée par `Shlink_Common`, injectée sous le nom `INITIAL_API_KEY`). Le texte en clair n'apparaît jamais dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~shlink"
@@ -103,7 +103,7 @@ Shlink peut utiliser Redis pour le cache et les verrous distribués — ce qui n
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec un domaine personnalisé (le choix naturel pour un domaine court à votre marque tel que `s.example.com`), Cloud CDN et Cloud Armor peuvent s'y ajouter ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -116,7 +116,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de Cloud Run et de Cloud SQL sont envoyées à Cloud Monitoring. Un test de disponibilité sur `/rest/health` est provisionné par défaut, avec une alerte d'échec reliée à `support_users`.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tests de disponibilité / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Uptime checks / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -186,7 +186,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `max_instance_count` | `3` | Nombre maximal d'instances. Activez Redis avant de l'augmenter sensiblement. |
 | `container_port` | `8080` | Port HTTP natif de Shlink. |
 | `enable_cloudsql_volume` | `true` | Socket Unix du Cloud SQL Auth Proxy — la connexion compatible libpq qu'attend Shlink. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `execution_environment` | `gen2` | Cloud Run gen2 (recommandé). |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -200,7 +200,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 6 — Contrôle des accès et de l'entrée {#group-6--access--ingress-control}
+### Groupe 6 — Contrôle d'accès et d'entrée {#group-6--access--ingress-control}
 
 Entrées standard IAP / entrée / sortie VPC (`enable_iap`, `ingress_settings`, `vpc_egress_setting`). Notez que les points de terminaison de redirection d'un raccourcisseur doivent rester accessibles publiquement — placer IAP devant Shlink soumet également chaque lien court à une authentification. Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -229,7 +229,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -253,7 +253,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `enable_redis` | `false` | Cache/verrouillage facultatif pour les configurations multi-instances ; inutile à l'échelle par défaut. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Détails du point de terminaison Redis lorsqu'il est activé. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Comportement standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`, `organization_id`, `enable_audit_logging`).
 
@@ -289,12 +289,12 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Shlink est configuré ici pour PostgreSQL (`DB_DRIVER=postgres`) ; un autre moteur empêche le démarrage. |
 | `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les URL courtes et les données de visites. |
@@ -312,7 +312,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Shlink partagée avec la variante GKE est décrite dans **[Shlink_Common](Shlink_Common.md)**.
+Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Shlink partagée avec la variante GKE est décrite dans **[Shlink_Common](Shlink_Common.md)**.
 
 <!-- related-guides -->
 

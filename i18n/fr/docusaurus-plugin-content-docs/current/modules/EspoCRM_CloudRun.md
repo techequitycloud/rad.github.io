@@ -11,7 +11,7 @@ description: "Référence de configuration pour déployer EspoCRM sur Google Clo
 
 EspoCRM est une plateforme open source de gestion de la relation client (CRM), sous licence GPLv3,
 construite sur PHP et Apache. Ce module déploie EspoCRM sur **Cloud Run v2** au-dessus
-de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise EspoCRM et sur la manière de les explorer et de les exploiter
@@ -19,7 +19,7 @@ depuis la console Google Cloud et la ligne de commande. Pour les mécanismes com
 les applications Cloud Run — identité du service, ingress et équilibrage de charge, scaling et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -28,7 +28,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 EspoCRM s'exécute comme un conteneur PHP/Apache sur Cloud Run v2. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Apache/PHP, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à l'échelle à zéro prise en charge |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — EspoCRM ne prend pas en charge PostgreSQL ; connexion via TCP sur IP privée |
@@ -61,7 +61,7 @@ ensemble ciblé de services Google Cloud :
   n'est monté **nulle part** par défaut.
 - **Instance unique par défaut.** `max_instance_count = 1` — Cloud Run n'a pas d'affinité de session
   intégrée ; conservez donc le service en instance unique, sauf si vous avez vérifié
-  le comportement d'EspoCRM avec des sessions PHP concurrentes réparties sur plusieurs répliques.
+  le comportement d'EspoCRM avec des sessions PHP concurrentes réparties sur plusieurs réplicas.
 - **`ESPOCRM_SITE_URL` est dérivé de l'URL de service prévue** au moment du plan et
   résolu par le point d'entrée, de sorte que les liens absolus et les vérifications de l'installateur d'EspoCRM utilisent
   le véritable hôte Cloud Run plutôt que `localhost`.
@@ -151,7 +151,7 @@ du serveur NFS est utilisée comme point de terminaison Redis.
 
 Le mot de passe administrateur initial (`ESPOCRM_ADMIN_PASSWORD`) est généré automatiquement et
 stocké dans Secret Manager, puis injecté dans le service sous forme de variable d'environnement secrète. Le mot de passe
-de la base de données est géré séparément par la fondation.
+de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -162,7 +162,7 @@ de la base de données est géré séparément par la fondation.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails de l'injection et de la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe
 avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'ingress et
@@ -249,7 +249,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `upload_max_filesize` | `64M` | Taille maximale d'un fichier envoyé (≤ `post_max_size`). |
 | `post_max_size` | `64M` | Taille maximale d'une requête POST ; doit être ≥ `upload_max_filesize`. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -263,7 +263,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | EspoCRM se connecte à MySQL via TCP sur IP privée, et non via le socket. |
 
-### Groupe 5 — Contrôle de l'accès et de l'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -322,7 +322,7 @@ en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -333,34 +333,34 @@ en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une valeur `redis_port`/`backup_retention_days` hors plage, un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une valeur `redis_port`/`backup_retention_days` hors plage, un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critique | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critique | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans URI de sauvegarde valide fait échouer le job d'import. |
-| `enable_nfs` | `true` | Élevé | Le désactiver relègue le stockage des pièces jointes d'EspoCRM au disque éphémère du conteneur — les fichiers envoyés sont perdus lorsqu'une instance est réduite ou recyclée. |
-| `max_instance_count` | `1` sauf si la sécurité a été vérifiée | Moyen | Les fichiers envoyés sont stockés sur NFS par défaut, mais Cloud Run n'a pas d'affinité de session intégrée — vérifiez le comportement d'EspoCRM avec des sessions PHP concurrentes avant de dépasser 1 instance. |
-| `enable_cloudsql_volume` | `false` (TCP sur IP privée) | Élevé | Forcer le socket sans chemin correspondant dans le point d'entrée peut casser la connexion MySQL ; EspoCRM se connecte à l'IP privée par conception. |
-| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL réelle du service / du domaine personnalisé | Élevé | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
-| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
-| `cpu_limit` | `1000m` | Moyen | En dessous de 1 vCPU, l'installation au premier démarrage et le traitement des plugins lourds sont ralentis. |
-| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Moyen | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
-| `min_instance_count` | `1` en production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid et, sans volume partagé, perd les fichiers envoyés locaux lors de la réduction. |
-| `application_version` | À figer en production | Moyen | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
+| `database_type` | `MYSQL_8_0` | Critical | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
+| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critical | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans URI de sauvegarde valide fait échouer le job d'import. |
+| `enable_nfs` | `true` | High | Le désactiver relègue le stockage des pièces jointes d'EspoCRM au disque éphémère du conteneur — les fichiers envoyés sont perdus lorsqu'une instance est réduite ou recyclée. |
+| `max_instance_count` | `1` sauf si la sécurité a été vérifiée | Medium | Les fichiers envoyés sont stockés sur NFS par défaut, mais Cloud Run n'a pas d'affinité de session intégrée — vérifiez le comportement d'EspoCRM avec des sessions PHP concurrentes avant de dépasser 1 instance. |
+| `enable_cloudsql_volume` | `false` (TCP sur IP privée) | High | Forcer le socket sans chemin correspondant dans le point d'entrée peut casser la connexion MySQL ; EspoCRM se connecte à l'IP privée par conception. |
+| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL réelle du service / du domaine personnalisé | High | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
+| `memory_limit` | `2Gi` | High | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
+| `cpu_limit` | `1000m` | Medium | En dessous de 1 vCPU, l'installation au premier démarrage et le traitement des plugins lourds sont ralentis. |
+| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Medium | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
+| `min_instance_count` | `1` en production | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid et, sans volume partagé, perd les fichiers envoyés locaux lors de la réduction. |
+| `application_version` | À figer en production | Medium | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, scaling et
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, scaling et
 concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**.
 La configuration applicative propre à EspoCRM partagée avec la variante GKE est décrite dans
 **[EspoCRM_Common](EspoCRM_Common.md)**.
 

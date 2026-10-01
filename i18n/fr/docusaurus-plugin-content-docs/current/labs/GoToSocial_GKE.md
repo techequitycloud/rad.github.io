@@ -11,7 +11,7 @@ description: "Lab pratique : déployez GoToSocial sur GKE Autopilot dans votre p
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 GoToSocial est un serveur ActivityPub/Fediverse léger et auto-hébergé — une
 petite alternative à Mastodon, écrite sous la forme d’un unique binaire Go statique. Ce lab
@@ -38,7 +38,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants, y compris
   une création de compte administrateur bloquée ou partiellement échouée.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -158,7 +158,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspecter la charge de travail** — le déploiement, les pods et les jobs :
 
@@ -217,7 +217,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l’explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur
@@ -241,7 +241,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   Passez toujours `curl -A "<some-agent>" ...`. Ce n’est *pas* le signe
   que le pod est en mauvaise santé.
 - **Pod non Ready / CrashLoopBackOff :** examinez les événements et les journaux. Les sondes de
-  démarrage et de liveness sont toutes deux des sondes **TCP** sur le port 8080 (et non HTTP) ; un pod
+  démarrage et de vivacité sont toutes deux des sondes **TCP** sur le port 8080 (et non HTTP) ; un pod
   « Ready » peut donc tout de même échouer sur les requêtes si Postgres ou GCS n’est pas joignable
   — consultez les journaux de l’application, et pas seulement l’état du pod.
   ```bash
@@ -313,7 +313,7 @@ des comptes orphelins).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement
@@ -338,4 +338,4 @@ le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas su
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l’échelle (jamais au-delà de `max_instance_count = 1`), mettre à jour la version, gérer secrets/stockage, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer la particularité 418/User-Agent, la propagation IAM du stockage, les courses de admin-create, les lignes de compte orphelines, les problèmes de base de données, de planification et de récupération d’image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

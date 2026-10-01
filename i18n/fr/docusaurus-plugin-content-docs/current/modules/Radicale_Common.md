@@ -31,7 +31,7 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Moteur de base de données | **Aucun** — Radicale est un pur stockage sur système de fichiers (`database_type = "NONE"`) | §3 ci-dessous et guides des plateformes |
 | Authentification | **Aucun compte administrateur intégré par défaut** — génère un véritable secret `ADMIN_PASSWORD` et le hache dans un fichier htpasswd à chaque démarrage | §2 ci-dessous |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sous-tend `/var/lib/radicale` | Sortie `storage_buckets` |
-| Amorçage des collections | Définit la tâche d'initialisation par défaut `seed-default-collections` qui contourne la restriction MKCOL de Cloud Run | §4 ci-dessous |
+| Amorçage des collections | Définit le job d'initialisation par défaut `seed-default-collections` qui contourne la restriction MKCOL de Cloud Run | §4 ci-dessous |
 | Contrôles de santé | Fournit les sondes de démarrage et de vivacité par défaut ciblant `/` | §Observabilité dans les guides des plateformes |
 
 ---
@@ -172,8 +172,8 @@ WebDAV `MKCOL`. Confirmé en conditions réelles :
   restriction — `MKCOL` fonctionne nativement (confirmé en conditions réelles :
   `201 Created`).
 
-**Le correctif — `seed-default-collections`.** `Radicale_Common` définit une
-tâche d'initialisation par défaut (`execute_on_apply = true`, qui exécute
+**Le correctif — `seed-default-collections`.** `Radicale_Common` définit un
+job d'initialisation par défaut (`execute_on_apply = true`, qui exécute
 `scripts/seed-default-collections.sh` dans un simple conteneur `alpine:3`) qui
 crée un « Default Calendar » et un « Default Address Book » pour l'utilisateur
 administrateur en écrivant l'arborescence des répertoires et le fichier de

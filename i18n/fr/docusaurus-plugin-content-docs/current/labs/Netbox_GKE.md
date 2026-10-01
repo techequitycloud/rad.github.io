@@ -11,7 +11,7 @@ description: "Lab pratique : déployez NetBox sur GKE Autopilot dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 60 à 90 minutes
+**Durée estimée :** 60–90 minutes
 
 NetBox est l'outil open source de référence pour la documentation des réseaux et
 des infrastructures et l'IPAM (gestion des adresses IP) — inventaire des équipements et des baies,
@@ -31,14 +31,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au pod en cours d'exécution et le vérifier, notamment en confirmant que les fichiers multimédias téléversés
   sont réellement conservés dans Cloud Storage.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, en utilisant
   `kubectl exec` pour obtenir de vraies preuves plutôt que de deviner à partir des seuls journaux.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -182,7 +182,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NAMESPACE" deploy/<service-name> --tail=100
@@ -266,7 +266,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -291,4 +291,4 @@ ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le déploiement progressif, mettre à l'échelle, mettre à jour la version, gérer les secrets et les sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner le tableau de bord GKE Workloads et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de CSRF, d'autorisation sur le montage GCS, de persistance des fichiers multimédias, de worker d'arrière-plan, de base de données, de job d'initialisation, de build et d'IAM à l'aide de `kubectl exec` |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

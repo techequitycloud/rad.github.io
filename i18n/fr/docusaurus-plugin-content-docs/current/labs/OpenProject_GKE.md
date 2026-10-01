@@ -19,7 +19,7 @@ vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Op
 Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter
 au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit OpenProject. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/OpenProject_GKE) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à la charge de travail en cours d'exécution et la vérifier, y compris le changement de mot de passe lors de la première connexion.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager
    (`SECRET_KEY_BASE` et le mot de passe de la base de données), une instance NFS Cloud Filestore pour
-   le stockage des pièces jointes, construit l'image du conteneur et exécute les deux tâches
+   le stockage des pièces jointes, construit l'image du conteneur et exécute les deux jobs
    d'initialisation — `db-init` (rôle + base de données) puis `db-migrate` (`rake db:migrate db:seed`).
    Les premiers déploiements prennent environ **25–40 minutes** (la création de Cloud SQL et l'amorçage
    des migrations en représentent l'essentiel).
@@ -88,7 +88,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -133,11 +133,11 @@ export REGION="us-central1"          # the region you deploy into
    s'arrête avant que le nouveau ne démarre.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme RAD
-   et en l'appliquant via **Update** ; une nouvelle image est construite, la tâche `db-migrate` exécute les éventuelles
+   et en l'appliquant via **Update** ; une nouvelle image est construite, le job `db-migrate` exécute les éventuelles
    nouvelles migrations, et les pods sont remplacés. OpenProject ne publie que des tags de version majeure
    numériques — fixez une version majeure précise (par exemple `16`) plutôt que `latest`.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -165,7 +165,7 @@ export REGION="us-central1"          # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -187,8 +187,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   kubectl describe pod -n "$NS" <pod>          # Events: scheduling/probe/mount errors
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
-- **« You have N pending migrations » dans les journaux :** la tâche `db-migrate` ne s'est pas terminée.
-  Inspectez la tâche et les journaux de son pod — la tâche de migration s'auto-vérifie : un véritable
+- **« You have N pending migrations » dans les journaux :** le job `db-migrate` ne s'est pas terminé.
+  Inspectez le job et les journaux de son pod — le job de migration s'auto-vérifie : un véritable
   échec fait donc échouer l'application bruyamment au lieu de livrer une base de données vide.
   ```bash
   kubectl get jobs -n "$NS"
@@ -196,7 +196,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
   secret du mot de passe de la base a été matérialisé dans l'espace de noms, que le sidecar Cloud SQL Auth Proxy
-  s'exécute (`enable_cloudsql_volume = true` sur GKE) et que les tâches d'initialisation se sont terminées.
+  s'exécute (`enable_cloudsql_volume = true` sur GKE) et que les jobs d'initialisation se sont terminés.
 - **Les pièces jointes disparaissent lorsqu'un pod est déplacé :** vérifiez que `enable_nfs = true` et que
   l'instance Filestore et son PVC sont en bonne santé.
 - **Pod en attente / pas d'IP externe :** consultez les événements de `kubectl describe pod` pour repérer des problèmes de ressources
@@ -224,7 +224,7 @@ GKE, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont p
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), les secrets, Filestore, et exécute `db-init` + `db-migrate` |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; se connecter en tant que `admin`/`admin` et définir un nouveau mot de passe |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; se connecter en tant que `admin`/`admin` et définir un nouveau mot de passe |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de migration, de base de données, de NFS, d'IP et d'image |

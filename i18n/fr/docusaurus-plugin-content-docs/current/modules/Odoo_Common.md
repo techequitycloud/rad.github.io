@@ -9,7 +9,7 @@ description: "Référence de la configuration partagée du module Odoo — param
 
 `Odoo_Common` est la couche de configuration applicative partagée qu'utilisent à la fois `Odoo_CloudRun` et
 `Odoo_GKE`. Elle n'est pas déployée indépendamment — chaque variante de plateforme l'appelle en interne
-pour assembler l'image de conteneur Odoo, les variables d'environnement, les tâches d'initialisation,
+pour assembler l'image de conteneur Odoo, les variables d'environnement, les jobs d'initialisation,
 les paramètres des sondes de santé et les définitions de stockage avant de les transmettre au socle
 de déploiement.
 
@@ -29,7 +29,7 @@ de déploiement :
    défaut) et toutes les variables d'environnement propres à Odoo.
 3. **Définitions de stockage** — définit le bucket GCS `odoo-addons` pour les addons personnalisés et
    communautaires.
-4. **Tâches d'initialisation** — définit la séquence ordonnée de deux tâches (`nfs-init` → `db-init`)
+4. **Jobs d'initialisation** — définit la séquence ordonnée de deux tâches (`nfs-init` → `db-init`)
    qui s'exécute avant le conteneur Odoo principal à chaque déploiement.
 
 ---
@@ -70,7 +70,7 @@ situé dans `Odoo_Common/scripts/`. Le build :
 - Configure l'utilisateur du processus Odoo (UID 101) et le fichier de configuration qui lit les informations
   de connexion à la base de données à partir des variables d'environnement injectées à l'exécution.
 
-L'image est poussée vers Artifact Registry dans votre projet et dupliquée depuis cet emplacement à chaque
+L'image est poussée vers Artifact Registry dans votre projet et mise en miroir depuis cet emplacement à chaque
 déploiement.
 
 Pour vérifier l'image en cours d'exécution :
@@ -112,7 +112,7 @@ Secret Manager supplémentaires via `secret_environment_variables` dans le modul
 
 ---
 
-## 5. Séquence des tâches d'initialisation {#5-initialization-job-sequence}
+## 5. Séquence des jobs d'initialisation {#5-initialization-job-sequence}
 
 À chaque déploiement, deux Cloud Run Jobs (ou Jobs Kubernetes) s'exécutent dans l'ordre avant le démarrage du service
 ou de la charge de travail Odoo. Les deux tâches sont idempotentes et peuvent être relancées sans risque.
@@ -129,7 +129,7 @@ ou de la charge de travail Odoo. Les deux tâches sont idempotentes et peuvent �
 
 - Image : `postgres:15-alpine`
 - Exécute `db-init.sh`, qui crée l'utilisateur et la base de données de l'application dans Cloud SQL
-  pour PostgreSQL s'ils n'existent pas déjà.
+  for PostgreSQL s'ils n'existent pas déjà.
 - Lit `DB_PASSWORD` et `ROOT_PASSWORD` depuis Secret Manager au moment de l'exécution.
 - Aucune modification du schéma — la création du schéma est assurée par Odoo au premier démarrage du service.
 

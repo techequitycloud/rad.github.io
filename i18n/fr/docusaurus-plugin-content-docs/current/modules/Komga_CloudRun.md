@@ -33,7 +33,7 @@ Komga s'exécute comme un unique conteneur JVM sur Cloud Run v2. Le déploiement
 assemble un ensemble minimal de services Google Cloud — il n'y a pas de base de
 données externe :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur JVM (Spring Boot), 1 vCPU / 1 GiB par défaut ; instance unique |
 | Base de données | Aucune | Komga utilise une base de données SQLite intégrée sous `/config` — aucune instance Cloud SQL n'est créée |
@@ -50,7 +50,7 @@ données externe :
   `database_type = "NONE"`.
 - **Image précompilée officielle.** `container_image_source = "prebuilt"` déploie
   directement `gotson/komga` — sans étape Cloud Build. `enable_image_mirroring = true`
-  la duplique dans Artifact Registry (copie tenant compte du digest) pour éviter les
+  la met en miroir dans Artifact Registry (copie tenant compte du digest) pour éviter les
   limites de débit de Docker Hub.
 - **Instance unique uniquement.** `min_instance_count = 1` et
   `max_instance_count = 1` — Komga sert une seule bibliothèque SQLite partagée depuis
@@ -79,7 +79,7 @@ données externe :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Komga {#a-cloud-run--the-komga-service}
 
@@ -206,7 +206,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -232,7 +232,7 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 requis pour les montages GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Komga n'a pas de Cloud SQL — conservez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Komga dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Komga dans Artifact Registry. |
 | `jvm_heap_max` | `""` | `-Xmx` facultatif de la JVM via `JAVA_TOOL_OPTIONS` (par ex. `"512m"`, `"1g"`). |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclarée pour la cohérence des conventions ; non référencée par le déploiement de ce module. |
@@ -329,12 +329,12 @@ sans effet.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `komga_url` | URL VPC interne du service (joignable uniquement depuis le VPC lorsque `ingress_settings = "internal"`). |
@@ -344,7 +344,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `initialization_jobs` | Noms des jobs de configuration (vide par défaut). |
@@ -377,8 +377,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Komga, partagée avec la variante GKE, est décrite dans
 **[Komga_Common](Komga_Common.md)**.
 

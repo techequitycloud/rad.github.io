@@ -15,7 +15,7 @@ application Next.js 16 / Node 22 dont toute la configuration (services, favoris,
 widgets, mise en page) tient dans une poignée de fichiers YAML, avec des widgets
 facultatifs d'état et de statistiques en direct pour les autres applications
 auto-hébergées que vous exploitez. Ce module déploie Homepage sur **GKE
-Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui provisionne et
+Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et
 gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Homepage et sur la manière
@@ -23,7 +23,7 @@ de les explorer et de les exploiter depuis la console Google Cloud et la ligne d
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -37,12 +37,12 @@ la couche de stockage elle-même : Cloud Run n'a pas de notion de PVC, si bien q
 par défaut la même approche GCS FUSE, mais propose en plus un véritable PVC de
 stockage en mode bloc, sur activation explicite.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Node.js unique, `1000m` de CPU / `1Gi` de mémoire par défaut |
 | Base de données | aucune | Homepage n'a aucune base de données ; `database_type = "NONE"` |
 | Stockage objet | Cloud Storage (par défaut) **ou** un PVC en mode bloc | Par défaut : un bucket `storage` monté sur `/app/config` via le pilote CSI GCS FUSE. Avec `stateful_pvc_enabled = true` : un PVC `standard-rwo` par pod (`5Gi` par défaut) sur le même chemin à la place, et la charge de travail devient un `StatefulSet` |
-| Cache et file d'attente | aucun | `enable_redis = false` est codé en dur dans `main.tf`, remplaçant la valeur par défaut `true` de la fondation |
+| Cache et file d'attente | aucun | `enable_redis = false` est codé en dur dans `main.tf`, remplaçant la valeur par défaut `true` du socle |
 | Secrets | aucun | Aucun secret n'est généré — Homepage n'a besoin d'aucun identifiant propre |
 | Entrée | Cloud Load Balancing | Service `LoadBalancer` par défaut, avec domaine personnalisé + certificat géré facultatifs ; `ClusterIP` est disponible pour les déploiements internes uniquement ou soumis à des contraintes de quota |
 
@@ -70,7 +70,7 @@ stockage en mode bloc, sur activation explicite.
   vérifié en conditions réelles pour ce module** (voir §3).
 - **Ni base de données ni Redis — architecture inhabituelle pour ce catalogue.**
   Presque tous les autres modules applicatifs raccordent une instance Cloud SQL
-  et/ou Redis via la fondation ; Homepage n'a besoin ni de l'une ni de l'autre.
+  et/ou Redis via le socle ; Homepage n'a besoin ni de l'une ni de l'autre.
   Cela signifie aussi qu'il échappe aux catégories de bugs habituelles —
   raccordement du DSN, socket ou TCP, encodage d'URL du mot de passe — documentées
   ailleurs dans ce dépôt : il n'y a tout simplement aucune connexion à une base de
@@ -95,7 +95,7 @@ stockage en mode bloc, sur activation explicite.
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Homepage {#a-gke-autopilot--the-homepage-workload}
@@ -265,7 +265,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 | `stateful_pvc_mount_path` | `/app/config` | Même chemin que le montage GCS FUSE par défaut — les deux s'excluent mutuellement et ne sont jamais montés en double. |
 | `stateful_fs_group` | `3000` | `fsGroup` au niveau du pod pour le PVC en bloc (valeur par défaut du chart Helm amont). |
 
-### Groupe 11 — Automatisation de la charge de travail {#group-11--workload-automation}
+### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -296,7 +296,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 | Sortie | Description |
 |---|---|
 | `service_name` / `service_url` | Nom du Service Kubernetes et URL du tableau de bord (port 3000). |
-| `namespace` | Namespace Kubernetes dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms Kubernetes dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` / `service_external_ip` | ClusterIP interne au cluster / adresse IP externe du LoadBalancer (lorsqu'elle est réservée). |
 | `storage_buckets` | Le bucket `storage` qui soutient `/app/config` — renseigné uniquement dans le mode de stockage par défaut, sans PVC. |
 | `statefulset_name` | Nom du StatefulSet — renseigné uniquement lorsque `stateful_pvc_enabled = true`. |
@@ -310,22 +310,22 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` avec `stateful_pvc_enabled = true` | Conserver `1` | Élevé | Chaque ordinal de pod du StatefulSet reçoit son propre PVC distinct (et non un stockage partagé) — dépasser un réplica en mode PVC en bloc donne à chaque pod une configuration de tableau de bord qui diverge indépendamment, et non une configuration partagée cohérente. |
-| `stateful_pvc_mount_path` / `gcs_volumes` sur `/app/config` | Laisser en place le montage automatique, quel que soit le mode utilisé | **Critique** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid ou à la prochaine replanification du pod — Homepage n'a aucune autre source de vérité. |
-| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Moyen | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
-| Chemin de sonde | Laisser `/api/healthcheck` | Élevé | Un chemin de sonde authentifié ou inexistant laisserait le pod durablement en `Ready=False` alors même que l'application a démarré correctement. |
-| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Faible | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
-| `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` | Laisser `workload_type` non défini (`null`) | Faible | Une validation au moment du plan rejette purement et simplement cette combinaison — un modèle de PVC exige un StatefulSet. |
-| `service_type` | `LoadBalancer`, sauf contrainte de quota | Moyen | `ClusterIP` exige `kubectl port-forward` pour l'accès — adapté à un usage interne ou aux projets limités en quota (comme lors de la vérification en conditions réelles de ce module), mais inaccessible depuis un navigateur sans cela. |
+| `max_instance_count` avec `stateful_pvc_enabled = true` | Conserver `1` | High | Chaque ordinal de pod du StatefulSet reçoit son propre PVC distinct (et non un stockage partagé) — dépasser un réplica en mode PVC en bloc donne à chaque pod une configuration de tableau de bord qui diverge indépendamment, et non une configuration partagée cohérente. |
+| `stateful_pvc_mount_path` / `gcs_volumes` sur `/app/config` | Laisser en place le montage automatique, quel que soit le mode utilisé | **Critical** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid ou à la prochaine replanification du pod — Homepage n'a aucune autre source de vérité. |
+| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Medium | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
+| Chemin de sonde | Laisser `/api/healthcheck` | High | Un chemin de sonde authentifié ou inexistant laisserait le pod durablement en `Ready=False` alors même que l'application a démarré correctement. |
+| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Low | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
+| `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` | Laisser `workload_type` non défini (`null`) | Low | Une validation au moment du plan rejette purement et simplement cette combinaison — un modèle de PVC exige un StatefulSet. |
+| `service_type` | `LoadBalancer`, sauf contrainte de quota | Medium | `ClusterIP` exige `kubectl port-forward` pour l'accès — adapté à un usage interne ou aux projets limités en quota (comme lors de la vérification en conditions réelles de ce module), mais inaccessible depuis un navigateur sans cela. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — Workload
+Pour le comportement du socle évoqué tout au long de ce guide — Workload
 Identity, autoscaling, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Homepage,

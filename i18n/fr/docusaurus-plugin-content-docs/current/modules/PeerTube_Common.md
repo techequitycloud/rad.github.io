@@ -17,7 +17,7 @@ de déploiement — mais comprendre ce qu'elle fournit explique les valeurs par 
 documentation de la plateforme.
 
 Pour l'infrastructure qui provisionne et exécute réellement PeerTube, consultez
-[PeerTube_CloudRun](PeerTube_CloudRun.md) et le guide de fondation
+[PeerTube_CloudRun](PeerTube_CloudRun.md) et le guide de socle
 [App_CloudRun](App_CloudRun.md).
 
 ---
@@ -29,7 +29,7 @@ Pour l'infrastructure qui provisionne et exécute réellement PeerTube, consulte
 | Secrets cryptographiques | Génère `PEERTUBE_SECRET` (64 caractères hexadécimaux, 32 octets aléatoires) et `PT_INITIAL_ROOT_PASSWORD` (24 caractères aléatoires), et les stocke dans **Secret Manager** | Injectés automatiquement ; récupérables via Secret Manager (voir ci-dessous) |
 | Identifiants de stockage d'objets | Crée un compte de service dédié + une **paire de clés HMAC**, et stocke les deux moitiés dans Secret Manager | `PEERTUBE_OBJECT_STORAGE_CREDENTIALS_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` |
 | Image de conteneur | Build personnalisé basé sur un Dockerfile reposant sur `chocobozzz/peertube`, avec un ARG de build dédié `PEERTUBE_VERSION` | Sortie `container_image` du déploiement de plateforme |
-| Moteur de base de données | Impose **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans le guide de plateforme |
+| Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans le guide de plateforme |
 | Initialisation de la base de données | Définit le job de premier déploiement (`db-init`) qui crée la base de données et l'utilisateur, accorde les droits et installe `pg_trgm`/`unaccent` | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare les buckets Cloud Storage **`data`** (état local, monté via FUSE) et **`videos`** (public, compatible S3) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement PeerTube de référence : liaison réseau, identité publique, initialisation de l'administrateur, inscription, activation du streaming en direct, TLS de la base de données, stockage d'objets S3, SMTP | Comportement de l'application dans le guide de plateforme |
@@ -75,14 +75,14 @@ gcloud secrets list --project "$PROJECT" --filter="name~app-secret OR name~root-
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ;
+Le mot de passe de la base de données est généré et géré séparément par le socle ;
 le nom de son secret est indiqué dans les sorties du déploiement de plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle partagé
 de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 PeerTube nécessite **PostgreSQL 15** ; le moteur est fixe, et MySQL ou d'autres
 moteurs ne sont pas pris en charge. Au premier déploiement, un job ponctuel (`db-init`)
@@ -117,7 +117,7 @@ Les noms de l'instance, de la base de données et de l'utilisateur figurent dans
 
 L'image personnalisée est construite à partir d'un Dockerfile reposant sur l'image de base officielle
 `chocobozzz/peertube`, avec un ARG de build `PEERTUBE_VERSION` — maintenu
-volontairement séparé de l'ARG de build générique `APP_VERSION` injecté par la fondation
+volontairement séparé de l'ARG de build générique `APP_VERSION` injecté par le socle
 (qui l'emporte lors de la fusion en cas de collision de noms). Lorsque
 `application_version = "latest"`, `PEERTUBE_VERSION` se résout en l'étiquette Docker Hub
 maintenue `production` plutôt qu'en une étiquette `latest` impossible à résoudre.
@@ -125,7 +125,7 @@ maintenue `production` plutôt qu'en une étiquette `latest` impossible à réso
 Un fin `docker-entrypoint.sh` s'exécute avant de passer la main au point d'entrée
 propre au fournisseur :
 
-- **Il remappe les variables d'environnement Redis.** La fondation injecte les noms fixes
+- **Il remappe les variables d'environnement Redis.** Le socle injecte les noms fixes
   `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` (aucun mécanisme d'alias par application
   n'existe pour Redis, contrairement à la base de données) ; le point d'entrée les remappe sur
   `PEERTUBE_REDIS_HOSTNAME`/`_PORT`/`_AUTH`.
@@ -148,7 +148,7 @@ propre au fournisseur :
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `PeerTube_Common` établit l'environnement PeerTube de référence afin que
 l'application démarre correctement et fédère dès le premier démarrage :
@@ -186,7 +186,7 @@ l'application démarre correctement et fédère dès le premier démarrage :
 
 ## 6. Stockage d'objets {#6-object-storage}
 
-`PeerTube_Common` déclare deux buckets GCS, provisionnés par la fondation :
+`PeerTube_Common` déclare deux buckets GCS, provisionnés par le socle :
 
 - **`data`** — privé, monté via **GCS FUSE** sur `/data`. Il contient
   l'état local de PeerTube (hors stockage d'objets) : avatars, miniatures,
@@ -197,7 +197,7 @@ l'application démarre correctement et fédère dès le premier démarrage :
   `uid`/`gid` particulière n'est donc requise (contrairement aux applications dont le processus principal s'exécute
   sans privilèges root du début à la fin).
 - **`videos`** — **public** (`public_access_prevention = "inherited"`,
-  qui remplace la valeur sécurisée par défaut `"enforced"` de la fondation), avec CORS activé
+  qui remplace la valeur sécurisée par défaut `"enforced"` du socle), avec CORS activé
   pour `GET`/`PUT`/`POST`/`DELETE`/`HEAD` depuis n'importe quelle origine. La documentation de PeerTube
   exige que son bucket de stockage d'objets soit public avec CORS configuré,
   car les fichiers vidéo et de playlists de streaming sont servis directement depuis le bucket
@@ -221,7 +221,7 @@ gcloud storage buckets describe gs://<videos-bucket> --format='value(iamConfigur
 
 ---
 
-## 7. Comportement des sondes d'état {#7-health-probe-behaviour}
+## 7. Comportement des sondes de santé {#7-health-probe-behaviour}
 
 - **Sonde de démarrage — TCP, et non HTTP.** Les migrations DB/Redis de PeerTube et
   l'initialisation de l'administrateur au premier démarrage (`installer.ts`) peuvent prendre plus de temps que ce

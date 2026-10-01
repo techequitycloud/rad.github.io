@@ -32,12 +32,12 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service binaire Rust, 1 vCPU / 512 Mi par défaut, mise à l'échelle automatique selon les requêtes |
-| Base de données | Cloud SQL for PostgreSQL 15 (par défaut) ou MySQL 8.0 | Moteur configurable ; la tâche d'initialisation s'adapte automatiquement |
+| Base de données | Cloud SQL for PostgreSQL 15 (par défaut) ou MySQL 8.0 | Moteur configurable ; le job d'initialisation s'adapte automatiquement |
 | Stockage d'objets | Cloud Storage | Un bucket `vaultwarden-attachments` dédié |
 | Secrets | Secret Manager | Mot de passe de la base de données ; Vaultwarden gère lui-même son jeton d'administration en interne |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Les inscriptions sont fermées par défaut.** `signups_allowed = false` empêche
   la création anonyme de comptes. Activez-les uniquement pendant la configuration
@@ -93,7 +93,7 @@ Vaultwarden stocke toutes les données du coffre-fort dans une instance Cloud SQ
 gérée. Le moteur par défaut est **PostgreSQL 15** ; définissez
 `database_type = "MYSQL_8_0"` pour utiliser MySQL à la place. Le service se connecte
 de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP
-publique). Lors du premier déploiement, une tâche d'initialisation crée la base de
+publique). Lors du premier déploiement, un job d'initialisation crée la base de
 données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les
@@ -132,7 +132,7 @@ le service à l'exécution. Vaultwarden gère lui-même son jeton d'administrati
 interne et ses clés de signature RSA dans le répertoire `/data` — ceux-ci ne sont pas
 stockés dans Secret Manager.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -150,7 +150,7 @@ en cache les réponses d'API authentifiées) et Cloud Armor peuvent être ajout�
 Cloud Armor est vivement recommandé pour protéger le point de terminaison de
 connexion de Vaultwarden contre les attaques par force brute.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -165,8 +165,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité (ciblant `/alive`) et des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -176,9 +176,9 @@ disponibilité (ciblant `/alive`) et des règles d'alerte en option.
 
 ## 3. Comportement de l'application Vaultwarden {#3-vaultwarden-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation crée la base de données et l'utilisateur Vaultwarden avant le
-  démarrage du service. Elle est idempotente. L'image de tâche appropriée est
+  démarrage du service. Il est idempotent. L'image de tâche appropriée est
   sélectionnée automatiquement : `postgres:15-alpine` pour PostgreSQL,
   `mysql:8.0-debian` pour MySQL.
 - **Aucune migration de schéma au démarrage.** Vaultwarden gère automatiquement
@@ -253,7 +253,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartir le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver pour un retour arrière. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -317,14 +317,14 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | `POSTGRES_15` (par défaut) ou `MYSQL_8_0`. L'image de la tâche d'initialisation est sélectionnée automatiquement. |
+| `database_type` | `POSTGRES_15` | `POSTGRES_15` (par défaut) ou `MYSQL_8_0`. L'image du job d'initialisation est sélectionné automatiquement. |
 | `db_name` | `vaultwarden` | Nom de la base de données. Immuable après le premier déploiement. |
 | `db_user` | `vaultwarden` | Utilisateur de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement supplémentaires sous lesquels les informations de connexion sont injectées. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -336,7 +336,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/alive`, délai de 30 s, 6 échecs | Chemin de santé dédié de Vaultwarden ; 30 s correspond au démarrage rapide en Rust. |
-| `liveness_probe` | HTTP `/alive`, délai de 30 s, 3 échecs | Sonde d'activité. |
+| `liveness_probe` | HTTP `/alive`, délai de 30 s, 3 échecs | Sonde de vivacité. |
 | `uptime_check_config` | désactivé, `/alive` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -347,7 +347,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_redis` | `false` | Vaultwarden n'utilise pas Redis nativement. Laissez désactivé sauf si vous ajoutez une intégration personnalisée. |
 | `redis_host` / `redis_port` / `redis_auth` | _(set)_ | Point de terminaison, port et authentification Redis. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -387,12 +387,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `signups_allowed` | `false` | Critical | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
 | `enable_cloudsql_volume` | `true` | Critical | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation fait échouer toutes les connexions à la base de données au démarrage. |
@@ -415,8 +415,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Vaultwarden partagée avec la variante GKE est décrite dans
 **[Vaultwarden_Common](Vaultwarden_Common.md)**.
 

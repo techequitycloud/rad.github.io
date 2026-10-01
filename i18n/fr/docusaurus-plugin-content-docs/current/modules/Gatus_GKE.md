@@ -95,7 +95,7 @@ d'aucune base de données, d'aucun cache ni d'aucun stockage d'objets :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Gatus {#a-gke-autopilot--the-gatus-workload}
 
@@ -104,9 +104,9 @@ réellement demandés par les pods. Par défaut, la charge de travail est un
 `Deployment` sans état avec un seul réplica ; passer à un `StatefulSet` provisionne
 un PVC en mode bloc par pod pour un historique durable des vérifications.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Gatus pour consulter les pods et les événements. Kubernetes Engine →
-  Services et Ingress affiche l'adresse IP externe.
+  Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -134,7 +134,7 @@ intégrée à l'image. Avec le Deployment sans état par défaut, ce répertoire
   volume sur `/data`, mais présente le risque lié à WAL sur un système de fichiers
   réseau décrit à la §1.
 
-- **Console :** Filestore → Instances (NFS) ; Kubernetes Engine → Stockage →
+- **Console :** Filestore → Instances (NFS) ; Kubernetes Engine → Storage →
   PersistentVolumeClaims (PVC en mode bloc).
 - **CLI :**
   ```bash
@@ -151,7 +151,7 @@ de base de données ni clé de chiffrement à gérer. Secret Manager n'est utili
 vous fournissez vos propres secrets via `secret_environment_variables` (par exemple
 une `${VAR}` référencée dans la configuration des alertes de `config.yaml`).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -169,7 +169,7 @@ certificat géré par Google et une adresse IP statique réservée peuvent tous 
 être activés si nécessaire, mais aucun n'est requis pour un fonctionnement correct,
 car la configuration de Gatus n'intègre aucune URL autoréférente.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -187,8 +187,8 @@ d'alerte facultatifs sont disponibles. Gatus journalise le résultat de chaque
 vérification de point de terminaison (réussite/échec, durée) au fil de son
 exécution.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -313,7 +313,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/health` | Sonde de démarrage. Gatus devient sain en quelques secondes. |
-| `health_check_config` | HTTP `/health` | Sonde d'activité. |
+| `health_check_config` | HTTP `/health` | Sonde de vivacité. |
 | `uptime_check_config` | disabled | Test de disponibilité Cloud Monitoring facultatif. |
 
 ### Groupe 13 / 14 — Système de fichiers et Cloud Storage {#group-13--14--filesystem--cloud-storage}
@@ -349,12 +349,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |

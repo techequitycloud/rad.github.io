@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Logto sur GKE Autopilot dans votre propre
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Logto est un fournisseur d'identité open source — une alternative à Auth0 qui prend en charge OIDC
 et OAuth 2.0, avec des flux de connexion, des connecteurs sociaux et d'entreprise, le multi-tenant et
@@ -29,13 +29,13 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, accéder à la charge de travail en cours d'exécution et atteindre la console
   d'administration pour la configuration initiale.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -78,7 +78,7 @@ export REGION="us-central1"           # the region you deploy into
    avec une IP statique réservée et un domaine personnalisé nip.io est provisionné par défaut.
    Les premiers déploiements prennent environ **20 à 35 minutes** (la création de Cloud SQL domine).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -137,7 +137,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la
    page de détails du déploiement — le module détient la spécification de la charge de travail, la mise à l'échelle est donc une
    modification de configuration et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de l'application suivante). GKE exige `min_instance_count >= 1` (pas de
+   annulée lors du prochain apply). GKE exige `min_instance_count >= 1` (pas de
    mise à l'échelle à zéro) ; l'affinité de session (`ClientIP`) est définie par défaut afin qu'un client
    atteigne toujours le même pod.
 
@@ -174,7 +174,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer. Le point d'entrée affiche une
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer). Le point d'entrée affiche une
    ligne `[cloud-entrypoint]` indiquant le mode de connexion à la base de données résolu et
    `ENDPOINT`, c'est la première chose à vérifier pour diagnostiquer un problème de connexion ou
    d'URL d'émetteur :
@@ -210,7 +210,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   externe du LoadBalancer ou du domaine personnalisé que le navigateur a utilisé pour atteindre Logto — Logto
   construit son émetteur OIDC et chaque URL de redirection absolue à partir de cette valeur.
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL est `RUNNABLE` et que
-  le secret du mot de passe de la base a bien été matérialisé dans le namespace via le pilote Secret Store
+  le secret du mot de passe de la base a bien été matérialisé dans l'espace de noms via le pilote Secret Store
   CSI. Sur GKE, le sidecar Auth Proxy écoute sur `127.0.0.1` ; le point d'entrée
   se connecte en TCP simple sur la boucle locale avec SSL désactivé (le proxy termine le TLS) —
   cela diffère du chemin par IP privée utilisé sur Cloud Run.
@@ -234,10 +234,10 @@ la seule copie des clés de signature OIDC de Logto s'y trouve).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL (et avec elle la seule copie des clés de signature
+et l'espace de noms, la base de données Cloud SQL (et avec elle la seule copie des clés de signature
 OIDC de Logto), le secret Secret Manager, le bucket GCS et les images Artifact Registry.
 Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé,
 le registre) sont gérées séparément et ne sont pas supprimées ici.
@@ -253,4 +253,4 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets et le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'OIDC/de rappel, de base de données, de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

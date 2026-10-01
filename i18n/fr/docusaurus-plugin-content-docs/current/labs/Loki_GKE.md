@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Loki sur GKE Autopilot dans votre propre 
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 45 minutes
+**Durée estimée :** 30–45 minutes
 
 Grafana Loki est un système d'agrégation de journaux évolutif horizontalement (« Prometheus pour
 les journaux ») qui n'indexe qu'un petit ensemble de libellés par flux de journaux plutôt que le texte
@@ -33,14 +33,14 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, accéder à la charge de travail en cours d'exécution et exécuter une première requête
   LogQL.
 - Effectuer les opérations du jour 2 — inspecter, comprendre la contrainte de mise à l'échelle, mettre à jour et
   inspecter l'utilisation du stockage GCS.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -87,7 +87,7 @@ export REGION="us-central1"           # the region you deploy into
    déploiements les plus rapides du catalogue — comptez environ **10 à 15 minutes**, principalement consacrées à
    la construction du conteneur et au provisionnement de l'IP du LoadBalancer.
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -234,7 +234,7 @@ figé).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement
@@ -243,7 +243,7 @@ plus le gérer (par exemple après des modifications manuelles en conflit avec l
 Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des
 enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le
 déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes et
-le namespace, le bucket GCS `storage` (et toutes les données de journaux ingérées qu'il contient), les entrées
+l'espace de noms, le bucket GCS `storage` (et toutes les données de journaux ingérées qu'il contient), les entrées
 Secret Manager (si certaines ont été ajoutées) et les images Artifact Registry. Les ressources appartenant
 à **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé, le registre) sont gérées
 séparément et ne sont pas supprimées ici.
@@ -259,4 +259,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, comprendre la contrainte de mise à l'échelle à réplica unique, mettre à jour la version, surveiller l'utilisation de GCS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de santé du pod, d'IAM GCS, de build de l'image, de planification et de requêtes |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime la charge de travail, le bucket de stockage (et ses données de journaux) et les images |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime la charge de travail, le bucket de stockage (et ses données de journaux) et les images |

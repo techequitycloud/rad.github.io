@@ -19,7 +19,7 @@ opérationnel du module **Planka on Cloud Run** sur Google Cloud :
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer
 les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Planka. Pour la liste complète des
 services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez
 le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Planka_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier, et vous connecter avec l'identifiant administrateur généré.
@@ -50,7 +50,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -71,7 +71,7 @@ export REGION="us-central1"          # the region you deploy into
    ghcr.io/plankanban/planka`), provisionne le service Cloud Run, une base de données Cloud SQL
    (PostgreSQL 15) avec son secret de mot de passe dans Secret Manager, les secrets
    `SECRET_KEY` et `DEFAULT_ADMIN_PASSWORD`, un bucket GCS `storage`,
-   et exécute une tâche ponctuelle d'initialisation de la base de données. Les premiers déploiements prennent
+   et exécute un job ponctuel d'initialisation de la base de données. Les premiers déploiements prennent
    environ **15–25 minutes** (le build de l'image par Cloud Build et la création de Cloud SQL
    en représentent l'essentiel).
 
@@ -88,7 +88,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et répond :
 
@@ -186,10 +186,10 @@ export REGION="us-central1"          # the region you deploy into
   `/api/status`. Si les sondes échouent, remplacez le chemin par `/` et
   redéployez.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est
-  `RUNNABLE`, que le secret du mot de passe de la base existe et que la tâche d'initialisation
-  s'est terminée. Recherchez dans les journaux du conteneur la ligne `[cloud-entrypoint]`
+  `RUNNABLE`, que le secret du mot de passe de la base existe et que le job d'initialisation
+  s'est terminé. Recherchez dans les journaux du conteneur la ligne `[cloud-entrypoint]`
   indiquant quel mode `DATABASE_URL` a été résolu.
-- **Échec de la tâche d'initialisation :**
+- **Échec du job d'initialisation :**
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" --project="$PROJECT" --region="$REGION"
   ```
@@ -224,8 +224,8 @@ ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne Cloud Run, Cloud SQL (PostgreSQL 15), les secrets, un bucket GCS, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; se connecter avec l'identifiant administrateur généré et créer un tableau |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; se connecter avec l'identifiant administrateur généré et créer un tableau |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

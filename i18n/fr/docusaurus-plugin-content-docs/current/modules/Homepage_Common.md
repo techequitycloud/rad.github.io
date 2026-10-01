@@ -17,8 +17,8 @@ de déploiement — mais comprendre ce qu'elle fournit explique les valeurs par
 défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Homepage, consultez le
-guide de plateforme ([Homepage_CloudRun](Homepage_CloudRun.md)) et les guides de
-fondation ([App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
+guide de plateforme ([Homepage_CloudRun](Homepage_CloudRun.md)) et les guides du
+socle ([App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
 
@@ -92,7 +92,7 @@ personnalisée :
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Homepage_Common` établit l'environnement minimal dont Homepage a besoin au
 premier démarrage :
@@ -141,10 +141,10 @@ authentifié.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
-Un unique bucket **Cloud Storage** est déclaré ici et provisionné par la
-fondation, qui accorde également l'accès au compte de service de la charge de
+Un unique bucket **Cloud Storage** est déclaré ici et provisionné par le
+socle, qui accorde également l'accès au compte de service de la charge de
 travail :
 
 ```bash

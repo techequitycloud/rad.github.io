@@ -18,7 +18,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Homebox, consultez les
 guides de plateforme ([Homebox_GKE](Homebox_GKE.md), [Homebox_CloudRun](Homebox_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -28,7 +28,7 @@ et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.m
 | Domaine | Fourni par Homebox_Common | Où cela apparaît |
 |---|---|---|
 | Image de conteneur | Référence directement l'image officielle `ghcr.io/sysadminsmedia/homebox` — aucun build personnalisé | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** ; définit explicitement `HBOX_DATABASE_DRIVER=postgres` | §Base de données dans les guides de plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** ; définit explicitement `HBOX_DATABASE_DRIVER=postgres` | §Base de données dans les guides de plateforme |
 | Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Stockage objet | Déclare un bucket GCS `data` (photos et pièces jointes des objets) et le monte sur `/data` via `gcs_volumes` | Sortie `storage_buckets` |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/v1/status` | §Observabilité dans les guides de plateforme |
@@ -56,7 +56,7 @@ publiques. La section *Pièges de configuration* des guides de plateforme signal
 ce point comme un élément de risque.
 
 Le mot de passe de la base de données et le secret `HBOX_AUTH_API_KEY_PEPPER`
-sont générés et gérés respectivement par la fondation et par ce module —
+sont générés et gérés respectivement par le socle et par ce module —
 consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de
 Workload Identity utilisé ailleurs dans le catalogue.
 
@@ -104,7 +104,7 @@ connexion combinée :
 
 Cet aliasing est configuré via les variables `db_host_env_var_name` /
 `db_user_env_var_name` / `db_password_env_var_name` / `db_name_env_var_name` /
-`db_port_env_var_name` de la fondation, définies au niveau de l'**Application
+`db_port_env_var_name` du socle, définies au niveau de l'**Application
 Module** (`Homebox_CloudRun`/`Homebox_GKE`), et non par cette couche Common.
 Comme il s'agit de simples champs clé=valeur (et non d'une URL), **aucun encodage
 d'URL n'est nécessaire** pour les caractères spéciaux du mot de passe, et **aucun
@@ -137,9 +137,9 @@ Dockerfile officiel lui-même (`wget ... http://localhost:7745/api/v1/status`).
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
-Un bucket GCS `data` est déclaré ici et provisionné par la fondation, pour le
+Un bucket GCS `data` est déclaré ici et provisionné par le socle, pour le
 stockage des photos et pièces jointes des objets, et ce module déclare également
 une entrée `gcs_volumes` qui le monte (sous le nom
 `gcs-<application_name><tenant-prefix>-data`) sur le chemin `/data` de Homebox —

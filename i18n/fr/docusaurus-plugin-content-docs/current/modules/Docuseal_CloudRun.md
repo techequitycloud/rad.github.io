@@ -74,7 +74,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service DocuSeal {#a-cloud-run--the-docuseal-service}
 
@@ -116,7 +116,7 @@ l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Filestore / NFS — documents persistants {#c-filestore--nfs--persistent-documents}
@@ -250,29 +250,29 @@ avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `docuseal` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_version` | `latest` | Tag de l'image DocuSeal (`FROM docuseal/docuseal:<tag>`) ; épinglez une version précise en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par instance (2 vCPU). |
@@ -284,12 +284,12 @@ avec leur comportement standard.
 | `container_resources` | `null` | Surcharge structurée du CPU / de la mémoire ; lorsqu'elle est définie, elle remplace `cpu_limit`/`memory_limit`. |
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS (et impose un plancher de mémoire de 512 MiB). |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
-| `enable_image_mirroring` | `true` | Duplique l'image DocuSeal dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image DocuSeal dans Artifact Registry. |
 | `container_image_source` | `custom` | Enveloppe légère construite à partir de `docuseal/docuseal`. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires fusionnés dans le conteneur. Les valeurs essentielles (`RAILS_LOG_TO_STDOUT`, `WORKDIR`) sont définies automatiquement. |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom de secret Secret Manager. `SECRET_KEY_BASE` est injecté automatiquement. |
@@ -297,7 +297,7 @@ avec leur comportement standard.
 
 ### Groupe 10 — Stockage et système de fichiers {#group-10--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Monte le volume NFS partagé sur `/data/docuseal` pour des documents persistants. **Laissez-le activé**, sinon les fichiers téléversés sont perdus au redéploiement. |
 | `nfs_mount_path` | `/data/docuseal` | Chemin de montage — doit correspondre au `WORKDIR` de DocuSeal. |
@@ -306,7 +306,7 @@ avec leur comportement standard.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `db_name` | `docuseal` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `docuseal` | Utilisateur de la base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
@@ -315,13 +315,13 @@ avec leur comportement standard.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` (crée le rôle + la base de données). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/up`, délai de 60 s | Sonde de démarrage. Prévoyez le temps nécessaire aux migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/up`, délai de 60 s | Sonde de vivacité sur le point de terminaison de santé de Rails. |
@@ -329,7 +329,7 @@ avec leur comportement standard.
 
 ### Groupe 21 — Cache et file d'attente Redis {#group-21--redis-cache--queue}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | DocuSeal utilise une file d'attente / un cache adossés à PostgreSQL ; laissez-le désactivé. |
 
@@ -337,12 +337,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -356,7 +356,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -393,8 +393,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à DocuSeal partagée avec la variante GKE est décrite dans
 **[Docuseal_Common](Docuseal_Common.md)**.
 

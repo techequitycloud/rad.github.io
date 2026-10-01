@@ -65,7 +65,7 @@ l'exécution. Le déploiement assemble un ensemble ciblé de services Google Clo
   court-circuite l'assistant d'installation web de Forgejo ; l'image
   `forgejo/forgejo` crée et migre son propre schéma au démarrage du conteneur,
   dans la base de données vide préparée par la tâche `db-init`.
-- **Aucun compte administrateur n'est amorcé par Terraform.** Aucune tâche
+- **Aucun compte administrateur n'est amorcé par Terraform.** Aucun job
   d'initialisation ne crée d'utilisateur administrateur Forgejo — consultez la
   [section 3](#3-forgejo-application-behaviour) pour l'étape manuelle.
 - **`SECRET_KEY` et `INTERNAL_TOKEN` sont générés automatiquement** et stockés
@@ -211,7 +211,7 @@ les détails de l'IP statique.
 
 Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les
 métriques de GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des
-vérifications de disponibilité et des règles d'alerte sont disponibles en option.
+tests de disponibilité et des règles d'alerte sont disponibles en option.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -239,7 +239,7 @@ vérifications de disponibilité et des règles d'alerte sont disponibles en opt
   de Forgejo est ignoré ; le point d'entrée d'origine `forgejo/forgejo` crée et
   migre le schéma dans la base de données vide au premier démarrage, puis
   applique les migrations suivantes lors des mises à niveau de version.
-- **Aucun compte administrateur n'est créé automatiquement.** Aucune tâche
+- **Aucun compte administrateur n'est créé automatiquement.** Aucun job
   d'initialisation n'exécute d'étape `forgejo admin user create` (ou équivalente),
   et l'inscription libre est activée (`GITEA__service__DISABLE_REGISTRATION = "false"`) :
   toute personne pouvant joindre le service peut donc créer un compte. L'étape
@@ -277,7 +277,7 @@ vérifications de disponibilité et des règles d'alerte sont disponibles en opt
   `initial_delay_seconds=0`, `timeout_seconds=10`, `period_seconds=30`,
   `failure_threshold=10` ; sonde de vivacité `initial_delay_seconds=60`,
   `timeout_seconds=5`, `period_seconds=30`, `failure_threshold=3`.
-- **Inspecter la tâche d'initialisation et la configuration en cours :**
+- **Inspecter le job d'initialisation et la configuration en cours :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -415,7 +415,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE ; la sélection du mode SSL par le point d'entrée en dépend. |
 | `public_domain` / `public_url` | Le véritable nom d'hôte externe | High | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
 | `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | High | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
-| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucune tâche d'initialisation n'amorce d'administrateur ; tant qu'aucun n'est créé via la CLI Forgejo, l'instance ne dispose d'aucun utilisateur privilégié. |
+| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucun job d'initialisation n'amorce d'administrateur ; tant qu'aucun n'est créé via la CLI Forgejo, l'instance ne dispose d'aucun utilisateur privilégié. |
 | `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Medium | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |
 | `max_instance_count` | `3` (par défaut) | Medium | Les réplicas concurrents partagent le même répertoire de données Git sur NFS et la même base de données Postgres ; l'exactitude multi-réplica des écritures concurrentes n'est pas documentée ici — traitez la mise à l'échelle comme pour toute charge de travail sur un système de fichiers partagé. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |

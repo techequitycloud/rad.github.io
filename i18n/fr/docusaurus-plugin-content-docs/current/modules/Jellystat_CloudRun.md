@@ -71,7 +71,7 @@ services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Jellystat {#a-cloud-run--the-jellystat-service}
 
@@ -110,7 +110,7 @@ démarrage.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
@@ -264,9 +264,9 @@ leur comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -278,7 +278,7 @@ leur comportement standard.
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés (`backups`). |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `uptime_check_names` | État de la supervision et tests de disponibilité. |
+| `monitoring_enabled` / `uptime_check_names` | État de la surveillance et tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -306,7 +306,7 @@ leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et simultanéité, entrée et équilibrage de charge, CI/CD, Cloud
-Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images —
+Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Jellystat, partagée avec la variante GKE, est décrite dans
 **[Jellystat_Common](Jellystat_Common.md)**.

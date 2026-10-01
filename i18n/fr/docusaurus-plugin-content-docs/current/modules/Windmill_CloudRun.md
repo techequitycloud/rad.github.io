@@ -27,7 +27,7 @@ Windmill s'exécute sous forme de conteneur combiné serveur+worker sur Cloud Ru
 | Secrets | Secret Manager | Mot de passe de la base de données généré automatiquement et secret SMTP provisoire |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 16 est obligatoire.** Windmill utilise des fonctionnalités propres à PostgreSQL ; le moteur de base de données est fixe. Utiliser une version plus ancienne ou `NONE` fait échouer le job d'initialisation.
 - **Mode combiné serveur+worker.** `MODE=server,worker` et `NUM_WORKERS=3` exécutent le serveur d'API et les workers d'exécution de scripts dans la même instance de conteneur. Pour une mise à l'échelle indépendante des workers à haut débit, utilisez `Windmill_GKE`.
@@ -117,7 +117,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés à Cloud Logging au format JSON structuré (`JSON_FMT=true`). Les métriques Cloud Run et Cloud SQL sont envoyées à Cloud Monitoring, avec des vérifications de disponibilité et des règles d'alerte en option. Un point de terminaison de métriques Prometheus est exposé sur `:9001` pour une collecte au sein du VPC.
+Les journaux des conteneurs sont envoyés à Cloud Logging au format JSON structuré (`JSON_FMT=true`). Les métriques Cloud Run et Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte en option. Un point de terminaison de métriques Prometheus est exposé sur `:9001` pour une collecte au sein du VPC.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -226,7 +226,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir [App_Cl
 | `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base pour une instance intégrée. |
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. |
 
-### Groupe 10 — Domaine, CDN, Cloud Armor et conservation des images {#group-10--domain-cdn-cloud-armor--image-retention}
+### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -268,7 +268,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir [App_Cl
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/version`, délai initial de 60s, 10 échecs | Sonde de démarrage. |
-| `liveness_probe` | HTTP `/api/version`, délai initial de 60s, 3 échecs | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/version`, délai initial de 60s, 3 échecs | Sonde de vivacité. |
 | `uptime_check_config` | désactivé, `/api/version` | Vérification de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -309,7 +309,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -320,12 +320,12 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_16` | Critical | Windmill nécessite PostgreSQL 16 ; une version plus ancienne fait échouer le job d'initialisation et la base de données reste non initialisée. |
 | `db_name` / `db_user` | défini une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tous les scripts, flux et l'historique des jobs. |

@@ -19,7 +19,7 @@ du cycle de vie opérationnel du module **Moodle on GKE Autopilot** sur Google C
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit Moodle. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Moodle_GKE) — ce
@@ -27,7 +27,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, un partage NFS
    Filestore pour `moodledata`, Redis en option, construit l'image du conteneur, exécute
-   les tâches ponctuelles `db-init` et `nfs-init`, et provisionne une tâche cron
+   les jobs ponctuels `db-init` et `nfs-init`, et provisionne un job cron
    Cloud Scheduler. Les premiers déploiements prennent environ **25–45 minutes** (la création de Cloud SQL et de Filestore
    en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -121,7 +121,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
 3. Ouvrez `http://${EXTERNAL_IP}` dans un navigateur et connectez-vous au panneau d'administration de Moodle.
-   Les identifiants administrateur initiaux sont définis lors de la tâche `db-init` (le nom d'utilisateur et
+   Les identifiants administrateur initiaux sont définis lors du job `db-init` (le nom d'utilisateur et
    l'e-mail sont configurables via `environment_variables` au moment du déploiement).
 
 ---
@@ -142,7 +142,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le cron Cloud Scheduler, le stockage et les tâches :**
+4. **Gérez les secrets, le cron Cloud Scheduler, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -152,7 +152,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl get jobs -n "$NS"
    ```
 
-   Pour déclencher manuellement la tâche cron de Moodle :
+   Pour déclencher manuellement le job cron de Moodle :
 
    ```bash
    CRON_JOB=$(gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
@@ -182,7 +182,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -205,22 +205,22 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que la tâche `db-init`
-  s'est terminée avec succès.
-- **Échec des tâches d'initialisation (`db-init` ou `nfs-init`) :** inspectez les tâches et
+  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que le job `db-init`
+  s'est terminé avec succès.
+- **Échec des jobs d'initialisation (`db-init` ou `nfs-init`) :** inspectez les jobs et
   les journaux de leurs pods :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
   ```
-- **Le cron de Moodle ne s'exécute pas :** vérifiez que la tâche Cloud Scheduler est activée et que sa
+- **Le cron de Moodle ne s'exécute pas :** vérifiez que le job Cloud Scheduler est activé et que sa
   dernière exécution a réussi ; vérifiez que le secret du mot de passe cron existe dans l'espace de noms.
   ```bash
   gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
     --filter="name~moodle"
   ```
-- **Erreurs NFS / `moodledata` :** vérifiez que l'instance Filestore est `READY` ; la
-  tâche `nfs-init` doit s'être terminée pour définir le bon propriétaire `www-data`. Vérifiez
+- **Erreurs NFS / `moodledata` :** vérifiez que l'instance Filestore est `READY` ; le
+  job `nfs-init` doit s'être terminé pour définir le bon propriétaire `www-data`. Vérifiez
   le montage NFS du pod avec
   `kubectl exec -n "$NS" <pod> -- df -h | grep nfs`.
 - **Pod en attente / pas d'IP externe :** consultez les événements de `kubectl describe pod` pour repérer des
@@ -237,7 +237,7 @@ paramètre.
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela supprime le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Delete supprime tout ce que le module a créé — la charge de travail Kubernetes
-et son espace de noms, la base de données Cloud SQL, le partage NFS Filestore, la tâche cron Cloud Scheduler,
+et son espace de noms, la base de données Cloud SQL, le partage NFS Filestore, le job cron Cloud Scheduler,
 les secrets Secret Manager, les buckets GCS et les images Artifact Registry. Les ressources appartenant
 à **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé, le registre) sont gérées
 séparément et ne sont pas supprimées ici.
@@ -248,9 +248,9 @@ séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), le NFS Filestore, Redis, le cron Cloud Scheduler, les secrets, et exécute les tâches db-init + nfs-init |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état sur `/health.php` réussit ; se connecter au panneau d'administration de Moodle |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), le NFS Filestore, Redis, le cron Cloud Scheduler, les secrets, et exécute les jobs db-init + nfs-init |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état sur `/health.php` réussit ; se connecter au panneau d'administration de Moodle |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le cron/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de NFS, de cron, de planification et de récupération d'image |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de NFS, de cron, de planification et de récupération d'image |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

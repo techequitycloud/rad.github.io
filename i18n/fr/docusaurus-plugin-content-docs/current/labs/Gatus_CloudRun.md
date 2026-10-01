@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Gatus sur Cloud Run dans votre propre pro
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Gatus est une page de statut et un moniteur de contrôles de santé open source, pensé pour les développeurs :
 il interroge des points de terminaison HTTP, TCP, DNS et autres selon des planifications indépendantes,
@@ -37,7 +37,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
   les secrets.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -115,7 +115,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -158,7 +158,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -213,7 +213,7 @@ mise en garde sur la persistance SQLite WAL).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run
 et les images Artifact Registry. Il n’y a ni base de données Cloud SQL, ni bucket GCS, ni
@@ -232,4 +232,4 @@ pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, garder le maximum d’instances à 1, mettre à jour la version, gérer les secrets, comprendre le compromis sur la persistance |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de modification de configuration, d’accès et de build |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

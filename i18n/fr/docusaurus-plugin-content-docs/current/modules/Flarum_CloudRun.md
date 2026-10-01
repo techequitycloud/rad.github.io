@@ -94,7 +94,7 @@ services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Flarum {#a-cloud-run--the-flarum-service}
 
@@ -136,7 +136,7 @@ conteneur.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Cloud Storage et Filestore (NFS) {#c-cloud-storage--filestore-nfs}
@@ -334,7 +334,7 @@ comportement et leurs valeurs par défaut standard.
 | `execution_environment` | `gen2` | Requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | **Remplacement propre à Cloud Run** de la valeur par défaut `true` de `Flarum_Common` — Flarum se connecte en TCP direct sur IP privée, sauf si vous passez cette valeur à `true` pour le volume de socket Unix de l'Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image de base mondedie/flarum dans Artifact Registry pour Cloud Build. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base mondedie/flarum dans Artifact Registry pour Cloud Build. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `container_protocol` | `http1` | `h2c` est disponible si l'application prend en charge HTTP/2 en clair. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence des conventions ; non référencée par le déploiement de ce module. |
@@ -461,12 +461,12 @@ transmise par `main.tf` — le réseau VPC est toujours découvert automatiqueme
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -520,7 +520,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Flarum,
 partagée avec la variante GKE — l'identifiant d'administration, l'amorçage de la base
 de données, le build de l'image de conteneur, les paramètres de base et les valeurs

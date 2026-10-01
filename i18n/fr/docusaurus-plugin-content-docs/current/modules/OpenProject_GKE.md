@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer OpenProject sur GKE Au
 OpenProject est une suite open source, sous licence GPLv3, de gestion de projet et de
 collaboration d'équipe — lots de travaux, diagrammes de Gantt, tableaux agiles, wikis,
 suivi du temps et budgets. Ce module déploie OpenProject sur **GKE Autopilot** au-dessus
-de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google
+du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google
 Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise OpenProject et sur la manière de
@@ -20,7 +20,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de c
 Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -29,7 +29,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 OpenProject s'exécute comme une charge de travail web Ruby on Rails (Puma). Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Rails/Puma, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — OpenProject ne prend pas en charge MySQL ni d'autres moteurs |
@@ -61,7 +61,7 @@ assemble un ensemble ciblé de services Google Cloud :
   l'écoute sur le port) est donc utilisée à la fois pour le démarrage et pour la vivacité.
   GKE prend en charge une sonde de vivacité TCP, qui reste donc activée (contrairement à
   Cloud Run).
-- **L'affinité de session est `ClientIP`** et au moins 1 réplica est maintenue (GKE ne
+- **L'affinité de session est `ClientIP`** et au moins 1 réplica est maintenu (GKE ne
   propose pas de réduction à zéro) ; un PodDisruptionBudget maintient les pods en service
   pendant les mises à niveau des nœuds.
 - **Les déploiements progressifs adossés au NFS utilisent la stratégie `Recreate`** afin
@@ -140,8 +140,8 @@ Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `SECRET_KEY_BASE` (signature des sessions/cookies Rails et dérivation de la clé des
-colonnes chiffrées). Le mot de passe de la base de données est géré séparément par la
-fondation.
+colonnes chiffrées). Le mot de passe de la base de données est géré séparément par le
+socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -154,7 +154,7 @@ Le nom du secret du mot de passe de la base de données figure dans les
 [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI
 et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load
 Balancing (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré
@@ -249,7 +249,7 @@ leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -260,7 +260,7 @@ leurs valeurs par défaut standard.
 | `display_name` | `OpenProject` | Nom lisible affiché dans la console. |
 | `application_version` | `latest` | Tag de l'image OpenProject (`OPENPROJECT_VERSION`). `latest` est épinglé sur la version majeure stable `16` ; épinglez explicitement une version en production. |
 
-### Groupe 4 — Exécution et dimensionnement {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -372,7 +372,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production/la conformité. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaure à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -428,7 +428,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `db-migrate`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -447,7 +447,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > service dégradé) — **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible :
 > mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une réplique en lecture sans son instance principale, IAP sans identités autorisées, une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, un `quota_memory_*` en entier sans unité, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, un `quota_memory_*` en entier sans unité, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -467,7 +467,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — IAM et Workload
+Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à OpenProject partagée avec

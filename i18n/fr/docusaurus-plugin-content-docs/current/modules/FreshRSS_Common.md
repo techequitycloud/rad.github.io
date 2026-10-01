@@ -28,11 +28,11 @@ guides des plateformes ([FreshRSS_GKE](FreshRSS_GKE.md),
 | Domaine | Fourni par FreshRSS_Common | Où cela apparaît |
 |---|---|---|
 | Identifiant administrateur | Génère un `FRESHRSS_ADMIN_PASSWORD` de 24 caractères et le stocke dans **Secret Manager** ; injecté comme variable d'environnement secrète du service | À récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Build personnalisé léger superposé à l'image officielle `freshrss/freshrss` avec un wrapper `platform-entrypoint.sh` ; construit via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Build personnalisé léger superposé à l'image officielle `freshrss/freshrss` avec un wrapper `platform-entrypoint.sh` ; construit via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme moteur pris en charge (le point d'entrée code en dur `--db-type pgsql`) | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Output `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Installation au premier lancement | Le point d'entrée pilote les scripts `cli/do-install.php` + `cli/create-user.php` de FreshRSS au premier démarrage | Comportement de l'application dans les guides des plateformes |
-| Stockage persistant | Ne déclare **aucun bucket GCS** ; l'état par utilisateur et la configuration résident dans le répertoire de données de FreshRSS, rendu persistant via NFS (ou un PVC en mode bloc sur GKE) | Output `storage_buckets` (vide) |
+| Stockage persistant | Ne déclare **aucun bucket GCS** ; l'état par utilisateur et la configuration résident dans le répertoire de données de FreshRSS, rendu persistant via NFS (ou un PVC en mode bloc sur GKE) | Sortie `storage_buckets` (vide) |
 | Paramètres de base | Définit la configuration de référence de FreshRSS : utilisateur administrateur, langue, fuseau horaire, cadence du cron d'actualisation des flux, URL de base | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes par défaut de démarrage (TCP) et d'activité (HTTP) ; FreshRSS sert aussi un point de terminaison JSON `/status` non authentifié | §Observabilité dans les guides des plateformes |
 
@@ -75,7 +75,7 @@ partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur et initialisation de la base de données {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 FreshRSS fonctionne avec **PostgreSQL 15**. Bien que la variable `database_type` de
 la plateforme propose nominalement d'autres options, le point d'entrée de FreshRSS
@@ -147,7 +147,7 @@ car la définition d'un ENTRYPOINT personnalisé réinitialise la CMD héritée.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `FreshRSS_Common` établit l'environnement de référence de FreshRSS afin que
 l'application démarre correctement dès le premier lancement :
@@ -172,10 +172,10 @@ l'application démarre correctement dès le premier lancement :
 ## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 La sonde de démarrage est une vérification **TCP** sur le port 80 (le conteneur est
-prêt dès qu'Apache se lie à son port), et la sonde d'activité est une vérification
+prêt dès qu'Apache se lie à son port), et la sonde de vivacité est une vérification
 **HTTP**. FreshRSS sert son index non authentifié sur `/` (HTTP 200) et un point de
 terminaison de santé JSON non authentifié sur `/status` ; les variantes CloudRun/GKE
-ciblent `/` par défaut, tandis que la valeur par défaut de la sonde d'activité de
+ciblent `/` par défaut, tandis que la valeur par défaut de la sonde de vivacité de
 cette couche partagée cible `/status`. Une fenêtre de démarrage généreuse (un
 `failure_threshold` élevé) laisse le temps à l'installation du premier démarrage qui
 crée le schéma.

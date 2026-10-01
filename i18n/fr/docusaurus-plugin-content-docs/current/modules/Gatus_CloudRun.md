@@ -93,7 +93,7 @@ dépend d'aucune base de données, d'aucun cache ni d'aucun stockage d'objets :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources sont indiqués dans les [Outputs](#5-outputs) du
+services et des ressources sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Gatus {#a-cloud-run--the-gatus-service}
@@ -145,7 +145,7 @@ de base de données ni clé de chiffrement à gérer. Secret Manager n'est utili
 vous fournissez vos propres secrets via `secret_environment_variables` (par exemple
 une `${VAR}` référencée dans la configuration des alertes de `config.yaml`).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -161,8 +161,7 @@ Le service est accessible par défaut à son URL `run.app`, ce qui permet l'acc�
 public dont une page de statut a généralement besoin. Un équilibreur de charge HTTPS
 externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -178,8 +177,8 @@ Run sont envoyées vers Cloud Monitoring, avec des tests de disponibilité et de
 règles d'alerte facultatifs. Gatus journalise le résultat de chaque vérification de
 point de terminaison (réussite/échec, durée) au fil de son exécution.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -286,7 +285,7 @@ avec leur comportement standard.
 | `nfs_mount_path` | `/data` | Chemin de montage NFS ; correspond au `storage.path` intégré dans `config.yaml`. |
 | `storage_buckets` | `[]` | Non requis — Gatus n'utilise aucun stockage d'objets. |
 
-### Groupe 12 — Base de données {#group-12--database-backend}
+### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -305,7 +304,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health` 10s delay | Sonde de démarrage. Gatus devient sain en quelques secondes. |
-| `liveness_probe` | HTTP `/health` 15s delay | Sonde d'activité. |
+| `liveness_probe` | HTTP `/health` 15s delay | Sonde de vivacité. |
 | `uptime_check_config` | `{ enabled=false, path="/health" }` | Test de disponibilité Cloud Monitoring facultatif. |
 
 ### Groupe 16 — Cache Redis {#group-16--redis-cache}
@@ -318,12 +317,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lorsqu'un déploiement réussit — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |

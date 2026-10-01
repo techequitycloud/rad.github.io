@@ -28,11 +28,11 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Identifiant cron | Génère le mot de passe cron de Moodle (32 caractères) et le stocke dans **Secret Manager** | Intégré à l'URL de la tâche Cloud Scheduler provisionnée automatiquement |
 | Identifiant SMTP | Génère un mot de passe SMTP initial (24 caractères) et le stocke dans **Secret Manager** | Récupéré et remplacé via Secret Manager après le déploiement |
-| Image de conteneur | Construit une image PHP 8.3/Apache entièrement personnalisée à partir d'Ubuntu 24.04 | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Construit une image PHP 8.3/Apache entièrement personnalisée à partir d'Ubuntu 24.04 | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
 | Extension PostgreSQL | Active `pg_trgm` pour la recherche en texte intégral de Moodle | Appliquée par la tâche `db-init` au premier déploiement |
 | Amorçage de la base de données | Définit la tâche `db-init` qui crée la base de données, l'utilisateur et l'extension | `initialization_jobs` dans les guides des plateformes |
-| Initialisation NFS | Définit la tâche `nfs-init` qui crée les sous-répertoires de `moodledata` avec la bonne propriété | Output `nfs_setup_job` des guides des plateformes |
+| Initialisation NFS | Définit la tâche `nfs-init` qui crée les sous-répertoires de `moodledata` avec la bonne propriété | Sortie `nfs_setup_job` des guides des plateformes |
 | Paramètres de base | Définit le port 8080, la construction de l'image personnalisée et l'environnement Moodle de base | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit `/health.php` comme point de terminaison de sonde par défaut, au démarrage comme pour la vivacité | Section Observabilité des guides des plateformes |
 
@@ -84,7 +84,7 @@ outputs du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Moodle_Common` établit l'environnement Moodle de base afin que l'application démarre
 correctement dès le premier lancement :

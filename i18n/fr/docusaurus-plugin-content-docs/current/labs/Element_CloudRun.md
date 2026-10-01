@@ -28,11 +28,11 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Faire pointer Element vers un homeserver Matrix et vérifier le service en cours d'exécution.
-- Effectuer les opérations du jour 2 (day-2) — inspecter, mettre à l'échelle, mettre à jour la version et changer
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour la version et changer
   le homeserver cible.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
@@ -121,7 +121,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Ajustez le plafond de mise à l'échelle** en modifiant `max_instance_count` et en cliquant sur **Update** sur
    la page de détails du déploiement — le module est propriétaire de la spécification du service : la mise à l'échelle est donc une
    modification de configuration, et non une modification manuelle avec `gcloud` (une modification manuelle serait annulée
-   lors de l'application suivante). **`min_instance_count` n'est pas un levier utilisable pour ce module :**
+   lors du prochain apply). **`min_instance_count` n'est pas un levier utilisable pour ce module :**
    `element.tf` le fixe en dur à `0` à la fois dans l'appel au module Foundation et dans la surcharge
    de configuration ; `var.min_instance_count` n'est donc jamais transmis au service déployé —
    l'augmenter via la plateforme n'a aucun effet. Element étant sans état, c'est voulu :
@@ -146,7 +146,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — journaux d'accès et d'erreurs nginx, depuis la CLI ou le Logs Explorer :
+1. **Journaux** — journaux d'accès et d'erreurs nginx, depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50

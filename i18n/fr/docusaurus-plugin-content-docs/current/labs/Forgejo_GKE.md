@@ -32,15 +32,15 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Initialiser le premier compte administrateur Forgejo (aucun administrateur n'est créé automatiquement).
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Démonter proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -57,7 +57,7 @@ temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -83,7 +83,7 @@ export REGION="us-central1"           # the region you deploy into
    sidecar Cloud SQL Auth Proxy, monte Cloud Filestore (NFS) pour le stockage
    des dépôts, de LFS et des pièces jointes, génère les secrets `SECRET_KEY` et
    `INTERNAL_TOKEN` dans Secret Manager, construit l'image de conteneur et
-   exécute une tâche ponctuelle d'initialisation de la base de données. Les
+   exécute un job ponctuel d'initialisation de la base de données. Les
    premiers déploiements prennent environ **20–35 minutes** (la création de
    Cloud SQL représente l'essentiel de ce temps).
 
@@ -127,7 +127,7 @@ export REGION="us-central1"           # the region you deploy into
 3. **Initialisez le premier administrateur.** Contrairement à la variante Cloud
    Run, ce module ignore entièrement le programme d'installation web de Forgejo
    (`GITEA__security__INSTALL_LOCK
-   = "true"`) et **aucune tâche d'initialisation ne crée de compte administrateur** —
+   = "true"`) et **aucun job d'initialisation ne crée de compte administrateur** —
    rien ne crée à l'avance un utilisateur privilégié. L'inscription libre est
    ouverte par défaut (`GITEA__service__DISABLE_REGISTRATION = "false"`) ; la
    démarche pratique consiste donc à : créer un compte ordinaire via l'interface
@@ -189,7 +189,7 @@ export REGION="us-central1"           # the region you deploy into
    dans les mêmes données de dépôts et la même base de données), et non un
    déploiement bloqué.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -225,7 +225,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour Logs Explorer :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -261,7 +261,7 @@ qui ne changent pas d'une version de Forgejo à l'autre.
   ```bash
   kubectl exec -n "$NS" deploy/<service-name> -- env | grep GITEA__
   ```
-- **Échec de la tâche d'initialisation :** inspectez la tâche `db-init` et les journaux de son pod :
+- **Échec du job d'initialisation :** inspectez le job `db-init` et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<db-init-job-name>
@@ -294,7 +294,7 @@ ne jamais modifier `db_name`/
 
 ---
 
-## Tâche 6 — Démonter [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible
@@ -307,7 +307,7 @@ ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que
 le module a créé — la charge de travail Kubernetes et son espace de noms, la
 base de données Cloud SQL, les secrets Secret Manager (`SECRET_KEY`,
 `INTERNAL_TOKEN` et le mot de passe de la base de données), le bucket Cloud
-Storage inutilisé et les images Artifact Registry. Une tâche (Job) de nettoyage
+Storage inutilisé et les images Artifact Registry. Un job de nettoyage
 du volume applicatif NFS, exécutée lors de la destruction, supprime également
 les données de dépôts de Forgejo du volume Filestore partagé, dans la mesure du
 possible (elle est ignorée si l'espace de noms a déjà disparu). Les ressources
@@ -325,5 +325,5 @@ séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; le contrôle d'état réussit ; créer puis promouvoir le premier compte administrateur via la CLI |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version (déploiement Recreate), gérer les secrets et le stockage, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de déploiement et de récupération d'image |
-| 6 — Démonter | Automatisé | La suppression (Trash) retire toutes les ressources du module, y compris les données applicatives NFS (dans la mesure du possible) |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de déploiement et de récupération d'image |
+| 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module, y compris les données applicatives NFS (dans la mesure du possible) |

@@ -40,7 +40,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, y compris
   les défaillances de disponibilité des dépendances propres à ce module.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -59,7 +59,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Facultatif mais recommandé : `ClickHouse_GKE` déjà déployé si vous souhaitez exercer
   le chemin de production (ClickHouse externe) plutôt que la solution de repli intégrée de dev/test.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -90,7 +90,7 @@ export REGION="us-central1"           # the region you deploy into
    services compagnons. Un premier déploiement prend environ **25 à 40 minutes** — la création de Cloud SQL
    et la migration du schéma ClickHouse prennent toutes deux un temps réel.
 
-3. Connectez-vous au cluster et identifiez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et identifiez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -198,7 +198,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et mémoire
    des pods (le premier démarrage de PostHog est réellement gourmand en CPU/mémoire — consultez le tableau des pièges
    du Guide de configuration pour les seuils de dimensionnement que ce module applique par défaut),
-   le nombre de redémarrages et les métriques de requêtes. Le module peut provisionner un **contrôle de disponibilité** (uptime check)
+   le nombre de redémarrages et les métriques de requêtes. Le module peut provisionner un **test de disponibilité** (uptime check)
    (lorsqu'il est activé) ; consultez Monitoring → Uptime checks et Alerting → Policies.
 
 ---
@@ -231,7 +231,7 @@ des diagnostics au niveau de la plateforme et propres au module, qui ne changent
   kubectl logs -n "$NS" job/clickhouse-migrate
   ```
 - **Erreurs de connexion à la base de données (Postgres) :** vérifiez que l'instance Cloud SQL est
-  `RUNNABLE`, que le secret du mot de passe de la base de données a été matérialisé dans le namespace et que `db-init`
+  `RUNNABLE`, que le secret du mot de passe de la base de données a été matérialisé dans l'espace de noms et que `db-init`
   s'est terminé.
 - **ClickHouse injoignable :** si vous utilisez un `clickhouse_host` externe, vérifiez la connectivité
   réseau et que `clickhouse_password_secret` (s'il est défini) correspond au mot de passe réel de
@@ -255,7 +255,7 @@ et l'épinglage de la balise d'image ClickHouse.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement
@@ -263,7 +263,7 @@ est conservé pour l'historique). Si un déploiement est bloqué et que la plate
 le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez
 plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire
 les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module
-a créé — la charge de travail Kubernetes et son namespace (y compris les services compagnons ClickHouse/Kafka
+a créé — la charge de travail Kubernetes et son espace de noms (y compris les services compagnons ClickHouse/Kafka
 intégrés, s'ils sont utilisés), la base de données Cloud SQL, les secrets Secret Manager, le bucket GCS et
 les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE,
 le Cloud SQL partagé, le registre) — ainsi qu'un `ClickHouse_GKE` déployé séparément, si vous avez utilisé le
@@ -271,13 +271,13 @@ chemin externe — sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), les secrets, le bucket de stockage, et exécute `db-init` + `clickhouse-migrate` |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; `/_readyz` confirme que les quatre dépendances (Postgres, ClickHouse, Kafka, Redis) sont joignables ; créer le compte administrateur initial dans l'interface |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à jour la version, gérer les secrets et le stockage, interroger directement Postgres et ClickHouse |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les défaillances de disponibilité par dépendance, ainsi que les problèmes de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

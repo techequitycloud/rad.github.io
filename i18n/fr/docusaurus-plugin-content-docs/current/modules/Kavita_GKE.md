@@ -34,7 +34,7 @@ données ni cache externes** — tout ce dont il a besoin (paramètres, base de
 données SQLite interne et index de la bibliothèque) se trouve sur le disque sous
 `/kavita/config`.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod web .NET sur le port 5000, `1000m` de CPU / `1Gi` de mémoire par défaut |
 | Base de données | **Aucune** — SQLite interne | `database_type` est fixé à `NONE` par `Kavita_Common` ; aucune instance Cloud SQL n'est créée |
@@ -43,7 +43,7 @@ données SQLite interne et index de la bibliothèque) se trouve sur le disque so
 | Secrets | Secret Manager | **Aucun secret généré** — l'assistant de configuration du premier lancement crée le compte administrateur ; `secret_ids`/`secret_values` sont vides |
 | Entrée | Kubernetes Gateway API | Service `ClusterIP` par défaut, exposé via la Gateway avec une IP statique réservée ; domaine personnalisé pris en charge |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **SQLite réside sur un véritable PVC bloc, et non sur GCS FUSE.**
   `stateful_pvc_enabled` vaut `true` par défaut ; Kavita s'exécute donc comme un
@@ -59,15 +59,15 @@ données SQLite interne et index de la bibliothèque) se trouve sur le disque so
   mais la surcouche GKE définit
   `enable_gcs_storage_volume = !stateful_pvc_enabled` ; avec le PVC bloc par
   défaut en place, ce bucket existe donc mais n'est **pas** monté dans le pod.
-- **Une seule réplique par défaut, et cela doit rester ainsi.**
+- **Un seul réplica par défaut, et cela doit rester ainsi.**
   `min_instance_count =
   1`, `max_instance_count = 1`. Kavita sert une unique
   bibliothèque SQLite partagée à partir d'un seul volume — sans clustering ni
-  coordination du stockage partagé ; exécuter plus d'une réplique sur le même PVC
+  coordination du stockage partagé ; exécuter plus d'un réplica sur le même PVC
   n'est donc pas sûr.
 - **NFS est désactivé par défaut** (`enable_nfs = false`) — la persistance est
   entièrement assurée par le PVC du StatefulSet, et non par Filestore.
-- **Aucune tâche d'initialisation de base de données au premier démarrage.**
+- **Aucun job d'initialisation de base de données au premier démarrage.**
   Kavita n'a pas de tâche `db-init` ni de migration ; `initialization_jobs` est
   par défaut une liste vide, et seules les tâches personnalisées que vous
   fournissez sont exécutées.
@@ -98,10 +98,10 @@ autres identifiants sont indiqués dans les [Sorties](#5-outputs) du déploiemen
 Kavita s'exécute par défaut comme un `StatefulSet` (sélectionné automatiquement
 parce que `stateful_pvc_enabled
 = true`), ce qui donne à chaque pod une identité
-stable et son propre PVC. Comme il s'agit d'une application SQLite à réplique
+stable et son propre PVC. Comme il s'agit d'une application SQLite à réplica
 unique et à écrivain unique, ne la mettez pas à l'échelle horizontalement.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
   de travail Kavita pour consulter les pods, les révisions et les événements.
 - **CLI :**
   ```bash
@@ -124,8 +124,8 @@ par défaut une **Persistent Volume Claim bloc par pod**
 bloc — et non d'un montage GCS FUSE — car gcsfuse corrompt les fichiers SQLite et
 les fichiers d'index multimédias.
 
-- **Console :** Kubernetes Engine → Stockage pour le PVC ; Compute Engine →
-  Disques pour le disque persistant sous-jacent.
+- **Console :** Kubernetes Engine → Storage pour le PVC ; Compute Engine →
+  Disks pour le disque persistant sous-jacent.
 - **CLI :**
   ```bash
   kubectl get pvc -n "$NAMESPACE"
@@ -164,7 +164,7 @@ vous configurez via `secret_environment_variables` transitent néanmoins par
 Secret Manager et le pilote Secret Store CSI, comme pour tout autre module
 d'application GKE.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~kavita"
@@ -181,8 +181,7 @@ Par défaut, la charge de travail utilise un Service `ClusterIP`
 true`) avec une IP statique réservée
 (`reserve_static_ip = true`).
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
-  IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,gateway,httproute -n "$NAMESPACE"
@@ -199,8 +198,8 @@ métriques GKE vers Cloud Monitoring. Des tests de disponibilité et des règles
 d'alerte facultatifs sont disponibles (`uptime_check_config` est désactivé par
 défaut pour ce module).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord
-  / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards
+  / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -228,17 +227,17 @@ défaut pour ce module).
   ce cas). `stateful_pod_management_policy` vaut `null` par défaut (valeur par
   défaut `OrderedReady` d'App_GKE), ce qui est le réglage sûr pour les
   redémarrages de Kavita à écrivain unique.
-- **Écrivain unique, réplique unique.** `min_instance_count = 1` et
+- **Écrivain unique, réplica unique.** `min_instance_count = 1` et
   `max_instance_count = 1` par défaut — Kavita n'a pas de mode distribué ni de
   clustering ; n'augmentez donc pas `max_instance_count` tant qu'un seul PVC et
   une seule base de données SQLite servent de support à la charge de travail.
 - **Chemins des sondes de santé.** La sonde de démarrage (`startup_probe` /
-  `startup_probe_config`) et la sonde d'activité (`liveness_probe` /
+  `startup_probe_config`) et la sonde de vivacité (`liveness_probe` /
   `health_check_config`) sont toutes deux des requêtes **HTTP `GET /api/health`**
   non authentifiées. La sonde de démarrage utilise une marge d'échecs plus large
   (`initial_delay_seconds = 15`, `period_seconds = 10`, `failure_threshold = 10`)
   pour tolérer une indexation de la bibliothèque plus lente au premier démarrage,
-  avant que la sonde d'activité (`initial_delay_seconds = 30`,
+  avant que la sonde de vivacité (`initial_delay_seconds = 30`,
   `period_seconds = 30`, `failure_threshold = 3`) prenne le relais.
 - **Redis est désactivé de force.** Le `main.tf` de `Kavita_GKE` définit
   `enable_redis = false` sans condition lors de l'appel à `App_GKE`, ce qui
@@ -292,7 +291,7 @@ standard.
 |---|---|---|
 | `service_type` | `LoadBalancer` | L'accès externe passe par la Gateway API, et non par un LoadBalancer direct. |
 | `workload_type` | `null` → `StatefulSet` | Se résout automatiquement en `StatefulSet` parce que `stateful_pvc_enabled = true`. |
-| `session_affinity` | `None` | Aucun routage persistant n'est nécessaire avec une seule réplique. |
+| `session_affinity` | `None` | Aucun routage persistant n'est nécessaire avec un seul réplica. |
 
 ### Groupe 7 — StatefulSet / PVC bloc {#group-7--statefulset--block-pvc}
 
@@ -349,7 +348,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées que vous avez fournies (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés que vous avez fournies (aucune par défaut). |
 | `statefulset_name` | Nom du StatefulSet (présent puisque Kavita utilise par défaut le type de charge de travail StatefulSet). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -362,18 +361,18 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un réglage sans état, IAP sans identités autorisées, des `quota_memory_*` exprimés en entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` (valeur par défaut) | Critical | Le désactiver déplace la base de données SQLite de Kavita vers un montage GCS FUSE, ce qui risque de corrompre le fichier SQLite et l'index de la bibliothèque en cas d'écritures concurrentes. |
 | `stateful_pvc_mount_path` | `/kavita/config` | Critical | Doit correspondre au répertoire de données fixe de Kavita ; le modifier sépare l'application de son état de configuration/SQLite. |
-| `max_instance_count` | `1` | Critical | Kavita n'offre ni clustering ni coordination des écritures partagées ; plus d'une réplique sur le même PVC risque de corrompre SQLite. |
+| `max_instance_count` | `1` | Critical | Kavita n'offre ni clustering ni coordination des écritures partagées ; plus d'un réplica sur le même PVC risque de corrompre SQLite. |
 | `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Le SSD consomme le quota `SSD_TOTAL_GB`, très limité ; sur un projet contraint par les quotas, passez au HDD (`standard`), car les besoins d'E/S de Kavita n'exigent pas les IOPS d'un SSD. |
 | `enable_nfs` | `false` | Low | NFS est inutile — la persistance passe par le PVC bloc ; l'activer ajoute un coût sans aucun bénéfice pour la disposition par défaut de ce module. |
 | `enable_redis` | forcé à `false` dans `main.tf` | Low | Définir cette variable n'a aucun effet — Kavita n'utilise jamais Redis, quelle que soit la valeur transmise. |

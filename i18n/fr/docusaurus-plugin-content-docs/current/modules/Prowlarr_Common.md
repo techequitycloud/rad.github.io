@@ -75,7 +75,7 @@ celui-ci.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Prowlarr n'utilise **pas** de base de données externe. Tout son état — indexeurs
 configurés, applications *arr connectées (Sonarr, Radarr, Lidarr, Readarr) et
@@ -112,7 +112,7 @@ lscr.io/linuxserver/prowlarr:<application_version>
   `Prowlarr_Common` ne contient qu'un fichier de remplacement (`.gitkeep`) — c'est,
   sur ce point précis, le module Common le plus simple du catalogue.
 - **`enable_image_mirroring = true`** s'applique toujours par défaut — l'image
-  officielle est dupliquée dans l'Artifact Registry du projet afin d'éviter les
+  officielle est mise en miroir dans l'Artifact Registry du projet afin d'éviter les
   limites de débit de Docker Hub, même si rien n'est modifié dans l'image.
 - **Pas d'ARG de build d'épinglage de version propre à l'application.** Plusieurs
   modules Common à build personnalisé de ce catalogue lisent un ARG de build

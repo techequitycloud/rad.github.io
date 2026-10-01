@@ -75,7 +75,7 @@ ciblé de services Google Cloud :
   défini et réellement différent du domaine de `server_url` — une contrainte
   qu'une seule valeur par défaut intégrée ne peut pas satisfaire de manière fiable
   pour chaque déploiement.
-- **Aucune tâche d'initialisation par défaut.** Contrairement aux applications
+- **Aucun job d'initialisation par défaut.** Contrairement aux applications
   reposant sur une base de données externe, le fichier SQLite de Headscale est
   créé automatiquement au premier démarrage.
 
@@ -84,7 +84,7 @@ ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-des services et des ressources figurent dans les [Outputs](#6-outputs) du
+des services et des ressources figurent dans les [sorties](#6-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Headscale {#a-cloud-run--the-headscale-service}
@@ -238,7 +238,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `container_port` | `8080` | Port d'écoute natif de Headscale. |
 | `execution_environment` | `gen2` | Requis pour le montage de stockage GCS Fuse. |
 | `enable_cloudsql_volume` | `false` | Sans objet — pas de Cloud SQL. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 5 — Accès et réseau {#group-5--access--networking}
 
@@ -261,7 +261,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 |---|---|---|
 | `database_type` | `NONE` | Fixée par `Headscale_Common` — Headscale repose entièrement sur SQLite, il n'y a pas d'instance Cloud SQL. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -286,12 +286,12 @@ VPC/IAM/Artifact Registry commune à tout déploiement `App_CloudRun`).
 
 ---
 
-## 6. Outputs {#6-outputs}
+## 6. Sorties {#6-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `api_url` | URL `run.app` par défaut du service — c'est ce que `server_url` prévoit et ce auprès de quoi les clients s'enregistrent. |
@@ -301,7 +301,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket `storage` qui sous-tend `/var/lib/headscale`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -337,8 +337,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Headscale, partagée avec la variante GKE, est décrite dans
 **[Headscale_Common](Headscale_Common.md)**.
 

@@ -36,9 +36,9 @@ jamais figé dans l'image.
 
 | Domaine | Fourni par Focalboard_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Encapsulation légère `FROM mattermost/focalboard` avec un point d'entrée personnalisé qui génère `config.json` ; construite via Cloud Build (Kaniko) et dupliquée dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
+| Image de conteneur | Encapsulation légère `FROM mattermost/focalboard` avec un point d'entrée personnalisé qui génère `config.json` ; construite via Cloud Build (Kaniko) et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
 | Secret applicatif | Génère un mot de passe administrateur (`FOCALBOARD_ADMIN_PASSWORD`, 24 caractères) dans **Secret Manager** et l'injecte en tant que variable d'environnement secrète du SERVICE | Sortie `secret_ids` ; à récupérer via Secret Manager (voir ci-dessous) |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** (`database_type = POSTGRES_15`) comme moteur | §Base de données dans les guides de plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (`database_type = POSTGRES_15`) comme moteur | §Base de données dans les guides de plateforme |
 | Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données et le rôle, et accorde les droits (idempotente) | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) pour les pièces jointes des tableaux | Sortie `storage_buckets` |
 | Persistance des pièces jointes | Définit `FOCALBOARD_FILESPATH = /data` et y monte le bucket de stockage via gcsfuse (Cloud Run / GKE sans PVC) ou un PVC en mode bloc (GKE) | §Persistance dans les guides de plateforme |
@@ -97,7 +97,7 @@ conditions réelles le 2026-07-14.)
 
 ---
 
-## 3. Moteur et initialisation de la base de données {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Focalboard utilise **PostgreSQL 15** ; le moteur est fixe (`database_type = POSTGRES_15`).
 Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
@@ -138,7 +138,7 @@ sorties du déploiement de plateforme.
 ## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image personnalisée est une encapsulation légère `FROM mattermost/focalboard:<version>`,
-construite via Cloud Build (Kaniko) et dupliquée dans Artifact Registry
+construite via Cloud Build (Kaniko) et mise en miroir dans Artifact Registry
 (`enable_image_mirroring = true`, `image_source = "custom"`). Le Dockerfile :
 
 - Copie `entrypoint.sh` vers `/usr/local/bin/cloud-entrypoint.sh` et le définit comme

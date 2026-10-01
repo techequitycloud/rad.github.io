@@ -43,7 +43,7 @@ La **tâche d'amorçage `db-init`** de `Vaultwarden_Common` prend en charge
 PostgreSQL 15 (par défaut) et MySQL 8.0 — le moteur est détecté à partir de la
 variable `database_type` transmise par le module de plateforme :
 
-| `database_type` | Image de la tâche d'initialisation | `db-init.sh` `DB_ENGINE` |
+| `database_type` | Image du job d'initialisation | `db-init.sh` `DB_ENGINE` |
 |---|---|---|
 | `POSTGRES_15` (ou toute valeur non MySQL) | `postgres:15-alpine` | `postgres` |
 | `MYSQL_8_0` (ou toute valeur commençant par `MYSQL`) | `mysql:8.0-debian` | `mysql` |

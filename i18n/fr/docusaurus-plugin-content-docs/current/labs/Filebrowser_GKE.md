@@ -30,14 +30,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d’exécution, y compris
   avec l’identifiant administrateur par défaut.
-- Effectuer les opérations du jour 2 : inspecter la charge de travail, choisir entre GCS FUSE et un PVC
+- Effectuer les opérations du jour 2 — inspecter la charge de travail, choisir entre GCS FUSE et un PVC
   de stockage en mode bloc, et gérer l’entrée (ingress).
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -97,7 +97,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
-1. Confirmez que la charge de travail est en cours d’exécution (un Deployment à réplique unique, ou un
+1. Confirmez que la charge de travail est en cours d’exécution (un Deployment à réplica unique, ou un
    StatefulSet lorsque `stateful_pvc_enabled = true`) et trouvez son adresse :
 
    ```bash
@@ -133,16 +133,16 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
-1. **Inspectez la charge de travail** : Deployment/StatefulSet, pods et PVC :
+1. **Inspectez la charge de travail** — Deployment/StatefulSet, pods et PVC :
 
    ```bash
    kubectl get deploy,statefulset,pods,pvc -n "$NS"
    kubectl describe deploy -n "$NS"           # or: kubectl describe statefulset -n "$NS"
    ```
 
-2. **Ne dépassez pas une réplique.** `min_instance_count = max_instance_count = 1`
+2. **Ne dépassez pas un réplica.** `min_instance_count = max_instance_count = 1`
    est intentionnel : la base de données SQLite embarquée ne tolère pas plusieurs rédacteurs
    simultanés, même avec le verrouillage de fichiers correct d’un PVC en mode bloc. Laissez les deux à `1` dans la
    plateforme RAD ; un `kubectl scale` manuel serait de toute façon annulé lors de l’application
@@ -153,7 +153,7 @@ export REGION="us-central1"           # the region you deploy into
    remplace le pod. En production, fixez explicitement `application_version`
    plutôt que de suivre `latest`.
 
-4. **Changez de backend de stockage ou d’entrée** : basculez `stateful_pvc_enabled` (GCS
+4. **Changez de backend de stockage ou d’entrée** — basculez `stateful_pvc_enabled` (GCS
    FUSE ou PVC en mode bloc ; Common désactive automatiquement GCS FUSE lorsque le PVC est activé, n’imposez donc
    pas les deux), ou ajustez `enable_custom_domain` / `application_domains`, puis
    appliquez via **Update**.
@@ -176,7 +176,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis `kubectl` ou l’explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis `kubectl` ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -185,7 +185,7 @@ export REGION="us-central1"           # the region you deploy into
    Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
-2. **Surveillance** : ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
+2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
    la mémoire des pods ainsi que le nombre de redémarrages (il doit rester un seul pod stable).
    Si `uptime_check_config` est activé, consultez Monitoring → Uptime checks et
    Alerting → Policies.
@@ -231,7 +231,7 @@ supprimer le volume `/database` et de laisser Common gérer l’exclusivité GCS
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : la charge de travail Kubernetes et son espace de noms, le bucket GCS ou le PVC de `/database` (y compris la base de données SQLite embarquée ; cette opération est destructrice et irrécupérable) et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, l’Artifact Registry partagé) sont gérées séparément et ne sont pas supprimées ici.
 
@@ -243,7 +243,7 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE et le stockage `/database` (GCS FUSE ou PVC en mode bloc) ; ni Cloud SQL, ni job d’initialisation |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé réussit ; connexion avec l’identifiant initialisé `admin`/`admin` et changement immédiat du mot de passe |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, garder 1 réplique, mettre à jour la version, changer de backend de stockage ou d’entrée, inspecter l’état persistant |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, garder 1 réplica, mettre à jour la version, changer de backend de stockage ou d’entrée, inspecter l’état persistant |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de montage, de planification et de récupération d’image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime la charge de travail et le bucket ou le PVC de `/database` (destructif) |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime la charge de travail et le bucket ou le PVC de `/database` (destructif) |

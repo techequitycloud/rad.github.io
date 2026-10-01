@@ -23,7 +23,7 @@ Contrairement à la plupart des modules de ce catalogue, il n'y a **aucune base 
 à attendre — Headscale est entièrement autonome autour d'un fichier SQLite
 intégré, si bien que les premiers déploiements sont relativement rapides.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les concepts réseau de Tailscale/WireGuard. Pour la liste complète
 des services provisionnés et de chaque paramètre de configuration (organisés par
 groupe), consultez le
@@ -33,7 +33,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris via son véritable point de terminaison `/health`.
@@ -59,7 +59,7 @@ dans le temps.
 - *(Facultatif, pour la tâche 2)* le [client Tailscale](https://tailscale.com/download)
   installé sur un appareil que vous pouvez utiliser pour tester un véritable enregistrement.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -80,7 +80,7 @@ export REGION="us-central1"          # the region you deploy into
    à laquelle s'ajoute une configuration intégrée), provisionne le service Cloud Run et son
    bucket GCS `storage` (monté sur `/var/lib/headscale` pour le fichier
    SQLite), puis démarre le service. Il n'y a **ni instance Cloud SQL ni
-   tâche d'initialisation de base de données** à attendre — SQLite se crée lui-même au premier
+   job d'initialisation de base de données** à attendre — SQLite se crée lui-même au premier
    démarrage — si bien que les premiers déploiements se terminent généralement en **5–10 minutes** environ,
    l'essentiel du temps étant consacré au build de l'image.
 
@@ -98,7 +98,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Headscale expose un véritable point de terminaison
    de santé, sans authentification :
@@ -122,7 +122,7 @@ export REGION="us-central1"          # the region you deploy into
 3. **Créez le premier utilisateur et une clé de pré-authentification.** Headscale n'a pas de parcours
    d'inscription web — la CLI est le seul moyen de créer un utilisateur et d'enregistrer
    des clients. Lancez une exécution ponctuelle du même binaire que celui utilisé par le service
-   (adaptez à la façon dont la plateforme nomme sa ressource de tâche/d'exécution pour ce
+   (adaptez à la façon dont la plateforme nomme sa ressource de job/d'exécution pour ce
    déploiement — consultez `gcloud run jobs list` si le nom exact de la tâche ci-dessous
    ne correspond pas) :
 
@@ -137,7 +137,7 @@ export REGION="us-central1"          # the region you deploy into
      --command="/ko-app/headscale" --args="preauthkeys,create,--user,myuser,--reusable,--expiration,1h" --wait
    ```
 
-   Lisez la clé de pré-authentification dans les journaux de l'exécution de la tâche.
+   Lisez la clé de pré-authentification dans les journaux de l'exécution du job.
 
 4. **Enregistrez un vrai client Tailscale** (facultatif, nécessite que le client
    Tailscale soit installé) :
@@ -189,7 +189,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
    **Surveillez tout particulièrement les erreurs d'écriture gcsfuse** (`BufferedWriteHandler.OutOfOrderError`)
    faisant référence à `db.sqlite`/`db.sqlite-wal`/`db.sqlite-shm` — voir la tâche 5 pour
@@ -269,8 +269,8 @@ gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne le service Cloud Run et le bucket `storage` ; ni Cloud SQL, ni tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | `/health` renvoie 200 ; créer le premier utilisateur + une clé de pré-authentification ; enregistrer un vrai client Tailscale |
+| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne le service Cloud Run et le bucket `storage` ; ni Cloud SQL, ni job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | `/health` renvoie 200 ; créer le premier utilisateur + une clé de pré-authentification ; enregistrer un vrai client Tailscale |
 | 3 — Exploiter | Manuel | Inspecter les révisions ; comprendre pourquoi `max_instance_count` n'a aucun effet ; mettre à jour la version ; lister les nœuds |
 | 4 — Observer | Manuel | Interroger Cloud Logging (surveiller les erreurs d'écriture gcsfuse) ; consulter les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de validation de configuration, SQLite/gcsfuse, d'enregistrement des clients et de build |

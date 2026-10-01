@@ -164,7 +164,7 @@ produit l'image enveloppée, qui est mise en miroir dans Artifact Registry
   gcloud artifacts docker images list <region>-docker.pkg.dev/$PROJECT/<repo> --include-tags
   ```
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google peut
@@ -197,8 +197,8 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 
 ## 3. Comportement de l'application Azimutt {#3-azimutt-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche d'initialisation exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle crée de manière idempotente le rôle applicatif
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il crée de manière idempotente le rôle applicatif
   (`LOGIN CREATEDB`) et la base de données, accorde `ALL` sur la base de données et le schéma `public`,
   et modifie (`ALTER`) le propriétaire du schéma — Azimutt a besoin de droits DDL complets car il
   exécute ses propres migrations. La tâche signale ensuite au sidecar Auth Proxy de s'arrêter
@@ -220,7 +220,7 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 - **Configuration initiale.** Atteignez le service via son IP LoadBalancer externe (ou votre domaine
   personnalisé) et créez le premier compte Azimutt via la page d'inscription. L'inscription est
   ouverte par défaut — restreignez l'accès ensuite.
-- **Inspecter l'exécution de la tâche d'initialisation :**
+- **Inspecter l'exécution du job d'initialisation :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -236,7 +236,7 @@ propres à Azimutt ou notables pour lui sont listés ; toutes les autres entrée
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
@@ -245,17 +245,17 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `azimutt` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Azimutt` | Nom lisible affiché dans l'interface de la plateforme. |
@@ -265,7 +265,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE ne prend pas en charge la mise à l'échelle jusqu'à zéro. |
@@ -277,7 +277,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `workload_type` | `null` | Deployment par défaut ; se résout automatiquement en StatefulSet si `stateful_pvc_enabled = true`. |
@@ -287,15 +287,15 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Laissez non défini — Azimutt s'appuie sur NFS et stocke les données de projet dans Postgres. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 
@@ -303,7 +303,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai 60s, fenêtre d'échec 30 × 15s | Sonde de démarrage ; prévoyez du temps pour les migrations du premier démarrage. Doit cibler le port 4000. |
 | `liveness_probe` | HTTP `/`, délai 60s | Sonde de vivacité. |
@@ -312,9 +312,9 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
 
@@ -322,7 +322,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisionne Cloud Filestore (activé par défaut), mais il n'est pas actuellement relié au chemin de stockage d'Azimutt — les téléversements vont toujours sur le disque éphémère du pod. |
 | `nfs_mount_path` | `/opt/azimutt/storage` | Chemin de montage dans le conteneur. |
@@ -331,7 +331,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 15 — Cache et file d'attente Redis {#group-15--redis-cache--queue}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les tâches d'arrière-plan, et non Redis. |
 | `redis_host` | `""` | Point de terminaison Redis (uniquement si une fonctionnalité en aval l'exige). |
@@ -340,7 +340,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_database_name` | `azimutt` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `application_database_user` | `azimutt` | Utilisateur applicatif de la base de données. Immuable après le premier déploiement. |
@@ -375,7 +375,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -390,24 +390,24 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, un `quota_memory_*` exprimé en entier nu. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critique | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
-| `container_port` | `4000` | Critique | Le point d'entrée définit `PORT=4000` par défaut sur GKE ; un port de Service ou de sonde non concordant frappe un port mort et le pod ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy fournit la connexion à la base de données sur `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque l'amorçage `db-init`. |
-| `enable_nfs` | `true` | Faible | Provisionne Filestore, mais n'a aucun effet sur Azimutt lui-même — `FILE_STORAGE_ADAPTER` n'est jamais dirigé vers le montage NFS ; les téléversements arrivent donc toujours sur le disque éphémère du pod quel que soit ce paramètre (les données de projet elles-mêmes sont en sécurité dans Postgres). |
-| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
-| `application_version` | Épingler une version | Élevé | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions de l'interface rebondissent d'un pod à l'autre. |
-| `enable_iap` / domaine personnalisé | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le LoadBalancer accessible publiquement permet à n'importe qui de créer un compte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critical | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
+| `container_port` | `4000` | Critical | Le point d'entrée définit `PORT=4000` par défaut sur GKE ; un port de Service ou de sonde non concordant frappe un port mort et le pod ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Critical | Le sidecar Auth Proxy fournit la connexion à la base de données sur `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque l'amorçage `db-init`. |
+| `enable_nfs` | `true` | Low | Provisionne Filestore, mais n'a aucun effet sur Azimutt lui-même — `FILE_STORAGE_ADAPTER` n'est jamais dirigé vers le montage NFS ; les téléversements arrivent donc toujours sur le disque éphémère du pod quel que soit ce paramètre (les données de projet elles-mêmes sont en sécurité dans Postgres). |
+| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
+| `application_version` | Épingler une version | High | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions de l'interface rebondissent d'un pod à l'autre. |
+| `enable_iap` / domaine personnalisé | Restreindre après le premier compte | High | L'inscription est ouverte par défaut ; laisser le LoadBalancer accessible publiquement permet à n'importe qui de créer un compte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_redis` | `false` | Low | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 

@@ -28,10 +28,10 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Domaine | Fourni par Mixpost_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère l'`APP_KEY` de Laravel (32 octets aléatoires, stockés sous la forme `base64:<value>`) et la stocke dans **Secret Manager** | Injectée automatiquement comme variable d'environnement secrète `APP_KEY` ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Déploie **directement** l'image officielle `inovector/mixpost:<version>` — `image_source = "prebuilt"`, sans build personnalisé ; `enable_image_mirroring = true` la duplique dans Artifact Registry | Output `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour MySQL 8.0** (`database_type = "MYSQL_8_0"`) comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données (`utf8mb4`), l'utilisateur et les droits — pas de job de migration séparé, puisque l'image effectue ses propres migrations au démarrage | Output `initialization_jobs` |
-| Stockage objet | Déclare un bucket **Cloud Storage** suffixé `storage` | Output `storage_buckets` |
+| Image de conteneur | Déploie **directement** l'image officielle `inovector/mixpost:<version>` — `image_source = "prebuilt"`, sans build personnalisé ; `enable_image_mirroring = true` la met en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** (`database_type = "MYSQL_8_0"`) comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données (`utf8mb4`), l'utilisateur et les droits — pas de job de migration séparé, puisque l'image effectue ses propres migrations au démarrage | Sortie `initialization_jobs` |
+| Stockage objet | Déclare un bucket **Cloud Storage** suffixé `storage` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Laravel/Mixpost de référence : nom/environnement/débogage de l'application, `DB_CONNECTION=mysql`, `TRUSTED_PROXIES`, expéditeur des e-mails sortants | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les valeurs par défaut des sondes de démarrage/vivacité (toutes deux HTTP sur `/`) ; remplacées par plateforme dans le `main.tf`/`variables.tf` de la variante | §Comportement des sondes de santé ci-dessous et guides des plateformes |
 
@@ -75,7 +75,7 @@ secret dans Secret Manager.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Mixpost requiert **MySQL 8.0** ; le moteur est fixe
 (`database_type = "MYSQL_8_0"`, `DB_CONNECTION = "mysql"`) et les autres moteurs ne
@@ -132,7 +132,7 @@ Contrairement à la plupart des modules applicatifs construits sur mesure,
 `Mixpost_Common` ne construit **pas** d'image et n'en enveloppe aucune —
 `image_source = "prebuilt"` et `container_build_config.enabled = false`. La
 configuration du conteneur pointe directement vers
-`inovector/mixpost:<application_version>` (Mixpost Lite), que Google duplique dans
+`inovector/mixpost:<application_version>` (Mixpost Lite), que Google met en miroir dans
 Artifact Registry lorsque `enable_image_mirroring = true` (valeur par défaut). Il n'y
 a ni `entrypoint.sh` ni `Dockerfile` personnalisé dans
 `modules/Mixpost_Common/scripts/` — le seul script livré par cette couche est
@@ -167,7 +167,7 @@ officielle `inovector/mixpost`. Cela signifie :
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Mixpost_Common` établit l'environnement Mixpost/Laravel de référence afin que
 l'application démarre correctement dès le premier lancement :
@@ -238,7 +238,7 @@ la sonde réellement appliquée à la charge de travail :
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** dédié (`name_suffix = "storage"`,
 `force_destroy = true`) est déclaré ici et provisionné par le socle, qui accorde

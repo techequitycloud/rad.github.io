@@ -11,7 +11,7 @@ description: "Référence de configuration pour déployer Changedetection sur Go
 
 changedetection.io est un service open source auto-hébergé qui surveille les modifications
 de pages web et envoie des notifications lorsqu'elles se produisent. Ce module déploie
-changedetection.io sur **Cloud Run v2** au-dessus de la fondation
+changedetection.io sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud
 partagée.
 
@@ -20,7 +20,7 @@ de les explorer et de les exploiter depuis la console Google Cloud et la ligne d
 Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, ingress
 et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les
 répéter ici.
 
 ---
@@ -31,7 +31,7 @@ changedetection.io s'exécute comme un conteneur Python/Flask unique sur Cloud R
 déploiement assemble un ensemble volontairement réduit de services Google Cloud — il n'y a ni
 base de données ni cache :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Python/Flask, 1 vCPU / 1 GiB par défaut, à l'écoute sur le port 5000 |
 | Base de données | _Aucune_ | `database_type = NONE` — changedetection.io stocke tout son état sur disque, et non en SQL |
@@ -72,7 +72,7 @@ base de données ni cache :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et
-des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service changedetection.io {#a-cloud-run--the-changedetectionio-service}
 
@@ -141,7 +141,7 @@ aucune clé de chiffrement. Secret Manager reste disponible pour les éventuelle
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app` (`ingress_settings = "all"`), ce qui
 permet un accès public au tableau de bord depuis un navigateur. Un équilibreur de charge HTTPS
@@ -221,7 +221,7 @@ comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
@@ -230,7 +230,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
@@ -240,7 +240,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `changedetection` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Changedetection.io` | Nom lisible affiché dans la console. |
@@ -251,7 +251,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance. |
@@ -262,13 +262,13 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `execution_environment` | `gen2` | Requis pour le montage GCS FUSE du stockage de données. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0 à 3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Pas de Cloud SQL — le sidecar Auth Proxy n'est pas nécessaire. |
-| `enable_image_mirroring` | `true` | Réplique l'image changedetection.io dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image changedetection.io dans Artifact Registry. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Accès public au tableau de bord depuis un navigateur. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'achemine via le VPC que le trafic RFC 1918. |
@@ -279,7 +279,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets (par exemple `FETCH_WORKERS`, `PLAYWRIGHT_DRIVER_URL`). `DATASTORE_PATH` et `BASE_URL` sont définis automatiquement. |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom du secret Secret Manager. |
@@ -289,7 +289,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). Comme il n'y a pas de base de données, sauvegardez le bucket du stockage de données. |
 | `backup_retention_days` | `7` | Durée de conservation ; à augmenter pour la production et la conformité. |
@@ -303,9 +303,9 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
@@ -317,7 +317,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée le bucket GCS du stockage de données. |
 | `storage_buckets` | `[]` | Buckets GCS supplémentaires, en plus du bucket de stockage de données provisionné automatiquement. |
@@ -329,7 +329,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | Fixé à `NONE` par Changedetection_Common ; changedetection.io n'a pas de base de données SQL. |
 | `service_url_env_var_name` | `BASE_URL` | Nom de la variable d'environnement pour l'URL de service injectée. changedetection.io lit `BASE_URL` pour les liens des notifications. |
@@ -338,7 +338,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Aucun job d'initialisation intégré — changedetection.io ne nécessite aucun amorçage. À fournir uniquement pour un chargement de données personnalisé. |
 | `cron_jobs` | `[]` | Jobs facultatifs planifiés par la plateforme (changedetection.io planifie lui-même ses vérifications de surveillance en interne). |
@@ -347,7 +347,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 15s | Sonde de démarrage sur l'interface web. |
 | `liveness_probe` | HTTP `/`, délai de 30s | Sonde de vivacité sur l'interface web. |
@@ -358,7 +358,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Impose un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définies)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -399,7 +399,7 @@ les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS FUSE, un `backup_retention_days` hors plage, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS FUSE, un `backup_retention_days` hors plage, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -417,9 +417,9 @@ les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service,
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 changedetection.io, partagée avec la variante GKE, est décrite dans
 **[Changedetection_Common](Changedetection_Common.md)**.

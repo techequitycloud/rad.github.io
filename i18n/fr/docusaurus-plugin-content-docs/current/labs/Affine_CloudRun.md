@@ -15,11 +15,11 @@ description: "Lab pratique : déployer AFFiNE sur Cloud Run dans votre propre pr
 
 AFFiNE est une base de connaissances open source qui réunit documents, tableaux blancs et bases de données dans un même espace de travail — une alternative auto-hébergeable à Notion et Miro. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **AFFiNE on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit AFFiNE. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Affine_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit AFFiNE. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Affine_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et effectuer la configuration initiale d'AFFiNE.
@@ -42,7 +42,7 @@ Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -62,7 +62,7 @@ export REGION="us-central1"          # the region you deploy into
    avec son secret de mot de passe dans Secret Manager, un partage NFS pour le stockage des blobs (dont l'hôte
    sert également de point de terminaison Redis par défaut), un bucket GCS dédié `storage`, construit
    l'image de conteneur personnalisée (une fine surcouche de `ghcr.io/toeverything/affine`) et
-   exécute deux tâches ponctuelles : `db-init` (base de données + utilisateur) et `affine-migrate` (la migration de schéma
+   exécute deux jobs ponctuels : `db-init` (base de données + utilisateur) et `affine-migrate` (la migration de schéma
    `self-host-predeploy` d'AFFiNE et la génération de la clé de signature). Les premiers déploiements
    prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -80,7 +80,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Le chemin de santé d'AFFiNE est `/`, qui renvoie HTTP 200
    dès que le serveur est prêt (la sonde de démarrage accorde une fenêtre généreuse, mais une instance
@@ -125,10 +125,10 @@ export REGION="us-central1"          # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre `application_version`
    (par ex. `stable` → un tag de version figé) via **Update** sur la page de détails du
-   déploiement ; une nouvelle image est construite et une nouvelle révision est déployée. La tâche `affine-migrate`
-   est réexécutée de manière idempotente.
+   déploiement ; une nouvelle image est construite et une nouvelle révision est déployée. Le job `affine-migrate`
+   est réexécuté de manière idempotente.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~affine"
@@ -157,7 +157,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -181,10 +181,10 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL (PostgreSQL 15) est
-  `RUNNABLE`, que le secret du mot de passe de la base existe et que la tâche `db-init` s'est terminée. Notez
+  `RUNNABLE`, que le secret du mot de passe de la base existe et que le job `db-init` s'est terminé. Notez
   qu'AFFiNE se connecte via l'**IP privée de l'instance avec `sslmode=require`** (et non via le socket
   Auth Proxy) — la sortie VPC doit être intacte.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué.
   `affine-migrate` effectue jusqu'à 3 tentatives et doit réussir pour que le serveur dispose d'un
   schéma :
   ```bash
@@ -222,8 +222,8 @@ séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), NFS/Redis, un bucket GCS, les secrets, et exécute db-init + affine-migrate |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; le premier compte inscrit devient l'administrateur du serveur |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; le premier compte inscrit devient l'administrateur du serveur |
 | 3 — Exploiter | Manuel | Inspecter les révisions, redimensionner verticalement, mettre à jour la version, gérer les secrets/sauvegardes/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de Redis, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de Redis, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

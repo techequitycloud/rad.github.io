@@ -279,7 +279,7 @@ Le bucket GCS `paperless-media` constitue la couche de persistance principale de
 
 ---
 
-## 10. Différences selon la plateforme {#10-platform-specific-differences}
+## 10. Différences propres à chaque plateforme {#10-platform-specific-differences}
 
 | Aspect | Paperless CloudRun | Paperless GKE |
 |---|---|---|
@@ -342,7 +342,7 @@ module "app_cloudrun" {
 
 ---
 
-## 12. Exploration avec la console GCP {#12-exploring-with-the-gcp-console}
+## 12. Explorer avec la console GCP {#12-exploring-with-the-gcp-console}
 
 Après le déploiement, les zones suivantes de la console GCP sont les plus pertinentes pour les ressources gérées par `Paperless Common`.
 
@@ -366,7 +366,7 @@ Accédez à **SQL → Instances → &lt;instance-name&gt; → Databases**. La ba
 
 ---
 
-## 13. Exploration avec gcloud {#13-exploring-with-gcloud}
+## 13. Explorer avec gcloud {#13-exploring-with-gcloud}
 
 ```bash
 # Retrieve the initial admin password for first login

@@ -11,7 +11,7 @@ description: "Lab pratique : déployez GoAlert sur GKE Autopilot dans votre prop
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 GoAlert est une plateforme open source de planification des astreintes et d’escalade des alertes
 d’incident, conçue à l’origine par Target, avec des politiques d’escalade, des rotations/plannings
@@ -38,7 +38,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants, y compris
   l’ordre des jobs d’initialisation, dont tout dépend.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -140,7 +140,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspecter la charge de travail :**
 
@@ -199,7 +199,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
    Cherchez une véritable ligne « listening and serving HTTP » confirmant que le serveur a bien
-   ouvert son port. Filtre de l’explorateur de journaux :
+   ouvert son port. Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de la
@@ -248,7 +248,7 @@ fonctionne correctement).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du
@@ -272,4 +272,4 @@ SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l’échelle, mettre à jour la version, gérer les secrets, accès à la base, gérer plannings/politiques d’escalade |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, d’ordre des migrations, de planification et de récupération d’image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

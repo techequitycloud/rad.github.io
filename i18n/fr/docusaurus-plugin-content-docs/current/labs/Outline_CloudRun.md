@@ -15,11 +15,11 @@ description: "Lab pratique : déployer Outline sur Cloud Run dans votre propre p
 
 Outline est une base de connaissances et un wiki d'équipe rapides et collaboratifs, de style Notion, avec édition en temps réel et une recherche puissante. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Outline on Cloud Run** sur Google Cloud : le déployer, raccorder le fournisseur d'authentification requis, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Outline. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Outline_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Outline. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Outline_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vérifier le service en cours d'exécution et configurer le fournisseur d'authentification OIDC **requis**.
@@ -42,7 +42,7 @@ Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -61,7 +61,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager (le mot de passe de la base ainsi que les `SECRET_KEY` et
    `UTILS_SECRET` d'Outline), un partage NFS Filestore pour les fichiers téléversés, un bucket GCS
-   `storage` dédié, construit l'image de conteneur personnalisée via Cloud Build et exécute une tâche ponctuelle
+   `storage` dédié, construit l'image de conteneur personnalisée via Cloud Build et exécute un job ponctuel
    d'initialisation de la base de données. Les premiers déploiements prennent environ **20–35 minutes**
    (la création de Cloud SQL en représente l'essentiel).
 
@@ -79,7 +79,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Le chemin de santé d'Outline est `/`, qui répond une fois
    que le point d'entrée s'est connecté à PostgreSQL, a exécuté les migrations Sequelize et s'est
@@ -144,7 +144,7 @@ export REGION="us-central1"          # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; Cloud Build reconstruit l'image personnalisée et une nouvelle révision est déployée — le point d'entrée exécute au démarrage les éventuelles migrations Sequelize en attente.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~outline"   # DB password, SECRET_KEY, UTILS_SECRET
@@ -172,7 +172,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
    Au démarrage, recherchez `Assembled DATABASE_URL`, `Database is ready.` et la sortie
    des migrations Sequelize.
@@ -206,10 +206,10 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
     --format="json(spec.template.spec.containers[0].env)" | grep -A1 '"URL"'
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL (PostgreSQL 15) est
-  `RUNNABLE`, que le secret du mot de passe de la base existe et que la tâche `db-init` s'est terminée
+  `RUNNABLE`, que le secret du mot de passe de la base existe et que le job `db-init` s'est terminé
   avec succès. La connexion utilise le socket Auth Proxy — `enable_cloudsql_volume`
   doit rester à `true`.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -244,8 +244,8 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), NFS, le bucket GCS, les secrets, construit l'image et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; configurer le fournisseur OIDC requis et effectuer la première connexion |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; configurer le fournisseur OIDC requis et effectuer la première connexion |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité facultatif |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, d'OIDC, de base de données, de tâche d'initialisation, de Redis, de NFS, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, d'OIDC, de base de données, de job d'initialisation, de Redis, de NFS, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

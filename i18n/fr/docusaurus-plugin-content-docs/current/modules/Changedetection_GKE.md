@@ -75,7 +75,7 @@ Google Cloud — il n'y a ni base de données ni cache :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail changedetection.io {#a-gke-autopilot--the-changedetectionio-workload}
@@ -104,7 +104,7 @@ du type de charge de travail (Deployment ou StatefulSet).
 changedetection.io n'utilise **aucune base de données SQL**. `database_type = NONE` est
 fixé par [Changedetection_Common](Changedetection_Common.md) ; aucune instance Cloud SQL
 n'est créée et il n'existe aucun job d'initialisation `db-init`. Les entrées
-`db_name`/`db_user` n'existent que pour la compatibilité avec la fondation et ne
+`db_name`/`db_user` n'existent que pour la compatibilité avec le socle et ne
 provisionnent rien. Tout l'état persistant réside dans le volume de données décrit
 ci-dessous.
 
@@ -153,7 +153,7 @@ aucune clé de chiffrement. Secret Manager reste disponible pour toute variable
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, le Service Kubernetes est de type `ClusterIP` (`service_type = ClusterIP`)
 et la charge de travail est exposée via un Ingress Kubernetes avec une IP statique
@@ -252,7 +252,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
@@ -312,7 +312,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -372,7 +372,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` (effectif) | La variable elle-même vaut `true` par défaut, mais le `main.tf` du wrapper code en dur `enable_redis = false` dans l'appel à la fondation et ne transmet jamais `var.enable_redis` — changedetection.io n'utilise pas Redis. |
+| `enable_redis` | `false` (effectif) | La variable elle-même vaut `true` par défaut, mais le `main.tf` du wrapper code en dur `enable_redis = false` dans l'appel au socle et ne transmet jamais `var.enable_redis` — changedetection.io n'utilise pas Redis. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -380,7 +380,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `db_name` / `db_user` | `""` | Non utilisées — transmises uniquement pour la compatibilité avec la fondation ; aucune base de données n'est créée. |
+| `db_name` / `db_user` | `""` | Non utilisées — transmises uniquement pour la compatibilité avec le socle ; aucune base de données n'est créée. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -426,7 +426,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -446,7 +446,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -468,31 +468,31 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, `min_instance_count > max_instance_count`, une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, des valeurs de quota de ressources en unités binaires, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, `min_instance_count > max_instance_count`, une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, des valeurs de quota de ressources en unités binaires, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC de données / bucket GCS | Ne jamais supprimer/recréer | Critique | Le volume contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
-| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent simultanément dans le même magasin de données et corrompent `url-watches.json` ; l'application ne dispose d'aucun verrouillage distribué. |
-| `stateful_pvc_enabled` ou `workload_type` | `true` (StatefulSet sélectionné automatiquement ; tous deux par défaut) | Élevé | Définir `workload_type = "Deployment"` conjointement à `stateful_pvc_enabled = true` échoue au moment du plan ; la persistance par PVC en mode bloc exige un StatefulSet. |
-| Mot de passe de l'interface web | À définir immédiatement | Élevé | Le tableau de bord est livré **sans authentification** ; exposer le point de terminaison de l'Ingress sans mot de passe (ni IAP) révèle toutes les surveillances et la configuration des notifications. |
-| `application_name` | À définir une seule fois | Élevé | Immuable après le premier déploiement ; le renommer recrée le bucket/PVC de données et rend les données existantes orphelines. |
-| `stateful_pvc_mount_path` / `DATASTORE_PATH` | `/datastore` | Élevé | Une incohérence signifie que les données sont écrites sur le disque éphémère du pod et perdues au redémarrage ou à la replanification. |
-| `BASE_URL` | URL externe du LoadBalancer / du domaine | Moyen | Non injecté sur GKE — le laisser non défini produit des liens absolus cassés dans les notifications de modification. |
-| `enable_iap` | Activer (ou définir un mot de passe dans l'interface) | Élevé | Sans IAP ni mot de passe dans l'interface, le point de terminaison public de l'Ingress expose un tableau de bord non authentifié. |
-| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'ordonnanceur de récupération en marche. |
-| `enable_redis` / `enable_cloudsql_volume` | `false` / `false` | Faible | changedetection.io n'a besoin ni de l'un ni de l'autre ; les activer provisionne une infrastructure inutilisée. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans le namespace. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire de la sauvegarde des données. |
+| PVC de données / bucket GCS | Ne jamais supprimer/recréer | Critical | Le volume contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
+| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent simultanément dans le même magasin de données et corrompent `url-watches.json` ; l'application ne dispose d'aucun verrouillage distribué. |
+| `stateful_pvc_enabled` ou `workload_type` | `true` (StatefulSet sélectionné automatiquement ; tous deux par défaut) | High | Définir `workload_type = "Deployment"` conjointement à `stateful_pvc_enabled = true` échoue au moment du plan ; la persistance par PVC en mode bloc exige un StatefulSet. |
+| Mot de passe de l'interface web | À définir immédiatement | High | Le tableau de bord est livré **sans authentification** ; exposer le point de terminaison de l'Ingress sans mot de passe (ni IAP) révèle toutes les surveillances et la configuration des notifications. |
+| `application_name` | À définir une seule fois | High | Immuable après le premier déploiement ; le renommer recrée le bucket/PVC de données et rend les données existantes orphelines. |
+| `stateful_pvc_mount_path` / `DATASTORE_PATH` | `/datastore` | High | Une incohérence signifie que les données sont écrites sur le disque éphémère du pod et perdues au redémarrage ou à la replanification. |
+| `BASE_URL` | URL externe du LoadBalancer / du domaine | Medium | Non injecté sur GKE — le laisser non défini produit des liens absolus cassés dans les notifications de modification. |
+| `enable_iap` | Activer (ou définir un mot de passe dans l'interface) | High | Sans IAP ni mot de passe dans l'interface, le point de terminaison public de l'Ingress expose un tableau de bord non authentifié. |
+| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'ordonnanceur de récupération en marche. |
+| `enable_redis` / `enable_cloudsql_volume` | `false` / `false` | Low | changedetection.io n'a besoin ni de l'un ni de l'autre ; les activer provisionne une infrastructure inutilisée. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire de la sauvegarde des données. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à changedetection.io,

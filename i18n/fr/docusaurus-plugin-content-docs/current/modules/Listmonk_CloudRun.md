@@ -114,7 +114,7 @@ Listmonk exige **PostgreSQL 15**. `database_type = "POSTGRES_15"` est la valeur 
 | `enable_auto_password_rotation` | 12 | `false` | Rotation automatisée des mots de passe sans interruption de service. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Secondes d'attente après la rotation avant le redémarrage du service. |
 
-> `sql_instance_name` et `sql_instance_base_name` ne sont pas exposées ; la découverte ou le provisionnement en ligne de Cloud SQL est géré de manière transparente par `App CloudRun`.
+> `sql_instance_name` et `sql_instance_base_name` ne sont pas exposées ; la découverte ou le provisionnement intégré (inline) de Cloud SQL est géré de manière transparente par `App CloudRun`.
 
 ### C. Stockage (GCS Fuse et NFS) {#c-storage-gcs-fuse--nfs}
 
@@ -286,7 +286,7 @@ La répartition du trafic est prise en charge. La conception sans état de Listm
 |---|---|---|---|
 | `traffic_split` | 4 | `[]` | Répartition du trafic en pourcentage entre des révisions nommées. La somme des entrées doit être égale à 100. Vide : 100 % vers la dernière révision. |
 
-### C. Sondes de santé et surveillance de disponibilité {#c-health-probes--uptime-monitoring}
+### C. Sondes de santé et surveillance de la disponibilité {#c-health-probes--uptime-monitoring}
 
 Listmonk expose un point de terminaison dédié `/api/health`, mais depuis Listmonk v6.1.0 celui-ci se trouve derrière l'authentification par session et renvoie `403 {"message":"invalid session"}` à un appelant non authentifié — une sonde HTTP qui l'interroge n'aboutit donc jamais. La sonde de démarrage utilise donc par défaut une vérification **TCP** d'écoute du port (elle confirme que le serveur est lié au port du conteneur), et la sonde de vivacité est **désactivée** par défaut (Cloud Run n'offre pas de sonde de vivacité TCP, et la forme HTTP renverrait 403 de la même façon). La sonde de démarrage TCP conditionne la disponibilité, et Cloud Run redémarre le conteneur s'il s'arrête.
 
@@ -356,7 +356,7 @@ Un test de disponibilité Cloud Monitoring peut interroger le point de terminais
 
 ---
 
-## 9. Exploration avec la console GCP {#9-exploring-with-the-gcp-console}
+## 9. Explorer avec la console GCP {#9-exploring-with-the-gcp-console}
 
 Après un déploiement réussi, utilisez la console GCP pour vérifier et explorer le déploiement Listmonk.
 
@@ -402,7 +402,7 @@ Accédez à **Monitoring → Alerting** pour voir les règles d'alerte actives c
 
 ---
 
-## 10. Exploration avec gcloud {#10-exploring-with-gcloud}
+## 10. Explorer avec gcloud {#10-exploring-with-gcloud}
 
 Les commandes gcloud suivantes offrent une visibilité opérationnelle sur le déploiement Cloud Run de Listmonk. Remplacez `PROJECT_ID`, `REGION` et `SERVICE_NAME` par les valeurs de votre déploiement. Le nom du service suit le modèle `app<listmonk><tenant><id>` — récupérez-le depuis la sortie Terraform `service_name`.
 
@@ -637,7 +637,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Listmonk Clo
 | `custom_sql_scripts_path` | 9 | `""` | Préfixe de chemin dans le bucket. |
 | `custom_sql_scripts_use_root` | 9 | `false` | Exécute les scripts avec l'utilisateur root de la base. |
 | `nfs_instance_name` | 9 | `""` | Nom d'une VM NFS GCE existante. Laissez vide pour la découverte automatique. |
-| `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base de la VM NFS créée en ligne. L'ID de déploiement y est ajouté. |
+| `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base de la VM NFS créée en mode intégré. L'ID de déploiement y est ajouté. |
 | `enable_cloud_armor` | 10 | `false` | Provisionne un équilibreur de charge HTTPS global + Cloud Armor WAF. |
 | `admin_ip_ranges` | 10 | `[]` | Plages CIDR exemptées des règles WAF. |
 | `application_domains` | 10 | `[]` | Domaines personnalisés avec certificats SSL gérés par Google. |
@@ -697,33 +697,33 @@ Toutes les variables configurables par l'utilisateur exposées par `Listmonk Clo
 
 ---
 
-## 14. Pièges de configuration et valeurs par défaut raisonnables {#14-configuration-pitfalls--sensible-defaults}
+## 14. Pièges de configuration et valeurs par défaut judicieuses {#14-configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation importante) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critique** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"POSTGRES_15"` | **Critique** | Listmonk prend exclusivement en charge PostgreSQL. Passer à MySQL ou SQL Server fait échouer Listmonk au démarrage. |
-| `db_name` | `"listmonk"` | **Critique** | Immuable après le premier déploiement — la modifier pousse Terraform à recréer la base de données, ce qui détruit tous les abonnés, campagnes et paramètres. |
-| `db_user` | `"listmonk"` | **Critique** | Immuable après le premier déploiement — la modifier recrée l'utilisateur Cloud SQL et invalide tous les identifiants stockés. |
-| `db_password_env_var_name` | `"LISTMONK_db__password"` | **Critique** | Listmonk lit exactement ce nom de variable d'environnement pour le mot de passe de sa base de données. Le modifier empêche Listmonk de se connecter à PostgreSQL au démarrage. |
-| `min_instance_count` | `0` | **Faible** | La mise à l'échelle à zéro est la valeur par défaut et elle est sûre : l'utilisateur d'API auto-réparé, injecté en base, garantit qu'une instance démarrée à froid recharge toujours un identifiant valide, et `cpu_always_allocated = true` permet à l'expéditeur de campagnes asynchrone de l'instance réveillée d'aller jusqu'au bout. Passez à `1` uniquement pour une utilisation interactive intensive de l'administration où les démarrages à froid sont indésirables. |
-| `memory_limit` | `"512Mi"` | **Moyen** | Suffisant pour de petites listes. Des listes de plusieurs millions d'abonnés ou un traitement concurrent de campagnes peuvent épuiser 512Mi sous charge. Augmentez à 1–2 Gi pour les déploiements de production comptant de nombreux abonnés. |
-| `enable_cloudsql_volume` | `true` | **Critique** | Listmonk se connecte par défaut à PostgreSQL via le socket Unix de l'Auth Proxy. Désactiver le volume sans fournir de chemin de connexion TCP fait échouer toutes les opérations sur la base de données. |
-| `gcs_volumes` | `[]` | **Moyen** | Sans volume GCS Fuse sur `/listmonk/uploads`, les fichiers médias téléversés sont stockés de manière éphémère sur le système de fichiers du conteneur et perdus lors du remplacement de la révision. À configurer pour tout déploiement qui accepte des pièces jointes ou des téléversements de médias. |
-| `ingress_settings` | `"all"` | **Moyen** | `"all"` expose l'interface d'administration de Listmonk sur l'internet public. Pour les déploiements de newsletters internes, envisagez `enable_iap = true` ou `ingress_settings = "internal"`. |
-| `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, l'API et l'interface d'administration de Listmonk sont exposées sans protection WAF. Les grandes listes d'abonnés sont des cibles de choix pour le moissonnage de données. Recommandé pour tout déploiement de production. |
-| `backup_retention_days` | `7` | **Moyen** | Sept jours sont insuffisants pour des bases d'abonnés de production. Perdre les données des abonnés, l'historique des campagnes et les enregistrements de désabonnement représente un risque de conformité sérieux. Augmentez à 30 jours ou plus pour tout déploiement de production. |
-| `enable_backup_import` | `false` | **Critique** | Exige que `backup_uri` soit un chemin GCS ou Drive valide et accessible. L'activer avec un `backup_uri` vide fait échouer le job Cloud Run de restauration pendant l'apply. |
-| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Moyen** | Listmonk doit joindre des fournisseurs SMTP/API externes pour envoyer les campagnes. `PRIVATE_RANGES_ONLY` autorise la sortie publique directe. Passer à `"ALL_TRAFFIC"` avec un pare-feu VPC restrictif bloquera les connexions SMTP/API sortantes et empêchera silencieusement la distribution des campagnes. |
-| `secret_propagation_delay` | `30` | **Faible** | Parfois insuffisant dans les configurations multirégionales. Augmentez à 60–90 s si des secrets sont introuvables pendant l'apply. |
+| `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
+| `database_type` | `"POSTGRES_15"` | **Critical** | Listmonk prend exclusivement en charge PostgreSQL. Passer à MySQL ou SQL Server fait échouer Listmonk au démarrage. |
+| `db_name` | `"listmonk"` | **Critical** | Immuable après le premier déploiement — la modifier pousse Terraform à recréer la base de données, ce qui détruit tous les abonnés, campagnes et paramètres. |
+| `db_user` | `"listmonk"` | **Critical** | Immuable après le premier déploiement — la modifier recrée l'utilisateur Cloud SQL et invalide tous les identifiants stockés. |
+| `db_password_env_var_name` | `"LISTMONK_db__password"` | **Critical** | Listmonk lit exactement ce nom de variable d'environnement pour le mot de passe de sa base de données. Le modifier empêche Listmonk de se connecter à PostgreSQL au démarrage. |
+| `min_instance_count` | `0` | **Low** | La mise à l'échelle à zéro est la valeur par défaut et elle est sûre : l'utilisateur d'API auto-réparé, injecté en base, garantit qu'une instance démarrée à froid recharge toujours un identifiant valide, et `cpu_always_allocated = true` permet à l'expéditeur de campagnes asynchrone de l'instance réveillée d'aller jusqu'au bout. Passez à `1` uniquement pour une utilisation interactive intensive de l'administration où les démarrages à froid sont indésirables. |
+| `memory_limit` | `"512Mi"` | **Medium** | Suffisant pour de petites listes. Des listes de plusieurs millions d'abonnés ou un traitement concurrent de campagnes peuvent épuiser 512Mi sous charge. Augmentez à 1–2 Gi pour les déploiements de production comptant de nombreux abonnés. |
+| `enable_cloudsql_volume` | `true` | **Critical** | Listmonk se connecte par défaut à PostgreSQL via le socket Unix de l'Auth Proxy. Désactiver le volume sans fournir de chemin de connexion TCP fait échouer toutes les opérations sur la base de données. |
+| `gcs_volumes` | `[]` | **Medium** | Sans volume GCS Fuse sur `/listmonk/uploads`, les fichiers médias téléversés sont stockés de manière éphémère sur le système de fichiers du conteneur et perdus lors du remplacement de la révision. À configurer pour tout déploiement qui accepte des pièces jointes ou des téléversements de médias. |
+| `ingress_settings` | `"all"` | **Medium** | `"all"` expose l'interface d'administration de Listmonk sur l'internet public. Pour les déploiements de newsletters internes, envisagez `enable_iap = true` ou `ingress_settings = "internal"`. |
+| `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, l'API et l'interface d'administration de Listmonk sont exposées sans protection WAF. Les grandes listes d'abonnés sont des cibles de choix pour le moissonnage de données. Recommandé pour tout déploiement de production. |
+| `backup_retention_days` | `7` | **Medium** | Sept jours sont insuffisants pour des bases d'abonnés de production. Perdre les données des abonnés, l'historique des campagnes et les enregistrements de désabonnement représente un risque de conformité sérieux. Augmentez à 30 jours ou plus pour tout déploiement de production. |
+| `enable_backup_import` | `false` | **Critical** | Exige que `backup_uri` soit un chemin GCS ou Drive valide et accessible. L'activer avec un `backup_uri` vide fait échouer le job Cloud Run de restauration pendant l'apply. |
+| `vpc_egress_setting` | `"PRIVATE_RANGES_ONLY"` | **Medium** | Listmonk doit joindre des fournisseurs SMTP/API externes pour envoyer les campagnes. `PRIVATE_RANGES_ONLY` autorise la sortie publique directe. Passer à `"ALL_TRAFFIC"` avec un pare-feu VPC restrictif bloquera les connexions SMTP/API sortantes et empêchera silencieusement la distribution des campagnes. |
+| `secret_propagation_delay` | `30` | **Low** | Parfois insuffisant dans les configurations multirégionales. Augmentez à 60–90 s si des secrets sont introuvables pendant l'apply. |
 
 ---
 
 ## 15. Destruction des ressources {#15-destroying-resources}
 
-### Problème de suppression connu : libération des adresses IPv4 serverless {#known-deletion-issue-serverless-ipv4-address-release}
+### Problème de suppression connu : libération des adresses IPv4 sans serveur {#known-deletion-issue-serverless-ipv4-address-release}
 
 Lors de la destruction d'un déploiement Cloud Run, vous pouvez rencontrer une erreur semblable à celle-ci :
 

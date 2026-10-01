@@ -51,7 +51,7 @@ dans Secret Manager et ne provisionne **aucune** instance Cloud SQL ni aucun buc
   à aucune base de données externe et n'a besoin ni de mot de passe d'amorçage ni de clé de chiffrement.
 - `storage_buckets = []` — ntfy conserve tout ce dont il a besoin (son cache de messages
   et, s'il est activé, sa base d'authentification) dans un fichier SQLite local, et non dans un stockage d'objets.
-- `database_type = "NONE"` — aucune instance Cloud SQL pour PostgreSQL/MySQL n'est créée. Les
+- `database_type = "NONE"` — aucune instance Cloud SQL for PostgreSQL/MySQL n'est créée. Les
   variables liées à la base de données qui apparaissent dans les guides de plateforme (`db_name`,
   `db_user`, `enable_cloudsql_volume`, `database_password_length`, …) sont inertes
   sauf si vous optez explicitement pour une base de données externe, ce dont ntfy n'a pas besoin.

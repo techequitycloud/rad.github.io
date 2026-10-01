@@ -33,7 +33,7 @@ FreeScout s'exécute sous la forme d'un unique conteneur PHP (nginx + php-fpm) s
 Cloud Run v2, construit comme une image personnalisée légère `FROM tiredofit/freescout`.
 Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur PHP sur le port 80, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; scale-to-zero pris en charge |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — FreeScout ne prend en charge ni PostgreSQL ni d'autres moteurs |
@@ -186,7 +186,7 @@ de données est géré séparément par le socle.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### G. Réseau et ingress {#g-networking--ingress}
+### G. Réseau et entrée {#g-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app` (`ingress_settings = "all"`),
 ce qui permet l'accès public à l'interface du helpdesk. Un équilibreur de charge HTTPS
@@ -288,7 +288,7 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS et GCS Fuse. |
 | `enable_cloudsql_volume` | `false` | Cloud Run se connecte à MySQL en TCP (IP privée) ; laissez `false`. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -374,7 +374,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
 > (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
@@ -382,7 +382,7 @@ d'explorer les ressources en cours d'exécution.
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, un `container_port`/`backup_retention_days` hors plage, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
 | `database_type` | `MYSQL_8_0` | Critical | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |

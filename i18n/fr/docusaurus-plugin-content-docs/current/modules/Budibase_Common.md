@@ -27,10 +27,10 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Domaine | Fourni par Budibase_Common | Où cela apparaît |
 |---|---|---|
 | Identifiants internes | Génère sept secrets stables — `INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `API_ENCRYPTION_KEY`, `REDIS_PASSWORD` et le mot de passe administrateur CouchDB — et les stocke dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes du service ; récupérables via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Construit une **image enveloppe légère** `FROM budibase/budibase` (l'image tout-en-un officielle) via Cloud Build, en fixant le tag de base au moyen d'un ARG de build propre à l'application, `BUDIBASE_VERSION` | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Construit une **image enveloppe légère** `FROM budibase/budibase` (l'image tout-en-un officielle) via Cloud Build, en fixant le tag de base au moyen d'un ARG de build propre à l'application, `BUDIBASE_VERSION` | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | **`database_type = "NONE"`** — Budibase intègre son propre **CouchDB** (ainsi que MinIO et Redis) dans l'unique conteneur ; il n'y a aucune base de données gérée externe | §Comportement de l'application dans les guides de plateforme |
 | Modèle d'état | Tout l'état réside dans le répertoire de données du conteneur `/data` (documents CouchDB + magasin d'objets MinIO), chiffré avec les secrets générés | §Persistance dans les guides de plateforme |
-| Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) provisionné par le socle | Output `storage_buckets` |
+| Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) provisionné par le socle | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit l'environnement Budibase de base : mode production auto-hébergé, utilisateur administrateur CouchDB, niveau de journalisation, port `80` | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité par défaut ciblant le chemin racine non authentifié `/` | §Observabilité dans les guides de plateforme |
 

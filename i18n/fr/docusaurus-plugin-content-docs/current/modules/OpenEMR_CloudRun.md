@@ -29,7 +29,7 @@ sauvegardes et cycle de vie du déploiement — consultez le
 OpenEMR s'exécute sous forme de conteneur Apache/PHP 8.3 FPM sur Cloud Run v2. Le déploiement associe
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Apache/PHP, 2 vCPU / 4 GiB par défaut, mise à l'échelle automatique selon les requêtes |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — OpenEMR ne prend pas en charge PostgreSQL |
@@ -39,7 +39,7 @@ un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe administrateur (`OE_PASS`) et mot de passe de la base de données (`MYSQL_PASS`) générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Sélectionner PostgreSQL ou `NONE` empêche le démarrage.
 - **NFS est obligatoire et nécessite `gen2`.** Le répertoire `sites/` d'OpenEMR — qui contient
@@ -49,7 +49,7 @@ un ensemble ciblé de services Google Cloud :
   simple. La pile Apache/PHP d'OpenEMR peut ne pas encore servir le HTTP pendant la phase
   d'installation au premier démarrage, si bien qu'une sonde HTTP expirerait. Une sonde TCP vérifie seulement que
   le port est ouvert et laisse l'installateur se terminer.
-- **L'installation au premier démarrage est automatisée et lente.** Lors du premier déploiement, deux tâches
+- **L'installation au premier démarrage est automatisée et lente.** Lors du premier déploiement, deux jobs
   d'initialisation s'exécutent — `nfs-init` (préparation des répertoires NFS et restauration facultative d'une sauvegarde) et `db-init`
   (création de l'utilisateur et de la base de données MySQL) — après quoi le conteneur lui-même exécute
   `auto_configure.php` pour installer le schéma de la base de données. Cela peut prendre de 5 à 20 minutes.
@@ -98,7 +98,7 @@ d'exécution et la répartition du trafic.
 
 OpenEMR stocke toutes les données cliniques dans une instance Cloud SQL for MySQL 8.0 gérée. Le
 service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix
-(sans IP publique). Lors du premier déploiement, la tâche Cloud Run `db-init` crée la base de données
+(sans IP publique). Lors du premier déploiement, le job Cloud Run `db-init` crée la base de données
 applicative et l'utilisateur ; la tâche `nfs-init` prépare le répertoire NFS `sites/`.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les sauvegardes, les flags et les métriques.
@@ -195,7 +195,7 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 
 ## 3. Comportement de l'application OpenEMR {#3-openemr-application-behaviour}
 
-- **Deux tâches d'initialisation s'exécutent à chaque déploiement.**
+- **Deux jobs d'initialisation s'exécutent à chaque déploiement.**
 
   | Tâche | Rôle | Image |
   |---|---|---|
@@ -209,7 +209,7 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
   gcloud run jobs executions list --job db-init --project "$PROJECT" --region "$REGION"
   ```
 
-- **L'installation du schéma au premier démarrage prend de 5 à 20 minutes.** Une fois les tâches d'initialisation terminées,
+- **L'installation du schéma au premier démarrage prend de 5 à 20 minutes.** Une fois les jobs d'initialisation terminés,
   le conteneur du service exécute `auto_configure.php` pour installer le schéma de la base de données
   OpenEMR et créer le compte administrateur. Pendant cette phase, un serveur web PHP intégré temporaire
   renvoie HTTP 200 sur le chemin de la sonde de démarrage, ce qui empêche l'instance d'être
@@ -285,7 +285,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -357,12 +357,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement supplémentaires sous lesquels les informations de connexion sont injectées. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la séquence intégrée `nfs-init` / `db-init`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes appelées selon une planification. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents appelés selon une planification. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -382,7 +382,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -428,12 +428,12 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_nfs` | `true` | Critical | OpenEMR ne peut pas fonctionner sans NFS. Le répertoire `sites/`, `sqlconf.php` et les documents des patients résident tous sur NFS. Le désactiver provoque un échec immédiat au démarrage. |
 | `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Critical | Doit correspondre au chemin du répertoire sites d'OpenEMR. En cas de non-correspondance, `nfs-init` prépare le mauvais emplacement et le conteneur ne trouve jamais de `sqlconf.php` configuré. |
@@ -456,7 +456,7 @@ ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**.
 La configuration applicative propre à OpenEMR partagée avec la variante GKE est décrite dans
 **[OpenEMR_Common](OpenEMR_Common.md)**.
 

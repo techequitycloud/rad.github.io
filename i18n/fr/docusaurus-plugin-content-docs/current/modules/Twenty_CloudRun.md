@@ -39,7 +39,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Secret applicatif généré automatiquement (`APP_SECRET` / `ENCRYPTION_KEY`) et mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Choisir MySQL ou `NONE` empêche le démarrage.
 - **Redis est activé par défaut.** Twenty v0.4+ impose Redis pour le stockage des
@@ -50,7 +50,7 @@ assemble un ensemble ciblé de services Google Cloud :
   aucune infrastructure supplémentaire et utilise directement la base PostgreSQL.
 - **Les pièces jointes sont stockées par défaut sur un stockage local éphémère.**
   Activez `enable_gcs_storage` pour un stockage d'objets persistant sur GCS.
-- **Trois tâches d'initialisation s'exécutent avant le démarrage du serveur.**
+- **Trois jobs d'initialisation s'exécutent avant le démarrage du serveur.**
   `db-init` crée la base de données et l'utilisateur ; `twenty-migrate` exécute les
   migrations de schéma TypeORM ; `twenty-verify` est une tâche de garde qui fait
   échouer l'apply si le schéma `core` ne contient aucune table, signalant
@@ -212,7 +212,7 @@ disponibilité et des règles d'alerte facultatifs.
      en cours de stabilisation lorsque cette tâche démarre.
   3. `twenty-verify` — une tâche de garde (`depends_on_jobs = ["twenty-migrate"]`)
      qui vérifie que le schéma `core` contient bien des tables et **fait échouer
-     l'apply** si ce n'est pas le cas. Elle existe parce qu'un échec de tâche
+     l'apply** si ce n'est pas le cas. Elle existe parce qu'un échec de job
      d'initialisation NE fait PAS échouer à lui seul l'apply du module — sans cette
      garde, un `twenty-migrate` concurrent ou échoué pourrait livrer en silence un
      service apparemment sain pointant vers une base de données VIDE (chaque requête
@@ -302,7 +302,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartition du trafic canary/blue-green entre les révisions. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -369,12 +369,12 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms facultatifs de variables d'environnement supplémentaires sous lesquels les informations de connexion sont injectées. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init`, `twenty-migrate` et `twenty-verify`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes supplémentaires déclenchées par Cloud Scheduler. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents supplémentaires déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run supplémentaires. Requis pour un worker bull-mq dédié lorsque `enable_redis = true`. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -395,7 +395,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -436,12 +436,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SERVER_URL` / `FRONT_BASE_URL` (dans `environment_variables`) | URL publique du déploiement | Critical | Les liens d'API sont incorrects, des erreurs CORS bloquent toutes les requêtes, les invitations par e-mail échouent. À définir avant la première utilisation. |
 | `database_type` | `POSTGRES_15` | Critical | Twenty exige PostgreSQL ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |

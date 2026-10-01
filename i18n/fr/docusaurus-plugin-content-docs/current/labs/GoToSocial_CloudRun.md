@@ -11,7 +11,7 @@ description: "Lab pratique : déployez GoToSocial sur Cloud Run dans votre propr
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 GoToSocial est un serveur ActivityPub/Fediverse léger et auto-hébergé — une
 petite alternative à Mastodon, écrite sous la forme d’un unique binaire Go statique. Ce lab
@@ -37,7 +37,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants, y compris
   une création de compte administrateur bloquée.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -141,7 +141,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspecter le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -201,7 +201,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l’explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez
@@ -294,7 +294,7 @@ l’immuabilité de `host`).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement
@@ -319,4 +319,4 @@ et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l’échelle (jamais au-delà de `max_instance_count = 1`), mettre à jour la version, gérer secrets/sauvegardes, accès à la base et au stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer la particularité 418/User-Agent, la propagation IAM du stockage, les échecs de admin-create, les lignes de compte orphelines, les problèmes de base de données/TLS |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

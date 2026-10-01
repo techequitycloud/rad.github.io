@@ -42,7 +42,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY_BASE` généré automatiquement (clé de session/chiffrement Rails) ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé + certificat géré activés par défaut |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type` vaut par défaut `POSTGRES_15`
   et une garde au moment du plan (`validation.tf`) rejette toute valeur autre que
@@ -73,7 +73,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   stocké dans Secret Manager, partagé à l'identique par les processus web et
   Sidekiq. Rails l'utilise pour signer les sessions/cookies et pour dériver la clé
   qui chiffre les colonnes chiffrées par ActiveRecord.
-- **Le schéma est créé par une tâche d'initialisation, pas au démarrage.** La
+- **Le schéma est créé par un job d'initialisation, pas au démarrage.** La
   tâche `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
   point d'entrée d'exécution n'exécute jamais les migrations.
 - **L'affinité de session est `ClientIP`**, afin que les requêtes d'un client
@@ -101,9 +101,9 @@ réellement demandés par les pods. Le serveur web Rails/Puma et le worker Sidek
 s'exécutent comme deux processus dans le même conteneur, partageant
 `SECRET_KEY_BASE` et la connexion Redis.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Maybe pour consulter les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -186,7 +186,7 @@ valeur aléatoire de 64 caractères partagée par le processus web Rails et le w
 Sidekiq. Le mot de passe de la base de données est géré séparément par le socle.
 Sur GKE, les secrets sont projetés dans les pods via le pilote CSI Secret Store.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~maybefinance"
@@ -203,8 +203,7 @@ l'adresse survive aux redéploiements), `enable_custom_domain = true` provisionn
 un Ingress Kubernetes. `network_tags` vaut par défaut `["nfsserver"]`, requis pour
 le mécanisme de découverte NFS/Redis.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
-  IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -221,8 +220,8 @@ Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging
 vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte sont
 disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord
-  / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards
+  / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -242,7 +241,7 @@ disponibles en option.
   créer des extensions Postgres) et crée au préalable `pgcrypto` par mesure de
   précaution supplémentaire. La tâche peut être réexécutée sans risque
   (`execute_on_apply = true`, `max_retries = 1`).
-- **La migration du schéma est une tâche d'initialisation distincte.**
+- **La migration du schéma est un job d'initialisation distinct.**
   `maybefinance-migrate` exécute `bundle exec rails db:prepare` sur l'image
   construite pour l'application (`image = null` dans la spécification de la
   tâche, elle réutilise donc l'image Maybe construite et sa chaîne d'outils),
@@ -273,10 +272,10 @@ disponibles en option.
 - **Chemin de santé.** La sonde de démarrage est une sonde **HTTP** `GET /up` avec
   une marge généreuse pour un premier démarrage lent (`initial_delay_seconds = 60`,
   `period_seconds = 15`, `failure_threshold = 30` — environ 8 minutes de marge).
-  La sonde d'activité est également une sonde **HTTP** `GET /up`
+  La sonde de vivacité est également une sonde **HTTP** `GET /up`
   (`initial_delay_seconds = 60`, `period_seconds = 30`,
   `failure_threshold = 3`).
-- **Inspecter les tâches d'initialisation et la configuration en cours :**
+- **Inspecter les jobs d'initialisation et la configuration en cours :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -396,10 +395,10 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -411,21 +410,21 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > si bien que la plupart des erreurs ci-dessous sont détectées en amont plutôt
 > qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critique | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de tâches d'arrière-plan fonctionnelle ni interface en temps réel. |
-| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critique | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `min_instance_count` | `1` | Élevé | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
-| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | Élevé | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
-| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | Élevé | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les tâches ne sont jamais traitées ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
-| `container_resources.memory_limit` | `4Gi` (par défaut) | Élevé | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
-| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
-| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
-| `backup_retention_days` | `7` (à augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
+| `enable_redis` | `true` | Critical | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de tâches d'arrière-plan fonctionnelle ni interface en temps réel. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critical | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `min_instance_count` | `1` | High | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
+| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | High | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
+| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | High | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les tâches ne sont jamais traitées ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
+| `container_resources.memory_limit` | `4Gi` (par défaut) | High | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
+| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
+| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
+| `backup_retention_days` | `7` (à augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
 
 ---
 

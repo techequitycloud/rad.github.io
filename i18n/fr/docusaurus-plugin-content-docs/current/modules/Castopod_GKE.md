@@ -11,14 +11,14 @@ description: "Référence de configuration pour déployer Castopod sur GKE Autop
 
 Castopod est une plateforme open source d'hébergement de podcasts, nativement compatible
 ActivityPub, construite sur CodeIgniter 4 (PHP 8) et servie par FrankenPHP/Caddy. Ce module
-déploie Castopod sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui
+déploie Castopod sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Castopod et sur la manière de les
 explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les
 mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que
+vie du déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que
 de les répéter ici.
 
 ---
@@ -28,7 +28,7 @@ de les répéter ici.
 Castopod s'exécute comme une charge de travail web FrankenPHP/Caddy unique. Le déploiement
 assemble un ensemble restreint de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods FrankenPHP/Caddy sur le port 8080, 1 vCPU / 2 GiB par défaut |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — le moteur est fixé à `MYSQL_8_0` ; Castopod ne prend pas en charge PostgreSQL |
@@ -94,7 +94,7 @@ assemble un ensemble restreint de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Castopod {#a-gke-autopilot--the-castopod-workload}
 
@@ -135,13 +135,13 @@ conteneur de l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager contenant
-le mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md)
+le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md)
 pour le modèle de connexion, les sauvegardes automatiques et la rotation du mot de passe.
 
 ### C. Cloud Storage et persistance des fichiers {#c-cloud-storage--file-persistence}
 
 **Deux buckets Cloud Storage** sont provisionnés automatiquement par défaut — un bucket
-générique `data` (la valeur par défaut de la fondation App_GKE) et un bucket `media` propre à
+générique `data` (la valeur par défaut du socle App_GKE) et un bucket `media` propre à
 Castopod, déclaré par `Castopod_Common`. Aucun n'est monté dans le système de fichiers du pod,
 sauf si `gcs_volumes` est explicitement configuré ; le répertoire de médias réel de Castopod
 (`/var/www/castopod/public/media`) est en revanche conservé via **NFS (Cloud Filestore)**,
@@ -162,7 +162,7 @@ Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 Redis est **désactivé par défaut** — Castopod utilise un cache sur le système de fichiers
 (`CP_CACHE_HANDLER = file`). Lorsque `enable_redis = true`, le module injecte
 `REDIS_HOST`/`REDIS_PORT` pour le cache d'objets de Castopod ; si `redis_host` est laissé
-vide, la fondation le résout vers l'IP de la VM du serveur NFS (nécessite `enable_nfs = true`).
+vide, le socle le résout vers l'IP de la VM du serveur NFS (nécessite `enable_nfs = true`).
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée plutôt que le Redis
   colocalisé avec NFS).
@@ -175,7 +175,7 @@ vide, la fondation le résout vers l'IP de la VM du serveur NFS (nécessite `ena
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `CP_ANALYTICS_SALT` (utilisé pour anonymiser les statistiques d'écoute des podcasts). Le mot
-de passe de la base de données est géré séparément par la fondation. Sur GKE, les secrets sont
+de passe de la base de données est géré séparément par le socle. Sur GKE, les secrets sont
 projetés dans les pods via le pilote Secret Store CSI.
 
 - **Console :** Security → Secret Manager.
@@ -187,7 +187,7 @@ projetés dans les pods via le pilote Secret Store CSI.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load Balancing
 (`service_type = LoadBalancer`, `reserve_static_ip = true`). Comme
@@ -252,10 +252,10 @@ facultatifs sont disponibles.
   (`database.default.hostname|database|username|password|port|DBDriver|DBPrefix`), qui ne
   peuvent pas être exprimées comme des noms de variables d'environnement Kubernetes. Le point
   d'entrée de la surcouche de la plateforme les écrit dans le `.env` de Castopod à partir du
-  `DB_HOST` injecté par la fondation (qui vaut `127.0.0.1` sur GKE, le sidecar Auth Proxy) et
+  `DB_HOST` injecté par le socle (qui vaut `127.0.0.1` sur GKE, le sidecar Auth Proxy) et
   de `DB_NAME`/`DB_USER`/`DB_PASSWORD`, puis délègue au point d'entrée FrankenPHP/Caddy amont.
 - **`CP_BASEURL` est dérivée automatiquement.** Lorsqu'elle n'est pas définie explicitement, le
-  point d'entrée la dérive du `GKE_SERVICE_URL` injecté par la fondation et l'écrit sous
+  point d'entrée la dérive du `GKE_SERVICE_URL` injecté par le socle et l'écrit sous
   `app.baseURL` dans `.env`, de sorte que les liens du flux du podcast et des médias reflètent
   l'adresse réelle du service (y compris le nom d'hôte nip.io émis automatiquement).
 - **`CP_ANALYTICS_SALT` doit rester stable après le premier démarrage.** Il est généré une
@@ -295,14 +295,14 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `castopod` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_version` | `latest` | Tag de l'image `castopod/castopod` utilisé comme base du build personnalisé ; `latest` est épinglé sur un tag connu pour fonctionner (`1.15.5`) au moment du build via l'ARG de build propre à l'application `CASTOPOD_VERSION`. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | 1 vCPU par instance de conteneur Castopod. |
 | `memory_limit` | `2Gi` | Environ 512Mi au minimum pour démarrer ; 2Gi recommandé pour les grandes médiathèques. |
@@ -315,7 +315,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP externe pour l'interface de Castopod et les flux de podcast publics. |
 | `workload_type` | `null` → `Deployment` | Deployment (adossé à NFS, stratégie `Recreate`). |
@@ -323,21 +323,21 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP, délai de 30s, 20 tentatives | Sonde de démarrage effective — remplace le `startup_probe_config` générique, qui est transmis mais écrasé et n'a aucun effet. |
 | `liveness_probe` | HTTP `/`, délai de 300s | Sonde de vivacité effective, sur la page d'accueil non authentifiée de Castopod — remplace le `health_check_config` générique. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS est activé par défaut afin que l'audio et les illustrations des épisodes téléversés soient conservés et partagés. |
 | `nfs_mount_path` | `/var/lib/castopod` | Emplacement de montage de l'état partagé des médias de Castopod. |
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Bascule le cache d'objets de Castopod du système de fichiers vers Redis. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
@@ -345,7 +345,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `null` → `MYSQL_8_0` | Conserve la valeur par défaut MySQL 8.0 de Common ; Castopod ne prend pas en charge d'autres moteurs. |
 | `application_database_name` | `castopod` | Nom de la base de données. Immuable après le premier déploiement. |
@@ -353,7 +353,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne une Gateway ; lorsque `application_domains` est vide, fournit un nom d'hôte HTTPS `<ip>.nip.io` sans configuration. |
 | `application_domains` | `[]` | À définir pour utiliser un vrai nom d'hôte personnalisé et un certificat géré au lieu du repli nip.io. |
@@ -401,7 +401,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -420,9 +420,9 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**. La
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La
 configuration applicative propre à Castopod, partagée avec la variante Cloud Run, est décrite
 dans **[Castopod_Common](Castopod_Common.md)**.
 

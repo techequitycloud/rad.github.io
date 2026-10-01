@@ -43,7 +43,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option, `reserve_static_ip = true` |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le schéma Prisma de Linkwarden code en dur le
   fournisseur `postgresql` ; sélectionner un autre moteur fait échouer la migration
@@ -60,7 +60,7 @@ assemble un ensemble ciblé de services Google Cloud :
   l'URL du service au démarrage du conteneur ; une IP externe stable évite donc la
   situation de concurrence avec le repli sur le DNS interne documentée pour d'autres
   applications de ce catalogue qui référencent leur propre URL.
-- **Au moins 1 réplique est maintenue** (GKE ne prend pas en charge la mise à
+- **Au moins 1 réplica est maintenu** (GKE ne prend pas en charge la mise à
   l'échelle à zéro) afin que le worker d'archivage en arrière-plan intégré au
   conteneur continue à traiter la file d'attente.
 - **Chrome headless s'exécute dans le même processus que le serveur web.**
@@ -89,9 +89,9 @@ autres identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 Les pods Linkwarden sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Linkwarden pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services et entrées affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -108,8 +108,8 @@ Linkwarden stocke toutes les données applicatives (favoris, collections, tags,
 utilisateurs, métadonnées d'archive) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le sidecar cloud-sql-proxy (activé via
 `enable_cloudsql_volume = true`) écoute sur `127.0.0.1` ; le point d'entrée cloud y
-connecte `DATABASE_URL` avec `sslmode=disable`. Lors du premier déploiement, une
-tâche d'initialisation crée la base de données applicative et l'utilisateur ;
+connecte `DATABASE_URL` avec `sslmode=disable`. Lors du premier déploiement, un
+job d'initialisation crée la base de données applicative et l'utilisateur ;
 Linkwarden exécute ensuite son propre `prisma migrate deploy` à chaque démarrage du
 conteneur.
 
@@ -148,7 +148,7 @@ Un secret est généré automatiquement et stocké dans Secret Manager :
 l'espace de noms et injecté en tant que variable d'environnement du pod. Le mot de
 passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -163,8 +163,8 @@ Le service est exposé par défaut via un Service Kubernetes `LoadBalancer` avec
 IP statique réservée (`reserve_static_ip = true`). Un Ingress avec un domaine
 personnalisé et un certificat géré, Cloud CDN et Cloud Armor peut y être ajouté.
 
-- **Console :** Kubernetes Engine → Services et entrées ; Services réseau →
-  Équilibrage de charge.
+- **Console :** Kubernetes Engine → Services & Ingress ; Network services →
+  Load balancing.
 - **CLI :**
   ```bash
   kubectl get svc -n "$NAMESPACE" -o wide
@@ -179,8 +179,8 @@ Les journaux du conteneur sont envoyés à Cloud Logging ; les métriques de GKE
 Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   kubectl logs -n "$NAMESPACE" deploy/<service-name> --tail=100 -f
@@ -190,8 +190,8 @@ règles d'alerte en option.
 
 ## 3. Comportement de l'application Linkwarden {#3-linkwarden-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via le sidecar cloud-sql-proxy et crée de manière idempotente la base de données
   applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
   réexécutée sans risque.
@@ -332,14 +332,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |

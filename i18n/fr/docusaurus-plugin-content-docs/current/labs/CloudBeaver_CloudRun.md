@@ -27,7 +27,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - Effectuer les opérations du jour 2 — inspecter les révisions, gérer l'espace de travail adossé à GCS et mettre à jour la version.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -42,7 +42,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -181,7 +181,7 @@ export REGION="us-central1"          # the region you deploy into
    nombre de requêtes, la latence des requêtes (P50/P95/P99), le nombre d'instances (qui doit rester stable à 1) et
    l'utilisation CPU / mémoire (surveillez la mémoire — CloudBeaver repose sur la JVM). Notez que
    `uptime_check_config.enabled` vaut `false` par défaut ; Monitoring → Uptime checks est donc
-   légitimement vide tant que vous ne l'activez pas ; si vous l'activez, un contrôle de disponibilité Cloud Monitoring
+   légitimement vide tant que vous ne l'activez pas ; si vous l'activez, un test de disponibilité Cloud Monitoring
    n'est provisionné que lorsque le point de terminaison est accessible publiquement — l'entrée par défaut
    `all` le permet, mais passer à `ingress_settings = "internal"` supprime
    le point de terminaison public et la possibilité d'en provisionner un.
@@ -225,19 +225,19 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run, le bucket d'espace de travail GCS (et avec lui **toutes les connexions enregistrées, les utilisateurs et les paramètres**) et les images Artifact Registry. Copiez d'abord le bucket d'espace de travail si vous souhaitez conserver la configuration. Les ressources appartenant à **Services_GCP** (le VPC, l'instance Cloud SQL partagée, le registre) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image et provisionne Cloud Run + le bucket d'espace de travail GCS (sans base de données, sans Redis, sans secrets) |
 | 2 — Accéder et vérifier | Manuel | Comprendre l'entrée par défaut `all` (publique) ; le contrôle de santé réussit ; revendiquer le compte administrateur via l'assistant de configuration |
 | 3 — Exploiter | Manuel | Inspecter les révisions, conserver une seule instance, mettre à jour la version, sauvegarder le bucket d'espace de travail |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; comprendre quand le contrôle de disponibilité existe |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; comprendre quand le test de disponibilité existe |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes d'entrée, de révision, d'espace de travail, de sortie VPC, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le bucket d'espace de travail |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le bucket d'espace de travail |

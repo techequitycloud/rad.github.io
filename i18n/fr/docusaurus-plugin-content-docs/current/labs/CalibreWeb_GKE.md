@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Calibre-Web sur GKE Autopilot dans votre 
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Calibre-Web est une application web auto-hébergée qui permet de parcourir, lire et télécharger des livres numériques
 d'une bibliothèque Calibre — elle fournit une liseuse dans le navigateur, un flux OPDS et la synchronisation Kobo
@@ -28,7 +28,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -52,7 +52,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -157,7 +157,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
 2. **N'augmentez pas `max_instance_count` au-delà de `1`.** Les
-   `volumeClaimTemplates` du StatefulSet donnent à chaque réplique son propre PVC indépendant — la mise à l'échelle
+   `volumeClaimTemplates` du StatefulSet donnent à chaque réplica son propre PVC indépendant — la mise à l'échelle
    ne partage **pas** `/config` entre les pods ; elle scinde silencieusement la bibliothèque et
    la configuration en copies distinctes et non synchronisées par pod. La mise à l'échelle est une modification
    de configuration dans la plateforme RAD (modifiez les paramètres d'instances min/max et cliquez sur
@@ -200,7 +200,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/<service-name> --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et

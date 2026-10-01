@@ -28,7 +28,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -69,7 +69,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager, un bucket GCS dédié aux documents, construit l'image
-   du conteneur et exécute une tâche ponctuelle d'initialisation de la base de données. Les premiers déploiements prennent environ
+   du conteneur et exécute un job ponctuel d'initialisation de la base de données. Les premiers déploiements prennent environ
    **20–35 minutes** (la création de Cloud SQL représente l'essentiel de la durée).
 
 3. Une fois l'opération terminée, repérez les ressources à l'aide de filtres indépendants des noms (afin que les
@@ -100,7 +100,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -112,11 +112,11 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification du service ; la mise à l'échelle est donc une modification de configuration, et non une
-   modification manuelle via `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle via `gcloud` (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~anythingllm"
@@ -138,13 +138,13 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -170,9 +170,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas d'une version d'Anyt
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base existe, que `enable_cloudsql_volume` vaut `true` et que la tâche
-  d'initialisation s'est terminée avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  secret du mot de passe de la base existe, que `enable_cloudsql_volume` vaut `true` et que le job
+  d'initialisation s'est terminé avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -202,7 +202,7 @@ sont gérées séparément et ne sont pas supprimées ici.
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), un bucket GCS, des secrets, et exécute l'initialisation de la base |
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit sur `/api/ping` ; compte administrateur créé via l'assistant de configuration |
-| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage/tâches, accès à la base |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage/jobs, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, d'OOM, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, d'OOM, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

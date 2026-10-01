@@ -34,9 +34,9 @@ guides de plateforme ([CodeServer_GKE](CodeServer_GKE.md),
 | Domaine | Fourni par CodeServer_Common | Où cela apparaît |
 |---|---|---|
 | Mot de passe de l'éditeur | Génère un mot de passe aléatoire de 24 caractères, le stocke dans **Secret Manager** et l'injecte comme variable d'environnement `PASSWORD` afin que la page de connexion de code-server l'exige | Injecté automatiquement lorsque `enable_password = true` ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Encapsule l'image officielle `codercom/code-server` dans un `Dockerfile` minimal et la construit/réplique dans **Artifact Registry** via Cloud Build (Kaniko) | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Encapsule l'image officielle `codercom/code-server` dans un `Dockerfile` minimal et la construit/met en miroir dans **Artifact Registry** via Cloud Build (Kaniko) | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **`database_type = NONE`** — code-server n'a ni base SQL ni job d'initialisation | §Comportement de l'application dans les guides de plateforme |
-| Espace de travail persistant | Déclare le bucket **Cloud Storage** de l'espace de travail monté sur `/home/coder` (GCS FUSE sur Cloud Run, PVC bloc sur GKE) | Output `storage_buckets` |
+| Espace de travail persistant | Déclare le bucket **Cloud Storage** de l'espace de travail monté sur `/home/coder` (GCS FUSE sur Cloud Run, PVC bloc sur GKE) | Sortie `storage_buckets` |
 | Paramètres de base | Définit `BIND_ADDR = 0.0.0.0:8080` afin que le frontal de la plateforme puisse router vers l'éditeur ; valeurs par défaut de mise à l'échelle à instance unique | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant le point de terminaison non authentifié `/healthz` | §Observabilité dans les guides de plateforme |
 
@@ -88,7 +88,7 @@ Registry via Cloud Build avec Kaniko :
   `latest`). Lorsque `application_version = "latest"`, le build épingle
   `CODESERVER_VERSION = 4.99.1` (une version éprouvée) ; sinon, il utilise le tag de
   version demandé.
-- `enable_image_mirroring = true` par défaut réplique l'image dans Artifact Registry
+- `enable_image_mirroring = true` par défaut met en miroir l'image dans Artifact Registry
   pour éviter les limites de débit de Docker Hub.
 
 Inspectez la référence de l'image construite :

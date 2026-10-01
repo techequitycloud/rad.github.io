@@ -36,7 +36,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service uWSGI, 1 vCPU / 512 MiB par défaut, toujours actif (pas de mise à zéro) |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — la variable d'environnement `DB` est explicitement définie à `postgres`, ce qui remplace le repli SQLite de l'image |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — la variable d'environnement `DB` est explicitement définie à `postgres`, ce qui remplace le repli SQLite de l'image |
 | Secrets | Secret Manager | `SECRET_KEY` et mot de passe administrateur initial générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
@@ -62,7 +62,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   afin que l'en-tête Host des sondes internes de la plateforme ne soit jamais
   rejeté par la validation d'hôte de Django.
 - **Le compte administrateur initial est créé une seule fois**, sans
-  auto-réparation. Une tâche d'initialisation `admin-bootstrap` exécute les
+  auto-réparation. Un job d'initialisation `admin-bootstrap` exécute les
   migrations et crée le superutilisateur (`admin_email` / un mot de passe Secret
   Manager généré) via la commande Django standard `createsuperuser --noinput`.
   Relancer la tâche est une opération sans effet et sans risque si le compte
@@ -80,7 +80,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-des services et des ressources figurent dans les [Outputs](#5-outputs) du
+des services et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Healthchecks {#a-cloud-run--the-healthchecks-service}
@@ -101,11 +101,11 @@ déploiements progressifs sûrs.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la
 concurrence, l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Healthchecks stocke toutes les données applicatives (vérifications, pings,
 intégrations, utilisateurs, historique des alertes) dans une instance gérée
-Cloud SQL pour PostgreSQL 15. Le service s'y connecte de manière privée via le
+Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le
 **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée.
 Lors du premier déploiement, des Jobs d'initialisation créent la base de données
 et le rôle de l'application, puis créent le compte administrateur initial.
@@ -120,7 +120,7 @@ et le rôle de l'application, puis créent le compte administrateur initial.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de
-passe figurent dans les [Outputs](#5-outputs). Consultez
+passe figurent dans les [sorties](#5-outputs). Consultez
 [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et
 la rotation des mots de passe.
 
@@ -262,7 +262,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `application_database_name` | `healthchecks_db` | Immuable après le premier déploiement. |
 | `application_database_user` | `healthchecks_user` | Mot de passe généré automatiquement dans Secret Manager. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -283,9 +283,9 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -318,8 +318,8 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Healthchecks, partagée avec la variante GKE, est décrite
 dans **[Healthchecks_Common](Healthchecks_Common.md)**.
 

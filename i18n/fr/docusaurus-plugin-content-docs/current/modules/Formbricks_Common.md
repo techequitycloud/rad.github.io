@@ -65,7 +65,7 @@ L'objet de configuration applicative transmis au module de plateforme via `appli
 
 ### `secret_ids` {#secret_ids}
 
-Une table de correspondance entre noms de variables d'environnement et ID de secrets Secret Manager. Elle est transmise sous la forme `module_secret_env_vars` au module Foundation, qui les injecte comme variables d'environnement secrètes à l'exécution. Les valeurs en clair ne sont jamais accessibles via le fichier d'état.
+Une table de correspondance entre noms de variables d'environnement et ID de secrets Secret Manager. Elle est transmise sous la forme `module_secret_env_vars` au module socle, qui les injecte comme variables d'environnement secrètes à l'exécution. Les valeurs en clair ne sont jamais accessibles via le fichier d'état.
 
 | Variable d'environnement | Secret | Condition |
 |---|---|---|
@@ -247,7 +247,7 @@ Contrairement à Ghost Common (qui ne crée aucun secret), Formbricks Common cr�
 
 **Valeur de repli fictive pour `SMTP_USER` (variable d'environnement en clair, pas un secret) :** Formbricks valide `SMTP_USER` comme une chaîne non vide (`z.string().min(1)`) dès que `smtp_host` est configuré — un `smtp_user` vide associé à un `smtp_host` non vide fait sinon échouer la validation Zod au démarrage (« Invalid environment variables » → le serveur ne démarre jamais). `main.tf` attribue par défaut à `SMTP_USER` la valeur `"noreply@formbricks.local"` lorsque `smtp_host` est défini mais que `smtp_user` est laissé vide, afin que l'application démarre toujours ; les opérateurs remplacent `smtp_user` par de véritables identifiants pour réellement envoyer des e-mails. Ce mécanisme reprend le modèle de secret conditionnel de `SMTP_PASSWORD`, mais sous forme de variable d'environnement en clair (non secrète). Dans ce même cas de configuration partielle, `EMAIL_VERIFICATION_DISABLED` est défini à `"1"` (e-mails de vérification désactivés) — il n'est défini à `"0"` (vérification activée) que lorsque `smtp_host` et `smtp_user` sont tous deux non vides, car un `SMTP_USER` fictif ne dispose d'aucun identifiant SMTP fonctionnel pour réellement envoyer les e-mails de vérification.
 
-**Rotation des secrets :** aucun de ces secrets propres à Formbricks ne comporte de bloc `rotation` — ils sont créés une seule fois comme versions statiques de secrets Secret Manager, sans rotation automatique ni notification Pub/Sub. En faire tourner un (par exemple `NEXTAUTH_SECRET`, pour invalider toutes les sessions) nécessite de créer manuellement une nouvelle version du secret et de redémarrer le conteneur. Seul `DB_PASSWORD` (géré par le module Foundation, en dehors de `Formbricks Common`) prend en charge la rotation automatisée lorsque `enable_auto_password_rotation = true`.
+**Rotation des secrets :** aucun de ces secrets propres à Formbricks ne comporte de bloc `rotation` — ils sont créés une seule fois comme versions statiques de secrets Secret Manager, sans rotation automatique ni notification Pub/Sub. En faire tourner un (par exemple `NEXTAUTH_SECRET`, pour invalider toutes les sessions) nécessite de créer manuellement une nouvelle version du secret et de redémarrer le conteneur. Seul `DB_PASSWORD` (géré par le module socle, en dehors de `Formbricks Common`) prend en charge la rotation automatisée lorsque `enable_auto_password_rotation = true`.
 
 ---
 
@@ -268,7 +268,7 @@ Contrairement à Ghost Common (qui ne crée aucun secret), Formbricks Common cr�
 
 ---
 
-## 9. Modèle de mise en œuvre {#9-implementation-pattern}
+## 9. Modèle d'implémentation {#9-implementation-pattern}
 
 ```hcl
 # Example: how Formbricks_CloudRun instantiates Formbricks_Common

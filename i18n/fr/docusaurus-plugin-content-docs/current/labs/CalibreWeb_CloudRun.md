@@ -34,10 +34,10 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
-- Effectuer les opérations du jour 2 : inspecter, gérer l'identifiant administrateur et le bucket `/config`.
+- Effectuer les opérations du jour 2 — inspecter, gérer l'identifiant administrateur et le bucket `/config`.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -52,7 +52,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -76,7 +76,7 @@ export REGION="us-central1"          # the region you deploy into
    repose plutôt sur le volume **NFS** partagé (`enable_nfs` vaut `true` par défaut, et
    `nfs_mount_path` vaut `/config`) ; le volume GCS FUSE est volontairement désactivé
    (`enable_gcs_storage_volume = false`) car le fichier SQLite `app.db` de Calibre-Web
-   s'y trouve. Il n'y a ni base de données ni tâche d'initialisation — Calibre-Web gère
+   s'y trouve. Il n'y a ni base de données ni job d'initialisation — Calibre-Web gère
    son propre stockage SQLite au premier démarrage. Un premier déploiement prend
    généralement **5–15 minutes** (essentiellement le build du conteneur).
 
@@ -126,7 +126,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente qui est saine) :
@@ -142,7 +142,7 @@ export REGION="us-central1"          # the region you deploy into
    Calibre), elles risquent de les corrompre. Pour le reste, la mise à l'échelle est
    une modification de configuration dans la plateforme RAD (modifiez les paramètres
    d'instances min/max et cliquez sur **Update**), et non une modification manuelle via
-   `gcloud` — une modification manuelle serait annulée lors de l'application suivante.
+   `gcloud` — une modification manuelle serait annulée lors du prochain apply.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version
    dans la plateforme RAD et en l'appliquant via **Update** ; une nouvelle image est
@@ -175,7 +175,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -233,7 +233,7 @@ rapport — la valeur est simplement l'URL normale du service Cloud Run.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run,
 le secret `CALIBRE_ADMIN_PASSWORD`, le bucket Cloud Storage `/config` et les images
@@ -253,4 +253,4 @@ sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, conserver `max_instance_count=1`, mettre à jour la version, inspecter le bucket `/config` |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring (test de disponibilité facultatif, désactivé par défaut) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de connexion, de stockage et de build ; deux écarts connus entre documentation et code source signalés |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris la bibliothèque de livres numériques et l'état SQLite |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris la bibliothèque de livres numériques et l'état SQLite |

@@ -19,7 +19,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 sur Google Cloud : le déployer, y accéder et le vérifier, créer et évaluer un feature
 flag, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Unleash. Pour la liste complète des services provisionnés et
 de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Unleash_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et vous connecter à l'interface d'administration.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -69,7 +69,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager (le jeton d'API administrateur d'amorçage et le
-   mot de passe de la base de données), construit l'image du conteneur et exécute une tâche ponctuelle
+   mot de passe de la base de données), construit l'image du conteneur et exécute un job ponctuel
    d'initialisation de la base de données qui crée la base de données et l'utilisateur `unleash`. Les premiers
    déploiements prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et connecté à sa base de données. Unleash expose un
    point de terminaison de santé public qui ne renvoie 200 que lorsque le serveur est entièrement initialisé
@@ -103,7 +103,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exemple pratique : créer et évaluer un feature flag [Manuel] {#task-3--worked-example-create-and-evaluate-a-feature-flag-manual}
+## Tâche 3 — Exemple guidé : créer et évaluer un feature flag [Manuel] {#task-3--worked-example-create-and-evaluate-a-feature-flag-manual}
 
 Unleash stocke chaque flag dans PostgreSQL et l'évalue via son API. Cette tâche
 crée un flag et l'évalue avec un jeton d'API — le même flux que celui qu'utilise un SDK
@@ -208,7 +208,7 @@ applicatif.
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -232,13 +232,13 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base existe et que la tâche d'initialisation s'est terminée avec succès. Vérifiez
+  secret du mot de passe de la base existe et que le job d'initialisation s'est terminé avec succès. Vérifiez
   les valeurs `DATABASE_URL`/`DB_*` injectées dans la révision en cours d'exécution :
   ```bash
   gcloud run services describe "$SERVICE" --region="$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
   ```
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -266,9 +266,9 @@ et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), les secrets, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; se connecter à l'interface d'administration en tant que `admin` / `unleash4all` |
-| 3 — Exemple pratique | Manuel | Créer un feature flag et l'évaluer via l'API Unleash à l'aide d'un jeton |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; se connecter à l'interface d'administration en tant que `admin` / `unleash4all` |
+| 3 — Exemple guidé | Manuel | Créer un feature flag et l'évaluer via l'API Unleash à l'aide d'un jeton |
 | 4 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base |
 | 5 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de build et d'IAM |
+| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build et d'IAM |
 | 7 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

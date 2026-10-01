@@ -27,14 +27,14 @@ le [guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 Ollama s'exécute comme un serveur d'inférence conteneurisé. Le déploiement assemble un ensemble ciblé
 de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Ollama, 8 vCPU / 16 GiB par défaut (modèles 7B), autoscaling horizontal |
 | Stockage des modèles | Cloud Storage + GCS Fuse CSI | Bucket des modèles monté sur `/mnt/gcs` ; les poids persistent à travers les redémarrages de pods |
 | Secrets | Secret Manager | Aucun secret géré par l'application — Ollama ne requiert aucun identifiant |
 | Entrée | Kubernetes ClusterIP | Interne uniquement par défaut ; n'utilisez `LoadBalancer` que lorsqu'un accès externe est nécessaire |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données, pas de Redis.** Ollama est sans état au-delà de son cache de modèles adossé à GCS. Ni
   Cloud SQL ni Redis ne sont provisionnés.
@@ -272,7 +272,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 d'unités binaires** (`4Gi`, `8192Mi`) — les entiers nus sont interprétés comme des octets par Kubernetes et bloquent
 toute planification de pods.
 
-### Groupe 9 — Tâches et tâches planifiées {#group-9--jobs--scheduled-tasks}
+### Groupe 9 — Jobs et tâches planifiées {#group-9--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -370,12 +370,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `service_type` | `ClusterIP` | Critical | `LoadBalancer` expose publiquement l'API Ollama non authentifiée sur le port 11434. Ollama n'a aucune authentification intégrée. |
 | `container_resources.memory_limit` | `16Gi` (7B) / `8Gi` (3B) | Critical | Une mémoire insuffisante provoque un arrêt OOM en pleine inférence et fait redémarrer le pod en boucle. Allouez au moins 2× la taille des poids quantifiés du modèle. |
@@ -397,7 +397,7 @@ d'explorer les ressources en cours d'exécution.
 ---
 
 Pour le comportement du socle évoqué tout au long de cette page — Workload Identity, autoscaling, entrée
-et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
+et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
 des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative partagée propre à Ollama
 est décrite dans **[Ollama_Common](Ollama_Common.md)**.
 

@@ -30,7 +30,7 @@ Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous 
 Focalboard s'exécute comme une unique charge de travail web Go/React. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | **StatefulSet** par défaut (voir ci-dessous), serveur Focalboard sur le port `8000`, 2 vCPU / 4 GiB par défaut |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — moteur limité à PostgreSQL 13/14/15 (ou `NONE`) ; MySQL est rejeté au moment du plan |
@@ -40,7 +40,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `FOCALBOARD_ADMIN_PASSWORD` généré automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; routage par domaine personnalisé activé par défaut |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL uniquement.** `database_type` vaut `POSTGRES_15` par défaut ; une
   précondition au moment du plan dans `validation.tf` rejette toute valeur autre que
@@ -269,7 +269,7 @@ règles d'alerte facultatifs sont disponibles (`uptime_check_config.enabled` vau
   contrairement à certains autres modules, aucun correctif manuel de
   `environment_variables` n'est requis après le déploiement, sauf si vous souhaitez
   plutôt une URL de domaine personnalisé spécifique.
-- **Inspecter la tâche d'initialisation et la configuration en cours d'exécution :**
+- **Inspecter le job d'initialisation et la configuration en cours d'exécution :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -371,7 +371,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et (facultative) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -384,14 +384,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Une précondition de `validation.tf` rejette MySQL et les autres moteurs non Postgres au moment du plan. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables dans les faits après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins tous les tableaux et toutes les cartes. |
@@ -412,7 +412,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Focalboard partagée
 avec la variante Cloud Run est décrite dans **[Focalboard_Common](Focalboard_Common.md)**.
 

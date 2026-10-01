@@ -159,7 +159,7 @@ Ajustements propres à chaque plateforme gérés par le point d'entrée :
 
 ---
 
-## 6. Comportement de la sonde de santé {#6-health-probe-behaviour}
+## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 L'objet de sonde par défaut propre à cette couche cible `/api/public/health` — le point de terminaison de santé
 non authentifié de Langfuse, qui ne renvoie 200 qu'une fois le serveur entièrement

@@ -11,8 +11,7 @@ description: "Référence de configuration pour déployer GoToSocial sur GKE Aut
 
 GoToSocial est un serveur ActivityPub/Fediverse léger et auto-hébergé — une
 petite alternative à Mastodon, écrite sous la forme d'un unique binaire Go
-statique. Ce module déploie GoToSocial sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
+statique. Ce module déploie GoToSocial sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
 Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise GoToSocial et sur la
@@ -20,7 +19,7 @@ manière de les explorer et de les exploiter depuis la console Google Cloud et
 la ligne de commande. Pour les mécanismes communs à toutes les applications
 GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
+déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md)
 plutôt que de les répéter ici.
 
 ---
@@ -35,7 +34,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods du binaire Go sur le port 8080, 2 vCPU / 4 GiB par défaut ; **`max_instance_count` fixé en dur à 1** |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — fixé à `POSTGRES_15` ; MySQL n'est pas pris en charge. Base de données créée avec la collation obligatoire `LC_COLLATE='C' LC_CTYPE='C'` |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — fixé à `POSTGRES_15` ; MySQL n'est pas pris en charge. Base de données créée avec la collation obligatoire `LC_COLLATE='C' LC_CTYPE='C'` |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` + un compte de service HMAC dédié, utilisés inconditionnellement via le client natif compatible S3 de GoToSocial — aucun montage GCS FUSE |
 | Secrets | Secret Manager | `SUPERUSER_PASSWORD` généré automatiquement, paire de clés HMAC S3 d'accès/secrète ; mot de passe de la base de données. Projetés via le pilote Secret Store CSI |
 | Ingress | Cloud Load Balancing / Gateway API | Service `LoadBalancer` par défaut ; IP statique réservée par défaut |
@@ -78,7 +77,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
   deux en TCP sur le port 8080.
 - **Le compte administrateur est créé automatiquement au mieux, sans
   garantie.** Contrairement à Cloud Run, l'ordonnancement plus souple des
-  tâches d'initialisation sur GKE donne à la boucle de nouvelles tentatives
+  jobs d'initialisation sur GKE donne à la boucle de nouvelles tentatives
   de la tâche `admin-create` une réelle chance de gagner la course contre le
   démarrage du pod principal — mais elle peut tout de même la perdre. Voir §3.
 
@@ -88,7 +87,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
 autres identifiants sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
@@ -108,10 +107,10 @@ déploiement.
 Consultez [App_GKE](App_GKE.md) pour savoir comment sont gérés Autopilot, le
 scaling et le type de charge de travail (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 GoToSocial stocke toutes les données de l'application (comptes, statuts,
-abonnements, métadonnées des médias) dans une instance gérée Cloud SQL pour
+abonnements, métadonnées des médias) dans une instance gérée Cloud SQL for
 PostgreSQL 15, créée avec la collation `C` obligatoire par la tâche
 `db-init`. Les pods y accèdent via le **sidecar cloud-sql-proxy** sur
 `127.0.0.1` ; aucune IP publique n'est exposée.
@@ -153,7 +152,7 @@ Le conteneur principal de GoToSocial lit `GTS_STORAGE_S3_ACCESS_KEY` et
 `GTS_STORAGE_S3_SECRET_KEY` sous forme de variables d'environnement adossées
 à des secrets (projetées via le pilote Secret Store CSI) ;
 `SUPERUSER_PASSWORD` n'est utilisé que par la tâche `admin-create`. Le mot de
-passe de la base de données est géré séparément par la fondation.
+passe de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -168,7 +167,7 @@ pourquoi ces secrets transitent par `secret_ids`/`module_secret_env_vars`, et
 non par le champ (mort) `secret_environment_variables` de l'objet de
 configuration propre à l'application.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 `service_type = "LoadBalancer"` et `reserve_static_ip = true` sont tous deux
 des valeurs par défaut — **conservez `reserve_static_ip = true`** : sans IP
@@ -281,13 +280,13 @@ et des règles d'alerte facultatifs sont disponibles.
 - **Propagation IAM du stockage.** GoToSocial panique au démarrage s'il ne
   peut pas joindre son backend de stockage S3. L'attribution
   `roles/storage.objectAdmin` du compte de service de stockage est câblée sur
-  la sortie `storage_buckets` propre à la fondation (et non sur un
+  la sortie `storage_buckets` propre au socle (et non sur un
   `depends_on` portant sur le module entier, qui provoquerait un
   interblocage) — mais lors d'un tout premier déploiement, le démarrage du
   tout premier pod peut encore entrer en concurrence avec le délai de
   propagation de ~1–2 minutes de l'attribution IAM, ce qui produit une brève
   boucle de plantages `Access Denied` qui se résout d'elle-même.
-- **Inspectez les tâches d'initialisation et la configuration en cours
+- **Inspectez les jobs d'initialisation et la configuration en cours
   d'exécution :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -316,7 +315,7 @@ standard.
 | `host` | `gotosocial.local` | `GTS_HOST` — le domaine public. Inscrit dans chaque URI ActivityPub au moment de sa création, **immuable après le premier démarrage**. Définissez votre domaine réel avant la production. |
 | `account_domain` | `""` | `GTS_ACCOUNT_DOMAIN` — domaine de vitrine facultatif pour les identifiants, distinct de `host`. Prend par défaut la valeur de `host` lorsqu'il est vide. Même risque d'immuabilité. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -345,7 +344,7 @@ Comportement standard d'`App_GKE` — voir [App_GKE](App_GKE.md).
 |---|---|---|
 | `startup_probe` | TCP, `/readyz` (chemin purement informatif), `initial_delay_seconds=15`, `failure_threshold=10` | Le seul type de sonde qui fonctionne avec les points de terminaison de santé de GoToSocial, conditionnés par le User-Agent. |
 | `liveness_probe` | TCP, `/livez`, `initial_delay_seconds=30`, `failure_threshold=3` | Même raisonnement que pour `startup_probe`. |
-| `startup_probe_config` / `health_check_config` | HTTP `/`, divers | Sondes structurées de niveau fondation ; remplacées par `startup_probe`/`liveness_probe` ci-dessus pour ce module. |
+| `startup_probe_config` / `health_check_config` | HTTP `/`, divers | Sondes structurées de niveau du socle ; remplacées par `startup_probe`/`liveness_probe` ci-dessus pour ce module. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
@@ -373,7 +372,7 @@ Comportement standard d'`App_GKE` — voir [App_GKE](App_GKE.md).
 | `database_type` | `POSTGRES_15` | **Validé au moment du plan** — `validation.tf` rejette tout ce qui n'est pas PostgreSQL 13/14/15 ou `NONE`. |
 | `application_database_name` | `gotosocial` | La base de données réellement créée (avec la collation `C`) et injectée en tant que `GTS_DB_DATABASE`. |
 | `application_database_user` | `gotosocial` | Le rôle réellement créé et injecté en tant que `GTS_DB_USER` ; mot de passe généré automatiquement dans Secret Manager. |
-| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | `GTS_DB_ADDRESS` / `GTS_DB_PORT` / `GTS_DB_USER` / `GTS_DB_DATABASE` / `GTS_DB_PASSWORD` | **Définies par `main.tf`, et non laissées à leurs valeurs par défaut génériques vides** — le mécanisme qui permet au binaire GoToSocial de lire les informations de connexion à la base de la fondation. |
+| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | `GTS_DB_ADDRESS` / `GTS_DB_PORT` / `GTS_DB_USER` / `GTS_DB_DATABASE` / `GTS_DB_PASSWORD` | **Définies par `main.tf`, et non laissées à leurs valeurs par défaut génériques vides** — le mécanisme qui permet au binaire GoToSocial de lire les informations de connexion à la base du socle. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
@@ -396,7 +395,7 @@ d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `service_external_ip` | IP externe du LoadBalancer (réservée par défaut). |
 | `service_url` | URL permettant d'accéder à GoToSocial. |
@@ -424,7 +423,7 @@ d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Le `validation.tf` propre à `GoToSocial_GKE` bloque en outre `min_instance_count > max_instance_count`, `enable_redis = true` sans `redis_host` ni `enable_nfs`, un `database_type` autre que PostgreSQL, `enable_iap = true` sans les deux identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Le `validation.tf` propre à `GoToSocial_GKE` bloque en outre `min_instance_count > max_instance_count`, `enable_redis = true` sans `redis_host` ni `enable_nfs`, un `database_type` autre que PostgreSQL, `enable_iap = true` sans les deux identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -438,13 +437,13 @@ d'exécution.
 | Résultat de la tâche `admin-create` | Vérifiez, ne supposez pas | High | L'ordonnancement plus souple des tâches sur GKE permet souvent à `admin-create` de gagner automatiquement sa course contre le démarrage du pod, mais pas toujours — vérifiez que le compte existe avant de considérer le déploiement comme pleinement opérationnel. |
 | `reserve_static_ip` | `true` (par défaut) | Medium | Sans cela, `GKE_SERVICE_URL` peut se rabattre sur un nom d'hôte interne injoignable `*.svc.cluster.local` avant que l'IP éphémère du LoadBalancer ne soit connue — une situation de concurrence documentée sur l'ensemble du parc. |
 | `curl`/contrôles de santé manuels | Passez toujours `-A "<agent>"` | Medium | Un `curl` nu (et la plupart des clients/moniteurs HTTP par défaut) reçoit `418 I'm a teapot` de la barrière anti-scraping de GoToSocial fondée sur le User-Agent, même sur des points de terminaison « non authentifiés ». |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 | `enable_nfs` | `true` (par défaut) ou `false` si inutile | Low | Filestore est facturé que l'application y écrive ou non ; GoToSocial n'utilise pas du tout le montage NFS dans sa configuration par défaut. |
 | `enable_redis` | `false` (par défaut) | Low | GoToSocial ne dépend pas de Redis ; laisser cette valeur à `true` n'a aucun effet fonctionnel. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à

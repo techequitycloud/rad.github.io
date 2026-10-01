@@ -126,7 +126,7 @@ FROM jellyfin/jellyfin:${JELLYFIN_VERSION}
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Jellyfin_Common` établit l'environnement minimal dont Jellyfin a besoin pour démarrer
 la première fois et écrire son état sur le volume persistant :
@@ -166,7 +166,7 @@ répond, indépendamment de toute connexion administrateur.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un unique bucket **Cloud Storage** est déclaré ici et provisionné par le socle, qui
 accorde également l'accès au compte de service de la charge de travail :

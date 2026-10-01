@@ -46,11 +46,11 @@ guide de plateforme [Kopia_GKE](Kopia_GKE.md) et les guides des socles
 
 | Domaine | Fourni par Kopia_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Wrapper léger `FROM kopia/kopia:${KOPIA_VERSION}` (Docker Hub) plus un point d'entrée cloud personnalisé ; construit via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Wrapper léger `FROM kopia/kopia:${KOPIA_VERSION}` (Docker Hub) plus un point d'entrée cloud personnalisé ; construit via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Stockage des données | Fixe `database_type = "NONE"` — pas de Cloud SQL. Le dépôt de Kopia réside nativement dans le bucket Cloud Storage, et non sur un montage de système de fichiers | §Stockage dans le guide de la plateforme |
 | Deux secrets indépendants | Génère `ADMIN_PASSWORD` (connexion au serveur) et `REPO_PASSWORD` (clé de chiffrement du contenu du dépôt) dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | TLS | Le certificat auto-signé de Kopia est généré une seule fois et persisté sous `/var/lib/kopia/tls/` d'un redémarrage à l'autre | §TLS dans le guide de la plateforme |
-| Stockage objet | Déclare le bucket **Cloud Storage** `storage`, utilisé à la fois pour le dépôt natif ET pour le certificat TLS persisté | Output `storage_buckets` |
+| Stockage objet | Déclare le bucket **Cloud Storage** `storage`, utilisé à la fois pour le dépôt natif ET pour le certificat TLS persisté | Sortie `storage_buckets` |
 | Paramètres principaux | Fixe `container_port = 51515`, la mise à l'échelle à serveur unique (`max_instance_count = 1`) et la mise à l'échelle à zéro (`min_instance_count = 0`) | Comportement de l'application dans le guide de la plateforme |
 | Contrôles de santé | Fournit des sondes de démarrage/vivacité TCP uniquement sur le port `51515` (Kopia n'a aucun point de terminaison HTTP non authentifié) | §Observabilité dans le guide de la plateforme |
 

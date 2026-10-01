@@ -195,7 +195,7 @@ migrations Prisma qui s'exécutent au premier démarrage.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket de données **Cloud Storage** dédié (`name_suffix = "storage"`, classe
 STANDARD, prévention de l'accès public appliquée) est déclaré ici et provisionné par

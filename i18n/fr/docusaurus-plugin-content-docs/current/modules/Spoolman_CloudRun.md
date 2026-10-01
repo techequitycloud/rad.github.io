@@ -34,16 +34,16 @@ a pas de service frontend distinct ; l'interface Vue/Quasar est intégrée et se
 par le même processus. Le déploiement assemble un ensemble minimal de services
 Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Image préconstruite `ghcr.io/donkie/spoolman`, 1 vCPU / 512Mi par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro par défaut |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — ce module se standardise sur Postgres (Spoolman en amont prend aussi en charge MySQL/SQLite/CockroachDB) |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — ce module se standardise sur Postgres (Spoolman en amont prend aussi en charge MySQL/SQLite/CockroachDB) |
 | Stockage objet | Aucun | Spoolman conserve tout son état dans Postgres ; aucun bucket GCS n'est provisionné |
 | Cache | Aucun | Spoolman n'a aucune intégration Redis/cache |
 | Secrets | Secret Manager | Uniquement le mot de passe de base de données généré automatiquement — Spoolman n'a aucun secret d'amorçage administrateur/clé API qui lui soit propre |
 | Entrée | URL Cloud Run | URL `run.app` par défaut, publique par défaut (`ingress_settings = "all"`) |
 
-**Valeurs par défaut pertinentes à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le seul moteur pris en charge par ce module.** `database_type`
   est fixé par `Spoolman_Common` ; Spoolman en amont prend aussi en charge MySQL et
@@ -79,7 +79,7 @@ Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définies. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Spoolman {#a-cloud-run--the-spoolman-service}
 
@@ -98,10 +98,10 @@ révisions pour des déploiements progressifs sûrs.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Spoolman stocke toutes les données d'inventaire (bobines, filaments, fournisseurs,
-historique de consommation) dans une instance gérée Cloud SQL pour PostgreSQL 15.
+historique de consommation) dans une instance gérée Cloud SQL for PostgreSQL 15.
 Le service se connecte de manière privée via le **Cloud SQL Auth Proxy** sur un
 socket Unix ; aucune adresse IP publique n'est exposée. Il n'y a pas de job
 d'initialisation — Spoolman applique ses propres migrations de schéma à chaque
@@ -116,7 +116,7 @@ démarrage.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Secret Manager {#c-secret-manager}
@@ -246,9 +246,9 @@ Spoolman n'en utilise aucune par défaut.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -259,7 +259,7 @@ Spoolman n'en utilise aucune par défaut.
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Toujours vide — Spoolman n'a besoin d'aucun bucket GCS. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry (lorsque la duplication est activée). |
-| `monitoring_enabled` / `uptime_check_names` | Statut de la supervision et tests de disponibilité. |
+| `monitoring_enabled` / `uptime_check_names` | Statut de la surveillance et tests de disponibilité. |
 | `initialization_jobs` | Toujours vide — Spoolman n'a besoin d'aucun job d'initialisation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -268,12 +268,12 @@ Spoolman n'en utilise aucune par défaut.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut pertinentes {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critical | Quiconque possède l'URL peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
 | `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critical | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage. |
@@ -288,7 +288,7 @@ Spoolman n'en utilise aucune par défaut.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Spoolman,
 partagée avec la variante GKE, est décrite dans
 **[Spoolman_Common](Spoolman_Common.md)**.

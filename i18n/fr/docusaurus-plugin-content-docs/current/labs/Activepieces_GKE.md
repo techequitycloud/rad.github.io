@@ -19,7 +19,7 @@ l'intégralité du cycle de vie opérationnel du module **Activepieces on GKE Au
 Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer,
 diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Activepieces. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Activepieces_GKE) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager
    (`AP_ENCRYPTION_KEY`, `AP_JWT_SECRET` et le mot de passe de la base de données), un bucket de données Cloud
-   Storage, construit l'image du conteneur et exécute une tâche ponctuelle
+   Storage, construit l'image du conteneur et exécute un job ponctuel
    d'initialisation de la base de données (y compris la configuration de l'extension `pgvector`). Les premiers déploiements
    prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -133,7 +133,7 @@ export REGION="us-central1"           # the region you deploy into
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme RAD
    et en l'appliquant via **Update** ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -161,7 +161,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -177,7 +177,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'Activepieces.
 
 - **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. La sonde de
-  liveness cible par défaut `/` (et non `/api/v1/flags` — le Guide de configuration du module
+  vivacité cible par défaut `/` (et non `/api/v1/flags` — le Guide de configuration du module
   ne fait qu'*envisager* `/api/v1/flags` comme remplacement facultatif, car il
   reflète l'état de préparation complet du serveur, y compris la connectivité PostgreSQL) ; un
   échec de connexion à PostgreSQL empêchera le pod de devenir Ready.
@@ -186,8 +186,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que la tâche d'initialisation s'est terminée.
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que le job d'initialisation s'est terminé.
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -217,8 +217,8 @@ GKE, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont p
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), les secrets, le bucket de stockage, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; créer le compte administrateur initial dans l'interface |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; créer le compte administrateur initial dans l'interface |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de planification et de récupération d'image |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification et de récupération d'image |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

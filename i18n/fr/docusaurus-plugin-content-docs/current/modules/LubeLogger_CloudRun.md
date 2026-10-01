@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer LubeLogger sur Google 
 LubeLogger est un outil gratuit et open source de suivi de l'entretien des véhicules
 et de la consommation de carburant, construit sur ASP.NET Core (.NET) et livré sous
 la forme d'une image de conteneur unique avec une base de données LiteDB intégrée.
-Ce module déploie LubeLogger sur **Cloud Run v2** en s'appuyant sur la fondation
+Ce module déploie LubeLogger sur **Cloud Run v2** en s'appuyant sur le socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google
 Cloud partagée.
 
@@ -22,7 +22,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run — 
 du service, ingress et équilibrage de charge, mise à l'échelle et concurrence,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
 cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -32,7 +32,7 @@ LubeLogger s'exécute sous la forme d'un conteneur ASP.NET Core sur Cloud Run v2
 déploiement assemble un ensemble minimal de services Google Cloud — la configuration
 par défaut ne comporte aucune base de données gérée :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service ASP.NET Core, 1 vCPU / 1 GiB par défaut, autoscaling serverless ; fixé à une seule instance |
 | Base de données | Aucune (par défaut) | Le mode par défaut de LubeLogger utilise un fichier de base de données LiteDB intégré — aucune instance Cloud SQL n'est créée |
@@ -108,7 +108,7 @@ gcloud storage ls gs://<storage-bucket>/        # bucket names are in the Output
 
 Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
-### C. Réseau et ingress {#c-networking--ingress}
+### C. Réseau et entrée {#c-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app` (`ingress_settings = "all"`).
 Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud
@@ -221,7 +221,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements par étapes. |
 | `max_revisions_to_retain` | `7` | Déclarée par cohérence avec la convention ; non utilisée par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -329,7 +329,7 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -345,7 +345,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration applicative

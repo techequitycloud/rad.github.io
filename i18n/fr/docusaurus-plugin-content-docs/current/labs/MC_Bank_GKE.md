@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Bank of Anthos multicluster sur GKE Autop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 90 à 150 minutes (dont l'essentiel pour le déploiement multicluster initial)
+**Durée estimée :** 90–150 minutes (dont l'essentiel pour le déploiement multicluster initial)
 
 Bank of Anthos est la démo bancaire open source de microservices de Google. Ce module la déploie
 sur **plusieurs clusters GKE dans plusieurs régions**, réunis en une seule **GKE Fleet**, un
@@ -28,7 +28,7 @@ ne duplique volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les clusters, la flotte, le mesh et l'équilibreur de charge global qu'il provisionne.
 - Atteindre l'application via la passerelle multicluster et confirmer que les charges de travail s'exécutent sur chaque cluster.
@@ -99,7 +99,7 @@ gcloud config set project "$PROJECT"
 
 ## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
-1. **Confirmez la flotte et la charge de travail sur chaque cluster.** Les pods du namespace `bank-of-anthos`
+1. **Confirmez la flotte et la charge de travail sur chaque cluster.** Les pods de l'espace de noms `bank-of-anthos`
    doivent être prêts à `2/2` (conteneur de l'application + sidecar Envoy) sur chaque cluster :
 
    ```bash
@@ -218,7 +218,7 @@ Ici, le travail du jour 2 consiste à opérer à travers **plusieurs contextes d
 Des techniques durables pour les modes de défaillance inter-clusters que vous rencontrerez le plus probablement. Il s'agit de
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de l'application.
 
-- **Pods non `2/2` (pas de sidecar) :** confirmez le libellé d'injection du namespace et l'état du mesh :
+- **Pods non `2/2` (pas de sidecar) :** confirmez le libellé d'injection de l'espace de noms et l'état du mesh :
   ```bash
   kubectl --context cluster1 get ns "$NS" --show-labels      # expect istio.io/rev=asm-managed
   gcloud container fleet mesh describe --project "$PROJECT"   # control/data plane ACTIVE per membership
@@ -249,11 +249,11 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**).
 La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour
-l'historique). Le démantèlement supprime tout ce que le module a créé sur chaque cluster — les charges de travail et namespaces Bank of
+l'historique). Le démantèlement supprime tout ce que le module a créé sur chaque cluster — les charges de travail et espaces de noms Bank of
 Anthos, les ressources Multi-Cluster Ingress/Service et l'équilibreur de charge
 global, les adhésions à la flotte et la fonctionnalité de mesh, tous les clusters GKE, ainsi que le VPC partagé et sa
 mise en réseau. La destruction exécute un nettoyage ordonné afin que l'entrée multicluster, le mesh et l'état de la flotte soient
@@ -276,4 +276,4 @@ doivent être nettoyés manuellement.
 | 3 — Exploiter | Manuel | Inspecter et remodeler la plateforme à travers plusieurs contextes de cluster |
 | 4 — Observer | Manuel | Agréger Cloud Logging ; examiner le tableau de bord Service Mesh, Monitoring/Prometheus et Cloud Trace |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de sidecar, de backend par région, de niveau de données du cluster principal, de certificat et de flotte/mesh |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module sur chaque cluster ; Purge retire l'enregistrement de RAD sans détruire les ressources |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module sur chaque cluster ; Purge retire l'enregistrement de RAD sans détruire les ressources |

@@ -40,7 +40,7 @@ ensemble de services volontairement minimal :
 | Secrets | Secret Manager | Aucun généré automatiquement — l'authentification réside dans SQLite ; secrets facultatifs pour votre propre usage |
 | Entrée | Cloud Load Balancing | `LoadBalancer` par défaut (externe) ; PocketBase est un backend-as-a-service exposé publiquement, pas une charge de travail purement interne |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **La base de données est un SQLite intégré — il n'y a pas de Cloud SQL.** PocketBase
   stocke chaque enregistrement, jeton d'authentification et fichier téléversé sous
@@ -252,7 +252,7 @@ leurs valeurs par défaut standard.
 | `max_instance_count` | `1` | **Ne l'augmentez pas.** SQLite + un PVC ReadWriteOnce n'acceptent qu'un seul rédacteur ; >1 corrompt les données. |
 | `container_port` | `8090` | PocketBase écoute sur le port 8090 (API HTTP + interface d'administration). |
 | `enable_cloudsql_volume` | `false` | Pas de Cloud SQL Auth Proxy — PocketBase n'utilise aucune base de données externe. |
-| `enable_image_mirroring` | `true` | Duplique/construit l'image PocketBase dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir/construit l'image PocketBase dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -331,7 +331,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -344,7 +344,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 > avec une erreur claire et nommée avant la création de toute ressource ; la plupart des
 > erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` (ne jamais augmenter) | Critical | SQLite n'accepte qu'un seul rédacteur et le PVC est ReadWriteOnce ; un second réplica ne peut pas monter le volume et des rédacteurs concurrents corrompent la base de données. |
 | `stateful_pvc_enabled` | `true` | Critical | Sans PVC en mode bloc, SQLite se rabat sur un stockage de type GCS FUSE au verrouillage peu fiable → corruption de la base de données. |
@@ -362,7 +362,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à PocketBase partagée avec la
 variante Cloud Run est décrite dans **[PocketBase_Common](PocketBase_Common.md)**.
 

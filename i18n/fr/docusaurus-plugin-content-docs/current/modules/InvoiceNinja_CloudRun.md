@@ -57,7 +57,7 @@ Invoice Ninja est une plateforme open source professionnelle de facturation util
 
 ---
 
-## 3. Configuration principale du service {#3-core-service-configuration}
+## 3. Configuration du service principal {#3-core-service-configuration}
 
 ### A. Calcul (Cloud Run) {#a-compute-cloud-run}
 
@@ -267,7 +267,7 @@ Lorsque `enable_cloud_deploy = true` (nécessite `enable_cicd_trigger = true`), 
 
 ## 7. Fiabilité et planification {#7-reliability--scheduling}
 
-### A. Scaling et concurrence {#a-scaling--concurrency}
+### A. Mise à l'échelle et concurrence {#a-scaling--concurrency}
 
 `min_instance_count = 0` par défaut (scale-to-zero, conformément à la valeur par défaut du socle `App_CloudRun`) — définissez-le à `1` pour garder une instance active en permanence. `max_instance_count = 3` assure un scaling horizontal pendant les pics de traitement des factures ou les périodes d'export par lots. Les deux valeurs sont configurables par l'utilisateur.
 
@@ -322,7 +322,7 @@ Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation des mots
 
 ## 8. Intégrations {#8-integrations}
 
-### A. File d'attente et cache Redis {#a-redis-queue--cache}
+### A. Redis (file d'attente et cache) {#a-redis-queue--cache}
 
 Redis est **requis pour les déploiements Invoice Ninja de production** (`enable_redis = true` par défaut). Invoice Ninja utilise Redis pour trois fonctions essentielles :
 
@@ -731,7 +731,7 @@ Toutes les variables configurables par l'utilisateur exposées par `InvoiceNinja
 | `enable_nfs` | 11 | `true` | Provisionne un stockage partagé NFS. Nécessite `gen2`. |
 | `nfs_mount_path` | 11 | `'/mnt/nfs'` | Chemin du conteneur où NFS est monté. |
 | `nfs_instance_name` | 9 | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour la découverte automatique. |
-| `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base de la VM NFS en ligne. L'ID de déploiement y est ajouté. |
+| `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base de la VM NFS intégrée (inline). L'ID de déploiement y est ajouté. |
 | `gcs_volumes` | 11 | `[]` | Buckets GCS à monter via GCS Fuse. |
 | `manage_storage_kms_iam` | 11 | `false` | Crée une clé KMS CMEK et active CMEK sur les buckets de stockage. |
 | `enable_artifact_registry_cmek` | 11 | `false` | Crée une clé KMS Artifact Registry pour le chiffrement des images au repos. |

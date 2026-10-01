@@ -30,12 +30,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Terminer l'assistant de configuration initiale d'Emby et ajouter une médiathèque sur le PVC.
-- Effectuer les opérations du jour 2 (day-2) — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -83,7 +83,7 @@ export REGION="us-central1"           # the region you deploy into
    `LoadBalancer` (Emby est une application destinée aux navigateurs et aux clients). Les premiers déploiements prennent
    environ **8–15 minutes** (le build de l'image en représente l'essentiel).
 
-3. Connectez-vous au cluster et découvrez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et découvrez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -206,7 +206,7 @@ vérifier que vous pouvez la parcourir.
    taille de l'instance (relevez `cpu_limit` au-delà de la valeur par défaut `1000m` et `memory_limit` au-delà de `1Gi`
    pour le transcodage en direct) plutôt que le nombre de réplicas. Appliquez les modifications en éditant les paramètres et en cliquant sur
    **Update** — le module est propriétaire de la spécification de la charge de travail : un `kubectl scale` manuel serait
-   annulé lors de l'application suivante.
+   annulé lors du prochain apply.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme RAD
    et en l'appliquant via **Update** ; une nouvelle image est buildée et le pod du StatefulSet est
@@ -231,7 +231,7 @@ vérifier que vous pouvez la parcourir.
 
 ## Tâche 5 — Observer : journalisation et surveillance [Manuel] {#task-5--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -287,7 +287,7 @@ propres à chaque paramètre (notamment conserver `max_instance_count = 1` et di
 ## Tâche 7 — Démanteler [Automatisé] {#task-7--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et son namespace, le **PersistentVolumeClaim** `/config` (**y compris vos bases
+et son espace de noms, le **PersistentVolumeClaim** `/config` (**y compris vos bases
 SQLite, vos métadonnées et tous les médias que vous y avez copiés**), les secrets Secret Manager et
 les images Artifact Registry. Si vous souhaitez conserver votre médiathèque, copiez d'abord les médias hors du PVC
 (tâche 3). Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre,

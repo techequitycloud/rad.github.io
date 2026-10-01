@@ -19,15 +19,15 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 
 > **Ce lab se déploie sur une fondation `Services_GCP`.** Utilisez le **même `tenant_id`** que votre déploiement `Services_GCP` afin qu'`App GKE` se déploie dans le **cluster GKE Autopilot** partagé et se rattache au VPC partagé, à l'instance Cloud SQL, au serveur NFS et à Artifact Registry, au lieu de provisionner son propre cluster et sa propre infrastructure intégrés. (Le mode autonome — `require_services_gcp_module = false` — crée un cluster GKE intégré et prend beaucoup plus de temps ; l'objet de ce lab est de mettre en œuvre la fondation.)
 
-> **Les paramètres sont validés au moment du plan.** Le module rejette les valeurs et combinaisons invalides — `stateful_pvc_enabled` avec `workload_type = "Deployment"`, IAP sans client OAuth, une source d'image `prebuilt` sans image, une tâche `mount_nfs` avec `enable_nfs = false`, une valeur de mémoire de ResourceQuota exprimée par un entier nu — *avant* que quoi que ce soit ne soit créé, avec un message d'erreur clair qui nomme la variable. Le tableau [*Configuration Pitfalls* du Guide de configuration](https://docs.radmodules.dev/docs/modules/App_GKE) indique quelles combinaisons sont détectées de cette manière.
+> **Les paramètres sont validés au moment du plan.** Le module rejette les valeurs et combinaisons invalides — `stateful_pvc_enabled` avec `workload_type = "Deployment"`, IAP sans client OAuth, une source d'image `prebuilt` sans image, un job `mount_nfs` avec `enable_nfs = false`, une valeur de mémoire de ResourceQuota exprimée par un entier nu — *avant* que quoi que ce soit ne soit créé, avec un message d'erreur clair qui nomme la variable. Le tableau [*Configuration Pitfalls* du Guide de configuration](https://docs.radmodules.dev/docs/modules/App_GKE) indique quelles combinaisons sont détectées de cette manière.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
-- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, les tâches et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, les jobs et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -47,7 +47,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -62,7 +62,7 @@ export REGION="us-central1"           # the region you deploy into
 
 Choisissez un parcours selon la part du module que vous souhaitez mettre en œuvre. Les deux se rattachent à votre fondation `Services_GCP` via un `tenant_id` identique.
 
-**Parcours A — Minimal (le plus rapide).** Valeurs par défaut : une charge de travail `Deployment` adossée à PostgreSQL (le Cloud SQL partagé), le NFS partagé et une tâche d'initialisation. Définissez uniquement `project_id` et `tenant_id`. Cela suffit pour parcourir les tâches 2 à 6.
+**Parcours A — Minimal (le plus rapide).** Valeurs par défaut : une charge de travail `Deployment` adossée à PostgreSQL (le Cloud SQL partagé), le NFS partagé et un job d'initialisation. Définissez uniquement `project_id` et `tenant_id`. Cela suffit pour parcourir les tâches 2 à 6.
 
 **Parcours B — Complet (recommandé pour ce lab).** Met en œuvre l'étendue du moteur afin que chaque étape de vérification ait quelque chose à confirmer. Paramètres suggérés (tout le reste par défaut) :
 
@@ -114,7 +114,7 @@ iap_support_email       = "<your-email>"
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne
    une base de données Cloud SQL facultative avec ses secrets Secret Manager, un stockage
    NFS/Redis/GCS facultatif, construit ou met en miroir l'image du conteneur et exécute les
-   tâches d'initialisation configurées. Les premiers déploiements prennent environ **20–35 minutes**
+   jobs d'initialisation configurés. Les premiers déploiements prennent environ **20–35 minutes**
    lorsque la création de Cloud SQL est incluse.
 
 3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
@@ -168,7 +168,7 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
    kubectl describe pod "$POD" -n "$NS" | grep -iA2 "Mounts:"   # NFS / GCS / Cloud SQL volume mounts
    ```
 
-5. **Tâche d'initialisation** — vérifiez que la tâche d'initialisation s'est terminée :
+5. **Job d'initialisation** — vérifiez que le job d'initialisation s'est terminé :
 
    ```bash
    kubectl get jobs -n "$NS"
@@ -186,7 +186,7 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — le Deployment, les pods et (si activés) l'autoscaler
    horizontal et les volumes persistants :
@@ -198,12 +198,12 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification de la charge de travail ; la mise à l'échelle est donc une modification de configuration, et non un
-   `kubectl scale` manuel (une modification manuelle serait annulée lors de l'application suivante).
+   `kubectl scale` manuel (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite ou mise en miroir et une mise à jour progressive remplace les
    pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -224,13 +224,13 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -252,8 +252,8 @@ le conteneur.
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que les éventuelles tâches d'initialisation se sont terminées.
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que les éventuelles jobs d'initialisation se sont terminés.
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -284,9 +284,9 @@ pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Choisir la configuration et déployer | Automatisé | Choisir Minimal ou Complet ; le module se déploie dans le cluster GKE Autopilot partagé, se rattache au Cloud SQL/NFS/registre de la fondation, provisionne secrets/stockage et exécute les tâches d'initialisation |
-| 2 — Accéder et vérifier | Manuel | Connexion au cluster ; vérifier la santé et la forme de la charge de travail, la base de données + la synchronisation du secret, le raccordement base de données/Redis/NFS, la réussite de la tâche d'initialisation, l'application d'IAP et le test de disponibilité |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/tâches/stockage, accès à la base |
+| 1 — Choisir la configuration et déployer | Automatisé | Choisir Minimal ou Complet ; le module se déploie dans le cluster GKE Autopilot partagé, se rattache au Cloud SQL/NFS/registre de la fondation, provisionne secrets/stockage et exécute les jobs d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Connexion au cluster ; vérifier la santé et la forme de la charge de travail, la base de données + la synchronisation du secret, le raccordement base de données/Redis/NFS, la réussite du job d'initialisation, l'application d'IAP et le test de disponibilité |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/jobs/stockage, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de planification, de récupération d'image et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification, de récupération d'image et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -28,8 +28,7 @@ réseau, qui bloque les publicités et les traqueurs au niveau DNS et intègre u
 contrôle parental. Il s'agit d'un binaire Go statique sans base de données
 externe — toute la configuration réside dans un fichier YAML plat écrit par son
 propre assistant de configuration au premier lancement. Ce module déploie la
-console d'administration web d'AdGuard Home sur **Cloud Run v2**, au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+console d'administration web d'AdGuard Home sur **Cloud Run v2**, au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise AdGuard Home et sur la
@@ -38,7 +37,7 @@ ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
 Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls
 et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter
 ici.
 
 ---
@@ -48,7 +47,7 @@ ici.
 AdGuard Home s'exécute comme un conteneur unique de binaire Go statique sur Cloud
 Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Binaire Go unique, 1 vCPU / 512 MiB par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro par défaut |
 | Base de données | Aucune | AdGuard Home n'a pas de base de données externe — la configuration est un fichier YAML plat |
@@ -87,7 +86,7 @@ Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-du service et des ressources figurent dans les [Outputs](#5-outputs) du
+du service et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — la console d'administration web d'AdGuard Home {#a-cloud-run--the-adguard-home-web-admin-console}
@@ -126,7 +125,7 @@ provisionnés automatiquement.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour GCS Fuse et les options CMEK.
 
-### C. Réseau et ingress {#c-networking--ingress}
+### C. Réseau et entrée {#c-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. **Il s'agit uniquement
 de l'URL de la console d'administration web — ce n'est pas une adresse de
@@ -193,20 +192,20 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `adguardhome` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `AdGuard Home` | Nom lisible affiché dans la console. |
@@ -214,7 +213,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance. |
@@ -225,23 +224,23 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `cpu_always_allocated` | `false` | Facturation à la requête — une simple console d'administration n'a besoin d'aucun CPU en arrière-plan. |
 | `enable_cloudsql_volume` | `false` | Non utilisé — pas de base de données. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Public par défaut ; la console d'administration dispose de sa propre connexion. |
 | `enable_iap` | `false` | Activation recommandée — place l'authentification par identité Google devant la console de politique de filtrage DNS. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Rarement nécessaire — AdGuard Home lit sa configuration dans son propre fichier YAML. |
 | `secret_environment_variables` | `{}` | Aucun secret de plateforme n'existe pour cette application. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée les buckets `conf`/`work` toujours provisionnés, ainsi que ceux de `storage_buckets`. |
 | `gcs_volumes` | `[]` | Laissez vide pour utiliser les montages `conf`/`work` propres au module. |
@@ -249,19 +248,19 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | Fixe — ne doit pas être modifié. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Aucun job par défaut — AdGuard Home n'a besoin d'aucun amorçage de base de données. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `/` | Pas de point de terminaison de santé dédié ; la racine renvoie 200 avant et après la configuration. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
@@ -272,7 +271,7 @@ Sans objet — AdGuard Home n'utilise pas Redis. `enable_redis` vaut `false` par
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 
@@ -305,7 +304,7 @@ d'explorer les ressources en cours d'exécution.
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
-> configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md),
+> configuration par le moteur du socle [App_CloudRun](App_CloudRun.md),
 > qui valide les valeurs et leurs combinaisons au moment du plan. Une
 > configuration invalide fait échouer le **plan** avec une erreur claire et
 > nommée avant toute création de ressource.
@@ -322,9 +321,9 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité
+Pour le comportement du socle évoqué tout au long de ce guide — identité
 du service, mise à l'échelle et concurrence, ingress et équilibrage de charge,
-CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC et réplication d'images —
+CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à AdGuard Home, partagée avec la variante GKE, est décrite dans
 **[AdGuardHome_Common](AdGuardHome_Common.md)**.

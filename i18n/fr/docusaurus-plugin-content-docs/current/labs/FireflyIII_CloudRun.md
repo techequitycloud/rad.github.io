@@ -29,12 +29,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Accéder au service en cours d’exécution, le vérifier et créer le premier compte administrateur.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l’échelle, mettre à jour, gérer les secrets et les sauvegardes, et raccorder le point de terminaison cron.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l’échelle, mettre à jour, gérer les secrets et les sauvegardes, et raccorder le point de terminaison cron.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -104,7 +104,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -155,7 +155,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -164,7 +164,7 @@ export REGION="us-central1"          # the region you deploy into
    Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
-2. **Surveillance** : ouvrez le tableau de bord Cloud Run du service et examinez le nombre
+2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
    de requêtes, la latence des requêtes (P50/P95/P99), le nombre d’instances (comportement de mise à l’échelle) et l’utilisation du processeur /
    de la mémoire. Si vous avez activé `uptime_check_config`, vérifiez qu’il est au vert sous
    Monitoring → Uptime checks, et consultez Alerting → Policies.
@@ -202,7 +202,7 @@ Consultez la section *Configuration Pitfalls* (pièges de configuration) du Guid
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS, le volume NFS et les images
@@ -220,4 +220,4 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l’échelle, mettre à jour la version, raccorder le cron, gérer les secrets/sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d’initialisation, de cron, de NFS et d’IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

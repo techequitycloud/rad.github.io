@@ -64,7 +64,7 @@ assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Wiki.js {#a-cloud-run--the-wikijs-service}
 
@@ -91,8 +91,8 @@ Wiki.js stocke toutes les données de l'application (pages, utilisateurs, naviga
 index de recherche) dans une instance gérée Cloud SQL for PostgreSQL 15. L'extension
 `pg_trgm` est installée lors du provisionnement et alimente la recherche en texte
 intégral native de Wiki.js. Le service se connecte de manière privée via le **Cloud
-SQL Auth Proxy** sur un socket Unix (sans IP publique). Au premier déploiement, une
-tâche d'initialisation crée la base de données et l'utilisateur de l'application.
+SQL Auth Proxy** sur un socket Unix (sans IP publique). Au premier déploiement, un
+job d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
   sauvegardes, les flags et les métriques.
@@ -104,7 +104,7 @@ tâche d'initialisation crée la base de données et l'utilisateur de l'applicat
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
@@ -142,7 +142,7 @@ sessions. Définissez `enable_redis = true` et fournissez `redis_host` pour l'ac
 Le mot de passe de la base de données est stocké dans Secret Manager et injecté dans
 le service à l'exécution ; il n'apparaît jamais en clair dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -158,7 +158,7 @@ Le service est joignable par défaut via son URL `run.app`. Un équilibreur de c
 HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
 ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -173,8 +173,8 @@ Les journaux du conteneur sont envoyés à Cloud Logging ; les métriques Cloud 
 Cloud SQL à Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte
 facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -184,7 +184,7 @@ facultatifs.
 
 ## 3. Comportement de l'application Wiki.js {#3-wikijs-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`) utilise l'image `postgres:15-alpine` pour se connecter
   via le Cloud SQL Auth Proxy, créer de manière idempotente la base de données et
   l'utilisateur `wikijs`, et accorder les droits requis. L'extension PostgreSQL
@@ -298,7 +298,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base d'une instance créée en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base d'une instance créée en mode intégré (inline). |
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. |
 
 ### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
@@ -328,19 +328,19 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | _(défini)_ | Noms sous lesquels les détails de connexion sont injectés. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée de `Wikijs_Common`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes déclenchées par Cloud Scheduler. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/healthz`, 60 s initial delay | Sonde de démarrage — délai généreux pour la migration de la base de données au premier lancement. |
-| `liveness_probe` | HTTP `/healthz`, 60 s initial delay | Sonde d'activité. |
+| `liveness_probe` | HTTP `/healthz`, 60 s initial delay | Sonde de vivacité. |
 | `uptime_check_config` | disabled, path `/` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -363,12 +363,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -420,8 +420,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Wiki.js, partagée avec la variante GKE, est décrite dans
 **[Wikijs_Common](Wikijs_Common.md)**.
 

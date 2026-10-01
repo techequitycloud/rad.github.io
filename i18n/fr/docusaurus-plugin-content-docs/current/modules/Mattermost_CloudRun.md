@@ -21,7 +21,7 @@ Mattermost est une plateforme open source et auto-hébergeable de messagerie d'�
 *   **Calcul** : Cloud Run v2 (Gen2), conteneur Mattermost personnalisé, 2 vCPU / 2 Gi par défaut. Le nombre minimal d'instances vaut 1 par défaut — Mattermost maintient des connexions WebSocket persistantes pour la messagerie en temps réel, ce qui rend la mise à l'échelle jusqu'à zéro inadaptée à la plupart des déploiements.
 *   **Persistance des données** : Cloud SQL **PostgreSQL 15**. Volume GCS FUSE monté sur `/mattermost/data` pour la persistance des fichiers envoyés et des pièces jointes.
 *   **Sécurité** : hérite de Cloud Armor WAF, IAP, Binary Authorization et VPC Service Controls depuis `App CloudRun`. Mattermost génère ses propres clés de signature internes au premier démarrage et les stocke dans la base de données — ce module ne génère automatiquement aucun secret au niveau de l'application.
-*   **Mise en cache** : Redis est **facultatif** (`enable_redis = false` par défaut). Lorsqu'il est activé, Mattermost utilise Redis comme cache distribué et backend de sessions — ce qui est nécessaire à un comportement correct avec plusieurs répliques.
+*   **Mise en cache** : Redis est **facultatif** (`enable_redis = false` par défaut). Lorsqu'il est activé, Mattermost utilise Redis comme cache distribué et backend de sessions — ce qui est nécessaire à un comportement correct avec plusieurs réplicas.
 *   **Éditions** : Team Edition (gratuite, par défaut) ou Enterprise Edition (licence payante requise). Contrôlée par la variable `edition`.
 *   **Messagerie en temps réel** : Mattermost maintient des connexions WebSocket pour la remise des messages en temps réel. Le délai d'expiration des requêtes de 60 minutes de Cloud Run signifie que `timeout_seconds` doit être défini sur `3600` pour les déploiements faisant un usage intensif des WebSocket. Pour les charges de travail de production nécessitant des connexions persistantes de longue durée, envisagez `Mattermost GKE`.
 
@@ -375,7 +375,7 @@ Redis est **désactivé par défaut** (`enable_redis = false`). Activez Redis po
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `enable_redis` | 21 | `false` | Active Redis pour la mise en cache et le stockage des sessions de Mattermost. Recommandé pour les déploiements à plusieurs répliques. |
+| `enable_redis` | 21 | `false` | Active Redis pour la mise en cache et le stockage des sessions de Mattermost. Recommandé pour les déploiements à plusieurs réplicas. |
 | `redis_host` | 21 | `""` | Nom d'hôte ou adresse IP du serveur Redis. Laissez vide pour utiliser l'adresse IP du serveur NFS lorsque `enable_redis = true`. Remplacez-la par une instance Memorystore en production. |
 | `redis_port` | 21 | `'6379'` | Port TCP du serveur Redis (chaîne). |
 | `redis_auth` | 21 | `""` | Mot de passe AUTH de Redis. Laissez vide si l'authentification n'est pas requise. Sensible — jamais stocké dans l'état. |
@@ -384,7 +384,7 @@ Redis est **désactivé par défaut** (`enable_redis = false`). Activez Redis po
 
 Mattermost expose des métriques au format Prometheus sur le port 8067 (`/metrics`). Activez les métriques dans la System Console de Mattermost, sous **Environment → Performance Monitoring**, puis intégrez-les à Google Cloud Monitoring via un point de terminaison Prometheus remote write ou un collecteur s'exécutant dans le même VPC.
 
-### E. Importation de sauvegarde et récupération {#e-backup-import--recovery}
+### E. Import de sauvegarde et restauration {#e-backup-import--recovery}
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -692,7 +692,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Mattermost C
 | `alert_policies` | 14 | `[]` | Règles d'alerte Cloud Monitoring sur les métriques. |
 | `site_url` | 20 | `""` | URL publique de Mattermost. Définit `MM_SERVICESETTINGS_SITEURL`. |
 | `edition` | 20 | `'team'` | `'team'` (gratuite) ou `'enterprise'` (payante). |
-| `enable_redis` | 21 | `false` | Redis pour la mise en cache de Mattermost. Requis avec plusieurs répliques. |
+| `enable_redis` | 21 | `false` | Redis pour la mise en cache de Mattermost. Requis avec plusieurs réplicas. |
 | `redis_host` | 21 | `""` | Nom d'hôte ou adresse IP de Redis. Utilise par défaut l'adresse IP du serveur NFS lorsqu'il est vide. |
 | `redis_port` | 21 | `'6379'` | Port TCP de Redis (chaîne). |
 | `redis_auth` | 21 | `""` | Mot de passe AUTH de Redis. Sensible. |
@@ -724,11 +724,11 @@ Toutes les variables configurables par l'utilisateur exposées par `Mattermost C
 
 ---
 
-## 14. Pièges de configuration et valeurs par défaut raisonnables {#14-configuration-pitfalls--sensible-defaults}
+## 14. Pièges de configuration et valeurs par défaut judicieuses {#14-configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"POSTGRES_15"` | **Critical** | Mattermost exige PostgreSQL 13 ou une version ultérieure. Choisir une variante MySQL ou SQL Server empêche Mattermost de démarrer, avec une erreur de connexion du pilote. |
@@ -736,7 +736,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Mattermost C
 | `db_user` | `"mattermost"` | **Critical** | Immuable après le premier déploiement — le modifier recrée l'utilisateur Cloud SQL et rompt la connexion à la base de données. |
 | `min_instance_count` | `1` | **High** | La mise à l'échelle jusqu'à zéro (`0`) coupe les connexions WebSocket actives (messagerie en temps réel) de tous les utilisateurs en ligne chaque fois que l'instance unique est réduite. Définissez `1` pour tout déploiement de production. |
 | `timeout_seconds` | `300` | **High** | Mattermost maintient des connexions WebSocket pour la messagerie en temps réel. Un délai d'expiration de 5 minutes amène Cloud Run à interrompre toutes les connexions WebSocket actives toutes les 5 minutes. Définissez `3600` pour les déploiements de production faisant un usage intensif des WebSocket. |
-| `enable_redis` | `false` | **High** | Lorsque plusieurs répliques s'exécutent (`max_instance_count > 1`), Redis est requis pour le partage distribué des sessions. Sans lui, les utilisateurs subissent des échecs d'authentification intermittents et des données obsolètes, car les requêtes sont acheminées vers différentes instances dotées de caches mémoire indépendants. |
+| `enable_redis` | `false` | **High** | Lorsque plusieurs réplicas s'exécutent (`max_instance_count > 1`), Redis est requis pour le partage distribué des sessions. Sans lui, les utilisateurs subissent des échecs d'authentification intermittents et des données obsolètes, car les requêtes sont acheminées vers différentes instances dotées de caches mémoire indépendants. |
 | `site_url` | `""` | **High** | Sans `site_url`, Mattermost utilise `http://localhost:8065` pour générer les liens. Cela casse les liens d'invitation par e-mail, les URI de redirection OAuth et les URL de callback des webhooks. Définissez-la sur l'URL du service Cloud Run ou sur le domaine personnalisé après le premier déploiement. |
 | `gcs_volumes` | `[]` | **High** | Sans volume persistant sur `/mattermost/data`, tous les fichiers et pièces jointes envoyés par les utilisateurs sont stockés sur le système de fichiers éphémère du conteneur. Tous les fichiers envoyés sont définitivement perdus lors du déploiement d'une nouvelle révision ou du redémarrage du conteneur. |
 | `edition` | `"team"` | **Medium** | Définir `edition = "enterprise"` sélectionne l'image de conteneur Enterprise Edition. Sans clé de licence valide définie via `environment_variables`, Mattermost démarre en mode d'essai Enterprise et finit par revenir aux fonctionnalités de la Team Edition. |

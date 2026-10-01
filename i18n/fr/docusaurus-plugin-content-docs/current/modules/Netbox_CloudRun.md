@@ -13,7 +13,7 @@ NetBox est la « source de vérité » open source de référence pour les équi
 d'ingénierie réseau — gestion des adresses IP (IPAM), inventaire des équipements et
 des baies, câblage et topologie réseau, le tout modélisé sous forme de données
 structurées derrière une API REST/GraphQL complète. Ce module déploie NetBox sur
-**Cloud Run v2** en s'appuyant sur la fondation [App_CloudRun](App_CloudRun.md), qui
+**Cloud Run v2** en s'appuyant sur le socle [App_CloudRun](App_CloudRun.md), qui
 provisionne et gère l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise NetBox et sur la manière de
@@ -22,7 +22,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run — 
 du service, ingress et équilibrage de charge, mise à l'échelle et concurrence,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
 cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -33,7 +33,7 @@ Cloud Run v2, qui encapsule l'image officielle `netboxcommunity/netbox` avec un
 processus d'arrière-plan `rqworker --with-scheduler` colocalisé. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Image construite sur mesure, 2 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro prise en charge |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — NetBox ne prend en charge ni MySQL ni SQLite en production |
@@ -170,7 +170,7 @@ Deux secrets cryptographiques sont générés automatiquement et stockés dans S
 Manager : `SECRET_KEY` (secret cryptographique Django utilisé pour les sessions, la
 protection CSRF et les cookies signés) et `SUPERUSER_PASSWORD` (le mot de passe du
 compte administrateur initial). Le mot de passe de la base de données est géré
-séparément par la fondation.
+séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -182,7 +182,7 @@ séparément par la fondation.
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
 rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut via son URL `run.app`. Un équilibreur de charge
 HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ;
@@ -322,7 +322,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -361,7 +361,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 `custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécutent du SQL depuis un
 bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -400,7 +400,7 @@ bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `cron_jobs` | `[]` | Non transmis — NetBox n'a aucune tâche récurrente planifiée par la plateforme ; ses propres jobs planifiés s'exécutent plutôt via le worker RQ colocalisé. |
 | `additional_services` | `[]` | Services Cloud Run supplémentaires déployés aux côtés de NetBox. |
 
-### Groupe 14 — Observabilité et état {#group-14--observability--health}
+### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -472,7 +472,7 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -494,7 +494,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative

@@ -19,7 +19,7 @@ du cycle de vie opérationnel du module **Moodle on Cloud Run** sur Google Cloud
 y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants
 et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Moodle. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Moodle_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -50,7 +50,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -68,8 +68,8 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager, un partage NFS Filestore pour
-   `moodledata`, Redis en option, construit l'image du conteneur, exécute les tâches ponctuelles `db-init`
-   et `nfs-init`, et provisionne une tâche cron Cloud Scheduler. Les premiers
+   `moodledata`, Redis en option, construit l'image du conteneur, exécute les jobs ponctuels `db-init`
+   et `nfs-init`, et provisionne un job cron Cloud Scheduler. Les premiers
    déploiements prennent environ **25–45 minutes** (la création de Cloud SQL et de Filestore
    en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et que son environnement d'exécution PHP est opérationnel :
 
@@ -116,7 +116,7 @@ export REGION="us-central1"          # the region you deploy into
    ```
 
 3. Ouvrez `${SERVICE_URL}` dans un navigateur et connectez-vous au panneau d'administration de Moodle. Les
-   identifiants administrateur initiaux sont définis lors de la tâche `db-init` (le nom d'utilisateur et l'e-mail
+   identifiants administrateur initiaux sont définis lors du job `db-init` (le nom d'utilisateur et l'e-mail
    sont configurables via `environment_variables` au moment du déploiement).
 
 ---
@@ -137,7 +137,7 @@ export REGION="us-central1"          # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
 
-4. **Gérez les secrets, le cron Cloud Scheduler et les tâches de sauvegarde :**
+4. **Gérez les secrets, le cron Cloud Scheduler et les jobs de sauvegarde :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~moodle"
@@ -146,7 +146,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run jobs list --project="$PROJECT" --region="$REGION"
    ```
 
-   Pour déclencher manuellement la tâche cron de Moodle :
+   Pour déclencher manuellement le job cron de Moodle :
 
    ```bash
    CRON_JOB=$(gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
@@ -176,7 +176,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -200,9 +200,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base existe, que la tâche `db-init` s'est terminée avec succès et que le
+  secret du mot de passe de la base existe, que le job `db-init` s'est terminé avec succès et que le
   sidecar Cloud SQL Auth Proxy est présent dans la configuration de la révision.
-- **Échec des tâches d'initialisation (`db-init` ou `nfs-init`) :** listez les exécutions et
+- **Échec des jobs d'initialisation (`db-init` ou `nfs-init`) :** listez les exécutions et
   lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
@@ -210,14 +210,14 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run jobs executions list --job="${SERVICE}-nfs-init" \
     --project="$PROJECT" --region="$REGION"
   ```
-- **Le cron de Moodle ne s'exécute pas :** vérifiez que la tâche Cloud Scheduler est activée et que
+- **Le cron de Moodle ne s'exécute pas :** vérifiez que le job Cloud Scheduler est activé et que
   sa dernière exécution a réussi ; vérifiez que le secret du mot de passe cron existe.
   ```bash
   gcloud scheduler jobs list --project="$PROJECT" --location="$REGION" \
     --filter="name~moodle"
   ```
-- **Erreurs NFS / `moodledata` :** vérifiez que l'instance Filestore est `READY` ; la
-  tâche `nfs-init` doit s'être terminée pour définir le bon propriétaire `www-data` sur les
+- **Erreurs NFS / `moodledata` :** vérifiez que l'instance Filestore est `READY` ; le
+  job `nfs-init` doit s'être terminé pour définir le bon propriétaire `www-data` sur les
   répertoires du partage. Le service nécessite `execution_environment = "gen2"` pour les montages
   de volumes NFS.
 - **Échec de la construction de l'image :** consultez l'historique Cloud Build pour le journal du build en échec.
@@ -231,7 +231,7 @@ paramètre.
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela supprime le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Delete supprime tout ce que le module a créé — le service Cloud Run,
-la base de données Cloud SQL, le partage NFS Filestore, la tâche cron Cloud Scheduler, les secrets Secret Manager,
+la base de données Cloud SQL, le partage NFS Filestore, le job cron Cloud Scheduler, les secrets Secret Manager,
 les buckets GCS et les images Artifact Registry. Les ressources appartenant à
 **Services_GCP** (le VPC, le Cloud SQL partagé, le registre) sont gérées séparément et
 ne sont pas supprimées ici.
@@ -242,9 +242,9 @@ ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), le NFS Filestore, Redis, le cron Cloud Scheduler, les secrets, et exécute les tâches db-init + nfs-init |
-| 2 — Accès et vérification | Manuel | La vérification d'état sur `/health.php` réussit ; se connecter au panneau d'administration de Moodle |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), le NFS Filestore, Redis, le cron Cloud Scheduler, les secrets, et exécute les jobs db-init + nfs-init |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état sur `/health.php` réussit ; se connecter au panneau d'administration de Moodle |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/le cron/les sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de NFS, de cron, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de NFS, de cron, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

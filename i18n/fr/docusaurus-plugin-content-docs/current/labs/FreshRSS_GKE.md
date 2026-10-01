@@ -30,15 +30,15 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours
   d'exécution, y compris l'installation au premier démarrage et la connexion administrateur.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et la base de données.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Démonter proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -55,7 +55,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -78,7 +78,7 @@ export REGION="us-central1"           # the region you deploy into
    Cloud SQL (PostgreSQL 15) avec les secrets `FRESHRSS_ADMIN_PASSWORD` et du
    mot de passe de la base de données dans Secret Manager, un volume NFS monté
    sur `/var/www/FreshRSS/data` (aucun bucket GCS n'est créé), construit l'image
-   de conteneur personnalisée et exécute une tâche ponctuelle `db-init`. Les
+   de conteneur personnalisée et exécute un job ponctuel `db-init`. Les
    premiers déploiements prennent environ **15–25 minutes** (la création de
    Cloud SQL représente l'essentiel de ce temps).
 
@@ -151,7 +151,7 @@ export REGION="us-central1"           # the region you deploy into
    travail : la mise à l'échelle est donc une modification de configuration, et
    non un `kubectl scale` manuel (une modification manuelle serait annulée lors
    de l'application suivante). GKE exige `min_instance_count >= 1` (pas de mise
-   à l'échelle jusqu'à zéro) ; la tâche cron d'actualisation des flux dans le
+   à l'échelle jusqu'à zéro) ; le job cron d'actualisation des flux dans le
    conteneur (`CRON_MIN = */15`) se déclenche donc toujours. Conservez
    `max_instance_count` à `1` — un seul pod détient le cron d'actualisation et
    l'état de session et de cache stocké sous forme de fichiers sur le volume NFS
@@ -200,7 +200,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour Logs Explorer :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -229,9 +229,9 @@ qui ne changent pas d'une version de FreshRSS à l'autre.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud
   SQL est `RUNNABLE`, que le secret du mot de passe de la base de données a bien
   été matérialisé dans l'espace de noms, que `enable_cloudsql_volume =
-  true` (sidecar Auth Proxy lié à `127.0.0.1:5432`) et que la tâche `db-init`
-  s'est terminée.
-- **Échec de la tâche `db-init` :** inspectez la tâche et les journaux de son pod :
+  true` (sidecar Auth Proxy lié à `127.0.0.1:5432`) et que le job `db-init`
+  s'est terminé.
+- **Échec du job `db-init` :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -259,7 +259,7 @@ essentielles concernant `enable_nfs`,
 
 ---
 
-## Tâche 6 — Démonter [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes
 et son espace de noms, la base de données et l'utilisateur Cloud SQL, les
@@ -279,4 +279,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version (déploiement Recreate), gérer les secrets et la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de `db-init`, de NFS et de stratégie de déploiement |
-| 6 — Démonter | Automatisé | La suppression (Trash) retire toutes les ressources du module |
+| 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

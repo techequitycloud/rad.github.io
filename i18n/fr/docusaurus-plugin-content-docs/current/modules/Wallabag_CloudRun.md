@@ -13,8 +13,7 @@ Wallabag est une application gratuite, open source et auto-hébergée d'archivag
 à « lire plus tard » — une alternative à Pocket. Enregistrez des articles depuis une extension de navigateur, un bookmarklet,
 une application mobile ou l'API REST, puis lisez-les plus tard dans une vue épurée et sans distraction,
 avec recherche plein texte, étiquettes, annotations et flux RSS de vos éléments
-enregistrés. Ce module déploie Wallabag sur **Cloud Run v2** au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+enregistrés. Ce module déploie Wallabag sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Wallabag et sur la manière de les explorer et
@@ -22,7 +21,7 @@ de les exploiter depuis la Google Cloud Console et la ligne de commande. Pour le
 mécanismes communs à toutes les applications Cloud Run — identité du service, entrée et
 équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que
 de les répéter ici.
 
 ---
@@ -33,7 +32,7 @@ Wallabag s'exécute sous la forme d'un conteneur PHP/Symfony (nginx + php-fpm so
 Cloud Run v2. Le déploiement relie un ensemble ciblé de services Google
 Cloud :
 
-| Fonction | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service PHP/Symfony, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à zéro par défaut |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — Wallabag_Common fixe le moteur ; PostgreSQL n'est pas pris en charge |
@@ -112,7 +111,7 @@ modèle de connexion, les sauvegardes et le renouvellement du mot de passe.
 ### C. Cloud Storage {#c-cloud-storage}
 
 Un bucket générique `data` est provisionné par défaut (via l'entrée `storage_buckets`
-de la fondation), mais Wallabag lui-même ne le lit ni ne l'écrit jamais — tout
+du socle), mais Wallabag lui-même ne le lit ni ne l'écrit jamais — tout
 le contenu réside dans MySQL, et `gcs_volumes` (qui monterait un bucket via Fuse dans
 le conteneur) est vide par défaut.
 
@@ -127,7 +126,7 @@ le conteneur) est vide par défaut.
 Un secret est généré automatiquement et stocké dans Secret Manager : `APP_SECRET`
 (matérialisé sous cette clé simple ; associé au véritable nom `SYMFONY__ENV__SECRET`
 par le point d'entrée d'enveloppe). Le mot de passe de la base de données est géré séparément par
-la fondation.
+le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -245,7 +244,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `container_port` | `80` | Le nginx de Wallabag écoute sur le port 80. |
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages GCS Fuse. |
 | `enable_cloudsql_volume` | `false` | Cloud Run se connecte en TCP via l'IP privée au lieu du socket de l'Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry. |
 | `container_protocol` | `http1` | HTTP/1.1. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
@@ -381,11 +380,11 @@ ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Variable d'environnement du pilote de base de données (`SYMFONY__ENV__DATABASE_DRIVER`, codée en dur dans `entrypoint.sh`) | doit être définie explicitement (`pdo_mysql` ici) | **Critical** | Le `parameters.yml` livré avec Wallabag fixe `database_driver` à `pdo_sqlite` par défaut. Définir uniquement `SYMFONY__ENV__DATABASE_HOST`/`_PORT`/`_NAME`/`_USER`/`_PASSWORD` sans variable de pilote explicite installe quand même silencieusement l'application sur un fichier SQLite local jetable — l'installation « réussit », l'application semble fonctionner, mais toutes les données résident dans un fichier éphémère effacé à chaque redémarrage ou redéploiement, et MySQL n'est jamais sollicité. Aucune erreur n'est levée. **Si ce module est un jour cloné comme modèle pour une autre application basée sur Symfony, vérifiez que la variable d'environnement du pilote de base de données est définie explicitement** — cette catégorie de défaillance est indétectable de l'extérieur ; seule la comparaison des journaux de démarrage du conteneur (`"Configuring the SQLite database..."` par rapport à une ligne de connexion MySQL) la révèle. Consultez [App_CloudRun](App_CloudRun.md) et [App_GKE](App_GKE.md) pour savoir comment la fondation injecte de manière générique les variables d'environnement de la base de données — la transposition propre à l'application et les éléments manquants relèvent toujours de la responsabilité du module appelant. |
+| Variable d'environnement du pilote de base de données (`SYMFONY__ENV__DATABASE_DRIVER`, codée en dur dans `entrypoint.sh`) | doit être définie explicitement (`pdo_mysql` ici) | **Critical** | Le `parameters.yml` livré avec Wallabag fixe `database_driver` à `pdo_sqlite` par défaut. Définir uniquement `SYMFONY__ENV__DATABASE_HOST`/`_PORT`/`_NAME`/`_USER`/`_PASSWORD` sans variable de pilote explicite installe quand même silencieusement l'application sur un fichier SQLite local jetable — l'installation « réussit », l'application semble fonctionner, mais toutes les données résident dans un fichier éphémère effacé à chaque redémarrage ou redéploiement, et MySQL n'est jamais sollicité. Aucune erreur n'est levée. **Si ce module est un jour cloné comme modèle pour une autre application basée sur Symfony, vérifiez que la variable d'environnement du pilote de base de données est définie explicitement** — cette catégorie de défaillance est indétectable de l'extérieur ; seule la comparaison des journaux de démarrage du conteneur (`"Configuring the SQLite database..."` par rapport à une ligne de connexion MySQL) la révèle. Consultez [App_CloudRun](App_CloudRun.md) et [App_GKE](App_GKE.md) pour savoir comment le socle injecte de manière générique les variables d'environnement de la base de données — la transposition propre à l'application et les éléments manquants relèvent toujours de la responsabilité du module appelant. |
 | `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les articles enregistrés. |
 | `APP_SECRET` (généré automatiquement) | Ne jamais le modifier à la main dans Secret Manager après le premier démarrage | High | Wallabag l'utilise comme clé de signature de sécurité Symfony ; le modifier invalide les jetons CSRF et toutes les URL signées déjà émises. |
 | Identifiants administrateur par défaut (`wallabag` / `wallabag`, créés par `wallabag:install`) | À modifier immédiatement après la première connexion | High | Le programme d'installation crée les identifiants par défaut bien connus de Wallabag — toute personne connaissant l'URL du service et la valeur par défaut publique peut se connecter tant que le mot de passe n'a pas été modifié. |
@@ -397,9 +396,9 @@ ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — identité du service, mise à l'échelle et
+Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Wallabag
 partagée avec la variante GKE est décrite dans
 **[Wallabag_Common](Wallabag_Common.md)**.

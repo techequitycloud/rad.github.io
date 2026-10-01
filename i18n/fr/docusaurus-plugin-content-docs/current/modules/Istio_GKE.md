@@ -157,7 +157,7 @@ Les journaux système du cluster et ceux des charges de travail sont envoyés ve
 
 **Mode sidecar (`install_ambient_mesh = false`, par défaut) :**
 
-- Istio est installé avec des identifiants de maillage et une Ingress Gateway à mise à l'échelle automatique (2 répliques minimum / 5 maximum, cible CPU de 80 %). Si ce chemin d'installation échoue, l'étape se rabat sur une installation avec le profil `minimal`.
+- Istio est installé avec des identifiants de maillage et une Ingress Gateway à mise à l'échelle automatique (2 réplicas minimum / 5 maximum, cible CPU de 80 %). Si ce chemin d'installation échoue, l'étape se rabat sur une installation avec le profil `minimal`.
 - L'espace de noms `default` est étiqueté `istio-injection=enabled`. Les pods qui y sont créés reçoivent un sidecar Envoy `istio-proxy` ; le cluster autorise `NET_ADMIN` afin que le sidecar puisse programmer l'interception du trafic. **Les pods existants doivent être redémarrés pour recevoir un sidecar.**
 
 **Mode ambient (`install_ambient_mesh = true`) :**
@@ -225,12 +225,12 @@ Regroupées exactement comme elles apparaissent sur la plateforme de déploiemen
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | plages sans chevauchement | Critical | Des plages secondaires qui se chevauchent (entre elles ou avec des réseaux appairés/sur site) font échouer la création du cluster ou provoquent des conflits de routage difficiles à corriger. |
 | `install_ambient_mesh` | choisi une fois au déploiement | High | Le mode est fixé au moment de l'installation ; passer du mode sidecar au mode ambient (ou inversement) après le déploiement nécessite de démanteler puis de réinstaller le maillage. |

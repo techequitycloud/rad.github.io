@@ -47,7 +47,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe de la base de données généré automatiquement |
 | Entrée | Cloud Load Balancing | Service LoadBalancer externe ; domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est imposé ; choisir
   PostgreSQL ou `NONE` empêche le démarrage.
@@ -360,7 +360,7 @@ Ces paramètres ne s'appliquent que lorsque `workload_type = "StatefulSet"` ou `
 | `uptime_check_config` | `{ enabled=false, path="/v1/health" }` | Test de disponibilité Cloud Monitoring facultatif ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -454,7 +454,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -498,12 +498,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critical | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté s'il est vide et que `deploy_application = true`. |
 | `enable_redis` | `true` | Critical | Sans Redis, la file de tâches du traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
@@ -528,7 +528,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à RAGFlow partagée avec
 la variante Cloud Run est décrite dans **[RAGFlow_Common](RAGFlow_Common.md)**.
 

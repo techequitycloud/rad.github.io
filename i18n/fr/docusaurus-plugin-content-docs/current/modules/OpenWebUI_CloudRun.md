@@ -39,7 +39,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `WEBUI_SECRET_KEY` et mot de passe de la base de données générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Open WebUI ne prend pas en charge MySQL ni aucun
   autre moteur ; le type de base de données est fixé en interne.
@@ -146,7 +146,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour le montage NFS et les exigences G
 données sont stockés dans Secret Manager et injectés dans le service à l'exécution ; le
 texte en clair n'apparaît jamais dans la configuration ni dans les journaux.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -161,7 +161,7 @@ Le service est accessible par défaut à son URL `run.app`. Un équilibreur de c
 externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les
 paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
@@ -177,8 +177,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques Cl
 Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> \
@@ -345,7 +345,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -368,7 +368,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_redis` | `false` | Redis n'est pas nécessaire — Open WebUI conserve tout son état dans PostgreSQL. |
 | `redis_host` | `""` | Point de terminaison Redis (pertinent uniquement si `enable_redis` est défini à `true`). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -408,12 +408,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_cloudsql_volume` | `true` | Critical | Le désactiver rompt toutes les connexions à la base de données avec Cloud SQL. Ne le désactivez que pour vous connecter à un PostgreSQL externe en TCP. |
 | `WEBUI_SECRET_KEY` (généré automatiquement) | immuable après la première utilisation | Critical | La rotation de la clé déconnecte immédiatement tous les utilisateurs actifs et invalide tous les jetons « se souvenir de moi ». |

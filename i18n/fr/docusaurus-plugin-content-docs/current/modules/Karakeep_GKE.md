@@ -34,7 +34,7 @@ ressources téléversées sur le volume NFS partagé de la plateforme :
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Pod Next.js, 1 vCPU / 512 MiB par défaut, limité à une seule réplique |
+| Calcul | GKE Autopilot | Pod Next.js, 1 vCPU / 512 MiB par défaut, limité à un seul réplica |
 | Recherche | GKE Autopilot (Service interne) | Un sidecar Meilisearch requis, déployé automatiquement — non facultatif |
 | Base de données | aucune | L'état réside dans une base SQLite intégrée, et non dans Cloud SQL |
 | Stockage objet | aucun (NFS à la place) | Les ressources téléversées sont conservées sur le volume NFS partagé de la plateforme, et non dans GCS |
@@ -46,7 +46,7 @@ ressources téléversées sur le volume NFS partagé de la plateforme :
 - **Pas de Cloud SQL.** `database_type = "NONE"` — la base SQLite intégrée de
   Karakeep et les ressources téléversées résident toutes deux sur le volume NFS
   partagé de la plateforme.
-- **Une seule réplique uniquement.** `max_instance_count = 1` — plusieurs pods
+- **Un seul réplica uniquement.** `max_instance_count = 1` — plusieurs pods
   écrivant dans le même fichier SQLite sur NFS risquent de le corrompre, même avec le
   mode WAL désactivé.
 - **Stratégie de déploiement `Recreate` appliquée automatiquement.** Le socle
@@ -173,7 +173,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_image_source` | `prebuilt` | Aucun build personnalisé nécessaire. |
-| `min_instance_count` / `max_instance_count` | `0` / `1` | Limité à une seule réplique pour la sécurité de SQLite sur NFS. |
+| `min_instance_count` / `max_instance_count` | `0` / `1` | Limité à un seul réplica pour la sécurité de SQLite sur NFS. |
 | `container_port` | `3000` | Port par défaut natif de Karakeep. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
@@ -192,12 +192,12 @@ comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `service_external_ip` | IP externe du LoadBalancer. |
 | `database_instance_name` / `database_name` / `database_user` / `database_host` / `database_port` | Vides — sans objet. |
 | `storage_buckets` | Vide — Karakeep assure la persistance via NFS. |
@@ -225,7 +225,7 @@ comportement standard.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload Identity,
 entrée, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à Karakeep, partagée avec la variante Cloud Run,
 est décrite dans **[Karakeep_Common](Karakeep_Common.md)**.
 

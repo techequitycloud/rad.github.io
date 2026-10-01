@@ -26,11 +26,11 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
-- Effectuer les opérations du jour 2 (day-2) — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -116,7 +116,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module est propriétaire de la spécification du service : la mise à l'échelle est donc une modification de configuration, et non une
-   modification manuelle avec `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle avec `gcloud` (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est buildée et une nouvelle révision est déployée.
 
@@ -141,7 +141,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50

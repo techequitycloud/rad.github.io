@@ -19,7 +19,7 @@ cycle de vie opérationnel du module **Ollama on GKE Autopilot** sur Google Clou
 y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
 démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités
 du produit Ollama ou les workflows propres à chaque modèle. Pour la liste complète des services provisionnés
 et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Ollama_GKE) — ce lab
@@ -27,11 +27,11 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
-- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer le stockage des modèles et les tâches.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer le stockage des modèles et les jobs.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -51,7 +51,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -86,7 +86,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 Ollama est déployé avec un service `ClusterIP` par défaut — l'API est joignable depuis
 l'intérieur du cluster, mais pas depuis l'internet public. Pour y accéder depuis votre machine locale, utilisez
@@ -124,7 +124,7 @@ non authentifiée au sein du cluster, par conception.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est mise en miroir et une mise à jour progressive remplace les pods.
 
-4. **Inspectez le bucket de stockage des modèles et les tâches Kubernetes :**
+4. **Inspectez le bucket de stockage des modèles et les jobs Kubernetes :**
 
    ```bash
    MODELS_BUCKET=$(gcloud storage buckets list --project="$PROJECT" \
@@ -133,7 +133,7 @@ non authentifiée au sein du cluster, par conception.
    kubectl get jobs -n "$NS"   # model-pull job if default_model was configured
    ```
 
-5. Ollama n'a pas de base de données SQL — il n'y a ni instance Cloud SQL ni tâche `db-init` à
+5. Ollama n'a pas de base de données SQL — il n'y a ni instance Cloud SQL ni job `db-init` à
    gérer.
 
 ---
@@ -146,7 +146,7 @@ non authentifiée au sein du cluster, par conception.
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -173,7 +173,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   est correctement monté sur `/mnt/gcs`.
 - **OOM / boucle de redémarrage du conteneur :** Ollama nécessite en mémoire au moins 2× la taille des poids
   quantifiés du modèle. Augmentez `container_resources.memory_limit` dans la plateforme RAD et appliquez-le via **Update**.
-- **Échec de la tâche de récupération de modèle :** inspectez la tâche et les journaux de son pod :
+- **Échec du job de récupération de modèle :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<model-pull-job>
@@ -200,9 +200,9 @@ GKE, le registre partagé) sont gérées séparément et ne sont pas supprimées
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, le stockage GCS des modèles et une tâche facultative de récupération de modèle |
-| 2 — Accès et vérification | Manuel | Redirection de port vers le service interne au cluster ; la vérification d'état réussit sur `/` |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer le stockage des modèles et les tâches |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, le stockage GCS des modèles et un job facultatif de récupération de modèle |
+| 2 — Accéder et vérifier | Manuel | Redirection de port vers le service interne au cluster ; la vérification d'état réussit sur `/` |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer le stockage des modèles et les jobs |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de GCS Fuse, d'OOM, de tâche de récupération de modèle, de planification et de récupération d'image |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de GCS Fuse, d'OOM, de job de récupération de modèle, de planification et de récupération d'image |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris les poids des modèles |

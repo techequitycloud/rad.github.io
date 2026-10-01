@@ -28,14 +28,14 @@ que de les répéter ici.
 Ollama s'exécute comme un serveur d'inférence conteneurisé sur Cloud Run v2. Le déploiement assemble
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 (gen2) | Service Ollama, 4 vCPU / 8 GiB par défaut (modèles 3B), autoscaling basé sur les requêtes |
 | Stockage des modèles | Cloud Storage + GCS Fuse | Bucket des modèles monté sur `/mnt/gcs` ; les poids persistent à travers les redémarrages de conteneur et les nouvelles révisions |
 | Secrets | Secret Manager | Aucun secret géré par l'application — Ollama ne requiert aucun identifiant |
 | Entrée | URL Cloud Run (interne au VPC) | Entrée `internal` par défaut ; seuls les services du même VPC peuvent atteindre l'API |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données, pas de Redis.** Ollama est sans état au-delà de son cache de modèles adossé à GCS. Ni
   Cloud SQL ni Redis ne sont provisionnés.
@@ -326,12 +326,12 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `ingress_settings` | `internal` | Critical | `"all"` expose publiquement l'API Ollama non authentifiée — n'importe quel appelant sur internet peut interroger ou charger des modèles. |
 | `enable_iap` | `true` si `ingress_settings = "all"` | Critical | Sans IAP, l'API est non authentifiée et accessible publiquement. Ollama n'a aucune authentification intégrée. |
@@ -354,7 +354,7 @@ ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 partagée propre à Ollama est décrite dans **[Ollama_Common](Ollama_Common.md)**.
 
 <!-- related-guides -->

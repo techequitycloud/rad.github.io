@@ -45,7 +45,7 @@ Services volontairement **non** utilisés : **Cloud SQL** (`database_type = "NON
 **Cloud Storage** (aucun bucket) et **Redis** (désactivé par défaut ; le frontend
 statique n'a ni limitation de débit côté serveur ni file d'attente à alimenter).
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Jamais de base de données.** `database_type = "NONE"` et `enable_cloudsql_volume = false`.
   Hoppscotch conserve l'ensemble des collections, environnements et historiques dans
@@ -110,7 +110,7 @@ l'environnement d'exécution et la répartition du trafic.
 
 Comme `container_image_source = "custom"`, l'image est construite par Cloud Build à
 partir du `Dockerfile` minimal (`FROM hoppscotch/hoppscotch-frontend:${HOPPSCOTCH_VERSION}`)
-puis poussée vers Artifact Registry (la réplication d'image est activée par défaut
+puis poussée vers Artifact Registry (la mise en miroir des images est activée par défaut
 pour éviter les limites de débit de Docker Hub).
 
 - **Console :** Artifact Registry → Repositories ; Cloud Build → History.
@@ -304,10 +304,10 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par
 > le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -317,22 +317,22 @@ d'explorer les ressources en cours d'exécution.
 > claire et nommée avant la création de toute ressource ; la plupart des erreurs
 > ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `container_image_source` | `custom` | Élevé | Passer à `prebuilt` fait pointer le service vers un chemin Artifact Registry jamais construit (`Image not found`) ; Hoppscotch exige le build personnalisé `hoppscotch-frontend`. |
-| `application_version` | `latest` ou un tag `hoppscotch-frontend` réel | Élevé | Un tag invalide fait échouer le Cloud Build (`MANIFEST_UNKNOWN`) ; le service exécute alors une image obsolète ou absente. |
-| `enable_cloudsql_volume` | `false` | Moyen | L'activer monte un sidecar Auth Proxy pour une base de données inexistante — coût inutile et dépendance superflue. |
-| `container_port` | `3000` | Élevé | Le frontend ne sert que sur le port 3000 ; un port différent fait échouer la sonde de démarrage et la révision ne devient jamais Ready. |
-| `memory_limit` | `512Mi` | Moyen | Une valeur inférieure à 512Mi est rejetée en raison du plancher de l'environnement d'exécution gen2 ; le plan ou l'application échoue. |
-| `enable_iap` | `false` pour un usage public | Élevé | Activer IAP sans identifiants OAuth expose ou bloque l'application sans avertissement ; l'activer délibérément exige une connexion Google pour chaque requête. |
-| `min_instance_count` | `0` (ou `1` pour éviter les démarrages à froid) | Faible | La mise à l'échelle à zéro ajoute un léger délai de démarrage à froid à la première requête après une période d'inactivité ; sans conséquence pour une SPA statique. |
-| `enable_redis` | `false` | Faible | Le frontend statique n'a pas de file d'attente côté serveur ; activer Redis ajoute un coût sans aucun bénéfice. |
+| `container_image_source` | `custom` | High | Passer à `prebuilt` fait pointer le service vers un chemin Artifact Registry jamais construit (`Image not found`) ; Hoppscotch exige le build personnalisé `hoppscotch-frontend`. |
+| `application_version` | `latest` ou un tag `hoppscotch-frontend` réel | High | Un tag invalide fait échouer le Cloud Build (`MANIFEST_UNKNOWN`) ; le service exécute alors une image obsolète ou absente. |
+| `enable_cloudsql_volume` | `false` | Medium | L'activer monte un sidecar Auth Proxy pour une base de données inexistante — coût inutile et dépendance superflue. |
+| `container_port` | `3000` | High | Le frontend ne sert que sur le port 3000 ; un port différent fait échouer la sonde de démarrage et la révision ne devient jamais Ready. |
+| `memory_limit` | `512Mi` | Medium | Une valeur inférieure à 512Mi est rejetée en raison du plancher de l'environnement d'exécution gen2 ; le plan ou l'application échoue. |
+| `enable_iap` | `false` pour un usage public | High | Activer IAP sans identifiants OAuth expose ou bloque l'application sans avertissement ; l'activer délibérément exige une connexion Google pour chaque requête. |
+| `min_instance_count` | `0` (ou `1` pour éviter les démarrages à froid) | Low | La mise à l'échelle à zéro ajoute un léger délai de démarrage à froid à la première requête après une période d'inactivité ; sans conséquence pour une SPA statique. |
+| `enable_redis` | `false` | Low | Le frontend statique n'a pas de file d'attente côté serveur ; activer Redis ajoute un coût sans aucun bénéfice. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'image — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Hoppscotch,
 partagée avec la variante GKE, est décrite dans
 **[Hoppscotch_Common](Hoppscotch_Common.md)**.

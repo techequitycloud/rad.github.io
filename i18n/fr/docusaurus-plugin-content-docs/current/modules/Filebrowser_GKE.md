@@ -40,7 +40,7 @@ bien que le déploiement assemble un petit ensemble de services Google Cloud :
 | Secrets | Secret Manager | Aucun secret applicatif généré ; les utilisateurs résident dans la base SQLite |
 | Entrée | Cloud Load Balancing | Service `ClusterIP` par défaut ; domaine personnalisé + certificat géré disponibles |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **L'état réside dans un fichier SQLite embarqué sur `/database`.** Filebrowser
   n'a pas de base de données Cloud SQL. Ses utilisateurs, ses paramètres et ses liens
@@ -57,7 +57,7 @@ bien que le déploiement assemble un petit ensemble de services Google Cloud :
   SQLite ne tolère pas les écritures concurrentes — conservez un seul réplica.
 - **L'identifiant par défaut est `admin` / `admin`.** Filebrowser le crée au premier
   démarrage ; modifiez-le dans l'interface web immédiatement après le déploiement.
-- **Pas de Redis, pas de tâche d'initialisation.** `enable_redis = false` et aucune
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
   tâche `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
 - **Port du conteneur 80.** Filebrowser sert du HTTP/1.1 simple sur le port 80.
 - **Le domaine personnalisé est activé par défaut.** `enable_custom_domain = true`
@@ -121,7 +121,7 @@ ni secret JWT à gérer, car tout l'état d'identité réside dans la base SQLit
 Manager reste utilisé par le socle pour les secrets gérés par la plateforme (par
 exemple les jetons CI/CD s'ils sont configurés).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~filebrowser"
@@ -137,7 +137,7 @@ Google puisse servir le nom d'hôte fourni sur une IP stable. Sans domaine
 personnalisé, la charge de travail est accessible au sein du cluster à l'adresse
 `http://<service>.<namespace>.svc.cluster.local`.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -153,8 +153,8 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriq
 GKE sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règles
 d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -192,8 +192,8 @@ d'alerte facultatifs sont disponibles.
   fichiers autonome, sans file d'attente ni cache. La valeur par défaut
   `enable_redis = true` d'App_GKE est explicitement remplacée.
 - **Une image construite sur mesure nécessite `imagePullPolicy = Always`.** L'image
-  est une fine surcouche construite et dupliquée dans Artifact Registry ; App_GKE
-  définit `imagePullPolicy = Always` pour les images personnalisées/dupliquées, afin
+  est une fine surcouche construite et mise en miroir dans Artifact Registry ; App_GKE
+  définit `imagePullPolicy = Always` pour les images personnalisées/mises en miroir, afin
   qu'un redéploiement après reconstruction récupère toujours la nouvelle couche.
 
 ---
@@ -230,7 +230,7 @@ leurs valeurs par défaut standard.
 | `max_instance_count` | `1` | **Conservez 1** pour éviter les écritures SQLite concurrentes. |
 | `container_port` | `80` | L'écouteur HTTP/1.1 de Filebrowser. |
 | `enable_cloudsql_volume` | `false` | Filebrowser n'utilise pas Cloud SQL ; laissez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Filebrowser dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Filebrowser dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -249,7 +249,7 @@ leurs valeurs par défaut standard.
 | `stateful_pvc_mount_path` | `/database` | Chemin de montage — doit correspondre au répertoire de `FB_DATABASE`. |
 | `stateful_pvc_storage_class` | `standard-rwo` | StorageClass (`standard-rwo` pour un PD équilibré ; `premium-rwo` pour davantage d'IOPS). |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -261,7 +261,7 @@ leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health`, délai de 15s | Sonde de démarrage ; Filebrowser expose `/health` une fois prêt. |
-| `liveness_probe` | HTTP `/health`, délai de 30s | Sonde d'activité sur le point de terminaison non authentifié `/health`. |
+| `liveness_probe` | HTTP `/health`, délai de 30s | Sonde de vivacité sur le point de terminaison non authentifié `/health`. |
 | `uptime_check_config` | `{enabled=false, path="/health"}` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
@@ -309,7 +309,7 @@ compatibilité ; `database_type` est fixé à `NONE` par `Filebrowser_Common`.
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder. |
 | `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Obligatoires lorsque IAP est activé (sensibles). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -337,8 +337,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `/database` en mode GCS FUSE). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation (vide par défaut). |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation (vide par défaut). |
 | `statefulset_name` | Nom du StatefulSet (lorsque `stateful_pvc_enabled = true`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -351,14 +351,14 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, `workload_type = Deployment` combiné à `stateful_pvc_enabled = true`, des valeurs de mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Volume `/database` (bucket ou PVC) | Ne jamais le supprimer | Critical | La base SQLite embarquée réside ici ; la supprimer détruit tous les utilisateurs, paramètres et liens de partage. |
 | `admin` / `admin` (identifiant créé initialement) | Modifier à la première connexion | Critical | Conserver l'identifiant par défaut permet à quiconque peut atteindre le service d'en prendre le contrôle total. |
@@ -376,7 +376,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images —
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à
 Filebrowser partagée avec la variante Cloud Run est décrite dans
 **[Filebrowser_Common](Filebrowser_Common.md)**.

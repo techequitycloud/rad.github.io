@@ -38,7 +38,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Clés d'API et secret JWT injectés à l'exécution |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données externe.** `database_type` est fixé à `NONE` — Cloud
   SQL n'est pas provisionné. Tout l'état des tâches réside dans l'instance Redis
@@ -125,7 +125,7 @@ en clair n'apparaît dans la configuration. Crawl4AI n'a aucun secret généré
 automatiquement — tous les secrets doivent être fournis via
 `secret_environment_variables`.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -147,8 +147,7 @@ domaine personnalisé, Cloud CDN et Cloud Armor peuvent être ajoutés. La sorti
 VPC est définie sur `ALL_TRAFFIC` afin que le robot puisse atteindre des URL
 publiques arbitraires.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -163,8 +162,7 @@ Les journaux du conteneur (sortie Python diffusée via `PYTHONUNBUFFERED=1`) son
 envoyés à Cloud Logging. Les métriques de Cloud Run sont envoyées à Cloud
 Monitoring, avec des tests de disponibilité et des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -193,8 +191,8 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte en option.
   asynchrones sont stockés dans le Redis intégré avec un TTL de
   `redis_task_ttl_seconds` (1 heure par défaut). Une fois le TTL expiré, le
   résultat disparaît. Il n'existe aucun stockage durable des résultats.
-- **Aucune migration de base de données ni tâche d'initialisation.** Crawl4AI est
-  entièrement sans état — `Crawl4AI_Common` ne fournit aucune tâche
+- **Aucune migration de base de données ni job d'initialisation.** Crawl4AI est
+  entièrement sans état — `Crawl4AI_Common` ne fournit aucun job
   d'initialisation. Aucune configuration de base de données n'est nécessaire.
 - **Extraction basée sur les LLM.** Fournissez les clés d'API des LLM via
   `secret_environment_variables` et définissez `LLM_PROVIDER` (ou des clés
@@ -296,7 +294,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Crawl4AI_Common ne fournit aucune tâche d'initialisation par défaut — laissez vide sauf si une étape de configuration personnalisée est nécessaire. |
+| `initialization_jobs` | `[]` | Crawl4AI_Common ne fournit aucun job d'initialisation par défaut — laissez vide sauf si une étape de configuration personnalisée est nécessaire. |
 | `cron_jobs` | `[]` | Cloud Run Jobs récurrentes facultatives déclenchées par Cloud Scheduler. |
 | `enable_custom_sql_scripts` | `false` | Sans objet pour Crawl4AI (pas de base de données). |
 
@@ -364,12 +362,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `vpc_egress_setting` | `ALL_TRAFFIC` | Critical | Utiliser `PRIVATE_RANGES_ONLY` bloque toutes les cibles d'exploration externes ; chaque exploration d'une URL publique échoue avec une erreur de connexion. |
 | `memory_limit` | `8Gi` | Critical | En dessous de 4 GiB, les processus Chromium sont tués par OOM en pleine exploration et renvoient des résultats partiels ; en dessous de 2 GiB, le conteneur ne démarre pas. |

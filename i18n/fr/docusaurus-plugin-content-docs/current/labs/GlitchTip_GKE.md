@@ -11,7 +11,7 @@ description: "Lab pratique : déployez GlitchTip sur GKE Autopilot dans votre pr
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 GlitchTip est une plateforme open source de suivi des erreurs et de surveillance des performances,
 compatible avec Sentry. Vos applications envoient les exceptions et les traces à son point de
@@ -35,7 +35,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 - Effectuer les opérations du jour 2 — inspecter les pods, mettre à l’échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -114,7 +114,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspecter les pods, le HPA et le PodDisruptionBudget :**
 
@@ -202,7 +202,7 @@ paramètre (notamment les valeurs de ResourceQuota en unités binaires et le fai
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est
@@ -224,4 +224,4 @@ SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
 | 3 — Exploiter | Manuel | Inspecter pods/HPA/PDB, mettre à l’échelle, mettre à jour la version, gérer secrets/sauvegardes, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job de migration, de NFS, de déploiement et de build |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

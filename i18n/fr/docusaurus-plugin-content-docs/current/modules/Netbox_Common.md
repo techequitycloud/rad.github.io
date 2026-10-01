@@ -18,7 +18,7 @@ par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement NetBox, consultez les
 guides des plateformes ([Netbox_GKE](Netbox_GKE.md), [Netbox_CloudRun](Netbox_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -64,8 +64,8 @@ gcloud secrets list --project "$PROJECT" --filter="name~-key OR name~admin-passw
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la
-fondation ; le nom de son secret est indiqué dans les sorties du déploiement de la
+Le mot de passe de la base de données est généré et géré séparément par le
+socle ; le nom de son secret est indiqué dans les sorties du déploiement de la
 plateforme (`database_password_secret`). Consultez [App_Common](App_Common.md) pour
 le modèle partagé de secrets et de Workload Identity.
 
@@ -140,7 +140,7 @@ définit aucun `USER` non root) avec un point d'entrée shell léger
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Netbox_Common` établit l'environnement NetBox de référence afin que l'application
 démarre correctement la première fois :
@@ -166,12 +166,12 @@ démarre correctement la première fois :
 
 ---
 
-## 6. Comportement des sondes d'état {#6-health-probe-behaviour}
+## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 Les sondes par défaut ciblent `/login/` — la page de connexion publique et non
 authentifiée de NetBox, qui ne répond qu'une fois le serveur entièrement initialisé
 et connecté à PostgreSQL. `/api/status/` n'est délibérément **pas** utilisé, car il
-nécessite une authentification et ferait échouer chaque sonde d'état de la
+nécessite une authentification et ferait échouer chaque sonde de santé de la
 plateforme.
 
 - Sonde de démarrage : HTTP `/login/`, délai initial de 60 secondes, seuil d'échec de
@@ -180,7 +180,7 @@ plateforme.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** `media` dédié est déclaré ici et monté via GCS Fuse sur
 le véritable `MEDIA_ROOT` de NetBox, `/etc/netbox/media` (confirmé en conditions
@@ -207,7 +207,7 @@ gcloud storage buckets list --project "$PROJECT"
 
 Le nom du bucket est calculé sous la forme `gcs-${application_name}${tenant_resource_prefix}-media`,
 en utilisant le préfixe propre au **seul tenant** (correspondant au hash propre du
-module `deployment_id`) afin de s'aligner sur ce que la fondation crée réellement.
+module `deployment_id`) afin de s'aligner sur ce que le socle crée réellement.
 
 ---
 

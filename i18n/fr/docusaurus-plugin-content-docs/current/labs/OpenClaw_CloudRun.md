@@ -19,7 +19,7 @@ de canaux Telegram ou Slack. Ce lab vous fait parcourir l'intégralité du cycle
 module **OpenClaw on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter
 au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit OpenClaw. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/OpenClaw_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -50,7 +50,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme construit une image de conteneur personnalisée (en ajoutant `entrypoint.sh` par-dessus
    l'image OpenClaw amont), crée un bucket d'espace de travail GCS monté sur `/data` via
    GCS Fuse, stocke la clé API Anthropic et le jeton de passerelle dans Secret Manager, puis
-   déploie le service Cloud Run. OpenClaw ne nécessite ni Cloud SQL ni tâche d'initialisation — l'état
+   déploie le service Cloud Run. OpenClaw ne nécessite ni Cloud SQL ni job d'initialisation — l'état
    des agents réside entièrement sur GCS. Les premiers déploiements prennent environ **10–20 minutes** (Cloud
    Build en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Par défaut, `ingress_settings = "all"` rend le service directement joignable à son
    URL `run.app` — aucun proxy ni tunnel n'est nécessaire. Si vous définissez `ingress_settings = "internal"`
@@ -163,7 +163,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -217,7 +217,7 @@ supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image, provisionne l'espace de travail GCS, stocke les secrets et déploie Cloud Run |
-| 2 — Accès et vérification | Manuel | Accès par proxy ou public ; la vérification d'état réussit ; jeton de passerelle récupéré |
+| 2 — Accéder et vérifier | Manuel | Accès par proxy ou public ; la vérification d'état réussit ; jeton de passerelle récupéré |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, inspecter l'espace de travail GCS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de GCS Fuse, d'API Anthropic, de jeton de passerelle, de synchronisation des skills et d'IAM |

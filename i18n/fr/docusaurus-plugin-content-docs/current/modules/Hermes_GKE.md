@@ -15,8 +15,8 @@ l'expérience, conserve une mémoire d'une session à l'autre, et se connecte à
 plateformes de messagerie ainsi qu'à une API compatible OpenAI depuis un unique
 processus de passerelle
 ([documentation](https://hermes-agent.nousresearch.com/docs/)). Ce module déploie
-l'image officielle `nousresearch/hermes-agent` sur **GKE Autopilot** au-dessus de
-la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
+l'image officielle `nousresearch/hermes-agent` sur **GKE Autopilot** au-dessus du
+socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
 Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Hermes et sur la manière
@@ -24,7 +24,7 @@ de les explorer et de les exploiter depuis la console Google Cloud et la ligne d
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -34,7 +34,7 @@ Hermes s'exécute sous la forme d'un pod de passerelle à réplica unique sur GK
 Autopilot. Le déploiement assemble un ensemble délibérément restreint de services
 Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod de passerelle, 2 vCPU / 2 GiB par défaut, réplicas `min=1` / `max=1` |
 | État de l'agent | NFS autogéré (Services_GCP) | Monté sur `/opt/data` — configuration SQLite, sessions, compétences, mémoires. **Pas de Cloud SQL** |
@@ -53,7 +53,7 @@ Google Cloud :
   par l'agent.
 - **`max_instance_count` est validé à 1.** L'état de Hermes est en SQLite, qui
   suit un modèle à écrivain unique — un second réplica simultané corrompt la base
-  de données. La fondation déploie en outre les applications adossées à NFS avec
+  de données. Le socle déploie en outre les applications adossées à NFS avec
   la stratégie `Recreate`, afin que les mises à jour ne fassent jamais tourner
   brièvement deux pods sur le volume.
 - **Le serveur d'API compatible OpenAI écoute sur le port 8642** et exige
@@ -79,7 +79,7 @@ Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Hermes {#a-gke-autopilot--the-hermes-workload}
@@ -129,7 +129,7 @@ Cinq secrets peuvent exister par déploiement : `ANTHROPIC_API_KEY` (fourni par
 l'opérateur), `API_SERVER_KEY` (hexadécimal de 64 caractères généré
 automatiquement — le jeton bearer de l'API de la passerelle),
 `HERMES_DASHBOARD_BASIC_AUTH_PASSWORD` (généré automatiquement) et, en option,
-`OPENAI_API_KEY` et `TELEGRAM_BOT_TOKEN`. Ils apparaissent dans le namespace sous
+`OPENAI_API_KEY` et `TELEGRAM_BOT_TOKEN`. Ils apparaissent dans l'espace de noms sous
 forme de Secrets Kubernetes (SecretSync pour la plupart ; un Secret explicite pour
 `API_SERVER_KEY`).
 
@@ -206,7 +206,7 @@ disponibilité non authentifié échouerait toujours.
 - **Aucun job d'initialisation de base de données.** Hermes crée sa propre base de
   configuration SQLite sous `/opt/data` au premier démarrage ; il n'y a rien à
   amorcer et `initialization_jobs` est vide. `database_type = "NONE"` et
-  `enable_redis = false` sont codés en dur dans l'appel à la fondation.
+  `enable_redis = false` sont codés en dur dans l'appel au socle.
 - **L'accès à l'API exige l'`API_SERVER_KEY`.** Le point de terminaison compatible
   OpenAI sur le port 8642 s'authentifie avec un jeton bearer :
   ```bash
@@ -233,7 +233,7 @@ disponibilité non authentifié échouerait toujours.
   vide. Les autres connecteurs (Discord, Slack, WhatsApp, Signal) se configurent
   via la map `environment_variables` de l'opérateur.
 - **Les mises à jour de version utilisent `Recreate`.** Comme l'application est
-  adossée à NFS, la fondation remplace le pod en l'arrêtant puis en le
+  adossée à NFS, le socle remplace le pod en l'arrêtant puis en le
   redémarrant, au lieu d'une mise à jour progressive — une brève interruption de
   disponibilité pendant les mises à jour est attendue et protège la base SQLite
   d'un chevauchement à deux écrivains.
@@ -344,7 +344,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | Adresse IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -366,11 +366,11 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan.** Le fichier `validation.tf` de ce module et le
-> moteur de la fondation [App_GKE](App_GKE.md) valident les valeurs *et leurs
+> moteur du socle [App_GKE](App_GKE.md) valident les valeurs *et leurs
 > combinaisons* au moment du plan — `max_instance_count > 1`, `enable_nfs = false`,
 > un connecteur Telegram sans son jeton, ou OpenAI activé sans clé font tous
 > échouer le **plan** avec une erreur claire et nommée avant la création de toute
@@ -378,20 +378,20 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (validé) | Critique | Un second réplica simultané écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt tout l'état de l'agent. |
-| `enable_nfs` | `true` (validé) | Critique | Sans le montage NFS, `/opt/data` est un disque de pod éphémère — chaque redémarrage / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
-| `gcs_volumes` sur `/opt/data` | jamais | Critique | GCSFuse ne fournit ni verrouillage POSIX ni renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans le namespace. |
-| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | Élevé | Sans aucune clé de fournisseur, l'agent ne peut pas exécuter un seul tour. |
-| VM NFS pas à l'état `RUNNING` | attendre avant de déployer | Élevé | La découverte ne trouve aucun serveur → le module crée un NFS inline ou le montage échoue ; le pod reste bloqué en `ContainerCreating`. |
-| `startup_probe` / `liveness_probe` | TCP (par défaut) | Moyen | Une sonde HTTP contre le serveur d'API authentifié renvoie 401/403 indéfiniment — le pod ne devient jamais Ready et le déploiement reste bloqué. |
-| `min_instance_count` | `1` | Moyen | GKE n'a pas de mise à l'échelle à zéro, mais une réduction manuelle met les connecteurs hors ligne. |
-| `application_version` | épingler un tag de version | Moyen | `latest` est résolu à nouveau à chaque mise en miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
-| `enable_telegram` sans jeton | bloqué | Faible | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
+| `max_instance_count` | `1` (validé) | Critical | Un second réplica simultané écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt tout l'état de l'agent. |
+| `enable_nfs` | `true` (validé) | Critical | Sans le montage NFS, `/opt/data` est un disque de pod éphémère — chaque redémarrage / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
+| `gcs_volumes` sur `/opt/data` | jamais | Critical | GCSFuse ne fournit ni verrouillage POSIX ni renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | High | Sans aucune clé de fournisseur, l'agent ne peut pas exécuter un seul tour. |
+| VM NFS pas à l'état `RUNNING` | attendre avant de déployer | High | La découverte ne trouve aucun serveur → le module crée un NFS inline ou le montage échoue ; le pod reste bloqué en `ContainerCreating`. |
+| `startup_probe` / `liveness_probe` | TCP (par défaut) | Medium | Une sonde HTTP contre le serveur d'API authentifié renvoie 401/403 indéfiniment — le pod ne devient jamais Ready et le déploiement reste bloqué. |
+| `min_instance_count` | `1` | Medium | GKE n'a pas de mise à l'échelle à zéro, mais une réduction manuelle met les connecteurs hors ligne. |
+| `application_version` | épingler un tag de version | Medium | `latest` est résolu à nouveau à chaque mise en miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
+| `enable_telegram` sans jeton | bloqué | Low | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Hermes, partagée

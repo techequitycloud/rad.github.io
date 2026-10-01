@@ -73,7 +73,7 @@ Tout l'état d'Uptime Kuma — la base de données SQLite intégrée, l'historiq
 
 Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de montage NFS et CMEK.
 
-### C. Artifact Registry — l'image dupliquée {#c-artifact-registry--the-mirrored-image}
+### C. Artifact Registry — l'image mise en miroir {#c-artifact-registry--the-mirrored-image}
 
 Avec `container_image_source = "custom"` (la valeur par défaut), une étape Cloud Build construit une fine image personnalisée `FROM louislam/uptime-kuma`, en appliquant un correctif au code source qui fait passer le `journal_mode` SQLite codé en dur de `WAL` à `DELETE` — le verrouillage en mémoire partagée de WAL n'est pas sûr sur le volume `/app/data` adossé à NFS (voir la [Vue d'ensemble](#1-overview)). Avec `enable_image_mirroring = true` (la valeur par défaut), l'image construite est ensuite poussée dans l'Artifact Registry du projet, ce qui protège les déploiements des limites de débit et des pannes de Docker Hub.
 
@@ -146,7 +146,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -164,7 +164,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_image_source` | `custom` | Construit via Cloud Build une fine image personnalisée qui fait passer le `journal_mode` codé en dur de SQLite de `WAL` à `DELETE` pour la sécurité sur NFS (voir la Vue d'ensemble). Conservez `custom`. |
-| `container_image` | `louislam/uptime-kuma` | Image officielle en amont, dupliquée dans Artifact Registry. |
+| `container_image` | `louislam/uptime-kuma` | Image officielle en amont, mise en miroir dans Artifact Registry. |
 | `enable_image_mirroring` | `true` | Copie l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `cpu_limit` / `memory_limit` | `1000m` / `512Mi` | Largement suffisant pour des dizaines de moniteurs ; augmentez la mémoire pour un très grand nombre de moniteurs. |
 | `min_instance_count` | `0` | **Définissez `1` pour une supervision 24 h/24 et 7 j/7** — tant que le service est à zéro, aucune vérification ne s'exécute. |
@@ -196,7 +196,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 12 — Back-end de base de données {#group-12--database-backend}
+### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -258,7 +258,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `storage_buckets` | Buckets Cloud Storage créés (aucun par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -290,7 +290,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Uptime Kuma partagée avec la variante GKE est décrite dans **[UptimeKuma_Common](UptimeKuma_Common.md)**.
+Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Uptime Kuma partagée avec la variante GKE est décrite dans **[UptimeKuma_Common](UptimeKuma_Common.md)**.
 
 <!-- related-guides -->
 

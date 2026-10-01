@@ -29,10 +29,10 @@ guides de plateforme ([Jellystat_GKE](Jellystat_GKE.md),
 | Domaine | Fourni par Jellystat_Common | Où cela apparaît |
 |---|---|---|
 | Secret cryptographique | Génère `JWT_SECRET` (50 caractères alphanumériques) et le stocke dans **Secret Manager** | Injecté automatiquement ; récupérable via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Référence l'image officielle préconstruite `cyfershepard/jellystat` — aucun build personnalisé | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Référence l'image officielle préconstruite `cyfershepard/jellystat` — aucun build personnalisé | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base, l'utilisateur et les droits | Output `initialization_jobs` |
-| Stockage objet | Déclare un petit bucket **Cloud Storage** `backups` | Output `storage_buckets` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Stockage objet | Déclare un petit bucket **Cloud Storage** `backups` | Sortie `storage_buckets` |
 | Paramètres principaux | Fixe `container_port = 3000` (le port d'écoute codé en dur de Jellystat) | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/auth/isConfigured` | §Observabilité dans les guides de plateforme |
 
@@ -157,7 +157,7 @@ nécessiter de connexion.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un petit bucket **Cloud Storage** `backups` facultatif est déclaré ici et provisionné
 par le socle, pour la fonctionnalité d'export/archivage de sauvegarde de la base de

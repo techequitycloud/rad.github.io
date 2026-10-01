@@ -24,10 +24,10 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Accéder à la charge de travail en cours d'exécution, la vérifier et terminer la prise en main initiale (onboarding) de Cal.com.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et la base de données.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et la base de données.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -44,7 +44,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -63,14 +63,14 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne
    une base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager
    (`NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` générés automatiquement, ainsi que le
-   mot de passe de la base de données), construit/copie l'image Cal.com et exécute une
-   tâche ponctuelle `db-init` qui crée la base vide et le rôle. **Aucun bucket GCS n'est
-   créé** — Cal.com conserve tout son état dans PostgreSQL. La tâche ne crée pas le
+   mot de passe de la base de données), construit/copie l'image Cal.com et exécute un
+   job ponctuel `db-init` qui crée la base vide et le rôle. **Aucun bucket GCS n'est
+   créé** — Cal.com conserve tout son état dans PostgreSQL. Le job ne crée pas le
    schéma de l'application ; Cal.com exécute `prisma migrate deploy` à chaque démarrage,
    de sorte que le schéma est créé au premier démarrage du pod. Un premier déploiement
    prend environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -96,7 +96,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. Vérifiez que le service est sain. Le chemin de santé de Cal.com est `/`, qui renvoie
    HTTP 200 une fois que l'application a fini d'exécuter ses migrations Prisma au
-   premier démarrage — le schéma est créé **au démarrage**, et non par la tâche
+   premier démarrage — le schéma est créé **au démarrage**, et non par le job
    d'initialisation ; prévoyez donc plusieurs minutes sur un nouveau déploiement (la
    fenêtre de la sonde de démarrage est généreuse — jusqu'à ~15 minutes — précisément
    pour cette raison) :
@@ -120,7 +120,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — le deployment, les pods et l'autoscaler horizontal :
 
@@ -133,7 +133,7 @@ export REGION="us-central1"           # the region you deploy into
    sur **Update** sur la page de détails du déploiement — le module gère la
    spécification de la charge de travail ; la mise à l'échelle est donc une
    modification de configuration, et non un `kubectl scale` manuel (une modification
-   manuelle serait annulée lors de l'application suivante). Cal.com est sans état
+   manuelle serait annulée lors du prochain apply). Cal.com est sans état
    (`workload_type = Deployment`) ; l'affinité de session (`ClientIP`) est définie par
    défaut pour maintenir les requêtes d'un client sur le même pod. Activer
    `enable_redis` nécessite soit `redis_host`, soit `enable_nfs = true` pour le point de
@@ -144,7 +144,7 @@ export REGION="us-central1"           # the region you deploy into
    construite/copiée et une mise à jour progressive remplace les pods, en appliquant
    les éventuelles migrations Prisma en attente à leur premier démarrage.
 
-4. **Gérez les secrets et les tâches** — et sachez quels secrets sont immuables :
+4. **Gérez les secrets et les jobs** — et sachez quels secrets sont immuables :
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -178,7 +178,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -206,12 +206,12 @@ d'une version de Cal.com à l'autre.
   Next.js 16 plante par manque de mémoire et le pod ne devient jamais Ready.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL
   (PostgreSQL 15) est `RUNNABLE`, que le secret du mot de passe de la base a bien été
-  matérialisé dans le namespace et que `enable_cloudsql_volume = true` (le sidecar
+  matérialisé dans l'espace de noms et que `enable_cloudsql_volume = true` (le sidecar
   Auth Proxy fournit à Cal.com son point de terminaison PostgreSQL `127.0.0.1` — le
   désactiver avec une véritable base de données est bloqué par une vérification au
   moment du plan).
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod
-  (elle crée uniquement la base/le rôle vides — elle ne construit pas le schéma) :
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod
+  (il crée uniquement la base/le rôle vides — il ne construit pas le schéma) :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -235,10 +235,10 @@ tourner `CALENDSO_ENCRYPTION_KEY` ni `NEXTAUTH_SECRET` après le premier démarr
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL (tous les utilisateurs, types d'événements
+et l'espace de noms, la base de données Cloud SQL (tous les utilisateurs, types d'événements
 et réservations), les secrets Secret Manager (y compris `NEXTAUTH_SECRET` et
 `CALENDSO_ENCRYPTION_KEY`) et les images Artifact Registry. Les ressources appartenant à
 **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé, le registre) sont
@@ -254,5 +254,5 @@ gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé réussit ; terminer l'onboarding, restreindre l'inscription ouverte, définir `webapp_url` |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, respecter les secrets immuables, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'OOM, de base de données, de tâche d'initialisation, de planification, d'URL et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'OOM, de base de données, de job d'initialisation, de planification, d'URL et de récupération d'image |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

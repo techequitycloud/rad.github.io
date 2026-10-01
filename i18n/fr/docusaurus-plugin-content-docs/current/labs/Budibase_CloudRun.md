@@ -35,12 +35,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et créer le compte administrateur initial.
-- Effectuer les opérations du jour 2 : inspecter les révisions, comprendre pourquoi la
+- Effectuer les opérations du jour 2 — inspecter les révisions, comprendre pourquoi la
   mise à l'échelle est fixée à une seule instance, mettre à jour la version et gérer les secrets.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus
   courants, y compris une instabilité connue propre à la variante Cloud Run de ce module.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -55,7 +55,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -78,7 +78,7 @@ export REGION="us-central1"          # the region you deploy into
    Storage et sept secrets d'identifiants internes dans Secret Manager
    (`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`,
    `API_ENCRYPTION_KEY`, `REDIS_PASSWORD`, `COUCH_DB_PASSWORD`). Il n'y a **aucune
-   instance Cloud SQL** ni tâche d'initialisation de base de données — Budibase
+   instance Cloud SQL** ni job d'initialisation de base de données — Budibase
    provisionne lui-même ses CouchDB et MinIO intégrés au premier démarrage. Un premier
    déploiement prend environ **10–20 minutes**, essentiellement consacrées au build de
    l'image de conteneur.
@@ -128,7 +128,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente qui est saine) :
@@ -177,7 +177,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -241,7 +241,7 @@ démarrage).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run,
 les secrets Secret Manager, le bucket GCS et les images Artifact Registry (et, avec
@@ -260,4 +260,4 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, maintenir la mise à l'échelle fixée à 1/1, mettre à jour la version, gérer les secrets (ne jamais les faire tourner) |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision/sonde, la boucle OOM documentée due au manque de mémoire et le problème connu non résolu de relance d'instances sur cette variante |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module (les données éphémères de l'application sont perdues dans tous les cas) |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module (les données éphémères de l'application sont perdues dans tous les cas) |

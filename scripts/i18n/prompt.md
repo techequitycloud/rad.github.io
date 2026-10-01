@@ -87,6 +87,25 @@ agent) translating by hand follows it, so the whole site reads as one voice.
 | toil | travail opérationnel répétitif (toil) |
 | observability | observabilité |
 | Overview (as a page or label) | Vue d'ensemble |
+| job (Cloud Run job, Kubernetes job, initialization job) | job (masculine: un job d'initialisation) |
+| namespace (Kubernetes) | espace de noms |
+| replica | réplica (masculine) |
+| image mirroring | mise en miroir des images |
+| liveness probe / health probe | sonde de vivacité / sonde de santé |
+| readiness probe | sonde de disponibilité (readiness) |
+| uptime check | test de disponibilité |
+| monitoring | surveillance (never "supervision", except product names) |
+| inline (resource created inside the module) | intégré(e) (inline) -- never "en ligne", which means online |
+| Terraform apply / first apply / re-apply | apply / premier apply / nouvel apply -- never "application" |
+| Foundation (module) | socle / module socle |
+| Outputs (section heading) | Sorties |
+| Default (table column) | Valeur par défaut |
+| sensible defaults | valeurs par défaut judicieuses |
+
+Keep in English: risk labels in tables (Critical, High, Medium, Low), Google
+Cloud product names (Cloud SQL for PostgreSQL, not "Cloud SQL pour"), and
+Google Cloud Console menu paths (Security, Network services, Load balancing),
+which must match the labels the reader sees in the console.
 
 Module reference pages are mostly settings tables: setting names, types and
 defaults stay as written; translate the descriptions.

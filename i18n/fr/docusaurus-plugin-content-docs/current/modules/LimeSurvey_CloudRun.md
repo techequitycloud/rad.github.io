@@ -41,7 +41,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `ADMIN_PASSWORD` généré automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire et InnoDB est forcé.** Le moteur est imposé par la
   couche applicative partagée (`database_type = MYSQL_8_0`). InnoDB est forcé car
@@ -176,7 +176,7 @@ automatiquement et stocké dans Secret Manager, puis injecté comme variable
 d'environnement secrète. Le mot de passe de la base de données est géré séparément
 par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~admin-password"
@@ -193,7 +193,7 @@ public nécessaire aux répondants anonymes. Un équilibreur de charge HTTPS ext
 avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les
 paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -208,8 +208,8 @@ Les journaux du conteneur sont envoyés à Cloud Logging ; les métriques de Clo
 et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et
 des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -219,8 +219,8 @@ des règles d'alerte en option.
 
 ## 3. Comportement de l'application LimeSurvey {#3-limesurvey-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Elle se connecte via
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Il se connecte via
   le socket Cloud SQL (s'il est monté) ou, à défaut, en TCP sur IP privée, puis crée
   de manière idempotente la base de données applicative et l'utilisateur, accorde les
   privilèges et vérifie que l'utilisateur de l'application peut se connecter. La
@@ -298,7 +298,7 @@ avec leur comportement standard.
 | `timeout_seconds` | `300` | Durée maximale d'une requête ; augmentez-la pour les imports CSV volumineux. |
 | `enable_cloudsql_volume` | `false` | `false` utilise le TCP sur IP privée vers MySQL ; définissez `true` pour le socket de l'Auth Proxy. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -364,14 +364,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, un `redis_port`/`backup_retention_days` hors plage, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `DB_MYSQL_ENGINE` / `DBENGINE` (auto `InnoDB`) | Ne jamais définir MyISAM | Critical | Cloud SQL désactive MyISAM ; le `CREATE TABLE … ENGINE=MyISAM` de l'installateur échoue et chaque page renvoie une erreur 500 (« table settings_global not found »). |
 | `database_type` | `MYSQL_8_0` | Critical | LimeSurvey nécessite MySQL ; passer à Postgres/None empêche le démarrage. |

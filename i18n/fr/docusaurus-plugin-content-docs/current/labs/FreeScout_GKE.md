@@ -30,15 +30,15 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours
   d'exécution, y compris au compte administrateur créé automatiquement au premier lancement.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Démonter proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -55,7 +55,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -74,12 +74,12 @@ export REGION="us-central1"           # the region you deploy into
    du déploiement avec les journaux en temps réel.
 
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot,
-   provisionne une base de données Cloud SQL pour **MySQL 8.0** avec ses secrets
+   provisionne une base de données Cloud SQL for **MySQL 8.0** avec ses secrets
    Secret Manager (la clé Laravel `APP_KEY`, le mot de passe `ADMIN_PASS`
    initial et le mot de passe de la base de données), un montage NFS Filestore
    pour les pièces jointes (activé par défaut), un bucket Cloud Storage pour les
    fichiers téléversés, construit l'image de conteneur personnalisée minimale
-   (`FROM tiredofit/freescout`) et exécute une tâche ponctuelle d'initialisation
+   (`FROM tiredofit/freescout`) et exécute un job ponctuel d'initialisation
    de la base de données. Les premiers déploiements prennent environ
    **20–35 minutes** (la création de Cloud SQL représente l'essentiel de ce
    temps).
@@ -202,7 +202,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour Logs Explorer :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -229,7 +229,7 @@ qui ne changent pas d'une version de FreeScout à l'autre.
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Échecs de migration au démarrage :** `php artisan migrate --force`
-  s'exécute à chaque démarrage du conteneur (il n'existe pas de tâche de
+  s'exécute à chaque démarrage du conteneur (il n'existe pas de job de
   migration distincte) ; une migration en échec se manifeste par une boucle de
   plantage sur le pod — lisez les journaux du conteneur ci-dessus pour trouver
   l'erreur Laravel/PDO.
@@ -240,7 +240,7 @@ qui ne changent pas d'une version de FreeScout à l'autre.
   ```bash
   kubectl logs -n "$NS" <pod> -c cloud-sql-proxy
   ```
-- **Échec de la tâche db-init :** inspectez la tâche et les journaux de son pod :
+- **Échec du job db-init :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -267,7 +267,7 @@ jamais faire tourner
 
 ---
 
-## Tâche 6 — Démonter [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes
 et son espace de noms, la base de données Cloud SQL, les secrets Secret Manager,
@@ -285,5 +285,5 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; le contrôle d'état réussit ; se connecter avec le compte administrateur créé automatiquement et changer le mot de passe |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version (déploiement Recreate), gérer les secrets et le stockage (ne jamais faire tourner `APP_KEY`), accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de migration, de base de données, de tâche d'initialisation, de planification et de récupération d'image |
-| 6 — Démonter | Automatisé | La suppression (Trash) retire toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de migration, de base de données, de job d'initialisation, de planification et de récupération d'image |
+| 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

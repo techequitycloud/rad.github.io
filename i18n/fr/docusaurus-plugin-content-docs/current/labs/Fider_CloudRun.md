@@ -27,11 +27,11 @@ ce lab ne reprend volontairement pas ce détail, afin de rester exact dans la du
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service et effectuer la configuration initiale du site et de l'administrateur de Fider.
-- Réaliser les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et la
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et la
   base de données.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
@@ -48,10 +48,10 @@ ce lab ne reprend volontairement pas ce détail, afin de rester exact dans la du
 - **gcloud CLI** authentifié : `gcloud auth login` et `gcloud auth application-default login`.
 - Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
 - **Vous apportez votre propre projet ?** Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes affichées en tant que Owner du projet, puis **Verify**) et d'attribuer le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous ne nécessite ni l'un ni l'autre.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du locataire et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -132,7 +132,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur
    la page de détails du déploiement — le module est propriétaire de la spécification du service, la mise à l'échelle est donc
    une modification de configuration, et non une modification manuelle avec `gcloud` (une modification manuelle serait
-   annulée lors de l'application suivante). Fider n'a pas de processus d'arrière-plan ;
+   annulée lors du prochain apply). Fider n'a pas de processus d'arrière-plan ;
    `min_instance_count = 0` (mise à l'échelle jusqu'à zéro) est donc sans risque pour les données si vous préférez accepter
    un démarrage à froid en échange d'un coût plus faible ; la valeur par défaut `min=1` avec `cpu_always_allocated=true`
    le maintient au contraire constamment actif.
@@ -175,13 +175,13 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou l'Explorateur de journaux :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
    Lorsque l'e-mail est désactivé, les liens d'inscription et d'invitation apparaissent ici — c'est le comportement attendu,
    et non une erreur.
@@ -254,7 +254,7 @@ Filestore, le registre) sont gérées séparément et ne sont pas supprimées ic
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|

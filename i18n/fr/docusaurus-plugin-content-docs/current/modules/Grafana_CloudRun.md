@@ -32,7 +32,7 @@ vie du déploiement — reportez-vous au
 Grafana s'exécute sous la forme d'un conteneur Go sur Cloud Run v2. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go, 1 vCPU / 2 GiB par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Grafana nécessite une base de données relationnelle ; SQLite n'est pas sûr pour les déploiements multi-instances |
@@ -42,7 +42,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe de la base de données géré par le socle ; identifiants administrateur injectés via une variable d'environnement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Grafana conserve les tableaux de bord, les
   utilisateurs, les alertes et l'état des plugins dans une base de données
@@ -51,7 +51,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **`GF_DATABASE_TYPE=postgres` est injecté automatiquement.** Sans lui, Grafana
   revient à SQLite même lorsque toutes les autres variables `GF_DATABASE_*` sont
   présentes.
-- **Aucune tâche d'initialisation de la base de données n'est nécessaire.** Grafana
+- **Aucun job d'initialisation de la base de données n'est nécessaire.** Grafana
   migre automatiquement son schéma au premier démarrage lorsqu'il se connecte à
   l'instance PostgreSQL provisionnée.
 - **Le mot de passe administrateur n'est PAS généré automatiquement.** Grafana est
@@ -96,7 +96,7 @@ Grafana stocke toutes les données de l'application (tableaux de bord, utilisate
 organisations, règles d'alerte, état des plugins) dans une instance gérée Cloud SQL
 for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth
 Proxy** sur un socket Unix. Grafana migre automatiquement son schéma au démarrage —
-aucune tâche d'initialisation distincte n'est requise.
+aucun job d'initialisation distinct n'est requis.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
   sauvegardes, les flags et les métriques.
@@ -148,7 +148,7 @@ Le mot de passe de la base de données est stocké dans Secret Manager et inject
 le service à l'exécution. Le mot de passe administrateur de Grafana n'est pas généré
 automatiquement — injectez-le via `secret_environment_variables`.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -167,7 +167,7 @@ HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être aj
 par-dessus. `ingress_settings` et `vpc_egress_setting` déterminent quelles sources de
 trafic peuvent atteindre le service et comment le trafic sortant est acheminé.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -183,8 +183,8 @@ Run et de Cloud SQL sont envoyées vers Cloud Monitoring. Grafana expose `/api/h
 comme point de terminaison de santé, ciblé à la fois par les sondes de démarrage et de
 vivacité, ainsi que par un test de disponibilité facultatif.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -248,7 +248,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -272,12 +272,12 @@ avec leur comportement standard.
 | `container_port` | `3000` | Grafana écoute sur le port 3000. |
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS et GCS Fuse. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Duplique l'image Grafana dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Grafana dans Artifact Registry avant le déploiement. |
 | `cpu_always_allocated` | `false` | Facturation à la requête par défaut. Ne définissez `true` que si l'évaluation des règles d'alerte interne au processus est activée, afin qu'elle puisse s'exécuter selon sa planification sans requête entrante. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -346,7 +346,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement supplémentaires sous lesquels les informations de connexion sont exposées. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -359,7 +359,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `startup_probe` | `/api/health`, HTTP, délai de 30 s, 12 échecs | Sonde de démarrage HTTP sur le point de terminaison de santé de Grafana. |
 | `liveness_probe` | `/api/health`, HTTP, délai de 60 s, 3 échecs | Sonde de vivacité. |
-| `uptime_check_config` | désactivé, `/api/health` | Test de disponibilité Cloud Monitoring. À activer pour la supervision en production. |
+| `uptime_check_config` | désactivé, `/api/health` | Test de disponibilité Cloud Monitoring. À activer pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
@@ -371,7 +371,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -400,7 +400,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `grafana-data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -411,12 +411,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critical | Grafana est livré avec les valeurs par défaut `admin`/`admin`. Déployer sans définir de mot de passe robuste expose l'interface d'administration. |
 | `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critical | La valeur `"true"` expose tous les tableaux de bord aux utilisateurs non authentifiés. |
@@ -436,8 +436,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Grafana partagée avec la variante GKE est décrite dans
 **[Grafana_Common](Grafana_Common.md)**.
 

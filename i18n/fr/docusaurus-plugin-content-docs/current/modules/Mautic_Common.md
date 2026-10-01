@@ -55,7 +55,7 @@ des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Mautic nécessite **MySQL 8.0** ; le moteur est fixe et PostgreSQL n'est pas pris en
 charge. Lors du premier déploiement, un job ponctuel se connecte à Cloud SQL via
@@ -123,7 +123,7 @@ détournent de ce chemin — pour deux raisons différentes :
 
 ---
 
-## 6. Stockage objet {#6-object-storage}
+## 6. Stockage d'objets {#6-object-storage}
 
 Un bucket **Cloud Storage** dédié aux médias est déclaré ici et provisionné par le
 socle, qui accorde également l'accès au compte de service de la charge de travail.

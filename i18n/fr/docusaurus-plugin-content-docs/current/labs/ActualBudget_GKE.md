@@ -15,11 +15,11 @@ description: "Lab pratique : déployer ActualBudget sur GKE Autopilot dans votre
 
 Une application de budget personnel fondée sur la méthode des enveloppes pour suivre les revenus et les dépenses. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **ActualBudget on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit ActualBudget. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit ActualBudget. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -42,7 +42,7 @@ Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Googl
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -55,7 +55,7 @@ export REGION="us-central1"           # the region you deploy into
 
 1. Ouvrez **Solutions → Solution Catalog → RAD modules** dans la navigation supérieure de la plateforme RAD, ouvrez **ActualBudget (GKE)** depuis la liste **Platform Modules** pour démarrer la configuration, choisissez **Configuration Form** sous *How would you like to configure this deployment?* (le formulaire s'ouvre sur le **Conversational Assistant** si vous détenez des crédits achetés ou si vous êtes partenaire ou administrateur), renseignez `project_id` et passez en revue les paramètres. Ne configurez que ce dont vous avez besoin — le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_GKE) documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne un bucket de données GCS et construit l'image du conteneur. Aucune base de données ni tâche d'initialisation n'est nécessaire. Les premiers déploiements prennent environ **10–20 minutes** (la construction de l'image en représente l'essentiel).
+2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne un bucket de données GCS et construit l'image du conteneur. Aucune base de données ni job d'initialisation n'est nécessaire. Les premiers déploiements prennent environ **10–20 minutes** (la construction de l'image en représente l'essentiel).
 
 3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
@@ -70,9 +70,9 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
-1. **Récupérez le service et vérifiez la sonde de liveness.** `service_type` vaut par défaut `LoadBalancer` pour ce module ; une IP externe est donc provisionnée d'office (son attribution peut prendre une minute ou deux). Tant que l'adresse est en attente — ou si vous avez délibérément défini `service_type = "ClusterIP"` — utilisez une redirection de port pour une vérification rapide :
+1. **Récupérez le service et vérifiez la sonde de vivacité.** `service_type` vaut par défaut `LoadBalancer` pour ce module ; une IP externe est donc provisionnée d'office (son attribution peut prendre une minute ou deux). Tant que l'adresse est en attente — ou si vous avez délibérément défini `service_type = "ClusterIP"` — utilisez une redirection de port pour une vérification rapide :
 
    ```bash
    kubectl get svc -n "$NS"
@@ -86,7 +86,7 @@ export REGION="us-central1"           # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:5006/"
    ```
 
-   Attendez-vous à une réponse HTTP 200 — il s'agit du même chemin racine que celui vérifié par les sondes de démarrage et de liveness du déploiement. Pour un accès externe durable, définissez `service_type = "LoadBalancer"` via **Update** sur la page de détails du déploiement, puis récupérez l'IP externe :
+   Attendez-vous à une réponse HTTP 200 — il s'agit du même chemin racine que celui vérifié par les sondes de démarrage et de vivacité du déploiement. Pour un accès externe durable, définissez `service_type = "LoadBalancer"` via **Update** sur la page de détails du déploiement, puis récupérez l'IP externe :
 
    ```bash
    ENDPOINT=$(kubectl get svc -n "$NS" "$SVC" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -110,7 +110,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -129,7 +129,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire des pods, le nombre de redémarrages et les métriques de requêtes. Lorsqu'ils sont activés, consultez Monitoring → Uptime checks et Alerting → Policies.
@@ -163,7 +163,7 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Charge de travail GKE et bucket GCS provisionnés ; image construite et déployée |
-| 2 — Accès et vérification | Manuel | Le point de terminaison de liveness renvoie 200 ; l'interface de budget se charge dans le navigateur |
+| 2 — Accéder et vérifier | Manuel | Le point de terminaison de liveness renvoie 200 ; l'interface de budget se charge dans le navigateur |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les défaillances de pods, les erreurs de récupération d'image et les problèmes d'autorisation |

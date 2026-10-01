@@ -32,7 +32,7 @@ FreeScout s'exécute sous la forme d'une unique charge de travail web PHP (nginx
 php-fpm), construite comme une image personnalisée légère `FROM tiredofit/freescout`.
 Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods PHP sur le port 80, 1 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — FreeScout ne prend en charge ni PostgreSQL ni d'autres moteurs |
@@ -63,7 +63,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
   `/var/lib/freescout`.
 - **L'affinité de session vaut `ClientIP` par défaut**, ce qui maintient les requêtes
   d'un client sur le même pod — important pour l'expérience de session PHP/d'interface.
-- **Au moins 1 réplique est maintenue** (`min_instance_count = 1`, `max_instance_count = 1`)
+- **Au moins 1 réplica est maintenu** (`min_instance_count = 1`, `max_instance_count = 1`)
   afin que l'endpoint du helpdesk reste toujours joignable.
 - **La santé est signalée sur `GET /`.** Il n'existe pas d'endpoint de santé JSON
   dédié ; la sonde de démarrage est TCP et la sonde de vivacité est `GET /`.
@@ -74,7 +74,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail FreeScout {#a-gke-autopilot--the-freescout-workload}
@@ -185,7 +185,7 @@ Le nom du secret contenant le mot de passe de la base de données figure dans le
 [Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store
 CSI et la rotation.
 
-### G. Réseau et ingress {#g-networking--ingress}
+### G. Réseau et entrée {#g-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par
@@ -281,7 +281,7 @@ par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; conservez 1 afin que l'endpoint reste toujours joignable. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; conservez 1 afin que l'endpoint reste toujours joignable. |
 | `max_instance_count` | `1` | Conservez 1 tant que le fonctionnement multi-pods n'est pas confirmé comme sûr (stockage NFS, base de données partagée). |
 | `container_port` | `80` | FreeScout (nginx/php-fpm) écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy pour MySQL en boucle locale (`DB_HOST = 127.0.0.1`) ; conservez `true`. |
@@ -349,7 +349,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -375,7 +375,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
 > (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
@@ -383,7 +383,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, des `quota_memory_*` fournis sous forme d'entiers nus, `stateful_pvc_enabled` avec `workload_type = "Deployment"`, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
 | `database_type` | `MYSQL_8_0` | Critical | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
@@ -397,7 +397,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `memory_limit` | `2Gi` | High | Une valeur trop basse provoque l'arrêt OOM du worker PHP sous la charge des pièces jointes. |
 | `max_instance_count` | `1` | High | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les pods. |
 | `enable_iap` | uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris les rappels d'intégration entrants. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 | `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Medium | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
 | `application_version` | À fixer en production | Medium | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |

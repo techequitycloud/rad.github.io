@@ -40,7 +40,7 @@ de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `SALT` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Langfuse v2 (Postgres uniquement) est épinglé.** L'image est construite
   `FROM langfuse/langfuse:2` via l'ARG de build `LANGFUSE_VERSION`. Même
@@ -103,7 +103,7 @@ Langfuse stocke toutes les données applicatives (traces, observations, scores,
 prompts, utilisateurs, projets, clés d'API) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le service s'y connecte de façon privée via le **Cloud SQL Auth
 Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Au premier
-déploiement, une tâche d'initialisation crée le rôle applicatif et la base de
+déploiement, un job d'initialisation crée le rôle applicatif et la base de
 données ; Langfuse applique ensuite son schéma via `prisma migrate deploy` au
 démarrage.
 
@@ -174,7 +174,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run
-et Cloud SQL à Cloud Monitoring, avec des vérifications de disponibilité et des
+et Cloud SQL à Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte facultatives.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -187,10 +187,10 @@ règles d'alerte facultatives.
 
 ## 3. Comportement de l'application Langfuse {#3-langfuse-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` à l'aide de `postgres:15-alpine`. Elle se
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` à l'aide de `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente le rôle
-  applicatif et la base de données, puis accorde les privilèges. Elle ne crée **pas**
+  applicatif et la base de données, puis accorde les privilèges. Il ne crée **pas**
   les tables — la tâche peut être relancée sans risque.
 - **Migrations Prisma au démarrage.** Le point d'entrée cloud compose `DATABASE_URL`,
   puis délègue au démarrage propre de Langfuse, qui exécute `prisma migrate deploy`
@@ -273,11 +273,11 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Duplique l'image Langfuse dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Langfuse dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements par étapes. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -310,7 +310,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 9 — Équilibreur de charge, CDN et conservation des images {#group-9--load-balancer-cdn--image-retention}
+### Groupe 9 — Équilibreur de charge, CDN et rétention des images {#group-9--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -347,7 +347,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -400,7 +400,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -411,14 +411,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives, obligeant chacun à se reconnecter immédiatement. |
 | `SALT` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'attribution de nouvelles clés. |
@@ -438,8 +438,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Langfuse partagée avec la variante GKE est décrite dans
 **[Langfuse_Common](Langfuse_Common.md)**.
 

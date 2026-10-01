@@ -41,7 +41,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Cinq secrets cryptographiques générés automatiquement, plus le mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** La couche de données de Strapi est câblée sur
   PostgreSQL ; MySQL et `NONE` empêchent le démarrage.
@@ -99,7 +99,7 @@ l'environnement d'exécution et la répartition du trafic.
 Strapi stocke toutes les données applicatives (types de contenu, contenu,
 utilisateurs, jetons d'API) dans une instance gérée Cloud SQL for PostgreSQL 15. Le
 service se connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket
-Unix (sans IP publique). Lors du premier déploiement, une tâche Cloud Run
+Unix (sans IP publique). Lors du premier déploiement, un job Cloud Run
 d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
@@ -141,7 +141,7 @@ stockés dans Secret Manager : `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT
 passe de la base de données y est également stocké. Tous les secrets sont injectés
 dans le service à l'exécution.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -172,7 +172,7 @@ Le service est accessible par défaut à son URL `run.app`. Un équilibreur de c
 HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ;
 les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -187,8 +187,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -198,11 +198,11 @@ disponibilité et des règles d'alerte en option.
 
 ## 3. Comportement de l'application Strapi {#3-strapi-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche Cloud Run
-  `db-init` s'exécute à chaque apply avec `postgres:15-alpine`. Elle crée de manière
+- **Configuration de la base de données au premier déploiement.** Un job Cloud Run
+  `db-init` s'exécute à chaque apply avec `postgres:15-alpine`. Il crée de manière
   idempotente la base de données et l'utilisateur Strapi, accorde les privilèges
   nécessaires (dont `CREATEDB`) et signale au Cloud SQL Auth Proxy de s'arrêter
-  proprement. Elle peut être relancée sans risque.
+  proprement. Il peut être relancé sans risque.
 - **Fournisseur de médias GCS.** `GCS_BUCKET_NAME` et `GCS_BASE_URL` sont injectées
   automatiquement dans le conteneur. Le fichier `config/plugins.js` de Strapi détecte
   ces variables et bascule vers le fournisseur de téléversement GCS pour tous les
@@ -247,7 +247,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -279,7 +279,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements canary/blue-green. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions Cloud Run à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -316,7 +316,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base pour une instance créée en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base pour une instance créée en mode intégré (inline). |
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. |
 
 ### Groupe 10 — Équilibreur de charge, CDN et Cloud Armor {#group-10--load-balancer-cdn--cloud-armor}
@@ -349,12 +349,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement alias supplémentaires pour les informations de connexion. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[{ name="db-init", execute_on_apply=true }]` | La tâche intégrée `db-init` s'exécute à chaque apply. Fournissez une liste non vide pour la remplacer. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes déclenchées par Cloud Scheduler. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run déployés conjointement (par ex. workers d'arrière-plan). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -375,7 +375,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -404,7 +404,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -415,12 +415,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEYS` / `JWT_SECRET` / `ADMIN_JWT_SECRET` / `API_TOKEN_SALT` (générés automatiquement) | générés une fois, jamais modifiés | Critical | Leur rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API actifs ; tous les utilisateurs sont déconnectés et toutes les intégrations clientes cessent de fonctionner. |
 | `database_type` | `POSTGRES_15` | Critical | Strapi requiert PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |

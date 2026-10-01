@@ -28,11 +28,11 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Domaine | Fourni par Kimai_Common | Où cela apparaît |
 |---|---|---|
 | Secrets | Génère `APP_SECRET` (clé de signature CSRF/session de Symfony) et `ADMINPASS` (mot de passe administrateur initial), tous deux stockés dans **Secret Manager** | Injectés comme variables d'environnement secrètes du conteneur ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Un build personnalisé léger `FROM kimai/kimai2:<tag>` avec un point d'entrée wrapper qui compose `DATABASE_URL` à l'exécution ; construit via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Un build personnalisé léger `FROM kimai/kimai2:<tag>` avec un point d'entrée wrapper qui compose `DATABASE_URL` à l'exécution ; construit via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** (`MYSQL_8_0`) comme moteur | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit un unique job `db-init` (crée la base de données, l'utilisateur et les droits) — pas de job de migration distinct | Output `initialization_jobs` |
+| Amorçage de la base de données | Définit un unique job `db-init` (crée la base de données, l'utilisateur et les droits) — pas de job de migration distinct | Sortie `initialization_jobs` |
 | Paramètres principaux | Définit `ADMINMAIL` et la variable d'environnement en minuscules `memory_limit` ; laisse `DATABASE_URL` entièrement à la composition à l'exécution | Comportement de l'application dans les guides des plateformes |
-| Stockage objet | Un bucket GCS `storage`, éventuellement monté via GCS FUSE sur `/opt/kimai/var/data` | Output `storage_buckets` |
+| Stockage objet | Un bucket GCS `storage`, éventuellement monté via GCS FUSE sur `/opt/kimai/var/data` | Sortie `storage_buckets` |
 | Contrôles de santé | Déclare les valeurs par défaut de `startup_probe`/`liveness_probe` (`GET /en/login`) que les deux variantes héritent telles quelles | §Observabilité dans les guides des plateformes |
 
 ---
@@ -218,7 +218,7 @@ plateforme.
 
 ---
 
-## 8. Stockage objet {#8-object-storage}
+## 8. Stockage d'objets {#8-object-storage}
 
 Cette couche provisionne un bucket GCS via `storage_buckets`
 (`name_suffix = "storage"`, classe `STANDARD`, `force_destroy = true`, prévention

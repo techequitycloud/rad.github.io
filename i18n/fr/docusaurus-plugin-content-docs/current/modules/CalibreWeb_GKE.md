@@ -13,7 +13,7 @@ Calibre-Web est une application web auto-hébergée et épurée permettant de pa
 télécharger des livres numériques depuis une bibliothèque Calibre existante — elle fournit une
 liseuse dans le navigateur, un flux OPDS, la gestion des utilisateurs et la synchronisation
 Kobo, au-dessus de l'image `calibre-web` amont de LinuxServer.io. Ce module déploie
-Calibre-Web sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui
+Calibre-Web sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée ; `CalibreWeb_GKE`
 est une fine surcouche qui fournit la configuration propre à Calibre-Web (image, ports,
 sondes, raccordement du stockage) et transmet tout le reste tel quel.
@@ -22,7 +22,7 @@ Ce guide se concentre sur les services cloud qu'utilise Calibre-Web et sur la ma
 explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les
 mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que
+vie du déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que
 de les répéter ici.
 
 ---
@@ -35,7 +35,7 @@ de la bibliothèque Calibre, la configuration, le cache et les journaux) réside
 fichiers SQLite internes sous `/config`. Le déploiement assemble un ensemble restreint de
 services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Calibre-Web sur le port 8083, 1 vCPU / 1 GiB par défaut |
 | Type de charge de travail | **StatefulSet** Kubernetes | Sélectionné automatiquement parce que `stateful_pvc_enabled = true` par défaut |
@@ -67,9 +67,9 @@ services Google Cloud :
   synchronisation externe.
 - **Aucune base de données.** `database_type = "NONE"` ; il n'y a pas de job `db-init` et
   aucune des variables liées à la base de données de ce module n'est référencée.
-- **Pas de Redis.** `enable_redis` est déclaré pour refléter les variables de la fondation,
+- **Pas de Redis.** `enable_redis` est déclaré pour refléter les variables du socle,
   mais il n'est **pas transmis** — `main.tf` impose en dur `enable_redis = false` dans l'appel
-  à la Foundation, quelle que soit la valeur de la variable.
+  au socle, quelle que soit la valeur de la variable.
 - **`service_type` vaut par défaut `ClusterIP`, et non `LoadBalancer`.** Combiné à la valeur
   par défaut `application_domains = []`, le déploiement n'a **aucun accès externe configuré
   d'emblée**, même si `enable_custom_domain = true` par défaut — la Gateway est provisionnée
@@ -85,8 +85,8 @@ services Google Cloud :
   `/config` que lorsque `stateful_pvc_enabled = false` (mode Deployment). Avec le chemin
   StatefulSet/PVC par défaut, le bucket existe mais n'est pas rattaché à la charge de travail.
 - **La version de l'image est épinglée via un ARG de build propre à l'application.** Le
-  Dockerfile lit `CALIBREWEB_VERSION` (et non le `APP_VERSION` générique qu'injecte la
-  Foundation) ; lorsque `application_version = "latest"`, le build est épinglé sur une version
+  Dockerfile lit `CALIBREWEB_VERSION` (et non le `APP_VERSION` générique qu'injecte le
+  socle) ; lorsque `application_version = "latest"`, le build est épinglé sur une version
   connue pour fonctionner, `0.6.24`.
 
 ---
@@ -96,7 +96,7 @@ services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — le StatefulSet Calibre-Web {#a-gke-autopilot--the-calibre-web-statefulset}
 
@@ -177,7 +177,7 @@ Remarque : le secret injecté n'est pas appliqué automatiquement comme identifi
 Calibre-Web — voir §3 pour les identifiants réels de la première connexion. Consultez
 [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 `service_type` vaut par défaut **`ClusterIP`** (interne uniquement), et
 `enable_custom_domain = true` par défaut provisionne une ressource Kubernetes Gateway API —
@@ -222,8 +222,8 @@ Cloud Monitoring. Les tests de disponibilité sont désactivés par défaut
 - **Image de type fine surcouche, sans point d'entrée personnalisé.** Le Dockerfile est
   `FROM lscr.io/linuxserver/calibre-web:${CALIBREWEB_VERSION}` sans script de point d'entrée
   ajouté — l'initialisation amont de LinuxServer, fondée sur s6, s'exécute telle quelle.
-  `image_source = "custom"` est défini uniquement pour que la Foundation construise ou
-  réplique l'image dans Artifact Registry.
+  `image_source = "custom"` est défini uniquement pour que le socle construise ou
+  mette en miroir l'image dans Artifact Registry.
 - **Organisation du stockage au premier démarrage.** L'image LinuxServer abandonne ses
   privilèges au profit de `PUID=1000`/`PGID=1000` et conserve tout son état sous `/config`
   (`app.db`, le `metadata.db` de Calibre, la configuration, le cache, les journaux) ; la
@@ -266,7 +266,7 @@ valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `calibreweb` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_version` | `latest` | Tag `lscr.io/linuxserver/calibre-web` utilisé comme base du build personnalisé ; `latest` est épinglé sur un tag connu pour fonctionner (`0.6.24`) au moment du build via l'ARG de build propre à l'application `CALIBREWEB_VERSION`. |
@@ -275,18 +275,18 @@ valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | 1 vCPU. |
 | `memory_limit` | `1Gi` | Limite de mémoire du conteneur Calibre-Web. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Conservez 1 — voir la contrainte de mise à l'échelle au §3 (scission des PVC par réplica). |
 | `container_port` | `8083` | Fixé par `CalibreWeb_Common` ; la variable du module n'est pas transmise à App_GKE et n'a aucun effet. |
 | `enable_cloudsql_volume` | `false` | Laissé désactivé à juste titre — Calibre-Web n'utilise pas Cloud SQL. |
-| `enable_image_mirroring` | `true` | Réplique l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Accessible depuis l'extérieur par défaut. Définissez `ClusterIP` pour un accès interne uniquement — voir au §2.E le piège d'ingress que cela crée en combinaison avec `application_domains = []`. |
 | `workload_type` | `null` → `StatefulSet` | Résolu automatiquement parce que `stateful_pvc_enabled = true`. |
@@ -294,7 +294,7 @@ valeurs par défaut standard.
 
 ### Groupe 7 — Configuration du StatefulSet {#group-7--statefulset-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `true` | Provisionne un PVC bloc par pod — requis, car gcsfuse corromprait les fichiers SQLite de Calibre-Web. |
 | `stateful_pvc_size` | `20Gi` | Taille de `/config` et de la bibliothèque Calibre. |
@@ -304,51 +304,51 @@ valeurs par défaut standard.
 
 ### Groupe 9 — PodDisruptionBudget {#group-9--poddisruptionbudget}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Activé par défaut (contrairement à la plupart des modules). |
 | `pdb_min_available` | `1` | Avec `max_instance_count = 1`, un PDB de `1` bloque de fait l'éviction volontaire de l'unique pod tant qu'il ne peut pas être replanifié. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` (depuis `CalibreWeb_Common`) | HTTP `/` | Page de connexion, `200`, sans authentification — réussit dès que le serveur répond. |
 | `uptime_check_config.enabled` | `false` | Les tests de disponibilité sont désactivés par défaut. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | NFS n'est **pas** utilisé par Calibre-Web — la persistance passe par le PVC du StatefulSet (ou GCS FUSE en mode Deployment). |
 | `network_tags` | `["nfsserver"]` | Inclut par défaut le tag `nfsserver` bien que NFS soit désactivé par défaut ; sans conséquence, mais pertinent uniquement si vous activez NFS séparément. |
 
 ### Groupe 14 — Cloud Storage {#group-14--cloud-storage}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne toujours le bucket suffixé `storage`, mais voir §2.C — il n'est pas monté tant que `stateful_pvc_enabled = true` (la valeur par défaut). |
 
 ### Groupe 15 — Redis {#group-15--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` (déclaré) | **Inerte** — `main.tf` impose en dur `enable_redis = false` dans l'appel à la Foundation, quelle que soit la valeur de cette variable. Calibre-Web n'utilise pas Redis. |
-| `redis_host` / `redis_port` | `""` / `6379` | Déclarés pour refléter les variables de la fondation, mais **pas du tout transmis** à App_GKE. |
+| `enable_redis` | `true` (déclaré) | **Inerte** — `main.tf` impose en dur `enable_redis = false` dans l'appel au socle, quelle que soit la valeur de cette variable. Calibre-Web n'utilise pas Redis. |
+| `redis_host` / `redis_port` | `""` / `6379` | Déclarés pour refléter les variables du socle, mais **pas du tout transmis** à App_GKE. |
 
 ### Groupe 16 — Base de données {#group-16--database}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | Fixé par `CalibreWeb_Common` ; aucune instance, base ni utilisateur Cloud SQL n'est créé. Toutes les autres variables `database_*`/`sql_*` de ce groupe sont explicitement « Not referenced. » |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne la ressource Gateway API, mais ne sert à rien en externe sans `application_domains` défini (voir §2.E). |
 | `application_domains` | `[]` | Vide par défaut — définissez-le pour obtenir un nom d'hôte externe fonctionnel tant que `service_type = ClusterIP`. |
-| `reserve_static_ip` | `true` | Se raccorde au nom d'hôte `<reserved-ip>.nip.io` par défaut d'App_GKE uniquement lorsque `service_type = LoadBalancer` ; le comportement combiné au `ClusterIP` par défaut n'est pas explicitement documenté par la Foundation. {/* TODO: confirm whether reserve_static_ip provisions/attaches an address when service_type stays ClusterIP with enable_custom_domain=true */} |
+| `reserve_static_ip` | `true` | Se raccorde au nom d'hôte `<reserved-ip>.nip.io` par défaut d'App_GKE uniquement lorsque `service_type = LoadBalancer` ; le comportement combiné au `ClusterIP` par défaut n'est pas explicitement documenté par le socle. {/* TODO: confirm whether reserve_static_ip provisions/attaches an address when service_type stays ClusterIP with enable_custom_domain=true */} |
 
 Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.md).
 
@@ -390,7 +390,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -399,17 +399,17 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | `service_type` + `application_domains` | Définir `application_domains`, ou utiliser `LoadBalancer` | High | Avec les valeurs par défaut (`ClusterIP` + `application_domains` vide), le déploiement n'a **aucun accès externe configuré** malgré `enable_custom_domain = true`. |
 | `stateful_pvc_storage_class` | `standard` (HDD) pour les projets limités en quota | Medium | La valeur par défaut `standard-rwo` (SSD) consomme le quota serré `SSD_TOTAL_GB` ; une campagne d'applications GKE avec état peut l'épuiser vers la 8e application. La mise à zéro ne libère **pas** le PVC — seule sa suppression le fait. |
 | `CALIBRE_ADMIN_PASSWORD` (généré automatiquement) | Changer l'identifiant dans l'interface lors de la première connexion | High | Le secret généré n'est pas appliqué automatiquement ; l'identifiant fonctionnel de première connexion est la valeur amont par défaut `admin`/`admin123` jusqu'à ce qu'il soit modifié manuellement. |
-| `enable_resource_quota` | Bien comprendre avant d'activer | Medium | Les variables `quota_cpu_*`/`quota_memory_*`/`quota_max_*` de ce module sont déclarées mais **pas transmises** à App_GKE — activer le quota utilise les valeurs par défaut propres à la Foundation (4 CPU / 4Gi–8Gi de mémoire / 20 pods), et non une valeur définie sur ce module. |
+| `enable_resource_quota` | Bien comprendre avant d'activer | Medium | Les variables `quota_cpu_*`/`quota_memory_*`/`quota_max_*` de ce module sont déclarées mais **pas transmises** à App_GKE — activer le quota utilise les valeurs par défaut propres au socle (4 CPU / 4Gi–8Gi de mémoire / 20 pods), et non une valeur définie sur ce module. |
 | `enable_redis` | À ignorer — inerte | Low | `main.tf` impose en dur `enable_redis = false` quelle que soit cette variable ; Calibre-Web ne dépend pas de Redis. |
 | `create_cloud_storage` | `false` si vous n'avez pas besoin du bucket de repli | Low | Avec le chemin StatefulSet par défaut, le bucket `storage` est provisionné mais jamais monté — un coût faible et évitable si vous ne prévoyez pas de passer en mode Deployment. |
 | `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Medium | Calibre-Web charge en mémoire les index de la bibliothèque et des collections ; une sous-dimension expose à un OOM avec une grande bibliothèque Calibre. |
-| `quota_memory_requests` / `_limits` (au niveau de la fondation, si vous activez les quotas directement sur App_GKE) | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `quota_memory_requests` / `_limits` (au niveau du socle, si vous activez les quotas directement sur App_GKE) | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**. La
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La
 configuration applicative propre à Calibre-Web, partagée entre les variantes de plateforme,
 est décrite dans **[CalibreWeb_Common](CalibreWeb_Common.md)**.
 

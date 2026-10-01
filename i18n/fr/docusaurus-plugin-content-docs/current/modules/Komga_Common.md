@@ -28,10 +28,10 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Domaine | Fourni par Komga_Common | Où cela apparaît |
 |---|---|---|
 | Authentification | **Aucun secret généré** — le compte administrateur est créé via l'assistant de configuration initiale de Komga sur `/` | Interface web de Komga au premier accès |
-| Image de conteneur | L'image précompilée officielle `gotson/komga`, déployée directement (sans étape de build) | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | L'image précompilée officielle `gotson/komga`, déployée directement (sans étape de build) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Komga utilise une base de données SQLite intégrée (`database.sqlite`, mode WAL) sous `/config` (`database_type = "NONE"`) | §Base de données dans les guides des plateformes |
 | Amorçage de la base de données | **Aucun** — il n'y a pas de job `db-init` ; Komga gère lui-même son stockage et son schéma (les migrations Flyway s'exécutent automatiquement au démarrage) | n/a |
-| Stockage objet | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/config` sur Cloud Run (et sur GKE lorsque le PVC en mode bloc est désactivé) | Output `storage_buckets` |
+| Stockage objet | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/config` sur Cloud Run (et sur GKE lorsque le PVC en mode bloc est désactivé) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit le port du conteneur `25600` et, en option, le dimensionnement du heap JVM via `JAVA_TOOL_OPTIONS` | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes par défaut de démarrage/vivacité ciblant `/actuator/health` | §Observabilité dans les guides des plateformes |
 
@@ -104,7 +104,7 @@ aucune étape Cloud Build n'est utilisé :
 
 - **`image_source = "prebuilt"`** — le socle déploie directement
   `gotson/komga:<version>`.
-- **`enable_image_mirroring = true`** par défaut duplique tout de même l'image dans
+- **`enable_image_mirroring = true`** par défaut met en miroir tout de même l'image dans
   Artifact Registry via une copie tenant compte du digest (`mirror-image.sh`), ce qui
   évite les limites de débit de Docker Hub — il s'agit d'une copie, pas d'une
   reconstruction.
@@ -169,7 +169,7 @@ et renvoie `401 Unauthorized` même lorsque l'application est saine.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un seul bucket **Cloud Storage** est déclaré ici et provisionné par le socle, qui
 accorde également l'accès au compte de service de la charge de travail :

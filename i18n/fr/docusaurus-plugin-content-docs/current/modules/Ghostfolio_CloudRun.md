@@ -32,7 +32,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 Ghostfolio s'exécute sous la forme d'un conteneur NestJS (ORM Prisma) sur Cloud
 Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | API NestJS et frontend Angular servis depuis un seul conteneur, 1 vCPU / 1 GiB par défaut, facturation à la requête, mise à l'échelle jusqu'à zéro |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — l'ORM Prisma de Ghostfolio ne prend pas en charge MySQL |
@@ -161,7 +161,7 @@ base de données est géré séparément par le socle.
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails de l'injection et de la
 rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge
 HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être
@@ -234,7 +234,7 @@ avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `ghostfolio` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Ghostfolio` | Nom lisible affiché dans la console. |
@@ -242,7 +242,7 @@ avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | 1 vCPU suffit pour un usage typique. |
 | `memory_limit` | `1Gi` | 1 GiB suffit pour un usage typique. |
@@ -254,34 +254,34 @@ avec leur comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. `DATABASE_URL`, `PORT` et `REDIS_PASSWORD` (alias de `REDIS_AUTH`) sont composés par le point d'entrée cloud — ne les définissez pas ici. |
 | `secret_environment_variables` | `{}` | Map variable d'environnement → nom du secret Secret Manager (par ex. la clé d'API d'un fournisseur de données de marché personnalisé). |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `db_name` | `ghostfolio` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `ghostfolio` | Utilisateur de la base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Il n'existe pas de job de migration distinct — les migrations s'exécutent dans le conteneur de l'application à chaque démarrage. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/v1/health`, délai de 30s, seuil de 12 échecs | Vérifie À LA FOIS la connectivité à la base de données ET à Redis. |
 | `liveness_probe` | HTTP `/api/v1/health`, délai de 30s, seuil de 3 échecs | Même point de terminaison que la sonde de démarrage. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | OBLIGATOIRE — toujours transmis sans condition, jamais conditionné à `redis_host != ""`. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
@@ -337,7 +337,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
-Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images —
+Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Ghostfolio, partagée avec la variante GKE, est décrite dans
 **[Ghostfolio_Common](Ghostfolio_Common.md)**.

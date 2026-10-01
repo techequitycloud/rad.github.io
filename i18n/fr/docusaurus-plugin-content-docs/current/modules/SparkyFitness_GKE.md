@@ -36,7 +36,7 @@ entre les Services internes au cluster ; SparkyFitness est donc déployé sous f
 docker-compose de l'éditeur :
 
 - Le **backend** (`codewithcj/sparkyfitness_server`, port 3010) est l'**application
-  principale** — avec le câblage standard Deployment/Service/tâche d'initialisation du
+  principale** — avec le câblage standard Deployment/Service/job d'initialisation du
   socle.
 - Le **frontend** (`codewithcj/sparkyfitness`, port 80) est une entrée
   **`additional_services`** : son propre Deployment+Service, avec une **adresse IP
@@ -50,7 +50,7 @@ docker-compose de l'éditeur :
 | Secrets | Secret Manager → Secret K8s | `SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `SPARKY_FITNESS_APP_DB_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Adresse IP externe réservée de LoadBalancer (frontend) | Déterministe d'un redéploiement à l'autre — connue au moment du plan |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Aucun autre moteur n'est pris en charge.
 - **Deux rôles de base de données, dont un seul géré par Terraform.** `db_user` (par
@@ -147,7 +147,7 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
 
 ## 3. Comportement de l'application SparkyFitness {#3-sparkyfitness-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une unique tâche
+- **Configuration de la base de données au premier déploiement.** Un unique job
   d'initialisation `db-init` crée uniquement le rôle d'**administration** (`db_user`)
   et la base de données (`db_name`).
 - **Les migrations s'exécutent à chaque démarrage.** Le backend applique ses propres
@@ -255,12 +255,12 @@ leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critical | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
 | `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critical | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
@@ -275,7 +275,7 @@ leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — modèle d'espace de
 noms, mise à l'échelle, entrée, CI/CD, IAP, Binary Authorization, VPC-SC, sauvegardes
-et duplication des images — consultez **[App_GKE](App_GKE.md)**. La configuration
+et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration
 applicative propre à SparkyFitness partagée avec la variante Cloud Run est décrite dans
 **[SparkyFitness_Common](SparkyFitness_Common.md)**.
 

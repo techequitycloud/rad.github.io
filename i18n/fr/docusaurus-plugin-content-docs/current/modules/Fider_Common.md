@@ -36,7 +36,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Domaine | Fourni par Fider_Common | Où cela apparaît |
 |---|---|---|
 | Secret cryptographique | Génère un `JWT_SECRET` stable de 64 caractères et le stocke dans **Secret Manager** | Injecté automatiquement en tant que `JWT_SECRET` ; récupérable via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Construit une fine surcouche `FROM getfider/fider` avec un point d'entrée cloud personnalisé via Cloud Build (Kaniko) ; la duplique dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Construit une fine surcouche `FROM getfider/fider` avec un point d'entrée cloud personnalisé via Cloud Build (Kaniko) ; la met en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données, accorde les droits et transfère la propriété du schéma `public` | Sortie `initialization_jobs` |
 | Migrations de schéma | Exécutées par le point d'entrée (`./fider migrate`) à chaque démarrage du conteneur — aucune tâche de migration séparée | Comportement de l'application dans les guides des plateformes |
@@ -77,7 +77,7 @@ partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Fider nécessite **PostgreSQL 15** ; le moteur est imposé (`POSTGRES_15`) et MySQL
 ou les autres moteurs ne sont pas pris en charge. Lors du premier déploiement, une
@@ -116,7 +116,7 @@ sorties du déploiement de la plateforme.
 ## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image personnalisée est une **fine surcouche** construite
-`FROM getfider/fider:<FIDER_VERSION>` via Cloud Build (Kaniko) et dupliquée dans
+`FROM getfider/fider:<FIDER_VERSION>` via Cloud Build (Kaniko) et mise en miroir dans
 Artifact Registry. `getfider/fider` est une image Alpine (`sh` de busybox, pas de
 `python3`) ; le point d'entrée est donc du pur shell POSIX et effectue lui-même
 l'encodage des URL. Un point d'entrée cloud (`cloud-entrypoint.sh`) s'exécute avant
@@ -192,7 +192,7 @@ exécutées au premier démarrage.
 - **Sonde de démarrage** — HTTP `/_health`, délai initial de 30 secondes, période
   de 15 secondes, 30 échecs tolérés (environ 7.5 minutes de marge pour les
   migrations du premier démarrage).
-- **Sonde d'activité** — HTTP `/_health`, période de 30 secondes.
+- **Sonde de vivacité** — HTTP `/_health`, période de 30 secondes.
 - **Sonde de disponibilité** — HTTP `/_health`, période de 10 secondes.
 
 Le `container_port` et le port de la sonde doivent tous deux valoir **3000** — sur

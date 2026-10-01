@@ -18,7 +18,7 @@ par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Nextcloud, consultez les
 guides des plateformes ([Nextcloud_GKE](Nextcloud_GKE.md),
-[Nextcloud_CloudRun](Nextcloud_CloudRun.md)) et les guides des fondations
+[Nextcloud_CloudRun](Nextcloud_CloudRun.md)) et les guides des socles
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
@@ -30,10 +30,10 @@ guides des plateformes ([Nextcloud_GKE](Nextcloud_GKE.md),
 |---|---|---|
 | Identifiant administrateur | Génère le mot de passe administrateur de Nextcloud et le stocke dans **Secret Manager** | À récupérer via Secret Manager (voir ci-dessous) |
 | Secrets de configuration post-installation | Crée des secrets provisoires pour `instanceid`, `passwordsalt` et `secret` ; le hook du conteneur écrit les vraies valeurs après `occ maintenance:install` | Injectés en tant que `NEXTCLOUD_INSTANCE_ID`, `NEXTCLOUD_PASSWORD_SALT`, `NEXTCLOUD_APP_SECRET` |
-| Image de conteneur | Épingle l'image officielle Nextcloud Apache et construit une extension personnalisée via Cloud Build, avec les limites PHP intégrées sous forme de valeurs `ARG` Docker | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Épingle l'image officielle Nextcloud Apache et construit une extension personnalisée via Cloud Build, avec les limites PHP intégrées sous forme de valeurs `ARG` Docker | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** comme seul moteur pris en charge (jeu de caractères `utf8mb4`) | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits | Output `initialization_jobs` |
-| Stockage d'objets | Déclare le bucket **Cloud Storage** `nc-data` | Output `storage_buckets` |
+| Initialisation de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Stockage d'objets | Déclare le bucket **Cloud Storage** `nc-data` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Nextcloud de base — identité de l'administrateur, limites PHP, proxys de confiance, câblage Redis et SMTP s'il est configuré | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage/vivacité ciblant `/status.php` | §Observabilité dans les guides des plateformes |
 | Authentification Redis | Lorsque `redis_auth` n'est pas vide, stocke le mot de passe Redis sous forme de secret Secret Manager | Injecté en tant que `REDIS_HOST_PASSWORD` |
@@ -63,14 +63,14 @@ gcloud secrets list --project "$PROJECT" --filter="name~nextcloud"
 # Look for: *-instance-id, *-password-salt, *-app-secret
 ```
 
-Le mot de passe de la base de données est généré et géré par la fondation ; le nom de
+Le mot de passe de la base de données est généré et géré par le socle ; le nom de
 son secret figure dans les outputs du déploiement de la plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle
 partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Nextcloud exige **MySQL 8.0** ; le moteur est fixe et PostgreSQL n'est pas pris en
 charge. Lors du premier déploiement, un job ponctuel `db-init` se connecte à Cloud SQL
@@ -96,7 +96,7 @@ outputs du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres applicatifs de base {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Nextcloud_Common` établit l'environnement Nextcloud de base afin que l'application
 démarre correctement dès le premier lancement :
@@ -149,8 +149,8 @@ une instance Cloud SQL froide.
 
 ## 6. Stockage d'objets {#6-object-storage}
 
-Un bucket **Cloud Storage** `nc-data` dédié est déclaré ici et provisionné par la
-fondation dans la région de déploiement. Le compte de service de la charge de travail
+Un bucket **Cloud Storage** `nc-data` dédié est déclaré ici et provisionné par le
+socle dans la région de déploiement. Le compte de service de la charge de travail
 reçoit automatiquement l'accès à ce bucket. Listez-le avec :
 
 ```bash
@@ -165,7 +165,7 @@ gcloud storage buckets list --project "$PROJECT" --filter="name~nc-data"
 
 | Fichier | Rôle |
 |---|---|
-| `Dockerfile` | Image Nextcloud personnalisée étendant `nextcloud:<version>-apache`. Accepte `APP_VERSION`, `NEXTCLOUD_VERSION`, `PHP_MEMORY_LIMIT`, `UPLOAD_MAX_FILESIZE` et `POST_MAX_SIZE` sous forme de valeurs `ARG` Docker intégrées au moment du build. Le tag de l'image de base provient de `NEXTCLOUD_VERSION`, et non de `APP_VERSION` — la fondation injecte de force `APP_VERSION = application_version` (souvent `"latest"`, et `nextcloud:latest-apache` n'existe pas) ; le Dockerfile dérive donc son propre argument `NEXTCLOUD_VERSION` (`"latest"` étant converti en `"stable"`) pour le tag `FROM`. |
+| `Dockerfile` | Image Nextcloud personnalisée étendant `nextcloud:<version>-apache`. Accepte `APP_VERSION`, `NEXTCLOUD_VERSION`, `PHP_MEMORY_LIMIT`, `UPLOAD_MAX_FILESIZE` et `POST_MAX_SIZE` sous forme de valeurs `ARG` Docker intégrées au moment du build. Le tag de l'image de base provient de `NEXTCLOUD_VERSION`, et non de `APP_VERSION` — le socle injecte de force `APP_VERSION = application_version` (souvent `"latest"`, et `nextcloud:latest-apache` n'existe pas) ; le Dockerfile dérive donc son propre argument `NEXTCLOUD_VERSION` (`"latest"` étant converti en `"stable"`) pour le tag `FROM`. |
 | `entrypoint.sh` | Wrapper du point d'entrée : définit `NEXTCLOUD_DATA_DIR` sur le montage NFS pour les données des fichiers utilisateur, et résout `OVERWRITEHOST`/`OVERWRITECLIURL` à partir de l'URL du service à l'exécution. `config.php` n'est ni lié symboliquement à NFS ni stocké sur NFS — il est reconstruit localement à partir des secrets de Secret Manager à chaque démarrage (voir la ligne « Secrets de configuration post-installation » au §1). |
 | `db-init.sh` | Script de configuration MySQL idempotent — crée la base de données avec `utf8mb4`, crée l'utilisateur avec `mysql_native_password`, accorde les privilèges et vérifie la connectivité. |
 | `post-install-config-secrets.sh` | Hook post-installation : lit `instanceid`, `passwordsalt` et `secret` dans le `config.php` de Nextcloud après `occ maintenance:install` et les écrit dans Secret Manager. |

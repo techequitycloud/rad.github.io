@@ -74,7 +74,7 @@ que les services dont il a réellement besoin :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail phpMyAdmin {#a-gke-autopilot--the-phpmyadmin-workload}
 
@@ -83,9 +83,8 @@ demandés par les pods. L'autoscaling horizontal des pods dimensionne le Deploym
 entre le nombre minimal et maximal de réplicas. Le conteneur écoute sur le
 **port 80**.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
-  travail phpMyAdmin pour voir les pods et les événements. Kubernetes Engine → Services
-  et Ingress affiche l'IP externe.
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
+  travail phpMyAdmin pour voir les pods et les événements. Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -146,7 +145,7 @@ propres du serveur MySQL cible, saisis sur la page de connexion de phpMyAdmin et
 stockés. Vous pouvez néanmoins ajouter vos propres `secret_environment_variables`, que
 le socle matérialise via l'intégration Secret Store CSI.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~phpmyadmin"
@@ -163,7 +162,7 @@ survive aux redéploiements. IAP (via un Ingress) peut conditionner l'accès à 
 connexion Google — vivement recommandé pour un outil d'administration de bases de
 données.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -179,8 +178,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs
 sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -273,7 +272,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE n'a pas de mise à zéro, conservez ≥ 1 afin que la console soit joignable. **Codé en dur** — `phpmyadmin.tf` fusionne `min_instance_count = 1` directement dans la configuration applicative que déploie `App_GKE` (`local.selected_module.min_instance_count`, et non la variable de premier niveau `var.min_instance_count`) ; cette entrée est donc insensible aux surcharges de l'utilisateur. |
 | `max_instance_count` | `3` | Nombre maximal de réplicas. |
 | `enable_cloudsql_volume` | `false` | phpMyAdmin n'utilise pas l'intégration Cloud SQL de la plateforme ; il se connecte directement à un hôte MySQL externe. |
-| `enable_image_mirroring` | `true` | Duplique l'image phpMyAdmin dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image phpMyAdmin dans Artifact Registry. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -323,12 +322,12 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen
 le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |

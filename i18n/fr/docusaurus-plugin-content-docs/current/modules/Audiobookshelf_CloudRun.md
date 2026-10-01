@@ -9,9 +9,9 @@ description: "Référence de configuration pour déployer Audiobookshelf sur Goo
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Audiobookshelf_CloudRun.png" alt="Audiobookshelf sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Audiobookshelf est un serveur auto-hébergé de livres audio et de podcasts — il organise votre bibliothèque audio, diffuse vers l'interface web et les applications mobiles officielles, et synchronise la progression d'écoute de chaque utilisateur. Ce module déploie Audiobookshelf sur **Cloud Run v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
+Audiobookshelf est un serveur auto-hébergé de livres audio et de podcasts — il organise votre bibliothèque audio, diffuse vers l'interface web et les applications mobiles officielles, et synchronise la progression d'écoute de chaque utilisateur. Ce module déploie Audiobookshelf sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud qu'utilise Audiobookshelf et sur la façon de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud qu'utilise Audiobookshelf et sur la façon de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -33,11 +33,11 @@ Audiobookshelf s'exécute comme un conteneur Node.js sur Cloud Run v2. Fait inha
 - **Pas de base de données externe.** `database_type = "NONE"` et `enable_cloudsql_volume = false` sont fixés par `Audiobookshelf_Common` ; Audiobookshelf crée et migre sa base de données SQLite interne au premier démarrage. Aucun job `db-init` ne s'exécute.
 - **Un seul montage persistant couvre tout.** `CONFIG_PATH = /data/config` (base SQLite + configuration de l'application) et `METADATA_PATH = /data/metadata` (pochettes, métadonnées en cache) sont tous deux redirigés sous `/data`, qui repose sur un bucket GCS provisionné automatiquement et monté via GCS FUSE. Perdre ce bucket, c'est perdre tout l'état d'Audiobookshelf.
 - **Instance unique.** `min_instance_count = 1` et `max_instance_count = 1` — une bibliothèque SQLite partagée doit être servie par exactement un rédacteur. N'augmentez pas le maximum.
-- **L'ingress vaut `all` par défaut.** L'URL `run.app` est accessible publiquement depuis un navigateur d'emblée, conformément à la valeur par défaut de la fondation `App_CloudRun`. Définissez `ingress_settings = "internal"` (ou placez le service derrière l'équilibreur de charge) pour restreindre l'accès au seul VPC.
+- **L'ingress vaut `all` par défaut.** L'URL `run.app` est accessible publiquement depuis un navigateur d'emblée, conformément à la valeur par défaut du socle `App_CloudRun`. Définissez `ingress_settings = "internal"` (ou placez le service derrière l'équilibreur de charge) pour restreindre l'accès au seul VPC.
 - **Image personnalisée (wrapper léger).** Cloud Build encapsule l'image amont `ghcr.io/advplyr/audiobookshelf` afin qu'elle soit mise en miroir dans Artifact Registry. Le Dockerfile lit l'ARG de build propre à l'application `AUDIOBOOKSHELF_VERSION` ; `application_version = "latest"` correspond à la version épinglée `2.17.0`.
 - **Aucun secret généré.** L'utilisateur **root** initial est créé de manière interactive dans l'interface web lors du premier lancement, et les jetons d'API sont émis ensuite dans l'interface — `Audiobookshelf_Common` expose des `secret_ids` vides.
-- **Les sondes d'état ciblent `/healthcheck`**, le point de terminaison d'Audiobookshelf qui renvoie 200 sans authentification (démarrage : délai initial de 15 s, 10 échecs tolérés ; vivacité : délai de 30 s, 3 échecs).
-- **Pas de Redis.** `enable_redis` est explicitement forcé à `false` dans l'appel à la fondation.
+- **Les sondes de santé ciblent `/healthcheck`**, le point de terminaison d'Audiobookshelf qui renvoie 200 sans authentification (démarrage : délai initial de 15 s, 10 échecs tolérés ; vivacité : délai de 30 s, 3 échecs).
+- **Pas de Redis.** `enable_redis` est explicitement forcé à `false` dans l'appel au socle.
 
 ---
 
@@ -95,9 +95,9 @@ Audiobookshelf lui-même n'a besoin d'aucun secret injecté — il n'y a ni mot 
   gcloud secrets list --project "$PROJECT"
   ```
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
-Par défaut `ingress_settings = "all"` — le service est accessible publiquement, conformément à la valeur par défaut de la fondation `App_CloudRun`. Définissez `ingress_settings = "internal"` pour restreindre le service aux appelants situés dans le VPC, ou activez l'équilibreur de charge HTTPS externe (`enable_cloud_armor`) avec un domaine personnalisé pour une configuration en frontal.
+Par défaut `ingress_settings = "all"` — le service est accessible publiquement, conformément à la valeur par défaut du socle `App_CloudRun`. Définissez `ingress_settings = "internal"` pour restreindre le service aux appelants situés dans le VPC, ou activez l'équilibreur de charge HTTPS externe (`enable_cloud_armor`) avec un domaine personnalisé pour une configuration en frontal.
 
 - **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
@@ -154,7 +154,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -218,7 +218,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir [App_Cl
 
 `enable_custom_sql_scripts` et les paramètres associés sont **sans objet** — Audiobookshelf n'a pas de base de données SQL. Laissez-les à leurs valeurs par défaut.
 
-### Groupe 10 — Domaine, CDN, Cloud Armor et conservation des images {#group-10--domain-cdn-cloud-armor--image-retention}
+### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -239,7 +239,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-`database_type` est fixé à `NONE` par `Audiobookshelf_Common` ; les autres entrées de base de données (`database_password_length`, paramètres de renouvellement, `db_*_env_var_name`) ne sont transmises que pour la compatibilité avec la fondation et n'ont aucun effet.
+`database_type` est fixé à `NONE` par `Audiobookshelf_Common` ; les autres entrées de base de données (`database_password_length`, paramètres de renouvellement, `db_*_env_var_name`) ne sont transmises que pour la compatibilité avec le socle et n'ont aucun effet.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
@@ -248,7 +248,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut — Audiobookshelf s'initialise lui-même. Ne fournissez des jobs que pour des tâches ponctuelles personnalisées. |
 | `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
-### Groupe 14 — Observabilité et contrôles d'état {#group-14--observability--health}
+### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -281,7 +281,7 @@ Renvoyées lorsque le déploiement réussit — le moyen le plus rapide de local
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `storage` de `/data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -294,26 +294,26 @@ Renvoyées lorsque le déploiement réussit — le moyen le plus rapide de local
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent dans la même base SQLite via le montage FUSE partagé — corruption de la base de données. |
-| `create_cloud_storage` / le bucket `storage` | à conserver provisionné | Critique | `/data` contient *tout* l'état (base SQLite, configuration, métadonnées). Supprimer le bucket fait perdre toute la configuration de la bibliothèque. |
-| Surcharges de `CONFIG_PATH` / `METADATA_PATH` | laisser les valeurs par défaut | Critique | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
-| `container_port` | `80` | Critique | Audiobookshelf écoute sur le `$PORT` injecté automatiquement par Cloud Run, dérivé de `container_port=80` (aucune variable d'environnement `PORT` explicite n'est définie — c'est un nom réservé que Cloud Run refuse) ; un `container_port` incohérent fait échouer toutes les sondes d'état. |
-| `execution_environment` | `gen2` | Élevé | Les montages GCS FUSE exigent gen2 ; gen1 ne peut pas monter le bucket `/data`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Élevé | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `ingress_settings` | `all` (par défaut) / `internal` si nécessaire | Moyen | La valeur par défaut `all` est accessible publiquement ; définissez `internal` (ou ajoutez l'équilibreur de charge) uniquement si vous voulez spécifiquement restreindre le service à un accès depuis le VPC. |
-| `application_version` | tag épinglé | Moyen | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
-| `min_instance_count` | `1` | Moyen | `0` réduit les coûts (l'état étant sur GCS, les données ne sont pas en danger) mais ajoute un démarrage à froid à la première diffusion après une période d'inactivité. |
-| Taille de la bibliothèque sur GCS FUSE | bibliothèques petites/moyennes | Moyen | Les grandes bibliothèques et les analyses fréquentes pâtissent de la latence FUSE — utilisez `Audiobookshelf_GKE` (PVC bloc) pour des bibliothèques à l'échelle de la production. |
-| `enable_cloudsql_volume` | `false` | Faible | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
+| `max_instance_count` | `1` | Critical | Plusieurs instances écrivent dans la même base SQLite via le montage FUSE partagé — corruption de la base de données. |
+| `create_cloud_storage` / le bucket `storage` | à conserver provisionné | Critical | `/data` contient *tout* l'état (base SQLite, configuration, métadonnées). Supprimer le bucket fait perdre toute la configuration de la bibliothèque. |
+| Surcharges de `CONFIG_PATH` / `METADATA_PATH` | laisser les valeurs par défaut | Critical | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
+| `container_port` | `80` | Critical | Audiobookshelf écoute sur le `$PORT` injecté automatiquement par Cloud Run, dérivé de `container_port=80` (aucune variable d'environnement `PORT` explicite n'est définie — c'est un nom réservé que Cloud Run refuse) ; un `container_port` incohérent fait échouer toutes les sondes de santé. |
+| `execution_environment` | `gen2` | High | Les montages GCS FUSE exigent gen2 ; gen1 ne peut pas monter le bucket `/data`. |
+| `enable_backup_import` | `false` sauf en cas de restauration | High | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `ingress_settings` | `all` (par défaut) / `internal` si nécessaire | Medium | La valeur par défaut `all` est accessible publiquement ; définissez `internal` (ou ajoutez l'équilibreur de charge) uniquement si vous voulez spécifiquement restreindre le service à un accès depuis le VPC. |
+| `application_version` | tag épinglé | Medium | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `min_instance_count` | `1` | Medium | `0` réduit les coûts (l'état étant sur GCS, les données ne sont pas en danger) mais ajoute un démarrage à froid à la première diffusion après une période d'inactivité. |
+| Taille de la bibliothèque sur GCS FUSE | bibliothèques petites/moyennes | Medium | Les grandes bibliothèques et les analyses fréquentes pâtissent de la latence FUSE — utilisez `Audiobookshelf_GKE` (PVC bloc) pour des bibliothèques à l'échelle de la production. |
+| `enable_cloudsql_volume` | `false` | Low | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Audiobookshelf partagée avec la variante GKE est décrite dans **[Audiobookshelf_Common](Audiobookshelf_Common.md)**.
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Audiobookshelf partagée avec la variante GKE est décrite dans **[Audiobookshelf_Common](Audiobookshelf_Common.md)**.
 
 <!-- related-guides -->
 

@@ -84,7 +84,7 @@ sorties du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `OpenWebUI_Common` établit l'environnement Open WebUI de référence afin que
 l'application démarre correctement dès le premier démarrage :

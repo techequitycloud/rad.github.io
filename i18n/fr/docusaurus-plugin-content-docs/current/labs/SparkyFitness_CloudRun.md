@@ -11,7 +11,7 @@ description: "Lab pratique : déployez SparkyFitness sur Cloud Run dans votre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 SparkyFitness est un outil auto-hébergé de suivi familial de l'alimentation, de la forme physique, de l'hydratation et de la santé,
 assisté par l'IA. Ce lab vous fait parcourir le cycle de vie opérationnel complet du
@@ -28,12 +28,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à l'application en cours d'exécution et la vérifier, y compris son architecture à deux conteneurs.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour et gérer les secrets.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -153,7 +153,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer. Les journaux des deux conteneurs arrivent dans le
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer). Les journaux des deux conteneurs arrivent dans le
    même flux, étiquetés par nom de conteneur :
 
    ```bash
@@ -207,7 +207,7 @@ des utilisateurs ont activé la 2FA).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -231,4 +231,4 @@ ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions et les conteneurs, mettre à l'échelle, mettre à jour la version, gérer les secrets, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging pour les deux conteneurs ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de sidecar, de base de données, de job d'initialisation et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

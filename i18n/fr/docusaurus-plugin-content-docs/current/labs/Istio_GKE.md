@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Istio sur GKE Autopilot dans votre propre
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Istio est le **service mesh** open source de référence — une couche d'infrastructure transparente qui gère, sécurise et observe le trafic de service à service dans un cluster Kubernetes sans aucune modification du code des applications. Ce lab vous fait parcourir tout le cycle de vie opérationnel du module **Istio on GKE** sur Google Cloud : le déployer, vérifier que le mesh est installé et que des charges de travail peuvent y être inscrites, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
@@ -21,7 +21,7 @@ Ce lab porte sur l'exploitation du **module et de la plateforme Google Cloud**, 
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et vérifier que le mesh est installé et sain.
@@ -41,7 +41,7 @@ Ce lab porte sur l'exploitation du **module et de la plateforme Google Cloud**, 
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -55,7 +55,7 @@ export CLUSTER="gke-cluster"          # matches the gke_cluster input
 
 1. Ouvrez **Solutions → Solution Catalog → RAD modules** dans la navigation supérieure de la plateforme RAD, ouvrez **Istio (GKE)** dans la liste **Platform Modules** pour commencer la configuration, choisissez **Configuration Form** sous *How would you like to configure this deployment?* (le formulaire s'ouvre sur le **Conversational Assistant** si vous détenez des crédits achetés ou si vous êtes partenaire ou administrateur), renseignez `project_id` et passez en revue les paramètres. Les choix essentiels sont `install_ambient_mesh` (`false` pour le mode sidecar, `true` pour le mode ambient) et `istio_version`. Ne configurez que ce dont vous avez besoin — le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Istio_GKE) documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme crée un VPC et Cloud NAT, provisionne un cluster GKE Standard (un pool de nœuds régional de 2 nœuds `e2-standard-2` préemptifs **par zone** — 8 nœuds dans une région à 4 zones comme `us-central1`), puis exécute l'étape d'installation d'Istio : elle télécharge `istioctl`, installe Istio avec le profil choisi, ajoute au namespace `default` le libellé d'inscription au mesh, et installe les modules complémentaires Prometheus, Grafana, Jaeger et Kiali. Les premiers déploiements prennent environ **15 à 25 minutes** (la création du cluster et l'installation du mesh représentent l'essentiel du temps).
+2. La plateforme crée un VPC et Cloud NAT, provisionne un cluster GKE Standard (un pool de nœuds régional de 2 nœuds `e2-standard-2` préemptifs **par zone** — 8 nœuds dans une région à 4 zones comme `us-central1`), puis exécute l'étape d'installation d'Istio : elle télécharge `istioctl`, installe Istio avec le profil choisi, ajoute à l'espace de noms `default` le libellé d'inscription au mesh, et installe les modules complémentaires Prometheus, Grafana, Jaeger et Kiali. Les premiers déploiements prennent environ **15 à 25 minutes** (la création du cluster et l'installation du mesh représentent l'essentiel du temps).
 
 3. Connectez-vous au cluster (la sortie `cluster_credentials_cmd` vous donne la commande exacte) :
 
@@ -97,7 +97,7 @@ export CLUSTER="gke-cluster"          # matches the gke_cluster input
    echo "Ingress Gateway IP: ${INGRESS_IP}"   # may take 1–2 minutes to appear
    ```
 
-4. Le module installe le mesh mais **ne déploie pas d'application d'exemple**. Inscrivez une charge de travail pour vérifier que l'inscription fonctionne. Le namespace `default` porte déjà le libellé ; déployez donc l'exemple Istio Bookinfo (fourni dans la version d'Istio téléchargée, ou récupéré directement) :
+4. Le module installe le mesh mais **ne déploie pas d'application d'exemple**. Inscrivez une charge de travail pour vérifier que l'inscription fonctionne. L'espace de noms `default` porte déjà le libellé ; déployez donc l'exemple Istio Bookinfo (fourni dans la version d'Istio téléchargée, ou récupéré directement) :
 
    ```bash
    kubectl apply -n default \
@@ -121,7 +121,7 @@ export CLUSTER="gke-cluster"          # matches the gke_cluster input
 
 2. **Changez le mode ou la version d'Istio** en modifiant `install_ambient_mesh` ou `istio_version` et en cliquant sur **Update** sur la page de détails du déploiement. Le module possède l'installation, il s'agit donc d'une modification de configuration. Notez que changer de mode de plan de données équivaut à une réinstallation — prévoyez une fenêtre de maintenance.
 
-3. **Imposez le mTLS strict** une fois que toutes les charges de travail d'un namespace sont inscrites, puis vérifiez :
+3. **Imposez le mTLS strict** une fois que toutes les charges de travail d'un espace de noms sont inscrites, puis vérifiez :
 
    ```bash
    kubectl apply -f - <<'EOF'
@@ -176,8 +176,8 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 
 - **L'Ingress Gateway n'a pas d'IP externe :** cela peut prendre 1 à 2 minutes ; si elle reste `<pending>`, consultez `kubectl describe svc istio-ingressgateway -n istio-system` et le quota d'équilibreurs de charge du projet.
 - **Échec de l'installation d'Istio pendant le déploiement :** consultez les journaux de la page d'état du déploiement. La cause la plus fréquente est une `istio_version` invalide (le téléchargement d'`istioctl` échoue) ou des nœuds qui ne passent pas à l'état Ready à temps (des nœuds préemptifs ont été récupérés). Relancez **Update** après avoir corrigé la version.
-- **Un pod n'a pas de sidecar (mode sidecar) :** vérifiez le libellé de namespace `istio-injection=enabled` et rappelez-vous que **les pods existants doivent être redémarrés** (`kubectl rollout restart`) pour recevoir un sidecar.
-- **Charge de travail non inscrite (mode ambient) :** vérifiez `istio.io/dataplane-mode=ambient` sur le namespace et que le DaemonSet `ztunnel` dispose d'un pod sur chaque nœud (`kubectl get pods -n istio-system -l app=ztunnel -o wide`).
+- **Un pod n'a pas de sidecar (mode sidecar) :** vérifiez le libellé d'espace de noms `istio-injection=enabled` et rappelez-vous que **les pods existants doivent être redémarrés** (`kubectl rollout restart`) pour recevoir un sidecar.
+- **Charge de travail non inscrite (mode ambient) :** vérifiez `istio.io/dataplane-mode=ambient` sur l'espace de noms et que le DaemonSet `ztunnel` dispose d'un pod sur chaque nœud (`kubectl get pods -n istio-system -l app=ztunnel -o wide`).
 - **Problèmes de mTLS / de connectivité :** exécutez `istioctl analyze -A` pour valider la configuration et `istioctl proxy-status` pour vérifier que les proxys sont synchronisés avec `istiod`.
 - **Pod en CrashLoopBackOff :** `kubectl describe pod -n <ns> <pod>` (Events) et `kubectl logs -n <ns> <pod> --previous`.
 
@@ -187,7 +187,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
-Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` : elle désinstalle proprement Istio et les modules complémentaires d'observabilité, supprime le namespace `istio-system`, puis démantèle le cluster GKE, le pool de nœuds, le compte de service, le VPC, les règles de pare-feu et Cloud NAT créés par ce module. La suppression est irréversible (l'enregistrement du déploiement est conservé pour l'historique).
+Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` : elle désinstalle proprement Istio et les modules complémentaires d'observabilité, supprime l'espace de noms `istio-system`, puis démantèle le cluster GKE, le pool de nœuds, le compte de service, le VPC, les règles de pare-feu et Cloud NAT créés par ce module. La suppression est irréversible (l'enregistrement du déploiement est conservé pour l'historique).
 
 Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Après une purge, nettoyez manuellement les ressources restantes.
 

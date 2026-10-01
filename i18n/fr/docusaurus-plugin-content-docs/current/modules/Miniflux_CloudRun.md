@@ -32,7 +32,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Un seul binaire Go, 2 vCPU / 4 GiB par défaut, CPU toujours allouée avec `min = 1` pour le collecteur de flux intégré au processus |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Miniflux stocke **tout** son état ici ; pas de MySQL ni d'autre moteur |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Miniflux stocke **tout** son état ici ; pas de MySQL ni d'autre moteur |
 | Stockage objet | Cloud Storage | Un bucket `data` par défaut est provisionné mais n'est ni monté ni utilisé par l'application (tout l'état réside dans PostgreSQL) ; un montage NFS facultatif est également disponible mais inutilisé par défaut |
 | Cache et file d'attente | Aucun | Miniflux ne dépend pas de Redis et n'a pas de worker séparé |
 | Secrets | Secret Manager | `ADMIN_PASSWORD` généré automatiquement (propriétaire initial) ; mot de passe de la base de données |
@@ -70,7 +70,7 @@ assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources sont indiqués dans les [Outputs](#5-outputs) du
+services et des ressources sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Miniflux {#a-cloud-run--the-miniflux-service}
@@ -94,10 +94,10 @@ instance est maintenue active.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Miniflux stocke **toutes** les données applicatives (flux, entrées, utilisateurs,
-sessions, catégories) dans une instance gérée Cloud SQL pour PostgreSQL 15. Le service
+sessions, catégories) dans une instance gérée Cloud SQL for PostgreSQL 15. Le service
 se connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix ;
 aucune IP publique n'est exposée. Au premier déploiement, le job `db-init` crée la
 base de données et le rôle `miniflux` et installe l'extension `hstore`, dont le rôle
@@ -113,10 +113,10 @@ applicatif est propriétaire.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
-### C. Cloud Storage / NFS {#c-cloud-storage--nfs}
+### C. Cloud Storage et NFS {#c-cloud-storage--nfs}
 
 Miniflux n'a besoin d'**aucun** stockage objet — il conserve tout son état dans
 PostgreSQL. La valeur par défaut `storage_buckets` de la variante provisionne
@@ -142,7 +142,7 @@ Un secret est généré automatiquement : `ADMIN_PASSWORD` — le mot de passe d
 propriétaire initial, injecté dans Miniflux au premier démarrage. Le mot de passe de
 la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~miniflux"
@@ -159,7 +159,7 @@ Armor peut être ajouté ; les paramètres d'entrée et la sortie VPC contrôlen
 connectivité. Lorsqu'un domaine personnalisé est utilisé, définissez `BASE_URL` pour
 que Miniflux produise des liens absolus et des URL de proxy de flux corrects.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -176,8 +176,8 @@ règles d'alerte facultatifs. Le point d'entrée journalise au démarrage son mo
 connexion `DATABASE_URL` (socket / loopback / TCP sur IP privée) — utile pour
 diagnostiquer la connectivité à la base de données.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -248,7 +248,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -277,7 +277,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Duplique l'image Miniflux dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Miniflux dans Artifact Registry. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -376,12 +376,12 @@ consultez [App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -395,7 +395,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (un bucket `data` par défaut sauf remplacement). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -432,7 +432,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Miniflux,
 partagée avec la variante GKE, est décrite dans **[Miniflux_Common](Miniflux_Common.md)**.
 

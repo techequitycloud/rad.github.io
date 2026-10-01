@@ -29,7 +29,7 @@ Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
 OpenClaw s'exécute sous forme de charge de travail de passerelle Node.js sur GKE Autopilot. Le déploiement associe
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 2 GiB par défaut, mise à l'échelle horizontale automatique |
 | Stockage de l'espace de travail | Cloud Storage (GCS Fuse) | Bucket d'espace de travail par tenant monté sur `/data` via le pilote CSI GCS Fuse |
@@ -37,7 +37,7 @@ un ensemble ciblé de services Google Cloud :
 | Entrée | Cloud Load Balancing | `LoadBalancer` par défaut (IP externe publique) ; `ClusterIP` ou un domaine personnalisé disponibles |
 | Secrets | Secret Manager | Tous les identifiants sont injectés au démarrage des pods ; jamais en clair dans la configuration |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Ni base de données, ni Redis.** OpenClaw est une passerelle Node.js avec état reposant entièrement sur GCS
   Fuse sur `/data`. Cloud SQL et Redis ne sont jamais provisionnés.
@@ -158,7 +158,7 @@ test de disponibilité et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application OpenClaw {#3-openclaw-application-behaviour}
 
-- **Aucune tâche d'initialisation de base de données.** OpenClaw ne nécessite ni Cloud SQL ni tâche d'initialisation. L'état des agents
+- **Aucun job d'initialisation de base de données.** OpenClaw ne nécessite ni Cloud SQL ni job d'initialisation. L'état des agents
   réside entièrement sur GCS ; le premier démarrage d'un pod crée automatiquement les répertoires de l'espace de travail
   via `entrypoint.sh`.
 - **Configuration régénérée à chaque démarrage.** `entrypoint.sh` réécrit toujours `openclaw.json`
@@ -176,7 +176,7 @@ test de disponibilité et des règles d'alerte facultatifs sont disponibles.
   embarqués avant que la passerelle ne soit déclarée en mauvaise santé.
 - **Affinité de session.** Le Service Kubernetes utilise par défaut l'affinité `ClientIP` afin que la
   connexion WebSocket d'un utilisateur soit systématiquement routée vers le même pod lorsque plusieurs réplicas
-  sont déployées.
+  sont déployés.
 - **Webhooks Telegram et Slack.** Lorsque `enable_telegram` ou `enable_slack` est défini, le
   jeton de bot correspondant est injecté sous la forme `TELEGRAM_BOT_TOKEN` ou `SLACK_BOT_TOKEN`. Les
   secrets de webhook/de signature sont stockés dans Secret Manager pour un service routeur compagnon et ne sont
@@ -226,7 +226,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `max_instance_count` | `3` | Nombre maximal de réplicas de pods. OpenClaw est avec état — utilisez 1 par tenant, sauf avec un routage de session persistant. |
 | `container_port` | `8080` | Port sur lequel écoute la passerelle OpenClaw. Doit correspondre à la variable d'environnement `PORT`. |
 | `timeout_seconds` | `3600` | Délai d'expiration des requêtes. Les sessions d'agents sont longues ; 3600 s est le maximum. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry avant le déploiement. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources (désactive le HPA). |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -286,11 +286,11 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `uptime_check_config` | `{ enabled = false }` | Désactivé par défaut pour les services `ClusterIP` (non joignables de l'extérieur). |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Automatisation de la charge de travail {#group-11--workload-automation}
+### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | OpenClaw n'a pas de tâche d'initialisation par défaut. À utiliser pour un amorçage personnalisé de l'espace de travail. |
+| `initialization_jobs` | `[]` | OpenClaw n'a pas de job d'initialisation par défaut. À utiliser pour un amorçage personnalisé de l'espace de travail. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrents (par ex. archivage de l'espace de travail). |
 | `additional_services` | `[]` | Services sidecar ou compagnons (par ex. un routeur OpenClaw). |
 
@@ -363,7 +363,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -392,7 +392,7 @@ d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées. |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
 | `cron_jobs` | Noms des CronJobs créés. |
 | `statefulset_name` | Nom du StatefulSet (lorsque `workload_type = "StatefulSet"`). |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -402,12 +402,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `anthropic_api_key` | Définie au premier déploiement | Critical | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
 | Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critical | Effectuer la rotation du jeton dans Secret Manager sans redémarrer les pods entraîne le rejet de toutes les requêtes clientes jusqu'au recyclage des pods. |
@@ -429,7 +429,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity, mise à l'échelle automatique,
 entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes
-et duplication des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à OpenClaw
+et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à OpenClaw
 partagée avec la variante Cloud Run est décrite dans
 **[OpenClaw_Common](OpenClaw_Common.md)**.
 

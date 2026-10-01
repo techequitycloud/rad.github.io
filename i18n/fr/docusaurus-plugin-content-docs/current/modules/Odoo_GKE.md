@@ -9,7 +9,7 @@ description: "Référence de configuration pour déployer Odoo sur GKE Autopilot
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Odoo_GKE.png" alt="Odoo sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Odoo est une suite ERP open source complète comptant plus de 12M d'utilisateurs, avec des modules couvrant le CRM,
+Odoo est une suite ERP open source complète comptant plus de 12 millions d'utilisateurs, avec des modules couvrant le CRM,
 la comptabilité, les stocks, la fabrication, les RH et l'eCommerce. Ce module déploie Odoo Community
 Edition sur **GKE Autopilot** en s'appuyant sur le socle [App_GKE](App_GKE.md), qui provisionne
 et gère l'infrastructure Google Cloud et Kubernetes partagée.
@@ -30,14 +30,14 @@ services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Python/Odoo, 1 vCPU / 512 MiB par défaut (à porter à ≥ 2 vCPU / 4 GiB pour la production), autoscaling horizontal |
-| Base de données | Cloud SQL pour PostgreSQL | Obligatoire — Odoo ne prend en charge ni MySQL ni SQL Server |
+| Base de données | Cloud SQL for PostgreSQL | Obligatoire — Odoo ne prend en charge ni MySQL ni SQL Server |
 | Fichiers partagés | Filestore (NFS) | Répertoires filestore, sessions et extra-addons partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket d'addons dédié (`odoo-addons`) pour les addons personnalisés et communautaires |
 | Cache et sessions | Redis (facultatif) | Désactivé par défaut ; requis lorsque `max_instance_count > 1` pour partager l'état des sessions |
 | Secrets | Secret Manager | Mot de passe maître généré automatiquement (`ODOO_MASTER_PASS`) et mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe ; domaine personnalisé et certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** Le moteur de base de données est fixe ; choisir MySQL ou `NONE` empêche
   le démarrage.
@@ -45,7 +45,7 @@ services Google Cloud :
   champs binaires, ressources compilées) est isolé dans chaque pod et perdu au redémarrage.
 - **L'affinité de session vaut `ClientIP`.** Odoo stocke les sessions sur NFS ; rattacher les requêtes au
   même pod évite les recherches de session entre pods.
-- **Deux tâches d'initialisation s'exécutent à chaque déploiement.** `nfs-init` configure la propriété des répertoires NFS et
+- **Deux jobs d'initialisation s'exécutent à chaque déploiement.** `nfs-init` configure la propriété des répertoires NFS et
   `db-init` crée la base de données et l'utilisateur PostgreSQL — toutes deux sont idempotentes.
 - **Le mot de passe maître Odoo** est généré automatiquement et stocké dans Secret Manager ; vous
   ne le définissez jamais en clair.
@@ -81,10 +81,10 @@ de réplicas.
 Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type
 de charge de travail (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL {#b-cloud-sql-for-postgresql}
+### B. Cloud SQL for PostgreSQL {#b-cloud-sql-for-postgresql}
 
 Odoo stocke toutes les données de l'ERP (contacts, factures, stocks, commandes) dans une instance gérée Cloud SQL
-pour PostgreSQL. Les pods s'y connectent en privé via le sidecar **Cloud SQL Auth Proxy**
+for PostgreSQL. Les pods s'y connectent en privé via le sidecar **Cloud SQL Auth Proxy**
 sur un socket Unix ; aucune IP publique n'est donc exposée. Au premier déploiement, la tâche `db-init`
 crée la base de données et l'utilisateur de l'application.
 
@@ -193,7 +193,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application Odoo {#3-odoo-application-behaviour}
 
-- **Deux tâches d'initialisation à chaque déploiement.**
+- **Deux jobs d'initialisation à chaque déploiement.**
   - `nfs-init` — monte le partage NFS et crée `/mnt/filestore`, `/mnt/sessions` et
     `/mnt/extra-addons` avec la propriété `101:101` (l'utilisateur du processus Odoo). Doit réussir
     avant le démarrage d'Odoo.
@@ -274,7 +274,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `container_port` | `8069` | Port d'écoute d'Odoo. Ne le modifiez pas, sauf si le serveur Odoo est reconfiguré. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
-| `enable_image_mirroring` | `true` | Duplique l'image de conteneur dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de conteneur dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -311,7 +311,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `enable_resource_quota` | `false` | Plafonne la CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — Kubernetes interprète des entiers nus comme des octets, ce qui bloque la planification. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -328,7 +328,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `uptime_check_config` | `{ enabled = false, path = "/" }` | Test de disponibilité Cloud Monitoring facultatif ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -460,36 +460,36 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` | Critique | Odoo exige exclusivement PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
-| `enable_nfs` | `true` | Critique | Sans NFS, les pièces jointes et les données de session sont isolées dans chaque pod et perdues au redémarrage. |
-| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'ERP. |
-| `container_resources.memory_limit` | `≥ 4Gi` pour la production | Critique | La valeur par défaut `512Mi` provoque immédiatement un OOM Python lors du chargement des modules. Augmentez-la toujours à au moins `2Gi`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Kubernetes interprète des entiers nus comme des octets, ce qui bloque toute planification. |
-| `explicit_secret_values` (ODOO_MASTER_PASS) | fort et unique | Critique | Le gestionnaire de bases de données à l'adresse `/web/database/manager` n'est protégé que par ce mot de passe ; une valeur faible permet à quiconque peut atteindre l'URL de supprimer la base de données. |
-| `enable_redis` | `true` lorsque `max_instance_count > 1` | Élevé | Sans Redis ni `session_affinity = ClientIP`, les utilisateurs sont déconnectés lorsqu'ils sont routés vers un autre pod. |
-| `redis_host` | point de terminaison explicite | Élevé | Requis lorsque `enable_redis = true` ; une valeur vide provoque des défaillances du backend de sessions au démarrage. |
-| `application_version` | LTS valide (`18.0`, `17.0`) | Élevé | Un tag de version invalide fait échouer l'étape Cloud Build lors du build de l'image. |
-| `container_image_source` | `custom` | Élevé | Odoo nécessite une image personnalisée pour câbler le socket PostgreSQL et les chemins du filestore ; une image amont non configurée pour les sockets Unix Cloud SQL ne parviendra pas à se connecter. |
-| `min_instance_count` | `1` | Élevé | `0` arrête le planificateur d'arrière-plan d'Odoo (cron) et ajoute des démarrages à froid de 30 à 60 secondes. |
-| `session_affinity` | `ClientIP` | Élevé | Sans affinité ni Redis, les déploiements à plusieurs réplicas perdent continuellement l'état des sessions. |
-| `backup_retention_days` | `90` pour la production | Élevé | Odoo contient des données financières ; 7 jours ne suffisent pas pour la plupart des exigences de conformité. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour la production | Élevé | Le gestionnaire de bases de données et le portail d'administration d'Odoo ne doivent pas être accessibles publiquement sans authentification. |
-| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds lorsque l'unique pod ne peut pas être évincé. |
-| `stateful_pvc_size` | `100Gi`+ pour la production | Moyen | Les pièces jointes de l'ERP (factures, contrats, images de produits) s'accumulent rapidement. |
+| `database_type` | `POSTGRES` | Critical | Odoo exige exclusivement PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
+| `enable_nfs` | `true` | Critical | Sans NFS, les pièces jointes et les données de session sont isolées dans chaque pod et perdues au redémarrage. |
+| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'ERP. |
+| `container_resources.memory_limit` | `≥ 4Gi` pour la production | Critical | La valeur par défaut `512Mi` provoque immédiatement un OOM Python lors du chargement des modules. Augmentez-la toujours à au moins `2Gi`. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critical | Kubernetes interprète des entiers nus comme des octets, ce qui bloque toute planification. |
+| `explicit_secret_values` (ODOO_MASTER_PASS) | fort et unique | Critical | Le gestionnaire de bases de données à l'adresse `/web/database/manager` n'est protégé que par ce mot de passe ; une valeur faible permet à quiconque peut atteindre l'URL de supprimer la base de données. |
+| `enable_redis` | `true` lorsque `max_instance_count > 1` | High | Sans Redis ni `session_affinity = ClientIP`, les utilisateurs sont déconnectés lorsqu'ils sont routés vers un autre pod. |
+| `redis_host` | point de terminaison explicite | High | Requis lorsque `enable_redis = true` ; une valeur vide provoque des défaillances du backend de sessions au démarrage. |
+| `application_version` | LTS valide (`18.0`, `17.0`) | High | Un tag de version invalide fait échouer l'étape Cloud Build lors du build de l'image. |
+| `container_image_source` | `custom` | High | Odoo nécessite une image personnalisée pour câbler le socket PostgreSQL et les chemins du filestore ; une image amont non configurée pour les sockets Unix Cloud SQL ne parviendra pas à se connecter. |
+| `min_instance_count` | `1` | High | `0` arrête le planificateur d'arrière-plan d'Odoo (cron) et ajoute des démarrages à froid de 30 à 60 secondes. |
+| `session_affinity` | `ClientIP` | High | Sans affinité ni Redis, les déploiements à plusieurs réplicas perdent continuellement l'état des sessions. |
+| `backup_retention_days` | `90` pour la production | High | Odoo contient des données financières ; 7 jours ne suffisent pas pour la plupart des exigences de conformité. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour la production | High | Le gestionnaire de bases de données et le portail d'administration d'Odoo ne doivent pas être accessibles publiquement sans authentification. |
+| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds lorsque l'unique pod ne peut pas être évincé. |
+| `stateful_pvc_size` | `100Gi`+ pour la production | Medium | Les pièces jointes de l'ERP (factures, contrats, images de produits) s'accumulent rapidement. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity, autoscaling,
 entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-duplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Odoo
+mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Odoo
 partagée avec la variante Cloud Run est décrite dans **[Odoo_Common](Odoo_Common.md)**.
 
 <!-- related-guides -->

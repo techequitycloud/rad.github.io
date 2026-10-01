@@ -78,7 +78,7 @@ de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service GlitchTip {#a-cloud-run--the-glitchtip-service}
 
@@ -116,7 +116,7 @@ migrations et créent le superutilisateur.
   ```
 
 Le nom de l'instance, la base, l'utilisateur et le secret du mot de passe figurent dans
-les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de
+les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de
 connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage et NFS {#c-cloud-storage--nfs}
@@ -252,7 +252,7 @@ leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement (utilisez `cr` pour une exécution aux côtés de la variante GKE). |
-| `support_users` | `[]` | Adresses e-mail qui reçoivent l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail qui reçoivent l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -278,7 +278,7 @@ leur comportement standard.
 | `container_port` | `8080` | GlitchTip est servi par Granian sur le port 8080. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `enable_cloudsql_volume` | `true` | Socket du Cloud SQL Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image de base dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
@@ -386,12 +386,12 @@ provisionnement.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus
 rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -405,7 +405,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`, `glitchtip-migrate`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -443,7 +443,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à GlitchTip,
 partagée avec la variante GKE, est décrite dans
 **[GlitchTip_Common](GlitchTip_Common.md)**.

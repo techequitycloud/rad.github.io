@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Uptime Kuma sur Cloud Run dans votre prop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Uptime Kuma est un outil auto-hébergé de supervision de disponibilité pour les sites web, les API, les ports TCP et les enregistrements DNS, avec des pages d'état et plus de 90 canaux de notification. Ce lab vous fait parcourir le cycle de vie opérationnel complet du module **Uptime Kuma on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le supprimer.
 
@@ -21,13 +21,13 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service, effectuer la configuration administrateur initiale et vérifier son état de santé.
 - Expliquer pourquoi Uptime Kuma a besoin d'un CPU toujours alloué et d'une instance en cours d'exécution pour superviser.
 - Effectuer les opérations du jour 2 — inspecter les révisions, mettre à l'échelle, mettre à jour et vérifier l'état stocké sur NFS.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -65,7 +65,7 @@ export REGION="us-central1"          # the region you deploy into
    personnalisée légère `FROM louislam/uptime-kuma` qui remplace le `journal_mode` SQLite codé en dur,
    de `WAL` à `DELETE` — le verrouillage par mémoire partagée de WAL n'est pas sûr sur
    le volume `/app/data` adossé à NFS — et l'image construite est poussée vers Artifact
-   Registry. Il n'y a **ni instance Cloud SQL, ni secret applicatif, ni tâche
+   Registry. Il n'y a **ni instance Cloud SQL, ni secret applicatif, ni job
    d'initialisation** — c'est l'un des modules les plus rapides à déployer (généralement
    **10 à 15 minutes** ; aucun provisionnement de base de données).
 
@@ -125,7 +125,7 @@ export REGION="us-central1"          # the region you deploy into
    `min_instance_count = 1` et `max_instance_count = 1` (SQLite n'admet qu'un seul processus d'écriture)
    et cliquez sur **Update** sur la page de détails du déploiement — le module gère la
    spécification du service, la mise à l'échelle est donc une modification de configuration, et non une modification manuelle via `gcloud`
-   (une modification manuelle serait annulée lors de l'application suivante). Conservez
+   (une modification manuelle serait annulée lors du prochain apply). Conservez
    `cpu_always_allocated = true` : sans CPU alloué, le planificateur interne au processus
    est bridé entre les requêtes et les vérifications se figent.
 
@@ -150,7 +150,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -211,7 +211,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 le partage NFS Filestore (y compris la base de données SQLite avec toutes les sondes et
@@ -225,9 +225,9 @@ séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run (CPU toujours alloué), NFS sur `/app/data`, et construit/met en miroir une image personnalisée corrigée pour un SQLite sûr sur NFS — sans base de données, secrets ni tâches d'initialisation |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run (CPU toujours alloué), NFS sur `/app/data`, et construit/met en miroir une image personnalisée corrigée pour un SQLite sûr sur NFS — sans base de données, secrets ni jobs d'initialisation |
 | 2 — Accéder et vérifier | Manuel | La vérification de santé réussit ; compte administrateur créé sur la page de configuration initiale |
 | 3 — Exploiter | Manuel | Inspecter les révisions, définir min=1/max=1 pour une supervision 24 h/24 à processus d'écriture unique, mettre à jour la version, vérifier l'état NFS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; surveiller le nombre d'instances et le niveau de CPU ; surveiller le superviseur (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de trous dus à la mise à zéro, de NFS/perte de données, de verrou SQLite, de sortie réseau et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

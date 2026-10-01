@@ -75,7 +75,7 @@ déploiement assemble un petit ensemble de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-des services et des ressources figurent dans les [Outputs](#5-outputs) du
+des services et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Seerr {#a-cloud-run--the-seerr-service}
@@ -209,7 +209,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `seerr` | Nom de base des ressources. |
 | `display_name` | `Seerr` | Nom lisible affiché dans l'interface de la plateforme. |
@@ -217,23 +217,23 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_port` | `5055` | Confirmé via `docker run` en local et un déploiement réel. |
 | `container_image_source` | `prebuilt` | Seerr ne prend en charge que l'image officielle ; `Seerr_Common` code également cette valeur en dur en interne. |
 | `min_instance_count` / `max_instance_count` | `1` / `5` | Voir le §6 ci-dessous — `max_instance_count = 5` est une valeur par défaut plus permissive que ne le suggérerait le modèle de paramètres à écrivain unique de Seerr. |
-| `enable_image_mirroring` | `true` | Réplique l'image dans Artifact Registry (évite les limites de débit de GHCR). |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry (évite les limites de débit de GHCR). |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `storage_buckets` | un bucket `data` | Bucket supplémentaire, distinct du bucket `storage` automatique. |
 | `gcs_volumes` | `[]` | Le montage du bucket `storage` sur `/app/config` est ajouté automatiquement ; utilisez ce paramètre uniquement pour des volumes *supplémentaires*. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Obligatoire — Seerr ne dispose d'aucun chemin hors Postgres. |
 | `db_name` / `db_user` | `seerr` / `seerr` | Transmis à `Seerr_Common`, injectés sous forme de `DB_NAME`/`DB_USER`. |
@@ -241,21 +241,21 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Vide, et le reste généralement — `dbConnection.runMigrations()` s'exécute à chaque démarrage au sein même de l'application. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `/api/v1/status` (via `Seerr_Common`) | Point de terminaison d'état JSON non authentifié renvoyant `200` ; la valeur par défaut du `variables.tf` propre à la variante (HTTP `/`) est remplacée par la valeur par défaut plus précise de `Seerr_Common`. |
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` / `service_url` | Nom et URL du service Cloud Run. |
 | `database_instance_name` / `database_name` / `database_user` / `database_password_secret` | Identifiants de l'instance Cloud SQL et de la base de données Seerr. |
@@ -284,7 +284,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-réplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La
+mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
 configuration applicative propre à Seerr, partagée avec la variante GKE, est
 décrite dans **[Seerr_Common](Seerr_Common.md)**.
 

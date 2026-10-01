@@ -19,7 +19,7 @@ Technitium DNS Server est un serveur DNS faisant autorité et récursif, auto-h�
 multiplateforme (.NET), doté d'une console d'administration web complète et d'une API REST pour gérer
 les zones, les enregistrements, le blocage des publicités et des traqueurs au niveau DNS, le transfert
 conditionnel et le DNS-over-HTTPS/TLS. Ce module déploie l'image officielle `technitium/dns-server`
-sur **Cloud Run v2**, sans modification, au-dessus de la fondation [App_CloudRun](App_CloudRun.md),
+sur **Cloud Run v2**, sans modification, au-dessus du socle [App_CloudRun](App_CloudRun.md),
 qui provisionne et gère l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise TechnitiumDNS et sur la manière de les explorer
@@ -27,7 +27,7 @@ et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour
 à toutes les applications Cloud Run — identité du service, ingress et équilibrage de charge, mise à
 l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -37,7 +37,7 @@ TechnitiumDNS s'exécute comme un conteneur préconstruit unique sur Cloud Run v
 assemble un ensemble volontairement restreint de services Google Cloud — TechnitiumDNS n'a lui-même
 aucune dépendance à une base de données ou à un cache :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur préconstruit unique, 500m vCPU / 512 MiB par défaut ; facturation à la requête, mise à l'échelle jusqu'à zéro |
 | Base de données | **Aucune** | `database_type = "NONE"` ; les zones, paramètres et journaux sont des fichiers plats locaux, aucun Cloud SQL n'est provisionné |
@@ -122,7 +122,7 @@ initial.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app` — il s'agit de l'**URL de la console web**, et
 non d'un point de terminaison DNS. Un équilibreur de charge HTTPS externe avec un domaine personnalisé,
@@ -187,14 +187,14 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 / 3 — Environnement de déploiement et identité de l'application {#group-2--3--deployment-environment--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `application_name` | `technitiumdns` | Nom de base du service, du dépôt du registre et des secrets. Ne pas modifier après le premier déploiement. |
@@ -203,7 +203,7 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure de support. |
 | `container_image_source` | `prebuilt` | Déploie l'image officielle telle quelle ; `custom` est accepté pour la compatibilité future, mais aucun Dockerfile n'est fourni. |
@@ -214,25 +214,25 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 | `container_port` | `5380` | Port par défaut de la console web. |
 | `cpu_always_allocated` | `false` | Facturation à la requête — aucun travail d'arrière-plan pour lequel rester actif. |
 | `enable_cloudsql_volume` | `false` | Désactivé — TechnitiumDNS n'a pas de base de données. |
-| `enable_image_mirroring` | `true` | Réplique l'image TechnitiumDNS dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image TechnitiumDNS dans Artifact Registry. |
 
 ### Groupe 5 — Accès et réseau {#group-5--access--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Accès public à la console par défaut. |
 | `enable_iap` | `false` | Exige une connexion Google. **Vivement recommandé** — sinon, la console repose uniquement sur son propre mot de passe administrateur. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres `DNS_SERVER_*` supplémentaires (p. ex. `DNS_SERVER_FORWARDERS`, `DNS_SERVER_DOMAIN`). |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager (secrets supplémentaires ; `DNS_SERVER_ADMIN_PASSWORD` est déjà raccordé). |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gcs_volumes` | `[]` | Buckets GCS supplémentaires à monter ; le bucket de configuration sur `/etc/dns` est ajouté automatiquement. |
 | `storage_buckets` | `[]` | Buckets supplémentaires en plus du bucket de configuration créé automatiquement. |
@@ -240,21 +240,21 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | TechnitiumDNS n'a pas de base de données externe ; laissez `NONE`. |
 | `application_database_name` / `application_database_user` | `technitiumdns` | Sans effet — aucune base de données n'est provisionnée. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | TechnitiumDNS n'a besoin d'aucun job d'initialisation ; laissez vide. |
 | `cron_jobs` | `[]` | Jobs Cloud Run planifiés optionnels. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` délai de 20s | Sonde de démarrage ciblant la page racine publique de la console. |
 | `liveness_probe` | HTTP `/` délai de 30s | Sonde de liveness. |
@@ -262,7 +262,7 @@ entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportemen
 
 ### Groupe 16 — Cache Redis {#group-16--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Non requis — TechnitiumDNS n'a aucune dépendance à Redis. |
 
@@ -303,8 +303,8 @@ ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la
-> fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du
+> socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment
 > du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant
 > toute création de ressource.
 
@@ -320,9 +320,9 @@ ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, mise à
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à
 l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à TechnitiumDNS, partagée avec
 la variante GKE, est décrite dans **[TechnitiumDNS_Common](TechnitiumDNS_Common.md)**.
 

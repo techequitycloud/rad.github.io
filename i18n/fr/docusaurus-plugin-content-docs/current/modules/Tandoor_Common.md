@@ -17,7 +17,7 @@ explique les valeurs par défaut que vous voyez dans la documentation des platef
 
 Pour l'infrastructure qui provisionne et exécute réellement Tandoor, consultez les guides
 des plateformes ([Tandoor_GKE](Tandoor_GKE.md), [Tandoor_CloudRun](Tandoor_CloudRun.md))
-et les guides des fondations ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -64,14 +64,14 @@ gcloud secrets list --project "$PROJECT" --filter="name~secret-key OR name~super
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans les sorties du déploiement de la plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle
 partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Tandoor exige **PostgreSQL 15** ; le moteur est imposé et aucun autre moteur n'est pris
 en charge. Le `boot.sh` propre à Tandoor interroge `pg_isready` avant de poursuivre —
@@ -128,7 +128,7 @@ tag de l'image.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Tandoor_Common` établit l'environnement Tandoor de base afin que l'application démarre
 correctement dès le premier démarrage :
@@ -167,14 +167,14 @@ du port (liveness) :
 ## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** `data` dédié (pour les images des recettes) est déclaré ici et
-provisionné par la fondation, qui accorde également l'accès au compte de service de la
+provisionné par le socle, qui accorde également l'accès au compte de service de la
 charge de travail. Il **est** monté automatiquement : `Tandoor_Common` déclare une entrée
 `gcs_volumes` qui monte `gcs-<app><prefix>-data` sur
 `/opt/recipes/mediafiles` (le `MEDIA_ROOT` de Tandoor) avec
 `implicit-dirs,uid=0,gid=0,file-mode=0644,dir-mode=0755` — sans cela, les images de
 recettes téléversées résidaient sur le disque éphémère du conteneur et étaient perdues à
 chaque redémarrage. Une valeur `gcs_volumes` fournie par l'opérateur reste prioritaire
-(la fondation la privilégie). `STATIC_ROOT` est régénéré à chaque démarrage et ne
+(le socle la privilégie). `STATIC_ROOT` est régénéré à chaque démarrage et ne
 nécessite aucune persistance.
 
 ```bash

@@ -29,13 +29,13 @@ Grocy s'exécute sous forme d'un conteneur nginx + php-fpm (l'image `grocy` amon
 | Secrets | Secret Manager | Aucun n'est généré pour Grocy — il n'existe pas d'identifiant administrateur injectable |
 | Entrée | Service Kubernetes | `LoadBalancer` par défaut du module ; ce déploiement utilise `ClusterIP` (voir §5) |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **SQLite est la seule base de données prise en charge par Grocy.** Confirmé par la lecture du code source amont de Grocy (`services/DatabaseService.php`) — il n'existe aucun embranchement vers un pilote MySQL/Postgres. `database_type` est fixé à `NONE`.
 - **Un véritable PVC en mode bloc, ni NFS ni GCS FUSE — par conception, et non comme correctif de bug.** `stateful_pvc_enabled = true` est la valeur par défaut du module, qui résout automatiquement `workload_type` en `"StatefulSet"`. `Grocy_Common` définit `enable_gcs_storage_volume = !stateful_pvc_enabled`, si bien que le volume GCS FUSE est entièrement ignoré dès que le PVC est utilisé (l'état par défaut). Voir §4 pour comprendre pourquoi c'est important et en quoi cela se compare à la variante Cloud Run.
 - **Instance unique uniquement.** `min_instance_count = 1`, `max_instance_count = 1`. La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering — et comme le StatefulSet utilise `volumeClaimTemplates`, augmenter le nombre de réplicas donnerait à chaque pod son propre PVC non synchronisé au lieu de partager `/config`.
 - **Aucun identifiant administrateur injectable.** L'image amont est livrée avec les identifiants par défaut `admin` / `admin`, modifiés via l'interface web à la première connexion. Aucun secret Secret Manager n'est créé pour Grocy.
-- **Les sondes de santé ciblent `/`, pas `/health`.** Grocy n'a pas de point de terminaison de santé dédié ; la page de connexion (`200`, sans authentification) sert à la fois pour la sonde de démarrage et pour la sonde de disponibilité (liveness).
+- **Les sondes de santé ciblent `/`, pas `/health`.** Grocy n'a pas de point de terminaison de santé dédié ; la page de connexion (`200`, sans authentification) sert à la fois pour la sonde de démarrage et pour la sonde de vivacité (liveness).
 
 ---
 
@@ -191,7 +191,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche d'initialisation par défaut — Grocy initialise son propre schéma SQLite au premier démarrage. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut — Grocy initialise son propre schéma SQLite au premier démarrage. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
@@ -217,7 +217,7 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des tâches d'initialisation créées (vide par défaut). |
+| `initialization_jobs` | Noms des jobs d'initialisation créés (vide par défaut). |
 | `kubernetes_ready` | Indique si le point de terminaison du cluster est disponible et si toutes les ressources Kubernetes sont déployées. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
@@ -226,7 +226,7 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 
 ---
 
-## 7. Pièges de configuration et valeurs par défaut raisonnables {#7-configuration-pitfalls--sensible-defaults}
+## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -236,7 +236,7 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 > *et leurs combinaisons* au moment du plan. La plupart des entrées hors limites ou
 > contradictoires sont détectées avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` | Critical | Le désactiver sans montage `gcs_volumes` correspondant ramène `/config` sur GCS FUSE, ce qui reproduit le risque de corruption lié à la fréquence d'écriture confirmé sur `Grocy_CloudRun` — une couche de traduction réseau/stockage d'objets ne peut pas soutenir le schéma d'écriture de `grocy.db-journal` de Grocy. |
 | `stateful_pvc_mount_path` | `/config` | Critical | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
@@ -249,7 +249,7 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 
 ---
 
-Pour le comportement du socle mentionné tout au long de ce guide — Workload Identity, entrée et équilibrage de charge, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Grocy partagée avec la variante Cloud Run est décrite dans **[Grocy_Common](Grocy_Common.md)**. Pour le bug de corruption du stockage que ce module a évité par conception, consultez **[Grocy_CloudRun](Grocy_CloudRun.md)**.
+Pour le comportement du socle mentionné tout au long de ce guide — Workload Identity, entrée et équilibrage de charge, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Grocy partagée avec la variante Cloud Run est décrite dans **[Grocy_Common](Grocy_Common.md)**. Pour le bug de corruption du stockage que ce module a évité par conception, consultez **[Grocy_CloudRun](Grocy_CloudRun.md)**.
 
 <!-- related-guides -->
 

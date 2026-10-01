@@ -29,10 +29,10 @@ guides des plateformes ([Superset_GKE](Superset_GKE.md),
 | Domaine | Fourni par Superset_Common | Où cela apparaît |
 |---|---|---|
 | Clé secrète Flask | Génère `SUPERSET_SECRET_KEY` (aléatoire, 50 caractères) et la stocke dans **Secret Manager** | À récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Fixe `apache/superset:latest` et la configuration Cloud Build qui l'étend | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Fixe `apache/superset:latest` et la configuration Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit le job `db-init` (création de la base et de l'utilisateur) et le job `app-init` (migration du schéma et création de l'administrateur) | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket de données **Cloud Storage** | Output `storage_buckets` |
+| Amorçage de la base de données | Définit le job `db-init` (création de la base et de l'utilisateur) et le job `app-init` (migration du schéma et création de l'administrateur) | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket de données **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres de base | Définit le port de conteneur de référence de Superset (8088), les ressources par défaut et la configuration des sondes de santé | Comportement de l'application dans les guides des plateformes |
 | Sondes de santé | HTTP GET `/health`, démarrage : délai de 60 s / 12 échecs, vivacité : délai de 30 s / 3 échecs | §Observabilité dans les guides des plateformes |
 
@@ -119,7 +119,7 @@ gcloud artifacts docker images list <registry-path> --project "$PROJECT"
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Superset_Common` établit l'environnement de référence de Superset :
 
@@ -152,7 +152,7 @@ Superset n'émet pas de redirections HTTP→HTTPS qui casseraient les sondes HTT
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket de données **Cloud Storage** dédié est déclaré ici et provisionné par le
 socle. L'accès est accordé automatiquement au compte de service de la charge de

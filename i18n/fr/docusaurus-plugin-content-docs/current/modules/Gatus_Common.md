@@ -27,11 +27,11 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Domaine | Fourni par Gatus_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Encapsule l'image officielle `ghcr.io/twin/gatus` — un binaire statique véritablement distroless — avec un `config.yaml` intégré et un répertoire `/data` vide accessible en écriture ; construite via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule l'image officielle `ghcr.io/twin/gatus` — un binaire statique véritablement distroless — avec un `config.yaml` intégré et un répertoire `/data` vide accessible en écriture ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — `database_type = "NONE"`. Gatus n'a pas de base de données externe ; son stockage d'historique facultatif est un fichier SQLite local | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | **Aucune** — aucun job d'initialisation n'est injecté. `initialization_jobs` est transmis tel quel (vide par défaut) | Output `initialization_jobs` |
+| Initialisation de la base de données | **Aucune** — aucun job d'initialisation n'est injecté. `initialization_jobs` est transmis tel quel (vide par défaut) | Sortie `initialization_jobs` |
 | Secrets cryptographiques | **Aucun** — `secret_ids` est vide. Gatus n'a besoin d'aucun identifiant au moment du déploiement ; la protection facultative par basic-auth/OIDC se configure directement dans `config.yaml` | — |
-| Stockage d'objets | **Aucun** — `storage_buckets` est vide | Output `storage_buckets` |
+| Stockage d'objets | **Aucun** — `storage_buckets` est vide | Sortie `storage_buckets` |
 | Paramètres de base | Fixe `container_port = 8080` ; les points de terminaison, les alertes et le stockage reposent entièrement sur un fichier (`config.yaml`), et non sur des variables d'environnement | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde par défaut de démarrage/d'activité ciblant `/health` | §Observabilité dans les guides des plateformes |
 

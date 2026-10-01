@@ -44,7 +44,7 @@ Cloud :
 | Secrets | Secret Manager | `PAYLOAD_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire et le schéma n'est pas créé au démarrage.** Démarrer le serveur
   construit sur une base de données vierge ne crée aucune table — le job d'initialisation
@@ -244,7 +244,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
 | `enable_image_mirroring` | `true` | Copie l'image construite dans Artifact Registry. |
 
-### Groupe 5 — Accès et contrôle de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -320,12 +320,12 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) — **Medium**
 > (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `PAYLOAD_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
 | `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |

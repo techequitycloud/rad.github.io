@@ -31,7 +31,7 @@ durée.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -56,7 +56,7 @@ durée.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -80,7 +80,7 @@ export REGION="us-central1"           # the region you deploy into
    génère les secrets Secret Manager (`APPSMITH_ENCRYPTION_PASSWORD`,
    `APPSMITH_ENCRYPTION_SALT`, `APPSMITH_SUPERVISOR_PASSWORD`) et met en miroir l'image
    préconstruite `appsmith/appsmith-ce` depuis Docker Hub vers Artifact
-   Registry. Il n'y a **ni instance Cloud SQL ni tâche d'initialisation de base de données** —
+   Registry. Il n'y a **ni instance Cloud SQL ni job d'initialisation de base de données** —
    Appsmith CE exécute ses propres MongoDB et Redis intégrés et s'initialise lui-même au
    premier démarrage. Comptez **10–20 minutes** pour le premier déploiement ; le conteneur monolithique
    lui-même démarre lentement (Mongo, Redis et le backend Java intégrés démarrent tous
@@ -131,7 +131,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — StatefulSet, pod et PVC :
 
@@ -179,13 +179,13 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=100
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -255,7 +255,7 @@ supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail StatefulSet GKE, un PVC de 20Gi, les secrets de chiffrement/superviseur, et met en miroir l'image préconstruite — pas de Cloud SQL, pas de tâche d'initialisation de base |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail StatefulSet GKE, un PVC de 20Gi, les secrets de chiffrement/superviseur, et met en miroir l'image préconstruite — pas de Cloud SQL, pas de job d'initialisation de base |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé réussit ; créer le compte administrateur initial dans l'interface |
 | 3 — Exploiter | Manuel | Inspecter l'unique pod du StatefulSet, mettre à jour la version, gérer les secrets, inspecter les données persistées du PVC — ne pas dépasser 1 réplica |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |

@@ -59,7 +59,7 @@ seul conteneur). Le déploiement assemble un ensemble ciblé de services Google 
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Kestra {#a-gke-autopilot--the-kestra-workload}
@@ -85,8 +85,8 @@ Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'éc
 Kestra stocke tout l'état des workflows — définitions de flux, historique des exécutions, déclencheurs, namespaces
 et file d'attente interne des tâches — dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods l'atteignent
 via le sidecar **Cloud SQL Auth Proxy** sur un socket TCP à `127.0.0.1:5432`
-(aucune IP publique n'est exposée). Lors du premier déploiement, une tâche d'initialisation crée la base de données Kestra,
-l'utilisateur et accorde les privilèges nécessaires.
+(aucune IP publique n'est exposée). Lors du premier déploiement, un job d'initialisation crée la base de données Kestra et
+l'utilisateur, et accorde les privilèges nécessaires.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -135,7 +135,7 @@ Le secret du mot de passe administrateur est nommé `<resource_prefix>-admin-pas
 de la base de données figure dans les [Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour
 l'intégration Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 La charge de travail est exposée via une IP Cloud Load Balancing externe. `enable_custom_domain`
 vaut `true` par défaut, ce qui provisionne une Kubernetes Gateway avec un certificat géré par Google pour
@@ -169,11 +169,11 @@ optionnels sont disponibles.
 
 ## 3. Comportement de l'application Kestra {#3-kestra-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche d'initialisation (`db-init`) utilise `postgres:15-alpine`
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation (`db-init`) utilise `postgres:15-alpine`
   pour se connecter via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et
   l'utilisateur Kestra, accorde les privilèges et réinitialise le schéma public afin que Flyway puisse appliquer toutes les migrations
-  proprement sur une instance Cloud SQL neuve. La tâche signale au proxy de s'arrêter proprement
-  une fois terminée.
+  proprement sur une instance Cloud SQL neuve. Le job signale au proxy de s'arrêter proprement
+  une fois terminé.
 - **Migrations Flyway au démarrage.** Kestra exécute ses propres migrations de schéma basées sur Flyway à chaque
   démarrage. Le paramètre `FLYWAY_DATASOURCES_POSTGRES_BASELINE_ON_MIGRATE=true` évite les échecs
   sur Cloud SQL, qui pré-remplit le schéma public avec des objets d'extension. La mise à niveau de
@@ -215,7 +215,7 @@ propres à Kestra ou notables pour lui sont listés ; toutes les autres entrées
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -274,14 +274,14 @@ pour dimensionner le pod.
 | `namespace_name` | `""` | Laissez vide pour le générer automatiquement à partir du nom de l'application et de l'ID de tenant. |
 | `network_tags` | `["nfsserver"]` | Tags de nœud/pod pour les règles de pare-feu VPC. |
 | `enable_network_segmentation` | `false` | Crée des ressources Kubernetes NetworkPolicy. |
-| `configure_service_mesh` | `false` | Active l'injection Istio pour le namespace de l'application. |
+| `configure_service_mesh` | `false` | Active l'injection Istio pour l'espace de noms de l'application. |
 | `extra_service_ports` | `[]` | Ports de Service supplémentaires pour les charges de travail multiprotocoles. Déclarée mais **non transmise** — sans effet sur ce module. |
 
 `prereq_gke_subnet_cidr`, `prereq_subnet_cidr_override`, `prereq_gke_pod_cidr_override` et
-`prereq_gke_service_cidr_override` contrôlent les prérequis VPC/GKE en ligne créés uniquement lorsqu'aucun
+`prereq_gke_service_cidr_override` contrôlent les prérequis VPC/GKE intégrés (inline) créés uniquement lorsqu'aucun
 réseau/cluster `Services_GCP` n'existe encore. `prereq_gke_subnet_cidr` est déclarée mais non
-référencée ; les trois variables `*_override` sont transmises et n'ont d'importance que pour les déploiements en ligne existants
-(sans `Services_GCP`), afin d'éviter de remplacer le cluster lors d'une nouvelle application.
+référencée ; les trois variables `*_override` sont transmises et n'ont d'importance que pour les déploiements existants avec prérequis intégrés
+(sans `Services_GCP`), afin d'éviter de remplacer le cluster lors d'un nouvel apply.
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
@@ -294,7 +294,7 @@ Pertinent uniquement lorsque `workload_type = "StatefulSet"` ou `stateful_pvc_en
 | `stateful_pvc_mount_path` | `/app/storage` | Chemin du conteneur où le PVC est monté. |
 | `stateful_pvc_storage_class` | `""` | StorageClass Kubernetes ; vide utilise la valeur par défaut du cluster. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -311,11 +311,11 @@ Pertinent uniquement lorsque `workload_type = "StatefulSet"` ou `stateful_pvc_en
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring optionnel. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques optionnelles. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. Fournissez une liste non vide pour la remplacer entièrement. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Fournissez une liste non vide pour la remplacer entièrement. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour des tâches auxiliaires planifiées (par ex. sauvegardes). |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de Kestra. |
 
@@ -389,7 +389,7 @@ Les définir n'a aucun effet.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne une Kubernetes Gateway avec un certificat SSL pour les noms d'hôte personnalisés. |
-| `application_domains` | `[]` | Noms d'hôte à servir. Vide avec `enable_custom_domain = true`, un domaine `nip.io` est généré. |
+| `application_domains` | `[]` | Noms d'hôte à servir. S'il est vide alors que `enable_custom_domain = true`, un domaine `nip.io` est généré. |
 | `reserve_static_ip` | `true` | IP externe stable d'un redéploiement à l'autre. Recommandé pour la production. |
 | `gateway_backend_stage` | `dev` | Étape Cloud Deploy (`dev`/`staging`/`prod`) dont le Service est ciblé par la HTTPRoute de la Gateway. Ignorée lorsque `enable_cloud_deploy = false`. |
 | `network_name` | `""` | Déclarée par souci de cohérence avec les conventions du socle. **Non référencée** — la découverte du réseau est gérée en interne via `module.network_discovery`. |
@@ -428,7 +428,7 @@ d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Mappage des ClusterIP des services propres à chaque étape (Cloud Deploy). |
 | `service_external_ip` | IP du LoadBalancer externe (lorsqu'une IP statique est réservée). |
@@ -441,14 +441,14 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de stockage Kestra). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (optionnelle). |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt GitHub. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. `false` lors de la première application d'un nouveau cluster en ligne. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. `false` lors du premier apply d'un nouveau cluster intégré (inline). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
 
@@ -456,29 +456,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `db_name` | `kestra` — à définir une fois | Critique | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, avec perte de tous les flux, de l'historique des exécutions, des déclencheurs et des namespaces. |
-| `application_name` | `kestra` — à définir une fois | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP/Kubernetes, ce qui entraîne une recréation complète avec perte de données. |
-| `KESTRA_BASICAUTH_ENABLED` (injectée à `true`) | laisser telle qu'injectée | Critique | La forcer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne la désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `max_instance_count` | `1` | Élevé | Kestra Community Edition utilise le verrouillage de file d'attente PostgreSQL — plusieurs réplicas provoquent une double affectation des tâches et des conflits d'exécution. |
-| `min_instance_count` | `1` | Élevé | La valeur `0` entraîne des déclencheurs planifiés manqués pendant les périodes de démarrage à froid. Le démarrage de la JVM Kestra peut prendre plusieurs minutes. |
-| `memory_limit` | `4Gi` | Élevé | Des valeurs inférieures à 2 GiB provoquent des erreurs OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
-| `enable_cloudsql_volume` | `true` | Élevé | Requis pour la connectivité PostgreSQL ; bloqué au moment du plan lorsque `database_type != "NONE"`. |
-| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectées à `postgres`) | laisser telles qu'injectées | Élevé | Seul PostgreSQL est provisionné ; les forcer vers un type de backend non pris en charge provoque un échec au démarrage. |
-| `KESTRA_STORAGE_TYPE` (injectée à `gcs`) | laisser telle qu'injectée | Élevé | Passer à `local` fait écrire tous les artefacts d'exécution dans le stockage éphémère du pod, perdus au redémarrage. |
-| Seuil d'échec de `startup_probe` | 40 (par défaut) | Élevé | Le réduire en dessous de ~10 provoque des redémarrages prématurés du pod lors des démarrages lents de la JVM, avant que Kestra ait fini de charger tous les flux. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les connexions de diffusion des journaux de l'interface Kestra se coupent lorsqu'elles sont acheminées vers un autre pod. |
-| `termination_grace_period_seconds` | `60` | Moyen | Des valeurs inférieures à 30 s interrompent les exécutions de tâches en cours. |
-| `enable_pod_disruption_budget` | `true` | Moyen | Désactiver le PDB permet à GKE d'évincer le pod Kestra pendant la maintenance des nœuds, interrompant toutes les exécutions en cours. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification dans le namespace. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface et l'API Kestra sont accessibles publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
-| `organization_id` | à définir en cas d'utilisation de VPC-SC | Moyen | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
+| `db_name` | `kestra` — à définir une fois | Critical | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, avec perte de tous les flux, de l'historique des exécutions, des déclencheurs et des namespaces. |
+| `application_name` | `kestra` — à définir une fois | Critical | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP/Kubernetes, ce qui entraîne une recréation complète avec perte de données. |
+| `KESTRA_BASICAUTH_ENABLED` (injectée à `true`) | laisser telle qu'injectée | Critical | La forcer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne la désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
+| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `max_instance_count` | `1` | High | Kestra Community Edition utilise le verrouillage de file d'attente PostgreSQL — plusieurs réplicas provoquent une double affectation des tâches et des conflits d'exécution. |
+| `min_instance_count` | `1` | High | La valeur `0` entraîne des déclencheurs planifiés manqués pendant les périodes de démarrage à froid. Le démarrage de la JVM Kestra peut prendre plusieurs minutes. |
+| `memory_limit` | `4Gi` | High | Des valeurs inférieures à 2 GiB provoquent des erreurs OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
+| `enable_cloudsql_volume` | `true` | High | Requis pour la connectivité PostgreSQL ; bloqué au moment du plan lorsque `database_type != "NONE"`. |
+| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectées à `postgres`) | laisser telles qu'injectées | High | Seul PostgreSQL est provisionné ; les forcer vers un type de backend non pris en charge provoque un échec au démarrage. |
+| `KESTRA_STORAGE_TYPE` (injectée à `gcs`) | laisser telle qu'injectée | High | Passer à `local` fait écrire tous les artefacts d'exécution dans le stockage éphémère du pod, perdus au redémarrage. |
+| Seuil d'échec de `startup_probe` | 40 (par défaut) | High | Le réduire en dessous de ~10 provoque des redémarrages prématurés du pod lors des démarrages lents de la JVM, avant que Kestra ait fini de charger tous les flux. |
+| `session_affinity` | `ClientIP` | Medium | Sans persistance, les connexions de diffusion des journaux de l'interface Kestra se coupent lorsqu'elles sont acheminées vers un autre pod. |
+| `termination_grace_period_seconds` | `60` | Medium | Des valeurs inférieures à 30 s interrompent les exécutions de tâches en cours. |
+| `enable_pod_disruption_budget` | `true` | Medium | Désactiver le PDB permet à GKE d'évincer le pod Kestra pendant la maintenance des nœuds, interrompant toutes les exécutions en cours. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification dans l'espace de noms. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface et l'API Kestra sont accessibles publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
+| `organization_id` | à définir en cas d'utilisation de VPC-SC | Medium | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
 
 ---
 

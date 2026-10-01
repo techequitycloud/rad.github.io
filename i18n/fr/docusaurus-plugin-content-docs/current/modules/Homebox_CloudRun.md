@@ -13,7 +13,7 @@ Homebox est un système open source et auto-hébergé d'inventaire et d'organisa
 domestique, doté d'un backend d'API REST en Go (de style Echo, ORM Ent) et d'un
 frontend Vue 3/Nuxt servi de manière intégrée par le même binaire — suivez vos
 objets, joignez des photos et organisez-les par emplacement. Ce module déploie
-Homebox sur **Cloud Run v2** au-dessus de la fondation
+Homebox sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google
 Cloud partagée.
 
@@ -23,7 +23,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run —
 identité du service, entrée et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter
 ici.
 
 ---
@@ -34,10 +34,10 @@ Homebox s'exécute sous la forme d'un unique binaire Go (API + frontend intégr�
 sur Cloud Run v2. Le déploiement assemble un ensemble restreint et ciblé de
 services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go/Echo, 1 vCPU / 512 MiB par défaut, mise à l'échelle à zéro |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Homebox lit des variables d'environnement `HBOX_DATABASE_*` distinctes, et non un DSN construit |
+| Base de données | Cloud SQL for PostgreSQL 15 | Homebox lit des variables d'environnement `HBOX_DATABASE_*` distinctes, et non un DSN construit |
 | Stockage objet | Cloud Storage | Un bucket `data` est créé pour les photos et pièces jointes des objets et monté automatiquement sur `/data` |
 | Cache et file d'attente | aucun | Homebox ne dépend ni de Redis ni d'une file d'attente |
 | Secrets | Secret Manager | Mot de passe de la base de données plus `HBOX_AUTH_API_KEY_PEPPER` (un véritable secret consommé par l'application) |
@@ -92,10 +92,10 @@ service et des ressources figurent dans les [sorties](#5-outputs) du déploiemen
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la
 concurrence et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Homebox stocke toutes les données des objets, des emplacements et des
-utilisateurs dans une instance gérée Cloud SQL pour PostgreSQL 15, connectée en
+utilisateurs dans une instance gérée Cloud SQL for PostgreSQL 15, connectée en
 privé via le **Cloud SQL Auth Proxy** sur un socket Unix. Au premier déploiement,
 un Job d'initialisation crée la base de données et l'utilisateur de
 l'application.
@@ -229,20 +229,20 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile — le build échoue. |
-| Première inscription | À effectuer rapidement après le déploiement | **Moyen** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
-| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **Élevé** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Les métadonnées des objets ne sont pas concernées. |
-| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critique | Les modifier ou les vider rompt entièrement la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile — le build échoue. |
+| Première inscription | À effectuer rapidement après le déploiement | **Medium** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
+| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **High** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Les métadonnées des objets ne sont pas concernées. |
+| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critical | Les modifier ou les vider rompt entièrement la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration

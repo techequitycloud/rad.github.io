@@ -11,15 +11,14 @@ description: "Référence de configuration pour déployer Vikunja sur GKE Autopi
 
 Vikunja est une application open source et auto-hébergée de gestion de tâches et de projets —
 listes, tableaux kanban, diagrammes de Gantt, calendriers, rappels et partage en équipe, via une
-API REST et une interface web. Ce module déploie Vikunja sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google
+API REST et une interface web. Ce module déploie Vikunja sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google
 Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Vikunja et sur la manière de les explorer et
 de les exploiter depuis la Google Cloud Console et la ligne de commande. Pour les mécanismes
 communs à toutes les applications GKE — Workload Identity, entrée, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
-cycle de vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
+cycle de vie du déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md)
 plutôt que de les répéter ici.
 
 ---
@@ -29,7 +28,7 @@ plutôt que de les répéter ici.
 Vikunja s'exécute en tant que charge de travail web Go. Le déploiement relie un ensemble ciblé de
 services Google Cloud :
 
-| Fonction | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Go, 1 vCPU / 512 MiB par défaut, réplica unique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Vikunja ne prend pas en charge MySQL dans ce module |
@@ -58,7 +57,7 @@ services Google Cloud :
   si vous avez besoin de pièces jointes durables dans `/app/vikunja/files`.
 - **Un domaine personnalisé + une IP statique sont activés par défaut** (`enable_custom_domain = true`,
   `reserve_static_ip = true`) afin que l'adresse externe survive aux redéploiements.
-- **Quelques variables de la fondation sont déclarées mais inopérantes.** `db_host_env_var_name`,
+- **Quelques variables du socle sont déclarées mais inopérantes.** `db_host_env_var_name`,
   `db_name_env_var_name`, `db_password_env_var_name`, `db_port_env_var_name`,
   `db_user_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`,
   `sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`,
@@ -72,7 +71,7 @@ services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Vikunja {#a-gke-autopilot--the-vikunja-workload}
@@ -130,7 +129,7 @@ personnalisée, de sorte qu'un rebuild suivi d'un redéploiement récupère touj
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `VIKUNJA_SERVICE_JWTSECRET` (utilisé pour signer les JWT de session des utilisateurs). Le mot de passe de la base de données
-est géré séparément par la fondation.
+est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -258,7 +257,7 @@ ce module — `explicit_secret_values` et `scripts_dir`. `credit_cost` vaut par 
 | `container_image_source` | `custom` | Construit l'enveloppe avec greffe busybox via Cloud Build. |
 | `container_image` | `""` | URI d'image de remplacement ; laissez vide pour le chemin AR dérivé automatiquement. |
 | `container_build_config` | `{ enabled = true }` | Dockerfile/contexte du build personnalisé. |
-| `enable_image_mirroring` | `true` | Duplique l'image d'enveloppe dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image d'enveloppe dans Artifact Registry. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Réplica unique — Vikunja n'a aucune coordination multi-réplica. |
 | `container_port` | `3456` | Port sur lequel écoute le serveur Go de Vikunja. |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Limites et demandes de CPU/mémoire. |
@@ -286,7 +285,7 @@ ce module — `explicit_secret_values` et `scripts_dir`. `credit_cost` vaut par 
 | `environment_variables` | `{}` | Paramètres `VIKUNJA_*` supplémentaires. Ne définissez pas `VIKUNJA_DATABASE_*` ni `VIKUNJA_SERVICE_JWTSECRET` ici. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager. |
 | `gke_cluster_name` | `""` | Cluster cible ; laissez vide pour découvrir automatiquement le cluster `Services_GCP`. |
-| `namespace_name` | `""` | Namespace Kubernetes ; laissez vide pour le générer automatiquement. |
+| `namespace_name` | `""` | Espace de noms Kubernetes ; laissez vide pour le générer automatiquement. |
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `session_affinity` | `None` | Routage persistant (`ClientIP`) ou `None`. |
 | `network_tags` | `[]` | Tags réseau des nœuds/pods pour le ciblage des règles de pare-feu. |
@@ -316,7 +315,7 @@ modèles de PVC StatefulSet. Non recommandés pour Vikunja ; l'état réside dan
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
 `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`,
-`quota_memory_requests`, `quota_memory_limits` — ResourceQuota du namespace. Les valeurs
+`quota_memory_requests`, `quota_memory_limits` — ResourceQuota de l'espace de noms. Les valeurs
 de mémoire exigent des suffixes d'unités binaires (p. ex. `"4Gi"`).
 
 ### Groupe 9 — Scripts SQL personnalisés et règles de fiabilité {#group-9--custom-sql-scripts--reliability-policies}
@@ -382,7 +381,7 @@ référencée**.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Vikunja n'utilise pas Redis ; fournie par souci de cohérence avec la convention de la fondation. |
+| `enable_redis` | `false` | Vikunja n'utilise pas Redis ; fournie par souci de cohérence avec la convention du socle. |
 | `redis_host` / `redis_port` | `""` / `6379` | Détails de connexion Redis, pertinents uniquement si `enable_redis = true`. |
 
 `redis_auth` est déclarée mais **n'est pas transmise** par ce module ; la définir n'a donc aucun
@@ -445,7 +444,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP des services par étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -475,7 +474,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, une incohérence `StatefulSet`/`Deployment`, des valeurs de quota mémoire sans suffixes binaires, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, une incohérence `StatefulSet`/`Deployment`, des valeurs de quota mémoire sans suffixes binaires, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -487,16 +486,16 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
 | `min_instance_count` | `1` | Medium | La validation propre à la variable autorise `0`–`1000` et aucune garde au moment du plan ne rejette `0` — la logique de Deployment d'App_GKE convertit silencieusement `min_instance_count=0` en `min_replicas` de `1` lors de l'application (`local.min_instance_count > 0 ? local.min_instance_count : 1`) ; le nombre de réplicas déployé s'écarte donc silencieusement de la configuration au lieu d'échouer avec une erreur. |
 | `VIKUNJA_SERVICE_ENABLEREGISTRATION` (variable d'environnement) | `"false"` après le premier administrateur | High | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune garantie de disponibilité. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `db_*_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`/`sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`, `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode` | Laisser la valeur par défaut | Low | Déclarées par souci de cohérence avec la convention de la fondation, mais ni transmises ni référencées par ce module — les définir n'a aucun effet sur le déploiement. |
+| `db_*_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`/`sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`, `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode` | Laisser la valeur par défaut | Low | Déclarées par souci de cohérence avec la convention du socle, mais ni transmises ni référencées par ce module — les définir n'a aucun effet sur le déploiement. |
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — IAM et Workload Identity,
+Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Vikunja partagée
 avec la variante Cloud Run est décrite dans
 **[Vikunja_Common](Vikunja_Common.md)**.

@@ -80,7 +80,7 @@ secrets partagés et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 FreeScout exige **MySQL** ; le moteur est fixé à `MYSQL_8_0` et PostgreSQL ou les
 autres moteurs ne sont pas pris en charge. Lors du premier déploiement, un job
@@ -149,7 +149,7 @@ est monté dans le job et prend effet au prochain apply, sans nouveau build.
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `FreeScout_Common` établit l'environnement FreeScout de base afin que l'application
 démarre correctement au premier lancement :

@@ -85,7 +85,7 @@ avant la création du nouveau.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 ClassicPress nécessite **MySQL 8.0** ; le `config` de `ClassicPress_Common` code en dur
 directement `database_type = "MYSQL_8_0"` — le moteur est fixe, quelle que soit la

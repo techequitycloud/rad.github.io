@@ -27,10 +27,10 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Domaine | Fourni par RAGFlow_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Construit une image personnalisée à partir de `infiniflow/ragflow` via Cloud Build ; `APP_VERSION` est défini à partir de l'`application_version` de l'appelant | Output `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour MySQL 8.0** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données `rag_flow`, l'utilisateur `ragflow` et les droits associés | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket de documents **Cloud Storage** (suffixe `documents`) | Output `storage_buckets` |
+| Image de conteneur | Construit une image personnalisée à partir de `infiniflow/ragflow` via Cloud Build ; `APP_VERSION` est défini à partir de l'`application_version` de l'appelant | Sortie `container_image` du déploiement de la plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données `rag_flow`, l'utilisateur `ragflow` et les droits associés | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket de documents **Cloud Storage** (suffixe `documents`) | Sortie `storage_buckets` |
 | Paramètres de base | Injecte les variables d'environnement de connexion MySQL, Elasticsearch et Redis ; définit le port du service à 80 | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage, de vivacité et de disponibilité ciblant les points de terminaison de santé de RAGFlow | §Observabilité dans les guides de plateforme |
 | Configuration de démarrage | Intègre le script `entrypoint.sh` personnalisé qui génère `service_conf.yaml` au démarrage du conteneur | Comportement de démarrage du conteneur |
@@ -141,7 +141,7 @@ amplement de temps avant que les sondes ne commencent leurs vérifications.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket de documents **Cloud Storage** dédié est déclaré ici avec le suffixe
 `documents` et provisionné par le socle dans la région du déploiement. Le compte de

@@ -17,11 +17,11 @@ Pour l'infrastructure qui provisionne et exécute réellement Gitea, consultez l
 
 | Domaine | Fourni par Gitea_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Build personnalisé léger au-dessus de l'image officielle `gitea/gitea:<version>` (Cloud Build) avec un point d'entrée de plateforme | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Build personnalisé léger au-dessus de l'image officielle `gitea/gitea:<version>` (Cloud Build) avec un point d'entrée de plateforme | Sortie `container_image` du déploiement de la plateforme |
 | Point d'entrée de plateforme | Compose `GITEA__database__{HOST,NAME,USER,SSL_MODE}` à partir des variables d'environnement `DB_*` injectées par le socle au démarrage du conteneur, puis exécute le point d'entrée standard de Gitea | Comportement de l'application dans le guide de la plateforme |
 | Moteur de base de données | Fixe **PostgreSQL** (`GITEA__database__DB_TYPE = "postgres"`) | §Base de données dans le guide de la plateforme |
-| Amorçage de la base de données | Définit le job `db-init` (`postgres:15-alpine`) qui crée de façon idempotente le rôle et la base préfixés par le tenant | Output `initialization_jobs` |
-| Secrets de l'application | Génère `SECRET_KEY` et `INTERNAL_TOKEN` dans Secret Manager ; réutilise le mot de passe de base de données du socle comme `GITEA__database__PASSWD` | Output `secret_ids` |
+| Amorçage de la base de données | Définit le job `db-init` (`postgres:15-alpine`) qui crée de façon idempotente le rôle et la base préfixés par le tenant | Sortie `initialization_jobs` |
+| Secrets de l'application | Génère `SECRET_KEY` et `INTERNAL_TOKEN` dans Secret Manager ; réutilise le mot de passe de base de données du socle comme `GITEA__database__PASSWD` | Sortie `secret_ids` |
 | Valeurs d'environnement de base | `INSTALL_LOCK=true`, `DISABLE_REGISTRATION=false`, domaine/URL racine/port du serveur, `APP_DATA_PATH` sur NFS | Environnement d'exécution du service |
 | Contrôles de santé | Sondes par défaut de démarrage (`/api/healthz`, délai de 30 s) et de vivacité (`/api/healthz`, délai de 15 s) | §Observabilité dans le guide de la plateforme |
 
@@ -79,7 +79,7 @@ gcloud run jobs executions list --job=<service-name>-db-init --project "$PROJECT
 
 ---
 
-## 5. Valeurs d'environnement de base {#5-core-environment-defaults}
+## 5. Valeurs par défaut de l'environnement de base {#5-core-environment-defaults}
 
 - `GITEA__database__DB_TYPE = "postgres"` — le seul moteur pris en charge par cette couche.
 - `GITEA__server__DOMAIN` / `GITEA__server__ROOT_URL` — issus de `public_domain` / `public_url` (ils déterminent les URL de clonage ; indiquez l'hôte réel en production).

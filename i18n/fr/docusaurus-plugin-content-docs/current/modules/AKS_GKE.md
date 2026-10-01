@@ -187,12 +187,12 @@ Consignez le nom de l'appartenance immédiatement après le déploiement ; toute
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `client_id` / `client_secret` / `azure_tenant_id` / `subscription_id` | identifiants valides d'un principal de service, Contributor sur l'abonnement | Critical | Des identifiants absents ou erronés font échouer l'apply à la création d'AKS ; un principal insuffisamment privilégié provisionne partiellement et laisse des ressources Azure orphelines. Le principal de service a besoin du rôle Contributor au niveau de l'abonnement, car le module crée lui-même le Resource Group. |
 | `platform_version` ↔ `k8s_version` | gardez des versions mineures compatibles (p. ex. `1.35.0-gke.1` avec `1.35` ; la mineure de la plateforme peut aussi être inférieure d'un) | High | Une association incompatible fait échouer le rattachement ou laisse l'agent Connect en mauvais état, de sorte que le cluster ne devient jamais gérable depuis Google Cloud. |

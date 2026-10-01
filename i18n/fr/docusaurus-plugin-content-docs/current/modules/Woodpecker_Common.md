@@ -133,7 +133,7 @@ Les sondes de démarrage et d'activité émettent toutes deux une requête **HTT
 
 - **Sonde de démarrage** — `initial_delay = 30s`, `timeout = 10s`, `period =
   10s`, `failure_threshold = 30`.
-- **Sonde d'activité** — `initial_delay = 30s`, `timeout = 10s`, `period =
+- **Sonde de vivacité** — `initial_delay = 30s`, `timeout = 10s`, `period =
   30s`, `failure_threshold = 3`.
 
 ---

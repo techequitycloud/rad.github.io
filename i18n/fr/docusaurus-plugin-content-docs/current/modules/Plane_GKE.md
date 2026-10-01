@@ -95,7 +95,7 @@ partir des valeurs distinctes injectées par la plateforme.
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail tout-en-un de Plane {#a-gke-autopilot--the-plane-all-in-one-workload}
 
@@ -104,7 +104,7 @@ mémoire réellement demandés par le pod. Tous les sous-services de Plane (api,
 beat, web, space, admin, live) s'exécutent dans ce conteneur unique sous supervisord,
 derrière Caddy sur le port 80.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Plane pour voir les pods, les révisions et les événements.
 - **CLI :**
   ```bash
@@ -147,7 +147,7 @@ résout Redis en l'IP de la VM NFS partagée (service colocalisé), injectée à
 l'exécution via `$(NFS_SERVER_IP)` et résolue par le point d'entrée wrapper avant
 qu'il ne compose `REDIS_URL`.
 
-- **Console :** Compute Engine → Instances de VM (la VM NFS/Redis) ; Filestore →
+- **Console :** Compute Engine → VM instances (la VM NFS/Redis) ; Filestore →
   Instances.
 - **CLI :**
   ```bash
@@ -168,7 +168,7 @@ uniquement depuis l'intérieur du cluster (`INGRESS_TRAFFIC_INTERNAL_ONLY`) sur 
 wrapper compose `AMQP_URL` à partir des identifiants statiques
 `plane`/`plane`/vhost-`plane` et de ce nom DNS.
 
-- **Console :** Kubernetes Engine → Charges de travail / Services et Ingress → filtrez
+- **Console :** Kubernetes Engine → Workloads / Services & Ingress → filtrez
   sur le suffixe `-mq`.
 - **CLI :**
   ```bash
@@ -206,7 +206,7 @@ serveur temps réel live, 40 caractères). Le mot de passe de la base de donnée
 géré séparément par le socle. Sur GKE, les secrets sont projetés dans les pods via le
 pilote Secret Store CSI.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~plane"
@@ -222,7 +222,7 @@ Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing e
 personnalisé avec un certificat géré par Google est activé par défaut
 (`enable_custom_domain = true`) dès que `application_domains` est renseigné.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -238,8 +238,7 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 et Cloud SQL vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte
 facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -389,12 +388,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen
 le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -455,7 +454,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Plane, partagée avec
 la variante Cloud Run (câblage de l'image tout-en-un, secrets, identifiants RabbitMQ,
 TODO du stockage), est décrite dans **[Plane_Common](Plane_Common.md)**.

@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l’échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n’entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l’autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -120,7 +120,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l’échelle** en modifiant les paramètres de nombre minimal/maximal d’instances dans la plateforme RAD et
    en les appliquant via **Update** — le module possède la spécification de la charge de travail, la mise à l’échelle est donc une
    modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de l’application suivante).
+   annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l’application** en modifiant le paramètre de version dans l’interface RAD
    et en l’appliquant via **Update** ; une nouvelle image est répliquée et une mise à jour progressive remplace les
@@ -142,7 +142,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -153,7 +153,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et
    de la mémoire des pods, le nombre de redémarrages et les événements de mise à l’échelle du HPA. Le module peut
-   aussi provisionner un **contrôle de disponibilité** (uptime check, qui interroge `/health`) ; lorsqu’il est activé, consultez
+   aussi provisionner un **test de disponibilité** (uptime check, qui interroge `/health`) ; lorsqu’il est activé, consultez
    Monitoring → Uptime checks et Alerting → Policies.
 
 ---
@@ -201,13 +201,13 @@ GKE, le registre partagé) sont gérées séparément et ne sont pas supprimées
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, réplique l’image, provisionne le HPA et le LoadBalancer |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle d’état réussit sur `/health` ; playground accessible |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l’échelle, mettre à jour la version, gérer les secrets |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer l’état des pods, les OOM, la planification, les clés LLM et les erreurs de récupération d’image |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

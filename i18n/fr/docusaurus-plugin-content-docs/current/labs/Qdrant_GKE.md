@@ -36,7 +36,7 @@ temps.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -53,7 +53,7 @@ temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -76,7 +76,7 @@ export REGION="us-central1"           # the region you deploy into
    n'a ni base de données SQL ni job d'initialisation. Un premier déploiement prend généralement
    **10 à 20 minutes** (le build de l'image et le provisionnement des nœuds dominent).
 
-3. Connectez-vous au cluster et identifiez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et identifiez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -178,7 +178,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et
    mémoire des pods, le nombre de redémarrages et les métriques de requêtes. Le module
-   provisionne également un **contrôle de disponibilité** (uptime check, lorsqu'il est activé) ; consultez Monitoring → Uptime
+   provisionne également un **test de disponibilité** (uptime check, lorsqu'il est activé) ; consultez Monitoring → Uptime
    checks et Alerting → Policies.
 
 ---
@@ -204,7 +204,7 @@ des diagnostics au niveau de la plateforme, qui ne changent pas avec les version
   kubectl describe pvc -n "$NS"
   ```
 - **Erreurs de clé d'API (401/403) :** vérifiez que `enable_api_key = true` a été défini au
-  moment du déploiement, que le secret a été matérialisé dans le namespace et que l'en-tête `api-key`
+  moment du déploiement, que le secret a été matérialisé dans l'espace de noms et que l'en-tête `api-key`
   figure dans les requêtes.
 - **Pod en attente / aucune IP externe :** consultez les événements de `kubectl describe pod` à la recherche de
   problèmes de ressources ou de quota, et vérifiez que le Service LoadBalancer a reçu une
@@ -217,23 +217,23 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — la charge de travail
-Kubernetes et son namespace, le PVC et le Persistent Disk sous-jacent (s'ils sont utilisés), le bucket
+Kubernetes et son espace de noms, le PVC et le Persistent Disk sous-jacent (s'ils sont utilisés), le bucket
 Cloud Storage (s'il est utilisé), les secrets Secret Manager et les images Artifact Registry.
 Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre partagé) sont
 gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, le stockage persistant et un secret de clé d'API facultatif |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; les contrôles de santé réussissent sur `/readyz` et `/livez` ; clé d'API récupérée si elle est activée |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets, le stockage et les jobs |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de stockage, de clé d'API, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

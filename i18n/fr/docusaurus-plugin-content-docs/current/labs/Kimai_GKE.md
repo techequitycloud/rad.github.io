@@ -20,7 +20,7 @@ opérationnel du module **Kimai on GKE Autopilot** sur Google Cloud : le déploy
 y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Kimai. Pour la liste complète des
 services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez
 le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Kimai_GKE) —
@@ -29,7 +29,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne.
@@ -57,7 +57,7 @@ dans le temps.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le
   projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -83,7 +83,7 @@ export REGION="us-central1"           # the region you deploy into
    provisionne une base de données Cloud SQL (MySQL 8.0) avec ses secrets Secret Manager
    (`APP_SECRET`, `ADMINPASS` et le mot de passe de la base de données), le
    bucket Cloud Storage `storage`, construit l'image wrapper personnalisée qui compose
-   `DATABASE_URL`, et exécute la tâche d'initialisation `db-init` (création de la
+   `DATABASE_URL`, et exécute le job d'initialisation `db-init` (création de la
    base de données, de l'utilisateur et des droits). Les premiers déploiements prennent environ **15–25 minutes**
    (la création de Cloud SQL et le build de l'image en représentent l'essentiel).
 
@@ -101,7 +101,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -194,7 +194,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -232,7 +232,7 @@ de diagnostics au niveau de la plateforme, qui ne changent pas avec les versions
   documentation ou à une autre installation de Kimai qui suppose le port 80, notez que la
   variante d'image `:apache` de ce module écoute sur le port **8001** — confirmé par des tests
   locaux et par le déploiement en conditions réelles.
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<db-init-job-name>
@@ -277,8 +277,8 @@ gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), les secrets, le bucket de stockage, et exécute la tâche `db-init` |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état renvoie 200 sur `/en/login` ; se connecter en tant que `admin` avec le secret `ADMINPASS` généré ; créer une entrée de feuille de temps de test |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), les secrets, le bucket de stockage, et exécute le job `db-init` |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état renvoie 200 sur `/en/login` ; se connecter en tant que `admin` avec le secret `ADMINPASS` généré ; créer une entrée de feuille de temps de test |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base, configurer l'API et les utilisateurs |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de sidecar, de port et de base de données |

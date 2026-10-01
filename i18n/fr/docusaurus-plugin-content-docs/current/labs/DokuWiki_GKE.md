@@ -29,7 +29,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (délibérément pas), mettre à jour, et gérer
   le PVC de type bloc qui contient tout le contenu du wiki.
@@ -53,7 +53,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -77,7 +77,7 @@ export REGION="us-central1"           # the region you deploy into
    programme d'installation. Les premiers déploiements prennent généralement **10–20 minutes** (aucun provisionnement
    Cloud SQL à attendre).
 
-3. Connectez-vous au cluster et découvrez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et découvrez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -141,7 +141,7 @@ export REGION="us-central1"           # the region you deploy into
    `min_instance_count` / `max_instance_count` à `1` dans la plateforme RAD pour un
    wiki partagé. La mise à l'échelle (si elle s'avérait nécessaire pour un cas d'usage multi-wiki délibéré) est un
    changement de configuration via **Update**, et non un `kubectl scale` manuel — le module
-   est propriétaire de la spécification de la charge de travail et une modification manuelle serait annulée lors de l'application suivante.
+   est propriétaire de la spécification de la charge de travail et une modification manuelle serait annulée lors du prochain apply.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme
    RAD et en l'appliquant via **Update** ; une nouvelle image est construite et déployée.
@@ -176,7 +176,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -187,7 +187,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
    mémoire des pods, le nombre de redémarrages et l'utilisation du disque du PVC. Le module peut
-   provisionner un **uptime check** (lorsque le point de terminaison est accessible publiquement) ; examinez
+   provisionner un **test de disponibilité** (uptime check) (lorsque le point de terminaison est accessible publiquement) ; examinez
    Monitoring → Uptime checks et Alerting → Policies.
 
 ---
@@ -215,7 +215,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
 - **Contenu du wiki « réinitialisé » ou vide après une modification :** vérifiez que vous n'avez pas supprimé ni
   remplacé le PVC (ou le StatefulSet avec son PVC) — le PVC *est* le
   wiki. Recréer le StatefulSet seul ne touche pas au PVC, mais supprimer le
-  PVC ou le namespace entier, si.
+  PVC ou l'espace de noms entier, si.
 - **Plusieurs réplicas affichent un contenu différent :** c'est attendu, et non un bogue — chaque
   pod du StatefulSet possède son propre PVC. Revenez à 1 réplica pour un wiki partagé.
 - **`install.php` toujours accessible / administrateur non créé :** reprenez la tâche 2 — vérifiez
@@ -237,7 +237,7 @@ définir `workload_type = "Deployment"` en même temps que `stateful_pvc_enabled
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes,
-le namespace et le PVC de type bloc contenant tout le contenu du wiki (sauvegardez-le d'abord si vous
+l'espace de noms et le PVC de type bloc contenant tout le contenu du wiki (sauvegardez-le d'abord si vous
 devez le conserver — voir la tâche 3), ainsi que les images Artifact Registry. Les ressources appartenant
 à **Services_GCP** (le VPC, le cluster GKE, le registre partagé) sont gérées séparément
 et ne sont pas supprimées ici.
@@ -251,6 +251,6 @@ et ne sont pas supprimées ici.
 | 1 — Déployer | Automatisé | Le module déploie un StatefulSet avec un PVC de type bloc (`/storage`) et construit l'image ; aucune base de données, aucun secret |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé répond ; exécuter l'assistant `/install.php` puis le bloquer |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, conserver 1 réplica, mettre à jour la version, parcourir/sauvegarder le PVC |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et l'uptime check |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC, de contenu des réplicas et de récupération d'image |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire la charge de travail et le PVC — sauvegardez d'abord le contenu |

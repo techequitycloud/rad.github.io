@@ -13,7 +13,7 @@ Payload CMS est un CMS headless et un framework applicatif natif TypeScript, ori
 directement sur Next.js — non pas un produit SaaS hébergé, mais une bibliothèque installée dans votre propre application
 Next.js. Le contenu est modélisé au moyen de « Collections » typées définies dans `payload.config.ts`, et
 Payload génère une interface d'administration ainsi que des API REST, GraphQL et Local à partir de cette même configuration. Ce
-module déploie une véritable application Payload sur **GKE Autopilot** au-dessus de la fondation
+module déploie une véritable application Payload sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
@@ -21,7 +21,7 @@ Ce guide se concentre sur les services cloud utilisés par ce déploiement et su
 depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les
 applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -32,11 +32,11 @@ officielle de Payload** — ce module construit, via Cloud Build, une véritable
 `create-payload-app` vierge utilisant l'adaptateur PostgreSQL). Le déploiement relie
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js (Next.js standalone), avec autoscaling horizontal |
 | Build | Cloud Build | Construit l'application de démarrage Payload fournie à partir de `Payload_Common/scripts/Dockerfile` — aucune image préconstruite n'existe à télécharger |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — l'adaptateur Postgres de Payload est utilisé ; MySQL/MongoDB ne sont pas raccordés |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — l'adaptateur Postgres de Payload est utilisé ; MySQL/MongoDB ne sont pas raccordés |
 | Stockage d'objets | Aucun | Aucun bucket n'est provisionné ; les médias téléversés vont sur le disque local et éphémère du conteneur |
 | Secrets | Secret Manager | `PAYLOAD_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Ingress | Cloud Load Balancing | LoadBalancer externe par défaut, domaine personnalisé + certificat géré en option |
@@ -48,7 +48,7 @@ un ensemble ciblé de services Google Cloud :
   la CLI `payload migrate`, à l'aide d'un fichier de migration pré-généré intégré à l'image.
 - **`container_image_source` est fixé à `"custom"`.** Rien ne peut être déployé sans une exécution
   Cloud Build — le module construit toujours `Payload_Common/scripts/` à partir des sources.
-- **Les sondes d'état ciblent `/admin`, et non `/` ou une route d'API.** `/admin` sert le
+- **Les sondes de santé ciblent `/admin`, et non `/` ou une route d'API.** `/admin` sert le
   formulaire de connexion/de création du premier utilisateur de Payload et renvoie un `200` sans authentification ; les routes REST/GraphQL
   de Payload exigent une authentification et ne conviennent pas comme cibles de sonde.
 - **Aucun bucket de stockage n'est provisionné.** Les médias téléversés sont écrits sur le disque local du conteneur et
@@ -100,10 +100,10 @@ des sources) déclenche une exécution Cloud Build sur `Payload_Common/scripts/`
   gcloud builds log <build-id> --project "$PROJECT"
   ```
 
-### C. Cloud SQL pour PostgreSQL 15 {#c-cloud-sql-for-postgresql-15}
+### C. Cloud SQL for PostgreSQL 15 {#c-cloud-sql-for-postgresql-15}
 
 Payload stocke toutes les données de l'application (Collections, utilisateurs, métadonnées des documents téléversés) dans une instance
-gérée Cloud SQL pour PostgreSQL 15. Les pods y accèdent de façon privée via le sidecar **Cloud SQL Auth Proxy**
+gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent de façon privée via le sidecar **Cloud SQL Auth Proxy**
 sur un socket Unix ; aucune IP publique n'est exposée. Au premier déploiement, `db-init` crée la
 base de données et le rôle, puis `payload-migrate` applique le schéma.
 
@@ -123,7 +123,7 @@ les sauvegardes automatiques et la rotation des mots de passe.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager : `PAYLOAD_SECRET`
 (utilisé pour signer les propres jetons de session/d'authentification de Payload). Le mot de passe de la base de données est géré séparément par
-la fondation.
+le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -134,7 +134,7 @@ la fondation.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load Balancing
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google peut être
@@ -231,7 +231,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `application_display_name` | `Payload CMS` | Nom lisible affiché dans la Console. Texte résiduel provenant de la source clonée du module — remplacez-le par `Payload CMS` au moment du déploiement ; il est purement cosmétique. |
 | `application_version` | `latest` | Étiquette de suivi du déploiement intégrée à l'image via l'argument de build Cloud Build `application_version`. |
 
-### Groupe 4 — Runtime et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -241,7 +241,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `container_port` | `3000` | Valeur par défaut de Next.js. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="1Gi" }` | Payload (Next.js) a besoin de marge pour le serveur standalone ainsi que pour l'empreinte TypeScript/CLI du job de migration ; envisagez d'augmenter la mémoire en production. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -272,7 +272,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la chaîne intégrée `db-init` → `payload-migrate`. |
 | `enable_nfs` | `false` | Non requis — les données propres à Payload résident dans Postgres, pas sur NFS. |
 
-### Groupe 14 — Observabilité et état {#group-14--observability--health}
+### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -348,9 +348,9 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload Identity, autoscaling,
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity, autoscaling,
 ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-réplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Payload
+mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Payload
 partagée avec la variante Cloud Run est décrite dans **[Payload_Common](Payload_Common.md)**.
 
 <!-- related-guides -->

@@ -202,7 +202,7 @@ Listmonk lit sa configuration depuis des variables d'environnement en notation �
 | `LISTMONK_upload__provider` | `"filesystem"` | Fournisseur de stockage des téléversements. `"filesystem"` stocke les fichiers sur le chemin monté |
 | `LISTMONK_upload__filesystem__upload_path` | `"/listmonk/uploads"` | Chemin de stockage des téléversements. Montez un volume GCS Fuse sur ce chemin pour la persistance |
 
-> **`LISTMONK_db__user` / `LISTMONK_db__database` ne sont volontairement PAS définies.** La Foundation crée l'utilisateur et la base de données sous des noms propres au tenant et injecte `DB_USER`/`DB_NAME` ; le point d'entrée ne les fait correspondre que si elles ne sont pas définies. Les prérégler sur `"listmonk"` écrase les vrais noms et provoque `password authentication failed for user listmonk`.
+> **`LISTMONK_db__user` / `LISTMONK_db__database` ne sont volontairement PAS définies.** Le socle crée l'utilisateur et la base de données sous des noms propres au tenant et injecte `DB_USER`/`DB_NAME` ; le point d'entrée ne les fait correspondre que si elles ne sont pas définies. Les prérégler sur `"listmonk"` écrase les vrais noms et provoque `password authentication failed for user listmonk`.
 
 **Variables d'environnement secrètes (issues de `secret_ids`) :**
 
@@ -210,7 +210,7 @@ Listmonk lit sa configuration depuis des variables d'environnement en notation �
 |---|---|
 | `LISTMONK_ADMIN_PASSWORD` | Secret du mot de passe administrateur géré par ce module (pilote l'installation automatique v3) |
 | `LISTMONK_API_TOKEN` | Secret du jeton d'API déterministe géré par ce module (réinscrit dans `users.password` par le point d'entrée) |
-| `DB_PASSWORD` | Secret du mot de passe de la base de données injecté par la plateforme (géré par `App CloudRun`/`App GKE`) ; `entrypoint.sh` le fait correspondre à `LISTMONK_db__password` au démarrage lorsque cette dernière n'est pas définie. Sur Cloud Run, `Listmonk_CloudRun` définit en outre `db_password_env_var_name = "LISTMONK_db__password"` afin que la Foundation injecte également le même secret directement sous ce nom. |
+| `DB_PASSWORD` | Secret du mot de passe de la base de données injecté par la plateforme (géré par `App CloudRun`/`App GKE`) ; `entrypoint.sh` le fait correspondre à `LISTMONK_db__password` au démarrage lorsque cette dernière n'est pas définie. Sur Cloud Run, `Listmonk_CloudRun` définit en outre `db_password_env_var_name = "LISTMONK_db__password"` afin que le socle injecte également le même secret directement sous ce nom. |
 
 **Remarque sur DB_HOST :** la variable d'environnement `LISTMONK_db__host` est renseignée à l'exécution par `entrypoint.sh`, qui y fait correspondre la valeur `DB_HOST` injectée par la plateforme lorsqu'elle n'est pas définie. Lorsque `enable_cloudsql_volume = true`, le chemin du socket de l'Auth Proxy est associé à la clé de configuration Listmonk appropriée.
 
@@ -231,7 +231,7 @@ Encapsule l'image officielle `listmonk/listmonk:latest` (Alpine) — le tag est 
 
 S'exécute avant `exec ./listmonk` pour configurer l'environnement d'exécution :
 
-**1. Correspondance des variables de base de données** — fait correspondre les variables `DB_HOST`/`DB_USER`/`DB_NAME`/`DB_PASSWORD` injectées par la plateforme aux variables `LISTMONK_db__*` **uniquement lorsqu'elles ne sont pas définies** (de sorte que les noms propres au tenant de la Foundation l'emportent). Les hôtes de socket Unix Cloud SQL (`/...`) définissent `ssl_mode=disable`.
+**1. Correspondance des variables de base de données** — fait correspondre les variables `DB_HOST`/`DB_USER`/`DB_NAME`/`DB_PASSWORD` injectées par la plateforme aux variables `LISTMONK_db__*` **uniquement lorsqu'elles ne sont pas définies** (de sorte que les noms propres au tenant du socle l'emportent). Les hôtes de socket Unix Cloud SQL (`/...`) définissent `ssl_mode=disable`.
 
 **2. Installation idempotente du schéma** — exécute `./listmonk --install --idempotent --yes` à chaque démarrage. `--idempotent` est **obligatoire** : un simple `--install --yes` est destructeur (il supprime et recrée toutes les tables à chaque démarrage, effaçant les abonnés) ; avec cette option, l'installation est sans effet une fois la base configurée (`skipping install as database appears to be already setup`).
 
@@ -260,7 +260,7 @@ Script de création de la base de données et de l'utilisateur PostgreSQL. Voir 
 
 ---
 
-## 10. Modèle de mise en œuvre {#10-implementation-pattern}
+## 10. Modèle d'implémentation {#10-implementation-pattern}
 
 ```hcl
 # How Listmonk_CloudRun instantiates Listmonk_Common
@@ -312,7 +312,7 @@ module "app_cloudrun" {
 
 ---
 
-## 11. Exploration avec la console GCP {#11-exploring-with-the-gcp-console}
+## 11. Explorer avec la console GCP {#11-exploring-with-the-gcp-console}
 
 Après le déploiement, utilisez la console GCP pour vérifier les secrets et la configuration générés par `Listmonk Common`.
 
@@ -342,7 +342,7 @@ Depuis l'interface d'administration, vérifiez :
 
 ---
 
-## 12. Exploration avec gcloud {#12-exploring-with-gcloud}
+## 12. Explorer avec gcloud {#12-exploring-with-gcloud}
 
 ```bash
 # List all Secret Manager secrets in the project related to this Listmonk deployment

@@ -49,7 +49,7 @@ données monté en système de fichiers pour les sauvegardes elles-mêmes :
 | Secrets | Secret Manager | Deux secrets indépendants : `ADMIN_PASSWORD` (connexion) et `REPO_PASSWORD` (clé de chiffrement du dépôt) |
 | Entrée | LoadBalancer / Cloud Load Balancing | Externe par défaut (les clients distants doivent pouvoir l'atteindre) ; simple relais TCP L4 — Kopia termine son propre TLS |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données, pas de montage de système de fichiers pour les
   données.** Le dépôt de Kopia est écrit directement par le client d'API GCS natif
@@ -192,7 +192,7 @@ permanence.
 - **Connexion ou création du dépôt à chaque démarrage.** Le point d'entrée exécute
   `kopia repository connect gcs --bucket=... --prefix=repository/`, avec repli sur
   `kopia repository create gcs ...` si le dépôt n'existe pas encore. Cette logique
-  idempotente remplace entièrement ce que ferait sinon la tâche d'initialisation
+  idempotente remplace entièrement ce que ferait sinon le job d'initialisation
   d'une application à base de données — il n'existe pas de tâche de
   migration/initialisation distincte pour Kopia.
 - **Utilisateur stocké dans le dépôt + ACL, provisionnés à chaque démarrage.**
@@ -276,7 +276,7 @@ groupe.
 | `min_instance_count` | `0` | La mise à zéro est sans risque — le dépôt réside dans Cloud Storage. |
 | `max_instance_count` | `1` | Gardez `1` — la maintenance du dépôt de Kopia suppose qu'un seul serveur en est propriétaire. |
 | `enable_cloudsql_volume` | `false` | Kopia n'utilise pas Cloud SQL — gardez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Kopia construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Kopia construite dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -313,11 +313,11 @@ groupe.
 | `liveness_probe` | TCP, délai de 30 s, seuil de 3 tentatives | Même raisonnement que pour `startup_probe`. |
 | `uptime_check_config` | désactivé | S'il est activé, il s'agit d'une vérification HTTP qui échouera en permanence face aux points de terminaison de Kopia protégés par authentification. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche d'initialisation par défaut — la logique de connexion-ou-création du point d'entrée la remplace. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut — la logique de connexion-ou-création du point d'entrée la remplace. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes (par exemple, un `kopia maintenance run` périodique pour le GC du dépôt). |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
@@ -371,7 +371,7 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Vide par défaut — Kopia n'a pas de tâche d'initialisation. |
+| `initialization_jobs` | Vide par défaut — Kopia n'a pas de job d'initialisation. |
 | `statefulset_name` | Nom du StatefulSet (uniquement lorsque `workload_type = "StatefulSet"`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -382,7 +382,7 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -394,7 +394,7 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 > binaires. Une configuration invalide fait échouer le **plan** avec une erreur
 > claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `REPO_PASSWORD` (Secret Manager) | Ne jamais le renouveler manuellement après le premier déploiement | **Critical** | Il n'existe aucun moyen pris en charge de rechiffrer un dépôt actif — renouveler ce secret indépendamment du contenu réel du dépôt GCS rend définitivement orphelins tous les snapshots existants. |
 | Mot de passe de l'utilisateur du dépôt | Connecter les clients avec `--password=<REPO_PASSWORD>`, jamais `<ADMIN_PASSWORD>` | **Critical** | `kopia repository connect server` n'a pas d'option distincte pour le mot de passe de l'utilisateur serveur — son unique saisie de mot de passe EST l'identifiant de la session gRPC, vérifié par rapport au mot de passe de l'utilisateur stocké dans le dépôt. Utiliser `ADMIN_PASSWORD` fait échouer chaque session avec `PermissionDenied`. |
@@ -410,7 +410,7 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Kopia est décrite
 dans **[Kopia_Common](Kopia_Common.md)**.
 

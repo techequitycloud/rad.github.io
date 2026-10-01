@@ -21,7 +21,7 @@ Ce guide se concentre sur les services cloud que provisionne le module et sur la
 
 Le module assemble un ensemble ciblé de services Google Cloud et, en option, AWS :
 
-| Capacité | Service cloud | Remarques |
+| Fonctionnalité | Service cloud | Remarques |
 |---|---|---|
 | Service Migration Center | Migration Center (`migrationcenter.googleapis.com`) | Initialisé pour la région choisie ; une source de découverte est enregistrée automatiquement |
 | Hôte MCDCv6 | Compute Engine — VM Windows Server 2022 | Héberge le MC Discovery Client (MCDCv6), préinstallé par un script de démarrage ; prêt pour RDP |
@@ -161,7 +161,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et emplacement {#group-1--project--location}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. Il doit déjà exister ; le compte de service de provisionnement doit disposer du rôle Owner. |
 | `region` | `us-central1` | Région de toutes les ressources. Définit **de façon permanente** la région d'évaluation de Migration Center. |
@@ -170,7 +170,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 2 — Réseau {#group-2--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_vpc` | `true` | Crée un VPC dédié en mode automatique pour le lab. Définissez `false` pour utiliser un réseau existant nommé `migcenter-<id>-vpc`. |
 | `create_default_firewall_rules` | `true` | Crée les quatre règles standard (allow-internal, allow-ssh, allow-rdp, allow-icmp). Définissez `false` si elles existent déjà sur le réseau cible. |
@@ -178,7 +178,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 3 — Compute Engine {#group-3--compute-engine}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_windows_vm` | `true` | Déploie l'hôte Windows Server 2022 MCDCv6. Le script de démarrage installe automatiquement MCDCv6 et Chrome. |
 | `windows_vm_machine_type` | `e2-medium` | Type de machine de l'hôte Windows (suffisant pour MCDCv6 + Chrome). |
@@ -189,13 +189,13 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 7 — Stockage de la clé SSH {#group-7--ssh-key-storage}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_ssh_key_bucket` | `true` | Crée un bucket Cloud Storage et y stocke le `lab-ssh-key.pem` généré. Le nom du bucket est exposé dans les sorties pour la récupération. |
 
 ### Groupe 8 — Migration Center {#group-8--migration-center}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialize_migration_center` | `true` | Initialise le service Migration Center et enregistre la source de découverte. Définissez `false` pour provisionner uniquement les VM, le VPC et le bucket. |
 | `mc_discovery_client_name` | `mc-discovery-client` | Nom d'affichage de la source de découverte. Il doit être saisi **à l'identique** dans MCDCv6 lors de la connexion, sinon les résultats d'analyse aboutissent dans une source non enregistrée. |

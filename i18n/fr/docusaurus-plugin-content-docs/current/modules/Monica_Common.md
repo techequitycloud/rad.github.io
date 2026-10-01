@@ -79,7 +79,7 @@ Comme l'image est précompilée, la variante de plateforme doit transmettre `con
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 Monica est une application Laravel et lit les variables d'environnement **natives de Laravel**. `Monica_Common` définit la configuration statique non dérivée et s'appuie sur la correspondance `db_*_env_var_name` de la variante de plateforme pour les valeurs propres au déploiement :
 

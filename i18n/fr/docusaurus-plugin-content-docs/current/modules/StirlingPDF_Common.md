@@ -27,10 +27,10 @@ consultez les guides des plateformes ([StirlingPDF_GKE](StirlingPDF_GKE.md),
 
 | Domaine | Fourni par StirlingPDF_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Fait pointer le déploiement vers l'image officielle préconstruite **`stirlingtools/stirling-pdf`** (`image_source = "prebuilt"`) ; aucune étape Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Fait pointer le déploiement vers l'image officielle préconstruite **`stirlingtools/stirling-pdf`** (`image_source = "prebuilt"`) ; aucune étape Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **`database_type = "NONE"`** — Stirling-PDF est sans état et n'utilise aucune base de données | §Base de données dans les guides des plateformes |
 | Secrets | **Aucun.** `secret_ids` et `secret_values` sont des maps vides — la connexion est désactivée par défaut, aucun secret de session n'est donc requis | §Variables d'environnement et secrets dans les guides des plateformes |
-| Stockage objet | **Aucun.** `storage_buckets` est toujours une liste vide — Stirling-PDF ne persiste rien | Output `storage_buckets` |
+| Stockage objet | **Aucun.** `storage_buckets` est toujours une liste vide — Stirling-PDF ne persiste rien | Sortie `storage_buckets` |
 | Paramètres principaux | *Non fournis ici.* L'activation de la connexion (`SECURITY_ENABLELOGIN`) et la langue par défaut de l'interface (`SYSTEM_DEFAULTLOCALE`) sont définies par les variables `enable_login`/`default_locale` propres à chaque module applicatif et câblées via son `module_env_vars` — l'output `config` de `StirlingPDF_Common` ne contient aucune de ces deux clés | Comportement de l'application dans les guides des plateformes |
 | Profil d'exécution | Port 8080, limites de CPU/mémoire (plancher de 2Gi) et nombres minimal/maximal d'instances propres à chaque plateforme | §Exécution et mise à l'échelle dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de démarrage / de vivacité / de disponibilité par défaut ciblant `/api/v1/info/status` | §Observabilité dans les guides des plateformes |
@@ -153,12 +153,12 @@ le bon point de terminaison public de vivacité.
 
 ---
 
-## 7. Outputs {#7-outputs}
+## 7. Sorties {#7-outputs}
 
 `StirlingPDF_Common` expose les outputs suivants, que le module applicatif fusionne
 dans `application_config` avant de tout transmettre au socle :
 
-| Output | Type | Description |
+| Sortie | Type | Description |
 |---|---|---|
 | `config` | `object` | Configuration complète de l'application (image préconstruite, port 8080, `database_type = "NONE"`, sondes, variables d'environnement, limites de ressources). |
 | `secret_ids` | `map(string)` | Toujours vide — Stirling-PDF ne requiert aucun secret. |

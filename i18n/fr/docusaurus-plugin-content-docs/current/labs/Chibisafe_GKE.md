@@ -45,7 +45,7 @@ temps.
   administrateur facultatif et comprendre les contraintes de stockage et de mise à l'échelle.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -62,7 +62,7 @@ temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -96,7 +96,7 @@ export REGION="us-central1"           # the region you deploy into
    généralement **10 à 20 minutes** (le build de l'image personnalisée domine ;
    il n'y a aucune instance Cloud SQL à provisionner).
 
-3. Connectez-vous au cluster et identifiez le namespace avec des filtres
+3. Connectez-vous au cluster et identifiez l'espace de noms avec des filtres
    indépendants des noms :
 
    ```bash
@@ -197,9 +197,9 @@ export REGION="us-central1"           # the region you deploy into
    kubectl describe statefulset -n "$NS"
    ```
 
-2. **Ne dépassez pas une réplique.** `min_instance_count = max_instance_count
+2. **Ne dépassez pas un réplica.** `min_instance_count = max_instance_count
    = 1` par défaut, et c'est une exigence stricte : Chibisafe est une
-   application SQLite à écrivain unique et, même si chaque réplique du
+   application SQLite à écrivain unique et, même si chaque réplica du
    StatefulSet reçoit son propre PVC, la mise à l'échelle risque de créer des
    écrivains concurrents et un état incohérent.
 
@@ -247,7 +247,7 @@ export REGION="us-central1"           # the region you deploy into
    le problème de sonde de santé décrit plus haut, qui se manifeste par des
    redémarrages répétés) et l'utilisation disque du PVC. Gardez un œil sur le
    quota régional `SSD_TOTAL_GB` si vous exécutez d'autres modules avec état à
-   côté de Chibisafe — `standard-rwo` repose par défaut sur du SSD. Un contrôle
+   côté de Chibisafe — `standard-rwo` repose par défaut sur du SSD. Un test
    de disponibilité (uptime check) est disponible mais **désactivé par défaut**
    (`uptime_check_config.enabled = false`).
 
@@ -276,7 +276,7 @@ changent pas avec les versions de Chibisafe.
   par défaut `standard-rwo` repose sur du SSD et consomme un quota régional
   restreint. Surchargez `stateful_pvc_storage_class = "standard"` (HDD) — le
   profil d'écriture SQLite/médias de Chibisafe n'a pas besoin des IOPS d'un
-  SSD. Récupérer du quota impose de supprimer le PVC ou le namespace ; réduire
+  SSD. Récupérer du quota impose de supprimer le PVC ou l'espace de noms ; réduire
   à zéro ne le libère pas.
 - **La Gateway / le certificat géré ne se rattache jamais :** vérifiez que
   `application_domains` est renseigné — `enable_custom_domain = true` est actif
@@ -296,10 +296,10 @@ variables inertes `enable_redis` / `container_port`).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — la charge de travail StatefulSet
-et son namespace, son PVC, le bucket Cloud Storage et le secret de mot de passe
+et son espace de noms, son PVC, le bucket Cloud Storage et le secret de mot de passe
 administrateur facultatif. Il n'y a aucune base de données Cloud SQL à
 supprimer — aucune n'a jamais été créée. Les ressources appartenant à
 **Services_GCP** (le VPC, le cluster GKE, Artifact Registry) sont gérées
@@ -307,13 +307,13 @@ séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image personnalisée et déploie un StatefulSet avec un PVC en mode bloc de 20Gi sur `/data`, un bucket GCS non monté et un secret administrateur facultatif — sans Cloud SQL |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; confirmer que les sondes `/api/health` permettent au pod d'atteindre l'état Ready ; l'interface web de Chibisafe se charge sur `/` ; se connecter en tant qu'`admin` et changer le mot de passe |
-| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, mettre à jour la version, gérer le secret administrateur, inspecter SQLite/fichiers téléversés/journaux sur le PVC ; ne jamais dépasser 1 réplique |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques des pods/du PVC et le contrôle de disponibilité facultatif |
+| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, mettre à jour la version, gérer le secret administrateur, inspecter SQLite/fichiers téléversés/journaux sur le PVC ; ne jamais dépasser 1 réplica |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques des pods/du PVC et le test de disponibilité facultatif |
 | 5 — Dépanner | Manuel | Diagnostiquer les régressions de chemin de sonde, le quota PVC/SSD, la Gateway/le certificat et les problèmes de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime le StatefulSet, le PVC, le bucket et le secret facultatif |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime le StatefulSet, le PVC, le bucket et le secret facultatif |

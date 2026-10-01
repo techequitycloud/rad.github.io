@@ -20,7 +20,7 @@ module **Infisical on GKE Autopilot** sur Google Cloud : le déployer, y accéde
 vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
 démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Infisical. Pour la liste complète des services provisionnés
 et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Infisical_GKE) —
@@ -29,7 +29,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et initialiser le premier compte administrateur.
@@ -52,7 +52,7 @@ temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -73,7 +73,7 @@ export REGION="us-central1"          # the region you deploy into
    Service `LoadBalancer` doté d'une adresse IP statique réservée), une base de données Cloud SQL (PostgreSQL 15),
    ses secrets Secret Manager (`ENCRYPTION_KEY`, `AUTH_SECRET`,
    `ADMIN_PASSWORD` et le mot de passe de la base de données), construit l'image de conteneur
-   personnalisée et exécute la tâche `db-init`. Les premiers déploiements prennent environ **20–35
+   personnalisée et exécute le job `db-init`. Les premiers déploiements prennent environ **20–35
    minutes** (la création de Cloud SQL, le build de l'image personnalisée et la réservation de l'adresse IP
    externe en représentent l'essentiel).
 
@@ -94,7 +94,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et connecté à sa base de données. Infisical
    expose un point de terminaison d'état accessible sans authentification :
@@ -103,13 +103,13 @@ export REGION="us-central1"          # the region you deploy into
    curl -s "http://$EXTERNAL_IP/api/status"   # expect HTTP 200 with a JSON body
    ```
 
-2. **Définissez `site_url` dès que l'adresse IP externe est connue.** La tâche `admin-bootstrap`
-   cible `site_url` lorsqu'il est défini ; lorsqu'il est laissé vide, le script de la tâche se rabat
+2. **Définissez `site_url` dès que l'adresse IP externe est connue.** Le job `admin-bootstrap`
+   cible `site_url` lorsqu'il est défini ; lorsqu'il est laissé vide, le script du job se rabat
    sur `GKE_SERVICE_URL` injecté par la plateforme (l'adresse IP statique réservée), et
    seulement en dernier recours sur un `http://localhost:8080` injoignable si aucun des deux n'est disponible. Définissez
    tout de même `site_url` afin que les liens d'invitation/d'e-mail et CORS utilisent l'adresse réelle : définissez
    `site_url = "http://<EXTERNAL_IP>"` (ou votre domaine personnalisé) sur le déploiement et
-   appliquez **Update**. Le pod de la tâche `admin-bootstrap` réessaie automatiquement (jusqu'à 20
+   appliquez **Update**. Le pod du job `admin-bootstrap` réessaie automatiquement (jusqu'à 20
    tentatives, espacées de 15 secondes) dès que la cible est joignable — aucun déclenchement manuel
    distinct n'est nécessaire sur GKE.
 
@@ -124,7 +124,7 @@ export REGION="us-central1"          # the region you deploy into
 
    L'e-mail de l'administrateur correspond au paramètre `admin_email` du module (par défaut
    `admin@techequity.cloud`). Si le compte n'existe toujours pas, consultez les journaux du
-   pod de la tâche (tâche 5).
+   pod du job (tâche 5).
 
 ---
 
@@ -146,7 +146,7 @@ export REGION="us-central1"          # the region you deploy into
    déploiement progressif commence. `"latest"` correspond à une version épinglée et éprouvée, passée comme
    argument de build du Dockerfile.
 
-4. **Gérez les secrets et les tâches :**
+4. **Gérez les secrets et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~infisical"
@@ -195,10 +195,10 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   kubectl logs -n "$NAMESPACE" deploy/"$SERVICE" --tail=200
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`,
-  que le secret du mot de passe de la base existe et que la tâche `db-init` s'est terminée. Vérifiez que le
+  que le secret du mot de passe de la base existe et que le job `db-init` s'est terminé. Vérifiez que le
   conteneur sidecar Cloud SQL Auth Proxy est en cours d'exécution (`enable_cloudsql_volume =
   true`).
-- **`admin-bootstrap` ne crée jamais de compte :** consultez les journaux du pod de la tâche — la
+- **`admin-bootstrap` ne crée jamais de compte :** consultez les journaux du pod du job — la
   cause la plus fréquente est un `site_url` pointant vers une adresse
   injoignable (voir la tâche 2).
   ```bash
@@ -237,8 +237,8 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne la charge de travail GKE, Cloud SQL (PostgreSQL 15), les secrets, construit l'image personnalisée et exécute `db-init` |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; définir `site_url` sur l'adresse IP externe, puis se connecter avec le mot de passe administrateur généré |
-| 3 — Exploiter | Manuel | Inspecter les pods, mettre à l'échelle, mettre à jour la version, gérer les secrets/tâches, accéder à la base |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; définir `site_url` sur l'adresse IP externe, puis se connecter avec le mot de passe administrateur généré |
+| 3 — Exploiter | Manuel | Inspecter les pods, mettre à l'échelle, mettre à jour la version, gérer les secrets/jobs, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques GKE/Cloud SQL et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

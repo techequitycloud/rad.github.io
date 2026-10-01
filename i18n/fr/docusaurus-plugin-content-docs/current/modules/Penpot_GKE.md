@@ -49,7 +49,7 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 | Déclencheurs Cloud Build | §6.A Cloud Build Triggers | Identique. |
 | Pipeline Cloud Deploy | §6.B Cloud Deploy Pipeline | Identique. |
 | Mise en miroir des images | §6.C Image Mirroring | `enable_image_mirroring` vaut `true` par défaut ; les images Penpot sont hébergées sur Docker Hub. |
-| Pod Disruption Budgets | §7.A Pod Disruption Budgets | `enable_pod_disruption_budget` vaut `false` par défaut ; voir [Groupe 15 : politiques de fiabilité](#group-15-reliability-policies). |
+| Pod Disruption Budgets | §7.A Pod Disruption Budgets | `enable_pod_disruption_budget` vaut `false` par défaut ; voir [Groupe 15 : règles de fiabilité](#group-15-reliability-policies). |
 | Contraintes de répartition topologique | §7.B Topology Spread Constraints | Identique. |
 | Quotas de ressources | §7.C Resource Quotas | Identique. |
 | Rotation automatique des mots de passe | §7.D Auto Password Rotation | Voir [Groupe 12 : configuration de la base de données](#group-12-database-configuration). |
@@ -70,7 +70,7 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
    - **Frontend** (service supplémentaire, port de Service `80` → port de conteneur `8080`, car le nginx du frontend Penpot n'écoute pas sur le port 80) : un conteneur nginx qui sert la SPA ClojureScript/React. Il relaie les requêtes `/api` et `/ws` vers le backend via l'adresse de service interne au cluster.
    - **Exporter** (service supplémentaire, port 6061) : un navigateur headless Node.js + Puppeteer/Chromium qui effectue le rendu des pages de design pour l'export en PDF, PNG et SVG. Chromium navigue vers le service frontend pour effectuer le rendu des pages avant la capture.
 3. **L'URI de l'exporter est injectée automatiquement.** `PENPOT_EXPORTER_URI` est définie au moment du déploiement sur l'URL interne au cluster du service exporter (`http://<service-name>-exporter.<namespace>.svc.cluster.local:6061`). Vous n'avez pas besoin de la configurer manuellement.
-4. **Redis est obligatoire.** Toutes les répliques du backend Penpot partagent l'état des événements WebSocket via le pub/sub Redis (base 0). Sans Redis, la collaboration de design multi-utilisateur en temps réel est immédiatement cassée dès que plusieurs répliques du backend tournent — les utilisateurs connectés à des répliques différentes ne voient pas les modifications des autres.
+4. **Redis est obligatoire.** Tous les réplicas du backend Penpot partagent l'état des événements WebSocket via le pub/sub Redis (base 0). Sans Redis, la collaboration de design multi-utilisateur en temps réel est immédiatement cassée dès que plusieurs réplicas du backend tournent — les utilisateurs connectés à des réplicas différents ne voient pas les modifications des autres.
 5. **Un bucket GCS `assets` est provisionné automatiquement.** `Penpot Common` fournit un bucket (`name_suffix = "assets"`, nom complet `gcs-<service-name>-assets`) pour les ressources de design (polices, images, miniatures, fichiers téléversés). Le backend lit et écrit dans ce bucket via Workload Identity ADC — aucun identifiant explicite n'est requis.
 6. **`public_uri` est défini automatiquement sur l'URL de service prévue.** L'URL prévue est transmise à `Penpot Common` en tant que `public_uri`. Pour les déploiements avec domaine personnalisé, vous devez remplacer `public_uri` via `environment_variables` afin qu'elle corresponde à l'URL utilisée par les utilisateurs, de sorte que la SPA du frontend, les liens du backend et la navigation de l'exporter utilisent tous la bonne URL de base.
 7. **Un secret applicatif est généré automatiquement.** `Penpot Common` crée `PENPOT_SECRET_KEY` — une valeur aléatoire de 64 caractères stockée dans Secret Manager sous le nom `secret-<prefix>-penpot-key` — la clé de signature JWT partagée utilisée à la fois par le backend et l'exporter. Elle est injectée comme variable d'environnement secrète via `module_secret_env_vars = module.penpot_app.secret_ids`, et l'exporter la référence en plus directement (`secret_env_vars = { PENPOT_SECRET_KEY = "PENPOT_SECRET_KEY" }`), car son schéma de configuration exige `:secret-key`, faute de quoi le conteneur s'arrête au démarrage. Le secret `DB_PASSWORD` est provisionné automatiquement par `App GKE`.
@@ -79,7 +79,7 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 
 ---
 
-## Groupe 1 : projet et identité {#group-1-project--identity}
+## Groupe 1 : Projet et identité {#group-1-project--identity}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
@@ -90,7 +90,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
 ---
 
-## Groupe 2 : identité de l'application {#group-2-application-identity}
+## Groupe 2 : Identité de l'application {#group-2-application-identity}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot) pour leurs descriptions.
 
@@ -105,7 +105,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ---
 
-## Groupe 3 : exécution et mise à l'échelle {#group-3-runtime--scaling}
+## Groupe 3 : Exécution et mise à l'échelle {#group-3-runtime--scaling}
 
 La plupart des variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -113,7 +113,7 @@ La plupart des variables se comportent de façon identique à `App_GKE`. Voir [A
 
 > **Remarque :** les variables de mise à l'échelle (`min_instance_count`, `max_instance_count`) et de ressources (`cpu_limit`, `memory_limit`) s'appliquent au service **backend**. Les services frontend et exporter ont leurs propres limites de ressources, définies en interne :
 > - Frontend : `1000m` de CPU, `512Mi` de mémoire, mise à l'échelle selon `min_instance_count` / `max_instance_count`
-> - Exporter : `2000m` de CPU, `2Gi` de mémoire, 1 réplique au minimum, mise à l'échelle jusqu'à `max_instance_count`
+> - Exporter : `2000m` de CPU, `2Gi` de mémoire, 1 réplica au minimum, mise à l'échelle jusqu'à `max_instance_count`
 
 | Variable | Valeur par défaut Penpot GKE | Valeur par défaut App GKE | Remarques |
 |---|---|---|---|
@@ -121,7 +121,7 @@ La plupart des variables se comportent de façon identique à `App_GKE`. Voir [A
 | `cpu_limit` | `"2000m"` | `"1000m"` | 2 vCPU constituent le minimum pour le backend JVM sous charge collaborative. La JVM elle-même nécessite environ 500m au repos ; les connexions WebSocket simultanées et les opérations sur les fichiers de design exigent une marge supplémentaire. |
 | `memory_limit` | `"2Gi"` | `"512Mi"` | La JVM a besoin de plus de marge mémoire que les applications Node.js ou Python classiques. Avec `jvm_max_heap = "1g"`, le conteneur a besoin d'au moins 1.5 Gi pour absorber la surcharge de la JVM, le système d'exploitation et les caches de fichiers en mémoire de Penpot. 2 Gi est le minimum recommandé ; passez à 4 Gi pour les grandes équipes ou les fichiers de design complexes. |
 | `min_instance_count` | `1` | `1` | Au moins un pod tourne en permanence. La mise à l'échelle à zéro provoque des déconnexions WebSocket pour les collaborateurs actifs et un délai de démarrage à froid de la JVM de 60 à 120 secondes. |
-| `max_instance_count` | `3` | `3` | Nombre maximal de répliques du backend. Toutes les répliques partagent l'état des designs via Redis — la mise à l'échelle horizontale est sûre. |
+| `max_instance_count` | `3` | `3` | Nombre maximal de réplicas du backend. Tous les réplicas partagent l'état des designs via Redis — la mise à l'échelle horizontale est sûre. |
 | `timeout_seconds` | `3600` | `300` | Délai maximal permettant de traiter les opérations d'export volumineuses (PDF/PNG de designs complexes de plusieurs pages). La valeur maximale autorisée est de 3600 secondes. |
 | `enable_cloudsql_volume` | `true` | `true` | Le sidecar Cloud SQL Auth Proxy est requis. Le backend Penpot se connecte à PostgreSQL via le socket Unix de l'Auth Proxy. |
 | `enable_image_mirroring` | `true` | `true` | Les images Penpot sont hébergées sur Docker Hub. La mise en miroir vers Artifact Registry évite les limites de débit et satisfait les exigences de Binary Authorization. Appliquée à l'image du backend ; les images du frontend et de l'exporter sont également mises en miroir automatiquement. |
@@ -130,7 +130,7 @@ Les autres variables d'exécution (`deploy_application`, `container_image`, `con
 
 ---
 
-## Groupe 4 : accès et réseau {#group-4-access--networking}
+## Groupe 4 : Accès et réseau {#group-4-access--networking}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress) et [App_GKE](./App_GKE.md#d-networking--network-policies).
 
@@ -154,7 +154,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ---
 
-## Groupe 5 : configuration de l'application Penpot {#group-5-penpot-application-configuration}
+## Groupe 5 : Configuration de l'application Penpot {#group-5-penpot-application-configuration}
 
 Ces variables sont propres à Penpot et sont transmises directement à `Penpot Common`. Elles contrôlent le comportement d'exécution du backend Clojure et l'allocation des ressources de la JVM.
 
@@ -183,7 +183,7 @@ kubectl logs -n NAMESPACE POD_NAME --since=5m | grep -i "flags\|heap\|migration\
 
 ---
 
-## Groupe 6 : sauvegarde et maintenance {#group-6-backup--maintenance}
+## Groupe 6 : Sauvegarde et maintenance {#group-6-backup--maintenance}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
@@ -208,7 +208,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ---
 
-## Groupe 7 : variables d'environnement et secrets {#group-7-environment-variables--secrets}
+## Groupe 7 : Variables d'environnement et secrets {#group-7-environment-variables--secrets}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#3-core-service-configuration).
 
@@ -228,7 +228,7 @@ Les variables standard (`environment_variables`, `secret_environment_variables`,
 
 ---
 
-## Groupe 8 : configuration SMTP {#group-8-smtp-configuration}
+## Groupe 8 : Configuration SMTP {#group-8-smtp-configuration}
 
 Penpot utilise SMTP pour les e-mails d'invitation (inviter des membres d'équipe dans une organisation Penpot) et les notifications de réinitialisation de mot de passe. SMTP est facultatif — sans lui, Penpot reste entièrement fonctionnel pour les utilisateurs invités et la connexion, mais les e-mails d'invitation et de réinitialisation de mot de passe ne peuvent pas être envoyés.
 
@@ -263,7 +263,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "smtp\|email\|mail"
 
 ---
 
-## Groupe 9 : jobs et tâches planifiées {#group-9-jobs--scheduled-tasks}
+## Groupe 9 : Jobs et tâches planifiées {#group-9-jobs--scheduled-tasks}
 
 Ces variables se comportent comme décrit dans [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
@@ -279,7 +279,7 @@ La variable `cron_jobs` est disponible pour des tâches planifiées personnalis�
 
 ---
 
-## Groupe 10 : stockage et système de fichiers — NFS {#group-10-storage--filesystem--nfs}
+## Groupe 10 : Stockage et système de fichiers — NFS {#group-10-storage--filesystem--nfs}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -292,7 +292,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ---
 
-## Groupe 11 : stockage et système de fichiers — GCS {#group-11-storage--filesystem--gcs}
+## Groupe 11 : Stockage et système de fichiers — GCS {#group-11-storage--filesystem--gcs}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -314,7 +314,7 @@ Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_
 
 ---
 
-## Groupe 12 : configuration de la base de données {#group-12-database-configuration}
+## Groupe 12 : Configuration de la base de données {#group-12-database-configuration}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
@@ -326,7 +326,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 | `db_user` | `"penpot"` | `"gkeappuser"` | Utilisateur PostgreSQL de Penpot. **Immuable après le déploiement.** |
 | `database_password_length` | `32` | `32` | Longueur du mot de passe de base de données généré automatiquement. Plage valide : 16 à 64 caractères. |
 
-> **Important :** Penpot exige PostgreSQL. La variable `database_type` déclarée sur `Penpot_GKE` n'existe que pour respecter la convention de reproduction des variables de la fondation (valeur par défaut `"POSTGRES"`) — elle n'est jamais transmise à `Penpot Common` ni à `App_GKE` ; la définir n'a donc **aucun effet**. Le moteur de base de données réellement provisionné est toujours `POSTGRES_15`, codé en dur dans `Penpot Common`.
+> **Important :** Penpot exige PostgreSQL. La variable `database_type` déclarée sur `Penpot_GKE` n'existe que pour respecter la convention de reproduction des variables du socle (valeur par défaut `"POSTGRES"`) — elle n'est jamais transmise à `Penpot Common` ni à `App_GKE` ; la définir n'a donc **aucun effet**. Le moteur de base de données réellement provisionné est toujours `POSTGRES_15`, codé en dur dans `Penpot Common`.
 
 **Découverte de l'instance Cloud SQL :**
 
@@ -344,7 +344,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ---
 
-## Groupe 13 : scripts SQL personnalisés {#group-13-custom-sql-scripts}
+## Groupe 13 : Scripts SQL personnalisés {#group-13-custom-sql-scripts}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
@@ -352,7 +352,7 @@ Variables disponibles : `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`
 
 ---
 
-## Groupe 14 : observabilité et santé {#group-14-observability--health}
+## Groupe 14 : Observabilité et santé {#group-14-observability--health}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -399,7 +399,7 @@ Il s'agit de chemins parallèles, et non d'alias. Modifier `startup_probe` n'aff
 | `startup_probe_config` | `{ enabled = true, type = "TCP", timeout_seconds = 240, period_seconds = 240, failure_threshold = 1 }` | Sonde TCP sur `container_port` (6060). Autorise jusqu'à 240 secondes pour le démarrage. |
 | `health_check_config` | `{ enabled = true, type = "HTTP", path = "/api/health" }` | Requête HTTP GET sur `/api/health`. Le point de terminaison de santé dédié de Penpot. |
 
-**`uptime_check_config` :** vaut par défaut `{ enabled = false, path = "/api/health" }` — les tests de disponibilité sont désactivés par défaut. Activez-les explicitement pour la supervision en production. Si le backend Penpot n'est pas accessible publiquement (par ex. derrière IAP), les tests de disponibilité doivent utiliser un point de terminaison joignable par Google ou être configurés via une supervision interne au VPC.
+**`uptime_check_config` :** vaut par défaut `{ enabled = false, path = "/api/health" }` — les tests de disponibilité sont désactivés par défaut. Activez-les explicitement pour la surveillance en production. Si le backend Penpot n'est pas accessible publiquement (par ex. derrière IAP), les tests de disponibilité doivent utiliser un point de terminaison joignable par Google ou être configurés via une supervision interne au VPC.
 
 ### Valider les sondes de santé {#validating-health-probes}
 
@@ -419,7 +419,7 @@ kubectl exec -n NAMESPACE FRONTEND_POD_NAME -- \
 
 ---
 
-## Groupe 15 : politiques de fiabilité {#group-15-reliability-policies}
+## Groupe 15 : Règles de fiabilité {#group-15-reliability-policies}
 
 Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
@@ -427,14 +427,14 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 | Variable | Valeur par défaut Penpot GKE | Remarques |
 |---|---|---|
-| `enable_pod_disruption_budget` | `false` | Le PDB est désactivé par défaut. Activez-le pour les déploiements de production — sans PDB, une maintenance de nœud peut arrêter simultanément toutes les répliques du backend, déconnecter tous les collaborateurs actifs et potentiellement corrompre les modifications de design en cours. |
-| `pdb_min_available` | `1` | Au moins un pod backend doit rester disponible pendant les interruptions volontaires. Nécessite au moins 2 répliques (`min_instance_count >= 2`) pour être efficace. |
+| `enable_pod_disruption_budget` | `false` | Le PDB est désactivé par défaut. Activez-le pour les déploiements de production — sans PDB, une maintenance de nœud peut arrêter simultanément tous les réplicas du backend, déconnecter tous les collaborateurs actifs et potentiellement corrompre les modifications de design en cours. |
+| `pdb_min_available` | `1` | Au moins un pod backend doit rester disponible pendant les interruptions volontaires. Nécessite au moins 2 réplicas (`min_instance_count >= 2`) pour être efficace. |
 
 Variables disponibles : `enable_pod_disruption_budget`, `pdb_min_available`, `enable_topology_spread`, `topology_spread_strict`.
 
 ---
 
-## Groupe 15 : domaine personnalisé et IP statique {#group-15-custom-domain--static-ip}
+## Groupe 15 : Domaine personnalisé et IP statique {#group-15-custom-domain--static-ip}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
@@ -449,13 +449,13 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 ## Groupe 16 : Redis (pub/sub WebSocket) {#group-16-redis-websocket-pubsub}
 
-Ces variables configurent l'intégration Redis de Penpot. La prise en charge de l'infrastructure Redis sous-jacente est fournie par `App_GKE` (voir [App_GKE](./App_GKE.md#a-redis--memorystore)). Redis est **obligatoire** pour Penpot — c'est le bus d'événements pub/sub WebSocket qui synchronise en temps réel les modifications de design entre tous les utilisateurs connectés, sur toutes les répliques du backend.
+Ces variables configurent l'intégration Redis de Penpot. La prise en charge de l'infrastructure Redis sous-jacente est fournie par `App_GKE` (voir [App_GKE](./App_GKE.md#a-redis--memorystore)). Redis est **obligatoire** pour Penpot — c'est le bus d'événements pub/sub WebSocket qui synchronise en temps réel les modifications de design entre tous les utilisateurs connectés, sur tous les réplicas du backend.
 
 > **Remarque :** dans `Penpot GKE`, les variables Redis se trouvent dans le **groupe 21**.
 
 | Variable | Valeur par défaut | Options / format | Description et implications |
 |---|---|---|---|
-| `enable_redis` | `true` | `true` / `false` | Active Redis comme bus d'événements pub/sub WebSocket de Penpot. **Doit rester à `true` pour que la collaboration en temps réel fonctionne.** Lorsque `true` et que `redis_host` est vide, le module utilise par défaut l'IP du serveur NFS comme hôte Redis. Sans Redis, tout déploiement comptant plus d'une réplique du backend présente un comportement de split-brain — les utilisateurs connectés à des répliques différentes ne voient pas les modifications de design des autres. Avec une seule réplique, le bus d'événements en processus de Penpot est utilisé, mais il ne survit à aucun redémarrage de pod ni à aucune mise à jour progressive. |
+| `enable_redis` | `true` | `true` / `false` | Active Redis comme bus d'événements pub/sub WebSocket de Penpot. **Doit rester à `true` pour que la collaboration en temps réel fonctionne.** Lorsque `true` et que `redis_host` est vide, le module utilise par défaut l'IP du serveur NFS comme hôte Redis. Sans Redis, tout déploiement comptant plus d'un réplica du backend présente un comportement de split-brain — les utilisateurs connectés à des réplicas différents ne voient pas les modifications de design des autres. Avec un seul réplica, le bus d'événements en processus de Penpot est utilisé, mais il ne survit à aucun redémarrage de pod ni à aucune mise à jour progressive. |
 | `redis_host` | `""` *(par défaut, l'IP du serveur NFS)* | Nom d'hôte ou adresse IP | Nom d'hôte ou adresse IP du serveur Redis. Laissez vide pour utiliser l'IP du serveur NFS découverte automatiquement. Remplacez-la par une IP ou un nom d'hôte explicite lorsque vous utilisez une instance Redis dédiée — comme Google Cloud Memorystore for Redis — pour une disponibilité et un débit supérieurs. Exemple : `"10.128.0.10"`. |
 | `redis_port` | `"6379"` | Numéro de port sous forme de chaîne | Port TCP sur lequel écoute le serveur Redis. La valeur par défaut `6379` est le port Redis standard. |
 | `redis_auth` | `""` | Chaîne *(sensible)* | Mot de passe d'authentification du serveur Redis. Laissez vide si l'instance Redis ne requiert pas d'authentification. Pour Google Cloud Memorystore avec AUTH activé, indiquez la chaîne AUTH de l'instance. Cette valeur est traitée comme sensible. |
@@ -487,7 +487,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "redis\|connected\|pub/sub"
 
 ---
 
-## Groupe 17 : configuration du backend GKE {#group-17-gke-backend-configuration}
+## Groupe 17 : Configuration du backend GKE {#group-17-gke-backend-configuration}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -495,7 +495,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 | Variable | Valeur par défaut Penpot GKE | Remarques |
 |---|---|---|
-| `session_affinity` | `"ClientIP"` | Recommandé pour la stabilité des WebSocket. Avec `"None"`, les requêtes de mise à niveau WebSocket et les trames WebSocket suivantes peuvent être routées vers des répliques différentes du backend — ce qui peut interrompre les sessions de collaboration actives. `"ClientIP"` garantit que la connexion WebSocket d'un utilisateur atteint toujours le même pod backend. |
+| `session_affinity` | `"ClientIP"` | Recommandé pour la stabilité des WebSocket. Avec `"None"`, les requêtes de mise à niveau WebSocket et les trames WebSocket suivantes peuvent être routées vers des réplicas différents du backend — ce qui peut interrompre les sessions de collaboration actives. `"ClientIP"` garantit que la connexion WebSocket d'un utilisateur atteint toujours le même pod backend. |
 | `service_type` | `"LoadBalancer"` | Expose le backend Penpot via un équilibreur de charge Google Cloud. Le service frontend (`ingress = "INGRESS_TRAFFIC_ALL"`) est lui aussi exposé à l'extérieur et reçoit directement le trafic des navigateurs des utilisateurs. Le service exporter (`ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"`) est uniquement interne au cluster. |
 | `termination_grace_period_seconds` | `60` | Laisse le temps aux sessions WebSocket et aux opérations d'export en cours de se terminer avant l'arrêt du pod. Envisagez de passer à 120 secondes ou plus pour les équipes qui utilisent fréquemment l'export PDF/PNG. |
 
@@ -503,7 +503,7 @@ Variables disponibles : `gke_cluster_name`, `namespace_name`, `workload_type`, `
 
 ---
 
-## Groupe 18 : charges de travail avec état {#group-18-stateful-workloads}
+## Groupe 18 : Charges de travail avec état {#group-18-stateful-workloads}
 
 Identique à `App_GKE`. Voir la configuration StatefulSet décrite dans [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -536,7 +536,7 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 | `service_external_ip` | Adresse IP externe de l'équilibreur de charge |
 | `project_id` | ID du projet GCP |
 | `deployment_id` | Suffixe de l'ID de déploiement |
-| `namespace` | Namespace Kubernetes |
+| `namespace` | Espace de noms Kubernetes |
 | `database_instance_name` | Nom de l'instance Cloud SQL |
 | `database_name` | Nom de la base de données de l'application |
 | `database_user` | Nom de l'utilisateur de la base de données de l'application |
@@ -549,21 +549,21 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | *(obligatoire)* | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `enable_redis` | `true` | **Critical** | Redis est le bus pub/sub WebSocket. Le désactiver casse immédiatement la collaboration en temps réel dès qu'il y a plus d'une réplique du backend. Split-brain : les utilisateurs connectés à des répliques différentes ne voient pas les modifications de design des autres. |
+| `enable_redis` | `true` | **Critical** | Redis est le bus pub/sub WebSocket. Le désactiver casse immédiatement la collaboration en temps réel dès qu'il y a plus d'un réplica du backend. Split-brain : les utilisateurs connectés à des réplicas différents ne voient pas les modifications de design des autres. |
 | `redis_host` | `""` | **High** | Se résout automatiquement en IP NFS. Si NFS est désactivé et qu'aucun hôte explicite n'est fourni, la connexion Redis de Penpot échoue au démarrage et le backend refuse de démarrer. |
 | `enable_nfs` | `true` | **High** | Requis lorsque `redis_host` est vide. Désactiver NFS sans fournir d'hôte Redis explicite fait échouer le démarrage du backend. |
 | `container_port` | `6060` | **Critical** | Le backend Penpot écoute sur le port 6060. Modifier cette valeur sans qu'elle corresponde au port réellement lié par le conteneur fait échouer immédiatement toutes les sondes de santé et le proxy nginx du frontend. |
 | `memory_limit` | `"2Gi"` | **High** | La JVM a besoin d'une marge au-delà de `jvm_max_heap`. Fixer `memory_limit` égal à `jvm_max_heap` ne laisse aucune place à la mémoire hors heap (buffers Netty, surcharge du GC) et provoque des arrêts OOM. Fixez toujours `memory_limit` à au moins 1.5× `jvm_max_heap`. |
 | `jvm_max_heap` | `"1g"` | **High** | Fixer `jvm_max_heap` au-dessus de `memory_limit` provoque un arrêt OOM immédiat au démarrage de la JVM. Une valeur trop basse entraîne un ramasse-miettes excessif sous charge, ce qui réduit la réactivité et le débit des WebSocket. |
 | `timeout_seconds` | `3600` | **Medium** | Les exports PDF/PNG volumineux de designs complexes de plusieurs pages peuvent prendre plusieurs minutes. Descendre sous 120 secondes fait expirer les jobs d'export, qui renvoient une erreur à l'utilisateur. |
-| `session_affinity` | `"ClientIP"` | **High** | Sans affinité de session, les requêtes de mise à niveau WebSocket et leurs trames suivantes peuvent être routées vers des répliques différentes du backend. Les sessions de collaboration actives subissent des déconnexions et des pertes d'événements. |
+| `session_affinity` | `"ClientIP"` | **High** | Sans affinité de session, les requêtes de mise à niveau WebSocket et leurs trames suivantes peuvent être routées vers des réplicas différents du backend. Les sessions de collaboration actives subissent des déconnexions et des pertes d'événements. |
 | `penpot_flags` | `"enable-registration enable-login disable-demo-users"` | **Medium** | Des flags incorrects peuvent désactiver complètement la connexion (par ex. en retirant `enable-login-with-password` sans configurer OIDC) ou ouvrir l'inscription au public de façon inattendue (en retirant `disable-registration` sur un déploiement exposé à Internet). |
 | `public_uri` (via `environment_variables`) | *(prévue automatiquement)* | **High** | Doit correspondre à l'URL réellement utilisée pour accéder à Penpot. Une `public_uri` incorrecte casse les liens des e-mails d'invitation, les redirections OIDC et la navigation du Chromium headless de l'exporter — les PDF et PNG exportés seront vides ou échoueront. |
 | `db_name` | `"penpot"` | **Critical** | Immuable après le déploiement — la modifier recrée la base de données et détruit l'ensemble des projets, fichiers de design, composants et données d'équipe de Penpot. |
@@ -571,7 +571,7 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 | `application_version` | `"latest"` | **High** | Les trois images de service (backend, frontend, exporter) doivent utiliser le même tag de version. Des versions différentes entre backend et frontend peuvent provoquer des incompatibilités d'API qui cassent l'interface web. Épinglez une version précise en production. |
 | `backup_retention_days` | `7` | **Medium** | Insuffisant pour les équipes de design soumises à des exigences strictes de récupération des données. Passez à 30 jours ou plus pour les déploiements de production comportant un travail de design actif impossible à recréer. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Les entiers nus sont interprétés comme des octets et empêchent la planification de tous les pods — ce qui touche simultanément les trois services Penpot. |
-| `enable_pod_disruption_budget` | `false` | **High** | Sans PDB, une maintenance de nœud peut arrêter simultanément toutes les répliques du backend, déconnecter tous les collaborateurs actifs et potentiellement faire perdre des modifications de design non enregistrées. Activez-le pour tout déploiement de production comptant des utilisateurs actifs. |
+| `enable_pod_disruption_budget` | `false` | **High** | Sans PDB, une maintenance de nœud peut arrêter simultanément tous les réplicas du backend, déconnecter tous les collaborateurs actifs et potentiellement faire perdre des modifications de design non enregistrées. Activez-le pour tout déploiement de production comptant des utilisateurs actifs. |
 | `smtp_enabled` | `false` | **Medium** | Sans SMTP, les e-mails d'invitation ne peuvent pas être envoyés. L'intégration des membres de l'équipe nécessite alors de partager manuellement les identifiants de connexion ou d'utiliser un fournisseur OIDC. La réinitialisation du mot de passe est également indisponible sans SMTP. |
 
 <!-- related-guides -->

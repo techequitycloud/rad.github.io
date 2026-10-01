@@ -13,7 +13,7 @@ PeerTube est une plateforme open source d'hébergement vidéo fédérée via Act
 alternative auto-hébergée à YouTube dans laquelle des instances exploitées indépendamment se suivent
 et fédèrent entre elles vidéos, commentaires et chaînes (ainsi qu'avec le reste du
 Fediverse), de la même manière que Mastodon fédère les publications. Ce module déploie
-PeerTube sur **Cloud Run v2** au-dessus de la fondation
+PeerTube sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
@@ -22,7 +22,7 @@ de les exploiter depuis la console Google Cloud et la ligne de commande. Pour le
 mécanismes communs à toutes les applications Cloud Run — identité du service, ingress
 et équilibrage de charge, scaling et concurrence, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que
 de les répéter ici.
 
 ---
@@ -34,10 +34,10 @@ d'un Dockerfile reposant sur l'image de base officielle `chocobozzz/peertube`, a
 ARG de build dédié `PEERTUBE_VERSION` puisse épingler une version réelle. Le déploiement
 relie un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Serveur Node.js sur le port 9000 ; 2 vCPU / 2 GiB par défaut (prudent — à augmenter pour un vrai transcodage) ; `cpu_always_allocated = true` |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — extensions `pg_trgm`/`unaccent` pré-créées ; PeerTube migre lui-même son schéma |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — extensions `pg_trgm`/`unaccent` pré-créées ; PeerTube migre lui-même son schéma |
 | Cache et file d'attente | Redis | **Obligatoire, et non facultatif** — la file de jobs BullMQ de PeerTube (transcodage, livraison de la fédération, notifications) n'a aucun repli en mémoire |
 | Stockage d'objets | Cloud Storage | Un bucket `videos` public (compatible S3, identifiants HMAC) pour les fichiers vidéo et de playlists de streaming ; un bucket `data` privé (GCS FUSE) pour l'état local |
 | Secrets | Secret Manager | `PEERTUBE_SECRET`, `PT_INITIAL_ROOT_PASSWORD` et paire de clés d'accès/secrète HMAC S3 générés automatiquement ; mot de passe de la base de données |
@@ -67,7 +67,7 @@ relie un ensemble ciblé de services Google Cloud :
 - **Le bucket `videos` est volontairement public.** L'architecture même de PeerTube
   exige que les navigateurs récupèrent les fichiers vidéo et de playlists de streaming directement depuis
   le stockage d'objets, sans passer par l'application — le bucket remplace le paramètre
-  sécurisé par défaut de la fondation `public_access_prevention = "enforced"` par
+  sécurisé par défaut du socle `public_access_prevention = "enforced"` par
   `"inherited"` afin que l'autorisation requise `allUsers:objectViewer` puisse s'appliquer. Voir
   le §3 pour l'explication complète.
 - **`host` (le domaine de fédération ActivityPub) est immuable après la première utilisation
@@ -105,10 +105,10 @@ ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
 Consultez [App_CloudRun](App_CloudRun.md) pour le scaling, la concurrence, l'environnement
 d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 PeerTube stocke toutes les données de l'application (comptes, métadonnées des vidéos, commentaires,
-abonnements, playlists) dans une instance gérée Cloud SQL pour PostgreSQL 15. Le
+abonnements, playlists) dans une instance gérée Cloud SQL for PostgreSQL 15. Le
 service se connecte en TCP chiffré à l'IP privée de l'instance (voir le §3 pour
 comprendre pourquoi il ne s'agit pas d'une connexion par socket Unix, contrairement à la plupart des applications Cloud Run de ce
 catalogue).
@@ -170,7 +170,7 @@ Le conteneur de PeerTube lit `PEERTUBE_SECRET`, `PT_INITIAL_ROOT_PASSWORD`
 (consulté uniquement au premier démarrage lorsqu'aucun utilisateur n'existe), la paire de clés d'accès/secrète
 HMAC S3 et — lorsque SMTP est configuré — un mot de passe SMTP, tous sous forme de
 variables d'environnement adossées à des secrets. Le mot de passe de la base de données est géré
-séparément par la fondation.
+séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -182,7 +182,7 @@ séparément par la fondation.
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation, et
 [PeerTube_Common](PeerTube_Common.md) §2 pour la liste complète des secrets.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app` (`ingress_settings
 = "all"`, requis pour la fédération ActivityPub publique et la diffusion des vidéos). Un
@@ -329,13 +329,13 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `application_name` | `peertube` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `display_name` | `PeerTube` | Nom lisible affiché dans la Console. |
 | `description` | `PeerTube - Federated (ActivityPub) Video Hosting Platform` | Description du service. |
-| `application_version` | `latest` | Se résout en l'étiquette Docker Hub maintenue `production` via l'ARG de build dédié `PEERTUBE_VERSION` — et non via l'`APP_VERSION` générique de la fondation (qui l'emporterait sinon lors de la fusion et produirait une étiquette `latest` impossible à résoudre). |
+| `application_version` | `latest` | Se résout en l'étiquette Docker Hub maintenue `production` via l'ARG de build dédié `PEERTUBE_VERSION` — et non via l'`APP_VERSION` générique du socle (qui l'emporterait sinon lors de la fusion et produirait une étiquette `latest` impossible à résoudre). |
 | `host` | `""` | `PEERTUBE_WEBSERVER_HOSTNAME` — le domaine public de fédération. **Immuable après la première utilisation réelle.** Laissé vide, il est dérivé de l'URL Cloud Run prévue. |
 | `admin_email` | `admin@example.com` | Adresse e-mail attribuée au compte administrateur `root` créé automatiquement. |
 | `enable_open_registration` | `false` | Permet aux nouveaux utilisateurs de s'inscrire eux-mêmes. |
 | `enable_live_streaming` | `false` | **Sans effet sur cette variante Cloud Run** — RTMP nécessite un port TCP brut que les services Cloud Run ne peuvent pas exposer. Utilisez `PeerTube_GKE`. |
 
-### Groupe 4 — Runtime et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -349,7 +349,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `max_instance_count` | `1` | Plafond de coût. |
 | `execution_environment` | `gen2` | Requis pour les montages GCS FUSE. |
 | `enable_cloudsql_volume` | `true` | Injecte le montage de socket du Cloud SQL Auth Proxy ; les variables d'environnement `PEERTUBE_DB_*` propres à PeerTube sont définies indépendamment via l'alias `db_host_env_var_name` (voir le §3). |
-| `enable_image_mirroring` | `true` | Réplique l'image de base dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base dans Artifact Registry. |
 
 ### Groupe 5 — Accès, réseau, SMTP {#group-5--access-networking-smtp}
 
@@ -385,7 +385,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -420,7 +420,7 @@ Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` fourni par `PeerTube_Common`. |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme n'est définie pour PeerTube. |
 
-### Groupe 14 — Observabilité et état {#group-14--observability--health}
+### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -495,9 +495,9 @@ les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, scaling
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, scaling
 et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à PeerTube
 est définie dans **[PeerTube_Common](PeerTube_Common.md)** (source du
 module : `modules/PeerTube_Common`).

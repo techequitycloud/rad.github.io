@@ -32,7 +32,7 @@ ici.
 n8n AI s'exécute sous forme de conteneur Node.js sur Cloud Run v2. Le déploiement associe
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Node.js, 2 vCPU / 4 GiB par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — n8n requiert PostgreSQL ; le moteur est fixe |
@@ -44,7 +44,7 @@ un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `N8N_ENCRYPTION_KEY` et `N8N_SMTP_PASS` générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS facultatif + domaine personnalisé via Cloud Armor |
 
-**Valeurs par défaut judicieuses à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
   configuration commune ; `database_type` vaut `POSTGRES_15` par défaut. Le remplacer par
@@ -68,7 +68,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service n8n AI et ses compagnons d'IA {#a-cloud-run--the-n8n-ai-service-and-ai-companions}
 
@@ -93,7 +93,7 @@ l'environnement d'exécution et la répartition du trafic.
 n8n stocke toutes les définitions de workflows, l'historique des exécutions et les
 identifiants dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte
 en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix. Lors du premier
-déploiement, une tâche d'initialisation crée la base de données et l'utilisateur de
+déploiement, un job d'initialisation crée la base de données et l'utilisateur de
 l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
@@ -106,7 +106,7 @@ l'application.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour le
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour le
 modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe,
 consultez [App_CloudRun](App_CloudRun.md).
 
@@ -195,7 +195,7 @@ stockés dans Secret Manager, puis injectés dans la révision Cloud Run à l'ex
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour les détails de
+[Sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour les détails de
 l'injection et de la rotation.
 
 ### H. Réseau et entrée {#h-networking--ingress}
@@ -233,7 +233,7 @@ facultatifs sont disponibles.
 
 ## 3. Comportement de l'application N8N AI {#3-n8n-ai-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation se connecte à Cloud SQL via le socket Unix de l'Auth Proxy, crée la base
   de données PostgreSQL `n8n_db` et l'utilisateur `n8n_user`, accorde tous les privilèges,
   puis arrête proprement le proxy. La tâche est idempotente et peut être relancée sans
@@ -249,7 +249,7 @@ facultatifs sont disponibles.
   démarrage n'a pas réussi.
 - **URL des webhooks et de l'éditeur.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont définies
   sur l'URL de service prévue avant le déploiement de la révision, afin que les webhooks
-  fonctionnent sans nouvelle application après le déploiement.
+  fonctionnent sans nouvel apply après le déploiement.
 - **Mode file d'attente.** Lorsque Redis est activé, n8n fonctionne en mode file d'attente
   pour une exécution fiable des workflows sur plusieurs instances. Avec une seule instance
   (`max_instance_count = 1`), le mode file d'attente est facultatif.
@@ -260,7 +260,7 @@ facultatifs sont disponibles.
 - **Mot de passe SMTP.** `N8N_SMTP_PASS` est généré automatiquement comme valeur fictive.
   Remplacez la valeur du secret dans Secret Manager par de véritables identifiants SMTP
   avant d'activer l'envoi d'e-mails.
-- **Inspecter les tâches Cloud Run Jobs :**
+- **Inspecter les jobs Cloud Run :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -354,10 +354,10 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base d'une instance créée en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Instance NFS existante / nom de base d'une instance créée en mode intégré (inline). |
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. |
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -392,12 +392,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 | `rotation_propagation_delay_sec` | `90` | Nombre de secondes après la rotation avant le redémarrage des instances. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Alias des informations de connexion injectés sous forme de variables d'environnement supplémentaires. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run Jobs planifiées pour les exportations de workflows ou la maintenance. |
+| `cron_jobs` | `[]` | Jobs Cloud Run planifiés pour les exportations de workflows ou la maintenance. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -441,12 +441,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le plus
 rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run de n8n. |
 | `service_url` | URL `run.app` par défaut du service n8n. |

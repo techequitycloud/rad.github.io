@@ -14,7 +14,7 @@ fondée sur l'IA : elle permet de parcourir, d'organiser et de partager une
 médiathèque personnelle avec étiquetage automatique, reconnaissance faciale et
 recherche plein texte/visuelle, le tout servi par un unique binaire Go doté
 d'une base de données SQLite embarquée. Ce module déploie PhotoPrism sur
-**GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui
+**GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise PhotoPrism et sur la
@@ -22,7 +22,7 @@ façon de les explorer et de les exploiter depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
+déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md)
 plutôt que de les répéter ici.
 
 ---
@@ -34,7 +34,7 @@ déployée sous la forme d'un **StatefulSet avec un Persistent Volume Claim bloc
 plutôt que d'un Deployment sans état. Le déploiement assemble un ensemble ciblé
 de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod PhotoPrism sur le port 2342, StatefulSet par défaut |
 | Base de données | Aucune | SQLite embarqué (`PHOTOPRISM_DATABASE_DRIVER=sqlite`) — aucune instance Cloud SQL n'est provisionnée |
@@ -50,18 +50,18 @@ de services Google Cloud :
   gère ses propres fichiers SQLite sous `/photoprism/storage`. Les variables
   `database_type`/`application_database_*`/`enable_mysql_plugins`/etc. au niveau GKE
   sont toutes des emplacements réservés sans effet, transmis uniquement pour la
-  compatibilité avec la fondation.
+  compatibilité avec le socle.
 - **Le PVC bloc, et non gcsfuse, est obligatoire.** `stateful_pvc_enabled = true` par
   défaut, ce qui résout `workload_type` en `StatefulSet` et monte un
   Persistent Disk `standard-rwo` (SSD) de 20Gi sur `/photoprism`. gcsfuse ne peut pas
   héberger SQLite ni l'index des médias en toute sécurité ; le module définit donc automatiquement
   `enable_gcs_storage_volume = false` sur la couche Common lorsque le PVC est
   activé, ce qui évite un double montage sur le même chemin.
-- **Une seule réplique, toujours.** `min_instance_count = 1`, `max_instance_count =
+- **Un seul réplica, toujours.** `min_instance_count = 1`, `max_instance_count =
   1`. PhotoPrism sert une seule bibliothèque SQLite partagée depuis un seul volume accessible en écriture —
   ne dépassez pas 1.
 - **Redis est forcé à off.** La variable `enable_redis` au niveau GKE vaut
-  `true` par défaut (valeur par défaut de la fondation App_GKE), mais le `main.tf` de `PhotoPrism_GKE`
+  `true` par défaut (valeur par défaut du socle App_GKE), mais le `main.tf` de `PhotoPrism_GKE`
   la remplace en dur par `false` — PhotoPrism n'a aucune intégration Redis ; aucun
   hôte Redis Memorystore/NFS n'est donc jamais injecté.
 - **NFS est désactivé par défaut** (`enable_nfs = false`). Le PVC bloc constitue le
@@ -73,7 +73,7 @@ de services Google Cloud :
   (valeur par défaut `admin`).
 - **Le build d'image personnalisé est un simple miroir, pas de la logique applicative.** Le build encapsule
   l'image amont `photoprism/photoprism` (`FROM photoprism/photoprism:${PHOTOPRISM_VERSION}`)
-  afin que la fondation puisse la mettre en miroir dans Artifact Registry ; l'argument de build
+  afin que le socle puisse la mettre en miroir dans Artifact Registry ; l'argument de build
   propre à l'application est `PHOTOPRISM_VERSION` (et non l'`APP_VERSION` générique), épinglé à
   `240915` lorsque `application_version = "latest"`.
 
@@ -83,7 +83,7 @@ de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — le StatefulSet PhotoPrism {#a-gke-autopilot--the-photoprism-statefulset}
@@ -156,7 +156,7 @@ pilote Secret Store CSI.
 
 Voir [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via un Service `LoadBalancer`
 (`service_type = "LoadBalancer"`) — PhotoPrism est une interface web publique, et non
@@ -213,7 +213,7 @@ défaut) et des règles d'alerte personnalisées sont disponibles.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité sont toutes deux des sondes **HTTP**
   `GET /api/v1/status` (délai initial de 15s / 10 tentatives pour le démarrage, 30s / 3
   tentatives pour la vivacité) — aucune authentification requise. Les variables
-  `startup_probe_config`/`health_check_config` du groupe 10, au niveau de la fondation, reprennent le même
+  `startup_probe_config`/`health_check_config` du groupe 10, au niveau du socle, reprennent le même
   chemin comme valeurs par défaut génériques. {/* TODO: verify precedence if the two probe
   configuration surfaces (Common-level startup_probe/liveness_probe vs.
   Group-10 startup_probe_config/health_check_config) are set to conflicting
@@ -294,7 +294,7 @@ standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `NONE` | Fixe — PhotoPrism n'a pas de base de données SQL (SQLite embarqué uniquement). Toutes les autres variables `database_*`/`application_database_*`/plugins MySQL de ce groupe sont sans effet et transmises uniquement pour la compatibilité avec la fondation. |
+| `database_type` | `NONE` | Fixe — PhotoPrism n'a pas de base de données SQL (SQLite embarqué uniquement). Toutes les autres variables `database_*`/`application_database_*`/plugins MySQL de ce groupe sont sans effet et transmises uniquement pour la compatibilité avec le socle. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
@@ -316,7 +316,7 @@ de localiser et d'explorer les ressources en fonctionnement.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -325,7 +325,7 @@ de localiser et d'explorer les ressources en fonctionnement.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés. |
@@ -345,7 +345,7 @@ de localiser et d'explorer les ressources en fonctionnement.
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
-> par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs
+> par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs
 > *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un
 > paramètre sans état, IAP sans identité autorisée, des `quota_memory_*`
 > exprimés en entiers nus, un `container_port`/
@@ -363,13 +363,13 @@ de localiser et d'explorer les ressources en fonctionnement.
 | `PHOTOPRISM_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous bloque hors du premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
 | `site_url` | À définir sur l'URL déployée dès qu'elle est connue | Medium | Laissée vide, PhotoPrism se rabat sur l'hôte de la requête ; les liens absolus et les URL des miniatures peuvent être erronés derrière un proxy ou un domaine personnalisé. |
 | `stateful_fs_group` | `3000` | High | Un fsGroup incohérent ou non défini peut rendre le PVC inaccessible en écriture pour l'UID 1000/GID 2000 de PhotoPrism, ce qui bloque le démarrage. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods du namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods de l'espace de noms. |
 | `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `site_url`. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à PhotoPrism

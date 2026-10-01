@@ -13,8 +13,7 @@ AnythingLLM est un espace de travail d'IA privé et une plateforme de générati
 par récupération (RAG) qui permet aux équipes de dialoguer avec leurs documents, de se
 connecter à n'importe quel fournisseur de LLM (OpenAI, Anthropic, Ollama, etc.) et de
 créer des assistants de connaissances reposant sur l'IA — sans envoyer de données à des
-services tiers. Ce module déploie AnythingLLM sur **Cloud Run v2** au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
+services tiers. Ce module déploie AnythingLLM sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise AnythingLLM et sur la façon de
@@ -22,7 +21,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de c
 Pour les mécanismes communs à toutes les applications Cloud Run — identité du service,
 ingress et équilibrage de charge, scaling et concurrence, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les
 répéter ici.
 
 ---
@@ -35,14 +34,14 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Node.js, 2 vCPU / 4 GiB par défaut, autoscaling basé sur les requêtes |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — AnythingLLM utilise l'ORM Prisma et ne prend pas en charge MySQL |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — AnythingLLM utilise l'ORM Prisma et ne prend pas en charge MySQL |
 | Stockage d'objets | Cloud Storage | Bucket de documents `anythingllm-docs` provisionné automatiquement ; buckets supplémentaires en option |
 | Fichiers partagés | Filestore (NFS) | Facultatif — pour un stockage persistant des documents/vecteurs sur plusieurs instances ; nécessite gen2 |
 | Secrets | Secret Manager | Quatre secrets applicatifs générés automatiquement (`JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`, `SIG_SALT`) plus le mot de passe de base de données |
 | Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS global + Cloud Armor + domaine personnalisé en option |
 | Cache | Redis | Désactivé par défaut ; facultatif pour les charges de travail de session ou de cache |
 
-**Valeurs par défaut utiles à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** L'ORM Prisma d'AnythingLLM nécessite PostgreSQL. Ne
   définissez pas `database_type` sur une variante MySQL ou SQL Server.
@@ -98,15 +97,15 @@ nécessitent au moins 2 vCPU et 4 GiB de RAM ; Startup CPU Boost est activé.
 Voir [App_CloudRun](App_CloudRun.md) pour le scaling, la concurrence, l'environnement
 d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 AnythingLLM stocke toutes les métadonnées de l'espace de travail, les comptes
-utilisateur et l'historique des conversations dans une instance gérée Cloud SQL pour
+utilisateur et l'historique des conversations dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le service s'y connecte de façon privée via le **Cloud SQL Auth Proxy**
 sur un socket Unix (pas d'IP publique). Lors du premier déploiement, un Job
 d'initialisation crée la base de données et l'utilisateur de l'application. La chaîne de
 connexion Prisma `DATABASE_URL` est assemblée par le script de point d'entrée
-d'AnythingLLM à partir des variables d'environnement `DB_*` injectées par la fondation
+d'AnythingLLM à partir des variables d'environnement `DB_*` injectées par le socle
 au démarrage du conteneur.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
@@ -169,7 +168,7 @@ déploiement.
 
 Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut via son URL `run.app`. Un équilibreur de charge
 HTTPS global avec Cloud Armor, un domaine personnalisé et Cloud CDN peuvent être ajoutés.
@@ -270,7 +269,7 @@ leur comportement standard.
 | `application_description` | _(défini)_ | Description du service. |
 | `application_version` | `latest` | Tag de version de l'image ; épinglez-le sur un tag de version publiée en production. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -285,7 +284,7 @@ leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
 | `traffic_split` | `[]` | Répartition du trafic entre les révisions pour les déploiements progressifs. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -323,7 +322,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Domaine, CDN, Cloud Armor et conservation des images {#group-10--domain-cdn-cloud-armor--image-retention}
+### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -381,7 +380,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -421,35 +420,35 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
-| Persistance de `STORAGE_DIR` | NFS ou GCS Fuse | Critique | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus à chaque redémarrage d'instance. |
-| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critique | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run. |
-| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `enable_cloudsql_volume` | `true` | Critique | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
-| `memory_limit` | `4Gi` | Élevé | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
-| `min_instance_count` | `1` | Élevé | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
-| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | Élevé | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
-| `EMBEDDING_ENGINE` | à définir une seule fois | Élevé | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
-| `ingress_settings` / `enable_iap` | sécurisés pour la production | Élevé | `ingress_settings = "all"` sans IAP expose publiquement l'espace de travail ; seul le formulaire de connexion le protège. |
-| `enable_nfs` / GCS Fuse | à activer en multi-instances | Élevé | Sans stockage partagé, au-delà d'une instance chacune dispose d'une vue de stockage isolée ; l'accès aux documents entre instances échoue. |
-| `execution_environment` | `gen2` (par défaut) | Élevé | Les montages NFS et GCS Fuse nécessitent gen2 ; avec gen1, le montage du volume échoue silencieusement. |
-| `enable_redis` | `false` (ou définir `redis_host`) | Moyen | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
-| `application_version` | épingler sur un tag de version publiée | Moyen | `latest` expose en production à des mises à niveau qui cassent le schéma. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
+| `database_type` | `POSTGRES_15` | Critical | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
+| Persistance de `STORAGE_DIR` | NFS ou GCS Fuse | Critical | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus à chaque redémarrage d'instance. |
+| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critical | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run. |
+| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `enable_cloudsql_volume` | `true` | Critical | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
+| `memory_limit` | `4Gi` | High | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
+| `min_instance_count` | `1` | High | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
+| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | High | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
+| `EMBEDDING_ENGINE` | à définir une seule fois | High | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
+| `ingress_settings` / `enable_iap` | sécurisés pour la production | High | `ingress_settings = "all"` sans IAP expose publiquement l'espace de travail ; seul le formulaire de connexion le protège. |
+| `enable_nfs` / GCS Fuse | à activer en multi-instances | High | Sans stockage partagé, au-delà d'une instance chacune dispose d'une vue de stockage isolée ; l'accès aux documents entre instances échoue. |
+| `execution_environment` | `gen2` (par défaut) | High | Les montages NFS et GCS Fuse nécessitent gen2 ; avec gen1, le montage du volume échoue silencieusement. |
+| `enable_redis` | `false` (ou définir `redis_host`) | Medium | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
+| `application_version` | épingler sur un tag de version publiée | Medium | `latest` expose en production à des mises à niveau qui cassent le schéma. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, scaling et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à AnythingLLM,

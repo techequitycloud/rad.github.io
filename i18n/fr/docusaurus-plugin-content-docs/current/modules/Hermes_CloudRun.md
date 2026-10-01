@@ -40,7 +40,7 @@ Google Cloud :
 | Calcul | Cloud Run v2 | Conteneur passerelle, 1 vCPU / 2 GiB par défaut, `min=1` / `max=1`, CPU toujours alloué |
 | État de l'agent | NFS autogéré (Services_GCP) | Monté sur `/opt/data` — configuration SQLite, sessions, compétences, mémoires. **Pas de Cloud SQL** |
 | Secrets | Secret Manager | `ANTHROPIC_API_KEY`, `API_SERVER_KEY` et mot de passe du tableau de bord générés automatiquement, `OPENAI_API_KEY` / `TELEGRAM_BOT_TOKEN` facultatifs |
-| Image de conteneur | Artifact Registry (miroir) | Image officielle préconstruite dupliquée ; aucun build personnalisé, aucune étape Cloud Build |
+| Image de conteneur | Artifact Registry (miroir) | Image officielle préconstruite mise en miroir ; aucun build personnalisé, aucune étape Cloud Build |
 | Réseau | VPC + URL `run.app` | Sortie VPC serverless pour le montage NFS ; URL publique pour le serveur d'API |
 | Base de données / cache | — | **Pas de Cloud SQL, pas de Redis** — Hermes repose entièrement sur SQLite sur NFS |
 
@@ -84,7 +84,7 @@ Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-des services et des ressources figurent dans les [Outputs](#5-outputs) du
+des services et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service passerelle Hermes {#a-cloud-run--the-hermes-gateway-service}
@@ -150,9 +150,9 @@ conservent la version `latest` stockée — les clés n'ont jamais besoin d'êtr
 ressaisies. Consultez [App_CloudRun](App_CloudRun.md) pour les détails sur
 l'injection et la rotation.
 
-### D. Artifact Registry — l'image dupliquée {#d-artifact-registry--the-mirrored-image}
+### D. Artifact Registry — l'image mise en miroir {#d-artifact-registry--the-mirrored-image}
 
-L'image officielle `nousresearch/hermes-agent:<version>` est dupliquée dans
+L'image officielle `nousresearch/hermes-agent:<version>` est mise en miroir dans
 Artifact Registry avant le déploiement (`enable_image_mirroring = true`), de sorte
 que le service ne tire jamais l'image depuis Docker Hub à l'exécution. Il n'y a
 **aucune étape Cloud Build** — il s'agit d'un module préconstruit.
@@ -275,7 +275,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `timeout_seconds` | `3600` | Les sessions de l'agent peuvent être longues. |
 | `enable_cloudsql_volume` | `false` | Hermes n'a pas de base de données. |
 | `container_image_source` | `prebuilt` | Déploie l'image officielle sans étape de build. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 
 ### Groupe 5 — Accès et réseau {#group-5--access--networking}
 
@@ -322,12 +322,12 @@ transmises** — Hermes n'a ni base de données ni Redis.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `api_url` | URL `run.app` par défaut du serveur d'API de la passerelle. |
@@ -336,7 +336,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (aucun par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (vide — aucune base de données à amorcer). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -375,7 +375,7 @@ d'explorer les ressources en cours d'exécution.
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et modes de facturation, entrée et équilibrage de
 charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La
+mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
 configuration applicative propre à Hermes, partagée avec la variante GKE, est
 décrite dans **[Hermes_Common](Hermes_Common.md)**.
 

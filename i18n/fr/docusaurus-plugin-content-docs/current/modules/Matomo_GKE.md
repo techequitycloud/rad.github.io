@@ -33,7 +33,7 @@ Matomo s'exécute sous forme d'une charge de travail web PHP/Apache unique,
 construite à partir de l'image officielle précompilée. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods PHP/Apache (`matomo:<application_version>`) sur le port 80, 1 vCPU / 2 GiB par défaut |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — le moteur est fixé à `MYSQL_8_0` |
@@ -43,7 +43,7 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Uniquement le mot de passe de l'utilisateur applicatif Cloud SQL, généré automatiquement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une adresse IP statique réservée ; domaine personnalisé et certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la
   couche applicative partagée (`Matomo_Common` code en dur
@@ -65,7 +65,7 @@ ensemble ciblé de services Google Cloud :
   (`config.ini.php`), les plugins installés et les ressources générées. Le point
   d'entrée de l'image officielle remplit un volume vide à partir de
   `/usr/src/matomo` au premier démarrage.
-- **Une seule réplique par défaut.** `min_instance_count = 1`, `max_instance_count
+- **Un seul réplica par défaut.** `min_instance_count = 1`, `max_instance_count
   = 1`. `session_affinity = ClientIP` maintient les requêtes d'un client sur le
   même pod ; la charge de travail adossée à NFS est déployée avec la stratégie de
   mise à jour `Recreate`, de sorte qu'une mise à jour progressive n'exécute
@@ -106,9 +106,9 @@ le Deployment utilise la stratégie `Recreate` (une mise à jour progressive
 exécuterait deux pods sur le même volume NFS et la même base de données
 partagée, et provoquerait un interblocage).
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
   de travail Matomo pour consulter les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -169,7 +169,7 @@ applicatif Cloud SQL, généré et géré par le module de secrets partagé du s
 créé). Sur GKE, les secrets sont projetés dans les pods via le pilote Secret
 Store CSI.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~matomo"
@@ -186,7 +186,7 @@ Load Balancing (`service_type = LoadBalancer`, `reserve_static_ip = true` pour
 que l'adresse survive aux redéploiements). Un domaine personnalisé avec un
 certificat géré par Google peut être activé.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -202,7 +202,7 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les
 métriques de GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests
 de disponibilité et des règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -264,7 +264,7 @@ de disponibilité et des règles d'alerte facultatifs sont disponibles.
 - **Contrainte de mise à l'échelle.** Conservez `max_instance_count = 1` tant
   que le comportement des sessions et des verrous NFS avec plusieurs pods n'a pas
   été vérifié — Matomo ne coordonne pas nativement les écritures d'archivage et
-  de journaux de suivi entre des répliques partageant un même volume NFS et une
+  de journaux de suivi entre des réplicas partageant un même volume NFS et une
   même base de données.
 - **Le cron et l'archivage ne sont pas câblés.** Ce module ne provisionne pas de
   CronJob pour le traitement périodique des archives de Matomo
@@ -341,7 +341,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `application_database_name` | `matomo` | Nom de la base de données, injecté sous la forme `MATOMO_DATABASE_DBNAME`. Immuable après le premier déploiement. |
 | `application_database_user` | `matomo` | Utilisateur de la base de données de l'application, injecté sous la forme `MATOMO_DATABASE_USERNAME` ; mot de passe généré automatiquement dans Secret Manager. |
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -385,7 +385,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -400,7 +400,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt
 > qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Matomo exige MySQL/MariaDB ; le moteur ne peut pas être remplacé par Postgres. |
 | `application_database_name` / `application_database_user` | Défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données d'analyse. |

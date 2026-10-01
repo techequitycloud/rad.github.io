@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Matomo sur Cloud Run dans votre propre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Matomo est la principale plateforme open source d'analyse web — une alternative auto-hébergée à Google Analytics, axée sur la confidentialité. Ce lab vous fait parcourir tout le cycle de vie opérationnel du module **Matomo on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
@@ -19,7 +19,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et terminer l'installateur web de premier démarrage de Matomo.
@@ -62,7 +62,7 @@ export REGION="us-central1"          # the region you deploy into
    avec son secret de mot de passe dans Secret Manager, un partage NFS Filestore qui conserve
    la racine documentaire de Matomo (`/var/www/html`), un bucket GCS `matomo-data` dédié,
    recopie l'image officielle `matomo:5-apache` dans Artifact Registry (pas d'étape de
-   build — il s'agit d'un module préconstruit), et exécute une tâche ponctuelle `db-init` qui crée
+   build — il s'agit d'un module préconstruit), et exécute un job ponctuel `db-init` qui crée
    la base de données vide et l'utilisateur. Les premiers déploiements prennent environ **20 à 35 minutes**
    (la création de Cloud SQL en représente l'essentiel).
 
@@ -93,7 +93,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. Ouvrez `$SERVICE_URL` dans un navigateur. Sur un nouveau déploiement, Matomo présente son **installateur
    web** : l'écran de base de données est prérempli à partir des variables d'environnement
-   `MATOMO_DATABASE_*` injectées (la tâche `db-init` a déjà créé la
+   `MATOMO_DATABASE_*` injectées (le job `db-init` a déjà créé la
    base de données vide et l'utilisateur) ; parcourez donc les étapes, créez le compte **superuser** (super-utilisateur) et
    enregistrez votre premier site web suivi. L'installateur écrit `config.ini.php` dans la
    racine documentaire conservée sur NFS, de sorte que la configuration survit aux redémarrages. Si vous avez besoin du
@@ -134,7 +134,7 @@ export REGION="us-central1"          # the region you deploy into
    page de détails du déploiement ; la nouvelle image est recopiée et une nouvelle révision est déployée.
    Matomo exécute ses propres migrations de schéma depuis la racine documentaire persistante.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~matomo"
@@ -157,7 +157,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -191,9 +191,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
 - **Erreurs de connexion à la base de données :** Matomo se connecte en **TCP à l'adresse IP privée de Cloud
   SQL** (`enable_cloudsql_volume = false` ; l'adresse IP est injectée sous la forme
   `MATOMO_DATABASE_HOST`). Confirmez que l'instance MySQL 8.0 est `RUNNABLE`, que le secret du mot de passe
-  de la base de données existe et que la tâche `db-init` s'est terminée — elle vérifie les identifiants de
-  l'utilisateur de l'application ; une tâche `db-init` au vert écarte donc la plupart des problèmes d'authentification.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  de la base de données existe et que le job `db-init` s'est terminé — il vérifie les identifiants de
+  l'utilisateur de l'application ; un job `db-init` au vert écarte donc la plupart des problèmes d'authentification.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -217,7 +217,7 @@ chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS (y compris le bucket `matomo-data`),
@@ -235,5 +235,5 @@ pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | La vérification de santé réussit ; terminer l'installateur web de Matomo et vérifier le suivi |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/sauvegardes/stockage, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; activer le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de NFS, d'image, d'archivage et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de NFS, d'image, d'archivage et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

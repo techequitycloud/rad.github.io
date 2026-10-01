@@ -11,7 +11,7 @@ description: "Lab pratique : provisionnez Google Cloud VMware Engine dans votre 
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 150 à 180 minutes (en grande partie de l'attente — la création du cloud privé peut à elle seule prendre **~2 heures** pour les types plus importants ; un cloud `TIME_LIMITED` à un seul nœud est généralement prêt en 30 à 90 minutes).
+**Durée estimée :** 150–180 minutes (en grande partie de l'attente — la création du cloud privé peut à elle seule prendre **~2 heures** pour les types plus importants ; un cloud `TIME_LIMITED` à un seul nœud est généralement prêt en 30 à 90 minutes).
 
 Google Cloud VMware Engine (GCVE) exécute un Software-Defined Data Center VMware complet — vSphere, vSAN, NSX-T et HCX — sur du matériel bare metal géré par Google, de sorte que vos outils et compétences VMware existants restent utilisables sans changement. Ce lab vous fait parcourir le cycle de vie opérationnel complet du module **VMware Engine** : le déployer, confirmer que le cloud privé démarre et atteindre vCenter via l'hôte de rebond (jump host), exploiter l'environnement au quotidien, l'observer, diagnostiquer les problèmes courants et le supprimer.
 
@@ -21,13 +21,13 @@ Le lab porte sur l'exploitation du **module et de la plateforme Google Cloud**, 
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Confirmer que le cloud privé atteint l'état `ACTIVE` et récupérer les identifiants vCenter.
 - Atteindre les consoles vCenter, NSX-T et HCX via l'hôte de rebond Windows.
 - Effectuer les opérations du jour 2 — explorer vCenter, gérer le cloud privé et sa mise en réseau.
 - Observer l'environnement avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -164,7 +164,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible — elle supprime le cloud privé (et **chaque VM et toutes les données qu'il contient**), le réseau VMware Engine et l'appairage, la stratégie réseau, le VPC pair et les règles de pare-feu, ainsi que l'hôte de rebond. La suppression est correctement ordonnée (la stratégie et l'appairage avant le réseau) et elle est **lente** — le déprovisionnement du bare metal peut prendre beaucoup de temps, laissez-la donc aller jusqu'au bout.
 
@@ -183,4 +183,4 @@ Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (
 | 3 — Exploiter | Manuel | Explorer vCenter/NSX-T ; gérer le cloud privé et la mise en réseau ; renouveler les identifiants |
 | 4 — Observer | Manuel | Interroger les journaux d'audit VMware Engine ; examiner les métriques de l'hôte de rebond et l'état de santé dans les consoles |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de provisionnement lent, de stratégies orphelines, d'accès aux consoles et de quota |
-| 6 — Supprimer | Automatisé | Delete (Trash) détruit toutes les ressources ; Purge retire le déploiement de RAD sans rien détruire |
+| 6 — Démanteler | Automatisé | Delete (Trash) détruit toutes les ressources ; Purge retire le déploiement de RAD sans rien détruire |

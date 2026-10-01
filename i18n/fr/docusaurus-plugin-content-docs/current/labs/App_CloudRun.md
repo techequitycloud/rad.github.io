@@ -19,15 +19,15 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 > **Ce lab se déploie sur une fondation `Services_GCP`.** Utilisez le **même `tenant_id`** que votre déploiement `Services_GCP` afin qu'`App CloudRun` découvre automatiquement le VPC partagé, l'instance Cloud SQL, le serveur NFS et Artifact Registry et s'y rattache, au lieu de provisionner ses propres copies intégrées. (Le déploiement autonome — avec `require_services_gcp_module = false` — est pris en charge, mais l'objet de ce lab est de mettre en œuvre la fondation.)
 
-> **Les paramètres sont validés au moment du plan.** Le module rejette les valeurs invalides et les combinaisons de fonctionnalités invalides — un réplica en lecture sans instance principale, IAP sans utilisateurs autorisés, un environnement d'exécution `gen1` avec NFS, une tâche `mount_nfs` avec `enable_nfs = false`, une source d'image `prebuilt` sans image — *avant* que quoi que ce soit ne soit créé, avec un message d'erreur clair qui nomme la variable. Vous obtenez un échec rapide et explicite plutôt qu'un déploiement à moitié construit. Le tableau [*Configuration Pitfalls* du Guide de configuration](https://docs.radmodules.dev/docs/modules/App_CloudRun) indique quelles combinaisons sont détectées de cette manière.
+> **Les paramètres sont validés au moment du plan.** Le module rejette les valeurs invalides et les combinaisons de fonctionnalités invalides — un réplica en lecture sans instance principale, IAP sans utilisateurs autorisés, un environnement d'exécution `gen1` avec NFS, un job `mount_nfs` avec `enable_nfs = false`, une source d'image `prebuilt` sans image — *avant* que quoi que ce soit ne soit créé, avec un message d'erreur clair qui nomme la variable. Vous obtenez un échec rapide et explicite plutôt qu'un déploiement à moitié construit. Le tableau [*Configuration Pitfalls* du Guide de configuration](https://docs.radmodules.dev/docs/modules/App_CloudRun) indique quelles combinaisons sont détectées de cette manière.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
-- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, les tâches et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, les jobs et le stockage.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -46,7 +46,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -61,7 +61,7 @@ export REGION="us-central1"          # the region you deploy into
 
 Choisissez un parcours selon la part du module que vous souhaitez mettre en œuvre. Les deux se rattachent à votre fondation `Services_GCP` via un `tenant_id` identique.
 
-**Parcours A — Minimal (le plus rapide).** Valeurs par défaut : un service Cloud Run adossé à PostgreSQL (le Cloud SQL partagé), le NFS partagé et une tâche d'initialisation. Définissez uniquement `project_id` et `tenant_id`. Cela suffit pour parcourir les tâches 2 à 6.
+**Parcours A — Minimal (le plus rapide).** Valeurs par défaut : un service Cloud Run adossé à PostgreSQL (le Cloud SQL partagé), le NFS partagé et un job d'initialisation. Définissez uniquement `project_id` et `tenant_id`. Cela suffit pour parcourir les tâches 2 à 6.
 
 **Parcours B — Complet (recommandé pour ce lab).** Met en œuvre l'étendue du moteur afin que chaque étape de vérification ait quelque chose à confirmer. Paramètres suggérés (tout le reste par défaut) :
 
@@ -109,7 +109,7 @@ iap_authorized_users = ["user:<your-email>"]
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL facultative
    avec ses secrets Secret Manager, un stockage NFS/Redis/GCS facultatif, construit ou
-   met en miroir l'image du conteneur et exécute les tâches d'initialisation configurées. Les premiers
+   met en miroir l'image du conteneur et exécute les jobs d'initialisation configurés. Les premiers
    déploiements prennent environ **20–35 minutes** lorsque la création de Cloud SQL est incluse.
 
 3. Une fois l'opération terminée, repérez les ressources à l'aide de filtres indépendants des noms (afin que les
@@ -176,7 +176,7 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
      --format="json(spec.template.spec.containers[0].env)" | grep -i redis
    ```
 
-7. **Tâche d'initialisation** — vérifiez que la tâche d'initialisation (par exemple `db-init`) s'est exécutée avec succès pendant le déploiement :
+7. **Job d'initialisation** — vérifiez que le job d'initialisation (par exemple `db-init`) s'est exécutée avec succès pendant le déploiement :
 
    ```bash
    JOB=$(gcloud run jobs list --project="$PROJECT" --region="$REGION" --filter="metadata.name~init" --format="value(metadata.name)" --limit=1)
@@ -199,7 +199,7 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -211,11 +211,11 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification du service ; la mise à l'échelle est donc une modification de configuration, et non une
-   modification manuelle via `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle via `gcloud` (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite ou mise en miroir et une nouvelle révision est déployée.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~crapp"
@@ -235,13 +235,13 @@ Vérifiez que chaque fonctionnalité que vous avez activée est bien opérationn
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -265,8 +265,8 @@ le conteneur.
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
   secret du mot de passe de la base existe et est accessible au compte de service, et que les éventuelles
-  tâches d'initialisation se sont terminées avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  jobs d'initialisation se sont terminés avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs list --project="$PROJECT" --region="$REGION"
   gcloud run jobs executions list --job="<job-name>" \
@@ -295,9 +295,9 @@ partagé, le registre) sont gérées séparément et ne sont pas supprimées ici
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Choisir la configuration et déployer | Automatisé | Choisir Minimal ou Complet ; le module se rattache à la fondation `Services_GCP` et provisionne Cloud Run, la base de données Cloud SQL partagée, les secrets, le raccordement NFS/GCS/Redis, et exécute les tâches d'initialisation |
-| 2 — Accéder et vérifier | Manuel | Vérifier la santé, la base de données + le secret, le rattachement à la fondation, le montage NFS, GCS Fuse + bucket, l'environnement Redis, la réussite de la tâche d'initialisation, l'application d'IAP et le test de disponibilité |
-| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/tâches/stockage, accès à la base |
+| 1 — Choisir la configuration et déployer | Automatisé | Choisir Minimal ou Complet ; le module se rattache à la fondation `Services_GCP` et provisionne Cloud Run, la base de données Cloud SQL partagée, les secrets, le raccordement NFS/GCS/Redis, et exécute les jobs d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Vérifier la santé, la base de données + le secret, le rattachement à la fondation, le montage NFS, GCS Fuse + bucket, l'environnement Redis, la réussite du job d'initialisation, l'application d'IAP et le test de disponibilité |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/jobs/stockage, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module ; les ressources partagées appartenant à `Services_GCP` sont conservées |

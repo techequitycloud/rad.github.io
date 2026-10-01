@@ -49,7 +49,7 @@ ciblé de services Google Cloud :
   `Flarum_Common` remplace explicitement `DB_HOST = "127.0.0.1"` car l'installateur
   propre à l'image mondedie/flarum lit directement `DB_HOST` ; un sidecar
   cloud-sql-proxy (`enable_cloudsql_volume = true`) écoute sur `127.0.0.1:3306`.
-- **Réplique unique par défaut.** `min_instance_count = 1`,
+- **Réplica unique par défaut.** `min_instance_count = 1`,
   `max_instance_count = 1`. La charge de travail est adossée à NFS
   (`enable_nfs = true`) ; conformément au comportement partagé du socle, un
   redéploiement utilise donc la stratégie de déploiement `Recreate` plutôt que
@@ -96,7 +96,7 @@ ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Flarum {#a-gke-autopilot--the-flarum-workload}
 
@@ -138,7 +138,7 @@ crée ensuite le schéma au premier démarrage du pod.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez
+contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatiques et la
 rotation du mot de passe.
 
@@ -305,7 +305,7 @@ et leurs valeurs par défaut standard.
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (boucle locale) — requis sur GKE tant que `database_type != "NONE"` (contrôlé au moment du plan). |
 | `container_image_source` | `custom` | Build minimal FROM `mondedie/flarum`, réétiqueté via l'ARG de build `FLARUM_VERSION`. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -361,12 +361,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -434,7 +434,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Flarum, partagée avec
 la variante Cloud Run, est décrite dans **[Flarum_Common](Flarum_Common.md)**.
 

@@ -40,7 +40,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe administrateur et mot de passe de la base de données générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Choisir PostgreSQL ou `NONE` empêche le démarrage.
 - **Les sondes sont détournées de la page de connexion.** Apache émet une redirection
@@ -167,7 +167,7 @@ Voir [App_CloudRun](App_CloudRun.md).
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de Cloud Run
-et de Cloud SQL sont envoyées à Cloud Monitoring, avec des contrôles de disponibilité
+et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité
 et des règles d'alerte facultatifs.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -233,7 +233,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -261,7 +261,7 @@ comportement standard.
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -343,7 +343,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | Remplacée par TCP (vérification de port ouvert), délai initial de 60s | Sonde de démarrage — TCP évite la redirection 301 HTTP→HTTPS d'Apache qui fait échouer une sonde HTTP. |
 | `liveness_probe` / `health_check_config` | Remplacée par HTTP `/healthz`, délai initial de 120s | Sonde de vivacité — `/healthz` est un fichier statique servi sans redirection. |
-| `uptime_check_config` | désactivé (`enabled = false`, chemin `/`) | Contrôle de disponibilité Cloud Monitoring. |
+| `uptime_check_config` | désactivé (`enabled = false`, chemin `/`) | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
@@ -393,7 +393,7 @@ et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, contrôles de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -404,12 +404,12 @@ et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé : service dégradé) —
 > **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible : mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
 | `cron_jobs` | configurés (§3) | Critical | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
@@ -427,7 +427,7 @@ et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images — voir
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Mautic
 partagée avec la variante GKE est décrite dans **[Mautic_Common](Mautic_Common.md)**.
 

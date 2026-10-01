@@ -28,14 +28,14 @@ Grocy s'exécute sous forme d'un conteneur nginx + php-fpm (l'image `grocy` amon
 | Secrets | Secret Manager | Aucun n'est généré pour Grocy — il n'existe pas d'identifiant administrateur injectable |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **SQLite est la seule base de données prise en charge par Grocy.** Confirmé par la lecture du code source amont de Grocy (`services/DatabaseService.php`) — il n'existe aucun embranchement vers un pilote MySQL/Postgres. `database_type` est fixé à `NONE`.
 - **`/config` est persisté via NFS, pas via GCS FUSE — un correctif délibéré, et non la valeur par défaut habituelle du catalogue.** Grocy écrit dans `data/grocy.db-journal` toutes les 1 à 2 secondes ; la couche de traduction vers le stockage d'objets de GCS FUSE ne peut pas soutenir ce schéma d'écriture. Un `/config` reposant sur GCS FUSE a tourné en boucle de plantages en production (confirmé en conditions réelles sur 12 cycles de démarrage / plus de 20 minutes — `BufferedWriteHandler.OutOfOrderError` répétés, limitation de débit HTTP `429`, erreurs de descripteur de fichier obsolète). `Grocy_CloudRun` définit à la place `enable_nfs = true`, `nfs_mount_path = "/config"`. Voir §4 pour l'histoire complète.
 - **Il s'agit d'une classe de bug réellement différente de l'incident SQLite-sur-NFS d'UptimeKuma.** Le problème d'UptimeKuma était une incompatibilité des verrous en mode WAL. Grocy n'active jamais le mode WAL (aucun PRAGMA `journal_mode` nulle part dans son code source) — son problème tient à la *fréquence* d'écriture, pas à la sémantique des verrous. Ensemble, ces deux cas montrent que « gcsfuse casse SQLite » est une leçon plus large que le seul verrouillage WAL.
 - **Instance unique uniquement.** `min_instance_count = 1`, `max_instance_count = 1`. La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering — exécuter plusieurs réplicas sur le même volume n'est pas sûr.
 - **Aucun identifiant administrateur injectable.** L'image amont est livrée avec les identifiants par défaut `admin` / `admin`, modifiés via l'interface web à la première connexion. Aucun secret Secret Manager n'est créé pour Grocy.
-- **Les sondes de santé ciblent `/`, pas `/health`.** Grocy n'a pas de point de terminaison de santé dédié ; la page de connexion (`200`, sans authentification) sert à la fois pour la sonde de démarrage et pour la sonde de disponibilité (liveness).
+- **Les sondes de santé ciblent `/`, pas `/health`.** Grocy n'a pas de point de terminaison de santé dédié ; la page de connexion (`200`, sans authentification) sert à la fois pour la sonde de démarrage et pour la sonde de vivacité (liveness).
 
 ---
 
@@ -184,11 +184,11 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `database_type` | `NONE` | Fixe — Grocy n'a aucune base de données SQL. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche d'initialisation par défaut — Grocy initialise son propre schéma SQLite au premier démarrage. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut — Grocy initialise son propre schéma SQLite au premier démarrage. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -216,7 +216,7 @@ Toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) ave
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des tâches d'initialisation créées (vide par défaut). |
+| `initialization_jobs` | Noms des jobs d'initialisation créés (vide par défaut). |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
@@ -224,14 +224,14 @@ Toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) ave
 
 ---
 
-## 7. Pièges de configuration et valeurs par défaut raisonnables {#7-configuration-pitfalls--sensible-defaults}
+## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des entrées hors limites ou contradictoires sont détectées avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_nfs` | `true` | Critical | Le désactiver sans montage POSIX tout aussi durable ramène `/config` sur GCS FUSE (ou sur un chemin éphémère dans le conteneur), ce qui reproduit la boucle de plantage et redémarrage confirmée (`BufferedWriteHandler.OutOfOrderError`, des `429`, erreurs de descripteur de fichier obsolète) — ou fait perdre silencieusement tout l'état à chaque redémarrage. |
 | `nfs_mount_path` | `/config` | Critical | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
@@ -243,7 +243,7 @@ Toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) ave
 
 ---
 
-Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Grocy est décrite dans **[Grocy_Common](Grocy_Common.md)**.
+Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Grocy est décrite dans **[Grocy_Common](Grocy_Common.md)**.
 
 <!-- related-guides -->
 

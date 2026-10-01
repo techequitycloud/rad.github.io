@@ -21,8 +21,8 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
-- Vous connecter au cluster GKE, repérer le namespace et vérifier que le pod s'exécute.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
+- Vous connecter au cluster GKE, repérer l'espace de noms et vérifier que le pod s'exécute.
 - Accéder à l'éditeur, récupérer le mot de passe généré dans Secret Manager et vérifier le service.
 - Effectuer les opérations du jour 2 — inspecter la charge de travail, choisir entre un stockage d'espace de travail GCS FUSE ou PVC en mode bloc, et mettre à jour la version.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
@@ -44,7 +44,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
    prennent généralement **10–20 minutes** (le build de l'image et la planification du pod dominent ; il n'y a aucune
    base de données à attendre).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants du nom :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants du nom :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -161,7 +161,7 @@ export REGION="us-central1"           # the region you deploy into
    sessions et risquerait des écritures concurrentes dans `/home/coder`. Les modifications de ressources
    (`cpu_limit`, `memory_limit` pour les serveurs de langage gourmands) passent par **Update** sur
    la page de détails du déploiement, et non par un `kubectl edit` manuel (une modification manuelle serait
-   annulée lors de l'application suivante).
+   annulée lors du prochain apply).
 
 3. **Choisissez délibérément votre mode de stockage de l'espace de travail.** GCS FUSE (par défaut) est
    le plus simple et ne consomme aucun quota de PVC ; `stateful_pvc_enabled = true` monte un PVC
@@ -204,7 +204,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -270,7 +270,7 @@ déploiement exposé à l'extérieur, et de ne jamais supprimer le bucket/PVC de
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela supprime le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cette opération supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, le secret Secret Manager `PASSWORD`, le stockage de l'espace de travail (le bucket
+et l'espace de noms, le secret Secret Manager `PASSWORD`, le stockage de l'espace de travail (le bucket
 GCS, ou le PVC en mode bloc et son Persistent Disk sous-jacent) et les images Artifact Registry.
 Copiez d'abord l'espace de travail si vous souhaitez conserver votre travail. Les ressources détenues
 par **Services_GCP** (le VPC, le cluster GKE, Cloud SQL partagé, le registre) sont gérées

@@ -26,7 +26,7 @@ opérationnel du module **AdGuard Home on GKE Autopilot** — déployer sa conso
 d'administration web, la vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et la démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
 et non sur les fonctionnalités de filtrage DNS d'AdGuard Home (qui ne sont pas joignables dans cette
 forme de déploiement). Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
@@ -36,7 +36,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la console d'administration en cours d'exécution (et comprendre ce qu'elle ne peut pas faire — servir un vrai DNS).
@@ -60,7 +60,7 @@ temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -81,7 +81,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot,
    provisionne deux buckets Cloud Storage (`conf` et `work`, montés via GCS
    Fuse CSI) et construit l'image de conteneur personnalisée. Il n'y a ni base de données ni
-   tâche d'initialisation ; ce déploiement est donc plus rapide que la plupart des modules de ce
+   job d'initialisation ; ce déploiement est donc plus rapide que la plupart des modules de ce
    catalogue — généralement **5–10 minutes**.
 
 3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
@@ -97,7 +97,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -167,7 +167,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
    Repérez la bannière de rappel sur la portée DNS affichée par le point d'entrée au début des
-   journaux d'un nouveau pod. Filtre de l'explorateur de journaux :
+   journaux d'un nouveau pod. Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -230,7 +230,7 @@ GKE, le registre) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, deux buckets GCS (`conf`, `work`) et construit l'image du conteneur |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; terminer l'assistant de configuration propre à AdGuard Home ; vérifier que la configuration est conservée |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; terminer l'assistant de configuration propre à AdGuard Home ; vérifier que la configuration est conservée |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, inspecter le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de non-concordance de port, de stockage et de planification |

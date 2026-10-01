@@ -37,7 +37,7 @@ déploiement assemble un ensemble minimal de services Google Cloud :
 | Secrets | Secret Manager | `SEARXNG_SECRET` (clé de session) généré automatiquement et injecté à l'exécution |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est provisionnée.** SearXNG est entièrement sans état — il
   agrège les résultats de recherche au moment de la requête et ne stocke rien.
@@ -200,7 +200,7 @@ facultatifs.
 
 - **Entièrement sans état.** SearXNG récupère les résultats auprès de moteurs de
   recherche externes au moment de la requête et ne stocke rien localement. Aucune
-  migration de base de données ni tâche d'initialisation ne s'exécute.
+  migration de base de données ni job d'initialisation ne s'exécute.
 - **Aucune tâche de configuration au premier déploiement.** Comme il n'y a pas de base
   de données, le déploiement se termine sans étape db-init — le service est prêt dès que
   le conteneur démarre.
@@ -275,12 +275,12 @@ comportement standard.
 | `timeout_seconds` | `60` | Durée maximale d'une requête. Des moteurs en amont lents peuvent nécessiter de la porter à 120–300. |
 | `container_image_source` | `prebuilt` | Utilise l'image officielle de SearXNG (`prebuilt`) ou la construit à partir des sources (`custom`). |
 | `cpu_always_allocated` | `false` | Facturation à la requête — SearXNG est un proxy de recherche sans état, sans travail d'arrière-plan dans le processus ; le CPU n'est donc nécessaire que pendant le traitement d'une requête. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry avant le déploiement. |
 | `enable_cloudsql_volume` | `false` | **Laissez false** — SearXNG n'utilise pas de base de données. |
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -341,11 +341,11 @@ Sans objet pour SearXNG (pas de base de données). Consultez
 |---|---|---|
 | `database_type` | `NONE` | Imposé — SearXNG n'utilise pas de base de données. Ne le modifiez pas. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | SearXNG ne nécessite aucune tâche d'initialisation — laissez vide. |
+| `initialization_jobs` | `[]` | SearXNG ne nécessite aucun job d'initialisation — laissez vide. |
 | `cron_jobs` | `[]` | Tâches planifiées facultatives (par exemple le préchauffage du cache). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -367,7 +367,7 @@ Sans objet pour SearXNG (pas de base de données). Consultez
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -404,12 +404,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critical | S'il est remplacé par une valeur aléatoire propre à chaque instance, chaque démarrage à froid produit une clé différente, ce qui invalide tous les cookies de session existants. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
 | `database_type` | `NONE` | Critical | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
@@ -426,7 +426,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à SearXNG
 partagée avec la variante GKE est décrite dans
 **[SearXNG_Common](SearXNG_Common.md)**.

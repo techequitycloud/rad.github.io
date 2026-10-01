@@ -19,7 +19,7 @@ vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Po
 Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit PocketBase. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/PocketBase_CloudRun) — ce lab
@@ -27,7 +27,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier, et revendiquer le compte administrateur du premier lancement.
@@ -50,7 +50,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run (gen2, port 8090), un bucket de données Cloud Storage
    monté sur `/pb_data` via GCS FUSE, et construit l'image de conteneur. Il n'y a **ni
-   instance Cloud SQL ni tâche d'initialisation de base de données** — PocketBase crée son propre
+   instance Cloud SQL ni job d'initialisation de base de données** — PocketBase crée son propre
    schéma SQLite au premier démarrage. Les premiers déploiements se terminent généralement en **5–15 minutes**, bien
    plus rapidement qu'un module adossé à Cloud SQL.
 
@@ -88,7 +88,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. PocketBase expose un point de terminaison de santé public et non authentifié
    qui répond dès que le binaire est démarré — il n'y a aucune base de données externe à
@@ -155,7 +155,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de requêtes,
@@ -171,7 +171,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 au niveau de la plateforme, qui ne changent pas avec les versions de PocketBase.
 
 - **Révision en mauvaise santé / le service ne répond pas :** inspectez la dernière révision et ses journaux à la recherche
-  d'erreurs de démarrage. Les sondes de démarrage et de liveness ciblent `/api/health`, qui ne dépend d'aucune
+  d'erreurs de démarrage. Les sondes de démarrage et de vivacité ciblent `/api/health`, qui ne dépend d'aucune
   ressource externe ; un échec à ce niveau désigne donc presque toujours un problème au niveau du conteneur
   (image défectueuse, variable d'environnement manquante, port incorrect) plutôt qu'un problème de base de données.
   ```bash
@@ -213,8 +213,8 @@ supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne le service Cloud Run (gen2) et son bucket de données GCS ; ni Cloud SQL, ni tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; revendiquer immédiatement le compte administrateur du premier lancement sur `/_/` |
+| 1 — Déployer | Automatisé | Le module provisionne le service Cloud Run (gen2) et son bucket de données GCS ; ni Cloud SQL, ni job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; revendiquer immédiatement le compte administrateur du premier lancement sur `/_/` |
 | 3 — Exploiter | Manuel | Inspecter les révisions, maintenir le nombre d'instances à 1, sauvegarder `/pb_data`, mettre à jour la version |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de montage du stockage, de revendication du compte administrateur, de build et d'IAM |

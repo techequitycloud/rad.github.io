@@ -19,7 +19,7 @@ Pour l'infrastructure qui provisionne et exécute effectivement Hasura, consulte
 |---|---|---|
 | Secret cryptographique | Génère `HASURA_GRAPHQL_ADMIN_SECRET` (32 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `hasura/graphql-engine` avec un point d'entrée personnalisé ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
 | Stockage d'objets | Aucun — Hasura est sans état (`storage_buckets = []`) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Hasura : console activée, port du serveur, les deux URL de connexion assemblées à l'exécution | Comportement de l'application dans les guides des plateformes |
@@ -47,7 +47,7 @@ Contrairement à une clé de chiffrement, le secret administrateur ne touche pas
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Hasura nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL ou d'autres moteurs ne sont pas pris en charge — le catalogue de métadonnées propre à Hasura et la source de données connectée par défaut résident tous deux dans Postgres. Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
@@ -86,7 +86,7 @@ Le point d'entrée existe parce que Hasura a besoin de deux chaînes de connexio
 
 ---
 
-## 5. Paramètres applicatifs principaux {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Hasura_Common` établit l'environnement de base de Hasura afin que l'application démarre correctement la première fois :
 

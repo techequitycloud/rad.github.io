@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Vaultwarden sur Cloud Run dans votre prop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Vaultwarden est un gestionnaire de mots de passe auto-hébergé et léger, compatible avec Bitwarden, écrit
 en Rust. Ce lab vous fait parcourir le cycle de vie opérationnel complet du module
@@ -28,12 +28,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -71,7 +71,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL)
    avec ses secrets Secret Manager, un bucket Cloud Storage pour les pièces jointes, construit
-   l'image de conteneur et exécute une tâche ponctuelle d'initialisation de la base de données. Les premiers déploiements prennent
+   l'image de conteneur et exécute un job ponctuel d'initialisation de la base de données. Les premiers déploiements prennent
    environ **20 à 35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Une fois l'opération terminée, repérez les ressources avec des filtres indépendants des noms (afin que les
@@ -123,7 +123,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification du service, la mise à l'échelle est donc une modification de configuration, et non une
-   modification manuelle via `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle via `gcloud` (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
 
@@ -148,7 +148,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -178,10 +178,10 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le secret
-  du mot de passe de la base de données existe et que la tâche d'initialisation s'est terminée. Vérifiez aussi que
+  du mot de passe de la base de données existe et que le job d'initialisation s'est terminé. Vérifiez aussi que
   `enable_cloudsql_volume = true` — Vaultwarden nécessite le sidecar Cloud SQL Auth Proxy
   via un socket Unix.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -195,7 +195,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets Cloud Storage et les images
@@ -212,5 +212,5 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | La vérification de santé réussit sur `/alive` ; le coffre web est joignable |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

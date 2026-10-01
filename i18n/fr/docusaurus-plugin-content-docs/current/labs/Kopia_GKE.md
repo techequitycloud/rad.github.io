@@ -28,7 +28,7 @@ HTTP/2 qu'au travers du TLS+ALPN propre à Kopia — la périphérie de Cloud Ru
 HTTPS public et ne peut pas laisser passer un flux TLS terminé par le conteneur. Le simple
 LoadBalancer L4 de GKE n'a pas cette restriction, c'est pourquoi ce module est réservé à GKE.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur la CLI propre à Kopia au-delà de ce qui est nécessaire pour prouver que le déploiement fonctionne. Pour la
 liste complète des services provisionnés et de chaque paramètre de configuration (organisés par
 groupe), consultez le
@@ -37,7 +37,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Récupérer les deux secrets générés et l'empreinte du certificat TLS, puis connecter un
@@ -65,7 +65,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -107,7 +107,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification avec un vrai client [Manuel] {#task-2--access--verify-with-a-real-client-manual}
+## Tâche 2 — Accéder et vérifier avec un vrai client [Manuel] {#task-2--access--verify-with-a-real-client-manual}
 
 1. Vérifiez que le pod s'exécute et consultez ses journaux du premier démarrage pour y trouver l'empreinte
    TLS (affichée **une seule fois**, au moment de la génération du certificat) :
@@ -258,7 +258,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" "$POD" --tail=100
    ```
 
-   Filtre de l'explorateur de journaux (Logs Explorer) :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -280,7 +280,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl describe pod -n "$NS" "$POD"    # Events: scheduling / probe / mount errors
   kubectl logs -n "$NS" "$POD" --previous # logs from the crashed container
   ```
-  Les sondes de démarrage et de liveness sont de type **TCP**, et non HTTP — Kopia n'a aucun point de terminaison HTTP
+  Les sondes de démarrage et de vivacité sont de type **TCP**, et non HTTP — Kopia n'a aucun point de terminaison HTTP
   non authentifié, une sonde HTTP échouerait donc toujours, même sur un serveur en bonne santé. Si les sondes
   échouent, vérifiez que l'étape de connexion ou de création du dépôt s'est bien terminée
   (recherchez `Connected to existing repository` / `Creating a new
@@ -340,7 +340,7 @@ gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image, génère deux secrets, provisionne le bucket `storage` et déploie sur GKE |
-| 2 — Accès et vérification | Manuel | Récupérer l'empreinte TLS et les secrets ; connecter un véritable client CLI `kopia` et réaliser un aller-retour de création/liste d'instantanés |
+| 2 — Accéder et vérifier | Manuel | Récupérer l'empreinte TLS et les secrets ; connecter un véritable client CLI `kopia` et réaliser un aller-retour de création/liste d'instantanés |
 | 3 — Exploiter | Manuel | Ajouter des clients nommés supplémentaires, inspecter la charge de travail, exécuter la maintenance du dépôt, mettre à jour la version |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'authentification, de port de connexion et d'initialisation du dépôt |

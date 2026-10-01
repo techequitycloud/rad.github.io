@@ -47,8 +47,8 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   schéma de Chatwoot et ses fonctionnalités reposant sur pgvector l'exigent.
 - **Image construite sur mesure.** `container_image_source = "custom"` — le module
   Common effectue un build `FROM chatwoot/chatwoot:${APP_VERSION}` et y ajoute un point
-  d'entrée cloud qui fait correspondre les variables d'environnement `DB_*`/`REDIS_*` de
-  la fondation à la convention `POSTGRES_*`/`REDIS_URL` de Chatwoot, puis lance Sidekiq
+  d'entrée cloud qui fait correspondre les variables d'environnement `DB_*`/`REDIS_*` du
+  socle à la convention `POSTGRES_*`/`REDIS_URL` de Chatwoot, puis lance Sidekiq
   en arrière-plan avant d'exécuter (exec) le serveur Rails. L'image s'exécute **en tant
   que root** — à l'image de l'image amont, dont `/app`/`/app/tmp` appartiennent à root
   et ne sont pas accessibles en écriture au groupe ; l'étape `create_tmp_directories` de
@@ -64,7 +64,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   conteneur ; la mise en place du schéma se fait entièrement dans ces deux Jobs, avant
   que le conteneur de l'application n'ait à servir du trafic.
 - **Redis est activé par défaut** (`enable_redis = true`). Laissez `redis_host` vide pour
-  utiliser l'IP du Redis partagé hébergé sur le serveur NFS, que la fondation injecte
+  utiliser l'IP du Redis partagé hébergé sur le serveur NFS, que le socle injecte
   automatiquement.
 - **`SECRET_KEY_BASE` est généré une seule fois et partagé** entre le processus web
   Rails et le worker Sidekiq (ils s'exécutent ici dans le même conteneur, mais la valeur
@@ -84,7 +84,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Chatwoot {#a-gke-autopilot--the-chatwoot-workload}
@@ -138,7 +138,7 @@ rotation des mots de passe.
 
 Sidekiq (la file de jobs d'arrière-plan de Chatwoot) et ActionCable (mises à jour de
 l'interface en temps réel) nécessitent tous deux Redis. `enable_redis = true` par
-défaut ; lorsque `redis_host` est laissé vide, la fondation injecte l'IP du Redis
+défaut ; lorsque `redis_host` est laissé vide, le socle injecte l'IP du Redis
 partagé hébergé sur le serveur NFS en tant que `REDIS_HOST`, et le point d'entrée du
 conteneur en déduit `REDIS_URL` au démarrage. Faites pointer
 `redis_host`/`redis_port`/`redis_auth` vers une instance Cloud Memorystore dédiée pour
@@ -176,7 +176,7 @@ Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 Un secret propre à Chatwoot est généré automatiquement et stocké dans Secret
 Manager : `SECRET_KEY_BASE` (la clé de signature des sessions et de chiffrement
 ActiveRecord de Rails, partagée à l'identique entre les processus web et Sidekiq). Le
-mot de passe de la base de données est géré séparément par la fondation. Sur GKE, les
+mot de passe de la base de données est géré séparément par le socle. Sur GKE, les
 secrets sont projetés dans les pods via le pilote Secret Store CSI.
 
 - **Console :** Security → Secret Manager.
@@ -188,7 +188,7 @@ secrets sont projetés dans les pods via le pilote Secret Store CSI.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load Balancing
 (`service_type = LoadBalancer`, `reserve_static_ip = true` afin que l'adresse survive
@@ -347,8 +347,8 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Requis pour la file d'attente de Sidekiq et le pub/sub d'ActionCable ; transmis à la fondation sans condition. |
-| `redis_host` | `""` | Vide : utilise l'IP du Redis partagé hébergé sur le serveur NFS, que la fondation injecte. |
+| `enable_redis` | `true` | Requis pour la file d'attente de Sidekiq et le pub/sub d'ActionCable ; transmis au socle sans condition. |
+| `redis_host` | `""` | Vide : utilise l'IP du Redis partagé hébergé sur le serveur NFS, que le socle injecte. |
 | `redis_port` | `6379` | Port TCP de Redis. |
 | `redis_auth` | `""` | Mot de passe Redis AUTH, si l'instance cible en exige un. |
 
@@ -388,7 +388,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -413,33 +413,33 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — paramètres de type de charge de travail et de PVC incohérents, IAP activé sans identités autorisées, `quota_memory_*` fourni sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — paramètres de type de charge de travail et de PVC incohérents, IAP activé sans identités autorisées, `quota_memory_*` fourni sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (fixé par Common) | Critique | Le schéma de Chatwoot et sa recherche reposant sur pgvector exigent Postgres 15+ ; tout autre moteur casse `chatwoot-prepare`. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais modifier | Critique | Le renouveler invalide chaque session/cookie signé et rend définitivement illisibles les colonnes chiffrées par ActiveRecord ; Sidekiq ne parviendra pas non plus à déchiffrer les jobs en cours. |
-| `enable_redis` | `true` (transmis sans condition) | Critique | Sidekiq (jobs d'arrière-plan, livraison sur les canaux) et ActionCable (interface en temps réel) nécessitent tous deux Redis ; le désactiver casse silencieusement la livraison des messages alors même que l'interface web se charge. |
-| `min_instance_count` | `1` | Élevé | En dessous de 1, le worker Sidekiq co-localisé ne s'exécute pas entre les requêtes, si bien que les jobs d'arrière-plan (interrogation des canaux, notifications, rapports) sont bloqués entre deux démarrages à froid. |
-| `enable_nfs` | `true` | Élevé | Le désactiver rend les pièces jointes téléversées éphémères — perdues à la recréation du pod. Le laisser activé fait aussi passer la stratégie de déploiement à `Recreate` (brève interruption à chaque mise à jour) au lieu de `RollingUpdate` — c'est attendu, pas un bug. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
-| Ordre du job `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | Élevé | Exécuter la préparation du schéma avant que la base, le rôle et les droits sur les extensions n'existent fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou base/rôle totalement absents). |
-| `container_image_source` | `custom` | Élevé | Chatwoot est une image préconstruite de Docker Hub enveloppée dans un point d'entrée personnalisé (correspondance des variables d'environnement + lancement de Sidekiq) ; passer à `prebuilt` contourne ce wrapper et le conteneur ne fera pas correspondre correctement `DB_*`/`REDIS_*`. |
-| `pdb_min_available` | `"1"` | Moyen | Sinon, une maintenance ou une mise à niveau volontaire des nœuds pourrait évincer le seul pod exécutant Sidekiq et suspendre le traitement en arrière-plan. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans le namespace. |
-| `reserve_static_ip` | `true` | Moyen | Sans cela, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URL de rappel de webhook/canal configurées. |
-| `ENABLE_ACCOUNT_SIGNUP` | `"false"` (par défaut) | Moyen | Laisser l'inscription libre publique activée sur un helpdesk exposé à Internet permet à n'importe qui de créer un compte agent/administrateur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire des données de conversation et des données clients. |
+| `database_type` | `POSTGRES_15` (fixé par Common) | Critical | Le schéma de Chatwoot et sa recherche reposant sur pgvector exigent Postgres 15+ ; tout autre moteur casse `chatwoot-prepare`. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais modifier | Critical | Le renouveler invalide chaque session/cookie signé et rend définitivement illisibles les colonnes chiffrées par ActiveRecord ; Sidekiq ne parviendra pas non plus à déchiffrer les jobs en cours. |
+| `enable_redis` | `true` (transmis sans condition) | Critical | Sidekiq (jobs d'arrière-plan, livraison sur les canaux) et ActionCable (interface en temps réel) nécessitent tous deux Redis ; le désactiver casse silencieusement la livraison des messages alors même que l'interface web se charge. |
+| `min_instance_count` | `1` | High | En dessous de 1, le worker Sidekiq co-localisé ne s'exécute pas entre les requêtes, si bien que les jobs d'arrière-plan (interrogation des canaux, notifications, rapports) sont bloqués entre deux démarrages à froid. |
+| `enable_nfs` | `true` | High | Le désactiver rend les pièces jointes téléversées éphémères — perdues à la recréation du pod. Le laisser activé fait aussi passer la stratégie de déploiement à `Recreate` (brève interruption à chaque mise à jour) au lieu de `RollingUpdate` — c'est attendu, pas un bug. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
+| Ordre du job `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | High | Exécuter la préparation du schéma avant que la base, le rôle et les droits sur les extensions n'existent fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou base/rôle totalement absents). |
+| `container_image_source` | `custom` | High | Chatwoot est une image préconstruite de Docker Hub enveloppée dans un point d'entrée personnalisé (correspondance des variables d'environnement + lancement de Sidekiq) ; passer à `prebuilt` contourne ce wrapper et le conteneur ne fera pas correspondre correctement `DB_*`/`REDIS_*`. |
+| `pdb_min_available` | `"1"` | Medium | Sinon, une maintenance ou une mise à niveau volontaire des nœuds pourrait évincer le seul pod exécutant Sidekiq et suspendre le traitement en arrière-plan. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Medium | Sans cela, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URL de rappel de webhook/canal configurées. |
+| `ENABLE_ACCOUNT_SIGNUP` | `"false"` (par défaut) | Medium | Laisser l'inscription libre publique activée sur un helpdesk exposé à Internet permet à n'importe qui de créer un compte agent/administrateur. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire des données de conversation et des données clients. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Chatwoot, partagée

@@ -212,11 +212,11 @@ Le groupe 0 (métadonnées du module — `module_description`, `module_dependenc
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `create_project` + `billing_account_id`/`deploying_identity_email`/`deployed_by_email` | Définir les trois ensemble, ou laisser `create_project = false` | **High** 🛡 au moment du plan | `create_project = true` avec l'une des trois variables associées vide est rejeté au moment du plan (`create_project_requires_billing_and_deploying_identity`) plutôt que de créer partiellement un projet sans identité de déploiement capable de l'exploiter. |
 | `folder_id` | Le dossier de palier injecté par la plateforme — il n'existe aucune valeur par défaut de repli |  **Critical** | Un projet placé dans un dossier sur lequel l'étape 10 de `02-setup-ui.sh` n'a pas été exécutée n'hérite d'**aucun** garde-fou de règle d'administration au niveau du dossier (refus des IP externes, restrictions sur les clés de comptes de service, liste d'API autorisées) — le projet est créé mais n'est en pratique pas protégé au niveau des règles d'administration, et ce module ne peut ni le détecter ni le signaler depuis l'état d'un seul projet. |

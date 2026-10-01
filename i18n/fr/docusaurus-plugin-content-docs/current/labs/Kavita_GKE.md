@@ -35,10 +35,10 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, accéder à la charge de travail en cours d'exécution et terminer l'assistant de configuration du premier lancement.
-- Effectuer les opérations du jour 2 : inspecter le StatefulSet et le PVC, mettre à jour et gérer le stockage.
+- Effectuer les opérations du jour 2 — inspecter le StatefulSet et le PVC, mettre à jour et gérer le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -55,7 +55,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -77,11 +77,11 @@ export REGION="us-central1"           # the region you deploy into
    Autopilot, avec un PVC en mode bloc par pod monté sur `/kavita/config`, construit
    l'image de conteneur personnalisée (une fine surcouche de `jvmilazz0/kavita`) et
    l'expose via la Gateway API avec une adresse IP statique réservée. Il n'y a
-   **aucune base de données à provisionner ni aucune tâche d'initialisation à
+   **aucune base de données à provisionner ni aucun job d'initialisation à
    attendre** — Kavita gère sa propre base de données SQLite interne. Un premier
    déploiement se termine généralement en **10–15 minutes**.
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide d'un filtre indépendant des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide d'un filtre indépendant des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -132,7 +132,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail et son stockage :**
 
@@ -143,9 +143,9 @@ export REGION="us-central1"           # the region you deploy into
    gcloud compute disks list --project="$PROJECT" --filter="name~kavita"
    ```
 
-2. **Ne dépassez pas une réplique.** `min_instance_count` et `max_instance_count`
+2. **Ne dépassez pas un réplica.** `min_instance_count` et `max_instance_count`
    valent tous deux `1` par défaut. Kavita ne dispose d'aucun clustering ni d'aucune
-   coordination du stockage partagé — exécuter plusieurs répliques sur le même PVC
+   coordination du stockage partagé — exécuter plusieurs réplicas sur le même PVC
    n'est pas sûr et risque de corrompre l'index SQLite de la bibliothèque.
 
 3. **Le stockage est par défaut un véritable PVC en mode bloc** —
@@ -186,7 +186,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/<service-name> --tail=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -236,10 +236,10 @@ rester à `1` et pourquoi `enable_redis` est sans effet pour ce module).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes
-et son namespace, le PVC en mode bloc contenant l'intégralité de l'état de Kavita (base
+et son espace de noms, le PVC en mode bloc contenant l'intégralité de l'état de Kavita (base
 de données SQLite, paramètres, couvertures) et le bucket Cloud Storage non monté. Les
 ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, Artifact Registry)
 sont gérées séparément et ne sont pas supprimées ici. Comme le PVC **est** l'index de la
@@ -252,9 +252,9 @@ d'un export qui vous importe avant la suppression.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie un StatefulSet avec un PVC en mode bloc monté sur `/kavita/config` ; pas de base de données, pas de tâche d'initialisation |
+| 1 — Déployer | Automatisé | Le module déploie un StatefulSet avec un PVC en mode bloc monté sur `/kavita/config` ; pas de base de données, pas de job d'initialisation |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé réussit ; terminer l'assistant du premier lancement pour créer le compte administrateur et la première bibliothèque |
-| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, conserver 1 réplique, mettre à jour la version, gérer la classe de stockage |
+| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, conserver 1 réplica, mettre à jour la version, gérer la classe de stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité facultatif |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC/quota, de fsGroup, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC contenant l'intégralité de l'état de Kavita |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC contenant l'intégralité de l'état de Kavita |

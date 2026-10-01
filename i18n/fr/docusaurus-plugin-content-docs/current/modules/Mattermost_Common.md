@@ -51,8 +51,8 @@ L'objet de configuration de l'application transmis au module de plateforme via `
 | `application_version` | Tag de version (par défaut : `"9.11.2"`) |
 | `container_image` | `"mattermost/mattermost-team-edition"` (codé en dur ; les modules d'encapsulation le remplacent par l'image enterprise lorsque `edition = "enterprise"`) |
 | `image_source` | `"custom"` — une image d'encapsulation personnalisée est construite à partir du Dockerfile du module Common |
-| `enable_image_mirroring` | `var.enable_image_mirroring` (par défaut `true`) — réplique l'image Docker Hub de Mattermost dans Artifact Registry avant le déploiement |
-| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { MM_VERSION = <version, "latest" mapped to "9.11.2"> }` (un nom d'argument propre à l'application, afin que l'injection générique `APP_VERSION` de la Foundation ne puisse pas le remplacer) |
+| `enable_image_mirroring` | `var.enable_image_mirroring` (par défaut `true`) — met en miroir l'image Docker Hub de Mattermost dans Artifact Registry avant le déploiement |
+| `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { MM_VERSION = <version, "latest" mapped to "9.11.2"> }` (un nom d'argument propre à l'application, afin que l'injection générique `APP_VERSION` du socle ne puisse pas le remplacer) |
 | `container_port` | `8065` |
 | `database_type` | `"POSTGRES_15"` |
 | `db_name` | Nom de la base de données (par défaut : `"mattermost"`) |
@@ -95,7 +95,7 @@ Le chemin absolu du répertoire du module, utilisé par les modules d'encapsulat
 | `initialization_jobs` | `list(object)` | `[]` | Jobs d'initialisation personnalisés. Une liste vide déclenche le job `db-init` par défaut. |
 | `startup_probe` | `object` | voir §6 | Configuration de la sonde de santé de démarrage. |
 | `liveness_probe` | `object` | voir §6 | Configuration de la sonde de santé de vivacité. |
-| `enable_image_mirroring` | `bool` | `true` | Réplique l'image de conteneur dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `bool` | `true` | Met en miroir l'image de conteneur dans Artifact Registry avant le déploiement. |
 | `min_instance_count` | `number` | `1` | Nombre minimal d'instances en cours d'exécution. La valeur par défaut `1` empêche la mise à l'échelle à zéro dans Cloud Run. |
 | `max_instance_count` | `number` | `3` | Nombre maximal d'instances en cours d'exécution. |
 | `region` | `string` | `"us-central1"` | Région GCP de déploiement des ressources. |
@@ -134,7 +134,7 @@ Mattermost Common injecte un ensemble de variables d'environnement principales d
 | `MM_SERVICESETTINGS_SITEURL` | `var.site_url` (lorsqu'il n'est pas vide) | L'URL publique utilisée pour générer les liens dans les e-mails, les webhooks et les callbacks OAuth. |
 | `MM_SERVICESETTINGS_TRUSTEDPROXYIPHEADER` | `X-Forwarded-For` | Indique à Mattermost de faire confiance à l'en-tête `X-Forwarded-For` provenant de la couche proxy de Cloud Run et de l'équilibreur de charge, afin d'extraire correctement l'adresse IP du client. |
 
-### Stockage des fichiers {#file-storage}
+### Stockage de fichiers {#file-storage}
 
 | Variable | Valeur | Rôle |
 |---|---|---|
@@ -205,7 +205,7 @@ C'est un signal de santé plus précis que le sondage du chemin racine (`/`) : l
 
 **Ce tableau correspond à la valeur par défaut des variables de `Mattermost_Common` lui-même, et non à ce que chaque plateforme déploie réellement.** `Mattermost_GKE` transmet `startup_probe`/`liveness_probe` sans modification ; GKE utilise donc bien ces chemins et valeurs par défaut. `Mattermost_CloudRun`, en revanche, déclare ses **propres** variables `startup_probe`/`liveness_probe`, dont la valeur par défaut est `path = "/"` — cette valeur par défaut remplace silencieusement celle de `Mattermost_Common` lorsqu'elle est transmise dans `mattermost.tf`, si bien que **les sondes réellement déployées sur Cloud Run ciblent par défaut le chemin racine, et non `/api/v4/system/ping`**, sauf si l'opérateur les remplace explicitement (voir `docs/modules/Mattermost_CloudRun.md` §C).
 
-`Mattermost_CloudRun` et `Mattermost_GKE` déclarent également chacun des variables distinctes `startup_probe_config`/`health_check_config`. Elles ne constituent **pas** un autre moyen de configurer les mêmes sondes et n'ont **pas** les mêmes chemins par défaut que le tableau ci-dessus — elles sont inopérantes pour Mattermost sur les deux plateformes, car reliées uniquement au préréglage de repli interne et inutilisé de chaque module Foundation (`cloudrunapp` d'`App_CloudRun` / `gkeapp` d'`App_GKE`). Les remplacer n'a aucun effet sur le service ou le pod déployé ; utilisez plutôt `startup_probe`/`liveness_probe`.
+`Mattermost_CloudRun` et `Mattermost_GKE` déclarent également chacun des variables distinctes `startup_probe_config`/`health_check_config`. Elles ne constituent **pas** un autre moyen de configurer les mêmes sondes et n'ont **pas** les mêmes chemins par défaut que le tableau ci-dessus — elles sont inopérantes pour Mattermost sur les deux plateformes, car reliées uniquement au préréglage de repli interne et inutilisé de chaque module socle (`cloudrunapp` d'`App_CloudRun` / `gkeapp` d'`App_GKE`). Les remplacer n'a aucun effet sur le service ou le pod déployé ; utilisez plutôt `startup_probe`/`liveness_probe`.
 
 Par ailleurs, la sortie `config` de ce module définit aussi une troisième clé, `readiness_probe` (codée en dur à `path = "/api/v4/system/ping"` dans `main.tf`), qui est elle aussi inopérante — ni `App_CloudRun` ni `App_GKE` ne lit de champ `readiness_probe` dans la configuration de l'application ; elle n'a donc aucun effet à l'exécution sur l'une ou l'autre plateforme.
 
@@ -219,7 +219,7 @@ Tous les fichiers annexes se trouvent dans `scripts/`. Le répertoire `scripts/`
 Encapsule l'image officielle `mattermost/mattermost-team-edition:${MM_VERSION}` :
 - N'accepte que `MM_VERSION` comme argument de build Docker (par défaut `9.11.2`) ; il n'existe pas d'argument de build `EDITION`, et la ligne `FROM` est toujours `mattermost-team-edition`, quelle que soit la variable `edition` du module d'encapsulation.
 - Passe à `root` uniquement pour installer le wrapper du point d'entrée, puis revient à l'uid `mattermost` intégré à l'image (`2000`).
-- Copie `entrypoint.sh` vers `/usr/local/bin/mm-entrypoint.sh` et l'utilise comme `ENTRYPOINT` — ce wrapper fait correspondre les variables `DB_*` de la Foundation à `MM_SQLSETTINGS_DATASOURCE` avant de démarrer le serveur ; tous les autres paramètres `MM_*` sont injectés directement sous forme de variables d'environnement.
+- Copie `entrypoint.sh` vers `/usr/local/bin/mm-entrypoint.sh` et l'utilise comme `ENTRYPOINT` — ce wrapper fait correspondre les variables `DB_*` du socle à `MM_SQLSETTINGS_DATASOURCE` avant de démarrer le serveur ; tous les autres paramètres `MM_*` sont injectés directement sous forme de variables d'environnement.
 - Expose le port `8065` (HTTP).
 
 ### `db-init.sh` {#db-initsh}

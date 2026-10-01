@@ -69,7 +69,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
   silencieusement toutes les tâches planifiées sans aucune erreur.
 - **L'identifiant par défaut est `admin` / `admin`.** Wallos le crée au premier
   démarrage ; modifiez-le dans l'interface web immédiatement après le déploiement.
-- **Pas de Redis, pas de tâche d'initialisation.** `enable_redis = false` et aucune
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
   tâche `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
 - **Port du conteneur 80.** Wallos sert du HTTP/1.1 simple sur le port 80.
 - **Exposé publiquement par défaut.** `service_type = "LoadBalancer"` — Wallos est
@@ -88,7 +88,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Wallos {#a-gke-autopilot--the-wallos-workload}
 
@@ -140,7 +140,7 @@ secret JWT à gérer, car tout l'état d'identité réside dans la base SQLite. 
 Manager reste utilisé par le socle pour les secrets gérés par la plateforme (par
 exemple les jetons CI/CD s'ils sont configurés).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~wallos"
@@ -154,7 +154,7 @@ Par défaut, le Service est de type `LoadBalancer`, avec `enable_custom_domain =
 et `reserve_static_ip = true`, de sorte qu'un Ingress doté d'un certificat géré par
 Google puisse servir un nom d'hôte fourni sur une IP stable.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -172,8 +172,8 @@ facultatifs sont disponibles. Le démon cron de Wallos s'exécute dans le proces
 l'activité (ou les échecs) de ses tâches planifiées n'est donc visible que dans les
 journaux propres au pod — il n'existe pas de CronJob distinct à inspecter.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -225,7 +225,7 @@ journaux propres au pod — il n'existe pas de CronJob distinct à inspecter.
 - **L'image précompilée n'a besoin de `imagePullPolicy = Always` que si elle est
   dupliquée.** Comme `enable_image_mirroring = true` rehéberge le même digest amont
   dans Artifact Registry, App_GKE définit tout de même `imagePullPolicy = Always`
-  pour les images dupliquées, afin qu'un changement de version ne soit jamais servi
+  pour les images mises en miroir, afin qu'un changement de version ne soit jamais servi
   périmé depuis le cache du nœud.
 
 ---
@@ -262,7 +262,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `max_instance_count` | `1` | **CRITIQUE — doit rester à `1`.** SQLite ne prend pas en charge plusieurs écrivains. |
 | `container_port` | `80` | Écouteur HTTP/1.1 de Wallos. |
 | `enable_cloudsql_volume` | `false` | Wallos n'a pas de Cloud SQL ; laissez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Wallos dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Wallos dans Artifact Registry. |
 | `container_image_source` | `prebuilt` | **Transmis au socle** — sinon, la valeur par défaut propre à App_GKE (`custom`) l'emporterait silencieusement et déclencherait un build depuis les sources sans Dockerfile. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
@@ -295,7 +295,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` 15s delay | Sonde de démarrage ; aucun point de terminaison `/health` dédié n'est documenté pour cette image. |
-| `liveness_probe` | HTTP `/` 30s delay | Sonde d'activité sur la page de connexion non authentifiée. |
+| `liveness_probe` | HTTP `/` 30s delay | Sonde de vivacité sur la page de connexion non authentifiée. |
 | `uptime_check_config` | `{enabled=false, path="/health"}` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
@@ -355,13 +355,13 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le
 moyen le plus rapide de localiser et d'explorer les ressources en cours
 d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -373,7 +373,7 @@ d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation (vide par défaut). |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation (vide par défaut). |
 | `statefulset_name` | Nom du StatefulSet (disposition par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -414,7 +414,7 @@ d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Wallos, partagée
 avec la variante Cloud Run, est décrite dans
 **[Wallos_Common](Wallos_Common.md)**.

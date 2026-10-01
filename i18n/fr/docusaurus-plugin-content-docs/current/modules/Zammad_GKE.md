@@ -32,7 +32,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Rails, 2 vCPU / 4 GiB par défaut, mise à l'échelle automatique horizontale |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Zammad ne prend pas en charge MySQL |
-| Stockage des pièces jointes | Filestore (NFS) | Pièces jointes des tickets dans `/opt/zammad/storage`, partagées entre toutes les répliques |
+| Stockage des pièces jointes | Filestore (NFS) | Pièces jointes des tickets dans `/opt/zammad/storage`, partagées entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket `zammad-attachments` dédié, toujours provisionné |
 | Cache et file de tâches | Redis | Activé par défaut ; requis pour le pub/sub WebSocket d'ActionCable et pour Sidekiq |
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
@@ -76,11 +76,11 @@ identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 Les pods Zammad sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le
-déploiement entre le nombre minimal et le nombre maximal de répliques.
+déploiement entre le nombre minimal et le nombre maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Zammad pour voir les pods, les événements et l'utilisation des ressources.
-  Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -119,7 +119,7 @@ consultez [App_GKE](App_GKE.md).
 
 Les pièces jointes des tickets et les fichiers téléversés sont écrits sur un partage
 **Filestore (NFS)** monté sur `/opt/zammad/storage` dans chaque pod, de sorte que
-toutes les répliques voient les mêmes fichiers. Un bucket **Cloud Storage** dédié
+tous les réplicas voient les mêmes fichiers. Un bucket **Cloud Storage** dédié
 (`zammad-attachments`) est également provisionné automatiquement ; l'accès est
 accordé au compte de service de la charge de travail.
 
@@ -164,7 +164,7 @@ et injecté dans les pods à l'exécution ; il n'apparaît jamais en clair dans 
 configuration. Zammad gère ses propres clés de signature internes au démarrage —
 aucun secret au niveau de l'application n'est généré automatiquement.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -182,7 +182,7 @@ Balancing. Un domaine personnalisé avec un certificat géré par Google peut ê
 activé, et une adresse IP statique peut être réservée afin que l'adresse survive aux
 redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -198,7 +198,7 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de disponibilité et
 des règles d'alerte sont disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -290,11 +290,11 @@ et leurs valeurs par défaut standard.
 | `container_image` | `""` | Remplace l'URI de l'image du conteneur. Laissez vide pour laisser Cloud Build la gérer. |
 | `container_resources` | `{ cpu_limit: "2000m", memory_limit: "4Gi" }` | Limites CPU/mémoire et demandes facultatives. Validées lors du plan. |
 | `container_port` | `3000` | Port du railsserver Zammad. Doit correspondre à `ZAMMAD_RAILSSERVER_PORT`. |
-| `min_instance_count` | `1` | Nombre minimal de répliques. Conservez ≥ 1 pour épargner aux agents de longs démarrages à froid. |
-| `max_instance_count` | `5` | Nombre maximal de répliques (plafond de l'autoscaler). |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Conservez ≥ 1 pour épargner aux agents de longs démarrages à froid. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy. Ne le désactivez pas. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
-| `enable_image_mirroring` | `true` | Réplique l'image Docker Hub de Zammad dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Docker Hub de Zammad dans Artifact Registry avant le déploiement. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -413,7 +413,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -502,11 +502,11 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `nfs_mount_path` | `/opt/zammad/storage` | High | Le modifier entraîne l'écriture des pièces jointes sur le stockage éphémère du pod ; les pièces jointes NFS existantes deviennent inaccessibles. |
 | `enable_nfs` | `true` | High | Sans NFS, toutes les pièces jointes téléversées sont perdues au redémarrage d'un pod ou lors d'une mise à jour progressive. |
 | `min_instance_count` | `1` | High | `0` provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
-| `session_affinity` | `ClientIP` | Medium | N'affecte que le routage des requêtes HTTP ordinaires entre les répliques ; n'active PAS ActionCable — `additional_services` est vide par défaut, si bien que le port 6042 n'est jamais exposé via un Service Kubernetes et que la diffusion en temps réel par WebSocket ne fonctionne pas, quel que soit ce paramètre. Ne comptez pas sur lui pour les mises à jour des tickets en direct. |
+| `session_affinity` | `ClientIP` | Medium | N'affecte que le routage des requêtes HTTP ordinaires entre les réplicas ; n'active PAS ActionCable — `additional_services` est vide par défaut, si bien que le port 6042 n'est jamais exposé via un Service Kubernetes et que la diffusion en temps réel par WebSocket ne fonctionne pas, quel que soit ce paramètre. Ne comptez pas sur lui pour les mises à jour des tickets en direct. |
 | `stateful_pvc_enabled = true` avec `workload_type = "Deployment"` | à éviter | High | Cette combinaison échoue lors du plan. |
 | `startup_probe.initial_delay_seconds` | `60` (ou plus) | High | Une valeur trop courte provoque des boucles de redémarrage au premier démarrage pendant la migration du schéma. |
 | `max_instance_count` > 1 sans Redis | configurez d'abord Redis | Medium | Plusieurs pods sans Redis provoquent des situations de concurrence sur l'attribution des tickets et une divergence de l'état en temps réel. |
-| `enable_topology_spread` | à activer avec plusieurs répliques | Medium | Sans répartition, tous les pods peuvent se retrouver dans une seule zone ; une défaillance de zone met le helpdesk hors service. |
+| `enable_topology_spread` | à activer avec plusieurs réplicas | Medium | Sans répartition, tous les pods peuvent se retrouver dans une seule zone ; une défaillance de zone met le helpdesk hors service. |
 | `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Medium | Sinon, l'interface d'administration de Zammad est accessible publiquement. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
 | `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
@@ -515,7 +515,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Zammad, partagée avec
 la variante Cloud Run, est décrite dans **[Zammad_Common](Zammad_Common.md)**.
 

@@ -36,7 +36,7 @@ déploiement assemble un ensemble minimal de services Google Cloud :
 | Secrets | Secret Manager | `SEARXNG_SECRET` (clé de session) généré automatiquement et injecté via le pilote CSI |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est provisionnée.** SearXNG est entièrement sans état — il
   agrège les résultats de recherche au moment de la requête et ne stocke rien.
@@ -160,7 +160,7 @@ facultatifs sont disponibles.
 
 - **Entièrement sans état.** SearXNG récupère les résultats auprès de moteurs de
   recherche externes au moment de la requête et ne stocke rien localement. Aucune
-  migration de base de données ni tâche d'initialisation ne s'exécute.
+  migration de base de données ni job d'initialisation ne s'exécute.
 - **Aucune tâche de configuration au premier déploiement.** Comme il n'y a pas de base
   de données, le déploiement se termine sans étape db-init — le pod est prêt dès que le
   conteneur démarre.
@@ -231,7 +231,7 @@ leurs valeurs par défaut standard.
 | `max_instance_count` | `3` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `container_port` | `8080` | Port HTTP natif de SearXNG. |
 | `container_image_source` | `prebuilt` | Utilise l'image officielle de SearXNG (`prebuilt`) ou la construit à partir des sources (`custom`). |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry avant le déploiement. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
 | `enable_cloudsql_volume` | `false` | **Laissez false** — SearXNG n'utilise pas de base de données. |
 
@@ -279,11 +279,11 @@ défaut (`null`). Consultez [App_GKE](App_GKE.md) pour savoir quand ce groupe s'
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | SearXNG ne nécessite aucune tâche d'initialisation — laissez vide. |
+| `initialization_jobs` | `[]` | SearXNG ne nécessite aucun job d'initialisation — laissez vide. |
 | `cron_jobs` | `[]` | Tâches planifiées facultatives (par exemple le préchauffage du cache). |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
@@ -333,7 +333,7 @@ Consultez [App_GKE](App_GKE.md).
 Sans objet pour SearXNG (pas de base de données). Consultez
 [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -358,7 +358,7 @@ Sans objet pour SearXNG (pas de base de données). Consultez
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -397,12 +397,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critical | Si un secret personnalisé propre à chaque pod est injecté à la place, chaque pod signe les cookies avec une clé différente, ce qui invalide les sessions d'un réplica à l'autre. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
 | `database_type` | `NONE` | Critical | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
@@ -421,7 +421,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à SearXNG partagée avec la
 variante Cloud Run est décrite dans **[SearXNG_Common](SearXNG_Common.md)**.
 

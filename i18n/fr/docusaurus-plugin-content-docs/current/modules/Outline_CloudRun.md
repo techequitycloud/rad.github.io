@@ -29,7 +29,7 @@ Outline s'exécute sous forme de conteneur Node.js sur Cloud Run v2, construit �
 | Secrets | Secret Manager | `SECRET_KEY`, `UTILS_SECRET` et le mot de passe de la base de données gérés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Outline est une application Sequelize/PostgreSQL ; MySQL n'est pas pris en charge.
 - **`DATABASE_URL` et `REDIS_URL` sont assemblées au démarrage du conteneur.** La plateforme injecte les éléments individuels (`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME`, `REDIS_HOST`, …) et le point d'entrée personnalisé construit les URL de connexion — ne définissez jamais `DATABASE_URL` vous-même.
@@ -104,7 +104,7 @@ Outline **nécessite** Redis pour les sessions, la mise en cache et sa file d'at
 
 Trois secrets sont gérés automatiquement : le mot de passe de la base de données (créé par le socle) ainsi que `SECRET_KEY` et `UTILS_SECRET` d'Outline — deux valeurs de 64 caractères hexadécimaux (le format `openssl rand -hex 32` exigé en amont) créées par `Outline_Common` et injectées dans le service à l'exécution. Le texte en clair n'apparaît jamais dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~outline"
@@ -117,7 +117,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de ro
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité. N'oubliez pas que l'`URL` d'Outline doit correspondre à l'hôte que les utilisateurs consultent réellement — si vous placez un domaine personnalisé devant le service, définissez `URL` en conséquence.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -130,7 +130,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -211,7 +211,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `execution_environment` | `gen2` | Requis pour le montage NFS. |
 | `timeout_seconds` | `300` | Timeout par requête ; augmentez-le pour les exports volumineux. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -269,7 +269,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez [A
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `service_url_env_var_name` | `URL` | Injecte l'URL prévue du service sous le nom `URL`. **Ne la videz pas** — sans `URL`, Outline n'enregistre aucun fournisseur d'authentification. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -294,7 +294,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez [A
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -333,12 +333,12 @@ Renvoyées lorsqu'un déploiement réussit — le moyen le plus rapide de locali
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Variables d'environnement `OIDC_*` | configurées après le déploiement | Critical | Livrées volontairement vides — tant qu'aucun IdP n'est configuré, la page de connexion n'affiche **aucun fournisseur** et le wiki est inutilisable, même si le déploiement est sain. |
 | `service_url_env_var_name` | `URL` | Critical | La vider supprime l'`URL` injectée ; Outline ne peut pas construire la `redirect_uri` OIDC et n'enregistre aucun fournisseur d'authentification. |

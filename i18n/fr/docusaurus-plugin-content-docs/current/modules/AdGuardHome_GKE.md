@@ -29,8 +29,8 @@ réseau, qui bloque les publicités et les traqueurs au niveau DNS et intègre u
 contrôle parental. Il s'agit d'un binaire Go statique sans base de données
 externe — toute la configuration réside dans un fichier YAML plat écrit par son
 propre assistant de configuration au premier lancement. Ce module déploie la
-console d'administration web d'AdGuard Home sur **GKE Autopilot**, au-dessus de
-la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
+console d'administration web d'AdGuard Home sur **GKE Autopilot**, au-dessus du
+socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
 Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise AdGuard Home et sur la
@@ -38,7 +38,7 @@ manière de les explorer et de les exploiter depuis la console Google Cloud et l
 ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les
+reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que de les
 répéter ici.
 
 ---
@@ -48,7 +48,7 @@ répéter ici.
 AdGuard Home s'exécute comme un pod unique de binaire Go statique sur GKE
 Autopilot. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod unique de binaire Go, 1 vCPU / 512 MiB par défaut, type de charge de travail `Deployment` |
 | Base de données | Aucune | AdGuard Home n'a pas de base de données externe — la configuration est un fichier YAML plat |
@@ -92,7 +92,7 @@ Autopilot. Le déploiement assemble un ensemble ciblé de services Google Cloud 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la console d'administration web d'AdGuard Home {#a-gke-autopilot--the-adguard-home-web-admin-console}
 
@@ -129,7 +129,7 @@ automatiquement.
 Consultez [App_GKE](App_GKE.md) pour les options CMEK et les détails des
 montages GCS Fuse CSI.
 
-### C. Réseau et ingress {#c-networking--ingress}
+### C. Réseau et entrée {#c-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing
 externe. **Il s'agit uniquement de l'URL de la console d'administration web — ce
@@ -196,27 +196,27 @@ standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `adguardhome` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Tag de suivi du déploiement. Correspond à l'ARG de build spécifique à l'application `ADGUARDHOME_VERSION` dans le Dockerfile (et non à l'`APP_VERSION` générique). |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `min_instance_count` | `1` | Nombre minimal de réplicas. |
@@ -227,53 +227,53 @@ standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Exposé publiquement par défaut — une interface utilisateur, pas un outil de base de données réservé à un usage interne. |
 | `workload_type` | `Deployment` | Aucun StatefulSet nécessaire ; la persistance passe par GCS Fuse. |
 
 ### Groupe 10 — IAP et VPC-SC {#group-10--iap--vpc-sc}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Activation recommandée — place l'authentification par identité Google devant la console de politique de filtrage DNS. |
 
 ### Groupe 11 — Domaine personnalisé et réseau {#group-11--custom-domain--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `reserve_static_ip` | `true` | IP externe stable d'un redéploiement à l'autre. |
-| `enable_custom_domain` | (valeur par défaut de la fondation) | Provisionne un Ingress pour des noms d'hôte personnalisés + certificat géré. |
+| `enable_custom_domain` | (valeur par défaut du socle) | Provisionne un Ingress pour des noms d'hôte personnalisés + certificat géré. |
 
 ### Groupe 14 — Cloud Storage {#group-14--cloud-storage}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée les buckets `conf`/`work` toujours provisionnés, ainsi que ceux de `storage_buckets`. |
 | `gcs_volumes` | `[]` | Laissez vide pour utiliser les montages `conf`/`work` propres au module. |
 
 ### Groupe 16 — Configuration de la base de données {#group-16--database-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | Fixe — ne doit pas être modifié. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` / `health_check_config` | HTTP `/` | Pas de point de terminaison de santé dédié ; la racine renvoie 200 avant et après la configuration. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Aucun job par défaut — AdGuard Home n'a besoin d'aucun amorçage de base de données. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 
@@ -313,7 +313,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
-> configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide
+> configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide
 > les valeurs et leurs combinaisons au moment du plan. Une configuration
 > invalide fait échouer le **plan** avec une erreur claire et nommée avant toute
 > création de ressource.
@@ -330,9 +330,9 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC et réplication d'images — consultez
+Binary Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à AdGuard Home,
 partagée avec la variante Cloud Run, est décrite dans
 **[AdGuardHome_Common](AdGuardHome_Common.md)**.

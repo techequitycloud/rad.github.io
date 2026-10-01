@@ -21,7 +21,7 @@ l'intégralité du cycle de vie opérationnel du module **Navidrome on GKE Autop
 sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien,
 l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Navidrome. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Navidrome_GKE) —
@@ -29,7 +29,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail StatefulSet en cours d'exécution.
@@ -54,7 +54,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -99,7 +99,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le pod s'exécute et recherchez une adresse externe (il n'y en a aucune par
    défaut — `service_type = ClusterIP`) :
@@ -188,7 +188,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/"$SVC" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -206,7 +206,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de Navidrome.
 
 - **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. Les sondes de démarrage
-  et de liveness ciblent toutes deux `GET /ping`, un point de terminaison non authentifié.
+  et de vivacité ciblent toutes deux `GET /ping`, un point de terminaison non authentifié.
   ```bash
   kubectl describe pod -n "$NS" -l app="$SVC"        # Events section shows scheduling/probe/mount errors
   kubectl logs -n "$NS" -l app="$SVC" --previous      # logs from the crashed container
@@ -246,8 +246,8 @@ SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie un StatefulSet GKE avec un PVC en mode bloc sur `/data`, un secret de mot de passe administrateur, et réplique l'image — ni Cloud SQL, ni tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état (`/ping`) réussit via une redirection de port ; récupérer le mot de passe administrateur et se connecter ; monter une bibliothèque musicale sur `/music` |
+| 1 — Déployer | Automatisé | Le module déploie un StatefulSet GKE avec un PVC en mode bloc sur `/data`, un secret de mot de passe administrateur, et réplique l'image — ni Cloud SQL, ni job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état (`/ping`) réussit via une redirection de port ; récupérer le mot de passe administrateur et se connecter ; monter une bibliothèque musicale sur `/music` |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/le pod/le PVC, maintenir la mise à l'échelle à 1/1, mettre à jour la version, gérer les secrets/le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et l'utilisation du PVC/disque |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC/quota SSD, de bibliothèque vide, d'entrée et de récupération d'image |

@@ -52,7 +52,7 @@ déploiement — reportez-vous au
 | Entrée | Cloud Load Balancing | `service_type = LoadBalancer` par défaut |
 | Build | Cloud Build | Clone `medusajs/dtc-starter`, exécute `medusa build` — il n'existe aucune image préconstruite à récupérer à la place |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par
   la couche applicative partagée ; choisir un autre moteur empêche le démarrage.
@@ -69,7 +69,7 @@ déploiement — reportez-vous au
   `cloudbuild.yaml` de référence), bien qu'un build typique — clone, `pnpm install`, `medusa
   build` — se termine en 10 minutes environ. Cela s'ajoute au provisionnement normal
   de Cloud SQL (20 à 35 minutes lors d'un premier déploiement) et aux quatre exécutions
-  de tâches d'initialisation (Jobs Kubernetes) qui suivent.
+  de jobs d'initialisation (Jobs Kubernetes) qui suivent.
 - **Une chaîne d'initialisation en quatre étapes s'exécute avant que la charge de travail
   ne soit considérée comme prête** : `db-init` → `medusa-migrate` → `medusa-verify` →
   `medusa-admin-create`, chacune dépendant de la précédente.
@@ -91,7 +91,7 @@ déploiement — reportez-vous au
 Toutes les commandes supposent que vous avez exécuté `gcloud container clusters get-credentials
 <cluster> --region <region> --project <project>` et que `PROJECT`,
 `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres identifiants figurent
-dans les [Outputs](#6-outputs) (sorties) du déploiement.
+dans les [sorties](#6-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Medusa {#a-gke-autopilot--the-medusa-workload}
 
@@ -130,7 +130,7 @@ gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --proje
 ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#6-outputs). Consultez [App_GKE](App_GKE.md) pour le modèle de
+figurent dans les [sorties](#6-outputs). Consultez [App_GKE](App_GKE.md) pour le modèle de
 connexion, les sauvegardes et la rotation des mots de passe.
 
 ### D. Redis {#d-redis}
@@ -200,7 +200,7 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
    **fait échouer l'apply** si le schéma `public` ne contient aucune table. Elle existe
    parce que le paramètre `execute_on_apply` d'`App_GKE` détermine seulement si Terraform
    *attend* une tâche, et non si le pod Kubernetes sous-jacent est planifié avant le
-   démarrage de la charge de travail principale — et un échec de tâche d'initialisation
+   démarrage de la charge de travail principale — et un échec de job d'initialisation
    ne fait pas échouer l'apply par défaut. Sans `medusa-verify`, une migration en
    concurrence ou en échec pourrait livrer silencieusement un pod apparemment sain
    pointant vers une base de données **vide**. Vérifié en conditions réelles :
@@ -266,7 +266,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `medusa` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `admin_email` | `admin@techequity.cloud` | E-mail du premier utilisateur administrateur créé par `medusa-admin-create`. |
@@ -274,7 +274,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "1Gi" }` | Limites de ressources par pod — mémoire par défaut inférieure aux 2Gi de la variante CloudRun ; augmentez-la sous une charge combinée API + workflows en arrière-plan. |
 | `min_instance_count` / `max_instance_count` | `1` / `3` | Bornes du nombre de réplicas. |
@@ -284,27 +284,27 @@ leurs valeurs par défaut standard.
 
 ### Groupe 6 — Configuration du backend GKE {#group-6--gke-backend-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Expose l'Admin UI et l'API à l'extérieur par défaut. |
 | `workload_type` | `null` (se résout en `Deployment`) | `StatefulSet` n'est sélectionné automatiquement que si `stateful_pvc_enabled = true`. |
 
 ### Groupe 15 — Base de données {#group-15--database}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Imposé par `Medusa_Common` ; MySQL n'est pas pris en charge. |
 | `application_database_name` / `application_database_user` | `medusa` / `medusa` | Nom de la base de données / utilisateur applicatif. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_gcs_storage` | `false` | Provisionne un bucket GCS + une clé HMAC générée automatiquement pour le fournisseur de fichiers compatible S3 de Medusa. Lorsque `false`, les téléversements utilisent le stockage local et éphémère du conteneur. |
 
 ### Groupe 21 — Redis et Cloud Armor {#group-21--redis--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | Obligatoire en production. |
 | `redis_host` | `""` | Vide : utilise l'IP de la VM NFS de la plateforme comme repli (nécessite `enable_nfs = true`) ; sinon, à définir explicitement. |
@@ -312,7 +312,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/health`, délai de 120s, seuil de 40 échecs | Fenêtre totale d'environ 12 minutes. |
 | `health_check_config` | HTTP `/health`, délai de 30s, seuil de 3 échecs | |
@@ -335,7 +335,7 @@ du comportement standard du socle sans surcharge propre à l'application.
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via l'Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés — vide sauf si `enable_gcs_storage = true`. |
 | `container_image` / `container_registry` | L'image Medusa produite par Cloud Build et son dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des quatre tâches d'initialisation créées. |
+| `initialization_jobs` | Noms des quatre jobs d'initialisation créés. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -344,7 +344,7 @@ du comportement standard du socle sans surcharge propre à l'application.
 
 ---
 
-## 7. Pièges de configuration et valeurs par défaut raisonnables {#7-configuration-pitfalls--sensible-defaults}
+## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -355,11 +355,11 @@ du comportement standard du socle sans surcharge propre à l'application.
 > une erreur claire et nommée avant la création de toute ressource — voir aussi la
 > section Validation Guards au niveau du module dans `modules/Medusa_GKE/README.md`.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Build à partir des sources (`container_image_source = "custom"`) | Aucune action nécessaire — c'est le seul mode valide | High | Toute modification du Dockerfile, de `entrypoint.sh` ou des arguments de build dans `Medusa_Common` nécessite une véritable reconstruction Cloud Build (~10 minutes pour la seule étape de build) avant de prendre effet. Forcez une reconstruction avec `tofu taint 'module.medusa_app.module.app_build.null_resource.build_and_push_application_image[0]'` si le déclencheur basé sur le hachage du contenu manque une modification. |
 | `enable_redis` | `true` | Critical | Medusa journalise `"redisUrl not found. A fake redis instance will be used."` et démarre quand même — ce message d'apparence anodine signale une solution de repli pour le développement et les tests, pas un mode de production pris en charge. Le cache, les sessions, le bus d'événements, le moteur de workflows et le verrouillage dépendent tous de Redis ; le désactiver dans un déploiement de production durable n'est pas pris en charge. |
-| Tâche d'initialisation `medusa-verify` | La laisser dans la chaîne par défaut | Critical | Cette tâche existe précisément parce qu'un échec de tâche d'initialisation ne fait **pas** échouer l'apply du module, et `execute_on_apply` sur GKE ne contrôle que l'*attente*, pas l'ordre de planification par rapport au démarrage de la charge de travail principale. Supprimer `medusa-verify` (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'elle devait éliminer. |
+| Job d'initialisation `medusa-verify` | La laisser dans la chaîne par défaut | Critical | Cette tâche existe précisément parce qu'un échec de job d'initialisation ne fait **pas** échouer l'apply du module, et `execute_on_apply` sur GKE ne contrôle que l'*attente*, pas l'ordre de planification par rapport au démarrage de la charge de travail principale. Supprimer `medusa-verify` (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'elle devait éliminer. |
 | Isolation de l'espace de travail pnpm (leçon pour réutiliser ce modèle de Dockerfile) | N/A — à titre informatif | High | Si vous reprenez ce modèle de build à partir des sources pour une autre application basée sur un espace de travail pnpm/npm, n'oubliez pas que la sortie de build produite *à l'intérieur* d'un monorepo cloné reste imbriquée sous le `pnpm-workspace.yaml` de ce monorepo. Exécuter `pnpm install --prod` directement sur cette sortie la réinstalle silencieusement comme partie de l'espace de travail englobant et peut n'écrire **aucun** `node_modules` — confirmé ici par `sh: medusa: not found` à l'exécution. Copiez toujours la sortie de build autonome dans un répertoire sans `pnpm-workspace.yaml` ancêtre avant d'installer ses dépendances de production. |
 | `admin_email` / mot de passe administrateur initial | Le récupérer dans Secret Manager après le déploiement | High | Aucun identifiant administrateur préalimenté n'est visible ailleurs que dans Secret Manager (sortie `admin_password_secret_id`) — le perdre de vue oblige à récupérer l'accès en exécutant manuellement `npx medusa user` contre la base de données en service. |
 | `container_resources.memory_limit` | `1Gi` par défaut | Medium | Inférieur aux 2Gi par défaut de la variante CloudRun alors que le même processus en mode worker partagé s'exécute ; augmentez-le si les pods subissent une pression mémoire sous une charge combinée API + workflows en arrière-plan. |

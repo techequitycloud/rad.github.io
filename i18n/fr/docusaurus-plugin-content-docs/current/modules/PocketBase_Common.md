@@ -29,11 +29,11 @@ consultez les guides de plateforme ([PocketBase_GKE](PocketBase_GKE.md),
 
 | Domaine | Fourni par PocketBase_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Enveloppe l'image préconstruite `ghcr.io/muchobien/pocketbase` dans un Dockerfile léger afin que le socle puisse la construire/la mettre en miroir dans **Artifact Registry** | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe l'image préconstruite `ghcr.io/muchobien/pocketbase` dans un Dockerfile léger afin que le socle puisse la construire/la mettre en miroir dans **Artifact Registry** | Sortie `container_image` du déploiement de la plateforme |
 | Version de l'image | Épingle `POCKETBASE_VERSION` sur `0.22.21` lorsque `application_version = "latest"`, afin qu'un tag inexistant dérivé de `pocketbase:latest` ne soit jamais demandé | `container_build_config.build_args` |
 | Moteur de base de données | Impose `database_type = "NONE"` — PocketBase embarque une base de données **SQLite** ; aucune instance Cloud SQL n'est créée | §Comportement de la base de données dans les guides de plateforme |
 | Amorçage de la base de données | **Aucun** — PocketBase crée et migre lui-même son schéma SQLite au premier démarrage ; aucun job `db-init` n'est donc injecté | Comportement de l'application dans les guides de plateforme |
-| Stockage persistant | Déclare un unique bucket de données **Cloud Storage** (suffixe `storage`) et le monte sur `/pb_data` sur Cloud Run via GCS FUSE ; sur GKE, un PVC en mode bloc est monté au même chemin à la place | Output `storage_buckets` |
+| Stockage persistant | Déclare un unique bucket de données **Cloud Storage** (suffixe `storage`) et le monte sur `/pb_data` sur Cloud Run via GCS FUSE ; sur GKE, un PVC en mode bloc est monté au même chemin à la place | Sortie `storage_buckets` |
 | Secrets | **Aucun** — PocketBase émet et stocke toute l'authentification dans sa propre base SQLite ; `secret_ids` / `secret_values` sont volontairement vides | §Secrets ci-dessous |
 | Cache / file d'attente | **Aucun** — PocketBase est un backend unique et autonome et n'utilise pas Redis | Les deux variantes définissent `enable_redis = false` |
 | Paramètres de base | Port du conteneur `8090`, administrateur créé de manière interactive sur `/_/`, aucune variable d'environnement requise pour le premier démarrage | Comportement de l'application dans les guides de plateforme |

@@ -34,7 +34,7 @@ services Google Cloud :
 |---|---|---|
 | Calcul | GKE Autopilot | Pod PHP/Apache sur le port 80, 1 vCPU / 2 GiB par défaut |
 | Forme de la charge de travail | **StatefulSet** Kubernetes + PVC en mode bloc | `stateful_pvc_enabled = true` résout automatiquement `workload_type` en `StatefulSet` ; un PVC `standard-rwo` (SSD) de 10Gi est monté sur `/var/www/html` — toute l'installation ClassicPress (code, extensions, thèmes, `wp-content`/uploads) réside sur ce volume propre à chaque pod |
-| Base de données | Cloud SQL pour MySQL 8.0 | Fixe — `ClassicPress_Common` code en dur `database_type = "MYSQL_8_0"` |
+| Base de données | Cloud SQL for MySQL 8.0 | Fixe — `ClassicPress_Common` code en dur `database_type = "MYSQL_8_0"` |
 | Persistance des fichiers (secondaire) | Cloud Filestore (NFS) | Monté sur `/var/www/html/wp-content` par défaut (`enable_nfs = true`) — un sous-chemin du PVC du StatefulSet ci-dessous ; c'est le mécanisme confirmé de persistance des uploads/extensions/thèmes (voir la [section 3](#3-classicpress-application-behaviour)) |
 | Stockage d'objets | Cloud Storage | Un bucket `classicpress-uploads` est provisionné automatiquement mais **n'est pas** monté dans le pod par défaut |
 | Secrets | Secret Manager | `CLASSICPRESS_SALT_SEED` généré automatiquement (dont dérivent les 8 clés/sels d'authentification de type WordPress) ; mot de passe de la base de données |
@@ -82,7 +82,7 @@ services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail ClassicPress {#a-gke-autopilot--the-classicpress-workload}
 
@@ -104,10 +104,10 @@ demande réellement. L'unique réplica possède un PVC `standard-rwo` (SSD) déd
 Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'échelle et le type de charge de travail
 (Deployment ou StatefulSet) sont gérés, et le groupe 7 pour les mécanismes StatefulSet/PVC.
 
-### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
+### B. Cloud SQL for MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
 ClassicPress stocke toutes les données applicatives (articles, pages, utilisateurs, options, paramètres
-des extensions/thèmes) dans une instance gérée Cloud SQL pour MySQL 8.0. Les pods y accèdent via le
+des extensions/thèmes) dans une instance gérée Cloud SQL for MySQL 8.0. Les pods y accèdent via le
 sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:3306` ; aucune IP publique n'est exposée. Au
 premier déploiement, le job `db-init` crée la base de données applicative, l'utilisateur et les droits,
 vérifie que l'utilisateur applicatif peut se connecter, puis arrête le sidecar.
@@ -121,7 +121,7 @@ vérifie que l'utilisateur applicatif peut se connecter, puis arrête le sidecar
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager contenant le
-mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour le
+mot de passe figurent tous dans les [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour le
 modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe.
 
 ### C. Stockage — PVC du StatefulSet, NFS et Cloud Storage {#c-storage--statefulset-pvc-nfs-and-cloud-storage}
@@ -264,14 +264,14 @@ lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GK
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `classicpress` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Correspond au tag de l'image `classicpress/classicpress`. Les tags sont qualifiés par la version de PHP (`php8.3-apache`, `php8.4-apache`), et non par la version de l'application ; `latest` est résolu en un tag épinglé qualifié par PHP au moment du build via l'argument de build propre à l'application `CLASSICPRESS_VERSION` (l'argument de build générique `APP_VERSION` injecté par le socle l'écraserait sinon silencieusement avec le tag littéral et inexistant `"latest"`). |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_image_source` | `custom` | Construit l'image légère `FROM classicpress/classicpress` avec la cale de point d'entrée greffée ; obligatoire — l'image standard ne peut pas faire correspondre `DB_*` d'elle-même. |
 | `cpu_limit` | `1000m` | Limite de CPU du conteneur ClassicPress. À augmenter pour les sites à fort trafic ou les extensions lourdes. |
@@ -284,7 +284,7 @@ lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GK
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP externe pour l'interface ClassicPress. |
 | `workload_type` | `null` → `StatefulSet` | Résolu automatiquement parce que `stateful_pvc_enabled = true`. |
@@ -292,7 +292,7 @@ lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GK
 
 ### Groupe 7 — StatefulSet / PVC {#group-7--statefulset--pvc}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `true` | ClassicPress stocke toute son installation sous `/var/www/html` ; l'activer résout automatiquement `workload_type` en `StatefulSet`. |
 | `stateful_pvc_size` | `10Gi` | Taille du PVC par pod. À augmenter pour les grandes médiathèques. |
@@ -301,28 +301,28 @@ lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GK
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | `{ type: TCP, path: "/", failure_threshold: 20, period_seconds: 15 }` | Seuil généreux — le premier démarrage remplit le PVC vide avec l'application complète. |
 | `liveness_probe` | `{ type: HTTP, path: "/", initial_delay_seconds: 300 }` | Un 200 comme un 302 vers l'installateur sont considérés comme sains. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisionne un stockage partagé adossé à Filestore, monté sur `nfs_mount_path` — le mécanisme de persistance confirmé pour les uploads/extensions/thèmes ; voir la [section 3](#3-classicpress-application-behaviour). |
 | `nfs_mount_path` | `/var/www/html/wp-content` | Chemin de montage du partage NFS dans le conteneur, un sous-répertoire du PVC du StatefulSet. La logique de copie du point d'entrée amont ignore un répertoire `wp-content` existant ; y monter le partage est donc sûr. |
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Active le backend de cache d'objets de type WordPress de ClassicPress. |
 | `redis_host` | `""` | Laissez vide pour vous rabattre sur le `REDIS_HOST` propre au socle (l'IP Redis de la VM NFS lorsque `enable_nfs = true`) ; définissez-le explicitement pour utiliser une instance Redis/Memorystore externe. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `null` → `MYSQL_8_0` | Codé en dur dans `ClassicPress_Common` ; laissez `null`. Le surcharger casse le job `db-init` et le point d'entrée propres à MySQL. |
 | `application_database_name` | `classicpress` | Nom de la base de données. Immuable après le premier déploiement. |
@@ -330,7 +330,7 @@ lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GK
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress prêt pour un certificat géré dès que `application_domains` est défini. |
 | `reserve_static_ip` | `true` | IP externe stable d'un redéploiement à l'autre. |
@@ -340,12 +340,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -400,7 +400,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**.
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à ClassicPress, partagée avec la variante Cloud Run, est
 décrite dans le module `ClassicPress_Common` (aucun guide autonome `ClassicPress_Common.md`
 n'existe encore dans cette documentation).

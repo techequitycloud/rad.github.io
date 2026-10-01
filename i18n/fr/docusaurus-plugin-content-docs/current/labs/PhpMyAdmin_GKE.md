@@ -25,7 +25,7 @@ base de données — c'est un *client* qui se connecte à un serveur MySQL/Maria
 ou tout hôte joignable). « Déployer » phpMyAdmin signifie mettre en place l'interface web
 et son chemin de connectivité vers ce serveur externe, et non créer un nouveau stockage de données.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit phpMyAdmin. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/PhpMyAdmin_GKE) — ce
@@ -33,7 +33,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail phpMyAdmin en cours d'exécution.
@@ -62,7 +62,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Un accès à (ou des identifiants pour) un **serveur MySQL/MariaDB** que vous comptez administrer —
   phpMyAdmin ne crée aucune base de données qui lui soit propre.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -83,10 +83,10 @@ export REGION="us-central1"           # the region you deploy into
    de la plateforme). Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
 2. La plateforme construit l'image de conteneur personnalisée minimale (`FROM phpmyadmin/phpmyadmin`),
-   la réplique dans Artifact Registry et déploie la charge de travail dans le cluster GKE Autopilot
+   le réplica dans Artifact Registry et déploie la charge de travail dans le cluster GKE Autopilot
    sous la forme d'un `Deployment` sans état (pas de StatefulSet — phpMyAdmin ne conserve aucun état
    par pod) derrière un Service `LoadBalancer` externe. Il n'y a **ni instance Cloud SQL,
-   ni secret Secret Manager, ni tâche d'initialisation de base de données** — phpMyAdmin
+   ni secret Secret Manager, ni job d'initialisation de base de données** — phpMyAdmin
    ne provisionne aucun stockage de données qui lui soit propre. Les premiers déploiements ne prennent généralement que
    **5–10 minutes** (build de l'image, plus la planification et le provisionnement du LoadBalancer — sans
    le temps de provisionnement Cloud SQL que subissent les autres modules applicatifs).
@@ -104,7 +104,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -203,7 +203,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -276,7 +276,7 @@ le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas su
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit/réplique l'image et déploie uniquement la charge de travail GKE + le LoadBalancer — aucune base de données, aucun secret ni bucket de stockage n'est créé |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la page de connexion renvoie 200 ; confirmer la cible MySQL configurée ; s'authentifier avec les identifiants propres à ce serveur |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la page de connexion renvoie 200 ; confirmer la cible MySQL configurée ; s'authentifier avec les identifiants propres à ce serveur |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (min 1, pas de mise à l'échelle à zéro sur GKE), mettre à jour la version, rediriger la cible MySQL, examiner l'entrée/IAP |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de connectivité MySQL, de planification/LB et de récupération d'image |

@@ -85,9 +85,9 @@ déploiement entre le nombre minimal (`1`) et le nombre maximal de réplicas. Co
 chaque pod est identique et sans état, la mise à l'échelle horizontale est sûre et ne
 nécessite aucune coordination.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Excalidraw pour voir les pods, les révisions et les événements. Kubernetes
-  Engine → Services et Ingress affiche l'IP externe.
+  Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -106,7 +106,7 @@ que Cloud Build produit et pousse dans l'Artifact Registry du projet (`enable_im
 mesure ou mises en miroir, de sorte qu'un tag reconstruit est toujours récupéré à
 nouveau.
 
-- **Console :** Artifact Registry → Dépôts.
+- **Console :** Artifact Registry → Repositories.
 - **CLI :**
   ```bash
   gcloud artifacts repositories list --project "$PROJECT" --location "$REGION"
@@ -140,7 +140,7 @@ Un domaine personnalisé avec un certificat géré par Google peut être activé
 statique peut être réservée afin que l'adresse survive aux redéploiements. Cloud CDN
 est bien adapté aux éléments statiques.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -157,8 +157,8 @@ les métriques GKE sont envoyées à Cloud Monitoring. Des tests de disponibilit
 règles d'alerte facultatifs sont disponibles ; un test de disponibilité public sur le
 chemin racine constitue un signal de santé naturel pour le frontend statique.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -291,7 +291,7 @@ cohérence d'interface avec les autres modules, mais se résolvent ici en valeur
 | `storage_buckets` | Buckets Cloud Storage créés — vide pour Excalidraw. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des jobs de configuration — vide pour Excalidraw. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

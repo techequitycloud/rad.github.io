@@ -205,7 +205,7 @@ pour absorber les migrations TypeORM qui s'exécutent au premier démarrage avan
 le serveur ne commence à écouter.
 
 - **Cloud Run** — sonde de démarrage HTTP sur `/` par défaut, délai initial de 60 s,
-  période de 15 s, 30 échecs ; sonde d'activité sur `/` par défaut, période de 30 s.
+  période de 15 s, 30 échecs ; sonde de vivacité sur `/` par défaut, période de 30 s.
   Remplacez le `path` de `startup_probe`/`liveness_probe` par `/api/health` si vous
   le préférez.
 - **GKE** — les mêmes sondes sur `/` par défaut, la sonde de démarrage de

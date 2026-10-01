@@ -30,7 +30,7 @@ Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous 
 Gotify s'exécute sous la forme d'une charge de travail web Go à binaire unique. Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Go, requête de 1 vCPU / 512 MiB par défaut ; réplica unique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — ce module n'utilise jamais le SQLite intégré de Gotify |
@@ -38,7 +38,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Build du conteneur | Cloud Build + Artifact Registry | Encapsule `ghcr.io/gotify/server` avec un point d'entrée de mappage de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé et certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** `database_type = "POSTGRES"` est la valeur par
   défaut du module ; le mode SQLite de Gotify n'est pas utilisé, aucun PVC par pod
@@ -78,9 +78,9 @@ Les pods Gotify sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. Le module conserve un réplica unique afin que le bus
 de messages interne au processus distribue les messages à chaque client connecté.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Gotify pour consulter les pods et les événements. Kubernetes Engine →
-  Services et entrées affiche l'IP externe.
+  Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -95,8 +95,8 @@ et du type de charge de travail.
 Gotify stocke toutes les données de l'application (messages, applications, clients,
 utilisateurs) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods s'y
 connectent de manière privée via le sidecar **Cloud SQL Auth Proxy** (boucle locale
-`127.0.0.1`) ; aucune IP publique n'est exposée. Lors du premier déploiement, une
-tâche d'initialisation crée la base de données et le rôle de l'application ; Gotify
+`127.0.0.1`) ; aucune IP publique n'est exposée. Lors du premier déploiement, un
+job d'initialisation crée la base de données et le rôle de l'application ; Gotify
 applique ensuite son propre schéma par auto-migration GORM au premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
@@ -119,7 +119,7 @@ et stocké dans Secret Manager, puis matérialisé dans l'espace de noms via le 
 Secret Store CSI. Le mot de passe de la base de données est géré séparément par le
 socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~gotify"
@@ -132,10 +132,10 @@ Consultez [App_GKE](App_GKE.md) pour l'intégration CSI et la rotation.
 
 L'image personnalisée encapsule `ghcr.io/gotify/server` avec un point d'entrée de
 mappage de la base de données. Cloud Build la construit et la pousse vers Artifact
-Registry ; `enable_image_mirroring = true` duplique l'image de base amont dans
+Registry ; `enable_image_mirroring = true` met en miroir l'image de base amont dans
 Artifact Registry afin d'éviter les limites de débit des registres.
 
-- **Console :** Cloud Build → Historique ; Artifact Registry → Dépôts.
+- **Console :** Cloud Build → History ; Artifact Registry → Repositories.
 - **CLI :**
   ```bash
   gcloud builds list --project "$PROJECT" --limit 5
@@ -148,7 +148,7 @@ Par défaut, la charge de travail est exposée via une IP externe Cloud Load Bal
 Un domaine personnalisé avec un certificat géré par Google peut être activé, et une
 IP statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -164,8 +164,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 GKE et de Cloud SQL sont envoyées vers Cloud Monitoring, avec un test de
 disponibilité sur `/health` et des règles d'alerte facultatives.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -176,8 +176,8 @@ disponibilité sur `/health` et des règles d'alerte facultatives.
 
 ## 3. Comportement de l'application Gotify {#3-gotify-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Elle se
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de
   données et le rôle de l'application, puis accorde les privilèges. La tâche peut être
   relancée sans risque.
@@ -228,7 +228,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -299,7 +299,7 @@ comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | `{ enabled=false, path="/health" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -377,7 +377,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | CIDR autorisés pour l'accès privilégié. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -409,14 +409,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, des réplicas `min > max`, `enable_cloudsql_volume` avec `database_type = "NONE"`, un `backup_retention_days` hors plage, des unités de mémoire de quota non binaires. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres pods (bus de messages interne au processus). |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
@@ -434,7 +434,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Gotify partagée avec
 la variante Cloud Run est décrite dans **[Gotify_Common](Gotify_Common.md)**.
 

@@ -27,10 +27,10 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 
 | Domaine | Fourni par Spoolman_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | `ghcr.io/donkie/spoolman` — image officielle préconstruite, aucun build personnalisé | Output `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
+| Image de conteneur | `ghcr.io/donkie/spoolman` — image officielle préconstruite, aucun build personnalisé | Sortie `container_image` du déploiement de la plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Amorçage de la base de données | Aucun n'est nécessaire — le socle crée automatiquement le rôle/la base de données, et Spoolman se migre lui-même au démarrage | Aucun `initialization_jobs` déclaré |
-| Stockage objet | Aucun — Spoolman conserve tout son état dans Cloud SQL | Output `storage_buckets` (toujours `[]`) |
+| Stockage objet | Aucun — Spoolman conserve tout son état dans Cloud SQL | Sortie `storage_buckets` (toujours `[]`) |
 | Paramètres principaux | Définit `SPOOLMAN_DB_TYPE=postgres` et une échappatoire `SPOOLMAN_DB_QUERY` vide | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/health` | §Observabilité dans les guides des plateformes |
 
@@ -134,7 +134,7 @@ initialisé et connecté à PostgreSQL.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Aucun bucket GCS n'est déclaré — `storage_buckets` renvoie toujours une liste vide.
 Spoolman conserve tout son état (bobines, filaments, fournisseurs, historique de

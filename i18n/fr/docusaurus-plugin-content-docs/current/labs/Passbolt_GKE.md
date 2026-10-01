@@ -21,7 +21,7 @@ vérifier (y compris le processus d'initialisation de l'administrateur, réellem
 application), l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
 démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Passbolt. Pour la liste complète des services
 provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Passbolt_GKE) —
@@ -30,7 +30,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne.
@@ -61,7 +61,7 @@ temps.
   depuis [passbolt.com/download](https://www.passbolt.com/download) avant de
   commencer.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -89,7 +89,7 @@ export REGION="us-central1"           # the region you deploy into
    provisionne une base de données Cloud SQL (MySQL 8.0) avec son secret de mot de passe
    Secret Manager, deux buckets dédiés montés via GCS Fuse (`storage` pour la
    paire de clés GPG du serveur, `jwt` pour la paire de clés JWT), et exécute la chaîne
-   de tâches d'initialisation en 2 étapes (`db-init` → `admin-bootstrap`). Les premiers déploiements
+   de jobs d'initialisation en 2 étapes (`db-init` → `admin-bootstrap`). Les premiers déploiements
    prennent généralement environ **15–25 minutes**. Contrairement à la sémantique
    `execute_on_apply` de Cloud Run, sur GKE les pods des Jobs sont planifiés
    immédiatement, quel que soit ce paramètre ; le respect de l'ordre provient
@@ -110,11 +110,11 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 La configuration du compte administrateur de Passbolt diffère réellement de presque toutes les autres
 applications de ce catalogue : il n'existe ni mot de passe administrateur côté serveur, ni
-assistant de configuration web à la première visite. La tâche d'initialisation `admin-bootstrap` affiche une **URL de
+assistant de configuration web à la première visite. Le job d'initialisation `admin-bootstrap` affiche une **URL de
 configuration à usage unique** dans les journaux de son pod, que vous ouvrez dans un navigateur doté d'une extension
 compatible avec Passbolt — l'extension génère alors localement votre paire de clés GPG et votre mot de passe maître,
 et les enregistre auprès du serveur via cette URL.
@@ -136,8 +136,8 @@ et les enregistre auprès du serveur via cette URL.
    # expect: {"header":{"status":"success",...},"body":"OK"}
    ```
 
-3. **Récupérez l'URL de configuration à usage unique dans les journaux du pod de la tâche `admin-bootstrap`.**
-   La tâche l'a affichée sur stdout lorsqu'elle a exécuté `cake passbolt
+3. **Récupérez l'URL de configuration à usage unique dans les journaux du pod du job `admin-bootstrap`.**
+   Le job l'a affichée sur stdout lorsqu'il a exécuté `cake passbolt
    register_user` (exécutée sans l'option `-q`/quiet précisément pour que cette URL
    soit visible) :
 
@@ -151,11 +151,11 @@ et les enregistre auprès du serveur via cette URL.
    https://<your-service-host>/setup/start/<user-id>/<token>
    ```
 
-   Si rien ne correspond, la tâche est peut-être encore en cours
+   Si rien ne correspond, le job est peut-être encore en cours
    (`kubectl get jobs -n "$NS"` affiche l'état d'achèvement), ou le pod a peut-être
    déjà été supprimé par le ramasse-miettes — vérifiez
    `kubectl get pods -n "$NS" -a | grep admin-bootstrap` et, s'il a disparu,
-   réexécutez la tâche (la tâche 5 couvre ce cas).
+   réexécutez le job (la tâche 5 couvre ce cas).
 
 4. **Installez l'extension de navigateur Passbolt** (Chrome, Firefox ou Edge) depuis
    [passbolt.com/download](https://www.passbolt.com/download) si ce n'est pas
@@ -193,7 +193,7 @@ et les enregistre auprès du serveur via cette URL.
 
 3. **Mettez à jour la version de l'application** en modifiant `application_version` dans
    la plateforme RAD et en l'appliquant via **Update** ; une nouvelle image est construite, une
-   mise à jour progressive remplace le pod, et les tâches d'initialisation `db-init`/`admin-bootstrap`
+   mise à jour progressive remplace le pod, et les jobs d'initialisation `db-init`/`admin-bootstrap`
    sont réexécutées (toutes deux sont idempotentes — un schéma existant et le compte administrateur
    restent intacts).
 
@@ -232,7 +232,7 @@ et les enregistre auprès du serveur via cette URL.
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -254,8 +254,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 
-- **La tâche `admin-bootstrap` échoue avec une Internal Error / 500 sur
-  `register_user` :** c'est précisément le mode de défaillance que la tâche est conçue
+- **Le job `admin-bootstrap` échoue avec une Internal Error / 500 sur
+  `register_user` :** c'est précisément le mode de défaillance que le job est conçu
   pour éviter en reproduisant d'abord la séquence de génération des clés GPG et d'installation du schéma
   propre à l'éditeur — si elle échoue malgré tout, consultez les journaux de son pod pour identifier l'étape
   en échec :
@@ -270,8 +270,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   manquante ou incorrecte.
 
 - **L'URL de configuration n'apparaît jamais dans les journaux :** vérifiez que `admin-bootstrap` s'est réellement
-  terminée (et pas seulement qu'elle a démarré). Si le pod de la tâche a été supprimé par le ramasse-miettes ou si la
-  tâche a échoué en cours de route, ses étapes GPG/JWT/schéma idempotentes peuvent être réexécutées sans risque —
+  terminé (et pas seulement qu'il a démarré). Si le pod du job a été supprimé par le ramasse-miettes ou si le
+  job a échoué en cours de route, ses étapes GPG/JWT/schéma idempotentes peuvent être réexécutées sans risque —
   supprimez l'objet Job terminé ou en échec et laissez le prochain apply le recréer,
   ou déclenchez-le manuellement selon la sémantique des Jobs de votre cluster.
 
@@ -323,7 +323,7 @@ Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas suppr
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), les buckets GCS GPG/JWT, et exécute la chaîne `db-init` → `admin-bootstrap` |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit sur `/healthcheck/status.json` ; récupérer l'URL de configuration à usage unique dans les journaux du pod et terminer l'enregistrement via une extension de navigateur |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit sur `/healthcheck/status.json` ; récupérer l'URL de configuration à usage unique dans les journaux du pod et terminer l'enregistrement via une extension de navigateur |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, inspecter les volumes des paires de clés, accéder à la base, gérer les utilisateurs/groupes |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'admin-bootstrap, de base de données, d'autorisations GCS Fuse et de perte des paires de clés |

@@ -18,7 +18,7 @@ défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement OpenProject, consultez les
 guides de plateforme ([OpenProject_GKE](OpenProject_GKE.md),
-[OpenProject_CloudRun](OpenProject_CloudRun.md)) et les guides de fondation
+[OpenProject_CloudRun](OpenProject_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -60,7 +60,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~secret-key-base"
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans les sorties du déploiement de la plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle partagé
 de secrets et de Workload Identity.
@@ -125,7 +125,7 @@ sorties du déploiement de la plateforme.
 L'image personnalisée est une fine enveloppe `FROM openproject/openproject:<version>`. Le
 seul ajout est `cloud-entrypoint.sh`, qui s'exécute avant le démarrage standard :
 
-- **Compose `DATABASE_URL` à partir des variables `DB_*` de la fondation.** OpenProject
+- **Compose `DATABASE_URL` à partir des variables `DB_*` du socle.** OpenProject
   (Rails) lit un unique DSN sous forme d'URL. Le point d'entrée choisit une branche selon
   la forme de l'hôte résolu et encode le mot de passe pour l'URL :
   - **Socket Unix Cloud SQL** (`/cloudsql/...`) → forme socket de libpq
@@ -145,14 +145,14 @@ seul ajout est `cloud-entrypoint.sh`, qui s'exécute avant le démarrage standar
   son cron dans le processus via `GOOD_JOB_EXECUTION_MODE = async`.
 
 L'image utilise un ARG de build propre à l'application, `OPENPROJECT_VERSION` (et non le
-`APP_VERSION` générique que la fondation injecte et qui l'écraserait). OpenProject ne
+`APP_VERSION` générique que le socle injecte et qui l'écraserait). OpenProject ne
 publie que des tags de version majeure numériques (16, 15, …) et **aucun tag `latest`** ;
 la valeur par défaut de la campagne `"latest"` est donc épinglée sur la version majeure
 stable `16`.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `OpenProject_Common` établit l'environnement de base afin que l'application démarre
 correctement dès le premier lancement :

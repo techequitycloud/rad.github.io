@@ -193,7 +193,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `seerr` | Nom de base des ressources. |
 | `application_display_name` | `Seerr` | Nom lisible affiché dans l'interface de la plateforme. |
@@ -201,7 +201,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_port` | `5055` | Confirmé via `docker run` en local et un déploiement réel ; le Service K8s et les sondes doivent tous s'accorder sur cette valeur. |
 | `container_image_source` | `prebuilt` | Seerr ne prend en charge que l'image officielle ; `Seerr_Common` code également cette valeur en dur en interne. |
@@ -209,7 +209,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ### Groupe 31 — Configuration du StatefulSet {#group-31--statefulset-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `false` | `settings.json` est un petit état JSON écrit en fichier entier — sûr sur un volume GCS FUSE avec `max_instance_count = 1` ; un PVC en mode bloc est donc facultatif ici, contrairement aux applications SQLite en mode WAL de ce catalogue. |
 | `stateful_pvc_mount_path` | `/app/config` | Correspond au chemin de montage GCS FUSE par défaut. |
@@ -217,7 +217,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ### Groupe 16 — Base de données {#group-16--database}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Obligatoire — Seerr ne dispose d'aucun chemin hors Postgres. |
 | `application_database_name` / `application_database_user` | `seerr` / `seerr` | Transmis à `Seerr_Common`, injectés sous forme de `DB_NAME`/`DB_USER`. |
@@ -225,27 +225,27 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Vide, et le reste généralement — `dbConnection.runMigrations()` s'exécute à chaque démarrage du pod au sein même de l'application. |
 
 ### Groupe 14 — Cloud Storage {#group-14--cloud-storage}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gcs_volumes` | `[]` | Le montage du bucket `storage` sur `/app/config`, aux permissions corrigées, est ajouté automatiquement (voir le §3) ; utilisez ce paramètre uniquement pour des volumes *supplémentaires*. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `/api/v1/status` (via `Seerr_Common`) | Point de terminaison d'état JSON non authentifié renvoyant `200` ; la valeur par défaut du `variables.tf` propre à la variante (HTTP `/`) est remplacée par la valeur par défaut plus précise de `Seerr_Common`. |
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` / `service_url` / `service_external_ip` | Identité et adresse du Service Kubernetes. |
 | `database_instance_name` / `database_name` / `database_user` / `database_password_secret` | Identifiants de l'instance Cloud SQL et de la base de données Seerr. |
@@ -271,7 +271,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload
 Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez
+VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Seerr, partagée
 avec la variante Cloud Run, est décrite dans
 **[Seerr_Common](Seerr_Common.md)**.

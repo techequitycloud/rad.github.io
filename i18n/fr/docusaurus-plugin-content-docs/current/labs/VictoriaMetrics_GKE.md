@@ -11,7 +11,7 @@ description: "Lab pratique : déployez VictoriaMetrics sur GKE Autopilot dans vo
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 20 à 30 minutes
+**Durée estimée :** 20–30 minutes
 
 VictoriaMetrics est une base de données de séries temporelles rapide, économique et compatible avec Prometheus
 — le backend auto-hébergé de référence pour le stockage de métriques à associer au
@@ -22,7 +22,7 @@ diagnostiquer les problèmes courants et le supprimer.
 
 C'est l'un des labs les plus simples de l'ensemble des modules applicatifs de ce catalogue —
 VictoriaMetrics n'a aucune dépendance à une base de données externe (c'est lui-même une
-base de données), aucune tâche d'initialisation et aucun secret à gérer ; la plupart des
+base de données), aucun job d'initialisation et aucun secret à gérer ; la plupart des
 étapes de dépannage habituelles d'un premier déploiement liées à ces éléments ne s'appliquent donc pas ici.
 
 Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**,
@@ -36,13 +36,13 @@ dans la durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et atteindre le service uniquement interne (`ClusterIP`) via `kubectl port-forward`.
 - Vérifier l'ingestion et interroger l'API compatible PromQL.
 - Effectuer les opérations du jour 2 — inspecter, mettre à jour la version et connecter un collecteur (scraper) ou une source de données Grafana.
 - Observer l'utilisation des ressources et le comportement d'ingestion de VictoriaMetrics lui-même avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -85,7 +85,7 @@ export REGION="us-central1"           # the region you deploy into
    StatefulSet, provisionne un PersistentVolumeClaim bloc (classe de stockage `standard`/HDD,
    `20Gi` par défaut) monté sur `/victoria-metrics-data`, et
    construit l'image de conteneur personnalisée. Il n'y a ni base de données SQL, ni Redis, ni
-   secret Secret Manager, ni tâche d'initialisation à attendre — VictoriaMetrics
+   secret Secret Manager, ni job d'initialisation à attendre — VictoriaMetrics
    est un binaire autonome, sans notion de schéma ni de migration. C'est donc
    l'un des modules de ce catalogue qui atteignent le plus rapidement un état sain ;
    les premiers déploiements prennent généralement **8 à 15 minutes** (le build de l'image et le provisionnement des nœuds
@@ -216,7 +216,7 @@ choses différentes : la vue du pod par la plateforme (Cloud Logging/Monitoring
 standard, comme pour toute charge de travail) et les métriques d'ingestion et de ressources
 que VictoriaMetrics rapporte sur lui-même.
 
-1. **Journaux et métriques au niveau de la plateforme** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux et métriques au niveau de la plateforme** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" \
@@ -285,7 +285,7 @@ les pièges propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail
 Kubernetes et l'espace de noms, le PersistentVolumeClaim et le Persistent Disk
@@ -302,9 +302,9 @@ sont gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et déploie le StatefulSet GKE + PVC ; aucune phase de base de données, de secret ou de tâche d'initialisation à attendre |
+| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et déploie le StatefulSet GKE + PVC ; aucune phase de base de données, de secret ou de job d'initialisation à attendre |
 | 2 — Accéder et vérifier | Manuel | Atteindre le service uniquement interne via `kubectl port-forward` ou `exec` ; confirmer `/health` et un véritable aller-retour ingestion→requête |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet, mettre à jour la version, connecter un véritable collecteur/Grafana — pas de mise à l'échelle horizontale |
 | 4 — Observer | Manuel | Journaux/métriques de la plateforme pour le pod, ainsi que les métriques d'ingestion/stockage rapportées par VictoriaMetrics lui-même |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC, de connectivité et de fenêtre de rétention |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module — aucune base de données externe ni aucun secret à nettoyer séparément |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module — aucune base de données externe ni aucun secret à nettoyer séparément |

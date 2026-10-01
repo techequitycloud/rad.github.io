@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Miniflux sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Miniflux est un lecteur de flux RSS/Atom minimaliste et auto-hébergé — un unique binaire
 Go statique qui stocke tout son état dans PostgreSQL. Ce lab vous fait parcourir
@@ -27,7 +27,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, trouver l'espace de noms et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -139,7 +139,7 @@ export REGION="us-central1"           # the region you deploy into
    page de détails du déploiement — le module possède la spécification de la charge de travail, donc la mise à l'échelle est une
    modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
    annulée lors de la prochaine application). Conservez `min_instance_count = 1` (la valeur par défaut et le
-   minimum GKE) afin que l'interrogateur de flux intégré au processus continue d'actualiser les flux ; chaque réplique supplémentaire
+   minimum GKE) afin que l'interrogateur de flux intégré au processus continue d'actualiser les flux ; chaque réplica supplémentaire
    interroge les flux indépendamment, car aucune file partagée ne les coordonne. L'affinité
    de session (`ClientIP`) est définie par défaut pour maintenir un client sur un même pod et garantir
    une session d'interface cohérente.
@@ -182,7 +182,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et
@@ -216,7 +216,7 @@ de diagnostics au niveau de la plateforme, qui ne changent pas avec les versions
   ```
 - **Les flux ne s'actualisent pas :** l'interrogateur de flux s'exécute dans le processus selon
   `POLLING_FREQUENCY` dans chaque pod. Vérifiez que `min_instance_count >= 1` — GKE
-  ne réduit pas à zéro, mais une charge de travail sans aucune réplique saine arrête complètement
+  ne réduit pas à zéro, mais une charge de travail sans aucun réplica sain arrête complètement
   l'interrogation.
 - **Impossible de se connecter / mot de passe administrateur perdu :** relisez le secret `ADMIN_PASSWORD`
   (voir la tâche 2) ; `CREATE_ADMIN` ne crée le compte qu'au premier démarrage et est

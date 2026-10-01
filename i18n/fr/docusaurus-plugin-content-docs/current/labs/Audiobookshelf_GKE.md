@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -52,7 +52,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -79,7 +79,7 @@ export REGION="us-central1"           # the region you deploy into
    `/data`, construit une image de conteneur légère qui enveloppe l'image amont
    (`FROM ghcr.io/advplyr/audiobookshelf`) dans Artifact Registry, et réserve une
    IP externe statique. Il n'y a **ni base de données Cloud SQL, ni Redis, ni
-   tâche d'initialisation** — Audiobookshelf initialise lui-même sa base de données SQLite au
+   job d'initialisation** — Audiobookshelf initialise lui-même sa base de données SQLite au
    premier démarrage, directement sur le volume persistant. Sans base de données à provisionner,
    les premiers déploiements prennent environ **15–25 minutes** (le build de l'image par Cloud Build et
    le provisionnement du PVC représentent l'essentiel de la durée).
@@ -143,7 +143,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — StatefulSet, pod et PVC :
 
@@ -165,7 +165,7 @@ export REGION="us-central1"           # the region you deploy into
    version épinglée (`2.17.0` au moment de la rédaction) — épinglez une étiquette explicite pour maîtriser
    délibérément les mises à niveau.
 
-4. **Gérez le volume persistant et les tâches :**
+4. **Gérez le volume persistant et les jobs :**
 
    ```bash
    kubectl get pvc -n "$NS"
@@ -187,13 +187,13 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$SERVICE" --tail=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -239,7 +239,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas d'une version d'Audi
   ```
 - **Corruption de la base de données ou de l'index des médias :** presque toujours causée par plus d'un
   rédacteur sur `/data`. Vérifiez que `max_instance_count = 1` et qu'aucun
-  `kubectl scale` manuel n'a été appliqué (une mise à l'échelle manuelle est annulée lors de l'application suivante, mais
+  `kubectl scale` manuel n'a été appliqué (une mise à l'échelle manuelle est annulée lors du prochain apply, mais
   peut causer des dégâts entre-temps).
 - **Erreurs de récupération d'image :** vérifiez que l'image existe dans Artifact Registry (Cloud Build
   enveloppe `ghcr.io/advplyr/audiobookshelf` dans votre registre) et que le compte de service

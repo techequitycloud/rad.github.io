@@ -43,7 +43,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Seul le mot de passe de la base de données est généré par le socle — Passbolt lui-même n'apporte aucun secret (la sortie `secret_ids` de `Passbolt_Common` est toujours vide) |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL est obligatoire.** `database_type = "MYSQL_8_0"` est imposé par
   `Passbolt_Common` ; Passbolt repose sur CakePHP avec un schéma exclusivement
@@ -350,7 +350,7 @@ comportement standard.
 |---|---|---|
 | `enable_redis` | `false` | Non utilisé par Passbolt. Présent pour la compatibilité avec la plateforme. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Intégration VPC-SC standard d'`App_CloudRun` — voir [App_CloudRun](App_CloudRun.md).
 
@@ -380,7 +380,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -391,7 +391,7 @@ d'explorer les ressources en cours d'exécution.
 > le **plan** avec une erreur claire et nommée avant la création de toute
 > ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
 | `enable_gcs_storage_volume` | `true` | Critical | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du conteneur. |

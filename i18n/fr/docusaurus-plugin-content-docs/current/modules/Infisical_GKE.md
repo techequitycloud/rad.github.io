@@ -31,7 +31,7 @@ Infisical s'exécute sous forme de pod Node.js (une image construite sur mesure 
 `infisical/infisical`) dans un `Deployment` sans état. Le déploiement associe
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js construits sur mesure, 2 vCPU / 2Gi par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Infisical ne prend pas en charge MySQL ni d'autres moteurs |
@@ -257,7 +257,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | `admin_organization` | `Default Organization` | Nom de l'organisation créée pour le compte amorcé. |
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|

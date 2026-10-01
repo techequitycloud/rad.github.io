@@ -32,7 +32,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods PHP (LinuxServer), 1 vCPU / 2 GiB par défaut, réplique unique (adossée à NFS) |
+| Calcul | GKE Autopilot | Pods PHP (LinuxServer), 1 vCPU / 2 GiB par défaut, réplica unique (adossé à NFS) |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — BookStack ne prend pas en charge PostgreSQL ni d'autres moteurs |
 | Stockage objet | Cloud Storage | Un bucket `data` dédié (`gcs-bookstack<tenant>-data`) provisionné automatiquement |
 | Fichiers persistants | Filestore / NFS | Images et pièces jointes téléversées conservées dans `/var/lib/bookstack` |
@@ -46,7 +46,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   applicative partagée (`database_type = "MYSQL_8_0"`) ; PostgreSQL n'est pas pris en
   charge et choisir un autre moteur empêche le démarrage.
 - **L'image précompilée `linuxserver/bookstack` est utilisée directement.** Il n'y a
-  pas de Cloud Build personnalisé ; l'image officielle LinuxServer.io est dupliquée
+  pas de Cloud Build personnalisé ; l'image officielle LinuxServer.io est mise en miroir
   dans Artifact Registry (`enable_image_mirroring = true`) et déployée telle quelle.
 - **Le conteneur écoute sur le port 80** (`container_port = 80`, `container_protocol = "http1"`).
 - **La persistance NFS des fichiers téléversés est activée par défaut.**
@@ -54,7 +54,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   jointes téléversées survivent aux redémarrages, aux redéploiements et au
   réordonnancement des pods. Comme BookStack est adossé à NFS, le Deployment utilise
   la stratégie de mise à jour `Recreate` (un seul pod sur le volume partagé).
-- **Une réplique unique est maintenue** (`min_instance_count = 1`, `max_instance_count = 1` ;
+- **Un réplica unique est maintenu** (`min_instance_count = 1`, `max_instance_count = 1` ;
   GKE ne permet pas la mise à zéro). Ne dépassez pas un pod sans coordination externe
   des sessions et du cache — plusieurs pods sur le même volume NFS et la même base se
   retrouvent en interblocage.
@@ -79,14 +79,14 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail BookStack {#a-gke-autopilot--the-bookstack-workload}
 
 Les pods BookStack sont ordonnancés sur Autopilot, qui facture le CPU et la mémoire
 que les pods demandent réellement. Comme l'application est adossée à NFS, la charge
-de travail s'exécute comme un Deployment à réplique unique utilisant la stratégie
+de travail s'exécute comme un Deployment à réplica unique utilisant la stratégie
 `Recreate`.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail
@@ -122,7 +122,7 @@ l'utilisateur de l'application.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour
 le modèle de connexion, les sauvegardes automatiques et la rotation des mots de
 passe, consultez [App_GKE](App_GKE.md).
 
@@ -166,14 +166,14 @@ l'**`APP_KEY`** Laravel (`base64:<44-char base64>`), utilisé pour chiffrer tout
 données que BookStack stocke sous forme chiffrée. Le mot de passe de la base de
 données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base figure dans les [Outputs](#5-outputs).
+Le nom du secret du mot de passe de la base figure dans les [sorties](#5-outputs).
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -183,7 +183,7 @@ avec un domaine personnalisé et un certificat géré par Google
 (`enable_custom_domain = true`), et une IP statique est réservée
 (`reserve_static_ip = true`) afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -233,7 +233,7 @@ règles d'alerte facultatifs sont disponibles.
   fichiers téléversés sont stockés sur le système de fichiers sous
   `/var/lib/bookstack`, adossé à NFS par défaut. Le Deployment utilise donc la
   stratégie `Recreate` afin qu'un seul pod écrive à tout moment sur le volume partagé
-  — ne passez pas à plusieurs répliques sans coordination externe.
+  — ne passez pas à plusieurs réplicas sans coordination externe.
 - **Chemin de santé.** La sonde de vivacité cible `/status` par défaut — le point de
   terminaison de santé JSON non authentifié de BookStack, qui indique l'état de
   l'application, de la base de données, du cache et des sessions. La sonde de
@@ -266,7 +266,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -283,11 +283,11 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer dupliquée — sans build personnalisé. |
-| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image dupliquée par défaut. |
-| `enable_image_mirroring` | `true` | Duplique l'image LinuxServer dans Artifact Registry avant le déploiement. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; laissez à 1 (pod unique adossé à NFS). |
-| `max_instance_count` | `1` | Nombre maximal de répliques. Ne l'augmentez pas sans coordination externe des sessions et du cache. |
+| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer mise en miroir — sans build personnalisé. |
+| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image mise en miroir par défaut. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image LinuxServer dans Artifact Registry avant le déploiement. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; laissez à 1 (pod unique adossé à NFS). |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. Ne l'augmentez pas sans coordination externe des sessions et du cache. |
 | `container_port` | `80` | BookStack écoute sur le port 80. |
 | `container_protocol` | `http1` | HTTP/1.1. |
 | `cpu_limit` | `1000m` | CPU par pod ; 1 vCPU par défaut. |
@@ -304,7 +304,7 @@ comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -327,7 +327,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Applique un ResourceQuota au namespace. |
+| `enable_resource_quota` | `false` | Applique un ResourceQuota à l'espace de noms. |
 | `quota_cpu_requests` / `quota_cpu_limits` | `""` | Quota de CPU. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Quota de mémoire — utilisez des unités binaires (`4Gi`, `8192Mi`). |
 | `quota_max_pods` / `quota_max_services` / `quota_max_pvcs` | `""` | Quotas sur le nombre d'objets. |
@@ -460,15 +460,15 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services par étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -481,7 +481,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -507,7 +507,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
 | `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
 | `database_type` | `MYSQL_8_0` | Critical | BookStack nécessite MySQL ; tout autre moteur empêche le démarrage. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | `APP_URL` (via `environment_variables`) | URL du LoadBalancer externe / du domaine personnalisé | High | Une URL de base erronée casse le chargement des ressources, les liens et les redirections de connexion. |
 | `enable_nfs` | `true` | High | Le désactiver fait perdre toutes les images et pièces jointes téléversées lors d'un redéploiement ou d'un réordonnancement de pod. |
 | `memory_limit` | `2Gi` | High | Des valeurs plus faibles exposent à des arrêts OOM lors d'éditions simultanées et de l'indexation en texte intégral. |
@@ -523,7 +523,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à BookStack, partagée
 avec la variante Cloud Run, est décrite dans
 **[BookStack_Common](BookStack_Common.md)**.

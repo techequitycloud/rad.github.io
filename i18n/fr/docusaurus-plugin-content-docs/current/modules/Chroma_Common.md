@@ -34,7 +34,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Bucket de données GCS | Déclare le bucket Cloud Storage `<prefix>-data` monté sur `/data` via GCS FUSE | Sortie `storage_buckets` |
 | Prévention des conflits PVC/GCS | Se transmet `enable_gcs_storage_volume = false` lorsque Chroma_GKE utilise un PVC de StatefulSet, ce qui évite un double montage sur `/data` | Section StatefulSet du guide Chroma_GKE |
 | Contrôles de santé | Fournit les chemins par défaut des sondes de démarrage et d'activité, tous deux fixés sur `/api/v2/heartbeat` | Section Observabilité des guides des plateformes |
-| Tâches d'initialisation | Accepte des tâches d'initialisation facultatives fournies par l'utilisateur ; n'injecte aucune tâche par défaut — Chroma n'a besoin d'aucun amorçage de base de données | Sortie `initialization_jobs` |
+| Jobs d'initialisation | Accepte des jobs d'initialisation facultatifs fournies par l'utilisateur ; n'injecte aucune tâche par défaut — Chroma n'a besoin d'aucun amorçage de base de données | Sortie `initialization_jobs` |
 
 ---
 
@@ -148,7 +148,7 @@ initialisé et prêt à traiter les requêtes.
 ## 7. Image de conteneur {#7-container-image}
 
 Chroma_Common définit `container_image = "chromadb/chroma"` avec `image_source = "custom"`,
-ce qui demande à Cloud Build de dupliquer l'image Docker Hub dans le dépôt
+ce qui demande à Cloud Build de mettre en miroir l'image Docker Hub dans le dépôt
 Artifact Registry du déploiement avant le démarrage de la charge de travail.
 L'étiquette de version exacte est contrôlée par `application_version` dans le
 module de plateforme (`latest` par défaut).

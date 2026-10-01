@@ -40,7 +40,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Entrée | URL Cloud Run / Cloud Load Balancing | `internal` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 | Distribution des images | Artifact Registry | L'image `jellyfin/jellyfin` y est copiée en miroir avant le déploiement |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Il n'y a pas de base de données externe.** Jellyfin stocke l'intégralité de sa
   bibliothèque — les bases SQLite, le XML de configuration, les métadonnées, les
@@ -62,7 +62,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Une seule instance active est la valeur par défaut.** `min_instance_count = 1`
   maintient le serveur multimédia démarré (évitant la latence d'un démarrage à froid
   en pleine lecture) et `max_instance_count = 1` conserve une bibliothèque SQLite
-  unique et partagée sur un seul volume. **N'exécutez pas plusieurs répliques** —
+  unique et partagée sur un seul volume. **N'exécutez pas plusieurs réplicas** —
   des écritures concurrentes sur un même fichier SQLite corrompent la bibliothèque.
 - **Cloud Run convient surtout à un usage léger ou de démonstration.** La latence de
   GCS FUSE et le modèle d'exécution sans état de Cloud Run, limité par un délai par
@@ -309,7 +309,7 @@ avec leur comportement standard.
 | `cpu_limit` | `1000m` | CPU par instance ; augmentez-le pour le transcodage en direct. |
 | `memory_limit` | `1Gi` | Mémoire par instance ; augmentez-la pour les grandes bibliothèques. |
 | `min_instance_count` | `1` | Gardez 1 pour rester actif et éviter les démarrages à froid en pleine lecture. |
-| `max_instance_count` | `1` | **Gardez 1.** Une bibliothèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs répliques. |
+| `max_instance_count` | `1` | **Gardez 1.** Une bibliothèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs réplicas. |
 | `container_port` | `8096` | Port web/API de Jellyfin. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages GCS FUSE et NFS. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0 à 3600 secondes). |
@@ -359,7 +359,7 @@ Intégration Cloud Build / Cloud Deploy standard de App_CloudRun — voir
 SQL) ; conservées pour la compatibilité avec le socle. Ce groupe contient également
 `nfs_instance_name` / `nfs_instance_base_name` pour la découverte NFS.
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -443,17 +443,17 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, une valeur hors plage pour `container_port`/`backup_retention_days`/`timeout_seconds`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Bucket GCS `/config` | Ne jamais le supprimer ni le faire pointer ailleurs | Critical | Le bucket `/config` contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface tout le serveur. |
-| `max_instance_count` | `1` | Critical | Plusieurs répliques écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
+| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
 | `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `execution_environment` | `gen2` | High | Gen1 ne peut pas monter GCS FUSE, si bien que `/config` n'est jamais persistant. |
 | `min_instance_count` | `1` | High | Les démarrages à froid après une mise à l'échelle à zéro interrompent les flux en cours et rechargent la bibliothèque. |

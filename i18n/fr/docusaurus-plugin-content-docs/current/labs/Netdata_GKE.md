@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Netdata sur GKE Autopilot dans votre prop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Netdata est un agent open source de surveillance en temps réel des infrastructures et des applications,
 qui collecte des milliers de métriques par seconde et les restitue sur un
@@ -31,12 +31,12 @@ durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, maintenir l'échelle à un seul réplica, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -91,7 +91,7 @@ export REGION="us-central1"           # the region you deploy into
    dominés par le build de l'image et la planification du pod — généralement **10 à 20
    minutes**.
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres
    indépendants des noms :
 
    ```bash
@@ -184,7 +184,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -237,10 +237,10 @@ persistance PVC contre GCS FUSE).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et son namespace, le PVC (et avec lui tout l'historique de surveillance accumulé), le
+et son espace de noms, le PVC (et avec lui tout l'historique de surveillance accumulé), le
 bucket GCS de repli, tout secret Secret Manager et les images Artifact Registry.
 Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre partagé)
 sont gérées séparément et ne sont pas supprimées ici.
@@ -256,4 +256,4 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, maintenir un seul réplica, mettre à jour la version, gérer les secrets et le stockage, surveiller le quota SSD |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité facultatif |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC/quota, de mode de persistance et d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et l'historique des métriques accumulé |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et l'historique des métriques accumulé |

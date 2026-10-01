@@ -180,7 +180,7 @@ Rocket.Chat lors du premier lancement.
 
 - **Sonde de démarrage** — HTTP `GET /api/info`, délai initial de 15 secondes, période
   de 10 secondes, fenêtre de 10 tentatives.
-- **Sonde d'activité** — HTTP `GET /api/info`, délai initial de 30 secondes, période de
+- **Sonde de vivacité** — HTTP `GET /api/info`, délai initial de 30 secondes, période de
   30 secondes, fenêtre de 3 tentatives.
 
 ---

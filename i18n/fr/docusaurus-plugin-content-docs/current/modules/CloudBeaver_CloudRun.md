@@ -65,7 +65,7 @@ le déploiement assemble un ensemble volontairement restreint de services Google
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et des ressources sont
-indiqués dans les [Outputs](#5-outputs) du déploiement.
+indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service CloudBeaver {#a-cloud-run--the-cloudbeaver-service}
 
@@ -209,14 +209,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
@@ -224,7 +224,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `cloudbeaver` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | _(défini)_ | Nom lisible affiché dans la console. |
@@ -233,7 +233,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | CPU par instance. |
 | `memory_limit` | `1Gi` | Mémoire par instance. CloudBeaver s'exécute sur la JVM — ne descendez pas en dessous de 512Mi. |
@@ -243,7 +243,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Internet public par défaut. Définissez `internal` pour restreindre une console de bases de données au VPC, ou placez-la derrière un équilibreur de charge HTTPS + IAP pour un accès externe contrôlé. |
 | `vpc_egress_setting` | _(défini)_ | Détermine quel trafic sortant passe par le VPC — nécessaire pour atteindre des bases de données privées. |
@@ -251,14 +251,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets transmis au conteneur. CloudBeaver n'en a besoin d'aucun pour le premier démarrage. |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom de secret Secret Manager. Aucun secret applicatif n'est généré par défaut. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne les buckets GCS, y compris le bucket de l'espace de travail CloudBeaver. |
 | `storage_buckets` | `[]` | Buckets GCS supplémentaires au-delà du bucket de l'espace de travail provisionné automatiquement. |
@@ -267,14 +267,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Vide — CloudBeaver n'a besoin d'aucun job d'amorçage (pas de base de données applicative). |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` délai de 15s, 10 échecs | Sonde de démarrage ciblant l'interface de CloudBeaver. |
 | `liveness_probe` | HTTP `/` délai de 30s | Sonde de vivacité ciblant l'interface de CloudBeaver. |
@@ -286,12 +286,12 @@ ne sont pas destinées à être surchargées.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
 ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `cloudbeaver_url` | URL du service pour l'interface web de CloudBeaver (port 8978). URL publique `run.app` avec la valeur par défaut `ingress_settings = "all"` ; URL VPC interne lorsqu'elle vaut `"internal"`. |
@@ -334,7 +334,7 @@ ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à CloudBeaver,
 partagée avec la variante GKE, est décrite dans
 **[CloudBeaver_Common](CloudBeaver_Common.md)**.

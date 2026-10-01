@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Loki sur Cloud Run dans votre propre proj
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 45 minutes
+**Durée estimée :** 30–45 minutes
 
 Grafana Loki est un système d'agrégation de journaux évolutif horizontalement (« Prometheus pour
 les journaux ») qui n'indexe qu'un petit ensemble de libellés par flux de journaux plutôt que le texte
@@ -33,13 +33,13 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et exécuter une première requête LogQL.
 - Effectuer les opérations du jour 2 — inspecter, comprendre la contrainte de mise à l'échelle, mettre à jour et
   inspecter l'utilisation du stockage GCS.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -222,7 +222,7 @@ figé).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement
@@ -247,4 +247,4 @@ ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, comprendre la contrainte de mise à l'échelle à instance unique, mettre à jour la version, surveiller l'utilisation de GCS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de santé du service, d'IAM GCS, de build de l'image et de requêtes |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime le service, le bucket de stockage (et ses données de journaux) et les images |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime le service, le bucket de stockage (et ses données de journaux) et les images |

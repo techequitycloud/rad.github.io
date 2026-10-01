@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Nextcloud sur GKE Autopilot dans votre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Nextcloud est une plateforme open source auto-hébergée de synchronisation de fichiers et de collaboration. Ce lab
 vous fait parcourir le cycle de vie opérationnel complet du module **Nextcloud on GKE Autopilot**
@@ -28,12 +28,12 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -74,7 +74,7 @@ export REGION="us-central1"           # the region you deploy into
    `occ maintenance:install` de manière synchrone au tout premier démarrage du pod — la sonde de
    démarrage accorde jusqu'à 10 minutes pour cette opération avant que le trafic ne soit acheminé.
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -159,7 +159,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -190,7 +190,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   fraîchement créée, la première installation peut prendre plusieurs minutes — attendez et réessayez plutôt que
   de forcer le redémarrage du pod.
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base de données a bien été matérialisé dans le namespace et que le job db-init s'est terminé.
+  secret du mot de passe de la base de données a bien été matérialisé dans l'espace de noms et que le job db-init s'est terminé.
   Le sidecar Cloud SQL Auth Proxy doit s'exécuter aux côtés du conteneur Nextcloud.
 - **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
@@ -199,7 +199,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   ```
 - **Erreurs HTTP 503 « File is locked » :** elles surviennent lorsque plusieurs réplicas partagent
   des écritures sans backend de verrouillage Redis. Confirmez que `enable_redis = true` et que
-  l'hôte Redis est joignable depuis le namespace.
+  l'hôte Redis est joignable depuis l'espace de noms.
 - **Erreur « Access through untrusted domain » :** le nom d'hôte utilisé pour atteindre Nextcloud
   ne figure pas dans `NEXTCLOUD_TRUSTED_DOMAINS`. Ajoutez-le à `application_domains` et
   appliquez via **Update**.
@@ -213,10 +213,10 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et son namespace, la base de données Cloud SQL, le partage NFS Filestore, les secrets Secret Manager, les buckets
+et son espace de noms, la base de données Cloud SQL, le partage NFS Filestore, les secrets Secret Manager, les buckets
 GCS et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC,
 le cluster GKE, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
 ici.
@@ -232,4 +232,4 @@ ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets et le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de premier démarrage, de base de données, de verrouillage de fichiers, de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

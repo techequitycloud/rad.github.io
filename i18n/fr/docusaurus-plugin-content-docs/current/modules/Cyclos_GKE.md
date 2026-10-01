@@ -59,14 +59,14 @@ services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres identifiants
-figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres identifiants
+figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Cyclos {#a-gke-autopilot--the-cyclos-workload}
 
 Les pods Cyclos sont planifiés sur Autopilot, qui facture le CPU et la mémoire que les pods demandent
 réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et le nombre maximal
-de répliques.
+de réplicas.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail Cyclos pour voir les pods,
   les révisions et les événements. Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
@@ -83,7 +83,7 @@ de travail (Deployment ou StatefulSet).
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Cyclos stocke toutes les données applicatives (comptes, transactions, membres) dans une instance Cloud
-SQL for PostgreSQL 15 gérée. Lors du premier déploiement, une tâche d'initialisation se connecte en tant que
+SQL for PostgreSQL 15 gérée. Lors du premier déploiement, un job d'initialisation se connecte en tant que
 superutilisateur `postgres`, crée la base de données et l'utilisateur de l'application, et installe les six
 extensions PostgreSQL requises. Les démarrages suivants utilisent l'utilisateur de l'application.
 
@@ -99,7 +99,7 @@ extensions PostgreSQL requises. Les démarrages suivants utilisent l'utilisateur
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le mot de passe
-figurent tous dans les [Outputs](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques
+figurent tous dans les [sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques
 et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage — gestionnaire de contenu de fichiers {#c-cloud-storage--file-content-manager}
@@ -136,7 +136,7 @@ configuration. La tâche `db-init` utilise `ROOT_PASSWORD` pour installer les ex
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base de données figure dans les [Outputs](#5-outputs). Consultez
+Le nom du secret du mot de passe de la base de données figure dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
 ### E. Réseau et entrée {#e-networking--ingress}
@@ -190,10 +190,10 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 - **Chemin des sondes de santé.** Les sondes de démarrage et de vivacité ciblent toutes deux `/api`, qui ne renvoie
   HTTP 200 qu'une fois Cyclos entièrement initialisé et le schéma appliqué. Utiliser un
   autre chemin (comme `/`) aboutit à une redirection 302 et la sonde ne réussit jamais.
-- **Instance unique par défaut.** Cyclos Community Edition utilise par défaut une seule réplique
+- **Instance unique par défaut.** Cyclos Community Edition utilise par défaut un seul réplica
   (`max_instance_count = 1`). Augmenter ce nombre sans configuration du clustering Hazelcast
   entraîne un traitement non atomique des transactions et une corruption potentielle des données.
-- **Clustering Hazelcast (facultatif).** Pour les déploiements à plusieurs répliques, définissez
+- **Clustering Hazelcast (facultatif).** Pour les déploiements à plusieurs réplicas, définissez
   `workload_type = "StatefulSet"` et configurez la découverte Hazelcast via
   `environment_variables`. Le fichier `hazelcast.xml` fourni utilise la découverte DNS Kubernetes via
   la variable d'environnement `CLUSTER_K8S_DNS`.
@@ -231,7 +231,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -253,8 +253,8 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Spécification complète des ressources. **Remplacez-la par au moins `"2000m"` de CPU et `"2Gi"` de mémoire.** `"4Gi"` est recommandé en production. |
 | `cpu_limit` | `2000m` | Variable de commodité transmise à Cyclos_Common. Remplacée en pratique par `container_resources`. |
 | `memory_limit` | `4Gi` | Variable de commodité transmise à Cyclos_Common. Remplacée en pratique par `container_resources`. |
-| `min_instance_count` | `1` | Nombre minimal de répliques. Gardez ≥ 1 pour éviter les démarrages à froid lents de la JVM. |
-| `max_instance_count` | `1` | Nombre maximal de répliques. Gardez `1` sauf si le clustering Hazelcast est configuré. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Gardez ≥ 1 pour éviter les démarrages à froid lents de la JVM. |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. Gardez `1` sauf si le clustering Hazelcast est configuré. |
 | `container_port` | `8080` | Cyclos/Tomcat écoute sur le port 8080. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy. Cyclos utilise par défaut TCP direct — activez-le uniquement si son besoin est vérifié. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
@@ -266,7 +266,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. SMTP et `CYCLOS_OPTIONS` se configurent ici. Les variables Cyclos principales sont injectées automatiquement. |
 | `secret_environment_variables` | `{}` | Table de correspondance variable d'environnement → nom du secret Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -292,7 +292,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets du namespace. |
+| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — des entiers nus sont lus comme des octets et bloquent l'ordonnancement. |
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
@@ -312,7 +312,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `uptime_check_config` | `{ enabled = false, path = "/" }` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -371,7 +371,7 @@ paire `application_database_*` à ses valeurs par défaut.
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le provisionnement. Consultez
 [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -407,15 +407,15 @@ paire `application_database_*` à ses valeurs par défaut.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide de localiser
 et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | Adresse IP externe du LoadBalancer (lorsqu'une adresse IP statique est réservée). |
@@ -428,7 +428,7 @@ et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'importation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -451,7 +451,7 @@ et d'explorer les ressources en cours d'exécution.
 | `database_type` | `POSTGRES` ou `POSTGRES_15` | Critical | Cyclos exige PostgreSQL. MySQL ou `NONE` empêche complètement le démarrage. |
 | `db_name` / `db_user` | définis une fois (`cyclos` / `cyclos`) | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données financières. |
 | `max_instance_count` | `1` (par défaut) | Critical | Plus de 1 sans clustering Hazelcast entraîne des transactions non atomiques et une corruption potentielle des données. |
-| `application_name` | `cyclos` (ne pas modifier) | Critical | Intégré au namespace GKE, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
+| `application_name` | `cyclos` (ne pas modifier) | Critical | Intégré à l'espace de noms GKE, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
 | Variable d'environnement `cyclos.storedFileContentManager` | `gcs` (codé en dur) | Critical | La surcharger avec `local` écrit les fichiers dans le stockage éphémère du pod ; tous les téléversements sont perdus au redémarrage. |
 | `memory_limit` (dans `container_resources`) | `≥ 2Gi` (`4Gi` recommandé) | Critical | La JVM lève `OutOfMemoryError` ; le pod est tué pour manque de mémoire (code de sortie 137). |
 | Variable d'environnement `CYCLOS_OPTIONS` | `-Xmx3g` pour une limite de 4 GiB | Critical | Sans `-Xmx`, la JVM croît jusqu'à consommer toute la mémoire du conteneur ; le pod est tué pour manque de mémoire sous charge. |
@@ -469,7 +469,7 @@ et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration
 applicative propre à Cyclos, partagée avec la variante Cloud Run, est décrite dans
 **[Cyclos_Common](Cyclos_Common.md)**.
 

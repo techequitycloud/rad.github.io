@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Azimutt sur GKE Autopilot dans votre prop
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Azimutt est un outil open source de nouvelle génération pour explorer les schémas de bases de données et
 produire des ERD (diagrammes entité-association) sur des bases de données réelles, construit avec
@@ -31,12 +31,12 @@ durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -80,7 +80,7 @@ export REGION="us-central1"           # the region you deploy into
    de l'application. Les premiers déploiements prennent environ **20 à 35 minutes** (la création de Cloud SQL
    domine).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -134,8 +134,8 @@ export REGION="us-central1"           # the region you deploy into
    la page de détails du déploiement — le module possède la spécification de la charge de travail ; la mise à l'échelle
    est donc une modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
    annulée lors du prochain apply). Contrairement aux applications dotées d'une file de tâches en mémoire,
-   Azimutt utilise PostgreSQL (Oban) pour le travail en arrière-plan ; passer à plus d'une
-   réplique ne nécessite donc pas de Redis. GKE ne prend pas en charge la réduction à zéro ;
+   Azimutt utilise PostgreSQL (Oban) pour le travail en arrière-plan ; passer à plus d'un
+   réplica ne nécessite donc pas de Redis. GKE ne prend pas en charge la réduction à zéro ;
    `min_instance_count` reste donc à sa valeur par défaut de `1`. `session_affinity =
    ClientIP` est défini par défaut pour maintenir un client sur un même pod.
 
@@ -175,7 +175,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer. Les lignes `cloud-entrypoint`
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer). Les lignes `cloud-entrypoint`
    indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT` :
 
    ```bash
@@ -233,10 +233,10 @@ les pièges propres à chaque paramètre (y compris la règle essentielle de ne 
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL, les secrets Secret Manager, le partage Cloud Filestore,
+et l'espace de noms, la base de données Cloud SQL, les secrets Secret Manager, le partage Cloud Filestore,
 le bucket GCS et les images Artifact Registry. Les ressources appartenant à
 **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé, le registre) sont gérées
 séparément et ne sont pas supprimées ici.
@@ -252,4 +252,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets et le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

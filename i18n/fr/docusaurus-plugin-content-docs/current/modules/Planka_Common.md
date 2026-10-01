@@ -32,12 +32,12 @@ fournisseur d'identité ni un produit d'authentification.
 
 | Domaine | Fourni par Planka_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Enveloppe légère construite `FROM ghcr.io/plankanban/planka:<version>` (image officielle) via Cloud Build ; mise en miroir dans Artifact Registry | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe légère construite `FROM ghcr.io/plankanban/planka:<version>` (image officielle) via Cloud Build ; mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Point d'entrée cloud | `entrypoint.sh` compose `DATABASE_URL` à partir des variables `DB_*` injectées et dérive `BASE_URL` de l'URL du service avant de passer la main au `start.sh` de l'image | Comportement à l'exécution sur les deux plateformes |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et le rôle | Output `initialization_jobs` |
-| Secrets applicatifs | **Deux secrets réels** — `SECRET_KEY` (signature des sessions/jetons) et `DEFAULT_ADMIN_PASSWORD` (crée le compte administrateur initial) | Output `secret_ids` |
-| Stockage d'objets | Déclare un bucket **Cloud Storage** (`storage`) pour les pièces jointes, avatars et arrière-plans | Output `storage_buckets` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et le rôle | Sortie `initialization_jobs` |
+| Secrets applicatifs | **Deux secrets réels** — `SECRET_KEY` (signature des sessions/jetons) et `DEFAULT_ADMIN_PASSWORD` (crée le compte administrateur initial) | Sortie `secret_ids` |
+| Stockage d'objets | Déclare un bucket **Cloud Storage** (`storage`) pour les pièces jointes, avatars et arrière-plans | Sortie `storage_buckets` |
 | Contrôles de santé | Fournit les sondes de démarrage/vivacité par défaut ciblant `/` — la cible de contrôle de santé réelle et non authentifiée de Planka | §Observabilité dans les guides de plateforme |
 
 ---

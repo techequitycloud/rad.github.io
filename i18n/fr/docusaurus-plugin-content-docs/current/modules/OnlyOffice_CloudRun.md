@@ -34,7 +34,7 @@ convertisseurs, nginx et RabbitMQ (AMQP) sous `supervisord`. Ce module construit
 surcouche personnalisée autour d'elle et externalise PostgreSQL (Cloud SQL) et Redis ; le
 RabbitMQ embarqué reste interne, sur localhost.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur construit sur mesure, 2 vCPU / 4 GiB par défaut, autoscaling serverless ; mise à l'échelle à zéro prise en charge |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — une garde au moment du plan rejette MySQL et tout autre moteur |
@@ -44,7 +44,7 @@ RabbitMQ embarqué reste interne, sur localhost.
 | Secrets | Secret Manager | `JWT_SECRET` de 48 caractères généré automatiquement ; mot de passe de base de données géré séparément |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Une garde inter-variables au moment du plan, dans le fichier
   `validation.tf` de ce module, rejette tout `database_type` autre que `POSTGRES_13`/`14`/`15`/`NONE`
@@ -311,7 +311,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Toujours true — duplique l'image de base Docker Hub dans Artifact Registry avant le build personnalisé. |
+| `enable_image_mirroring` | `true` | Toujours true — met en miroir l'image de base Docker Hub dans Artifact Registry avant le build personnalisé. |
 | `container_build_config` | construction de l'image de surcouche | Configuration du Dockerfile et des arguments de build ; `build_args` définit `ONLYOFFICE_VERSION` (voir la vue d'ensemble). |
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `container_protocol` | `http1` | Version du protocole HTTP. |
@@ -319,7 +319,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `additional_services` / `additional_containers` | `[]` | Non utilisés par ce module — inertes sauf configuration explicite. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec la convention ; non référencée par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -380,7 +380,7 @@ Document Server lui-même). Consultez [App_CloudRun](App_CloudRun.md).
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Bucket(s) GCS supplémentaire(s) en plus du bucket `storage` provisionné automatiquement. |
 | `enable_nfs` | `true` | Activé par défaut — stockage partagé des pièces jointes et source de l'hôte Redis de repli. |
 | `nfs_mount_path` | `/opt/onlyoffice/storage` | Chemin de montage dans le conteneur. |
-| `nfs_instance_name` / `nfs_instance_base_name` | `""` / `app-nfs` | VM NFS existante à utiliser, ou nom de base d'une VM créée en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | `""` / `app-nfs` | VM NFS existante à utiliser, ou nom de base d'une VM créée en mode intégré (inline). |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (requiert gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -395,7 +395,7 @@ Document Server lui-même). Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivée | Rotation du mot de passe de la base de données. |
 | `application_database_name` / `application_database_user` | `crappdb` / `crappuser` | Simple miroir pour la cohérence avec le socle — ce module raccorde la base de données via `db_name`/`db_user` ci-dessus, et non via celles-ci ; inertes à moins que le module ne soit raccordé autrement. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -421,7 +421,7 @@ Document Server lui-même). Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -461,14 +461,14 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. OnlyOffice ajoute ses propres gardes inter-variables dans `validation.tf` : `database_type` limité à PostgreSQL, `enable_redis` obligatoire, couplage `redis_host`/`enable_nfs`, `min_instance_count <= max_instance_count` et cohérence entre `enable_cloudsql_volume` et `database_type = "NONE"`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de la moindre ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par Document Server. |
 | `enable_redis` | `true` | Critical | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état des sessions et de l'édition ne peut pas être coordonné entre les instances. |
@@ -491,7 +491,7 @@ ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à OnlyOffice
 partagée avec la variante GKE — le secret JWT, l'initialisation de la base de données, l'image de conteneur
 et son point d'entrée, les paramètres de base de l'application et le comportement des sondes de santé — est décrite

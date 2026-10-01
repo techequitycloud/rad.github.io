@@ -151,7 +151,7 @@ Deux secrets authentik sont générés automatiquement :
 Consultez [Authentik_Common](Authentik_Common.md) pour le modèle complet des secrets et
 [App_GKE](App_GKE.md) pour les détails de SecretSync.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP LoadBalancer externe ; un domaine
 personnalisé avec un certificat géré par Google peut être activé, et une IP statique est
@@ -182,10 +182,10 @@ stdout/stderr du conteneur). Les métriques de GKE et de Cloud SQL arrivent dans
 
 ## 3. Comportement de l'application authentik {#3-authentik-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une unique tâche d'initialisation exécute `db-init.sh`
-  avec `postgres:15-alpine` : elle attend PostgreSQL, crée le rôle et la base de données
+- **Configuration de la base de données au premier déploiement.** Un unique job d'initialisation exécute `db-init.sh`
+  avec `postgres:15-alpine` : il attend PostgreSQL, crée le rôle et la base de données
   propres au locataire, accorde les privilèges, accorde `cloudsqlsuperuser` par précaution,
-  et signale au sidecar proxy de s'arrêter pour que la tâche se termine. Idempotente et
+  et signale au sidecar proxy de s'arrêter pour que la tâche se termine. Idempotent et
   réexécutable sans risque.
 - **Démarrage avec auto-migration.** Le serveur authentik exécute ses propres migrations Django à
   chaque démarrage, protégées par un verrou consultatif PostgreSQL afin que des pods concurrents n'entrent pas
@@ -225,7 +225,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
@@ -234,15 +234,15 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `authentik` | Nom de base des ressources (espace de noms, secrets, buckets). Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `authentik Identity Provider` | Nom lisible. |
@@ -250,7 +250,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | Image enveloppe légère construite via Cloud Build (ajoute le point d'entrée cloud + le lanceur du worker). |
@@ -263,14 +263,14 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres `AUTHENTIK_*` supplémentaires (p. ex. e-mail/SMTP : `AUTHENTIK_EMAIL__HOST`, …). Ne définissez pas `AUTHENTIK_SECRET_KEY` ni `AUTHENTIK_POSTGRESQL__*` ici. |
 | `secret_environment_variables` | `{}` | Table de correspondance variable d'environnement → nom de secret Secret Manager. Les clés ne doivent pas contenir `__` (CRD SecretSync). |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP externe pour le SSO navigateur et les rappels OAuth. |
 | `workload_type` | `Deployment` (auto) | authentik est sans état ; un StatefulSet est inutile. |
@@ -279,28 +279,28 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Si vous l'activez, dimensionnez les demandes à ≥ 2× un pod et utilisez des suffixes de mémoire binaires (`"8Gi"`). |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité des connexions pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/-/health/ready/`, délai 60s, 40×15s | Non authentifiée. Seuil généreux pour les migrations du premier démarrage (budget d'environ 11 min). |
 | `liveness_probe` | HTTP `/-/health/live/`, délai 60s, 3×30s | Vérification non authentifiée que le processus est vivant. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif (pointez-le vers `/-/health/live/`). |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique tâche intégrée `db-init`. |
 | `cron_jobs` | `[]` | Inutile — le worker co-localisé exécute les tâches planifiées d'authentik. |
@@ -314,14 +314,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Facultatif ; authentik conserve les médias sur GCS, pas sur NFS. |
 | `nfs_mount_path` | `/opt/authentik/storage` | Chemin de montage dans le conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Le bucket `/media` est déclaré par `Authentik_Common`. |
 | `gcs_volumes` | `[]` | Montages GCS Fuse supplémentaires ; `/media` est ajouté automatiquement. |
@@ -329,13 +329,13 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 15 — Redis {#group-15--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | **Sans effet.** authentik ≥ 2025.10 a entièrement supprimé Redis ; `main.tf` fixe `enable_redis = false`. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | authentik exige PostgreSQL — les valeurs MySQL sont rejetées par la validation. |
 | `application_database_name` | `authentik` | Nom de base de la base de données (préfixé par le locataire au déploiement). Immuable après le premier déploiement. |
@@ -344,7 +344,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
 | `backup_retention_days` | `7` | Rétention ; augmentez-la pour la production ou la conformité. |
@@ -352,7 +352,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Ingress + certificat géré pour les noms d'hôte personnalisés. |
 | `application_domains` | `[]` | Nom(s) d'hôte à servir. Enregistrez les URI de redirection OIDC sur le domaine que les utilisateurs atteignent réellement. |
@@ -360,20 +360,20 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | IAP devant un IdP impose un double contrôle à chaque connexion et casse les rappels OAuth/SAML — laissez-le désactivé sauf si vous savez en avoir besoin. |
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Politique WAF sur le backend de l'Ingress — recommandée pour un IdP public. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
@@ -400,7 +400,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `/media`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -414,26 +414,26 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTIK_SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler | Critique | La renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants stockés, jetons). |
-| `database_type` | `POSTGRES_15` | Critique | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
-| Ports d'écoute du worker (gérés par le point d'entrée) | Conservez les valeurs loopback par défaut `AUTHENTIK_LISTEN__*` du point d'entrée | Critique | Le `ak worker` co-localisé démarre lui aussi un écouteur HTTP et hérite du `0.0.0.0:9000` par défaut du serveur ; s'il remporte la course au bind, il répond à **toutes** les routes — y compris les points de terminaison de santé — par des 200 vides : une interface vide alors que les sondes du kubelet semblent vertes. Le point d'entrée épingle le worker sur des ports loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur détienne `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
-| `min_instance_count` | `≥ 1` | Élevé | `0` n'a pas de sens pour le worker co-localisé — les tâches d'arrière-plan et la synchronisation des outposts s'arrêtent ; les WebSockets des outposts se déconnectent. |
-| Clés de `secret_environment_variables` | Noms simples, sans `__` | Élevé | La CRD SecretSync rejette à l'apply les clés contenant `__` (p. ex. `AUTHENTIK_POSTGRESQL__PASSWORD`) — ce mappage relève du point d'entrée, pas d'un secret synchronisé. |
-| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Moyen | Pointer la sonde vers une page authentifiée renvoie 401/403 au kubelet — le pod ne devient jamais prêt alors qu'authentik a bien démarré. |
-| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Moyen | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
-| `application_version` | Épingler une version | Moyen | `latest` est épinglé silencieusement sur `2026.5.4` ; un épinglage explicite rend les montées de version délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
-| `quota_memory_requests` / `_limits` | Unités binaires (`8Gi`), ≥ 2× un pod | Critique | Des entiers nus sont des octets et bloquent toute planification de pods ; un quota dimensionné pour un seul pod bloque les mises à jour progressives. |
-| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Laisser non défini | Moyen | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts entraîne une authentification avec un rôle inexistant (les noms sont préfixés par le locataire). |
-| `enable_iap` | `false` | Moyen | IAP impose un double contrôle à chaque connexion et casse les rappels OAuth/SAML provenant de parties externes. |
-| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — une panne totale des connexions. |
+| `AUTHENTIK_SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler | Critical | La renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants stockés, jetons). |
+| `database_type` | `POSTGRES_15` | Critical | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
+| Ports d'écoute du worker (gérés par le point d'entrée) | Conservez les valeurs loopback par défaut `AUTHENTIK_LISTEN__*` du point d'entrée | Critical | Le `ak worker` co-localisé démarre lui aussi un écouteur HTTP et hérite du `0.0.0.0:9000` par défaut du serveur ; s'il remporte la course au bind, il répond à **toutes** les routes — y compris les points de terminaison de santé — par des 200 vides : une interface vide alors que les sondes du kubelet semblent vertes. Le point d'entrée épingle le worker sur des ports loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur détienne `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
+| `min_instance_count` | `≥ 1` | High | `0` n'a pas de sens pour le worker co-localisé — les tâches d'arrière-plan et la synchronisation des outposts s'arrêtent ; les WebSockets des outposts se déconnectent. |
+| Clés de `secret_environment_variables` | Noms simples, sans `__` | High | La CRD SecretSync rejette à l'apply les clés contenant `__` (p. ex. `AUTHENTIK_POSTGRESQL__PASSWORD`) — ce mappage relève du point d'entrée, pas d'un secret synchronisé. |
+| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Medium | Pointer la sonde vers une page authentifiée renvoie 401/403 au kubelet — le pod ne devient jamais prêt alors qu'authentik a bien démarré. |
+| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Medium | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
+| `application_version` | Épingler une version | Medium | `latest` est épinglé silencieusement sur `2026.5.4` ; un épinglage explicite rend les montées de version délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`8Gi`), ≥ 2× un pod | Critical | Des entiers nus sont des octets et bloquent toute planification de pods ; un quota dimensionné pour un seul pod bloque les mises à jour progressives. |
+| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Laisser non défini | Medium | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts entraîne une authentification avec un rôle inexistant (les noms sont préfixés par le locataire). |
+| `enable_iap` | `false` | Medium | IAP impose un double contrôle à chaque connexion et casse les rappels OAuth/SAML provenant de parties externes. |
+| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — une panne totale des connexions. |
 
 ---
 

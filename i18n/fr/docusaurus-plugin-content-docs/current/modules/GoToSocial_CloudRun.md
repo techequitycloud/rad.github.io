@@ -11,8 +11,7 @@ description: "Référence de configuration pour déployer GoToSocial sur Google 
 
 GoToSocial est un serveur ActivityPub/Fediverse léger et auto-hébergé — une
 petite alternative à Mastodon, écrite sous la forme d'un unique binaire Go
-statique. Ce module déploie GoToSocial sur **Cloud Run v2** au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+statique. Ce module déploie GoToSocial sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise GoToSocial et sur la
@@ -21,7 +20,7 @@ ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
 Run — identité du service, ingress et équilibrage de charge, scaling et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les
 répéter ici.
 
 ---
@@ -36,12 +35,12 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Binaire Go sur le port 8080, 2 vCPU / 4 GiB par défaut ; autoscaling serverless ; **`max_instance_count` fixé de manière stricte à 1** |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — fixé à `POSTGRES_15` ; MySQL n'est pas pris en charge. Base de données créée avec le classement obligatoire `LC_COLLATE='C' LC_CTYPE='C'` |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — fixé à `POSTGRES_15` ; MySQL n'est pas pris en charge. Base de données créée avec le classement obligatoire `LC_COLLATE='C' LC_CTYPE='C'` |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` + un compte de service HMAC dédié, utilisés sans condition via le client natif compatible S3 de GoToSocial — aucun montage GCS FUSE |
 | Secrets | Secret Manager | `SUPERUSER_PASSWORD` et paire de clés d'accès/secrète HMAC S3 générés automatiquement ; mot de passe de la base de données |
 | Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé via Cloud Armor en option |
 
-**Valeurs par défaut recommandées à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 avec le classement `C` est obligatoire.** `database_type =
   "POSTGRES_15"` est la valeur par défaut, et le `validation.tf` de `GoToSocial_CloudRun`
@@ -105,10 +104,10 @@ déploiement.
 Consultez [App_CloudRun](App_CloudRun.md) pour le scaling, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 GoToSocial stocke toutes les données de l'application (comptes, statuts,
-abonnements, métadonnées des médias) dans une instance gérée Cloud SQL pour
+abonnements, métadonnées des médias) dans une instance gérée Cloud SQL for
 PostgreSQL 15, créée avec le classement obligatoire `C` par le job `db-init`. Le
 service se connecte en TCP chiffré à l'IP privée de l'instance (voir la §3 pour
 comprendre pourquoi, contrairement à la plupart des applications Cloud Run de ce
@@ -153,9 +152,9 @@ Le conteneur principal de GoToSocial lit `SUPERUSER_PASSWORD` (uniquement via le
 job `admin-create`, et non le serveur en cours d'exécution),
 `GTS_STORAGE_S3_ACCESS_KEY` et `GTS_STORAGE_S3_SECRET_KEY` sous forme de
 variables d'environnement adossées à des secrets. Le mot de passe de la base de
-données est géré séparément par la fondation.
+données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~gotosocial"
@@ -168,15 +167,14 @@ pourquoi ces secrets transitent par `secret_ids`/`module_secret_env_vars`, et
 non par le champ (inactif) `secret_environment_variables` de l'objet de
 configuration propre à l'application.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app` (`ingress_settings
 = "all"`, requis pour la fédération ActivityPub publique). Un équilibreur de
 charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut
 être ajouté.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -232,7 +230,7 @@ disponibilité et des règles d'alerte facultatifs.
   gcloud secrets versions access latest --secret="$SECRET" --project "$PROJECT"
   ```
 - **`GTS_DB_TLS_MODE` vaut `"enable"` sur Cloud Run, et non `"disable"` ni
-  `"require"` — une véritable asymétrie au niveau de la fondation.**
+  `"require"` — une véritable asymétrie au niveau du socle.**
   L'implémentation de `db_host_env_var_name` d'`App_CloudRun` pointe toujours
   vers l'**IP privée** brute de Cloud SQL (`local.db_internal_ip`), et non vers
   le chemin de socket Unix auquel `DB_HOST` se résout autrement sur Cloud Run —
@@ -269,7 +267,7 @@ disponibilité et des règles d'alerte facultatifs.
 - **Propagation de l'IAM du stockage.** GoToSocial panique au démarrage s'il ne
   peut pas joindre son backend de stockage S3. L'attribution de
   `roles/storage.objectAdmin` au compte de service de stockage est câblée sur la
-  sortie `storage_buckets` propre à la fondation (et non sur un `depends_on`
+  sortie `storage_buckets` propre au socle (et non sur un `depends_on`
   portant sur tout le module, qui provoquerait un interblocage) — mais lors d'un
   premier déploiement, le tout premier démarrage du conteneur peut encore entrer
   en concurrence avec le délai de propagation de l'attribution IAM, d'environ
@@ -295,14 +293,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. Utilisez une valeur distincte (par ex. `cr`) de celle de toute variante GKE déployée en parallèle (par ex. `gke`) — des variantes CR et GKE sur le même tenant entrent en collision sur le nom du service, les secrets et les buckets. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de monitoring. |
@@ -310,7 +308,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `gotosocial` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `GoToSocial` | Nom lisible affiché dans la console. |
@@ -319,9 +317,9 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `host` | `gotosocial.local` | `GTS_HOST` — le domaine public. Intégré à chaque URI ActivityPub au moment de sa création, **immuable après le premier démarrage**. Définissez votre domaine réel avant la mise en production. |
 | `account_domain` | `""` | `GTS_ACCOUNT_DOMAIN` — domaine facultatif pour les identifiants personnalisés, distinct de `host`. Vaut `host` par défaut lorsqu'il est vide. Même risque d'immuabilité. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `prebuilt` | Déploie directement l'image officielle de Docker Hub. `custom` est pris en charge mais inutile — GoToSocial n'a besoin d'aucune enveloppe. |
@@ -339,7 +337,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 5 — Accès, réseau {#group-5--access-networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Obligatoire — la fédération comme l'accès des clients nécessitent une accessibilité publique. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'achemine que le trafic RFC 1918 via le VPC. |
@@ -348,7 +346,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Variables d'environnement en texte clair fusionnées avec les valeurs par défaut de `GoToSocial_Common`. |
 | `secret_environment_variables` | `{}` | Références de secrets destinées à l'opérateur — distinctes du mécanisme `secret_ids` qu'utilise `GoToSocial_Common` lui-même, avec lequel il ne faut pas les confondre (voir la §2 de [GoToSocial_Common](GoToSocial_Common.md)). |
@@ -357,7 +355,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; à augmenter pour la production. |
@@ -375,7 +373,7 @@ Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 
 ### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
 | `application_domains` | `[]` | Noms de domaine personnalisés — doivent correspondre à `host`. |
@@ -384,7 +382,7 @@ Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée des buckets GCS — `gotosocial.tf` fournit le véritable bucket `storage` via la sortie de `GoToSocial_Common`, en remplaçant la valeur par défaut générique `data` de cette variable. |
 | `enable_nfs` | `true` | Provisionne Filestore. **Non utilisé par GoToSocial** — le stockage des médias passe par le client S3 natif, et non par un montage. |
@@ -393,24 +391,24 @@ Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | **Validé au moment du plan** — `validation.tf` rejette tout ce qui n'est pas PostgreSQL 13/14/15 ou `NONE`. |
 | `db_name` | `gotosocial` | La base de données réellement créée (avec le classement `C`) et injectée sous la forme de `GTS_DB_DATABASE`. Immuable après le premier déploiement. |
 | `db_user` | `gotosocial` | Le rôle réellement créé et injecté sous la forme de `GTS_DB_USER` ; mot de passe généré automatiquement dans Secret Manager. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
-| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | `GTS_DB_ADDRESS` / `GTS_DB_PORT` / `GTS_DB_USER` / `GTS_DB_DATABASE` / `GTS_DB_PASSWORD` | **Définies par `main.tf`, et non laissées à leurs valeurs par défaut génériques vides** — c'est ce mécanisme qui permet au binaire GoToSocial de lire ses propres noms `GTS_DB_*` tout en recevant les valeurs de la génération standard `DB_*` de la fondation. |
+| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | `GTS_DB_ADDRESS` / `GTS_DB_PORT` / `GTS_DB_USER` / `GTS_DB_DATABASE` / `GTS_DB_PASSWORD` | **Définies par `main.tf`, et non laissées à leurs valeurs par défaut génériques vides** — c'est ce mécanisme qui permet au binaire GoToSocial de lire ses propres noms `GTS_DB_*` tout en recevant les valeurs de la génération standard `DB_*` du socle. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la paire intégrée `db-init` + `admin-create` fournie par `GoToSocial_Common`. |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme n'est définie pour GoToSocial. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP, `/readyz` (chemin purement informatif), `initial_delay_seconds=15`, `failure_threshold=10` | Le seul type de sonde qui fonctionne avec les points de terminaison de santé de GoToSocial conditionnés par le User-Agent. |
 | `liveness_probe` | `enabled = false` | Désactivée — l'API de Cloud Run rejette purement et simplement les sondes de vivacité TCP ; seule la sonde de démarrage conditionne le trafic. |
@@ -419,13 +417,13 @@ Exécution standard de scripts SQL personnalisés d'App_CloudRun — voir
 
 ### Groupe 21 — Redis {#group-21--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | GoToSocial ne dépend en rien de Redis — son cache est intégré au processus. Laissez `false`. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `enable_audit_logging` | `false` | Journaux Cloud Audit Logs détaillés. |
@@ -461,31 +459,31 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. `GoToSocial_CloudRun` ajoute lui-même des contrôles dans `validation.tf` pour `min_instance_count > max_instance_count`, Redis activé sans hôte et un `database_type` autre que PostgreSQL — ainsi, contrairement à certains modules de ce catalogue, l'erreur MySQL **est** détectée ici au moment du plan, et pas seulement à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. `GoToSocial_CloudRun` ajoute lui-même des contrôles dans `validation.tf` pour `min_instance_count > max_instance_count`, Redis activé sans hôte et un `database_type` autre que PostgreSQL — ainsi, contrairement à certains modules de ce catalogue, l'erreur MySQL **est** détectée ici au moment du plan, et pas seulement à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `host` (`GTS_HOST`) | Définissez votre domaine réel avant le premier déploiement | Critique | Intégré à chaque URI d'acteur/objet ActivityPub au moment de sa création ; le modifier une fois que de vrais comptes ou publications existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
-| `max_instance_count` | `1` (ne pas augmenter) | Critique | Le cache intégré au processus de GoToSocial ne dispose d'aucune synchronisation entre instances ; le projet amont ne prend pas en charge plusieurs instances sur la même base de données ou le même stockage — l'augmenter provoque des incohérences de données et de cache, et pas seulement un surcoût. |
-| `GTS_DB_TLS_MODE` | `enable` (défini automatiquement par `gotosocial.tf` ; ne le remplacez pas par `disable`/`require`) | Critique | `disable` échoue purement et simplement sur le chemin TCP vers l'IP privée de Cloud SQL sur Cloud Run (pas de chiffrement) ; `require` échoue à la vérification du certificat de Cloud SQL (pas d'IP SAN) — seul `enable` (chiffrer sans vérifier) fonctionne ici. |
-| `database_type` | `POSTGRES_15` | Critique | Validé au moment du plan par le `validation.tf` propre à `GoToSocial_CloudRun` — MySQL/SQL Server sont rejetés avant l'application, contrairement à d'autres modules de ce catalogue. |
-| Câblage IAM du stockage (`google_storage_bucket_iam_member`) | Laissez tel que livré (référence `module.app_cloudrun.storage_buckets["storage"]`) | Critique | GoToSocial panique au démarrage sans accès S3. Une alternative `depends_on = [module.app_cloudrun]` provoquerait un interblocage du déploiement avec son propre prérequis IAM. |
-| Sondes de santé (`startup_probe`/`liveness_probe`) | Laissez `type = "TCP"` | Élevé | Les points de terminaison `/readyz`/`/livez` de GoToSocial rejettent toute requête sans en-tête `User-Agent` (`418`) ; passer à `type = "HTTP"` fait échouer la sonde indéfiniment quel que soit le chemin, car le sondeur de Cloud Run n'en envoie jamais. |
-| Job `admin-create` | À déclencher manuellement après le déploiement | Élevé | GoToSocial ne propose aucun parcours d'inscription web pour le premier compte, et le job ne peut pas s'exécuter au moment de l'application sur Cloud Run (les jobs d'initialisation précèdent toujours la première révision) — sauter cette étape laisse l'instance sans aucun compte administrateur utilisable. |
-| `curl` manuel / contrôles de santé | Passez toujours `-A "<agent>"` | Moyen | Un `curl` nu (et la plupart des clients HTTP et outils de surveillance par défaut) reçoit `418 I'm a teapot` de la barrière User-Agent anti-scraping de GoToSocial, même sur des points de terminaison « non authentifiés » — facile à confondre avec une panne. |
-| `enable_redis` | `false` (par défaut) | Faible | GoToSocial ne dépend pas de Redis ; le laisser à `true` n'a aucun effet fonctionnel mais ajoute une configuration inutile dépendant de NFS. |
-| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | Laissez tels que livrés (alias `GTS_DB_*` définis dans `main.tf`) | Critique | Ce sont eux qui permettent au binaire de GoToSocial de lire les informations de connexion à la base de données fournies par la fondation — les remplacer casse entièrement la connexion à la base de données. |
-| `enable_iap` | `false` pour une instance publique | Moyen | IAP bloque le trafic de fédération ActivityPub non authentifié — uniquement adapté à une instance entièrement privée ou de test. |
-| Propagation de l'IAM du stockage au premier déploiement | Attendez-vous à une éventuelle nouvelle tentative ponctuelle | Faible | Lors d'un nouveau déploiement, le tout premier démarrage du conteneur peut entrer en concurrence avec la propagation de l'attribution IAM du compte de service de stockage (~1–2 minutes) ; l'application se rétablit à la révision ou à la tentative suivante sans aucune modification de configuration. |
+| `host` (`GTS_HOST`) | Définissez votre domaine réel avant le premier déploiement | Critical | Intégré à chaque URI d'acteur/objet ActivityPub au moment de sa création ; le modifier une fois que de vrais comptes ou publications existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
+| `max_instance_count` | `1` (ne pas augmenter) | Critical | Le cache intégré au processus de GoToSocial ne dispose d'aucune synchronisation entre instances ; le projet amont ne prend pas en charge plusieurs instances sur la même base de données ou le même stockage — l'augmenter provoque des incohérences de données et de cache, et pas seulement un surcoût. |
+| `GTS_DB_TLS_MODE` | `enable` (défini automatiquement par `gotosocial.tf` ; ne le remplacez pas par `disable`/`require`) | Critical | `disable` échoue purement et simplement sur le chemin TCP vers l'IP privée de Cloud SQL sur Cloud Run (pas de chiffrement) ; `require` échoue à la vérification du certificat de Cloud SQL (pas d'IP SAN) — seul `enable` (chiffrer sans vérifier) fonctionne ici. |
+| `database_type` | `POSTGRES_15` | Critical | Validé au moment du plan par le `validation.tf` propre à `GoToSocial_CloudRun` — MySQL/SQL Server sont rejetés avant l'application, contrairement à d'autres modules de ce catalogue. |
+| Câblage IAM du stockage (`google_storage_bucket_iam_member`) | Laissez tel que livré (référence `module.app_cloudrun.storage_buckets["storage"]`) | Critical | GoToSocial panique au démarrage sans accès S3. Une alternative `depends_on = [module.app_cloudrun]` provoquerait un interblocage du déploiement avec son propre prérequis IAM. |
+| Sondes de santé (`startup_probe`/`liveness_probe`) | Laissez `type = "TCP"` | High | Les points de terminaison `/readyz`/`/livez` de GoToSocial rejettent toute requête sans en-tête `User-Agent` (`418`) ; passer à `type = "HTTP"` fait échouer la sonde indéfiniment quel que soit le chemin, car le sondeur de Cloud Run n'en envoie jamais. |
+| Job `admin-create` | À déclencher manuellement après le déploiement | High | GoToSocial ne propose aucun parcours d'inscription web pour le premier compte, et le job ne peut pas s'exécuter au moment de l'application sur Cloud Run (les jobs d'initialisation précèdent toujours la première révision) — sauter cette étape laisse l'instance sans aucun compte administrateur utilisable. |
+| `curl` manuel / contrôles de santé | Passez toujours `-A "<agent>"` | Medium | Un `curl` nu (et la plupart des clients HTTP et outils de surveillance par défaut) reçoit `418 I'm a teapot` de la barrière User-Agent anti-scraping de GoToSocial, même sur des points de terminaison « non authentifiés » — facile à confondre avec une panne. |
+| `enable_redis` | `false` (par défaut) | Low | GoToSocial ne dépend pas de Redis ; le laisser à `true` n'a aucun effet fonctionnel mais ajoute une configuration inutile dépendant de NFS. |
+| `db_host_env_var_name` / `db_port_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | Laissez tels que livrés (alias `GTS_DB_*` définis dans `main.tf`) | Critical | Ce sont eux qui permettent au binaire de GoToSocial de lire les informations de connexion à la base de données fournies par le socle — les remplacer casse entièrement la connexion à la base de données. |
+| `enable_iap` | `false` pour une instance publique | Medium | IAP bloque le trafic de fédération ActivityPub non authentifié — uniquement adapté à une instance entièrement privée ou de test. |
+| Propagation de l'IAM du stockage au premier déploiement | Attendez-vous à une éventuelle nouvelle tentative ponctuelle | Low | Lors d'un nouveau déploiement, le tout premier démarrage du conteneur peut entrer en concurrence avec la propagation de l'attribution IAM du compte de service de stockage (~1–2 minutes) ; l'application se rétablit à la révision ou à la tentative suivante sans aucune modification de configuration. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité
+Pour le comportement du socle évoqué tout au long de ce guide — identité
 du service, scaling et concurrence, ingress et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
 des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration

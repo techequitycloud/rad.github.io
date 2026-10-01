@@ -36,7 +36,7 @@ socle ([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 | Domaine | Fourni par Filebrowser_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | **Aucun.** Filebrowser stocke ses utilisateurs et l'identifiant administrateur initial dans sa propre base de données SQLite embarquée ; aucune variable d'environnement Secret Manager n'est générée | Les sorties `secret_ids` / `secret_values` sont volontairement vides |
-| Image de conteneur | Encapsule finement l'image officielle `filebrowser/filebrowser` au moyen d'un Dockerfile de deux lignes ; construite avec Cloud Build (Kaniko) et dupliquée dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule finement l'image officielle `filebrowser/filebrowser` au moyen d'un Dockerfile de deux lignes ; construite avec Cloud Build (Kaniko) et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose `database_type = "NONE"` — Filebrowser utilise un fichier **SQLite embarqué**, pas Cloud SQL | §Persistance dans les guides des plateformes |
 | Initialisation de la base de données | **Aucune.** Aucune tâche `db-init` n'est injectée ; `initialization_jobs` est vide, sauf si l'opérateur fournit des tâches personnalisées | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) qui contient le montage persistant `/database` (la base SQLite) | Sortie `storage_buckets` |
@@ -66,7 +66,7 @@ chiffrement ni aucun secret JWT à préserver d'un redéploiement à l'autre —
 ## 3. Image de conteneur et build {#3-container-image-and-build}
 
 L'image personnalisée est une **fine surcouche de deux lignes** sur la version
-d'origine de Filebrowser, afin que le socle puisse la dupliquer dans Artifact
+d'origine de Filebrowser, afin que le socle puisse la mettre en miroir dans Artifact
 Registry :
 
 ```dockerfile
@@ -122,7 +122,7 @@ liens de partage survivent aux redémarrages et à la mise à l'échelle à zér
 L'emplacement du bucket est laissé vide afin que le socle le résolve vers la région
 de déploiement découverte automatiquement (`coalesce(bucket.location, region)`), ce
 qui évite le remplacement forcé du bucket, dont l'emplacement est immuable, lors
-d'une réapplication dans une autre région.
+d'un nouvel apply dans une autre région.
 
 Listez le bucket avec :
 
@@ -157,7 +157,7 @@ terminaison de santé non authentifié de Filebrowser, qui renvoie `200` dès qu
 serveur écoute. Comme il n'y a ni migration de base de données ni étape de schéma au
 premier lancement, le serveur est rapidement prêt ; la sonde de démarrage utilise un
 délai initial de 15 secondes avec une fenêtre de 10 tentatives, et la sonde
-d'activité un délai de 30 secondes.
+de vivacité un délai de 30 secondes.
 
 ---
 

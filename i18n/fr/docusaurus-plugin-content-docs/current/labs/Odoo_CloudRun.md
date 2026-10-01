@@ -18,7 +18,7 @@ la production, les RH et l'e-commerce. Ce lab vous fait parcourir l'intégralit�
 opérationnel du module **Odoo on Cloud Run** sur Google Cloud : le déployer, y accéder et
 le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Odoo. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Odoo_CloudRun) —
@@ -26,7 +26,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -49,7 +49,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -68,7 +68,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run (environnement d'exécution gen2), une base de données
    Cloud SQL (PostgreSQL) avec ses secrets Secret Manager, un partage Filestore NFS pour
    le filestore et les sessions d'Odoo, un bucket Cloud Storage pour les addons, construit l'image du
-   conteneur et exécute deux tâches d'initialisation ponctuelles : `nfs-init` (configure la propriété
+   conteneur et exécute deux jobs d'initialisation ponctuels : `nfs-init` (configure la propriété
    des répertoires NFS) et `db-init` (crée la base de données et l'utilisateur PostgreSQL). Les premiers déploiements
    prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -85,7 +85,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et connecté à sa base de données (le point de terminaison de santé d'Odoo
    ne renvoie 200 que lorsqu'il dispose d'une connexion active à la base de données) :
@@ -130,7 +130,7 @@ export REGION="us-central1"          # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
 
-4. **Gérez les secrets, les sauvegardes et les tâches :**
+4. **Gérez les secrets, les sauvegardes et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~odoo"
@@ -157,7 +157,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
@@ -180,11 +180,11 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   ```
 - **La vérification d'état renvoie autre chose que 200 au premier démarrage :** Odoo effectue des migrations de schéma qui
   peuvent prendre 2–10 minutes. La sonde de démarrage utilise TCP (port 8069) avec un délai initial de 60 secondes ;
-  la sonde de liveness passe à `GET /web/health` après 120 secondes. Attendez que
-  les deux tâches d'initialisation soient terminées avant de compter sur une réponse du point de terminaison de santé.
+  la sonde de vivacité passe à `GET /web/health` après 120 secondes. Attendez que
+  les deux jobs d'initialisation soient terminés avant de compter sur une réponse du point de terminaison de santé.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base existe et que la tâche `db-init` s'est terminée avec succès.
-- **Échec d'une tâche d'initialisation :** listez les exécutions et lisez les journaux de celle en échec :
+  secret du mot de passe de la base existe et que le job `db-init` s'est terminé avec succès.
+- **Échec d'un job d'initialisation :** listez les exécutions et lisez les journaux de celle en échec :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-nfs-init" \
     --project="$PROJECT" --region="$REGION"
@@ -213,8 +213,8 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL, Filestore NFS, GCS, les secrets, et exécute nfs-init + db-init |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; le mot de passe maître est récupéré dans Secret Manager |
-| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes/tâches, accéder à la base |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; le mot de passe maître est récupéré dans Secret Manager |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes/jobs, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de délai du premier démarrage, de base de données, de tâche d'initialisation, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de délai du premier démarrage, de base de données, de job d'initialisation, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

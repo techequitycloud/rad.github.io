@@ -41,14 +41,14 @@ ensemble restreint et ciblé de services Google Cloud :
 | Secrets | Secret Manager | Un véritable `ADMIN_PASSWORD` généré — Radicale n'est livré avec aucun compte administrateur par défaut |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données, quelle qu'elle soit.** `Radicale_Common` impose
   `database_type =
   "NONE"` — Radicale est un pur stockage sur système de fichiers.
 - **Build personnalisé à enveloppe fine.** `Radicale_Common` ajoute un point
   d'entrée cloud à l'image officielle `ghcr.io/kozea/radicale` via Cloud Build,
-  puis réplique le résultat dans Artifact Registry.
+  puis met en miroir le résultat dans Artifact Registry.
 - **PVC de stockage bloc recommandé.** Définissez `stateful_pvc_enabled = true`
   (ce qui résout automatiquement `workload_type` en `StatefulSet`) afin que le
   système de fichiers des collections de Radicale bénéficie d'un véritable
@@ -148,7 +148,7 @@ nouvelles collections sans aucun contournement, ce qui est l'une des raisons
 pour lesquelles `Radicale_GKE` convient mieux à un usage plus intensif ou de
 production.
 
-Cependant, la tâche d'initialisation par défaut `seed-default-collections` est
+Cependant, le job d'initialisation par défaut `seed-default-collections` est
 une tâche du module Common partagée entre Cloud Run et GKE et ne monte que le
 bucket GCS partagé `storage` — elle **ne peut pas** s'attacher au PVC bloc d'un
 StatefulSet (un Job Kubernetes ne peut pas monter un PVC `ReadWriteOnce` déjà
@@ -189,7 +189,7 @@ leur comportement standard.
 |---|---|---|
 | `container_port` | `5232` | Imposé via `Radicale_Common` ; cette variable n'est pas transmise à `App_GKE`. |
 | `min_instance_count` / `max_instance_count` | `0` / `1` | Bornes de mise à l'échelle du HPA ; `max` est fixé à `1`, sans dérogation possible. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
@@ -237,12 +237,12 @@ leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` en production | Medium | Sans cela, `/var/lib/radicale` est adossé à GCS FUSE — acceptable compte tenu du plafond d'une seule instance, mais ce n'est pas un véritable système de fichiers avec verrouillage POSIX. |
 | S'attendre à des collections par défaut sur un déploiement adossé à un PVC | Créer le premier agenda via un véritable client CalDAV ou `curl -X MKCOL` | Medium | La tâche `seed-default-collections` ne peut pas monter le PVC `ReadWriteOnce` d'un StatefulSet, si bien que ses écritures aboutissent dans le bucket GCS inutilisé — les collections pré-amorcées n'apparaissent silencieusement pas sur le système de fichiers du pod en cours d'exécution. |
@@ -254,7 +254,7 @@ leur comportement standard.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload
 Identity, entrée, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Radicale
 partagée avec la variante Cloud Run est décrite dans
 **[Radicale_Common](Radicale_Common.md)**.

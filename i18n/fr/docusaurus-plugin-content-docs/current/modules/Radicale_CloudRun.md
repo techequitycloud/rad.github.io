@@ -42,14 +42,14 @@ déploiement assemble un ensemble restreint et ciblé de services Google Cloud :
 | Secrets | Secret Manager | Un véritable `ADMIN_PASSWORD` généré — Radicale n'est livré avec aucun compte administrateur par défaut |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données, quelle qu'elle soit.** `Radicale_Common` impose
   `database_type =
   "NONE"` — Radicale est un pur stockage sur système de fichiers.
 - **Build personnalisé à enveloppe fine.** `Radicale_Common` ajoute un point
   d'entrée cloud à l'image officielle `ghcr.io/kozea/radicale` via Cloud Build,
-  puis réplique le résultat dans Artifact Registry.
+  puis met en miroir le résultat dans Artifact Registry.
 - **Aucun compte administrateur par défaut — un véritable secret généré.**
   Contrairement aux applications livrées avec un identifiant de première
   connexion bien connu, l'authentification de Radicale vaut `denyall` par
@@ -168,10 +168,10 @@ approfondi sur trois tentatives de déploiement distinctes :
   Thunderbird, DAVx5), ni même via l'interface web de Radicale, qui émet
   elle aussi MKCOL en interne.
 
-**Le correctif :** la tâche d'initialisation par défaut
+**Le correctif :** le job d'initialisation par défaut
 `seed-default-collections` de `Radicale_Common` écrit l'arborescence des
 collections directement sur le volume de stockage — un simple conteneur avec
-accès au système de fichiers, sans couche HTTP/GFE. Elle s'exécute
+accès au système de fichiers, sans couche HTTP/GFE. Il s'exécute
 automatiquement à chaque déploiement (`execute_on_apply = true`) et amorce un
 « Default Calendar » et un « Default Address Book » pour l'utilisateur
 administrateur. Vérifié en conditions réelles : un `PROPFIND` sur le principal
@@ -207,7 +207,7 @@ avec leur comportement standard.
 |---|---|---|
 | `container_port` | `5232` | Port par défaut natif de Radicale. |
 | `min_instance_count` / `max_instance_count` | `0` / `1` | Mise à l'échelle à zéro ; `max` est fixé à `1`, sans dérogation possible. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry (évite les limites de débit de GHCR). |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry (évite les limites de débit de GHCR). |
 | `container_protocol` | `http1` | Correct — Radicale sert du HTTP/1.1 simple. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
@@ -223,7 +223,7 @@ avec leur comportement standard.
 |---|---|---|
 | `database_type` | `NONE` | Imposé par `Radicale_Common` — Radicale n'a aucune base de données, quelle qu'elle soit. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -245,18 +245,18 @@ avec leur comportement standard.
 | `storage_buckets` | Le bucket `storage` qui sous-tend `/var/lib/radicale`. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des tâches d'initialisation créées (y compris `seed-default-collections`). |
+| `initialization_jobs` | Noms des jobs d'initialisation créés (y compris `seed-default-collections`). |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Création de nouvelles collections via un client CalDAV/CardDAV | S'appuyer sur les collections amorcées par défaut, ou utiliser `Radicale_GKE` pour créer librement de nouvelles collections | **High** | `MKCOL` est rejeté en périphérie de Cloud Run (GFE) avant d'atteindre le conteneur — aucun client standard, ni même l'interface web de Radicale, ne peut créer une NOUVELLE collection sur cette plateforme. Seules les deux collections amorcées au déploiement existent, sauf si vous fournissez une tâche d'initialisation personnalisée. |
+| Création de nouvelles collections via un client CalDAV/CardDAV | S'appuyer sur les collections amorcées par défaut, ou utiliser `Radicale_GKE` pour créer librement de nouvelles collections | **High** | `MKCOL` est rejeté en périphérie de Cloud Run (GFE) avant d'atteindre le conteneur — aucun client standard, ni même l'interface web de Radicale, ne peut créer une NOUVELLE collection sur cette plateforme. Seules les deux collections amorcées au déploiement existent, sauf si vous fournissez un job d'initialisation personnalisé. |
 | `max_instance_count` | Laisser à `1` | **Critical** | Le backend de stockage de Radicale utilise le verrouillage de fichiers au niveau du système d'exploitation et n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
 | Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critical** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
 | `stateful_pvc_enabled` (sans objet sur Cloud Run) | Utiliser `Radicale_GKE` en production | Medium | Le montage GCS FUSE de Cloud Run offre une sémantique de verrouillage de fichiers plus faible que celle attendue par le backend de stockage de Radicale ; acceptable uniquement parce que la concurrence est limitée à 1 instance. |
@@ -266,7 +266,7 @@ avec leur comportement standard.
 Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
+mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
 configuration applicative propre à Radicale partagée avec la variante GKE est
 décrite dans **[Radicale_Common](Radicale_Common.md)**.
 

@@ -109,7 +109,7 @@ sorties du déploiement de plateforme.
 
 ---
 
-## 4. Image de conteneur et entrypoint {#4-container-image-and-entrypoint}
+## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image personnalisée est un build léger : `FROM dolibarr/dolibarr:<DOLIBARR_VERSION>`
 (l'image officielle PHP/Apache) plus un entrypoint wrapper
@@ -137,7 +137,7 @@ l'écraserait sinon) ; `application_version = "latest"` est mappé sur un tag é
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Dolibarr_Common` établit l'environnement de référence afin que l'application
 s'installe et démarre correctement dès le premier lancement :

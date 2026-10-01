@@ -48,7 +48,7 @@ assemble un ensemble ciblé de services Google Cloud :
   variante définit `DB_HOST = 127.0.0.1` ; un sidecar cloud-sql-proxy
   (`enable_cloudsql_volume = true`) écoute sur `127.0.0.1:3306`, et l'entrypoint du
   wrapper reporte les `DB_*` injectées sur `DOLI_DB_*`.
-- **Réplique unique par défaut.** `min_instance_count = 1`, `max_instance_count = 1`.
+- **Réplica unique par défaut.** `min_instance_count = 1`, `max_instance_count = 1`.
   Dolibarr conserve un état de session et de verrouillage ; la charge de travail
   adossée à NFS se déploie avec la stratégie `Recreate`, donc ne dépassez pas 1 sans
   avoir vérifié le comportement du stockage partagé.
@@ -76,7 +76,7 @@ assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Dolibarr {#a-gke-autopilot--the-dolibarr-workload}
 
@@ -118,7 +118,7 @@ ensuite le schéma.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez
+contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatisées et la
 rotation des mots de passe.
 
@@ -353,7 +353,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Dolibarr, partagée avec
 la variante Cloud Run, est décrite dans **[Dolibarr_Common](Dolibarr_Common.md)**.
 

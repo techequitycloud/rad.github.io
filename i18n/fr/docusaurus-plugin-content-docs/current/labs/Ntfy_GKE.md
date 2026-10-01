@@ -20,7 +20,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter
 au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit ntfy. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Ntfy_GKE) — ce lab
@@ -28,7 +28,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution, notamment par un
@@ -54,7 +54,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -77,7 +77,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie une unique charge de travail de type Deployment dans le cluster GKE Autopilot,
    qui exécute le binaire Go de ntfy, et construit l'image du conteneur. Aucune base de données,
    aucun cache ni aucun bucket de stockage d'objets n'est provisionné — ntfy conserve son cache de messages dans
-   un fichier SQLite local. Il n'y a aucune tâche d'initialisation de base de données à attendre ; un
+   un fichier SQLite local. Il n'y a aucun job d'initialisation de base de données à attendre ; un
    premier déploiement est donc généralement bien plus rapide que pour un module adossé à une base de données (environ
    **10–15 minutes**, l'essentiel étant consacré au build de l'image et à la planification de la charge de travail).
 
@@ -94,7 +94,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -183,7 +183,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
    ntfy journalise son adresse d'écoute et le chemin résolu de son cache au démarrage — vérifiez ici
    en premier si vous attendiez une persistance NFS/PVC mais que le cache semble toujours éphémère.
@@ -201,7 +201,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de ntfy.
 
 - **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. Les sondes de démarrage et de
-  liveness ciblent toutes deux `/v1/health`, qui doit renvoyer `200` quelques
+  vivacité ciblent toutes deux `/v1/health`, qui doit renvoyer `200` quelques
   secondes après le démarrage — ntfy n'a aucune base de données à attendre ; une sonde lente ou en échec
   indique donc généralement un problème de build du conteneur ou de configuration plutôt qu'une dépendance
   en aval.
@@ -255,7 +255,7 @@ partagé) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie une unique charge de travail GKE exécutant ntfy ; aucune base de données ni aucun bucket de stockage |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le test rapide de publication/abonnement confirme la remise en temps réel |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le test rapide de publication/abonnement confirme la remise en temps réel |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, maintenir le maximum d'instances à 1, mettre à jour la version, gérer les secrets/le stockage, activer NFS/PVC pour la durabilité |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de persistance du cache, de planification et de récupération d'image |

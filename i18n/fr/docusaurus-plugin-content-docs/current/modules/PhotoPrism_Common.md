@@ -16,7 +16,7 @@ mais comprendre ce qu'elle fournit explique les valeurs par défaut que vous voy
 
 Pour l'infrastructure qui provisionne et exécute réellement PhotoPrism, consultez les guides de
 plateforme ([PhotoPrism_GKE](PhotoPrism_GKE.md), [PhotoPrism_CloudRun](PhotoPrism_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -102,7 +102,7 @@ de plateforme adossent ce chemin différemment :
   utilise donc toujours le PVC bloc.
 
 Le bucket `storage` est déclaré ici avec `public_access_prevention = "enforced"`,
-`force_destroy = true`, le versioning désactivé et une `location` vide, afin que la fondation
+`force_destroy = true`, le versioning désactivé et une `location` vide, afin que le socle
 le place dans la région de déploiement découverte automatiquement. Listez-le avec :
 
 ```bash
@@ -121,7 +121,7 @@ FROM photoprism/photoprism:${PHOTOPRISM_VERSION}
 ```
 
 - **ARG de build propre à l'application.** Le Dockerfile lit `PHOTOPRISM_VERSION`, et **non**
-  l'`APP_VERSION` générique que la fondation injecte (et qu'elle forcerait à `latest`).
+  l'`APP_VERSION` générique que le socle injecte (et qu'elle forcerait à `latest`).
   `photoprism/photoprism` utilise des tags glissants fondés sur la date ; lorsque l'appelant laisse
   `application_version = "latest"`, le module épingle donc un tag récent fiable (`240915`) ;
   sinon, il transmet tel quel la version demandée.
@@ -175,7 +175,7 @@ Les deux valeurs par défaut peuvent être remplacées pour chaque variante via 
 
 | Sortie | Description |
 |---|---|
-| `config` | La configuration complète du module PhotoPrism (image, port, variables d'environnement, sondes, volumes, ressources), transmise à la fondation en tant que `application_config`. |
+| `config` | La configuration complète du module PhotoPrism (image, port, variables d'environnement, sondes, volumes, ressources), transmise au socle en tant que `application_config`. |
 | `storage_buckets` | La définition de l'unique bucket `storage`, transmise en tant que `module_storage_buckets`. |
 | `secret_ids` | Table de correspondance `PHOTOPRISM_ADMIN_PASSWORD → <secret id>`, transmise en tant que `module_secret_env_vars`. |
 | `secret_values` | Valeurs brutes des secrets (sensibles) pour une injection explicite, sans passer par les lectures de data source Secret Manager. |

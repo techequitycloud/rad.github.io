@@ -29,7 +29,7 @@ plutôt que de les répéter ici.
 Django s'exécute comme un conteneur Python/Gunicorn sur Cloud Run v2. Le déploiement assemble
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur Python/Gunicorn, 1 vCPU / 512 MiB par défaut ; autoscaling jusqu'à zéro |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le `DB_ENGINE` de Django est fixé à `django.db.backends.postgresql` |
@@ -63,7 +63,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT`, `REGION` et `SERVICE` sont définis. Le nom du service et
-les autres identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+les autres identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run v2 — le service Django {#a-cloud-run-v2--the-django-service}
 
@@ -107,13 +107,13 @@ accorde les privilèges. Le job `db-migrate` exécute ensuite `manage.py migrate
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le
-mot de passe sont tous exposés dans les [Outputs](#5-outputs). Pour le modèle de connexion,
+mot de passe sont tous exposés dans les [sorties](#5-outputs). Pour le modèle de connexion,
 les sauvegardes automatiques et la rotation des mots de passe, consultez [App_CloudRun](App_CloudRun.md).
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
 Les médias téléversés sont écrits sur un partage **Filestore (NFS)** monté dans chaque instance
-de conteneur, afin que toutes les réplicas voient les mêmes fichiers. Un bucket de médias **Cloud Storage**
+de conteneur, afin que tous les réplicas voient les mêmes fichiers. Un bucket de médias **Cloud Storage**
 dédié est également provisionné automatiquement par `Django_Common` ; le compte de service
 de la charge de travail y reçoit l'accès. Les montages NFS sur Cloud Run nécessitent l'environnement d'exécution `gen2`,
 que ce module définit par défaut.
@@ -247,14 +247,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service Cloud Run et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails bénéficiant de l'accès au projet et des alertes de surveillance. |
@@ -262,7 +262,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `django` | Nom de base des ressources. **Ne pas modifier après le premier déploiement.** |
 | `application_display_name` | `Django Application` | Nom convivial affiché dans la console. |
@@ -271,7 +271,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | `custom` construit l'image via Cloud Build ; `prebuilt` déploie une URI d'image existante. |
@@ -285,7 +285,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 5 — Gestion du trafic et IAP {#group-5--traffic-management--iap}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Entrée Cloud Run : `all`, `internal` ou `internal-and-cloud-load-balancing`. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Sortie via le connecteur VPC sans serveur. |
@@ -294,7 +294,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. N'y incluez pas `SECRET_KEY` ni `DB_*`. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager (par ex. `DJANGO_SUPERUSER_PASSWORD`). |
@@ -303,7 +303,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 
 ### Groupe 7 — Sauvegarde et maintenance {#group-7--backup--maintenance}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -323,7 +323,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 
 ### Groupe 10 — Cloud Armor et CDN {#group-10--cloud-armor--cdn}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associer une règle Cloud Armor (WAF) au backend. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés pour l'accès privilégié. |
@@ -332,7 +332,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 
 ### Groupe 11 — Système de fichiers (NFS) et Cloud Storage {#group-11--filesystem-nfs--cloud-storage}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Volume Filestore partagé pour les médias Django (à garder activé en multi-instance). |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. Doit correspondre à `MEDIA_ROOT` dans `settings.py`. |
@@ -342,7 +342,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | **PostgreSQL 15 obligatoire.** Django ne prend pas en charge MySQL via ce module. |
 | `application_database_name` | `django_db` | Nom de la base de données. Immuable après le premier déploiement. |
@@ -356,14 +356,14 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | _(built-in `db-init`)_ | Par défaut, un seul Cloud Run Job `db-init` est défini. Le job `db-migrate` est toujours ajouté par `Django_Common`. Fournissez une liste non vide pour remplacer le `db-init` par défaut par des jobs personnalisés. |
 | `cron_jobs` | `[]` | Cloud Run Jobs planifiés (par ex. `clearsessions`, `cleartokens`). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `GET /healthz`, 60s initial delay | Sonde de démarrage transmise à `Django_Common`. Augmentez le délai pour les ensembles de migrations volumineux. **N'utilisez pas de chemin qui redirige.** |
 | `liveness_probe` | HTTP `GET /healthz`, 30s initial delay | Sonde de vivacité. Utilisez un point de terminaison léger qui renvoie 200 sans corps. |
@@ -373,7 +373,7 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Activer Redis pour le stockage des sessions et la mise en cache. |
 | `redis_host` | `""` | IP ou nom d'hôte Redis. |
@@ -382,7 +382,7 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -390,12 +390,12 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL HTTPS permettant d'atteindre Django. |

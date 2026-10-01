@@ -80,7 +80,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Synapse {#a-cloud-run--the-synapse-service}
 
@@ -121,7 +121,7 @@ l'utilisateur de l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Cloud Storage et répertoire de données persistant {#c-cloud-storage--the-persistent-data-directory}
@@ -147,7 +147,7 @@ Un **secret partagé d'enregistrement** est généré automatiquement et stocké
 Secret Manager ; il alimente `register_new_matrix_user` pour la création de comptes
 hors bande. Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~synapse"
@@ -164,7 +164,7 @@ donc la valeur par défaut. Un équilibreur de charge HTTPS externe avec un doma
 personnalisé (recommandé en production), Cloud CDN pour les médias et Cloud Armor
 peuvent être ajoutés par-dessus.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -179,8 +179,8 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de C
 et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et
 des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -254,7 +254,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -281,7 +281,7 @@ avec leur comportement standard.
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
 | `container_image_source` | `custom` | Build personnalisé léger `FROM matrixdotorg/synapse`. |
-| `enable_image_mirroring` | `true` | Duplique l'image de base Synapse dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base Synapse dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
@@ -384,12 +384,12 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `api_url` | URL `run.app` par défaut du service. |
@@ -403,7 +403,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -442,7 +442,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images —
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Synapse, partagée avec la variante GKE, est décrite dans
 **[Synapse_Common](Synapse_Common.md)**.

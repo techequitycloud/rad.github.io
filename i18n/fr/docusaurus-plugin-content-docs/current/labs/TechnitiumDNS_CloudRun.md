@@ -39,7 +39,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Effectuer les opérations du jour 2 — inspecter, mettre à jour et gérer les secrets.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -54,7 +54,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -175,7 +175,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de requêtes, la latence
    des requêtes, le nombre d'instances et l'utilisation CPU/mémoire. Comme `cpu_always_allocated = false` par
    défaut, attendez-vous à ce que le nombre d'instances retombe à zéro entre les sessions d'administration — il s'agit du comportement attendu
-   de mise à l'échelle à zéro, et non d'une erreur de configuration. Si un **contrôle de disponibilité** (uptime check) Cloud Monitoring est activé,
+   de mise à l'échelle à zéro, et non d'une erreur de configuration. Si un **test de disponibilité** (uptime check) Cloud Monitoring est activé,
    vérifiez qu'il est au vert sous Monitoring → Uptime checks.
 
 ---
@@ -212,7 +212,7 @@ Consultez la section *Configuration Pitfalls & Sensible Defaults* du Guide de co
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute
 `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement
@@ -226,13 +226,13 @@ ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne un unique service Cloud Run exécutant l'image TechnitiumDNS préconstruite, un bucket de configuration et un secret |
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit ; la première connexion aboutit ; une zone/un enregistrement survit à un redémarrage |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à jour la version, gérer les secrets, activer IAP |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de persistance du stockage et d'accès ; confirmer le périmètre sans résolveur DNS |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -22,12 +22,12 @@ Hasura s'exécute sous forme d'une charge de travail web Haskell sans état. Le 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Haskell, 1 vCPU / 512 MiB par défaut, autoscaling horizontal |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — le catalogue de métadonnées de Hasura et sa source de données par défaut résident tous deux dans Postgres |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le catalogue de métadonnées de Hasura et sa source de données par défaut résident tous deux dans Postgres |
 | Stockage d'objets | Aucun | Hasura est sans état ; aucun bucket n'est provisionné |
 | Secrets | Secret Manager | `HASURA_GRAPHQL_ADMIN_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé et certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la couche applicative partagée ; Hasura conserve son propre catalogue de métadonnées dans Postgres.
 - **Le secret administrateur protège tout ce qui est sensible.** `HASURA_GRAPHQL_ADMIN_SECRET` est généré automatiquement, stocké dans Secret Manager et matérialisé dans l'espace de noms via le pilote Secret Store CSI. Il protège l'interface `/console` ainsi que les API `/v1/graphql` et `/v1/metadata` ; `/healthz` reste public pour les sondes.
@@ -56,9 +56,9 @@ Les pods Hasura sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 
 Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type de charge de travail.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Hasura stocke son catalogue de métadonnées (tables suivies, relations, permissions, déclencheurs d'événements) **et** vos données applicatives dans une instance gérée Cloud SQL pour PostgreSQL 15. Les pods s'y connectent de manière privée via le sidecar **Cloud SQL Auth Proxy** en loopback ; aucune IP publique n'est exposée. Au premier déploiement, une tâche d'initialisation crée la base de données et l'utilisateur de l'application ; Hasura installe son schéma de métadonnées au premier démarrage.
+Hasura stocke son catalogue de métadonnées (tables suivies, relations, permissions, déclencheurs d'événements) **et** vos données applicatives dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods s'y connectent de manière privée via le sidecar **Cloud SQL Auth Proxy** en loopback ; aucune IP publique n'est exposée. Au premier déploiement, un job d'initialisation crée la base de données et l'utilisateur de l'application ; Hasura installe son schéma de métadonnées au premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -111,7 +111,7 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriq
 
 ## 3. Comportement de l'application Hasura {#3-hasura-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement.** Une tâche d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Elle se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. La tâche peut être réexécutée sans risque.
+- **Initialisation de la base de données au premier déploiement.** Un job d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. La tâche peut être réexécutée sans risque.
 - **Catalogue de métadonnées au démarrage.** Hasura installe et migre son propre schéma de catalogue de métadonnées dans Postgres au démarrage ; la mise à niveau de la version de l'image applique donc les modifications du catalogue sans étape de migration distincte. Les métadonnées des tables suivies persistent dans la base de données lors des redémarrages de pods et des mises à jour progressives.
 - **Deux URL de connexion, assemblées dans le conteneur.** Le point d'entrée construit à la fois `HASURA_GRAPHQL_DATABASE_URL` et `HASURA_GRAPHQL_METADATA_DATABASE_URL` à partir des variables `DB_*` injectées. Comme le sidecar Auth Proxy écoute sur `127.0.0.1`, le DSN est un loopback simple sans SSL.
 - **Le secret administrateur est la frontière de sécurité.** Envoyez-le dans l'en-tête `x-hasura-admin-secret` :
@@ -169,7 +169,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `workload_type` | `Deployment` | Sans état — Hasura conserve tout son état dans Postgres. |
 | `container_port` | `8080` | Hasura écoute sur `HASURA_GRAPHQL_SERVER_PORT = 8080`. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour la connexion Postgres. |
-| `enable_image_mirroring` | `true` | Duplique l'image Hasura dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Hasura dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
@@ -221,7 +221,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -294,7 +294,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir [App_GKE](Ap
 | `admin_ip_ranges` | `[]` | CIDR autorisés pour un accès privilégié. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -324,7 +324,7 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches d'initialisation et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs d'initialisation et d'import (facultative). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -336,14 +336,14 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critical | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
@@ -360,7 +360,7 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 
 ---
 
-Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Hasura partagée avec la variante Cloud Run est décrite dans **[Hasura_Common](Hasura_Common.md)**.
+Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à Hasura partagée avec la variante Cloud Run est décrite dans **[Hasura_Common](Hasura_Common.md)**.
 
 <!-- related-guides -->
 

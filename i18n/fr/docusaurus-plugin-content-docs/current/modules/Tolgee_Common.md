@@ -16,7 +16,7 @@ ce qu'elle fournit explique les valeurs par défaut que vous voyez dans la docum
 
 Pour l'infrastructure qui provisionne et exécute réellement Tolgee, consultez les guides
 des plateformes ([Tolgee_GKE](Tolgee_GKE.md), [Tolgee_CloudRun](Tolgee_CloudRun.md)) et les
-guides de la fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -27,8 +27,8 @@ guides de la fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Secrets cryptographiques | Génère le mot de passe administrateur initial (24 caractères) et le secret de signature JWT (64 caractères), et les stocke dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Construit un wrapper personnalisé léger `FROM tolgee/tolgee:<version>` doté d'un point d'entrée cloud ; construit via Cloud Build et mis en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | S'appuie sur le `create-db-and-user.sh` de la fondation (pas de job d'initialisation distinct) ; Tolgee migre automatiquement son schéma avec Liquibase au premier démarrage | §Base de données dans les guides des plateformes |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
+| Initialisation de la base de données | S'appuie sur le `create-db-and-user.sh` du socle (pas de job d'initialisation distinct) ; Tolgee migre automatiquement son schéma avec Liquibase au premier démarrage | §Base de données dans les guides des plateformes |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** pour le stockage de fichiers facultatif (captures d'écran/imports) | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit `SERVER_PORT`, le nom d'utilisateur administrateur initial, l'authentification native, et désactive le PostgreSQL intégré de Tolgee | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de disponibilité, de démarrage et de vivacité par défaut ciblant `/actuator/health` | §Observabilité dans les guides des plateformes |
@@ -63,17 +63,17 @@ gcloud secrets versions access latest \
   --secret="secret-<resource-prefix>-<app>-admin-password" --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le nom de son secret
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le nom de son secret
 est indiqué dans les sorties du déploiement de la plateforme (`database_password_secret`). Consultez
 [App_Common](App_Common.md) pour le modèle partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Tolgee exige **PostgreSQL 15** ; le moteur est fixé (`database_type = "POSTGRES_15"`)
 et MySQL ou d'autres moteurs ne sont pas pris en charge. Contrairement à la plupart des modules applicatifs, Tolgee
-ne fournit **pas** de job `db-init` par défaut. L'étape `create-db-and-user.sh` propre à la fondation
+ne fournit **pas** de job `db-init` par défaut. L'étape `create-db-and-user.sh` propre au socle
 App_CloudRun / App_GKE effectue déjà les opérations suivantes :
 
 1. Crée le rôle et la base de données PostgreSQL sous les `DB_USER` / `DB_NAME` propres au tenant,
@@ -105,7 +105,7 @@ POSIX-`sh` (`entrypoint.sh`) qui s'exécute avant le lanceur `/app/cmd.sh` propr
 
 - **Assemble `SPRING_DATASOURCE_URL` en TCP.** Le pilote JDBC PostgreSQL intégré à Tolgee
   **ne peut pas** se connecter via un socket Unix Cloud SQL (la même contrainte que Keycloak) ;
-  le point d'entrée construit donc toujours une URL JDBC TCP à partir des variables `DB_*` injectées par la fondation :
+  le point d'entrée construit donc toujours une URL JDBC TCP à partir des variables `DB_*` injectées par le socle :
   - `DB_HOST` est un répertoire de socket `/…` → repli sur `DB_IP` (l'IP privée de Cloud SQL)
     avec `sslmode=require`.
   - `DB_HOST` vaut `127.0.0.1` / `localhost` (boucle locale de l'Auth Proxy sur GKE) → TCP simple, sans SSL
@@ -126,7 +126,7 @@ exige une reconstruction de l'image et un redéploiement.
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Tolgee_Common` met en place l'environnement de base de Tolgee afin que l'application démarre
 correctement dès le premier lancement :
@@ -155,7 +155,7 @@ instance Cloud SQL neuve.
 ## 7. Stockage d'objets {#7-object-storage}
 
 Un unique bucket **Cloud Storage** (`name_suffix = "storage"`) est déclaré ici et
-provisionné par la fondation, avec un accès accordé au compte de service de la charge de travail. Tolgee
+provisionné par le socle, avec un accès accordé au compte de service de la charge de travail. Tolgee
 conserve les traductions et les métadonnées dans PostgreSQL ; ce bucket sert au stockage de fichiers
 **facultatif** (captures d'écran téléversées, artefacts d'import) — montez-le via `gcs_volumes` ou faites pointer
 le stockage de fichiers compatible S3 de Tolgee vers lui. Listez-le avec :

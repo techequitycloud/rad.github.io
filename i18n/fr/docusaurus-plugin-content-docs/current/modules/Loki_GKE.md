@@ -17,7 +17,7 @@ ce qui maintient les coûts de stockage et d'exploitation à un niveau bas. On
 l'interroge normalement en **LogQL** via **Grafana** (comme source de données) ou
 l'outil **LogCLI**, un agent tel que **Promtail** ou **Grafana Alloy** se chargeant
 de lui envoyer les journaux. Ce module déploie **Loki lui-même, et non Grafana**,
-sur **GKE Autopilot** en s'appuyant sur la fondation [App_GKE](App_GKE.md), qui
+sur **GKE Autopilot** en s'appuyant sur le socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Loki et sur la manière de
@@ -25,7 +25,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -37,7 +37,7 @@ composants internes — distributor, ingester, querier, compactor — dans un se
 processus). Le déploiement assemble un ensemble restreint de services Google Cloud,
 centré sur GCS :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod binaire Go, 1 vCPU / 512Mi par défaut, type de charge de travail `Deployment` |
 | Stockage objet | Cloud Storage | Un unique bucket `storage` — le véritable backend de stockage objet de Loki pour les chunks et l'index TSDB expédié, et non un stockage de fichiers accessoire |
@@ -86,7 +86,7 @@ centré sur GCS :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [sorties](#6-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Loki {#a-gke-autopilot--the-loki-workload}
@@ -147,7 +147,7 @@ placez devant Loki une couche d'authentification de type reverse proxy).
   gcloud secrets list --project "$PROJECT"
   ```
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Par défaut, la charge de travail est exposée via l'IP d'un Service `LoadBalancer`
 externe (`service_type = "LoadBalancer"`), afin que les clients d'envoi de journaux
@@ -226,7 +226,7 @@ l'interroger une fois déployé :
 - **Contrainte de mise à l'échelle à instance unique.** Le ring en mémoire et le
   compactor singleton font que Loki n'est pas conçu ici pour exécuter plus d'une
   instance simultanément. `Loki_Common` l'impose en figeant
-  `max_instance_count = 1` dans la configuration qu'il transmet à la fondation,
+  `max_instance_count = 1` dans la configuration qu'il transmet au socle,
   quelle que soit la valeur de l'entrée de la plateforme.
 - **`workload_type` et durabilité.** `Deployment` est la valeur par défaut et
   suffit — l'état durable de Loki est GCS, pas le disque local. Un `StatefulSet`
@@ -264,7 +264,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `loki` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `application_version` | `latest` | `"latest"` se résout vers l'ARG de build épinglé `LOKI_VERSION` (`3.6.12`) — **et non** vers l'`APP_VERSION` générique, que la fondation forcerait sinon vers un tag Loki `latest` inexistant. |
+| `application_version` | `latest` | `"latest"` se résout vers l'ARG de build épinglé `LOKI_VERSION` (`3.6.12`) — **et non** vers l'`APP_VERSION` générique, que le socle forcerait sinon vers un tag Loki `latest` inexistant. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
@@ -305,7 +305,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Loki n'a aucun usage intégré de Redis ; cette variable n'existe que par souci de cohérence avec la fondation. |
+| `enable_redis` | `false` | Loki n'a aucun usage intégré de Redis ; cette variable n'existe que par souci de cohérence avec le socle. |
 
 ### Groupe 16 — Configuration de la base de données {#group-16--database-configuration}
 
@@ -331,7 +331,7 @@ d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `api_url` | URL permettant d'atteindre Loki. |
 | `storage_buckets` | Buckets de stockage créés — y compris le bucket `storage` que Loki utilise pour les chunks et l'index TSDB. |
@@ -354,7 +354,7 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 > **Remarque pour les opérateurs et mainteneurs : pourquoi le Dockerfile de ce
 > module semble inhabituel.** L'image officielle `grafana/loki` est **réellement
@@ -385,7 +385,7 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | Laisser la valeur par défaut (de fait figée à `1`) | Critical | Même si `Loki_Common` la ramène à `1` dans la configuration qu'il transmet à la fondation, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — le ring en mémoire et le compactor singleton ne sont pas conçus pour des réplicas simultanés. |
+| `max_instance_count` | Laisser la valeur par défaut (de fait figée à `1`) | Critical | Même si `Loki_Common` la ramène à `1` dans la configuration qu'il transmet au socle, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — le ring en mémoire et le compactor singleton ne sont pas conçus pour des réplicas simultanés. |
 | `container_port` | `3100` (ne pas modifier sans modifier aussi le gabarit de configuration) | Critical | Le `server.http_listen_port` de Loki est intégré au fichier de configuration et n'est pas lu depuis `container_port` à l'exécution — une incohérence entre les deux casse le routage entre le Service Kubernetes et le pod. |
 | `service_type` | `LoadBalancer` pour l'envoi externe de journaux | High | Avec `ClusterIP`, Loki n'est accessible que depuis l'intérieur du cluster, ce qui bloque les agents Promtail/Alloy exécutés ailleurs. |
 | Contrôle d'accès | Aucun par défaut (`auth_enabled: false`) | High | L'API HTTP de Loki (envoi et requête) n'a aucune authentification intégrée. Quiconque peut atteindre l'IP externe peut envoyer ou interroger des journaux. Placez devant elle Cloud Armor, IAP ou une couche d'authentification de type reverse proxy si cela compte pour votre déploiement. |
@@ -396,7 +396,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Loki, partagée avec

@@ -41,7 +41,7 @@ Cloud :
 | Secrets | Secret Manager | Aucun généré automatiquement — l'authentification réside dans SQLite ; secrets facultatifs pour votre propre usage |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut (`ingress = all`) ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **La base de données est une SQLite embarquée — il n'y a pas de Cloud SQL.**
   PocketBase stocke chaque enregistrement, jeton d'authentification et fichier
@@ -77,7 +77,7 @@ Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définies. Les noms
-des services et des ressources figurent dans les [Outputs](#5-outputs) du
+des services et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service PocketBase {#a-cloud-run--the-pocketbase-service}
@@ -300,12 +300,12 @@ d'[App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `pocketbase_url` | URL du service pour l'API HTTP + l'interface d'administration de PocketBase (port 8090). |
@@ -326,7 +326,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -340,7 +340,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 > ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt
 > qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` (ne jamais augmenter) | Critical | SQLite + GCS FUSE sont à écrivain unique ; plus d'une instance corrompt la base de données. |
 | Le bucket de données `/pb_data` | Ne jamais le supprimer ; le sauvegarder | Critical | Le bucket **est** la base de données et le stockage de fichiers — le supprimer ou le vider détruit toutes les données. |

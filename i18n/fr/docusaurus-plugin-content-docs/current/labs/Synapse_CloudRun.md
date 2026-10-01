@@ -36,7 +36,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Effectuer les opérations du jour 2 — inspecter, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -54,7 +54,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - Un **domaine que vous contrôlez** pour `server_name` si vous comptez fédérer (définissez-le avant
   le premier déploiement — il est immuable).
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -193,7 +193,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
    de requêtes, la latence des requêtes (P50/P95/P99), le nombre d'instances et l'utilisation CPU / mémoire.
-   `uptime_check_config` vaut par défaut `enabled = false` — aucun contrôle de disponibilité (uptime check) n'est provisionné
+   `uptime_check_config` vaut par défaut `enabled = false` — aucun test de disponibilité (uptime check) n'est provisionné
    d'emblée. Si vous l'activez, notez que le chemin cible par défaut est `/`, et non `/health` ;
    vérifiez qu'il est au vert sous Monitoring → Uptime checks, et consultez Alerting → Policies.
 
@@ -239,7 +239,7 @@ immuables après le premier démarrage).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement
@@ -253,13 +253,13 @@ le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas su
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15, collation C), les secrets et le stockage, et exécute l'initialisation de la base |
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit ; enregistrer un administrateur avec `register_new_matrix_user` ; se connecter via l'API Matrix ; connecter Element |
 | 3 — Exploiter | Manuel | Inspecter les révisions, garder le service actif, mettre à jour la version, gérer secrets/sauvegardes, accès à la base |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de collation, de clé de signature, de base de données, de job d'initialisation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

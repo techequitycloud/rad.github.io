@@ -329,7 +329,7 @@ gcloud alpha monitoring channels list --project=PROJECT_ID
 App Common crée un tableau de bord Cloud Monitoring prédéfini, adapté à la plateforme de déploiement :
 
 - **Cloud Run** — affiche le nombre de requêtes, la latence des requêtes au p95, le nombre d'instances de conteneur et l'utilisation du CPU, filtrés par nom de service.
-- **GKE** — affiche l'utilisation du CPU, l'utilisation de la mémoire, le nombre de redémarrages de pods et le trafic réseau sortant, filtrés par namespace Kubernetes.
+- **GKE** — affiche l'utilisation du CPU, l'utilisation de la mémoire, le nombre de redémarrages de pods et le trafic réseau sortant, filtrés par espace de noms Kubernetes.
 
 ### Explorer dans GCP {#exploring-in-gcp-10}
 

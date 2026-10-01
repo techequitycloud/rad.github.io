@@ -20,7 +20,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au
 quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités d'édition de tableau de bord propres à Homepage. Pour la
 liste complète des services provisionnés et de chaque paramètre de configuration
 (organisés par groupe), consultez le
@@ -30,7 +30,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -53,7 +53,7 @@ dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -89,7 +89,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et répond — via le point de terminaison de santé
    propre à Homepage, accessible sans authentification :
@@ -250,7 +250,7 @@ qu'il contient) ainsi que les éventuelles images Artifact Registry. Les ressour
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run et un bucket GCS `storage` sur `/app/config` — sans base de données, sans Redis, sans secrets |
-| 2 — Accès et vérification | Manuel | `/api/healthcheck` renvoie `200 "up"` ; le tableau de bord s'affiche sans assistant de configuration ; une modification directe du YAML prouve le raccordement du stockage |
+| 2 — Accéder et vérifier | Manuel | `/api/healthcheck` renvoie `200 "up"` ; le tableau de bord s'affiche sans assistant de configuration ; une modification directe du YAML prouve le raccordement du stockage |
 | 3 — Exploiter | Manuel | Inspecter les révisions, confirmer que la mise à l'échelle est sans risque dans les deux sens, mettre à jour la version, sauvegarder le bucket de configuration |
 | 4 — Observer | Manuel | Interroger Cloud Logging (y compris la ligne des options de montage GCSFuse) ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer la santé des révisions, `HOMEPAGE_ALLOWED_HOSTS` et les problèmes de propagation de la configuration |

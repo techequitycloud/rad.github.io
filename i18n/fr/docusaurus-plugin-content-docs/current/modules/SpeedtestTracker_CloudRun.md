@@ -40,7 +40,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la couche
   applicative partagée (`database_type = "MYSQL_8_0"`) ; PostgreSQL n'est pas pris en
@@ -49,7 +49,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   car ce module câble toujours MySQL.
 - **L'image préconstruite `linuxserver/speedtest-tracker` est utilisée directement.**
   Il n'y a pas de Cloud Build personnalisé pour le déploiement par défaut ; l'image
-  officielle LinuxServer.io est dupliquée dans Artifact Registry
+  officielle LinuxServer.io est mise en miroir dans Artifact Registry
   (`enable_image_mirroring = true`) et déployée telle quelle. Solution de repli :
   `ghcr.io/alexjustesen/speedtest-tracker` (basée sur Alpine, sans s6-overlay) si
   l'image LinuxServer se révélait un jour incompatible avec le bac à sable gVisor de
@@ -113,7 +113,7 @@ l'application dans une instance gérée Cloud SQL for MySQL 8.0. Le service se c
 via l'**adresse IP privée** de Cloud SQL par la sortie VPC
 (`enable_cloudsql_volume = false`) ; `DB_HOST` est défini sur l'adresse IP privée de
 l'instance et aucune adresse IP publique n'est exposée. Lors du premier déploiement,
-une tâche d'initialisation crée la base de données et l'utilisateur de l'application.
+un job d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
   flags et les métriques.
@@ -151,7 +151,7 @@ l'**`APP_KEY`** Laravel (`base64:<44-char base64>`), utilisée pour chiffrer tou
 données que Speedtest Tracker stocke sous forme chiffrée. Le mot de passe de la base
 de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -167,7 +167,7 @@ Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN
 Cloud Armor peut être ajouté par-dessus ; les paramètres d'entrée et la sortie VPC
 contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -182,7 +182,7 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Cloud Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -192,8 +192,8 @@ disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application Speedtest Tracker {#3-speedtest-tracker-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Elle détecte le socket
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Il détecte le socket
   Cloud SQL ou le point de terminaison TCP, attend que MySQL soit joignable, crée la
   base de données et l'utilisateur de l'application, accorde les privilèges, vérifie
   que l'utilisateur de l'application peut se connecter et arrête proprement le sidecar
@@ -272,8 +272,8 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer dupliquée — aucun build personnalisé. |
-| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image dupliquée par défaut. |
+| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer mise en miroir — aucun build personnalisé. |
+| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image mise en miroir par défaut. |
 | `cpu_limit` | `1000m` | CPU par instance ; 1 vCPU par défaut. |
 | `memory_limit` | `1Gi` | Mémoire par instance. |
 | `cpu_always_allocated` | `true` | **Doit rester à true** — le planificateur cron a besoin de CPU sans requête entrante. |
@@ -284,7 +284,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `execution_environment` | `gen2` | Environnement d'exécution de deuxième génération (gen2). |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Connexion en TCP sur l'adresse IP privée de Cloud SQL (correct pour MySQL sur Cloud Run). |
-| `enable_image_mirroring` | `true` | Duplique l'image LinuxServer dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image LinuxServer dans Artifact Registry. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
 ### Groupe 5 — Entrée et VPC {#group-5--ingress--vpc}
@@ -382,7 +382,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -422,14 +422,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par Speedtest Tracker, un `redis_port`/`backup_retention_days` hors plage. Ce module vérifie en outre que `cpu_always_allocated=true` implique `min_instance_count >= 1`, et que `max_instance_count <= 1` dès que `speedtest_schedule` est défini. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend toutes les valeurs chiffrées de la base de données définitivement indéchiffrables. |
 | `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
@@ -448,7 +448,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Speedtest Tracker partagée avec la variante GKE est décrite dans
 **[SpeedtestTracker_Common](SpeedtestTracker_Common.md)**.

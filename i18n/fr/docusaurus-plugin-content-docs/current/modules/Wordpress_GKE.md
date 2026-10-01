@@ -51,7 +51,7 @@ identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 Les pods WordPress sont planifiés sur Autopilot, qui facture le CPU et la mémoire réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et le nombre maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail WordPress pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et entrées affiche l'adresse IP externe.
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail WordPress pour voir les pods, les révisions et les événements. Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -98,7 +98,7 @@ Le répertoire `wp-content` de WordPress est placé sur un partage **Filestore (
 
 Consultez [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options CMEK.
 
-### D. Cache d'objets Redis {#d-redis-object-cache}
+### D. Redis (cache d'objets) {#d-redis-object-cache}
 
 Redis sert de cache d'objets à WordPress via l'extension **WP Redis**, en conservant en mémoire les résultats des requêtes coûteuses vers la base de données, ce qui réduit considérablement les temps de chargement des pages et la charge sur la base de données des sites très fréquentés. Lorsque `redis_host` est laissé vide et que NFS est activé, l'adresse IP du serveur NFS est utilisée comme point de terminaison Redis (le modèle de déploiement partagé par défaut).
 
@@ -116,7 +116,7 @@ Redis sert de cache d'objets à WordPress via l'extension **WP Redis**, en conse
 
 Le mot de passe de la base de données WordPress ainsi que les huit clés et sels d'authentification WordPress sont stockés en tant que secrets Secret Manager et injectés dans les pods à l'exécution ; les valeurs en clair n'apparaissent jamais dans la configuration ni dans l'état Terraform.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -131,7 +131,7 @@ Le nom du secret du mot de passe de la base de données figure dans les [sorties
 
 Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut être activé, et une adresse IP statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -144,7 +144,7 @@ Consultez [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et l
 
 Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriques de GKE et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -423,7 +423,7 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à WordPress, partagée avec la
 variante Cloud Run, est décrite dans **[Wordpress_Common](Wordpress_Common.md)**.
 

@@ -171,7 +171,7 @@ bibliothèque.
 
 - **Sonde de démarrage** — `initial_delay = 15s`, `timeout = 5s`, `period = 10s`,
   `failure_threshold = 10`.
-- **Sonde d'activité** — `initial_delay = 30s`, `timeout = 5s`, `period = 30s`,
+- **Sonde de vivacité** — `initial_delay = 30s`, `timeout = 5s`, `period = 30s`,
   `failure_threshold = 3`.
 
 ---
@@ -186,8 +186,8 @@ qui accorde également l'accès au compte de service de la charge de travail :
   `public_access_prevention = "enforced"`.
 - La `location` du bucket est laissée vide afin que le socle la résolve à partir
   de la région de déploiement découverte automatiquement (ce qui évite un
-  remplacement forcé du bucket, dont l'emplacement est immuable, lors d'une
-  nouvelle application dans une autre région).
+  remplacement forcé du bucket, dont l'emplacement est immuable, lors d'un
+  nouvel apply dans une autre région).
 - Sur Cloud Run, il sert de support à `/kavita/config` via GCS FUSE ; il contient
   donc la base de données SQLite de Kavita, les images de couverture, les
   signets, les sauvegardes et les journaux.

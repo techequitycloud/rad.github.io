@@ -11,7 +11,7 @@ description: "Lab pratique : déployez UrBackup sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 60 à 90 minutes
+**Durée estimée :** 60–90 minutes
 
 UrBackup est un système open source de sauvegarde réseau client/serveur pour Windows,
 Linux et macOS : sauvegardes au niveau des fichiers et sauvegardes d'images disque complètes, déduplication
@@ -46,7 +46,7 @@ dans la durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne, y compris le volume bloc persistant et le Service
   multiport dédié.
 - Comprendre pourquoi les données persistantes d'UrBackup résident sur un unique PVC bloc
@@ -58,7 +58,7 @@ dans la durée.
   à une seule instance.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et de connectivité les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -286,7 +286,7 @@ les sorties à utiliser pour la connectivité des clients).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -318,4 +318,4 @@ gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail/le PVC, surveiller l'utilisation du disque à mesure que le parc grandit, mettre à jour la version, comprendre la limite d'une seule instance |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et l'utilisation du disque du PVC ; vérifier l'état des sauvegardes des clients dans l'interface web |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de quota du PVC, de Service/connectivité, d'autorisations et de mise à l'échelle |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le volume persistant et TOUTES les données de sauvegarde qu'il contient |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le volume persistant et TOUTES les données de sauvegarde qu'il contient |

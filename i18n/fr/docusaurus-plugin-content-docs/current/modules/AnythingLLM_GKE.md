@@ -13,8 +13,7 @@ AnythingLLM est un espace de travail d'IA privé et une plateforme de générati
 par récupération (RAG) qui permet aux équipes de dialoguer avec leurs documents, de se
 connecter à n'importe quel fournisseur de LLM (OpenAI, Anthropic, Ollama, etc.) et de
 créer des assistants de connaissances reposant sur l'IA — sans envoyer de données à des
-services tiers. Ce module déploie AnythingLLM sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
+services tiers. Ce module déploie AnythingLLM sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise AnythingLLM et sur la façon de
@@ -22,7 +21,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de c
 Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -34,7 +33,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — AnythingLLM utilise l'ORM Prisma et ne prend pas en charge MySQL |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — AnythingLLM utilise l'ORM Prisma et ne prend pas en charge MySQL |
 | Stockage d'objets | Cloud Storage | Bucket de documents `anythingllm-docs` provisionné automatiquement ; buckets supplémentaires en option |
 | Volumes persistants | PVC Kubernetes (StatefulSet) | Facultatif — PVC de 20 GiB par pod sur `/app/server/storage` lorsque `stateful_pvc_enabled = true` |
 | Fichiers partagés | Filestore (NFS) | Activé par défaut (`enable_nfs = true`) — `STORAGE_DIR` pointe vers le montage NFS afin que l'index vectoriel LanceDB survive aux redémarrages de pods et aux redéploiements |
@@ -42,7 +41,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 | Cache | Redis | Désactivé par défaut ; facultatif pour les charges de travail de session ou de cache |
 
-**Valeurs par défaut utiles à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** L'ORM Prisma d'AnythingLLM nécessite PostgreSQL. Ne
   définissez pas `database_type` sur une variante MySQL ou SQL Server.
@@ -75,7 +74,7 @@ assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail AnythingLLM {#a-gke-autopilot--the-anythingllm-workload}
@@ -98,18 +97,18 @@ d'embedding et d'inférence d'IA nécessitent au moins 2 vCPU et 4 GiB de RAM.
 Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, du scaling et du type de charge
 de travail (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 AnythingLLM stocke toutes les métadonnées de l'espace de travail, les comptes
-utilisateur et l'historique des conversations dans une instance gérée Cloud SQL pour
+utilisateur et l'historique des conversations dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods y accèdent de façon privée via le sidecar **Cloud SQL Auth
 Proxy** sur un socket Unix ; aucune IP publique n'est donc exposée. Lors du premier
 déploiement, un Job d'initialisation crée la base de données et l'utilisateur de
 l'application.
 
 La chaîne de connexion Prisma `DATABASE_URL` est assemblée par le script de point
-d'entrée d'AnythingLLM à partir des variables d'environnement `DB_*` injectées par la
-fondation au démarrage du conteneur.
+d'entrée d'AnythingLLM à partir des variables d'environnement `DB_*` injectées par le
+socle au démarrage du conteneur.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
   flags et les métriques.
@@ -198,7 +197,7 @@ Le nom du secret du mot de passe de base de données figure dans les
 [sorties](#5-outputs). Voir [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et
 la rotation.
 
-### G. Réseau et ingress {#g-networking--ingress}
+### G. Réseau et entrée {#g-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe. Un
 domaine personnalisé avec un certificat géré par Google peut être activé, et une IP
@@ -296,7 +295,7 @@ comportement et leurs valeurs par défaut standard.
 | `application_description` | `AnythingLLM Private AI Workspace on GKE` | Annotation de description de la charge de travail. |
 | `application_version` | `latest` | Tag de version de l'image ; épinglez-le sur un tag de version publiée en production. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -339,7 +338,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets du namespace. |
+| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`8Gi`, `16Gi`)** — les entiers bruts sont interprétés comme des octets et bloquent la planification. |
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
@@ -450,7 +449,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR bénéficiant d'un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -468,7 +467,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -494,35 +493,35 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
-| Persistance de `STORAGE_DIR` | `stateful_pvc_enabled=true` ou NFS | Critique | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus lors de l'éviction d'un pod. |
-| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critique | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les spécifications des pods Kubernetes. Utilisez `secret_environment_variables` pour tous les secrets. |
-| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires (`8Gi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
-| `enable_cloudsql_volume` | `true` | Critique | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
-| `container_resources.memory_limit` | `4Gi` | Élevé | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
-| `min_instance_count` | `1` | Élevé | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
-| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | Élevé | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
-| `EMBEDDING_ENGINE` | à définir une seule fois | Élevé | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Élevé | Sans IAP, l'accès n'est contrôlé que par l'écran de connexion de l'application. |
-| `enable_redis` | `false` (ou définir `redis_host`) | Moyen | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
-| `enable_nfs` | `true` (par défaut) | Moyen | Activé par défaut afin que l'index vectoriel LanceDB survive aux redémarrages de pods ; le désactiver laisse également les pods multi-réplicas sur un stockage éphémère isolé, ce qui casse l'accès aux documents entre pods. |
-| `application_version` | épingler sur un tag de version publiée | Moyen | `latest` expose en production à des mises à niveau qui cassent le schéma. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
+| `database_type` | `POSTGRES_15` | Critical | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
+| Persistance de `STORAGE_DIR` | `stateful_pvc_enabled=true` ou NFS | Critical | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus lors de l'éviction d'un pod. |
+| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critical | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les spécifications des pods Kubernetes. Utilisez `secret_environment_variables` pour tous les secrets. |
+| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires (`8Gi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
+| `enable_cloudsql_volume` | `true` | Critical | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
+| `container_resources.memory_limit` | `4Gi` | High | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
+| `min_instance_count` | `1` | High | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
+| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | High | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
+| `EMBEDDING_ENGINE` | à définir une seule fois | High | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | High | Sans IAP, l'accès n'est contrôlé que par l'écran de connexion de l'application. |
+| `enable_redis` | `false` (ou définir `redis_host`) | Medium | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
+| `enable_nfs` | `true` (par défaut) | Medium | Activé par défaut afin que l'index vectoriel LanceDB survive aux redémarrages de pods ; le désactiver laisse également les pods multi-réplicas sur un stockage éphémère isolé, ce qui casse l'accès aux documents entre pods. |
+| `application_version` | épingler sur un tag de version publiée | Medium | `latest` expose en production à des mises à niveau qui cassent le schéma. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à AnythingLLM, partagée

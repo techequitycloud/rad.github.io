@@ -11,7 +11,7 @@ description: "Référence de configuration pour déployer Temporal sur GKE Autop
 
 Temporal est un moteur open source d'orchestration de workflows utilisé par des organisations
 telles que Stripe, Netflix, Coinbase et HashiCorp pour construire des applications distribuées
-fiables. Ce module déploie Temporal sur **GKE Autopilot** au-dessus de la fondation
+fiables. Ce module déploie Temporal sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google
 Cloud et Kubernetes partagée.
 
@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud qu'utilise Temporal et sur la mani�
 depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à
 toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que
+déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que
 de les répéter ici.
 
 ---
@@ -32,10 +32,10 @@ Matching et Worker — dans un seul pod et gère automatiquement l'initialisatio
 au premier démarrage. Le déploiement assemble un ensemble ciblé de services Google
 Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod tout-en-un, 2 vCPU / 4 GiB par défaut |
-| Base de données | Cloud SQL pour PostgreSQL | Deux bases : persistance principale + visibilité ; accès par IP privée, sans sidecar Auth Proxy |
+| Base de données | Cloud SQL for PostgreSQL | Deux bases : persistance principale + visibilité ; accès par IP privée, sans sidecar Auth Proxy |
 | Secrets | Secret Manager | Mot de passe de base de données généré automatiquement |
 | Ingress | Cloud Load Balancing | ClusterIP (interne) par défaut ; LoadBalancer pour les workers SDK externes |
 | Visibilité avancée | Elasticsearch (facultatif) | Recherche plein texte des workflows et attributs de recherche personnalisés |
@@ -90,9 +90,9 @@ lance les quatre services Temporal dans un seul conteneur.
 Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'échelle et le type de
 charge de travail sont gérés.
 
-### B. Cloud SQL pour PostgreSQL {#b-cloud-sql-for-postgresql}
+### B. Cloud SQL for PostgreSQL {#b-cloud-sql-for-postgresql}
 
-Temporal stocke tout l'état d'exécution des workflows dans une instance gérée Cloud SQL pour PostgreSQL.
+Temporal stocke tout l'état d'exécution des workflows dans une instance gérée Cloud SQL for PostgreSQL.
 Deux bases de données sont créées :
 
 - **Base de données de persistance principale** — état des workflows, files de tâches, métadonnées des namespaces,
@@ -133,7 +133,7 @@ Manager injecté dans le pod à l'exécution ; il n'est jamais exposé en clair.
 Le nom du secret figure dans les [sorties](#5-outputs) sous `temporal_db_password_secret_id`.
 Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Par défaut, le service gRPC Frontend de Temporal est un `ClusterIP` et n'est joignable
 que depuis l'intérieur du cluster sur le port **7233**. Les workers SDK déployés sur le même cluster
@@ -235,14 +235,14 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
@@ -250,7 +250,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `temporal` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Temporal` | Nom convivial affiché dans la console. |
@@ -259,13 +259,13 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner les bases de données et les secrets sans déployer de pods. |
 | `cpu_limit` | `2000m` | CPU par pod ; les quatre services Temporal partagent cette allocation. |
 | `memory_limit` | `4Gi` | Mémoire par pod ; les quatre services partagent cette allocation. |
-| `min_instance_count` | `1` | Nombre minimal de répliques. Doit être ≥ 1 — Temporal exige au moins un pod en cours d'exécution pour traiter les minuteurs et les nouvelles tentatives. |
-| `max_instance_count` | `1` | Nombre maximal de répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Doit être ≥ 1 — Temporal exige au moins un pod en cours d'exécution pour traiter les minuteurs et les nouvelles tentatives. |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. |
 | `container_port` | `7233` | Port gRPC du Frontend de Temporal (à titre informatif — le port du service est codé en dur à 7233). |
 | `container_protocol` | `h2c` | HTTP/2 en clair — obligatoire pour gRPC. Ne le modifiez pas. |
 | `enable_image_mirroring` | `true` | Met en miroir l'image Temporal depuis Docker Hub dans Artifact Registry. |
@@ -273,14 +273,14 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets fusionnés avec la configuration du serveur Temporal. Remplacez les valeurs par défaut intégrées avec prudence. |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom de secret Secret Manager. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `ClusterIP` | Utilisez `ClusterIP` pour les workers SDK internes au cluster (recommandé). Utilisez `LoadBalancer` uniquement si les workers SDK s'exécutent hors du cluster. |
 | `workload_type` | `null` (Deployment) | Temporal est sans état — `Deployment` convient. |
@@ -298,7 +298,7 @@ Non requis pour Temporal. Tout l'état durable réside dans Cloud SQL PostgreSQL
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers nus sont lus comme des octets et bloquent toute planification. |
@@ -308,7 +308,7 @@ Non requis pour Temporal. Tout l'état durable réside dans Cloud SQL PostgreSQL
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds (recommandé en production). |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions. |
@@ -316,7 +316,7 @@ Non requis pour Temporal. Tout l'état durable réside dans Cloud SQL PostgreSQL
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | TCP sur le port 7233 | Fenêtre de 10 tentatives (5 minutes avec une période de 30 s) pour l'initialisation du schéma au premier démarrage. |
 | `health_check_config` | TCP sur le port 7233 | Sonde de vivacité ; délai initial de 60 s. |
@@ -325,7 +325,7 @@ Non requis pour Temporal. Tout l'état durable réside dans Cloud SQL PostgreSQL
 
 ### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Jobs supplémentaires à exécuter avant le pod du serveur. Codé en dur à `[]` par `Temporal_GKE` — aucun Job intégré ne s'exécute ; le rôle de base de données et les bases sont créés directement par les ressources Terraform de `Temporal_Common`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
@@ -350,7 +350,7 @@ si elles sont nécessaires à des charges de travail compagnes.
 Temporal ne nécessite aucun bucket Cloud Storage. Artifact Registry est utilisé pour l'image
 Temporal mise en miroir. Consultez [App_GKE](App_GKE.md).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `false` | Désactivé par défaut — Temporal n'utilise pas GCS. |
 | `max_images_to_retain` | `7` | Nombre d'images conservées dans Artifact Registry. |
@@ -358,7 +358,7 @@ Temporal mise en miroir. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 15 — Base de données et paramètres propres à Temporal {#group-15--database--temporal-specific-settings}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `sql_instance_name` | `""` | Nom d'une instance Cloud SQL PostgreSQL existante. Laissez vide pour la découverte automatique depuis Services_GCP. |
 | `temporal_database_name` | `""` | Nom de la base de données de persistance principale. Laissez vide pour une génération automatique à partir du préfixe de ressources du déploiement (recommandé). |
@@ -372,14 +372,14 @@ Temporal mise en miroir. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 16 — Rotation des secrets {#group-16--secret-rotation}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_auto_password_rotation` | `false` | Fait tourner le mot de passe de la base de données selon un calendrier. Le pod doit être redémarré après la rotation pour prendre en compte le nouveau secret. |
 | `rotation_propagation_delay_sec` | `90` | Nombre de secondes d'attente après la rotation avant de redémarrer les pods. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 en production ou pour la conformité. |
@@ -390,7 +390,7 @@ Sans objet pour Temporal. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés et un certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -398,7 +398,7 @@ Sans objet pour Temporal. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | IAP n'est pas recommandé pour le gRPC de Temporal — utilisez plutôt `enable_network_segmentation`. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder. |
@@ -407,7 +407,7 @@ Sans objet pour Temporal. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
@@ -415,7 +415,7 @@ Sans objet pour Temporal. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Impose un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -458,31 +458,31 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `num_history_shards` | `4` (dev/démo), `512`+ (prod) | Critique | Définitivement immuable après le premier déploiement. Le modifier exige d'effacer toutes les données de workflow et de tout réinitialiser depuis zéro. |
-| `container_protocol` | `h2c` | Critique | Temporal utilise gRPC ; passer à `http1` casse toutes les connexions des workers SDK ainsi que la Web UI. |
-| `temporal_database_name` / `temporal_visibility_database_name` | définis une seule fois | Critique | Immuables après le premier déploiement. Les modifier après le déploiement rend le schéma orphelin, et Temporal démarre alors avec une base de données non initialisée. |
-| `enable_elasticsearch` avec `elasticsearch_url` | définis ensemble | Critique | Un point de terminaison Elasticsearch injoignable lorsque `enable_elasticsearch = true` fait planter Temporal au démarrage — il ne se rabat pas sur la visibilité PostgreSQL. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification. |
-| `min_instance_count` | `1` | Élevé | La mise à zéro (`0`) entraîne des minuteurs manqués, des nouvelles tentatives d'activités bloquées et une progression des workflows perdue. |
-| `cpu_limit` | `2000m` | Élevé | Les quatre services Temporal partagent cette allocation. En dessous de 1000m, la latence de planification augmente fortement et le déclenchement des minuteurs est retardé, ce qui affecte directement les SLA des workflows. |
-| `memory_limit` | `4Gi` | Élevé | Temporal conserve l'état des shards en mémoire ; une mémoire insuffisante provoque des arrêts OOM pendant le traitement des workflows. |
-| `temporal_db_user` | généré automatiquement | Élevé | Le modifier après le déploiement sans mettre à jour les droits Cloud SQL et Secret Manager fait échouer toutes les connexions du serveur. |
-| `elasticsearch_version` | correspondre au cluster réel | Élevé | Une incohérence provoque des mappings d'index incompatibles, des entrées de workflow manquantes et des échecs d'écriture de visibilité. |
-| `elasticsearch_url` | `host:port` ou `http://host:port` | Élevé | Obligatoire lorsque `enable_elasticsearch = true` ; une valeur vide provoque un plantage immédiat au démarrage. |
-| `service_type` | `ClusterIP` (interne) | Moyen | Exposer le Frontend de Temporal en `LoadBalancer` sans règle réseau permet à n'importe quel hôte externe de soumettre des workflows. |
-| `enable_pod_disruption_budget` | `true` | Moyen | Sans PDB, les mises à niveau des nœuds GKE peuvent expulser tous les pods Temporal simultanément, interrompant toutes les exécutions de workflows en cours. |
-| `backup_schedule` | `0 2 * * *` | Moyen | Un calendrier vide ou désactivé ne laisse aucun moyen de récupération en cas de défaillance de Cloud SQL. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être expulsé). |
-| `stateful_pvc_enabled` | `false` | Moyen | Temporal stocke tout son état dans Cloud SQL ; les PVC n'apportent aucun bénéfice et peuvent provoquer des échecs de planification Autopilot. |
+| `num_history_shards` | `4` (dev/démo), `512`+ (prod) | Critical | Définitivement immuable après le premier déploiement. Le modifier exige d'effacer toutes les données de workflow et de tout réinitialiser depuis zéro. |
+| `container_protocol` | `h2c` | Critical | Temporal utilise gRPC ; passer à `http1` casse toutes les connexions des workers SDK ainsi que la Web UI. |
+| `temporal_database_name` / `temporal_visibility_database_name` | définis une seule fois | Critical | Immuables après le premier déploiement. Les modifier après le déploiement rend le schéma orphelin, et Temporal démarre alors avec une base de données non initialisée. |
+| `enable_elasticsearch` avec `elasticsearch_url` | définis ensemble | Critical | Un point de terminaison Elasticsearch injoignable lorsque `enable_elasticsearch = true` fait planter Temporal au démarrage — il ne se rabat pas sur la visibilité PostgreSQL. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification. |
+| `min_instance_count` | `1` | High | La mise à zéro (`0`) entraîne des minuteurs manqués, des nouvelles tentatives d'activités bloquées et une progression des workflows perdue. |
+| `cpu_limit` | `2000m` | High | Les quatre services Temporal partagent cette allocation. En dessous de 1000m, la latence de planification augmente fortement et le déclenchement des minuteurs est retardé, ce qui affecte directement les SLA des workflows. |
+| `memory_limit` | `4Gi` | High | Temporal conserve l'état des shards en mémoire ; une mémoire insuffisante provoque des arrêts OOM pendant le traitement des workflows. |
+| `temporal_db_user` | généré automatiquement | High | Le modifier après le déploiement sans mettre à jour les droits Cloud SQL et Secret Manager fait échouer toutes les connexions du serveur. |
+| `elasticsearch_version` | correspondre au cluster réel | High | Une incohérence provoque des mappings d'index incompatibles, des entrées de workflow manquantes et des échecs d'écriture de visibilité. |
+| `elasticsearch_url` | `host:port` ou `http://host:port` | High | Obligatoire lorsque `enable_elasticsearch = true` ; une valeur vide provoque un plantage immédiat au démarrage. |
+| `service_type` | `ClusterIP` (interne) | Medium | Exposer le Frontend de Temporal en `LoadBalancer` sans règle réseau permet à n'importe quel hôte externe de soumettre des workflows. |
+| `enable_pod_disruption_budget` | `true` | Medium | Sans PDB, les mises à niveau des nœuds GKE peuvent expulser tous les pods Temporal simultanément, interrompant toutes les exécutions de workflows en cours. |
+| `backup_schedule` | `0 2 * * *` | Medium | Un calendrier vide ou désactivé ne laisse aucun moyen de récupération en cas de défaillance de Cloud SQL. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être expulsé). |
+| `stateful_pvc_enabled` | `false` | Medium | Temporal stocke tout son état dans Cloud SQL ; les PVC n'apportent aucun bénéfice et peuvent provoquer des échecs de planification Autopilot. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload Identity,
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. Le provisionnement
 de la base de données et des secrets propre à Temporal, partagé entre les déploiements, est décrit dans

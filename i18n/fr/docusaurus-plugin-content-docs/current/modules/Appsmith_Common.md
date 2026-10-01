@@ -20,8 +20,8 @@ modèle sans état et à mise à l'échelle jusqu'à zéro de Cloud Run — il n
 pas de module `Appsmith_CloudRun` à mettre en regard.
 
 Pour l'infrastructure qui provisionne et exécute réellement Appsmith, consultez
-le guide de la plateforme ([Appsmith_GKE](Appsmith_GKE.md)) et les guides de
-fondation ([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
+le guide de la plateforme ([Appsmith_GKE](Appsmith_GKE.md)) et les guides du
+socle ([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 
 ---
 
@@ -81,7 +81,7 @@ Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 **Aucun (`database_type = "NONE"`).** L'image « fat » officielle d'Appsmith CE
 embarque sa propre MongoDB et son propre Redis dans le conteneur ; il n'y a ni
@@ -130,7 +130,7 @@ connexion à une base de données externe.
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Appsmith_Common` établit l'environnement Appsmith de référence afin que
 l'application démarre correctement dès le premier lancement :
@@ -166,7 +166,7 @@ corruption due à des rédacteurs concurrents.
 
 ---
 
-## 6. Comportement des sondes d'état {#6-health-probe-behaviour}
+## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 Les sondes par défaut ciblent `GET /api/v1/health` sur le port 80 — le point de
 terminaison pour lequel le nginx/backend de l'image « fat » renvoie HTTP 200

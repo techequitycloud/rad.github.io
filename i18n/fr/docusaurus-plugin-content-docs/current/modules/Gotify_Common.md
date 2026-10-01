@@ -74,7 +74,7 @@ partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Gotify prend en charge soit un fichier SQLite intégré, soit un serveur PostgreSQL
 externe. Ce module utilise toujours **PostgreSQL 15** sur Cloud SQL géré — le mode
@@ -104,7 +104,7 @@ sorties du déploiement de la plateforme.
 
 ---
 
-## 4. Image du conteneur et point d'entrée {#4-container-image-and-entrypoint}
+## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image personnalisée encapsule `ghcr.io/gotify/server:<version>` avec un point
 d'entrée shell léger (`gotify-entrypoint.sh`) qui s'exécute avant le démarrage du
@@ -173,7 +173,7 @@ deux un jeton ; ils ne sont donc pas utilisés pour les contrôles de santé.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Gotify stocke les messages, les applications et les jetons client dans PostgreSQL ;
 **aucun bucket Cloud Storage n'est donc déclaré** ici (`storage_buckets` est vide).

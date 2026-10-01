@@ -280,7 +280,7 @@ Lorsque `enable_cloud_deploy = true` (requiert `enable_cicd_trigger = true`), le
 
 ## 7. Fiabilité et planification {#7-reliability--scheduling}
 
-### A. Mise à l'échelle et simultanéité {#a-scaling--concurrency}
+### A. Mise à l'échelle et concurrence {#a-scaling--concurrency}
 
 `min_instance_count = 0` et `max_instance_count = 3` sont configurables via des variables (contrairement aux valeurs codées en dur de Ghost). Les tâches OCR de Paperless-ngx s'exécutent de manière asynchrone via des workers Celery adossés à Redis — l'interface web reste réactive pendant les gros traitements OCR. Plusieurs instances Cloud Run peuvent s'exécuter simultanément, les documents étant stockés dans GCS.
 
@@ -404,7 +404,7 @@ Un test de disponibilité Cloud Monitoring interroge le point de terminaison Pap
 
 ---
 
-## 9. Exploration avec la console GCP {#9-exploring-with-the-gcp-console}
+## 9. Explorer avec la console GCP {#9-exploring-with-the-gcp-console}
 
 Après un déploiement réussi, les zones suivantes de la console GCP offrent la meilleure visibilité sur une instance Paperless-ngx en cours d'exécution.
 
@@ -443,7 +443,7 @@ Accédez à **Cloud Build → History**. Chaque exécution de déploiement y app
 
 ---
 
-## 10. Exploration avec gcloud {#10-exploring-with-gcloud}
+## 10. Explorer avec gcloud {#10-exploring-with-gcloud}
 
 Les commandes suivantes sont utiles pour inspecter et exploiter un déploiement Paperless-ngx sur Cloud Run. Remplacez `PROJECT_ID`, `REGION` et `DEPLOYMENT_ID` par vos valeurs.
 

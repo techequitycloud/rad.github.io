@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Authentik sur GKE Autopilot dans votre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 60 à 90 minutes
+**Durée estimée :** 60–90 minutes
 
 authentik est un fournisseur d'identité open source — authentification unique via OIDC et SAML,
 LDAP, SCIM, MFA et authentification par proxy ; une alternative auto-hébergée à Okta,
@@ -30,7 +30,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, vérifier la charge de travail et vous connecter avec l'utilisateur
   `akadmin` initialisé.
 - Créer une première application OIDC et son fournisseur dans l'interface authentik.
@@ -38,7 +38,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
   worker colocalisé et ouvrir une session de base de données.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -72,7 +72,7 @@ export REGION="us-central1"          # the region you deploy into
    documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement
    avec les journaux en temps réel.
 
-2. La plateforme provisionne le namespace Kubernetes et le Deployment, une base de données Cloud SQL
+2. La plateforme provisionne l'espace de noms Kubernetes et le Deployment, une base de données Cloud SQL
    (PostgreSQL 15) avec ses secrets Secret Manager
    (`AUTHENTIK_SECRET_KEY`, le mot de passe d'initialisation d'`akadmin` et le mot de passe de la base
    de données), un bucket Cloud Storage pour les médias monté sur `/media` via GCS Fuse,
@@ -211,7 +211,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -280,9 +280,9 @@ contenir `__`).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
-Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le namespace Kubernetes
+Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — l'espace de noms Kubernetes
 et la charge de travail, la base de données Cloud SQL, les secrets Secret Manager, le bucket de médias et
 les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster
 GKE, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
@@ -299,4 +299,4 @@ ici.
 | 3 — Exploiter | Manuel | Inspecter les pods, mettre à jour la version (migration automatique), surveiller le worker colocalisé, gérer les secrets, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques de la charge de travail et de Cloud SQL |
 | 5 — Dépanner | Manuel | Diagnostiquer les attentes de migration au premier démarrage et les problèmes de base de données, de job d'initialisation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -44,7 +44,7 @@ de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY_BASE` généré automatiquement (clé de session/chiffrement Rails) ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type` vaut par défaut `POSTGRES_15`
   et une précondition au moment du plan (`validation.tf`) rejette toute valeur
@@ -83,7 +83,7 @@ de services Google Cloud :
   stocké dans Secret Manager, partagé à l'identique par les processus web et
   Sidekiq. Rails l'utilise pour signer les sessions/cookies et pour dériver la clé
   qui chiffre les colonnes chiffrées par ActiveRecord.
-- **Le schéma est créé par une tâche d'initialisation, pas au démarrage.** La
+- **Le schéma est créé par un job d'initialisation, pas au démarrage.** La
   tâche `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
   point d'entrée d'exécution n'exécute jamais les migrations.
 - **`container_image_source = "custom"`.** Cloud Build construit une image
@@ -196,7 +196,7 @@ Manager : `SECRET_KEY_BASE` (`secret-<prefix>-maybefinance-secret-key-base`), un
 valeur aléatoire de 64 caractères partagée par le processus web Rails et le worker
 Sidekiq. Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~maybefinance"
@@ -212,8 +212,7 @@ Le service est joignable par défaut via son URL `run.app` (`ingress_settings
 Cloud CDN et Cloud Armor peut y être ajouté ; les paramètres d'entrée et la
 sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -228,8 +227,8 @@ Les journaux du conteneur (`RAILS_LOG_TO_STDOUT = "true"`) sont acheminés vers
 Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud
 Monitoring, avec en option des tests de disponibilité et des règles d'alerte.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord
-  / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards
+  / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -247,7 +246,7 @@ Monitoring, avec en option des tests de disponibilité et des règles d'alerte.
   ne sont pas de vrais superutilisateurs, ce qui permet donc à la propre migration
   de Maybe de créer des extensions Postgres) et crée au préalable `pgcrypto` par
   mesure de précaution supplémentaire. La tâche peut être réexécutée sans risque.
-- **La migration du schéma est une tâche d'initialisation distincte.**
+- **La migration du schéma est un job d'initialisation distinct.**
   `maybefinance-migrate` exécute `bundle exec rails db:prepare` sur l'image Maybe
   construite (`image = null` dans la spécification de la tâche, elle réutilise
   donc l'image et la chaîne d'outils construites pour l'application), dépend de
@@ -285,7 +284,7 @@ Monitoring, avec en option des tests de disponibilité et des règles d'alerte.
 - **Chemin de santé.** La sonde de démarrage est une sonde **HTTP** `GET /up` avec
   une marge généreuse pour un premier démarrage lent (`initial_delay_seconds = 60`,
   `period_seconds = 15`, `failure_threshold = 30` — environ 8 minutes de marge).
-  La sonde d'activité est également une sonde **HTTP** `GET /up`
+  La sonde de vivacité est également une sonde **HTTP** `GET /up`
   (`initial_delay_seconds = 60`, `period_seconds = 30`,
   `failure_threshold = 3`).
 - **Inspecter l'exécution des tâches :**
@@ -416,7 +415,7 @@ un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Bucket GCS supplémentaire en plus du bucket `storage` provisionné automatiquement. |
 | `enable_nfs` | `true` | Les pièces jointes persistent et sont partagées entre révisions ; c'est aussi la source par défaut de l'adresse IP de l'hôte Redis. |
 | `nfs_mount_path` | `/opt/maybefinance/storage` | Emplacement où Maybe stocke les pièces jointes téléversées. |
-| `nfs_instance_name` / `nfs_instance_base_name` | _(découverte automatique)_ | Nommage de la VM NFS existante/en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(découverte automatique)_ | Nommage de la VM NFS existante/intégrée (inline). |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (requiert gen2) ; non utilisés d'origine. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -433,7 +432,7 @@ un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Inutilisés — Maybe fonctionne uniquement avec PostgreSQL. |
 | `application_database_name` / `application_database_user` | `crappdb` / `crappuser` | Déclarations miroir du socle **inertes** (jamais transmises à `main.tf`) — le nom et l'utilisateur réels de la base de données proviennent de `db_name`/`db_user` ci-dessus via `MaybeFinance_Common`. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -445,7 +444,7 @@ un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/up`, délai de 60s, 30 tentatives | Sonde de démarrage. Prévoyez environ 8 minutes au premier démarrage. |
-| `liveness_probe` | HTTP `/up`, délai de 60s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/up`, délai de 60s | Sonde de vivacité. |
 | `startup_probe_config` / `health_check_config` | HTTP `/up` | Sondes structurées alternatives. |
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut, à activer explicitement. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
@@ -459,7 +458,7 @@ un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -499,10 +498,10 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_CloudRun](App_CloudRun.md), ainsi que par ses propres
@@ -513,20 +512,20 @@ d'explorer les ressources en cours d'exécution.
 > que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à
 > l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critique | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de tâches d'arrière-plan fonctionnelle. |
-| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
-| `enable_cloudsql_volume` | `false` (Cloud Run) | Critique | L'activer transforme `DB_HOST` en un répertoire de socket que Rails ne sait pas analyser directement ; le point d'entrée se rabat sur `DB_IP`, mais une valeur erronée `database_type = "NONE"` combinée à `enable_cloudsql_volume = true` est bloquée au moment du plan, car le sidecar proxy n'aurait aucune instance à laquelle se connecter. |
-| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que `enable_nfs` est désactivé et qu'aucun hôte n'est défini, la précondition au moment du plan échoue ; si `enable_nfs` est désactivé après un déploiement fonctionnel, les pièces jointes téléversées deviennent éphémères et l'hôte Redis peut devenir obsolète. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` en production | Élevé | Avec les valeurs par défaut privilégiant le coût (`0` / `false`), le worker Sidekiq co-localisé ne s'exécute que lorsqu'une instance se trouve être active — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement entre les requêtes et pendant les fenêtres de mise à l'échelle à zéro. |
-| `memory_limit` | `4Gi` (par défaut) | Élevé | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; Maybe recommande au moins 2Gi. |
-| `SELF_HOSTED` (injecté automatiquement à `"true"`) | Inscrire rapidement le premier administrateur | Élevé | Laisser le déploiement joignable avant qu'un administrateur ne s'inscrive permet à quiconque dispose de l'URL de s'approprier le compte administrateur initial. |
-| `ingress_settings` | `all` | Moyen | La définir à `internal` bloque l'accès à l'interface web pour toute personne extérieure au VPC. |
-| `backup_retention_days` | `7` (à augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
-| `enable_cloud_armor` | à activer en production | Moyen | L'interface d'administration est publiquement accessible sans protection WAF. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
+| `enable_redis` | `true` | Critical | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de tâches d'arrière-plan fonctionnelle. |
+| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
+| `enable_cloudsql_volume` | `false` (Cloud Run) | Critical | L'activer transforme `DB_HOST` en un répertoire de socket que Rails ne sait pas analyser directement ; le point d'entrée se rabat sur `DB_IP`, mais une valeur erronée `database_type = "NONE"` combinée à `enable_cloudsql_volume = true` est bloquée au moment du plan, car le sidecar proxy n'aurait aucune instance à laquelle se connecter. |
+| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que `enable_nfs` est désactivé et qu'aucun hôte n'est défini, la précondition au moment du plan échoue ; si `enable_nfs` est désactivé après un déploiement fonctionnel, les pièces jointes téléversées deviennent éphémères et l'hôte Redis peut devenir obsolète. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` en production | High | Avec les valeurs par défaut privilégiant le coût (`0` / `false`), le worker Sidekiq co-localisé ne s'exécute que lorsqu'une instance se trouve être active — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement entre les requêtes et pendant les fenêtres de mise à l'échelle à zéro. |
+| `memory_limit` | `4Gi` (par défaut) | High | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; Maybe recommande au moins 2Gi. |
+| `SELF_HOSTED` (injecté automatiquement à `"true"`) | Inscrire rapidement le premier administrateur | High | Laisser le déploiement joignable avant qu'un administrateur ne s'inscrive permet à quiconque dispose de l'URL de s'approprier le compte administrateur initial. |
+| `ingress_settings` | `all` | Medium | La définir à `internal` bloque l'accès à l'interface web pour toute personne extérieure au VPC. |
+| `backup_retention_days` | `7` (à augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
+| `enable_cloud_armor` | à activer en production | Medium | L'interface d'administration est publiquement accessible sans protection WAF. |
 
 ---
 

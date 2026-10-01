@@ -39,7 +39,7 @@ Google Cloud :
 | Secrets | Secret Manager → Secret K8s natif | `MEILI_MASTER_KEY` générée automatiquement (l'identifiant administrateur de la recherche) |
 | Entrée | Cloud Load Balancing (facultatif) | Service LoadBalancer par défaut ; Gateway externe + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données, pas de Redis.** Meilisearch persiste tout — index, documents,
   paramètres, tâches — dans le répertoire `/meili_data`. Il n'y a ni instance Cloud SQL
@@ -74,7 +74,7 @@ Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) (sorties) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Meilisearch {#a-gke-autopilot--the-meilisearch-workload}
 
@@ -130,7 +130,7 @@ comme un identifiant racine et délivrez des clés à portée limitée (`POST /k
   kubectl get secret -n "$NAMESPACE"       # the synced native K8s Secret
   ```
 
-L'ID du secret de la clé maître figure dans les [Outputs](#5-outputs) (`meilisearch_api_key_secret_id`).
+L'ID du secret de la clé maître figure dans les [sorties](#5-outputs) (`meilisearch_api_key_secret_id`).
 Consultez [App_GKE](App_GKE.md) pour le modèle d'injection des secrets et leur rotation.
 
 ### D. Réseau et entrée {#d-networking--ingress}
@@ -166,7 +166,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application Meilisearch {#3-meilisearch-application-behaviour}
 
-- **Aucune tâche d'initialisation.** Meilisearch gère son propre stockage et ne nécessite aucun
+- **Aucun job d'initialisation.** Meilisearch gère son propre stockage et ne nécessite aucun
   amorçage de base de données ; aucune tâche `db-init` ne s'exécute donc. La première requête qui crée un
   index initialise à la demande le répertoire `/meili_data`.
 - **Le mode production exige la clé maître.** Avec `MEILI_ENV = production`,
@@ -213,14 +213,14 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails disposant d'un accès au projet et recevant les alertes de surveillance. |
@@ -228,7 +228,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `meilisearch` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Étiquette de l'image Meilisearch ; `latest` correspond au build figé `v1.11`. Figez une version en production. |
@@ -236,7 +236,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour ne provisionner que l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par pod. |
@@ -249,7 +249,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres `MEILI_*` supplémentaires. Les valeurs principales sont définies automatiquement. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager. |
@@ -258,7 +258,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster ; vide pour une découverte automatique. |
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
@@ -269,7 +269,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Définir `true` pour un PVC Persistent Disk (recommandé). Sélectionne automatiquement StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod ; ne peut pas être réduite après la création. |
@@ -280,7 +280,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Crée un ResourceQuota d'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des suffixes binaires** (`4Gi`, `8192Mi`) ; des entiers nus sont des octets et bloquent la planification. |
@@ -288,14 +288,14 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health`, délai de 15s | Sonde de démarrage ; renvoie `{"status":"available"}` lorsque le moteur est prêt. |
 | `liveness_probe` | HTTP `/health`, délai de 30s | Sonde de vivacité (même point de terminaison). |
@@ -304,11 +304,11 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/health`. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucune tâche d'initialisation par défaut ; ne fournissez des tâches que pour un chargement de données personnalisé. |
+| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucun job d'initialisation par défaut ; ne fournissez des tâches que pour un chargement de données personnalisé. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (par exemple, snapshots de dumps). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Meilisearch. |
 
@@ -320,7 +320,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Meilisearch utilise GCS ou un PVC pour le stockage ; NFS est désactivé par défaut. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
@@ -328,7 +328,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Le bucket `<prefix>-storage` est toujours créé (utilisé sur `/meili_data` en l'absence de PVC). |
 | `storage_buckets` | `[]` | Buckets supplémentaires à provisionner. |
@@ -338,7 +338,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Planification cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -346,7 +346,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne la Gateway pour les noms d'hôte personnalisés + certificat géré. Ne prend effet que lorsque `application_domains` n'est pas vide. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -358,7 +358,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 > requêtes entrantes, y compris les appels d'applications interrogeant l'API de recherche. Activez-le pour
 > un point de terminaison verrouillé destiné à des humains ; émettez des clés d'API à portée limitée pour l'accès programmatique.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google devant Meilisearch (nécessite `enable_custom_domain`). |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder. |
@@ -366,7 +366,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR disposant d'un accès privilégié. |
@@ -375,7 +375,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définis)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -414,14 +414,14 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` avec un PVC activé, IAP sans identités autorisées ni client OAuth, des quotas de mémoire sans suffixes binaires, un `backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_api_key` | `true` | Critical | Le désactiver supprime la clé maître ; en mode production, Meilisearch refuse de démarrer, et s'il s'exécutait, quiconque atteint le Service pourrait lire ou supprimer tous les index. |
 | `max_instance_count` | `1` | Critical | Plus d'un pod partageant le PVC RWO ou le bucket GCS corrompt l'index. |

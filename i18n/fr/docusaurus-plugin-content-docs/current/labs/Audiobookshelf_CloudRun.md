@@ -19,7 +19,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris son paramètre d'entrée (ingress).
@@ -41,7 +41,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour ne comportent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -63,7 +63,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, un **bucket d'état** GCS dédié
    monté sur `/data` via GCS FUSE, et construit l'image de conteneur légère qui enveloppe l'image amont
    (`FROM ghcr.io/advplyr/audiobookshelf`) dans Artifact Registry. Il n'y a **ni base de
-   données Cloud SQL, ni Redis, ni tâche d'initialisation** — Audiobookshelf initialise lui-même
+   données Cloud SQL, ni Redis, ni job d'initialisation** — Audiobookshelf initialise lui-même
    sa base de données SQLite au premier démarrage. Sans base de données à créer, les premiers déploiements sont
    relativement rapides : environ **10–20 minutes** (le build de l'image par Cloud Build
    représente l'essentiel de la durée).
@@ -110,7 +110,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -123,7 +123,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la
    page de détails du déploiement — le module gère la spécification du service ; la mise à l'échelle est donc une
    modification de configuration, et non une modification manuelle via `gcloud` (une modification manuelle serait annulée
-   lors de l'application suivante). **Conservez `max_instance_count = 1`** : Audiobookshelf sert une
+   lors du prochain apply). **Conservez `max_instance_count = 1`** : Audiobookshelf sert une
    bibliothèque SQLite partagée unique depuis un seul volume — un second rédacteur risque de la corrompre.
    `min_instance_count = 0` ne met pas les données en danger (l'état est sur GCS) mais ajoute un démarrage à froid.
 
@@ -132,7 +132,7 @@ export REGION="us-central1"          # the region you deploy into
    nouvelle révision est déployée. Notez que `latest` construit la version amont épinglée — épinglez une
    étiquette explicite pour maîtriser les mises à niveau.
 
-4. **Gérez l'état persistant et les tâches** (tout l'état d'Audiobookshelf — base SQLite,
+4. **Gérez l'état persistant et les jobs** (tout l'état d'Audiobookshelf — base SQLite,
    configuration, pochettes, métadonnées — se trouve dans le bucket `/data`) :
 
    ```bash
@@ -153,13 +153,13 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou l'Explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -192,7 +192,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas d'une version d'Audi
   `execution_environment` doit valoir `gen2`, et le bucket `storage` doit exister
   (`gcloud storage buckets list --filter="name~audiobookshelf"`). Les signalements de perte d'état
   signifient généralement que le bucket a été recréé, et non que SQLite a échoué.
-- **Échec de la tâche d'initialisation :** ce module n'injecte aucune tâche d'initialisation par défaut ; les échecs
+- **Échec du job d'initialisation :** ce module n'injecte aucun job d'initialisation par défaut ; les échecs
   à ce niveau ne concernent donc que les tâches personnalisées que vous avez ajoutées :
   ```bash
   gcloud run jobs executions list --project="$PROJECT" --region="$REGION"

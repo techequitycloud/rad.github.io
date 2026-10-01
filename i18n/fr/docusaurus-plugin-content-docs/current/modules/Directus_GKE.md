@@ -19,11 +19,11 @@ Ce guide se concentre sur les services cloud qu'utilise Directus et sur la mani�
 
 Directus s'exécute comme une charge de travail Node.js. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Directus code en dur `DB_CLIENT = "pg"` |
-| Fichiers partagés | Filestore (NFS) | Ressources et médias téléversés partagés entre toutes les réplicas |
+| Fichiers partagés | Filestore (NFS) | Ressources et médias téléversés partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket dédié aux téléversements ; GCS est le pilote de stockage Directus par défaut |
 | Cache | Redis | Activé par défaut ; utilise par défaut l'IP de l'hôte NFS lorsqu'aucun hôte explicite n'est défini |
 | Secrets | Secret Manager | KEY, SECRET, ADMIN_PASSWORD et URL de connexion REDIS générés automatiquement |
@@ -43,8 +43,8 @@ Directus s'exécute comme une charge de travail Node.js. Le déploiement assembl
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Directus {#a-gke-autopilot--the-directus-workload}
 
@@ -75,11 +75,11 @@ Directus stocke toutes les données applicatives dans une instance gérée Cloud
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le mot de passe sont tous exposés dans les [Outputs](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
+Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le mot de passe sont tous exposés dans les [sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
-Les ressources téléversées sont écrites sur un partage **Filestore (NFS)** monté dans chaque pod, afin que toutes les réplicas voient les mêmes fichiers. Un bucket **Cloud Storage** dédié aux téléversements est également provisionné ; Directus est configuré pour utiliser GCS comme pilote de stockage principal via `STORAGE_GCS_DRIVER = "gcs"`.
+Les ressources téléversées sont écrites sur un partage **Filestore (NFS)** monté dans chaque pod, afin que tous les réplicas voient les mêmes fichiers. Un bucket **Cloud Storage** dédié aux téléversements est également provisionné ; Directus est configuré pour utiliser GCS comme pilote de stockage principal via `STORAGE_GCS_DRIVER = "gcs"`.
 
 - **Console :** Filestore → Instances pour le partage NFS ; Cloud Storage → Buckets pour le bucket de téléversements.
 - **CLI :**
@@ -121,7 +121,7 @@ Quatre secrets sont générés et stockés automatiquement : `KEY` (chiffrement 
   gcloud secrets versions access latest --secret=<database_password_secret> --project "$PROJECT"
   ```
 
-Le nom `database_password_secret` figure dans les [Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
+Le nom `database_password_secret` figure dans les [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
 
@@ -166,14 +166,14 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. Ne pas modifier après le premier déploiement. |
 | `support_users` | `[]` | E-mails bénéficiant de l'accès au projet et des alertes de surveillance. |
@@ -181,7 +181,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `directus` | Nom de base des ressources. Ne pas modifier après le premier déploiement — il est intégré aux identifiants des secrets Secret Manager. |
 | `application_display_name` | `Directus CMS` | Nom convivial affiché dans la console. |
@@ -190,7 +190,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure (Cloud SQL, stockage, secrets) sans déployer la charge de travail. |
 | `cpu_limit` | `2000m` | CPU par pod ; 2 vCPU recommandés pour une génération d'API réactive. |
@@ -203,14 +203,14 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Remplacez `ADMIN_EMAIL` ici avant le premier déploiement. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service. |
 | `workload_type` | `Deployment` | `Deployment` (sans état) ou `StatefulSet`. Pour la plupart des déploiements Directus, conservez la valeur par défaut et utilisez `enable_nfs = true` pour les ressources partagées. |
@@ -219,7 +219,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `false` | Activer les modèles de PVC par pod dans la spécification du StatefulSet. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage par PVC de pod. Ne peut pas être réduite après le provisionnement. |
@@ -231,7 +231,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protéger la disponibilité lors des mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Augmentez `min_instance_count` au-dessus de 1 si vous avez besoin d'une marge pour les évictions. |
@@ -239,7 +239,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | `/server/ping`, HTTP, failure_threshold=10 | Sonde de démarrage Kubernetes. Accorde jusqu'à 300 s pour les migrations du premier démarrage. |
 | `liveness_probe` | `/server/ping`, HTTP | Sonde de vivacité Kubernetes ; le pod est redémarré après 3 échecs consécutifs. |
@@ -248,7 +248,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré fourni par `Directus_Common`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrents (par ex. purge du cache, synchronisation des données). |
@@ -260,14 +260,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Volume Filestore partagé pour les ressources téléversées (à garder activé en multi-réplica). |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionner les buckets supplémentaires de `storage_buckets`. Le bucket de téléversements de `Directus_Common` est toujours provisionné. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires en plus du bucket de téléversements provisionné automatiquement. |
@@ -276,7 +276,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | Utiliser Redis pour la mise en cache et la limitation du débit. |
 | `redis_host` | `""` | Laissez vide pour utiliser l'IP de l'hôte NFS ; définissez-le explicitement pour une instance Memorystore dédiée. |
@@ -285,7 +285,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Directus exige PostgreSQL. Ne pas modifier. |
 | `db_name` | `directus` | Nom de la base de données PostgreSQL. Ne pas modifier après le premier déploiement. |
@@ -297,7 +297,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -309,7 +309,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionner un Ingress pour les noms d'hôte personnalisés + un certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -317,7 +317,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exiger une connexion Google devant Directus. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
@@ -326,7 +326,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associer une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés pour l'accès privilégié. |
@@ -335,7 +335,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). Utilisez d'abord `vpc_sc_dry_run = true`. |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -343,14 +343,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir [App_GKE](Ap
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP pour les services propres à chaque étape (Cloud Deploy). |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |

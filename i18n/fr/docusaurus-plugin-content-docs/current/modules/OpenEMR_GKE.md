@@ -11,8 +11,7 @@ description: "Référence de configuration pour déployer OpenEMR sur GKE Autopi
 
 OpenEMR est le système open source de dossiers médicaux électroniques (DME) et de gestion
 de cabinet le plus largement adopté au monde, utilisé par plus de 100 000 professionnels de
-santé dans plus de 100 pays. Ce module déploie OpenEMR sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
+santé dans plus de 100 pays. Ce module déploie OpenEMR sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise OpenEMR et sur la manière de les
@@ -20,7 +19,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -29,11 +28,11 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 OpenEMR s'exécute comme une charge de travail Apache/PHP 8.3 FPM sur Alpine 3.20. Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Apache/PHP, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — OpenEMR ne prend pas en charge PostgreSQL |
-| Documents des patients | Filestore (NFS) | Répertoire `sites/` contenant les documents des patients, le cache de sessions et l'état de l'application, partagé entre toutes les réplicas |
+| Documents des patients | Filestore (NFS) | Répertoire `sites/` contenant les documents des patients, le cache de sessions et l'état de l'application, partagé entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket de données à usage général |
 | Stockage des sessions | Redis | Activé par défaut ; se rabat sur l'adresse IP du serveur NFS lorsqu'aucun hôte Redis n'est indiqué |
 | Secrets | Secret Manager | Mot de passe administrateur (`OE_PASS`) et mot de passe de la base de données (`MYSQL_PASS`) générés automatiquement |
@@ -120,7 +119,7 @@ consultez [App_GKE](App_GKE.md).
 Le répertoire `sites/` d'OpenEMR est écrit sur un partage **Filestore (NFS)** monté dans
 chaque pod sur `/var/www/localhost/htdocs/openemr/sites`. Ce répertoire contient
 `sqlconf.php` (qui signale la fin de l'installation), les documents téléversés pour les
-patients, les caches de modèles Twig/Smarty et les données de session. Toutes les réplicas
+patients, les caches de modèles Twig/Smarty et les données de session. Tous les réplicas
 doivent partager le même montage NFS. Un bucket **Cloud Storage** à usage général est
 également provisionné.
 
@@ -137,7 +136,7 @@ doivent partager le même montage NFS. Un bucket **Cloud Storage** à usage gén
 
 Consultez [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options CMEK.
 
-### D. Stockage des sessions dans Redis {#d-redis-session-store}
+### D. Magasin de sessions Redis {#d-redis-session-store}
 
 Redis sert de stockage aux sessions PHP d'OpenEMR. Lorsque `redis_host` est laissé vide et
 que le NFS est activé, l'instance Redis colocalisée sur le serveur NFS est utilisée
@@ -174,7 +173,7 @@ L'ID du secret du mot de passe administrateur est exposé dans la sortie
 dans `database_password_secret`. Consultez [App_GKE](App_GKE.md) pour l'intégration Secret
 Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load
 Balancing. Un domaine personnalisé avec un certificat géré par Google peut être activé, et
@@ -282,7 +281,7 @@ leurs valeurs par défaut standard.
 | `resource_creator_identity` | `rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com` | Compte de service utilisé par Terraform pour créer les ressources. |
 | `impersonation_service_account` | `""` | Compte de service dont l'identité est empruntée pour les scripts shell (découverte, mise en miroir des images, configuration NFS). Laissez vide pour utiliser les identifiants de l'exécuteur. |
 | `job_execution_wait_timeout` | `900` | Nombre maximal de secondes pendant lesquelles un déploiement attend le job `db-init` avant d'interrompre l'apply. |
-| `explicit_secret_values` / `scripts_dir` | `{}` / `""` | Repris de la fondation, **non référencés** par ce module. |
+| `explicit_secret_values` / `scripts_dir` | `{}` / `""` | Repris du socle, **non référencés** par ce module. |
 | `requires_services` | _(create_postgres=true, create_mysql=false, create_redis=false, create_network_filesystem=true, create_google_kubernetes_engine=true, autres à false)_ | Indique à la plateforme quelles ressources `Services_GCP` provisionner automatiquement pour ce module. |
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
@@ -297,7 +296,7 @@ leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -305,29 +304,29 @@ leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `openemr` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `application_display_name` / `application_description` | _(valeurs par défaut de la fondation)_ | Champs repris de la fondation. **Non référencés** — utilisez plutôt `display_name` / `description`. |
+| `application_display_name` / `application_description` | _(valeurs par défaut du socle)_ | Champs repris du socle. **Non référencés** — utilisez plutôt `display_name` / `description`. |
 | `application_version` | `7.0.4` | Tag de version de l'image OpenEMR ; incrémentez-le pour déployer une nouvelle version. |
 | `display_name` | `OpenEMR` | Nom convivial affiché dans la console et les tableaux de bord. |
 | `description` | _(définie)_ | Annotation de description de la charge de travail. |
 
-### Groupe 4 — Exécution et dimensionnement {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `container_image_source` / `container_image` / `container_build_config` | _(valeurs par défaut de la fondation)_ | Approvisionnement de l'image repris de la fondation. **Non référencés** — `OpenEMR_Common` construit toujours une image personnalisée. |
+| `container_image_source` / `container_image` / `container_build_config` | _(valeurs par défaut du socle)_ | Approvisionnement de l'image repris du socle. **Non référencés** — `OpenEMR_Common` construit toujours une image personnalisée. |
 | `enable_image_mirroring` | `true` | Met en miroir l'image OpenEMR dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
-| `container_port` | `8080` | Port du conteneur repris de la fondation. **Non référencé** — `main.tf` impose le port `80` en dur. |
-| `container_protocol` | `http1` | Protocole HTTP repris de la fondation. **Non référencé.** |
-| `container_resources` | _(valeurs par défaut de la fondation)_ | Objet CPU/mémoire repris de la fondation. **Non référencé** — utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`. |
+| `container_port` | `8080` | Port du conteneur repris du socle. **Non référencé** — `main.tf` impose le port `80` en dur. |
+| `container_protocol` | `http1` | Protocole HTTP repris du socle. **Non référencé.** |
+| `container_resources` | _(valeurs par défaut du socle)_ | Objet CPU/mémoire repris du socle. **Non référencé** — utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`. |
 | `cpu_limit` | `2000m` | CPU par pod ; 2 vCPU recommandés pour des charges de travail cliniques concurrentes. |
 | `memory_limit` | `4Gi` | Mémoire par pod ; 4 GiB au minimum en production. |
 | `ephemeral_storage_limit` | `8Gi` | Stockage éphémère pour l'opcache PHP, les journaux Apache et les fichiers temporaires. GKE Autopilot plafonne le stockage éphémère total d'un pod à 10 GiB ; le sidecar Auth Proxy en utilise environ 1 GiB, ce qui laisse un maximum de 9 GiB. |
 | `min_instance_count` | `1` | Nombre minimal de réplicas. Conservez une valeur ≥ 1 pour éviter les délais de démarrage à froid pour les utilisateurs cliniques. |
 | `max_instance_count` | `1` | N'augmentez cette valeur qu'après avoir confirmé que le partage des sessions via Redis est opérationnel. |
-| `enable_cloudsql_volume` | `true` | Activation du sidecar Cloud SQL Auth Proxy reprise de la fondation. **Non référencé** — `openemr.tf` force toujours cette valeur à `true` en interne. |
+| `enable_cloudsql_volume` | `true` | Activation du sidecar Cloud SQL Auth Proxy reprise du socle. **Non référencé** — `openemr.tf` force toujours cette valeur à `true` en interne. |
 | `cloud_sql_proxy_version` | `2-alpine` | Tag de l'image du sidecar Cloud SQL Auth Proxy. |
-| `cloudsql_volume_mount_path` | `/cloudsql` | Chemin du socket de l'Auth Proxy repris de la fondation. **Non référencé.** |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Chemin du socket de l'Auth Proxy repris du socle. **Non référencé.** |
 | `service_annotations` / `service_labels` | `{}` | Annotations/libellés personnalisés du Service Kubernetes. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête en secondes (0–3600). |
@@ -347,13 +346,13 @@ leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster cible. Laissez vide pour la découverte automatique. |
-| `gke_cluster_selection_mode` | `primary` | Stratégie de sélection du cluster reprise de la fondation. **Non référencé.** |
+| `gke_cluster_selection_mode` | `primary` | Stratégie de sélection du cluster reprise du socle. **Non référencé.** |
 | `namespace_name` | `""` | Espace de noms Kubernetes. Laissez vide pour le générer automatiquement. |
 | `prereq_gke_subnet_cidr` / `prereq_subnet_cidr_override` / `prereq_gke_pod_cidr_override` / `prereq_gke_service_cidr_override` | _(dérivées automatiquement)_ | Remplacements de CIDR pour un VPC/cluster GKE intégré lorsque `Services_GCP` n'existe pas encore. Sur les déploiements existants, renseignez les valeurs déjà appliquées pour éviter un remplacement. |
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service. |
 | `session_affinity` | `ClientIP` | Routage persistant requis pour les sessions PHP d'OpenEMR. |
-| `enable_multi_cluster_service` | `false` | Activation de Multi-Cluster Services reprise de la fondation. **Non référencé.** |
-| `extra_service_ports` | `[]` | Ports de Service supplémentaires pour les charges de travail multiprotocoles, repris de la fondation. **Non référencé** — déclaré uniquement pour la parité des conventions. |
+| `enable_multi_cluster_service` | `false` | Activation de Multi-Cluster Services reprise du socle. **Non référencé.** |
+| `extra_service_ports` | `[]` | Ports de Service supplémentaires pour les charges de travail multiprotocoles, repris du socle. **Non référencé** — déclaré uniquement pour la parité des conventions. |
 | `configure_service_mesh` | `false` | Active l'injection du sidecar Istio pour l'espace de noms. |
 | `enable_network_segmentation` | `false` | Crée des ressources NetworkPolicy Kubernetes. |
 | `termination_grace_period_seconds` | `30` | Nombre de secondes pendant lesquelles Kubernetes attend après SIGTERM avant SIGKILL. |
@@ -393,7 +392,7 @@ leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe_config` / `health_check_config` | _(valeurs par défaut de la fondation)_ | Objets de sonde repris de la fondation. **Non référencés** — utilisez plutôt `startup_probe` / `liveness_probe`. |
+| `startup_probe_config` / `health_check_config` | _(valeurs par défaut du socle)_ | Objets de sonde repris du socle. **Non référencés** — utilisez plutôt `startup_probe` / `liveness_probe`. |
 | `startup_probe` | TCP sur le port 80, 12 échecs × 10s | Sonde TCP ; laisse jusqu'à 120 secondes pour le démarrage. Augmentez `failure_threshold` pour les premiers déploiements avec des bases de données volumineuses. |
 | `liveness_probe` | HTTP `GET /interface/login/login.php`, 10 échecs × 30s | La page de connexion ne renvoie HTTP 200 que lorsque Apache, PHP-FPM et la connexion à la base de données sont tous opérationnels. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
@@ -440,7 +439,7 @@ règle).
 | `delete_untagged_images` | `true` | Supprime automatiquement les images sans tag. |
 | `image_retention_days` | `30` | Nombre de jours après lesquels les images deviennent éligibles à la suppression. |
 
-### Groupe 15 — Stockage des sessions dans Redis {#group-15--redis-session-store}
+### Groupe 15 — Magasin de sessions Redis {#group-15--redis-session-store}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -453,18 +452,18 @@ règle).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES` | Sélecteur du moteur de base de données repris de la fondation. **Non référencé** — `OpenEMR_Common` définit toujours `MYSQL_8_0`. |
-| `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Ciblage de l'instance Cloud SQL repris de la fondation. **Non référencés.** |
-| `application_database_name` / `application_database_user` | `gkeappdb` / `gkeappuser` | Nom/utilisateur de base de données repris de la fondation. **Non référencés** — utilisez plutôt `db_name` / `db_user`. |
+| `database_type` | `POSTGRES` | Sélecteur du moteur de base de données repris du socle. **Non référencé** — `OpenEMR_Common` définit toujours `MYSQL_8_0`. |
+| `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Ciblage de l'instance Cloud SQL repris du socle. **Non référencés.** |
+| `application_database_name` / `application_database_user` | `gkeappdb` / `gkeappuser` | Nom/utilisateur de base de données repris du socle. **Non référencés** — utilisez plutôt `db_name` / `db_user`. |
 | `db_name` | `openemr` | Nom de la base de données MySQL. Immuable après le premier déploiement. |
 | `db_user` | `openemr` | Utilisateur de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
-| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Installateur d'extensions PostgreSQL repris de la fondation. **Non référencés** — OpenEMR utilise MySQL. |
-| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Installateur de plugins MySQL repris de la fondation. **Non référencés** par ce module. |
+| `enable_postgres_extensions` / `postgres_extensions` | `false` / `[]` | Installateur d'extensions PostgreSQL repris du socle. **Non référencés** — OpenEMR utilise MySQL. |
+| `enable_mysql_plugins` / `mysql_plugins` | `false` / `[]` | Installateur de plugins MySQL repris du socle. **Non référencés** par ce module. |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. Nécessite un redémarrage des pods pour prendre en compte le nouveau secret. |
 | `rotation_propagation_delay_sec` | `90` | Nombre de secondes d'attente après la rotation avant de redémarrer les pods. |
-| `db_password_env_var_name` | `""` | Variable d'environnement supplémentaire pour le mot de passe, reprise de la fondation. **Non référencé** — `main.tf` impose `MYSQL_PASS` en dur. |
-| `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` | `""` | Noms de variables d'environnement de base de données supplémentaires repris de la fondation. **Non référencés** par ce module. |
+| `db_password_env_var_name` | `""` | Variable d'environnement supplémentaire pour le mot de passe, reprise du socle. **Non référencé** — `main.tf` impose `MYSQL_PASS` en dur. |
+| `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` | `""` | Noms de variables d'environnement de base de données supplémentaires repris du socle. **Non référencés** par ce module. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
@@ -474,7 +473,7 @@ règle).
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production/la conformité. |
 | `enable_backup_import` | `false` | Restaure à partir d'une sauvegarde lors du déploiement. |
 | `backup_source` | `gcs` | Source de l'import : `gcs` ou `gdrive`. |
-| `backup_file` | `backup.sql` | Nom du fichier de sauvegarde repris de la fondation. **Non référencé** — utilisez plutôt `backup_uri`. |
+| `backup_file` | `backup.sql` | Nom du fichier de sauvegarde repris du socle. **Non référencé** — utilisez plutôt `backup_uri`. |
 | `backup_uri` | `""` | URI GCS (`gs://bucket/path`) ou ID de fichier Google Drive. Lorsqu'il est défini, il est injecté dans `nfs-init` sous la forme `BACKUP_FILEID`. |
 | `backup_format` | `sql` | Format du fichier de sauvegarde : `sql`, `tar`, `gz`, `tgz`, `tar.gz` ou `zip`. |
 
@@ -484,7 +483,7 @@ règle).
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Voir [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -549,7 +548,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -578,21 +577,21 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
 | `backup_schedule` | `0 2 * * *` | Critical | Désactiver les sauvegardes d'un DME contenant des PHI constitue une violation de la conformité HIPAA. |
 | `ephemeral_storage_limit` | `8Gi` | Critical | OpenEMR écrit l'opcache PHP, les journaux Apache et les fichiers temporaires dans la couche du conteneur. La valeur par défaut de 1 GiB de GKE Autopilot est insuffisante — le pod est évincé pendant le démarrage. |
-| `enable_redis` | `true` | High | Avec plus d'une réplica, des sessions PHP isolées par pod provoquent des échecs de connexion et des pertes de session. |
+| `enable_redis` | `true` | High | Avec plus d'un réplica, des sessions PHP isolées par pod provoquent des échecs de connexion et des pertes de session. |
 | `redis_host` | `""` (NFS) ou explicite | High | Un hôte Redis inaccessible provoque des échecs de session PHP et empêche toute connexion. |
 | `memory_limit` | `4Gi` | High | La génération de PDF et les rapports de facturation d'OpenEMR sont gourmands en mémoire. Moins de 2 GiB provoque des arrêts OOM en cours de requête. |
 | `session_affinity` | `ClientIP` | High | Sans persistance, les déploiements à plusieurs réplicas perdent l'état des sessions entre les requêtes. |
 | `min_instance_count` | `1` | High | La réduction à zéro entraîne des délais de démarrage à froid de 20 à 40 secondes — inacceptables pour l'accès clinique. |
-| `enable_pod_disruption_budget` | à activer lorsque `min_instance_count` > 1 | High | Désactivé par défaut car `max_instance_count = 1` — un PDB bloquerait définitivement le drainage des nœuds sur un déploiement à pod unique. Activez-le lorsque vous dépassez une réplica. |
+| `enable_pod_disruption_budget` | à activer lorsque `min_instance_count` > 1 | High | Désactivé par défaut car `max_instance_count = 1` — un PDB bloquerait définitivement le drainage des nœuds sur un déploiement à pod unique. Activez-le lorsque vous dépassez un réplica. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Les environnements soumis à HIPAA doivent conserver au moins 90 jours. |
 | `enable_iap` / `enable_cloud_armor` | à activer dans le secteur de la santé | Medium | L'interface d'administration d'OpenEMR est accessible publiquement sans ces contrôles. |
 | `enable_audit_logging` | `true` pour HIPAA | Medium | HIPAA exige la journalisation d'audit des accès aux PHI. |
 | `enable_vpc_sc` | définir `organization_id` explicitement | Medium | Sans ID d'organisation explicite, VPC-SC ignore silencieusement la création du périmètre — ce qui donne un faux sentiment de sécurité. |
-| `container_image_source` / `container_port` / `container_resources` / `database_type` / `application_database_name` / `db_password_env_var_name` (Groupe 4/16/10) | laisser la valeur par défaut | Low | Ces variables reprises de la fondation ne sont déclarées que pour la parité avec `check_conventions.py` et ne sont **pas transmises** par `main.tf` — les modifier n'a aucun effet. Utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`, `db_name`/`db_user` et `startup_probe`/`liveness_probe`. |
+| `container_image_source` / `container_port` / `container_resources` / `database_type` / `application_database_name` / `db_password_env_var_name` (Groupe 4/16/10) | laisser la valeur par défaut | Low | Ces variables reprises du socle ne sont déclarées que pour la parité avec `check_conventions.py` et ne sont **pas transmises** par `main.tf` — les modifier n'a aucun effet. Utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`, `db_name`/`db_user` et `startup_probe`/`liveness_probe`. |
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — IAM et Workload
+Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à OpenEMR partagée avec la

@@ -28,10 +28,10 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Domaine | Fourni par Wallos_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | **Aucun.** Wallos stocke ses utilisateurs dans sa propre base SQLite embarquée ; aucune variable d'environnement Secret Manager n'est générée | Les outputs `secret_ids` / `secret_values` sont volontairement vides |
-| Image de conteneur | Récupère `bellamy/wallos` **directement** — une véritable image tierce précompilée, sans Dockerfile ni étape Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Récupère `bellamy/wallos` **directement** — une véritable image tierce précompilée, sans Dockerfile ni étape Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe `database_type = "NONE"` — Wallos utilise un fichier **SQLite embarqué** ; il est confirmé qu'aucune prise en charge de MySQL/Postgres n'existe dans l'application | §Persistance dans les guides des plateformes |
-| Amorçage de la base de données | **Aucun.** Aucune tâche `db-init` n'est injectée ; `initialization_jobs` reste vide sauf si l'opérateur fournit des tâches personnalisées | Output `initialization_jobs` |
-| Stockage objet | Déclare **deux** buckets Cloud Storage : `db` (le fichier SQLite) et `uploads` (logos de fournisseurs téléversés par les utilisateurs) | Output `storage_buckets` |
+| Amorçage de la base de données | **Aucun.** Aucune tâche `db-init` n'est injectée ; `initialization_jobs` reste vide sauf si l'opérateur fournit des tâches personnalisées | Sortie `initialization_jobs` |
+| Stockage objet | Déclare **deux** buckets Cloud Storage : `db` (le fichier SQLite) et `uploads` (logos de fournisseurs téléversés par les utilisateurs) | Sortie `storage_buckets` |
 | Paramètres principaux | Fixe le conteneur sur le port 80 ; aucune variable d'environnement ne permet de déplacer l'un ou l'autre répertoire persistant | Comportement de l'application dans les guides des plateformes |
 | Travail en arrière-plan | Un **véritable démon cron toujours actif** dans le conteneur (8 tâches planifiées intégrées) | §Contraintes de mise à l'échelle dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde par défaut de démarrage/d'activité ciblant `/` (aucun point de terminaison `/health` dédié n'est documenté pour cette image) | §Observabilité dans les guides des plateformes |
@@ -118,7 +118,7 @@ montage sans masquer le code de l'application — chacun dispose de son propre b
 Les emplacements des deux buckets sont laissés vides afin que le socle les résolve
 vers la région de déploiement découverte automatiquement
 (`coalesce(bucket.location, region)`), ce qui évite de forcer le remplacement des
-buckets à emplacement immuable lors d'une réapplication dans une autre région.
+buckets à emplacement immuable lors d'un nouvel apply dans une autre région.
 
 Listez-les avec :
 
@@ -170,7 +170,7 @@ connexion non authentifiée de Wallos. `bellamy/wallos` ne documente aucun point
 terminaison de contrôle de santé dédié ; il s'agit donc d'un signal de
 disponibilité grossier plutôt que d'un signal conçu à cet effet : la sonde de
 démarrage utilise un délai initial de 15 secondes avec une fenêtre de 10 tentatives,
-et la sonde d'activité un délai de 30 secondes.
+et la sonde de vivacité un délai de 30 secondes.
 
 ---
 

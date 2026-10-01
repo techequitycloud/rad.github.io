@@ -18,7 +18,7 @@ dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Gokapi, consultez les
 guides de plateforme ([Gokapi_GKE](Gokapi_GKE.md), [Gokapi_CloudRun](Gokapi_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -83,7 +83,7 @@ de plateforme.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 **Aucun (SQLite sur un stockage monté).** `Gokapi_Common` code en dur
-`database_type = "NONE"` dans la sortie `config` qu'il renvoie à la fondation.
+`database_type = "NONE"` dans la sortie `config` qu'il renvoie au socle.
 Il n'y a ni instance Cloud SQL, ni tâche `db-init`, ni utilisateur/mot de passe
 de base de données d'aucune sorte. Gokapi gère entièrement son état lui-même :
 il écrit une base de données SQLite interne sous `GOKAPI_CONFIG_DIR` et stocke
@@ -98,7 +98,7 @@ données par défaut n'est injectée, puisqu'il n'y a aucune base à amorcer. Le
 champs `db_name` et `db_user` de la sortie `config` du module sont codés en dur
 avec des chaînes vides, et `enable_cloudsql_volume = false` / `enable_postgres_extensions =
 false` sont également figés — tous présents uniquement pour satisfaire le schéma
-générique de la fondation, et non parce que Gokapi les utilise.
+générique du socle, et non parce que Gokapi les utilise.
 
 ---
 
@@ -114,13 +114,13 @@ FROM f0rc3/gokapi:${GOKAPI_VERSION}
 
 Ce module ne contient pas d'`entrypoint.sh` — `scripts/` ne contient que le
 `Dockerfile` et un `cloudbuild.yaml` (plus un `.gitkeep`). Le seul objectif du
-wrapper est de permettre à la fondation de construire et de mettre en miroir
+wrapper est de permettre au socle de construire et de mettre en miroir
 l'image amont `f0rc3/gokapi` dans Artifact Registry sous `container_build_config`
 (`dockerfile_path = "Dockerfile"`, `context_path = "."`), plutôt que de la
 récupérer directement depuis Docker Hub au moment du déploiement.
 
 Le build utilise un **argument de build propre à l'application**,
-`GOKAPI_VERSION`, au lieu de l'argument générique `APP_VERSION` que la fondation
+`GOKAPI_VERSION`, au lieu de l'argument générique `APP_VERSION` que le socle
 injecte dans chaque build personnalisé (qui forcerait sinon le tag de l'image à
 `"latest"` — un tag que `f0rc3/gokapi` ne publie pas de façon fiable sous une
 forme stable). `Gokapi_Common` le résout ainsi :
@@ -131,7 +131,7 @@ GOKAPI_VERSION = var.application_version == "latest" ? "v1.9.6" : var.applicatio
 
 Ainsi, la valeur par défaut `application_version = "latest"`, commune à toute la
 plateforme, s'épingle tout de même sur un tag connu et testé (`v1.9.6`) au lieu
-de casser le build. Le `cloudbuild.yaml` de `scripts/` reproduit en ligne ce
+de casser le build. Le `cloudbuild.yaml` de `scripts/` reproduit en mode intégré (inline) ce
 contenu exact du Dockerfile sous forme d'étape de build Kaniko, en se
 réparant de lui-même face à un fichier vide ou absent avant le build.
 
@@ -142,7 +142,7 @@ variables d'environnement (voir ci-dessous) et par le volume monté.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Gokapi_Common` établit l'environnement Gokapi de référence afin que
 l'application démarre correctement dès le premier lancement. Contrairement à la
@@ -169,13 +169,13 @@ Les ajustements propres à chaque plateforme sont minimes et se situent presque
 entièrement en dehors de cette couche Common :
 
 - **Cloud Run** transmet `container_port = var.container_port` via la fusion de
-  `gokapi.tf` dans la configuration propre à l'application qui atteint la
-  fondation ; la valeur est donc techniquement active — mais la remplacer par une
+  `gokapi.tf` dans la configuration propre à l'application qui atteint le
+  socle ; la valeur est donc techniquement active — mais la remplacer par une
   autre valeur que `53842` acheminerait le trafic vers un port sur lequel le
   conteneur (fixé ici à `GOKAPI_PORT = "53842"`) n'écoute pas réellement.
   Conservez la valeur par défaut.
 - **GKE** déclare la variable équivalente `container_port` mais ne la transmet
-  jamais à la fondation — elle y est sans effet. La décision de persistance de
+  jamais au socle — elle y est sans effet. La décision de persistance de
   GKE (PVC en mode bloc ou GCS Fuse) est également pilotée depuis la variante GKE,
   et non directement depuis cette couche Common, même si le mécanisme
   (`enable_gcs_storage_volume`) est implémenté ici — voir la
@@ -213,7 +213,7 @@ si la déclaration sous-jacente est la même.
 `Gokapi_Common` déclare toujours un bucket Cloud Storage via sa sortie
 `storage_buckets` (`name_suffix = "storage"`, classe `STANDARD`,
 `force_destroy = true`, sans gestion des versions, `public_access_prevention =
-"enforced"`, et un `location` vide afin que la fondation le résolve en la région
+"enforced"`, et un `location` vide afin que le socle le résolve en la région
 de déploiement découverte automatiquement). Ce bucket est provisionné dès que
 `create_cloud_storage = true` (la valeur par défaut de la plateforme), quelle que
 soit la manière dont il est finalement utilisé.
@@ -248,7 +248,7 @@ _gokapi_extra_storage_volumes = var.enable_gcs_storage_volume ? [
 
 Les volumes supplémentaires fournis par l'appelant (`var.gcs_volumes`) sont
 concaténés avant le montage `storage` propre à ce module dans la liste
-`gcs_volumes` transmise à la fondation, si bien qu'un montage personnalisé ne
+`gcs_volumes` transmise au socle, si bien qu'un montage personnalisé ne
 remplace jamais le montage du bucket `storage`.
 
 Listez le bucket (présent sur les deux plateformes, monté uniquement selon la

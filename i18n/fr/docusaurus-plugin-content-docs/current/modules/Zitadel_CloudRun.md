@@ -152,7 +152,7 @@ Deux secrets sont générés automatiquement et stockés dans Secret Manager :
 administrateur initial (initialise l'utilisateur humain de la première instance au
 démarrage). Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~zitadel"
@@ -174,7 +174,7 @@ connectivité. Comme Zitadel sert gRPC + REST sur HTTP/2, définissez
 `container_protocol = "h2c"` pour obtenir HTTP/2 de bout en bout lorsque c'est
 nécessaire.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -191,7 +191,7 @@ disponibilité et des règles d'alerte en option. Les lignes de journal
 `[cloud-entrypoint]` indiquent le mode SSL de la base de données et le domaine externe
 résolus.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -289,7 +289,7 @@ comportement standard.
 | `max_instance_count` | `5` | Nombre maximal d'instances ; peut être augmenté sans risque — tout l'état réside dans PostgreSQL. |
 | `cpu_always_allocated` | `true` | Facturation basée sur les instances ; garde Zitadel réactif pour le trafic d'authentification. |
 | `enable_cloudsql_volume` | `true` | Connexion par socket via le Cloud SQL Auth Proxy. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
@@ -325,7 +325,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -448,7 +448,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images —
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Zitadel, partagée avec la variante GKE, est décrite dans
 **[Zitadel_Common](Zitadel_Common.md)**.

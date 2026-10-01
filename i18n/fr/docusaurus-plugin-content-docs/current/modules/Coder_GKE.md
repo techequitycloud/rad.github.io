@@ -47,7 +47,7 @@ un ensemble restreint et ciblé de services Google Cloud :
 | Entrée | Cloud Load Balancing | Ingress Kubernetes avec une IP statique globale réservée ; domaine personnalisé en option |
 | Build du conteneur | Cloud Build + Artifact Registry | Encapsule l'image en amont `ghcr.io/coder/coder` avec un point d'entrée cloud |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type` vaut par défaut
   `POSTGRES_15` ; une validation au moment du plan dans `validation.tf` rejette
@@ -68,7 +68,7 @@ un ensemble restreint et ciblé de services Google Cloud :
   `enable_nfs` et `enable_redis` valent tous deux `false` par défaut et ne sont
   pas nécessaires au fonctionnement normal.
 - **Aucune tâche de migration distincte.** Coder exécute ses propres migrations
-  de schéma au démarrage ; la seule tâche d'initialisation est `db-init`, qui
+  de schéma au démarrage ; le seul job d'initialisation est `db-init`, qui
   crée la base de données vide et le rôle.
 - **Mise à l'échelle horizontale par défaut.** `min_instance_count = 1`,
   `max_instance_count = 5` — le plan de contrôle sans état peut exécuter
@@ -96,9 +96,9 @@ de travail s'exécute sous forme d'un `Deployment` standard avec une stratégie
 `RollingUpdate` (sans la contrainte `Recreate` liée à NFS) et peut être mise à
 l'échelle horizontalement sans risque.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
   de travail Coder pour les pods, les révisions et les événements. Kubernetes
-  Engine → Services et entrées affiche l'IP externe.
+  Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -159,7 +159,7 @@ identifiant que contient Secret Manager est le mot de passe de la base de donné
 géré par le socle. Sur GKE, les secrets sont projetés dans les pods via le pilote
 CSI Secret Store.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~coder"
@@ -180,8 +180,7 @@ d'espace de travail, conservez `session_affinity = ClientIP` afin que les
 requêtes d'un client aboutissent sur le même pod pendant toute la durée d'une
 session.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
-  IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -198,8 +197,7 @@ de GKE et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests de
 disponibilité et des règles d'alerte sont disponibles en option
 (`uptime_check_config` est désactivé par défaut).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -215,7 +213,7 @@ disponibilité et des règles d'alerte sont disponibles en option
   `postgres:15-alpine`. Elle attend le side-car Cloud SQL Auth Proxy, crée de
   manière idempotente le rôle et la base de données `coder`, accorde les
   privilèges et réattribue la propriété du schéma `public`, puis signale au
-  side-car du proxy de s'arrêter (`--quitquitquit`) afin que le pod de la Job se
+  side-car du proxy de s'arrêter (`--quitquitquit`) afin que le pod du Job se
   termine. Coder exécute ensuite ses propres migrations de schéma au démarrage du
   serveur — il n'existe pas de tâche de migration dédiée, contrairement aux
   applications dotées d'une étape `db-migrate` distincte.
@@ -371,7 +369,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -387,7 +385,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous
 > sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse toutes les requêtes émises par Coder. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail, modèles, utilisateurs et clés de signature auto-générées. |

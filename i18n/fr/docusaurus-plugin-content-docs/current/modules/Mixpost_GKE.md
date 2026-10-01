@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud utilisés par Mixpost et sur la man
 
 Mixpost s'exécute sous forme d'une charge de travail web unique et autonome (l'image officielle `inovector/mixpost`). Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod nginx + PHP-FPM + supervisord sur le port 80, 2 vCPU / 2 GiB par défaut |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — le moteur est fixé à `MYSQL_8_0` |
@@ -29,7 +29,7 @@ Mixpost s'exécute sous forme d'une charge de travail web unique et autonome (l'
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une adresse IP statique réservée ; domaine personnalisé et certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la couche applicative partagée (`Mixpost_Common` définit `database_type = "MYSQL_8_0"` et `DB_CONNECTION = "mysql"`) ; les autres moteurs ne sont pas pris en charge.
 - **Cloud SQL est joint via le sidecar Auth Proxy en TCP simple sur la boucle locale, et non par un socket.** La variante définit `DB_HOST = 127.0.0.1` ; sur GKE, le Cloud SQL Auth Proxy (`enable_cloudsql_volume = true`) est un simple écouteur TCP sur `127.0.0.1:3306` (contrairement au socket Unix de Cloud Run). **Laissez cette valeur à `true`** — la désactiver fait se connecter le job `db-init` via l'adresse IP privée et se terminer avant le démarrage du proxy, de sorte que son signal d'arrêt `quitquitquit` est manqué et que le sidecar du proxy tourne indéfiniment, bloquant le job.
@@ -181,7 +181,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `container_port` | `80` | nginx + PHP-FPM servent du HTTP simple. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (boucle locale TCP) — obligatoire sur GKE ; le désactiver bloque le job `db-init`. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -272,28 +272,28 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé conjointement à un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Le propre `validation.tf` de `Mixpost_GKE` ajoute quatre gardes supplémentaires (ordre des instances min/max, source de l'hôte Redis, identifiants OAuth d'IAP, volume Cloud SQL face à `database_type = "NONE"`). Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, si bien que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` (fixe) | Critique | Ne peut pas être remplacé par un autre moteur ; `Mixpost_Common` code MySQL en dur quelle que soit la valeur apparente de cette variable. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `APP_KEY` (généré automatiquement) | Ne jamais le modifier | Critique | Faire tourner la clé Laravel après le premier démarrage invalide les données chiffrées de session/cookies et tous les champs chiffrés de la base de données. |
-| `enable_cloudsql_volume` | `true` | Critique | Le désactiver fait manquer au signal d'arrêt `quitquitquit` du job `db-init` le proxy pas encore démarré, bloquant le job indéfiniment sur GKE. |
-| `enable_redis` + `redis_host` / `enable_nfs` | `true` + NFS activé, ou un `redis_host` explicite | Élevé | Activer Redis sans source d'hôte (ni `redis_host`, ni NFS) laisse `REDIS_HOST` vide — bloqué au moment du plan par `validation.tf`, mais désactiver/vider les deux casse la file d'attente, le cache et les sessions. |
-| `startup_probe_config` / `health_check_config` | `type = "TCP"` | Élevé | Les passer en HTTP réintroduit l'échec de la redirection 302 vers `:443` — le Deployment entre en boucle de redémarrage à `0/1` alors que l'application est saine. |
-| `enable_nfs` | `true` | Élevé | Le désactiver supprime à la fois la persistance partagée des médias et (sauf si `redis_host` est défini) l'hôte Redis par défaut, ce qui dégrade la fiabilité de la publication. |
-| `min_instance_count` | `1` | Élevé | Descendre à `0` arrête le planificateur Laravel et le worker de file d'attente dans le pod — les publications sociales planifiées cessent silencieusement d'être publiées. |
-| `mixpost_admin_email` | Récupérer les identifiants réels après le déploiement | Moyen | La variable n'est pas injectée dans la configuration en cours d'exécution ; la première connexion se fait toujours avec `admin@example.com` / `changeme` — modifiez-les immédiatement après la première connexion. |
-| `memory_limit` | `2Gi` | Élevé | En dessous de l'ensemble de travail de PHP-FPM et des workers gérés par supervisord, les pods subissent des OOM sous charge. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Moyen | Sans cela, l'adresse IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URI de redirection OAuth enregistrées auprès des plateformes sociales. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `MYSQL_8_0` (fixe) | Critical | Ne peut pas être remplacé par un autre moteur ; `Mixpost_Common` code MySQL en dur quelle que soit la valeur apparente de cette variable. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le modifier | Critical | Faire tourner la clé Laravel après le premier démarrage invalide les données chiffrées de session/cookies et tous les champs chiffrés de la base de données. |
+| `enable_cloudsql_volume` | `true` | Critical | Le désactiver fait manquer au signal d'arrêt `quitquitquit` du job `db-init` le proxy pas encore démarré, bloquant le job indéfiniment sur GKE. |
+| `enable_redis` + `redis_host` / `enable_nfs` | `true` + NFS activé, ou un `redis_host` explicite | High | Activer Redis sans source d'hôte (ni `redis_host`, ni NFS) laisse `REDIS_HOST` vide — bloqué au moment du plan par `validation.tf`, mais désactiver/vider les deux casse la file d'attente, le cache et les sessions. |
+| `startup_probe_config` / `health_check_config` | `type = "TCP"` | High | Les passer en HTTP réintroduit l'échec de la redirection 302 vers `:443` — le Deployment entre en boucle de redémarrage à `0/1` alors que l'application est saine. |
+| `enable_nfs` | `true` | High | Le désactiver supprime à la fois la persistance partagée des médias et (sauf si `redis_host` est défini) l'hôte Redis par défaut, ce qui dégrade la fiabilité de la publication. |
+| `min_instance_count` | `1` | High | Descendre à `0` arrête le planificateur Laravel et le worker de file d'attente dans le pod — les publications sociales planifiées cessent silencieusement d'être publiées. |
+| `mixpost_admin_email` | Récupérer les identifiants réels après le déploiement | Medium | La variable n'est pas injectée dans la configuration en cours d'exécution ; la première connexion se fait toujours avec `admin@example.com` / `changeme` — modifiez-les immédiatement après la première connexion. |
+| `memory_limit` | `2Gi` | High | En dessous de l'ensemble de travail de PHP-FPM et des workers gérés par supervisord, les pods subissent des OOM sous charge. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Medium | Sans cela, l'adresse IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URI de redirection OAuth enregistrées auprès des plateformes sociales. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

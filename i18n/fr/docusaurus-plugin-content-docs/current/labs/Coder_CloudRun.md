@@ -21,7 +21,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au plan de contrôle Coder, créer le premier compte administrateur et vérifier la santé du service.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
@@ -42,7 +42,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -122,7 +122,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification du service ; la mise à l'échelle est donc une modification de configuration, et non une
-   modification manuelle avec `gcloud` (une modification manuelle serait annulée lors de l'application suivante).
+   modification manuelle avec `gcloud` (une modification manuelle serait annulée lors du prochain apply).
    Conservez `min_instance_count >= 1` et `cpu_always_allocated = true` : les démons
    provisionneurs intégrés au processus de Coder interrogent PostgreSQL pour détecter les builds d'espaces de travail en attente, et
    la réduction à zéro ou la limitation du CPU les bloquent silencieusement.
@@ -156,7 +156,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer. Le point d'entrée personnalisé journalise
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer). Le point d'entrée personnalisé journalise
    l'hôte PostgreSQL résolu et l'URL d'accès à chaque démarrage :
 
    ```bash

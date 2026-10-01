@@ -33,10 +33,10 @@ guides de plateforme ([CloudBeaver_GKE](CloudBeaver_GKE.md),
 
 | Domaine | Fourni par CloudBeaver_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Enveloppe l'image officielle `dbeaver/cloudbeaver` via un Dockerfile léger afin que le socle puisse la construire/la répliquer dans **Artifact Registry** | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Enveloppe l'image officielle `dbeaver/cloudbeaver` via un Dockerfile léger afin que le socle puisse la construire/la répliquer dans **Artifact Registry** | Sortie `container_image` du déploiement de plateforme |
 | Port du conteneur | Fixe le port de l'interface web à **8978** | §Calcul dans les guides de plateforme |
 | Moteur de base de données | Définit `database_type = "NONE"` — CloudBeaver ne provisionne **aucun Cloud SQL** ; il conserve son propre état dans le volume de l'espace de travail | §Comportement de l'application dans les guides de plateforme |
-| Stockage persistant | Déclare un bucket **Cloud Storage** (suffixe `storage`) et un volume d'espace de travail monté sur `/opt/cloudbeaver/workspace` | Output `storage_buckets` ; §Persistance dans les guides de plateforme |
+| Stockage persistant | Déclare un bucket **Cloud Storage** (suffixe `storage`) et un volume d'espace de travail monté sur `/opt/cloudbeaver/workspace` | Sortie `storage_buckets` ; §Persistance dans les guides de plateforme |
 | Secrets | Émet des `secret_ids` / `secret_values` **vides** — CloudBeaver n'a besoin d'aucun secret au niveau du service pour démarrer (le compte administrateur est créé par l'assistant de configuration au premier lancement) | §Secrets dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/de vivacité par défaut ciblant `/` (HTTP 200 une fois l'interface prête) | §Observabilité dans les guides de plateforme |
 | Valeurs de mise à l'échelle par défaut | `min_instance_count = 1`, `max_instance_count = 1` — un service JVM à écrivain unique | §Mise à l'échelle dans les guides de plateforme |

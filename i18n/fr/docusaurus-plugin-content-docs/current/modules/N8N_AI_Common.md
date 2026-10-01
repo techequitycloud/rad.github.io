@@ -26,14 +26,14 @@ les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | Domaine | Fourni par N8N_AI_Common | Où cela apparaît |
 |---|---|---|
 | Secrets | Génère automatiquement `N8N_ENCRYPTION_KEY` (32 caractères) et `N8N_SMTP_PASS` (16 caractères) dans **Secret Manager** | À récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Fixe `n8nio/n8n` et la configuration Cloud Build qui l'étend | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Fixe `n8nio/n8n` et la configuration Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
 | Port du conteneur | Code en dur le port **5678** | Transmis sous la forme `container_port` dans l'output `config` |
 | Amorçage de la base de données | Définit la tâche `db-init` qui crée la base de données, l'utilisateur et les droits | `initialization_jobs` dans l'output `config` |
-| Stockage d'objets | Déclare le bucket de données d'IA **Cloud Storage** (suffixe de nom `data`) | Output `storage_buckets` |
+| Stockage d'objets | Déclare le bucket de données d'IA **Cloud Storage** (suffixe de nom `data`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement n8n de base (port, protocole, Redis, type de base de données, URL des webhooks, diagnostics) | Comportement de l'application dans les guides des plateformes |
-| Services d'IA compagnons | Configure Qdrant et Ollama comme services supplémentaires dans l'output `config` | Transmis au Foundation Module sous la forme `additional_services` |
-| Volume GCS Fuse | Déclare le volume GCS `n8n-data` monté sur `/mnt/gcs`, partagé par n8n, Qdrant et Ollama | Visible dans la configuration des volumes du Foundation Module |
+| Services d'IA compagnons | Configure Qdrant et Ollama comme services supplémentaires dans l'output `config` | Transmis au module socle sous la forme `additional_services` |
+| Volume GCS Fuse | Déclare le volume GCS `n8n-data` monté sur `/mnt/gcs`, partagé par n8n, Qdrant et Ollama | Visible dans la configuration des volumes du module socle |
 
 ---
 
@@ -98,7 +98,7 @@ outputs du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `N8N_AI_Common` établit l'environnement n8n de base afin que l'application démarre
 correctement dès le premier lancement :
@@ -107,12 +107,11 @@ correctement dès le premier lancement :
   n8n écoute sur le bon port et génère des URL absolues correctes.
 - **URL des webhooks et de l'éditeur.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont
   définies sur l'URL de service prévue avant la création du service, afin que les webhooks
-  fonctionnent sans seconde application une fois l'URL connue.
+  fonctionnent sans second apply une fois l'URL connue.
 - **Mode file d'attente Redis.** `QUEUE_BULL_REDIS_HOST` et `QUEUE_BULL_REDIS_PORT` sont
   définies lorsque Redis est activé. Si `redis_host` est vide, l'adresse IP du serveur NFS
   est substituée automatiquement à l'exécution grâce au mécanisme `$(NFS_SERVER_IP)`.
-- **Type de base de données.** `DB_TYPE = postgresdb` est toujours injecté ; le Foundation
-  Module fournit les autres variables de connexion `DB_POSTGRESDB_*` à partir des outputs
+- **Type de base de données.** `DB_TYPE = postgresdb` est toujours injecté ; le module socle fournit les autres variables de connexion `DB_POSTGRESDB_*` à partir des outputs
   Cloud SQL.
 - **Mode des données binaires.** `N8N_DEFAULT_BINARY_DATA_MODE = filesystem` stocke les
   données binaires des workflows sur le volume persistant GCS Fuse plutôt que dans la base
@@ -125,8 +124,7 @@ correctement dès le premier lancement :
 ## 5. Services d'IA compagnons {#5-ai-companion-services}
 
 Lorsque `enable_ai_components` vaut true, `N8N_AI_Common` injecte deux services
-supplémentaires dans la liste `config.additional_services` utilisée par le Foundation
-Module. Tous deux partagent le volume GCS `n8n-data` monté sur `/mnt/gcs`.
+supplémentaires dans la liste `config.additional_services` utilisée par le module socle. Tous deux partagent le volume GCS `n8n-data` monté sur `/mnt/gcs`.
 
 ### Qdrant {#qdrant}
 
@@ -140,7 +138,7 @@ Module. Tous deux partagent le volume GCS `n8n-data` monté sur `/mnt/gcs`.
 | Entrée | Interne uniquement |
 | Chemin de stockage | `/mnt/gcs/qdrant` (via `QDRANT__STORAGE__STORAGE_PATH`) |
 | Contrôle de santé | HTTP `GET /readyz` — délai initial de 15s |
-| Injecté dans n8n sous la forme | `QDRANT_URL` (renseigné automatiquement par le Foundation Module) |
+| Injecté dans n8n sous la forme | `QDRANT_URL` (renseigné automatiquement par le module socle) |
 
 ### Ollama {#ollama}
 
@@ -154,7 +152,7 @@ Module. Tous deux partagent le volume GCS `n8n-data` monté sur `/mnt/gcs`.
 | Entrée | Interne uniquement |
 | Chemin des modèles | `/mnt/gcs/ollama/models` (via `OLLAMA_MODELS`) |
 | Contrôle de santé | HTTP `GET /` — délai initial de 20s |
-| Injecté dans n8n sous la forme | `OLLAMA_HOST` (renseigné automatiquement par le Foundation Module) |
+| Injecté dans n8n sous la forme | `OLLAMA_HOST` (renseigné automatiquement par le module socle) |
 
 Les deux services sont supprimés lorsque `enable_ai_components = false` ou lorsque leur
 interrupteur respectif (`enable_qdrant`, `enable_ollama`) est défini sur `false`.

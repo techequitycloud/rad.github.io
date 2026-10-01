@@ -9,7 +9,7 @@ description: "Référence de configuration pour déployer Bank of Anthos sur GKE
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Bank_GKE.png" alt="Bank of Anthos sur GKE" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Bank of Anthos est l'application bancaire de référence open source de Google Cloud — une démonstration de microservices polyglottes (services Python et Java, deux bases de données PostgreSQL et un générateur de charge synthétique) qui imite une banque de détail avec des comptes, un registre de transactions et un front-end web. Ce module est un déploiement **autonome** : il construit son propre VPC, son cluster GKE, son appartenance à la flotte, Cloud Service Mesh et la supervision, puis déploie les manifestes amont de Bank of Anthos sur le cluster. Il ne dépend d'aucun module de socle partagé.
+Bank of Anthos est l'application bancaire de référence open source de Google Cloud — une démonstration de microservices polyglottes (services Python et Java, deux bases de données PostgreSQL et un générateur de charge synthétique) qui imite une banque de détail avec des comptes, un registre de transactions et un front-end web. Ce module est un déploiement **autonome** : il construit son propre VPC, son cluster GKE, son appartenance à la flotte, Cloud Service Mesh et la supervision, puis déploie les manifestes amont de Bank of Anthos sur le cluster. Il ne dépend d'aucun module socle partagé.
 
 Le module est destiné à **la formation et la démonstration** — explorer GKE Autopilot, un maillage de services géré avec mTLS automatique, la gestion de flotte et Cloud Monitoring. Ce n'est pas un système bancaire de production.
 
@@ -150,7 +150,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et région {#group-1--project--region}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(utilise le projet par défaut)_ | Projet GCP de destination dans lequel le cluster et l'application sont déployés. Le compte de service de provisionnement doit y détenir `roles/owner`. |
 | `region` | `us-central1` | Région du cluster, du VPC et de toutes les ressources régionales. Vérifiez que le quota est disponible. |
@@ -158,7 +158,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 2 — Réseau {#group-2--network}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_network` | `true` | Crée un nouveau VPC et un sous-réseau. Définissez `false` pour utiliser un réseau existant identifié par `network_name`/`subnet_name`. |
 | `network_name` | `vpc-network` | Nom du VPC (créé ou référencé). |
@@ -167,7 +167,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 5 — Cluster {#group-5--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cluster` | `true` | Crée un nouveau cluster GKE. Définissez `false` pour déployer sur un cluster existant nommé par `gke_cluster`. |
 | `create_autopilot_cluster` | `true` | `true` pour Autopilot (nœuds entièrement gérés) ; `false` pour Standard (un pool de nœuds Spot de 2 nœuds est créé). |
@@ -180,7 +180,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 6 — Fonctionnalités {#group-6--features}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_monitoring` | `true` | Active Managed Prometheus et crée les services Cloud Monitoring et les SLO par charge de travail. |
 | `enable_cloud_service_mesh` | `true` | Installe et configure Cloud Service Mesh (Istio géré) avec `MANAGEMENT_AUTOMATIC` — fournit le mTLS et la télémétrie du maillage. Google choisit la version du maillage à partir du `release_channel` du cluster ; il n'existe pas d'entrée de version. |
@@ -190,7 +190,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 7 — Application {#group-7--application}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Déploie les microservices Bank of Anthos `v0.6.10` sur le cluster. Définissez `false` pour provisionner uniquement le cluster et l'infrastructure. |
 
@@ -209,21 +209,21 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_cloud_service_mesh` | `true` | Élevé | Sans le maillage, aucun sidecar n'est injecté — les pods s'exécutent en `1/1`, il n'y a ni mTLS ni télémétrie du maillage, et l'attente de disponibilité du maillage qui conditionne le déploiement de l'application est ignorée. |
-| `deployment_id` | à définir une seule fois (ou laisser automatique) | Élevé | Le modifier après le premier déploiement renomme les ressources et force la recréation du VPC/du cluster — en pratique, un nouveau déploiement. |
-| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | CIDR sans chevauchement | Élevé | Des plages secondaires qui se chevauchent ou sont trop petites font échouer la création du cluster ou épuisent les IP de pods/services à mesure que l'application monte en charge. |
-| `region` | une région disposant de quota | Élevé | Un quota insuffisant de CPU/IP/SSD dans la région choisie fait échouer la création du cluster ou du pool de nœuds au milieu d'un long apply. |
-| `enable_config_management` | `false` | Moyen | Les entrées ne sont reliées à aucune ressource ; l'activer laisse attendre une configuration GitOps/Config Sync que le module ne fournit pas. |
-| `create_autopilot_cluster` | `true` | Moyen | Le mode Standard utilise un pool Spot de 2 nœuds — moins cher mais préemptible ; les nœuds peuvent être récupérés, perturbant brièvement les charges de travail. Utilisez Autopilot pour un comportement plus stable. |
-| Exposition de l'application (HTTP uniquement) | ajouter TLS/IAP manuellement | Moyen | Le front-end est servi en HTTP simple sur une IP publique. Pour tout usage au-delà d'une démonstration, placez-le derrière HTTPS et/ou IAP après le déploiement. |
-| `create_network = false` | sous-réseau existant correspondant | Moyen | Le sous-réseau existant doit déjà porter des plages secondaires dont les noms correspondent à `pod_ip_range`/`service_ip_range`, sinon la création du cluster échoue. |
-| `release_channel` | `REGULAR` | Faible | `RAPID` effectue des mises à niveau fréquentes (plus de remous) ; `NONE` laisse le cluster en mises à niveau manuelles et peut le faire prendre du retard sur les versions prises en charge. |
-| `enable_monitoring` | `true` | Faible | Le désactiver supprime les services supervisés et les SLO par charge de travail ; le parcours SLO/observabilité n'a alors rien à montrer. |
+| `enable_cloud_service_mesh` | `true` | High | Sans le maillage, aucun sidecar n'est injecté — les pods s'exécutent en `1/1`, il n'y a ni mTLS ni télémétrie du maillage, et l'attente de disponibilité du maillage qui conditionne le déploiement de l'application est ignorée. |
+| `deployment_id` | à définir une seule fois (ou laisser automatique) | High | Le modifier après le premier déploiement renomme les ressources et force la recréation du VPC/du cluster — en pratique, un nouveau déploiement. |
+| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | CIDR sans chevauchement | High | Des plages secondaires qui se chevauchent ou sont trop petites font échouer la création du cluster ou épuisent les IP de pods/services à mesure que l'application monte en charge. |
+| `region` | une région disposant de quota | High | Un quota insuffisant de CPU/IP/SSD dans la région choisie fait échouer la création du cluster ou du pool de nœuds au milieu d'un long apply. |
+| `enable_config_management` | `false` | Medium | Les entrées ne sont reliées à aucune ressource ; l'activer laisse attendre une configuration GitOps/Config Sync que le module ne fournit pas. |
+| `create_autopilot_cluster` | `true` | Medium | Le mode Standard utilise un pool Spot de 2 nœuds — moins cher mais préemptible ; les nœuds peuvent être récupérés, perturbant brièvement les charges de travail. Utilisez Autopilot pour un comportement plus stable. |
+| Exposition de l'application (HTTP uniquement) | ajouter TLS/IAP manuellement | Medium | Le front-end est servi en HTTP simple sur une IP publique. Pour tout usage au-delà d'une démonstration, placez-le derrière HTTPS et/ou IAP après le déploiement. |
+| `create_network = false` | sous-réseau existant correspondant | Medium | Le sous-réseau existant doit déjà porter des plages secondaires dont les noms correspondent à `pod_ip_range`/`service_ip_range`, sinon la création du cluster échoue. |
+| `release_channel` | `REGULAR` | Low | `RAPID` effectue des mises à niveau fréquentes (plus de remous) ; `NONE` laisse le cluster en mises à niveau manuelles et peut le faire prendre du retard sur les versions prises en charge. |
+| `enable_monitoring` | `true` | Low | Le désactiver supprime les services supervisés et les SLO par charge de travail ; le parcours SLO/observabilité n'a alors rien à montrer. |
 
 ---
 

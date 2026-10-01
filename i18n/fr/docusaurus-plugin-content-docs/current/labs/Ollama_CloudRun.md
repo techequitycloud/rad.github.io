@@ -19,7 +19,7 @@ cycle de vie opérationnel du module **Ollama on Cloud Run** sur Google Cloud : 
 y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
 démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit Ollama ou les workflows propres à chaque modèle. Pour la liste complète des services
 provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Ollama_CloudRun) — ce lab
@@ -27,11 +27,11 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
-- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer le stockage des modèles et les tâches.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer le stockage des modèles et les jobs.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -49,7 +49,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -67,7 +67,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run v2 (gen2), un bucket GCS pour le stockage des poids
    des modèles (monté via GCS Fuse sur `/mnt/gcs`), construit ou met en miroir l'image du conteneur et
-   exécute éventuellement une tâche ponctuelle de récupération de modèle si `default_model` est défini. Il n'y a pas de base de données.
+   exécute éventuellement un job ponctuel de récupération de modèle si `default_model` est défini. Il n'y a pas de base de données.
    Les premiers déploiements prennent généralement **10–20 minutes** (davantage si un modèle volumineux est récupéré).
 
 3. Une fois l'opération terminée, repérez le service avec des filtres indépendants des noms :
@@ -83,7 +83,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 Ollama est déployé avec `ingress_settings = "internal"` par défaut — l'API est joignable
 depuis le même VPC, mais pas depuis l'internet public. Pour y accéder depuis votre machine
@@ -121,7 +121,7 @@ non authentifiée au sein du VPC, par conception.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est mise en miroir et une nouvelle révision est déployée.
 
-4. **Inspectez le bucket de stockage des modèles et les éventuelles tâches :**
+4. **Inspectez le bucket de stockage des modèles et les éventuels jobs :**
 
    ```bash
    MODELS_BUCKET=$(gcloud storage buckets list --project="$PROJECT" \
@@ -130,7 +130,7 @@ non authentifiée au sein du VPC, par conception.
    gcloud run jobs list --project="$PROJECT" --region="$REGION"   # model-pull job if configured
    ```
 
-5. Ollama n'a pas de base de données SQL — il n'y a ni instance Cloud SQL ni tâche `db-init` à
+5. Ollama n'a pas de base de données SQL — il n'y a ni instance Cloud SQL ni job `db-init` à
    gérer.
 
 ---
@@ -143,7 +143,7 @@ non authentifiée au sein du VPC, par conception.
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de requêtes,
@@ -166,7 +166,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-- **Échec de la tâche de récupération de modèle :** listez les exécutions et lisez les journaux de celle en échec :
+- **Échec du job de récupération de modèle :** listez les exécutions et lisez les journaux de celle en échec :
   ```bash
   MODEL_PULL_JOB=$(gcloud run jobs list --project="$PROJECT" --region="$REGION" \
     --filter="metadata.name~model-pull" --format="value(metadata.name)" --limit=1)
@@ -198,9 +198,9 @@ sont gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run (gen2), le stockage GCS des modèles et une tâche facultative de récupération de modèle |
-| 2 — Accès et vérification | Manuel | Proxy vers le service interne au VPC ; la vérification d'état réussit sur `/` |
-| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer le stockage des modèles et les tâches |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run (gen2), le stockage GCS des modèles et un job facultatif de récupération de modèle |
+| 2 — Accéder et vérifier | Manuel | Proxy vers le service interne au VPC ; la vérification d'état réussit sur `/` |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer le stockage des modèles et les jobs |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de tâche de récupération de modèle, de GCS Fuse, d'OOM, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de job de récupération de modèle, de GCS Fuse, d'OOM, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris les poids des modèles |

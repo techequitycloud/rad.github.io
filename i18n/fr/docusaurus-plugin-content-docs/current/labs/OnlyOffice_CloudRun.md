@@ -17,7 +17,7 @@ Une suite bureautique en ligne pour l'édition collaborative en temps réel de d
 du module **OnlyOffice on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier,
 l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit OnlyOffice. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/OnlyOffice_CloudRun) —
@@ -25,7 +25,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -48,7 +48,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -64,7 +64,7 @@ export REGION="us-central1"          # the region you deploy into
    [Guide de configuration](https://docs.radmodules.dev/docs/modules/OnlyOffice_CloudRun)
    documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, construit l'image du conteneur et exécute une tâche ponctuelle d'initialisation de la base de données. Les premiers déploiements
+2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, construit l'image du conteneur et exécute un job ponctuel d'initialisation de la base de données. Les premiers déploiements
    prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Une fois l'opération terminée, repérez les ressources avec des filtres indépendants des noms (afin que les
@@ -81,7 +81,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. **Vérification d'état** — vérifiez que le service est opérationnel et que le Document Server est prêt :
 
@@ -151,7 +151,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
@@ -174,8 +174,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Révision bloquée indéfiniment sur « Waiting for connection to the /cloudsql/... host on port 5432 » :** un comportement connu de l'image du fournisseur, et non un véritable problème de connectivité. Sur Cloud Run, `DB_HOST` est un *répertoire* de socket Unix du Cloud SQL Auth Proxy, mais la propre vérification de disponibilité du lanceur amont du Document Server exécute `nc -z "$DB_HOST" "$DB_PORT"`, et `nc` ne peut jamais résoudre un chemin de système de fichiers en tant qu'hôte TCP — une image *non corrigée* répète donc cette ligne de journal (parfois accompagnée de `nc: getaddrinfo ... Name or service not known`) indéfiniment et la révision ne devient jamais Ready. Le `Dockerfile` du module (`modules/OnlyOffice_Common/scripts/Dockerfile`) corrige ce problème au moment du build avec un `sed -i` sur `/app/ds/run-document-server.sh`, protégé par une assertion `grep -q` qui fait échouer bruyamment le Cloud Build si une future montée de `ONLYOFFICE_VERSION` modifie la formulation du script amont. Si vous voyez exactement ce motif dans les journaux, vérifiez si l'assertion au moment du build a échoué (consultez l'historique Cloud Build pour cette étape) — la correction consiste à mettre à jour le motif `sed` du Dockerfile pour qu'il corresponde à la nouvelle formulation amont, puis à relancer le build. GKE n'est pas concerné (son sidecar Auth Proxy écoute sur un véritable hôte TCP `127.0.0.1`).
-- **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le secret du mot de passe de la base existe et que la tâche d'initialisation s'est terminée avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle en échec :
+- **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le secret du mot de passe de la base existe et que le job d'initialisation s'est terminé avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle en échec :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -201,9 +201,9 @@ la base de données Cloud SQL, les secrets Secret Manager et les images Artifact
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Service Cloud Run, Cloud SQL (PostgreSQL 15), connexion Redis, secrets Secret Manager et tâche d'initialisation provisionnés |
-| 2 — Accès et vérification | Manuel | La vérification d'état sur `/healthcheck` renvoie `{"status":"pass"}` ; le secret JWT est récupéré dans Secret Manager |
+| 1 — Déployer | Automatisé | Service Cloud Run, Cloud SQL (PostgreSQL 15), connexion Redis, secrets Secret Manager et job d'initialisation provisionnés |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état sur `/healthcheck` renvoie `{"status":"pass"}` ; le secret JWT est récupéré dans Secret Manager |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage ; ouvrir une session de base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les lenteurs de démarrage, les problèmes de connexion à la base, les échecs de la tâche d'initialisation, les erreurs Redis et les problèmes d'intégration JWT |
+| 5 — Dépanner | Manuel | Diagnostiquer les lenteurs de démarrage, les problèmes de connexion à la base, les échecs du job d'initialisation, les erreurs Redis et les problèmes d'intégration JWT |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -73,7 +73,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Les noms des ressources sont
-indiqués dans les [Outputs](#5-outputs) du déploiement.
+indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Ghostfolio {#a-gke-autopilot--the-ghostfolio-workload}
 
@@ -211,7 +211,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Ghostfolio est une interface web destinée au navigateur — ne passez pas à `ClusterIP` sans chemin d'entrée distinct. |
-| `namespace_name` | (généré automatiquement) | Namespace Kubernetes. |
+| `namespace_name` | (généré automatiquement) | Espace de noms Kubernetes. |
 
 ### Groupe 15 — Base de données {#group-15--database}
 
@@ -244,16 +244,16 @@ comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `service_url` | URL de l'application déployée (IP du LoadBalancer, domaine personnalisé ou DNS interne). |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base. |
@@ -284,7 +284,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — Workload Identity,
 entrée, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à Ghostfolio, partagée avec la variante Cloud
 Run, est décrite dans **[Ghostfolio_Common](Ghostfolio_Common.md)**.
 

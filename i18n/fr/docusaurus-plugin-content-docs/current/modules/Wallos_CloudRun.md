@@ -72,7 +72,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
   `ingress_settings = "internal"` (VPC uniquement) ou
   `internal-and-cloud-load-balancing`, ou placez-le derrière l'équilibreur de
   charge HTTPS (`enable_cloud_armor = true` + `application_domains`).
-- **Pas de Redis, pas de tâche d'initialisation.** `enable_redis = false` et aucune
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
   tâche `db-init` ne s'exécute ; l'application est prête dès que le conteneur
   démarre.
 - **Port du conteneur 80.** Wallos sert du HTTP/1.1 simple sur le port 80
@@ -86,7 +86,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Wallos {#a-cloud-run--the-wallos-service}
 
@@ -132,7 +132,7 @@ secret JWT à gérer, car tout l'état d'identité réside dans la base SQLite. 
 Manager reste utilisé par le socle pour les secrets gérés par la plateforme (par
 exemple les jetons CI/CD s'ils sont configurés).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~wallos"
@@ -148,8 +148,7 @@ dès l'installation. Pour la restreindre, définissez `ingress_settings = "inter
 (VPC uniquement), ou ajoutez un équilibreur de charge HTTPS externe avec un domaine
 personnalisé, Cloud CDN et Cloud Armor.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -166,8 +165,8 @@ facultatifs. Comme le démon cron de Wallos s'exécute dans le processus, l'acti
 (ou les échecs) de ses tâches planifiées n'est visible que dans les journaux du
 conteneur — il n'existe pas de Cloud Run Job distinct à inspecter.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -254,7 +253,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `container_protocol` | `http1` | Wallos sert du HTTP/1.1 simple. |
 | `execution_environment` | `gen2` | Requis pour les montages GCS FUSE. |
 | `enable_cloudsql_volume` | `false` | Wallos n'a pas de Cloud SQL ; laissez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Wallos dans Artifact Registry (évite les limites de débit de Docker Hub). |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Wallos dans Artifact Registry (évite les limites de débit de Docker Hub). |
 | `container_image_source` | `prebuilt` | **Doit rester transmis au socle** — `bellamy/wallos` ne nécessite aucune étape de build ; sinon, la valeur par défaut propre à App_CloudRun (`custom`) l'emporterait silencieusement. |
 | `cpu_always_allocated` | `true` | **CRITIQUE — doit rester à `true`.** Le démon cron a besoin de CPU entre les requêtes pour exécuter réellement ses tâches planifiées. |
 
@@ -301,11 +300,11 @@ Non applicable — Wallos n'a pas de base de données SQL. `database_type` est f
 `db_*_env_var_name` et la rotation des mots de passe ne sont transmis que pour la
 compatibilité avec le socle.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche d'initialisation par défaut. Ne fournissez des tâches que pour un chargement ou une migration de données personnalisés. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut. Ne fournissez des tâches que pour un chargement ou une migration de données personnalisés. |
 | `cron_jobs` | `[]` | Tâches Cloud Scheduler + Cloud Run supplémentaires — distinctes des 8 tâches planifiées propres à Wallos dans le conteneur. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -313,7 +312,7 @@ compatibilité avec le socle.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` 15s delay | Sonde de démarrage ; aucun point de terminaison `/health` dédié n'est documenté pour cette image. |
-| `liveness_probe` | HTTP `/` 30s delay | Sonde d'activité sur la page de connexion non authentifiée. |
+| `liveness_probe` | HTTP `/` 30s delay | Sonde de vivacité sur la page de connexion non authentifiée. |
 | `uptime_check_config` | disabled, path `/health` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -330,12 +329,12 @@ d'[App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `wallos_url` | URL de l'interface web de Wallos (port 80). Interne au VPC lorsque `ingress_settings = internal`. |
@@ -346,7 +345,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation (vide par défaut). |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -382,8 +381,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Wallos, partagée avec la variante GKE, est décrite dans
 **[Wallos_Common](Wallos_Common.md)**.
 

@@ -40,7 +40,7 @@ v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `LANGFLOW_SECRET_KEY` et `LANGFLOW_SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   couche applicative partagée (`database_type = "POSTGRES_15"`) ; choisir un autre
@@ -109,7 +109,7 @@ LangFlow stocke toutes les données applicatives (flux, composants, identifiants
 historique d'exécution, utilisateurs) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le service s'y connecte de façon privée via l'**IP privée** de
 l'instance (le point d'entrée compose un DSN TCP avec `sslmode=require`) ; le socket
-Unix du Cloud SQL Auth Proxy est également monté. Au premier déploiement, une tâche
+Unix du Cloud SQL Auth Proxy est également monté. Au premier déploiement, un job
 d'initialisation crée la base de données applicative, le rôle et les droits.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
@@ -172,7 +172,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run
-et Cloud SQL à Cloud Monitoring, avec des vérifications de disponibilité et des
+et Cloud SQL à Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte facultatives.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -185,11 +185,11 @@ règles d'alerte facultatives.
 
 ## 3. Comportement de l'application LangFlow {#3-langflow-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`) exécute le script générique `db-init.sh` du socle à
-  l'aide de `postgres:15-alpine`. Elle attend PostgreSQL, puis crée de manière
+  l'aide de `postgres:15-alpine`. Il attend PostgreSQL, puis crée de manière
   idempotente le rôle applicatif et la base de données, définit le propriétaire et
-  accorde les privilèges sur la base. Elle peut être relancée sans risque.
+  accorde les privilèges sur la base. Il peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** LangFlow exécute ses **migrations Alembic à
   chaque démarrage du conteneur** ; les tables sont donc créées et mises à niveau par
   l'application elle-même — la tâche `db-init` ne gère que le rôle, la base et les
@@ -275,7 +275,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS/GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Montage du socket du Cloud SQL Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image du conteneur dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image du conteneur dans Artifact Registry avant le déploiement. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -324,7 +324,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -362,12 +362,12 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[{ name = "db-init", image = "postgres:15-alpine", script_path = "scripts/db-init.sh", execute_on_apply = true }]` | Tâche intégrée qui crée le rôle applicatif, la base de données et les droits au premier déploiement. Remplacez-la par une liste non vide pour exécuter d'autres tâches. |
-| `cron_jobs` | `[]` | Tâches Cloud Run planifiées (aucune n'est requise par LangFlow). |
+| `cron_jobs` | `[]` | Jobs Cloud Run planifiés (aucun n'est requis par LangFlow). |
 | `additional_services` | `[]` | Services sidecar/auxiliaires déployés aux côtés de LangFlow. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -425,7 +425,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (un bucket `data` par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -436,14 +436,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, et plus encore. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `LANGFLOW_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation casse définitivement chaque identifiant stocké intégré dans un flux — ceux-ci ne peuvent plus être déchiffrés et doivent être ressaisis. |
 | `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit tous les flux et identifiants. |

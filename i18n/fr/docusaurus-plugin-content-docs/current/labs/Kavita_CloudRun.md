@@ -35,10 +35,10 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et terminer l'assistant de configuration du premier lancement.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle (ou plutôt comprendre pourquoi ne pas le faire), mettre à jour, et gérer le stockage et les sauvegardes.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (ou plutôt comprendre pourquoi ne pas le faire), mettre à jour, et gérer le stockage et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -54,7 +54,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -73,7 +73,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run et un bucket Cloud Storage
    (monté sur `/kavita/config` via GCS Fuse), construit l'image de conteneur
    personnalisée (une fine surcouche de `jvmilazz0/kavita`) et démarre le service. Il
-   n'y a **aucune base de données à provisionner ni aucune tâche d'initialisation à
+   n'y a **aucune base de données à provisionner ni aucun job d'initialisation à
    attendre** — Kavita gère sa propre base de données SQLite interne. Un premier
    déploiement se termine généralement en **5–10 minutes** (l'essentiel étant le build
    de l'image).
@@ -119,7 +119,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente qui est saine) :
@@ -178,7 +178,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -230,7 +230,7 @@ module).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run
 et le bucket Cloud Storage contenant l'intégralité de l'état de Kavita (base de données
@@ -246,9 +246,9 @@ la suppression.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run et le bucket de configuration monté via GCS Fuse ; pas de base de données, pas de tâche d'initialisation |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run et le bucket de configuration monté via GCS Fuse ; pas de base de données, pas de job d'initialisation |
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit ; terminer l'assistant du premier lancement pour créer le compte administrateur et la première bibliothèque |
 | 3 — Exploiter | Manuel | Inspecter les révisions, conserver `max_instance_count = 1`, mettre à jour la version, gérer le stockage/les sauvegardes |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité facultatif |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de stockage, d'OPDS/IAP, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le bucket contenant l'intégralité de l'état de Kavita |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le bucket contenant l'intégralité de l'état de Kavita |

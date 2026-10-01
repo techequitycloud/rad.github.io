@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Jellystat sur Cloud Run dans votre propre
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 Jellystat est un tableau de bord open source de statistiques et d'analyse pour les serveurs
 multimédias Jellyfin. Ce lab vous fait parcourir tout le cycle de vie opérationnel
@@ -28,7 +28,7 @@ le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -54,7 +54,7 @@ le temps.
   un d'abord avec le module **Jellyfin (Cloud Run)** ou **Jellyfin (GKE)** si vous
   n'en avez pas déjà un.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -164,7 +164,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez

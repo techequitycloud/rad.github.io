@@ -31,7 +31,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail du plan de contrôle Coder en cours d'exécution.
 - Créer le premier compte administrateur et vérifier que le déploiement est en bonne santé.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
@@ -54,7 +54,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -81,7 +81,7 @@ export REGION="us-central1"           # the region you deploy into
    démarrage du serveur — il n'y a pas de job de migration distinct. Les premiers déploiements prennent environ
    **20–35 minutes** (la création de Cloud SQL domine).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants du nom :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants du nom :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -157,7 +157,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max et en cliquant sur **Update** sur
    la page de détails du déploiement — le module gère la spécification de la charge de travail ; la mise à l'échelle est donc
    une modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de l'application suivante). Coder utilise par défaut `min_instance_count = 1`,
+   annulée lors du prochain apply). Coder utilise par défaut `min_instance_count = 1`,
    `max_instance_count = 5` : le plan de contrôle sans état peut être mis à l'échelle horizontalement en toute sécurité
    face à la base de données Cloud SQL partagée. `session_affinity =
    ClientIP` est défini par défaut afin que la session terminal/IDE d'un navigateur, fortement basée sur WebSocket,
@@ -198,7 +198,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer. Le point d'entrée personnalisé journalise
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer). Le point d'entrée personnalisé journalise
    la connexion PostgreSQL résolue et l'URL d'accès à chaque démarrage :
 
    ```bash
@@ -229,7 +229,7 @@ probablement. Ce sont des diagnostics au niveau de la plateforme, qui ne changen
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL (PostgreSQL 15)
-  est `RUNNABLE`, que le secret du mot de passe de la base de données a bien été matérialisé dans le namespace via le
+  est `RUNNABLE`, que le secret du mot de passe de la base de données a bien été matérialisé dans l'espace de noms via le
   pilote Secret Store CSI, et que le job `db-init` s'est terminé. GKE atteint Cloud SQL
   par le sidecar Auth Proxy sur `127.0.0.1` ; le point d'entrée assemble
   `CODER_PG_CONNECTION_URL` avec `sslmode=disable` (le proxy assure déjà la
@@ -265,7 +265,7 @@ binaire `coder`).
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela supprime le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cette opération supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL, les secrets Secret Manager, le bucket GCS et les
+et l'espace de noms, la base de données Cloud SQL, les secrets Secret Manager, le bucket GCS et les
 images Artifact Registry. Les ressources détenues par **Services_GCP** (le VPC, le cluster
 GKE, Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées ici.
 

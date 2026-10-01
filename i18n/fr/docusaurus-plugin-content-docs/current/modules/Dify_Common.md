@@ -117,7 +117,7 @@ mémoire.
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Dify_Common` définit toutes les variables d'environnement de base de Dify afin que l'application
 démarre correctement dès le premier lancement :

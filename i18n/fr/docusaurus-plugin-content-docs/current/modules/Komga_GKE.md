@@ -31,9 +31,9 @@ Komga s'exécute comme un unique pod JVM, de préférence sous forme de Stateful
 un PVC en mode bloc. Le déploiement assemble un ensemble minimal de services Google
 Cloud — il n'y a pas de base de données externe :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Pod JVM (Spring Boot), 1 vCPU / 1 GiB par défaut ; réplique unique |
+| Calcul | GKE Autopilot | Pod JVM (Spring Boot), 1 vCPU / 1 GiB par défaut ; réplica unique |
 | Base de données | Aucune | Komga utilise une base de données SQLite intégrée sous `/config` — aucune instance Cloud SQL n'est créée |
 | Stockage objet / stockage en mode bloc | Cloud Storage (GCS FUSE) ou PVC | `stateful_pvc_enabled = true` (par défaut) monte un véritable PVC en mode bloc sur `/config` ; désactivez-le pour utiliser à la place un bucket adossé à GCS FUSE |
 | Secrets | Secret Manager | Aucun généré — Komga n'a aucun secret de service injectable |
@@ -48,7 +48,7 @@ Cloud — il n'y a pas de base de données externe :
   `database_type = "NONE"`, `enable_redis` forcé à `false`.
 - **Image précompilée officielle.** `container_image_source = "prebuilt"` déploie
   directement `gotson/komga` — sans étape Cloud Build. `enable_image_mirroring = true`
-  la duplique dans Artifact Registry (copie tenant compte du digest) pour éviter les
+  la met en miroir dans Artifact Registry (copie tenant compte du digest) pour éviter les
   limites de débit de Docker Hub.
 - **Le PVC en mode bloc est la disposition recommandée.** `stateful_pvc_enabled = true`
   par défaut exécute Komga comme un StatefulSet avec un PVC par pod monté sur
@@ -77,8 +77,8 @@ Cloud — il n'y a pas de base de données externe :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Komga {#a-gke-autopilot--the-komga-workload}
 
@@ -184,7 +184,7 @@ d'alerte facultatifs.
   renvoie `401
   Unauthorized` même lorsque l'application est entièrement saine.
 - **Bibliothèque partagée unique, instance unique.** La base SQLite de Komga est un
-  fichier unique sur un seul volume monté — exécuter plus d'une réplique expose à sa
+  fichier unique sur un seul volume monté — exécuter plus d'un réplica expose à sa
   corruption par des écritures concurrentes. Conservez `max_instance_count = 1`.
 - **PVC en mode bloc plutôt que GCS FUSE.** Lorsque `stateful_pvc_enabled = true`,
   `enable_gcs_storage_volume` est automatiquement défini à `false` dans
@@ -213,7 +213,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -236,7 +236,7 @@ comportement et leurs valeurs par défaut standard.
 | `jvm_heap_max` | `""` | `-Xmx` facultatif de la JVM via `JAVA_TOOL_OPTIONS` (par ex. `"512m"`, `"1g"`). |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Komga n'a pas de Cloud SQL — conservez `false`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Komga dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Komga dans Artifact Registry avant le déploiement. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -247,13 +247,13 @@ comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de poursuivre. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes — définissez `LoadBalancer` pour un accès externe direct. |
 | `workload_type` | `null` (auto → `StatefulSet`) | Se résout automatiquement en `StatefulSet` lorsque `stateful_pvc_enabled = true`. |
-| `session_affinity` | `None` | Aucun routage persistant requis — réplique unique. |
+| `session_affinity` | `None` | Aucun routage persistant requis — réplica unique. |
 | `network_tags` | `["nfsserver"]` | Tags réseau des nœuds/pods ; `nfsserver` est requis lorsque `enable_nfs = true`. |
 | `termination_grace_period_seconds` | `60` | Secondes d'attente après SIGTERM avant SIGKILL (laisse Komga vider ses écritures). |
 | `enable_network_segmentation` | `false` | Crée des ressources NetworkPolicy Kubernetes. |
@@ -275,7 +275,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans le namespace. |
+| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Nécessite un suffixe binaire (par ex. `4Gi`, `8192Mi`) lorsqu'il est activé — des entiers nus sont interprétés en octets et bloquent l'ordonnancement des pods. |
 | `quota_cpu_requests` / `quota_cpu_limits` / `quota_max_pods` / `quota_max_services` / `quota_max_pvcs` | `""` | Dimensions de quota supplémentaires. |
 
@@ -389,15 +389,15 @@ cohérence des conventions.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services par étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -405,7 +405,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des jobs de configuration (vide par défaut). |
 | `statefulset_name` | Nom du StatefulSet. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
@@ -436,14 +436,14 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `min_instance_count` | `1` | Medium | Le redémarrage du pod unique entraîne une latence de démarrage à froid, y compris une reconstruction de l'index Lucene. |
 | `memory_limit` | `1Gi`, à augmenter pour les grandes bibliothèques | Medium | Une mémoire sous-dimensionnée peut provoquer un arrêt OOM lors de l'analyse d'une grande bibliothèque. |
 | `container_image_source` | `prebuilt` | Medium | Passer à `custom` sans Dockerfile fait échouer le build — Komga n'a besoin d'aucun build personnalisé. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Komga, partagée
 avec la variante Cloud Run, est décrite dans
 **[Komga_Common](Komga_Common.md)**.

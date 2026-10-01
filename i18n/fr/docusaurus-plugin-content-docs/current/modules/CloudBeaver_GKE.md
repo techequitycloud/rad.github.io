@@ -68,7 +68,7 @@ déploiement assemble un ensemble volontairement restreint de services Google Cl
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail CloudBeaver {#a-gke-autopilot--the-cloudbeaver-workload}
 
@@ -219,14 +219,14 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
@@ -234,7 +234,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `cloudbeaver` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `CloudBeaver` | Nom lisible affiché dans la console. |
@@ -242,7 +242,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `min_instance_count` | `1` | Gardez 1 réplica à chaud (GKE ne permet pas la mise à l'échelle à zéro ; évite les démarrages à froid lents de la JVM). |
 | `max_instance_count` | `1` | **Gardez 1.** L'espace de travail est un magasin à écrivain unique ; des pods concurrents le corrompent. |
@@ -252,7 +252,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `ClusterIP` | Interne au cluster par défaut (recommandé pour une console de bases de données). Utilisez `LoadBalancer` pour un accès externe. |
 | `workload_type` | `null` | Laissez non défini — avec `stateful_pvc_enabled = true`, il est résolu automatiquement en `StatefulSet`. |
@@ -260,7 +260,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | **Définissez `true`** — un PVC en mode bloc (et non GCS FUSE) est le stockage adapté à la base H2 intégrée de CloudBeaver. |
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod ; doit contenir l'espace de travail plus une marge. |
@@ -270,7 +270,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` délai de 15s | Sonde de démarrage ciblant l'interface de CloudBeaver. |
 | `liveness_probe` | HTTP `/` délai de 30s | Sonde de vivacité ciblant l'interface de CloudBeaver. |
@@ -278,17 +278,17 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | NFS est désactivé — l'espace de travail de CloudBeaver se trouve sur le PVC en mode bloc, pas sur NFS. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne les buckets GCS déclarés. |
 | `storage_buckets` | `[]` | Buckets supplémentaires à provisionner. |
-| `enable_image_mirroring` | `true` | Réplique l'image CloudBeaver dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image CloudBeaver dans Artifact Registry avant le déploiement. |
 
 Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.md). Notez que
 `enable_redis` est forcé à `false` et qu'aucune base de données applicative n'est provisionnée
@@ -296,12 +296,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -351,7 +351,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à CloudBeaver, partagée avec la variante Cloud Run, est
 décrite dans **[CloudBeaver_Common](CloudBeaver_Common.md)**.
 

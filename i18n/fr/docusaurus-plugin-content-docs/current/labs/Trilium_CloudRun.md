@@ -19,7 +19,7 @@ vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Tr
 sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien,
 l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Trilium. Pour la liste complète des services
 provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Trilium_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à l'application, vérifier son point de terminaison de santé et effectuer l'étape « Set Password » du premier lancement.
@@ -49,7 +49,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -87,7 +87,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Trilium expose un point de terminaison de santé
    non authentifié — notez qu'il ne s'agit **pas** du chemin racine :
@@ -135,7 +135,7 @@ export REGION="us-central1"          # the region you deploy into
    distincte n'est donc nécessaire.
 
 4. **Il n'y a aucune session de base de données à ouvrir.** `database_type = "NONE"` — pas d'instance Cloud
-   SQL, pas de tâche db-init, pas de mot de passe de base de données. Le seul état durable est
+   SQL, pas de job db-init, pas de mot de passe de base de données. Le seul état durable est
    le bucket de données.
 
 5. **Sauvegardez les notes :**
@@ -160,7 +160,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
@@ -224,7 +224,7 @@ séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image et provisionne le service Cloud Run et le bucket de données (pas de base de données, pas de Redis) |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit sur `/api/health-check` ; effectuer l'étape « Set Password » du premier lancement ; vérifier la persistance des notes |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit sur `/api/health-check` ; effectuer l'étape « Set Password » du premier lancement ; vérifier la persistance des notes |
 | 3 — Exploiter | Manuel | Inspecter les révisions, conserver une mise à l'échelle à instance unique, mettre à jour la version, sauvegarder les notes |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de chemin de sonde, de montage du stockage, de persistance et de build |

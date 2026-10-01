@@ -88,7 +88,7 @@ dans l'appel au socle. Toutes les données résident dans le PVC.
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail ClickHouse {#a-gke-autopilot--the-clickhouse-workload}
 
@@ -273,14 +273,14 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
@@ -288,7 +288,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `clickhouse` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `ClickHouse` | Nom convivial affiché dans la console. |
@@ -298,12 +298,12 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `prebuilt` | Toujours `prebuilt` — image officielle `clickhouse/clickhouse-server`, sans build. |
 | `container_image` | `""` | URI d'image de remplacement ; laissez vide pour l'image officielle. |
-| `enable_image_mirroring` | `true` | Réplique l'image dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry avant le déploiement. |
 | `min_instance_count` | `1` | Gardez `1` pour le mode nœud unique. |
 | `max_instance_count` | `1` | **Doit valoir `1`** — imposé au moment du plan ; le multi-nœuds nécessite une configuration Keeper/réplication que ce module ne fournit pas. |
 | `container_port` | `8123` | Port de l'interface HTTP de ClickHouse — également transmis comme port du Service (et non le port 80 par défaut d'App_GKE). |
@@ -313,7 +313,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Variables d'environnement supplémentaires fusionnées dans le conteneur ; les valeurs de l'utilisateur remplacent celles intégrées au module (`CLICKHOUSE_DB`, `CLICKHOUSE_USER`, `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT`). |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom de secret Secret Manager (le module injecte déjà `CLICKHOUSE_PASSWORD`). |
@@ -322,7 +322,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster GKE ; laissez vide pour la découverte automatique. |
 | `namespace_name` | `""` | Espace de noms Kubernetes ; généré automatiquement s'il est vide. |
@@ -335,7 +335,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 La persistance des données est critique — toutes les données d'événements ClickHouse résident dans le PVC.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `true` | **Vaut `true` par défaut** — sans PVC, ClickHouse est déployé comme Deployment sur disque éphémère et tout le magasin d'événements est effacé à chaque replanification du pod. Résout automatiquement `workload_type` en `StatefulSet`. |
 | `stateful_pvc_size` | `30Gi` | Taille du PVC. Prévoyez de la marge pour les fusions en arrière-plan. |
@@ -345,21 +345,21 @@ La persistance des données est critique — toutes les données d'événements 
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Plafonne le CPU et la mémoire de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Pour ClickHouse à nœud unique, `"1"` empêche toute interruption volontaire. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` / `health_check_config` | _(déclarées)_ | Reflets de la convention — le conteneur utilise les sondes **TCP** figées du module (démarrage 30 s/10 s/60 ; vivacité 60 s/30 s/3). |
 | `uptime_check_config` | désactivé, chemin `/_cluster/health` | Test de disponibilité Cloud Monitoring facultatif ; le chemin configuré n'est pas un véritable point de terminaison ClickHouse (utilisez `/ping` si vous l'activez). |
@@ -367,7 +367,7 @@ La persistance des données est critique — toutes les données d'événements 
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Non nécessaire — ClickHouse s'amorce lui-même ; Plausible crée le schéma. |
 | `cron_jobs` / `additional_services` | `[]` | CronJobs / services sidecar facultatifs. |
@@ -389,7 +389,7 @@ par souci de parité avec l'interface du socle). Les réglages de conservation d
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron (UTC). Pour ClickHouse, préférez les instructions natives `BACKUP ... TO S3/GCS` aux sauvegardes au niveau du système d'exploitation. |
 | `backup_retention_days` | `7` | Durée de conservation en jours. |
@@ -397,7 +397,7 @@ par souci de parité avec l'interface du socle). Les réglages de conservation d
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour le routage par nom d'hôte personnalisé. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -428,12 +428,12 @@ et `iap_oauth_client_secret` sont tous deux obligatoires (vérification au momen
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `clickhouse_endpoint` | Point de terminaison HTTP externe : `http://<external-ip>:8123`. À transmettre à Plausible en tant que `clickhouse_url`. Renvoie `null` tant que l'IP externe n'est pas attribuée. |
 | `clickhouse_internal_endpoint` | Point de terminaison interne au cluster : `http://<svc>.<ns>.svc.cluster.local:8123` — **à privilégier** lorsque `Plausible_GKE` s'exécute dans le même cluster. |
@@ -454,7 +454,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt GitHub connecté. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster est disponible et que toutes les ressources de la charge de travail sont déployées ; `false` lors du premier apply d'un nouveau cluster en ligne — relancez l'apply pour terminer. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster est disponible et que toutes les ressources de la charge de travail sont déployées ; `false` lors du premier apply d'un nouveau cluster intégré (inline) — relancez l'apply pour terminer. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
 
@@ -482,7 +482,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 
 <!-- related-guides -->
 

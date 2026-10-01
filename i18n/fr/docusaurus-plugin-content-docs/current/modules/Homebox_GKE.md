@@ -13,7 +13,7 @@ Homebox est un système open source et auto-hébergé d'inventaire et d'organisa
 domestique, doté d'un backend d'API REST en Go (de style Echo, ORM Ent) et d'un
 frontend Vue 3/Nuxt servi de manière intégrée par le même binaire — suivez vos
 objets, joignez des photos et organisez-les par emplacement. Ce module déploie
-Homebox sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui
+Homebox sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Homebox et sur la manière
@@ -21,7 +21,7 @@ de les explorer et de les exploiter depuis la console Google Cloud et la ligne d
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,10 +31,10 @@ Homebox s'exécute sous la forme d'un unique binaire Go (API + frontend intégr�
 un seul pod, sans autre sidecar que le Cloud SQL Auth Proxy. Le déploiement
 assemble un ensemble restreint et ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Go/Echo, 1 vCPU / 512 MiB par défaut |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Homebox lit des variables d'environnement `HBOX_DATABASE_*` distinctes, et non un DSN construit |
+| Base de données | Cloud SQL for PostgreSQL 15 | Homebox lit des variables d'environnement `HBOX_DATABASE_*` distinctes, et non un DSN construit |
 | Stockage objet | Cloud Storage | Un bucket `data` est créé pour les photos et pièces jointes des objets et monté automatiquement sur `/data` |
 | Cache et file d'attente | aucun | Homebox ne dépend ni de Redis ni d'une file d'attente |
 | Secrets | Secret Manager | Mot de passe de la base de données plus `HBOX_AUTH_API_KEY_PEPPER` (un véritable secret consommé par l'application) |
@@ -76,7 +76,7 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis.
   kubectl logs -n "$NAMESPACE" deploy/<service-name> --tail=100
   ```
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Les pods atteignent la base de données en privé via le sidecar
 **cloud-sql-proxy** sur `127.0.0.1`.
@@ -202,21 +202,21 @@ avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile. |
-| Première inscription | À effectuer rapidement après le déploiement | **Moyen** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
-| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **Élevé** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère du pod et ne survivent pas à un redémarrage. |
-| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critique | Les modifier ou les vider rompt la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
-| `HBOX_DATABASE_SSL_MODE` | `disable` (déjà défini par ce module) | Critique | Sur GKE, `DB_HOST` se résout en `127.0.0.1` (le sidecar cloud-sql-proxy), qui termine lui-même TLS et sert du texte en clair sur la boucle locale. Le client Postgres de Homebox fixe par défaut `HBOX_DATABASE_SSL_MODE` à `require` et **plante au démarrage** (`tls error: server refused TLS connection`) si on ne lui indique pas que la connexion locale n'est pas chiffrée. `Homebox_GKE` le définit via `module_env_vars` — ne le videz pas. Inutile sur Cloud Run, qui se connecte via un socket Unix (aucune négociation TLS ne s'y applique, quel que soit ce paramètre). |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile. |
+| Première inscription | À effectuer rapidement après le déploiement | **Medium** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
+| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **High** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère du pod et ne survivent pas à un redémarrage. |
+| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critical | Les modifier ou les vider rompt la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
+| `HBOX_DATABASE_SSL_MODE` | `disable` (déjà défini par ce module) | Critical | Sur GKE, `DB_HOST` se résout en `127.0.0.1` (le sidecar cloud-sql-proxy), qui termine lui-même TLS et sert du texte en clair sur la boucle locale. Le client Postgres de Homebox fixe par défaut `HBOX_DATABASE_SSL_MODE` à `require` et **plante au démarrage** (`tls error: server refused TLS connection`) si on ne lui indique pas que la connexion locale n'est pas chiffrée. `Homebox_GKE` le définit via `module_env_vars` — ne le videz pas. Inutile sur Cloud Run, qui se connecte via un socket Unix (aucune négociation TLS ne s'y applique, quel que soit ce paramètre). |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — Workload
+Pour le comportement du socle évoqué tout au long de ce guide — Workload
 Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Homebox,

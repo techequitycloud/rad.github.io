@@ -47,7 +47,7 @@ Le mot de passe de la base de données est généré et géré séparément par 
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 WordPress exige **MySQL 8.0** ; le moteur est fixe et PostgreSQL n'est pas pris en charge. Au premier déploiement, un job ponctuel `db-init` se connecte à Cloud SQL via l'Auth Proxy et, de manière idempotente :
 
@@ -91,7 +91,7 @@ gcloud run services logs read <service-name> --project "$PROJECT" --region "$REG
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Wordpress_Common` établit l'environnement WordPress de référence afin que l'application démarre correctement dès le premier lancement :
 
@@ -116,7 +116,7 @@ Les sondes sont identiques pour les variantes GKE et Cloud Run — toutes deux u
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket média **Cloud Storage** dédié, dont le nom porte le suffixe `wp-uploads`, est déclaré ici et provisionné par le socle, qui accorde également l'accès au compte de service de la charge de travail. Listez-le avec :
 

@@ -65,7 +65,7 @@ un ensemble volontairement restreint de services Google Cloud :
   que le volume `/app/data` adossé à NFS ne fournit pas de manière fiable, ce qui a
   provoqué des erreurs `SQLITE_CORRUPT` constatées. Le build fait passer ce PRAGMA en
   mode `DELETE`, qui n'a besoin que du verrouillage standard du fichier entier, que NFS gère
-  correctement. L'image construite est ensuite dupliquée par défaut dans Artifact Registry
+  correctement. L'image construite est ensuite mise en miroir par défaut dans Artifact Registry
   (`enable_image_mirroring = true`) pour éviter les limites de débit de Docker Hub.
 - **`container_port = 3001`** — le port natif d'Uptime Kuma.
 - **Un seul réplica, par défaut et obligatoirement.** `min_instance_count = 1`,
@@ -291,7 +291,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs d'initialisation créés (vide par défaut) et job d'import facultatif. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -335,7 +335,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et
 Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Uptime Kuma
 partagée avec la variante Cloud Run est décrite dans
 **[UptimeKuma_Common](UptimeKuma_Common.md)**.

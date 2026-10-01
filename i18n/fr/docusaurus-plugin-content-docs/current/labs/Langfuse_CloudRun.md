@@ -19,7 +19,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 sur Google Cloud : le déployer, inscrire le premier utilisateur, générer une clé d'API, envoyer une trace, l'exploiter
 au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit Langfuse. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Langfuse_CloudRun) — ce lab
@@ -27,7 +27,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et effectuer l'inscription du premier utilisateur.
@@ -51,7 +51,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15) avec
    ses secrets Secret Manager (`NEXTAUTH_SECRET`, `SALT` et le mot de passe de la base de données), un bucket
    Cloud Storage, construit l'image du conteneur (une fine surcouche de `langfuse/langfuse:2`) et
-   exécute une tâche ponctuelle d'initialisation de la base de données qui crée le rôle et la base. Langfuse
+   exécute un job ponctuel d'initialisation de la base de données qui crée le rôle et la base. Langfuse
    applique ensuite son schéma via `prisma migrate deploy` au premier démarrage. Les premiers déploiements prennent
    environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -88,7 +88,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé et connecté à sa base de données. Langfuse expose un
    point de terminaison de santé non authentifié qui ne renvoie 200 que lorsque le serveur est entièrement initialisé
@@ -191,7 +191,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de requêtes,
@@ -218,14 +218,14 @@ au niveau de la plateforme, qui ne changent pas avec les versions de Langfuse.
   remplacer) et prévoit une fenêtre généreuse au premier démarrage (délai initial de 60 s, seuil de 30 échecs) pour les
   migrations Prisma.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le secret du mot
-  de passe de la base existe et que la tâche `db-init` s'est terminée avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  de passe de la base existe et que le job `db-init` s'est terminé avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
   ```
-- **Les migrations ne se sont pas exécutées :** Langfuse exécute `prisma migrate deploy` au démarrage (et non dans une tâche
-  distincte). Si le schéma semble vide, recherchez la sortie de la migration au démarrage dans les journaux du service.
+- **Les migrations ne se sont pas exécutées :** Langfuse exécute `prisma migrate deploy` au démarrage (et non dans un job
+  distinct). Si le schéma semble vide, recherchez la sortie de la migration au démarrage dans les journaux du service.
 - **Échec du build de l'image :** consultez l'historique de Cloud Build pour lire le journal du build en échec. Notez que l'image
   est épinglée sur la branche **v2** via l'ARG de build `LANGFUSE_VERSION` — un tag v3 la casserait.
 - **Erreurs 403 / d'autorisation :** vérifiez les rôles IAM du compte de service d'exécution.
@@ -253,9 +253,9 @@ VPC, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont p
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), les secrets, le bucket de stockage, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; inscrire le premier utilisateur (qui devient propriétaire) et se connecter |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; inscrire le premier utilisateur (qui devient propriétaire) et se connecter |
 | 3 — Projet et trace | Manuel | Créer une organisation/un projet, générer une clé d'API, envoyer une trace via curl |
 | 4 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base |
 | 5 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de secrets/variables d'environnement, de base de données, de tâche d'initialisation, de migration, de build et d'IAM |
+| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de secrets/variables d'environnement, de base de données, de job d'initialisation, de migration, de build et d'IAM |
 | 7 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

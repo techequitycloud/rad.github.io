@@ -39,14 +39,14 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré + adresse IP statique par défaut |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la couche
   applicative partagée (`database_type` se résout en `MYSQL_8_0`) ; PostgreSQL n'est
   pas pris en charge.
 - **L'image préconstruite `linuxserver/speedtest-tracker` est utilisée directement.**
   Il n'y a pas de Cloud Build personnalisé ; l'image officielle LinuxServer.io est
-  dupliquée dans Artifact Registry (`enable_image_mirroring = true`) et déployée telle
+  mise en miroir dans Artifact Registry (`enable_image_mirroring = true`) et déployée telle
   quelle. Solution de repli : `ghcr.io/alexjustesen/speedtest-tracker` (basée sur
   Alpine) si un environnement d'exécution particulier se révélait un jour incompatible
   avec l'image LinuxServer s6-overlay.
@@ -106,7 +106,7 @@ Speedtest Tracker stocke tous les résultats des tests de débit et la configura
 l'application dans une instance gérée Cloud SQL for MySQL 8.0. Les pods y accèdent de
 manière privée via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:3306`
 (`enable_cloudsql_volume = true`) ; aucune adresse IP publique n'est exposée. Lors du
-premier déploiement, une tâche d'initialisation crée la base de données et
+premier déploiement, un job d'initialisation crée la base de données et
 l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
@@ -146,7 +146,7 @@ l'**`APP_KEY`** Laravel (`base64:<44-char base64>`), utilisée pour chiffrer tou
 données que Speedtest Tracker stocke sous forme chiffrée. Le mot de passe de la base
 de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -164,7 +164,7 @@ Balancing avec un domaine personnalisé et un certificat géré par Google
 (`enable_custom_domain = true`), et une adresse IP statique est réservée
 (`reserve_static_ip = true`) afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -180,7 +180,7 @@ Les flux stdout/stderr des pods sont envoyés vers Cloud Logging ; les métrique
 et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de disponibilité et des
 règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -191,8 +191,8 @@ règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Speedtest Tracker {#3-speedtest-tracker-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Elle détecte le socket
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Il détecte le socket
   Cloud SQL ou le point de terminaison TCP, attend que MySQL soit joignable, crée la
   base de données et l'utilisateur de l'application, accorde les privilèges, vérifie
   que l'utilisateur de l'application peut se connecter et arrête proprement le sidecar
@@ -269,9 +269,9 @@ avec leur comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer dupliquée — aucun build personnalisé. |
-| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image dupliquée par défaut. |
-| `enable_image_mirroring` | `true` | Duplique l'image LinuxServer dans Artifact Registry avant le déploiement. |
+| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer mise en miroir — aucun build personnalisé. |
+| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image mise en miroir par défaut. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image LinuxServer dans Artifact Registry avant le déploiement. |
 | `min_instance_count` | `1` | Nombre minimal de réplicas ; à maintenir à 1. |
 | `max_instance_count` | `1` | Nombre maximal de réplicas. Ne l'augmentez pas tant que `speedtest_schedule` est défini — risque de tests de débit planifiés en double. |
 | `container_port` | `80` | Speedtest Tracker écoute sur le port 80. |
@@ -336,7 +336,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -406,7 +406,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Voir [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -432,7 +432,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -476,14 +476,14 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par Speedtest Tracker, un `redis_port`/`backup_retention_days` hors plage. Ce module vérifie en outre que `max_instance_count <= 1` dès que `speedtest_schedule` est défini. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend toutes les valeurs chiffrées de la base de données définitivement indéchiffrables. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
@@ -502,7 +502,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Speedtest Tracker
 partagée avec la variante Cloud Run est décrite dans
 **[SpeedtestTracker_Common](SpeedtestTracker_Common.md)**.

@@ -107,7 +107,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ## Groupe 3 : Exécution et mise à l'échelle {#group-3-runtime--scaling}
 
-La plupart des variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+La plupart des variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
 **Valeurs par défaut et comportement propres à Mattermost :**
 
@@ -122,7 +122,7 @@ La plupart des variables se comportent de façon identique à `App_GKE`. Voir [A
 | `timeout_seconds` | `300` | `300` | Pour les déploiements faisant un usage intensif des WebSockets, portez cette valeur à `3600` afin d'éviter que le timeout du backend ne coupe les connexions WebSocket actives. |
 | `container_protocol` | `"http1"` | `"http1"` | Mattermost utilise HTTP/1.1 pour la mise à niveau WebSocket. Ne passez pas à `"h2c"`, sauf si votre configuration Mattermost prend explicitement en charge HTTP/2. |
 
-Les autres variables d'exécution (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) se comportent comme décrit dans [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+Les autres variables d'exécution (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) se comportent comme décrit dans [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
@@ -263,7 +263,7 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 ## Groupe 10 : Stockage et système de fichiers — GCS {#group-10-storage--filesystem--gcs}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 **Comportement propre à Mattermost :**
 
@@ -293,7 +293,7 @@ gcs_volumes = [
 
 Contrairement à Ghost GKE, `Mattermost Common` ne provisionne **pas** automatiquement de bucket GCS. Vous devez définir explicitement `storage_buckets` et `gcs_volumes` si vous souhaitez un stockage des fichiers adossé à GCS.
 
-Les variables `create_cloud_storage`, `storage_buckets` et `gcs_volumes` se comportent comme décrit dans [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+Les variables `create_cloud_storage`, `storage_buckets` et `gcs_volumes` se comportent comme décrit dans [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
 ---
 
@@ -386,7 +386,7 @@ Ce ne sont pas des alias. Modifier `startup_probe` affecte la sonde réellement 
 | `startup_probe_config` | `{ enabled = true, path = "/", initial_delay_seconds = 120, failure_threshold = 15 }` | Consommée uniquement par le préréglage de repli interne `gkeapp`, inutilisé, d'`App_GKE` — sans effet sur le conteneur Mattermost déployé. Inutile de remplacer `path` ; utilisez plutôt `startup_probe`. |
 | `health_check_config` | `{ enabled = true, path = "/" }` | Comme ci-dessus — inopérante pour Mattermost. Utilisez plutôt `liveness_probe`. |
 
-**`uptime_check_config` :** vaut par défaut `{ enabled = false, path = "/" }` — les contrôles de disponibilité sont désactivés par défaut. Activez-les et définissez `path = "/api/v4/system/ping"` pour la supervision en production.
+**`uptime_check_config` :** vaut par défaut `{ enabled = false, path = "/" }` — les tests de disponibilité sont désactivés par défaut. Activez-les et définissez `path = "/api/v4/system/ping"` pour la surveillance en production.
 
 **Métriques Prometheus :** Mattermost expose des métriques Prometheus sur le port `8067`. Ce module ne les collecte pas automatiquement, mais Cloud Monitoring peut les consommer au moyen d'un exportateur de métriques personnalisé ou d'une intégration Prometheus vers Cloud Monitoring.
 
@@ -484,7 +484,7 @@ Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cp
 ### Console Google Cloud {#google-cloud-console}
 
 **Charges de travail :**
-Accédez à **Kubernetes Engine → Workloads** et filtrez par namespace (le nom du namespace est dérivé de `application_name` et `tenant_id`). Le Deployment ou StatefulSet Mattermost, le Job `db-init` et les éventuels CronJobs configurés y apparaissent.
+Accédez à **Kubernetes Engine → Workloads** et filtrez par espace de noms (le nom de l'espace de noms est dérivé de `application_name` et `tenant_id`). Le Deployment ou StatefulSet Mattermost, le Job `db-init` et les éventuels CronJobs configurés y apparaissent.
 
 **Services et Ingress :**
 Accédez à **Kubernetes Engine → Services & Ingress** pour trouver le Service Mattermost, son adresse IP externe et les éventuelles ressources Ingress configurées. Si `reserve_static_ip = true`, l'IP réservée apparaît sous **VPC Network → IP Addresses**.
@@ -499,7 +499,7 @@ Accédez à **SQL** pour trouver l'instance Cloud SQL PostgreSQL 15. Le nom de l
 Accédez à **Security → Secret Manager** pour consulter `DB_PASSWORD` et les autres secrets provisionnés par le module. Les noms des secrets suivent le modèle `app<name><tenant><id>-*`.
 
 **Supervision :**
-Accédez à **Monitoring → Dashboards** et **Monitoring → Alerting** pour consulter les contrôles de disponibilité (si `uptime_check_config.enabled = true`) et les éventuelles règles d'alerte configurées via `alert_policies`.
+Accédez à **Monitoring → Dashboards** et **Monitoring → Alerting** pour consulter les tests de disponibilité (si `uptime_check_config.enabled = true`) et les éventuelles règles d'alerte configurées via `alert_policies`.
 
 ### gcloud CLI et kubectl {#gcloud-cli-and-kubectl}
 
@@ -560,7 +560,7 @@ gcloud secrets list \
 | `service_external_ip` | Adresse IP externe de l'équilibreur de charge |
 | `project_id` | ID du projet GCP |
 | `deployment_id` | Suffixe de l'ID de déploiement |
-| `namespace` | Namespace Kubernetes |
+| `namespace` | Espace de noms Kubernetes |
 | `database_instance_name` | Nom de l'instance Cloud SQL |
 | `database_name` | Nom de la base de données applicative |
 | `database_user` | Nom de l'utilisateur de la base de données applicative |
@@ -573,11 +573,11 @@ gcloud secrets list \
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (critique : perte de données, panne complète, faille de sécurité) — **High** (élevé : service indisponible ou dégradation importante) — **Medium** (moyen : fonctionnement dégradé ou coût accru) — **Low** (faible : impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"POSTGRES_15"` | **Critical** | Mattermost ne prend en charge que PostgreSQL. Définir `MYSQL_8_0` ou `NONE` fait échouer le job `db-init` et planter Mattermost au démarrage. |

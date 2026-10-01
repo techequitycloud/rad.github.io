@@ -46,7 +46,7 @@ Gitea s'exécute comme un conteneur à binaire Go unique sur Cloud Run v2. Le d�
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et des ressources sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Gitea {#a-cloud-run--the-gitea-service}
 
@@ -74,7 +74,7 @@ Gitea stocke toutes les données relationnelles (utilisateurs, métadonnées des
   gcloud sql connect <instance-name> --user=postgres --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base, l'utilisateur et le secret du mot de passe figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base, l'utilisateur et le secret du mot de passe figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
@@ -172,7 +172,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail qui reçoivent l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail qui reçoivent l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -197,7 +197,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `cpu_always_allocated` | `false` | Facturation à la requête. Définissez `true` si vous dépendez de la synchronisation planifiée des miroirs, du cron de santé des dépôts ou de la livraison temporisée des webhooks. |
 | `enable_cloudsql_volume` | `false` | TCP vers l'IP privée de Cloud SQL (SSL exigé par le point d'entrée). Définissez `true` pour le chemin Auth Proxy par socket Unix. |
 | `execution_environment` | `gen2` | Requis pour le montage NFS. |
-| `enable_image_mirroring` | `true` | Duplique l'image de base dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -282,11 +282,11 @@ Les entrées Redis (`enable_redis`, `redis_host`, `redis_port`, `redis_auth`) so
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -300,7 +300,7 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -335,7 +335,7 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Gitea, partagée avec la variante GKE, est décrite dans **[Gitea_Common](Gitea_Common.md)**.
+Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Gitea, partagée avec la variante GKE, est décrite dans **[Gitea_Common](Gitea_Common.md)**.
 
 <!-- related-guides -->
 

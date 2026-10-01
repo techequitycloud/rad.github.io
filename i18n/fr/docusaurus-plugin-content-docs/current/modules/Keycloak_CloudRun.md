@@ -32,7 +32,7 @@ Keycloak s'exécute comme un conteneur JVM (Quarkus) sur Cloud Run v2, construit
 
 - **PostgreSQL 15 est obligatoire.** `database_type = "POSTGRES_15"` est fixé par `Keycloak_Common` ; MySQL n'est pas pris en charge.
 - **La connexion à la base de données passe en TCP par le VPC privé, et non par le socket Cloud SQL.** `enable_cloudsql_volume` vaut `false` par défaut car le **pilote JDBC PostgreSQL** fourni avec Keycloak **ne peut pas utiliser les sockets Unix** — le point d'entrée assemble `KC_DB_URL = jdbc:postgresql://<private-ip>:5432/<db>` à l'exécution et, si un socket est un jour monté, bascule automatiquement d'un chemin de socket vers `DB_IP`.
-- **Une tâche `db-init` s'exécute à chaque application** (`postgres:15-alpine`) pour créer de manière idempotente la base de données et le rôle Keycloak.
+- **Une tâche `db-init` s'exécute à chaque apply** (`postgres:15-alpine`) pour créer de manière idempotente la base de données et le rôle Keycloak.
 - **L'identifiant de l'administrateur d'amorçage est généré automatiquement.** Nom d'utilisateur `admin` (`KC_BOOTSTRAP_ADMIN_USERNAME`), mot de passe aléatoire stocké dans Secret Manager et injecté sous la forme `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 - **La santé est exposée sur le port de gestion 9000, et non 8080.** Keycloak 25+ sert `/health`, `/health/ready` et `/metrics` sur un port de gestion distinct que la plateforme ne sonde pas — la **sonde de démarrage est donc en TCP sur 8080** ; la sonde de vivacité cible HTTP `/`.
 - **Mise à l'échelle jusqu'à zéro par défaut** (`min_instance_count = 0`). Les démarrages à froid de la JVM prennent 60 à 120 secondes — définissez `1` pour un IdP de production.
@@ -61,7 +61,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurr
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Keycloak stocke toutes les données applicatives (realms, clients, utilisateurs, sessions et configuration) dans une instance gérée Cloud SQL for PostgreSQL 15. Le service se connecte en **TCP à l'IP privée de l'instance** via le VPC (aucune IP publique) — le socket du Cloud SQL Auth Proxy n'est volontairement pas utilisé car JDBC ne peut pas se connecter via des sockets Unix. Lors du premier déploiement, une Job `db-init` crée la base de données et le rôle de l'application.
+Keycloak stocke toutes les données applicatives (realms, clients, utilisateurs, sessions et configuration) dans une instance gérée Cloud SQL for PostgreSQL 15. Le service se connecte en **TCP à l'IP privée de l'instance** via le VPC (aucune IP publique) — le socket du Cloud SQL Auth Proxy n'est volontairement pas utilisé car JDBC ne peut pas se connecter via des sockets Unix. Lors du premier déploiement, un Job `db-init` crée la base de données et le rôle de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -97,7 +97,7 @@ Deux secrets protègent le déploiement : le **mot de passe de l'administrateur 
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails de l'injection et de la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'ingress et l'egress VPC contrôlent la connectivité. Notez que Keycloak valide son nom d'hôte public — le point d'entrée détecte automatiquement l'URL `run.app` comme `KC_HOSTNAME` ; si vous placez Keycloak derrière un équilibreur de charge ou un domaine personnalisé, définissez donc `KC_HOSTNAME` explicitement via `environment_variables`.
 
@@ -124,7 +124,7 @@ Les journaux du conteneur sont envoyés vers Cloud Logging ; les métriques Clou
 
 ## 3. Comportement de l'application Keycloak {#3-keycloak-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une Job `db-init` (`postgres:15-alpine`) crée de manière idempotente le rôle et la base de données Keycloak, accorde les privilèges et accorde `ALL ON SCHEMA public` (requis pour PostgreSQL 15+). Elle s'exécute à chaque application avec jusqu'à 3 nouvelles tentatives et peut être relancée sans risque.
+- **Configuration de la base de données au premier déploiement.** Un Job `db-init` (`postgres:15-alpine`) crée de manière idempotente le rôle et la base de données Keycloak, accorde les privilèges et accorde `ALL ON SCHEMA public` (requis pour PostgreSQL 15+). Il s'exécute à chaque apply avec jusqu'à 3 nouvelles tentatives et peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** Keycloak crée et migre automatiquement son schéma au premier démarrage sur la base de données vide. Les migrations sont à sens unique — **ne rétrogradez jamais `application_version`**.
 - **Mappage des variables d'environnement à l'exécution.** Le point d'entrée personnalisé mappe les variables `DB_HOST`/`DB_IP`, `DB_PORT`, `DB_NAME`, `DB_USER` et `DB_PASSWORD` injectées par le socle sur `KC_DB_URL`, `KC_DB_USERNAME` et `KC_DB_PASSWORD` de Keycloak. Si `DB_HOST` est un répertoire de socket Cloud SQL (commence par `/`), il bascule vers `DB_IP` car JDBC ne peut pas utiliser les sockets Unix. Les variables `KC_DB_*` définies explicitement sont toujours prioritaires.
 - **Détection automatique du nom d'hôte.** Au démarrage, le point d'entrée interroge l'API de métadonnées/Admin de Cloud Run pour découvrir l'URL publique du service et l'exporte sous la forme `KC_HOSTNAME` (avec `KC_HOSTNAME_STRICT=false` derrière le front-end qui termine TLS). Remplacez `KC_HOSTNAME` via `environment_variables` lorsque vous utilisez un domaine personnalisé.
@@ -154,7 +154,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès et les alertes de surveillance. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -182,7 +182,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -237,7 +237,7 @@ Keycloak n'a besoin d'aucun stockage objet ni stockage de fichiers — `storage_
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -289,7 +289,7 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 | `storage_buckets` | Buckets Cloud Storage créés (vide — Keycloak n'en utilise aucun). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -302,24 +302,24 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | Keycloak nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `enable_cloudsql_volume` | `false` | Critique | JDBC ne peut pas utiliser le socket Unix Cloud SQL. Avec une connexion par socket uniquement et sans repli sur `DB_IP`, Keycloak ne peut pas atteindre PostgreSQL. |
-| `db_name` / `db_user` | à définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les realms et utilisateurs. |
-| `application_version` | ne jamais rétrograder | Critique | Les migrations de schéma de Keycloak sont à sens unique ; une rétrogradation corrompt le schéma ou le refuse. |
-| `container_image_source` | `custom` | Élevé | L'image amont ne dispose pas du point d'entrée qui mappe les identifiants de la base de données, assemble l'URL JDBC et détecte `KC_HOSTNAME` — et elle n'est pas pré-construite pour `start --optimized`. |
-| `startup_probe` | TCP sur 8080, ≥30 échecs | Élevé | Une sonde HTTP sur `8080/health` renvoie toujours 404 (la santé est sur le port 9000) ; la révision ne devient jamais prête alors que Keycloak a bien démarré. |
-| Administrateur d'amorçage | à remplacer après la première connexion | Élevé | `admin` + le mot de passe Secret Manager est un identifiant d'amorçage **temporaire** ; le conserver comme unique administrateur constitue un risque permanent. |
-| `KC_HOSTNAME` (via `environment_variables`) | explicite en cas de domaine personnalisé / équilibreur de charge | Élevé | La détection automatique fige l'URL `run.app` ; les redirections OIDC et les URL d'émetteur ne correspondent alors plus au domaine réellement visité par les utilisateurs. |
-| `memory_limit` | `2Gi` | Élevé | OOM de la JVM en dessous d'environ 1 GiB, en particulier pendant les migrations du premier démarrage. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` (ou `ALL_TRAFFIC`) | Élevé | Sans egress VPC, le service ne peut pas atteindre l'IP privée de Cloud SQL. |
-| `min_instance_count` | `1` en production | Moyen | `0` ajoute un démarrage à froid de la JVM de 60 à 120 s à la première redirection SSO après une période d'inactivité — très visible dans les flux de connexion. |
-| `enable_cloud_armor` | activé pour les connexions exposées à Internet | Moyen | Sinon, les points de terminaison de connexion et d'administration ne sont pas protégés contre le trafic volumétrique ou le bourrage d'identifiants. |
-| `enable_redis` | `false` | Faible | Keycloak n'utilise pas Redis ; l'activer ne fait qu'injecter des variables d'environnement inutilisées. |
+| `database_type` | `POSTGRES_15` | Critical | Keycloak nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `enable_cloudsql_volume` | `false` | Critical | JDBC ne peut pas utiliser le socket Unix Cloud SQL. Avec une connexion par socket uniquement et sans repli sur `DB_IP`, Keycloak ne peut pas atteindre PostgreSQL. |
+| `db_name` / `db_user` | à définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les realms et utilisateurs. |
+| `application_version` | ne jamais rétrograder | Critical | Les migrations de schéma de Keycloak sont à sens unique ; une rétrogradation corrompt le schéma ou le refuse. |
+| `container_image_source` | `custom` | High | L'image amont ne dispose pas du point d'entrée qui mappe les identifiants de la base de données, assemble l'URL JDBC et détecte `KC_HOSTNAME` — et elle n'est pas pré-construite pour `start --optimized`. |
+| `startup_probe` | TCP sur 8080, ≥30 échecs | High | Une sonde HTTP sur `8080/health` renvoie toujours 404 (la santé est sur le port 9000) ; la révision ne devient jamais prête alors que Keycloak a bien démarré. |
+| Administrateur d'amorçage | à remplacer après la première connexion | High | `admin` + le mot de passe Secret Manager est un identifiant d'amorçage **temporaire** ; le conserver comme unique administrateur constitue un risque permanent. |
+| `KC_HOSTNAME` (via `environment_variables`) | explicite en cas de domaine personnalisé / équilibreur de charge | High | La détection automatique fige l'URL `run.app` ; les redirections OIDC et les URL d'émetteur ne correspondent alors plus au domaine réellement visité par les utilisateurs. |
+| `memory_limit` | `2Gi` | High | OOM de la JVM en dessous d'environ 1 GiB, en particulier pendant les migrations du premier démarrage. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` (ou `ALL_TRAFFIC`) | High | Sans egress VPC, le service ne peut pas atteindre l'IP privée de Cloud SQL. |
+| `min_instance_count` | `1` en production | Medium | `0` ajoute un démarrage à froid de la JVM de 60 à 120 s à la première redirection SSO après une période d'inactivité — très visible dans les flux de connexion. |
+| `enable_cloud_armor` | activé pour les connexions exposées à Internet | Medium | Sinon, les points de terminaison de connexion et d'administration ne sont pas protégés contre le trafic volumétrique ou le bourrage d'identifiants. |
+| `enable_redis` | `false` | Low | Keycloak n'utilise pas Redis ; l'activer ne fait qu'injecter des variables d'environnement inutilisées. |
 
 ---
 

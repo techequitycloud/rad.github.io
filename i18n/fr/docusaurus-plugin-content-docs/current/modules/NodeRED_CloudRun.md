@@ -40,7 +40,7 @@ Google Cloud :
 | Secret des identifiants | Secret Manager | `NODE_RED_CREDENTIAL_SECRET`, généré automatiquement, chiffre les identifiants des flux |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est requise.** Node-RED stocke tout son état dans son
   répertoire `/data` ; `database_type` vaut `"NONE"` par défaut.
@@ -188,9 +188,9 @@ des règles d'alerte.
 
 ## 3. Comportement de l'application Node-RED {#3-node-red-application-behaviour}
 
-- **Ni base de données, ni tâche d'initialisation.** Node-RED stocke tout son état
-  dans `/data`. Aucune instance Cloud SQL n'est provisionnée et aucune tâche
-  d'initialisation de schéma n'est requise. Le premier démarrage crée
+- **Ni base de données, ni job d'initialisation.** Node-RED stocke tout son état
+  dans `/data`. Aucune instance Cloud SQL n'est provisionnée et aucun job
+  d'initialisation de schéma n'est requis. Le premier démarrage crée
   automatiquement les fichiers de flux par défaut si `/data` est vide.
 - **Chiffrement des identifiants des flux.** `NODE_RED_CREDENTIAL_SECRET` est
   injecté à l'exécution depuis Secret Manager. Cette clé chiffre le fichier
@@ -211,7 +211,7 @@ des règles d'alerte.
   HTTP GET à `/`, qui renvoie l'interface de l'éditeur une fois Node-RED prêt. Un
   délai initial de 30 secondes suffit.
 - **Tâches planifiées.** Node-RED ne dispose d'aucune commande planifiée intégrée.
-  Utilisez `cron_jobs` pour provisionner des tâches Cloud Run déclenchées par Cloud
+  Utilisez `cron_jobs` pour provisionner des jobs Cloud Run déclenchés par Cloud
   Scheduler pour les opérations de maintenance périodiques, comme les exports de
   flux ou les vidages de cache :
   ```bash
@@ -272,7 +272,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements canary/blue-green. |
 | `max_revisions_to_retain` | `7` | Révisions Cloud Run à conserver après chaque déploiement. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -339,19 +339,19 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `enable_auto_password_rotation` | `false` | Rotation automatique du secret des identifiants. La rotation de la clé rend illisibles les identifiants de flux existants. |
 | `rotation_propagation_delay_sec` | `90` | Nombre de secondes d'attente après la rotation avant de redémarrer le service. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Node-RED ne nécessite aucune tâche d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 30s | Sonde HTTP sur le chemin de l'éditeur Node-RED. |
-| `liveness_probe` | HTTP `/`, délai de 30s | Sonde d'activité — redémarre le conteneur si l'éditeur ne répond pas. |
+| `liveness_probe` | HTTP `/`, délai de 30s | Sonde de vivacité — redémarre le conteneur si l'éditeur ne répond pas. |
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -364,7 +364,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -400,12 +400,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_nfs` | `true` | Critical | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage d'instance ou nouveau déploiement. |
 | `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critical | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |

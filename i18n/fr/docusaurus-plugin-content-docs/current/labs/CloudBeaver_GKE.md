@@ -27,7 +27,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - Effectuer les opérations du jour 2 — inspecter le StatefulSet et son PVC en mode bloc, et mettre à jour la version.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -44,7 +44,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -62,7 +62,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme construit l'image de conteneur (une enveloppe légère `FROM dbeaver/cloudbeaver`
    — sans point d'entrée personnalisé, le démarrage propre de l'image amont est utilisé tel quel), puis
-   déploie un **StatefulSet** à réplique unique (port 8978, 1 vCPU / 1 GiB)
+   déploie un **StatefulSet** à réplica unique (port 8978, 1 vCPU / 1 GiB)
    dans le cluster GKE Autopilot, avec par pod un **Persistent Disk en mode bloc** monté sur
    `/opt/cloudbeaver/workspace`. Un bucket Cloud Storage est également déclaré par souci de cohérence
    avec la variante Cloud Run, mais ce n'est pas là que réside l'espace de travail. Il n'y a **ni
@@ -71,7 +71,7 @@ export REGION="us-central1"           # the region you deploy into
    (le build du conteneur et le provisionnement du PVC dominent — il n'y a aucune base de données à
    attendre).
 
-3. Connectez-vous au cluster et identifiez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et identifiez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -185,7 +185,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et
    mémoire des pods (surveillez la mémoire — CloudBeaver repose sur la JVM), le nombre de redémarrages et
-   l'utilisation du PVC. Le module peut provisionner un **contrôle de disponibilité** (uptime check), mais uniquement lorsque le
+   l'utilisation du PVC. Le module peut provisionner un **test de disponibilité** (uptime check), mais uniquement lorsque le
    point de terminaison est accessible publiquement (par ex. `service_type = "LoadBalancer"`) — avec la
    valeur par défaut `ClusterIP`, il n'y a aucun point de terminaison public à sonder ; Monitoring → Uptime
    checks peut donc être légitimement vide.
@@ -232,19 +232,19 @@ PVC en mode bloc (et non GCS FUSE) pour l'espace de travail.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
-Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes, le namespace et le PVC en mode bloc (et avec lui **toutes les connexions enregistrées, les utilisateurs et les paramètres**), le bucket Cloud Storage et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, l'instance Cloud SQL partagée, le registre) sont gérées séparément et ne sont pas supprimées ici.
+Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes, l'espace de noms et le PVC en mode bloc (et avec lui **toutes les connexions enregistrées, les utilisateurs et les paramètres**), le bucket Cloud Storage et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, l'instance Cloud SQL partagée, le registre) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module construit l'image et provisionne un StatefulSet à réplique unique avec un espace de travail sur PVC en mode bloc (sans base de données, sans Redis, sans secrets) |
+| 1 — Déployer | Automatisé | Le module construit l'image et provisionne un StatefulSet à réplica unique avec un espace de travail sur PVC en mode bloc (sans base de données, sans Redis, sans secrets) |
 | 2 — Accéder et vérifier | Manuel | Comprendre le Service `ClusterIP` par défaut ; le contrôle de santé réussit ; revendiquer le compte administrateur via l'assistant de configuration |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet et le PVC, conserver une seule instance, mettre à jour la version |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; comprendre quand le contrôle de disponibilité existe |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; comprendre quand le test de disponibilité existe |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes d'accessibilité du Service, de pod, de PVC de l'espace de travail, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC de l'espace de travail |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC de l'espace de travail |

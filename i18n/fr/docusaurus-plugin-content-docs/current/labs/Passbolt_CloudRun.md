@@ -20,7 +20,7 @@ module **Passbolt on Cloud Run** sur Google Cloud : le déployer, y accéder et 
 (y compris le processus d'initialisation de l'administrateur, réellement différent, qu'utilise cette application), l'exploiter
 au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Passbolt. Pour la liste complète des
 services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez
 le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Passbolt_CloudRun)
@@ -29,7 +29,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne.
@@ -60,7 +60,7 @@ dans le temps.
   depuis [passbolt.com/download](https://www.passbolt.com/download) avant de
   commencer.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -86,8 +86,8 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (MySQL 8.0)
    avec son secret de mot de passe Secret Manager, deux buckets GCS dédiés
    (`storage` pour la paire de clés GPG du serveur, `jwt` pour la paire de clés JWT), et exécute
-   dans l'ordre la chaîne de tâches d'initialisation en 2 étapes (`db-init` →
-   `admin-bootstrap`). La tâche `admin-bootstrap` est la plus lente des deux — elle
+   dans l'ordre la chaîne de jobs d'initialisation en 2 étapes (`db-init` →
+   `admin-bootstrap`). Le job `admin-bootstrap` est le plus lent des deux — il
    reproduit la séquence de démarrage propre à l'éditeur (génération des clés GPG, installation
    du schéma) avant d'enregistrer le compte administrateur. Les premiers déploiements prennent généralement
    environ **10–20 minutes**.
@@ -106,11 +106,11 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 La configuration du compte administrateur de Passbolt diffère réellement de presque toutes les autres
 applications de ce catalogue : il n'existe ni mot de passe administrateur côté serveur, ni
-assistant de configuration web à la première visite. La tâche d'initialisation `admin-bootstrap` affiche une **URL de
+assistant de configuration web à la première visite. Le job d'initialisation `admin-bootstrap` affiche une **URL de
 configuration à usage unique** dans Cloud Logging, que vous ouvrez dans un navigateur doté d'une extension compatible
 avec Passbolt — l'extension génère alors localement votre paire de clés GPG et votre mot de passe maître,
 et les enregistre auprès du serveur via cette URL.
@@ -123,8 +123,8 @@ et les enregistre auprès du serveur via cette URL.
    # expect: {"header":{"status":"success",...},"body":"OK"}
    ```
 
-2. **Récupérez l'URL de configuration à usage unique dans Cloud Logging.** La tâche `admin-bootstrap`
-   l'a affichée sur stdout lorsqu'elle a exécuté `cake passbolt register_user` (exécutée
+2. **Récupérez l'URL de configuration à usage unique dans Cloud Logging.** Le job `admin-bootstrap`
+   l'a affichée sur stdout lorsqu'il a exécuté `cake passbolt register_user` (exécutée
    sans l'option `-q`/quiet précisément pour que cette URL soit visible) :
 
    ```bash
@@ -139,7 +139,7 @@ et les enregistre auprès du serveur via cette URL.
    https://<your-service-url>/setup/start/<user-id>/<token>
    ```
 
-   Si rien ne correspond, la tâche est peut-être encore en cours (vérifiez avec
+   Si rien ne correspond, le job est peut-être encore en cours (vérifiez avec
    `gcloud run jobs executions list --job="${SERVICE}-admin-bootstrap"
    --project="$PROJECT" --region="$REGION"`) ou s'est peut-être déjà terminée lors
    d'un apply précédent — relisez les dernières entrées de journal sans le filtre `grep`
@@ -182,8 +182,8 @@ et les enregistre auprès du serveur via cette URL.
    équipe qui en dépend pendant les heures de travail.
 
 3. **Mettez à jour le tag de version de l'application** en modifiant `application_version` dans
-   la plateforme RAD et en l'appliquant via **Update**. Les tâches `db-init` et
-   `admin-bootstrap` sont réexécutées — toutes deux sont idempotentes ; un schéma existant
+   la plateforme RAD et en l'appliquant via **Update**. Les jobs `db-init` et
+   `admin-bootstrap` sont réexécutés — tous deux sont idempotents ; un schéma existant
    et le compte administrateur restent donc intacts.
 
 4. **Inspectez les volumes des paires de clés GPG/JWT** (ne les supprimez pas et ne les videz pas —
@@ -221,7 +221,7 @@ et les enregistre auprès du serveur via cette URL.
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -246,8 +246,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 
-- **La tâche `admin-bootstrap` échoue avec une Internal Error / 500 sur
-  `register_user` :** c'est précisément le mode de défaillance que la tâche est conçue
+- **Le job `admin-bootstrap` échoue avec une Internal Error / 500 sur
+  `register_user` :** c'est précisément le mode de défaillance que le job est conçu
   pour éviter en reproduisant d'abord la séquence de génération des clés GPG et d'installation du schéma
   propre à l'éditeur — si elle échoue malgré tout, consultez les journaux de son exécution pour identifier l'étape
   en échec :
@@ -258,12 +258,12 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   ```
   Vérifiez d'abord que `db-init` s'est terminée avec succès (`admin-bootstrap` en dépend)
   et que les volumes GCS `storage`/`jwt` sont réellement montés
-  (`mount_gcs_volumes = ["storage", "jwt"]` sur la tâche).
+  (`mount_gcs_volumes = ["storage", "jwt"]` sur le job).
 
 - **L'URL de configuration n'apparaît jamais dans les journaux :** vérifiez que `admin-bootstrap` s'est réellement
   terminée (et pas seulement qu'elle a démarré) — `gcloud run jobs executions list` affiche l'état
-  de l'exécution. Si la tâche a échoué en cours de route, ses étapes GPG/JWT/schéma idempotentes
-  peuvent être réexécutées sans risque ; relancez la tâche manuellement :
+  de l'exécution. Si le job a échoué en cours de route, ses étapes GPG/JWT/schéma idempotentes
+  peuvent être réexécutées sans risque ; relancez le job manuellement :
   ```bash
   gcloud run jobs execute "${SERVICE}-admin-bootstrap" --project="$PROJECT" --region="$REGION" --wait
   ```
@@ -310,7 +310,7 @@ gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (MySQL 8.0), les buckets GCS GPG/JWT, et exécute la chaîne `db-init` → `admin-bootstrap` |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit sur `/healthcheck/status.json` ; récupérer l'URL de configuration à usage unique dans Cloud Logging et terminer l'enregistrement via une extension de navigateur |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit sur `/healthcheck/status.json` ; récupérer l'URL de configuration à usage unique dans Cloud Logging et terminer l'enregistrement via une extension de navigateur |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, inspecter les volumes des paires de clés, accéder à la base, gérer les utilisateurs/groupes |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, d'admin-bootstrap, de base de données et de perte des paires de clés |

@@ -62,14 +62,14 @@ assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Crawl4AI {#a-gke-autopilot--the-crawl4ai-workload}
 
 Les pods Crawl4AI s'exécutent sur Autopilot, qui facture le CPU et la mémoire que les pods
 demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le
-nombre minimal et le nombre maximal de répliques. Chaque pod exécute sa propre arborescence supervisord :
+nombre minimal et le nombre maximal de réplicas. Chaque pod exécute sa propre arborescence supervisord :
 Redis (priorité 10) démarre en premier, puis Gunicorn (priorité 20).
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail Crawl4AI pour
@@ -188,9 +188,9 @@ facultatifs sont disponibles.
 - **Cycle de vie des résultats de tâche.** Les résultats d'exploration asynchrone sont stockés dans le Redis
   intégré avec une durée de vie de `redis_task_ttl_seconds` (1 heure par défaut). Une fois cette durée
   écoulée, le résultat disparaît. Il n'existe aucun stockage durable des résultats.
-- **Aucune migration de base de données ni tâche d'initialisation.** Crawl4AI est entièrement
-  sans état — `Crawl4AI_Common` ne fournit aucune tâche d'initialisation. Aucune configuration
-  de base de données n'est requise.
+- **Aucune migration de base de données ni job d'initialisation.** Crawl4AI est entièrement
+  sans état — `Crawl4AI_Common` ne fournit aucun job d'initialisation. Aucune configuration
+  de base de données n'est requis.
 - **Extraction fondée sur les LLM.** Fournissez les clés d'API des LLM via `secret_environment_variables`
   et définissez `LLM_PROVIDER` (ou des clés propres au fournisseur comme `OPENAI_API_KEY`)
   via `environment_variables` pour activer l'extraction de contenu pilotée par l'IA.
@@ -222,7 +222,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -241,15 +241,15 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | `deploy_application` | `true` | Définissez `false` pour provisionner l'IAM sans déployer la charge de travail. |
 | `workload_type` | `null` | `"Deployment"` (par défaut, sans état) ou `"StatefulSet"` pour une mise en cache adossée à un PVC. |
 | `container_resources` | `{ cpu_limit="4", memory_limit="8Gi", cpu_request="2", mem_request="4Gi" }` | CPU et mémoire du conteneur. Minimum 4 GiB de mémoire pour un fonctionnement stable de Chromium. |
-| `min_instance_count` | `1` | Nombre minimal de répliques. Gardez ≥ 1 afin qu'un pool Chromium chaud soit toujours disponible. |
-| `max_instance_count` | `5` | Nombre maximal de répliques (plafond de l'autoscaler). |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Gardez ≥ 1 afin qu'un pool Chromium chaud soit toujours disponible. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `timeout_seconds` | `1800` | Délai de grâce d'arrêt du pod ; définissez ≥ 1800 pour laisser les longues explorations par lots se terminer. |
 | `termination_grace_period_seconds` | `60` | Secondes pendant lesquelles Kubernetes attend après SIGTERM avant l'arrêt forcé. |
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service. Utilisez `ClusterIP` pour un accès interne au cluster uniquement. |
 | `session_affinity` | `None` | Pas de routage persistant — les identifiants de tâche sont locaux au pod ; utilisez `/crawl/sync` pour une fiabilité entre pods. |
 | `container_image_source` | `prebuilt` | `"prebuilt"` utilise directement `unclecode/crawl4ai` ; `"custom"` construit l'image via Cloud Build. |
 | `container_image` | `unclecode/crawl4ai` | URI de l'image lorsque `container_image_source = "prebuilt"`. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -259,13 +259,13 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `PYTHONUNBUFFERED` et `REDIS_TASK_TTL` sont définis automatiquement. **Ne définissez pas `REDIS_HOST` ni `REDIS_PORT`**. Surcharges reconnues : `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_TEMPERATURE`, `CRAWL4AI_HOOKS_ENABLED`. |
 | `secret_environment_variables` | `{}` | Table de correspondance variable d'environnement → nom du secret Secret Manager. À utiliser pour `SECRET_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster cible. Laissez vide pour une découverte automatique. |
 | `gke_cluster_selection_mode` | `primary` | Stratégie de sélection du cluster. |
-| `namespace_name` | `""` | Namespace Kubernetes. Généré à partir du préfixe de ressource lorsqu'il est vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Généré à partir du préfixe de ressource lorsqu'il est vide. |
 | `enable_multi_cluster_service` | `false` | Active le ServiceExport Multi-Cluster Services. |
 | `reserve_static_ip` | `true` | Réserve une adresse IP externe statique pour l'équilibreur de charge afin que l'adresse survive aux redéploiements (valeur par défaut de toute la flotte selon la campagne GKE — une adresse IP éphémère peut sinon laisser `GKE_SERVICE_URL`/une configuration auto-référencée pointer vers un DNS interne injoignable). |
 | `static_ip_name` | `""` | Nom d'une adresse IP statique existante à utiliser. Laissez vide pour une création automatique. |
@@ -280,12 +280,12 @@ présents pour la compatibilité de l'interface mais n'ont aucun effet.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets du namespace. |
+| `enable_resource_quota` | `false` | Plafonne le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_cpu_requests` | `8` | Total des demandes de CPU autorisées pour l'ensemble des pods. |
 | `quota_cpu_limits` | `16` | Total des limites de CPU autorisées. |
 | `quota_memory_requests` | `32Gi` | **Doit utiliser des unités binaires (`32Gi`, `8192Mi`)** — des entiers nus sont lus comme des octets et bloquent l'ordonnancement. |
 | `quota_memory_limits` | `64Gi` | **Doit utiliser des unités binaires** — même contrainte que `quota_memory_requests`. |
-| `quota_max_pods` | `20` | Nombre maximal de pods dans le namespace. |
+| `quota_max_pods` | `20` | Nombre maximal de pods dans l'espace de noms. |
 
 ### Groupe 9 — CI/CD et intégration GitHub {#group-9--cicd--github-integration}
 
@@ -293,11 +293,11 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 [App_GKE](App_GKE.md). Entrées principales : `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`.
 
-### Groupe 10 — Tâches et tâches planifiées {#group-10--jobs--scheduled-tasks}
+### Groupe 10 — Jobs et tâches planifiées {#group-10--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Crawl4AI_Common ne fournit aucune tâche d'initialisation par défaut — laissez vide sauf si une étape de configuration personnalisée est nécessaire. |
+| `initialization_jobs` | `[]` | Crawl4AI_Common ne fournit aucun job d'initialisation par défaut — laissez vide sauf si une étape de configuration personnalisée est nécessaire. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes facultatifs (par exemple, explorations périodiques de préchauffage du cache). |
 
 ### Groupe 11 — Cloud Storage et Artifact Registry {#group-11--cloud-storage--artifact-registry}
@@ -335,7 +335,7 @@ etc.) sont présentes pour la compatibilité de l'interface et n'ont aucun effet
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. Ignoré automatiquement lorsque `max_instance_count ≤ 1`. |
 | `pdb_min_available` | `1` | Augmentez `min_instance_count` au-delà de 1 si vous avez besoin de marge lors des évictions. |
 | `enable_topology_spread` | `false` | Répartit les pods entre les zones. |
-| `enable_network_segmentation` | `false` | Applique des NetworkPolicies Kubernetes pour isoler le namespace. |
+| `enable_network_segmentation` | `false` | Applique des NetworkPolicies Kubernetes pour isoler l'espace de noms. |
 
 ### Groupe 17 — StatefulSet {#group-17--statefulset}
 
@@ -354,15 +354,15 @@ etc.) sont présentes pour la compatibilité de l'interface et n'ont aucun effet
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide
 de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape (Cloud Deploy). |
 | `service_external_ip` | Adresse IP externe du LoadBalancer (lorsqu'une adresse IP statique est réservée). |
@@ -370,7 +370,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -406,7 +406,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC et duplication d'images — consultez
+Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative partagée propre à Crawl4AI est
 décrite dans **[Crawl4AI_Common](Crawl4AI_Common.md)**.
 

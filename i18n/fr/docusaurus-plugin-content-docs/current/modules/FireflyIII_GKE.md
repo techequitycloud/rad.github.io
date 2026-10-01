@@ -65,7 +65,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   ensuite l'inscription ouverte.
 - **NFS est activé par défaut** pour conserver les pièces jointes et les données
   d'exécution dans `/var/lib/fireflyiii`.
-- **Un minimum d'une réplique est maintenu** (GKE ne permet pas la mise à zéro).
+- **Un minimum d'un réplica est maintenu** (GKE ne permet pas la mise à zéro).
 
 ---
 
@@ -74,7 +74,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Firefly III {#a-gke-autopilot--the-firefly-iii-workload}
 
@@ -110,7 +110,7 @@ l'application et accorde les privilèges.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent dans les [Outputs](#5-outputs). Pour le modèle de
+contenant le mot de passe figurent dans les [sorties](#5-outputs). Pour le modèle de
 connexion, les sauvegardes et la rotation du mot de passe, consultez
 [App_GKE](App_GKE.md).
 
@@ -252,11 +252,11 @@ comportement et leurs valeurs par défaut standard.
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `prebuilt` | Déploie directement l'image officielle `fireflyiii/core`. |
-| `min_instance_count` | `1` | Nombre minimal de répliques (GKE exige ≥ 1). |
-| `max_instance_count` | `1` | Nombre maximal de répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas (GKE exige ≥ 1). |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. |
 | `container_port` | `8080` | Firefly III (Apache) écoute sur le port 8080. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy ; requis pour la connectivité en boucle locale vers Cloud SQL. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry avant le déploiement. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -268,7 +268,7 @@ comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de poursuivre. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -289,7 +289,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_pod_disruption_budget` | `false` | Désactivé par défaut car `max_instance_count = 1` (un PDB égal au nombre de répliques bloque le drainage des nœuds). |
+| `enable_pod_disruption_budget` | `false` | Désactivé par défaut car `max_instance_count = 1` (un PDB égal au nombre de réplicas bloque le drainage des nœuds). |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
@@ -391,12 +391,12 @@ comportement et leurs valeurs par défaut standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -450,7 +450,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Firefly III, partagée
 avec la variante Cloud Run, est décrite dans
 **[FireflyIII_Common](FireflyIII_Common.md)**.

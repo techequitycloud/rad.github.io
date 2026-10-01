@@ -31,7 +31,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours
   d'exécution, y compris récupérer le mot de passe administrateur du premier
   démarrage dans les journaux du pod.
@@ -57,7 +57,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -90,7 +90,7 @@ export REGION="us-central1"           # the region you deploy into
    déploiements prennent généralement **10–20 minutes** (essentiellement pour
    le build de l'image et le provisionnement du PVC).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres
    indépendants du nom :
 
    ```bash
@@ -189,7 +189,7 @@ export REGION="us-central1"           # the region you deploy into
    qui consomme le quota restreint `SSD_TOTAL_GB` dans les projets limités.
    Réduire la charge de travail à zéro (`kubectl scale --replicas=0`) libère le
    CPU et la mémoire mais **conserve le PVC** — seule la suppression du PVC (ou
-   du namespace) libère le quota qu'il occupe. Passez à
+   de l'espace de noms) libère le quota qu'il occupe. Passez à
    `stateful_pvc_storage_class = standard` (HDD) si la pression sur le quota
    pose problème ; Cloudreve n'a pas besoin des IOPS d'un SSD.
 
@@ -205,7 +205,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer. C'est aussi là
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer). C'est aussi là
    qu'apparaît le mot de passe administrateur du premier démarrage ; il est
    donc utile de connaître le filtre, même après la configuration initiale :
 
@@ -265,7 +265,7 @@ changent pas avec les versions de Cloudreve.
   ```
 - **Les données semblent réinitialisées après un redéploiement :** vérifiez que
   le PVC existe toujours et qu'il est toujours lié (`kubectl get pvc -n "$NS"`)
-  — seule la suppression d'un namespace ou d'un PVC (et non un simple
+  — seule la suppression d'un espace de noms ou d'un PVC (et non un simple
   redémarrage de pod) fait réellement perdre la base de données SQLite
   intégrée et les fichiers téléversés.
 - **Erreurs de récupération d'image :** vérifiez que l'image existe dans
@@ -281,7 +281,7 @@ doit jamais cibler `/cloudreve` tant que le PVC en mode bloc est activé).
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cela supprime le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cette opération supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, le Persistent Volume en mode bloc (et tout ce qui y est stocké,
+et l'espace de noms, le Persistent Volume en mode bloc (et tout ce qui y est stocké,
 y compris la base de données SQLite intégrée et tous les fichiers téléversés) et
 les images Artifact Registry. Les ressources détenues par **Services_GCP** (le
 VPC, le cluster GKE, le registre partagé) sont gérées séparément et ne sont pas
@@ -298,4 +298,4 @@ supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, rester sur un seul réplica, mettre à jour la version, gérer le compromis lié à la classe de stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging (y compris pour le mot de passe administrateur) ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de masquage de volume, de mot de passe perdu, de quota SSD, de sonde et de récupération d'image |
-| 6 — Démanteler | Automatisé | Delete (Trash) supprime la charge de travail, le namespace, le PVC et les images |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime la charge de travail, l'espace de noms, le PVC et les images |

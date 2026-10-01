@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Beszel sur GKE Autopilot dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Beszel est un hub de supervision de serveurs léger et open source — métriques historiques de ressources, statistiques des conteneurs Docker et alertes configurables, construit sur PocketBase avec une base de données SQLite intégrée. Ce lab vous fait parcourir le cycle de vie opérationnel complet du module **Beszel on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le supprimer.
 
@@ -21,13 +21,13 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder au StatefulSet en cours d'exécution.
 - Accéder au hub, le vérifier et effectuer la configuration administrateur initiale.
 - Effectuer les opérations du jour 2 — inspecter la charge de travail, gérer le PVC SQLite et mettre à jour la version.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -60,14 +60,14 @@ export REGION="us-central1"           # the region you deploy into
    [Guide de configuration](https://docs.radmodules.dev/docs/modules/Beszel_GKE)
    documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme planifie un **StatefulSet** à réplique unique sur le cluster GKE Autopilot
+2. La plateforme planifie un **StatefulSet** à réplica unique sur le cluster GKE Autopilot
    (un conteneur Go sur le port 8090), provisionne un **Persistent
    Volume** de type bloc de 20 Gi monté sur `/beszel_data` pour la base de données SQLite intégrée, et met en miroir
    l'image Beszel dans Artifact Registry. **Aucun Cloud SQL, aucun Redis et aucun
    job d'initialisation n'est créé** — Beszel est autonome ; le déploiement est donc rapide
    (généralement **10 à 20 minutes**, sans provisionnement Cloud SQL à attendre).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -173,7 +173,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -235,10 +235,10 @@ et de ne jamais porter `max_instance_count` au-delà de 1).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le StatefulSet Kubernetes
-et le namespace, le Persistent Volume (qui **est** la base de données SQLite — tout
+et l'espace de noms, le Persistent Volume (qui **est** la base de données SQLite — tout
 l'historique de supervision et le compte administrateur disparaissent avec lui) et les images Artifact
 Registry mises en miroir. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE,
 le registre partagé) sont gérées séparément et ne sont pas supprimées ici.
@@ -249,9 +249,9 @@ le registre partagé) sont gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie un StatefulSet à réplique unique (port 8090), un PVC de 20 Gi sur `/beszel_data`, et met l'image en miroir — sans base de données, ni Redis, ni job d'initialisation |
+| 1 — Déployer | Automatisé | Le module déploie un StatefulSet à réplica unique (port 8090), un PVC de 20 Gi sur `/beszel_data`, et met l'image en miroir — sans base de données, ni Redis, ni job d'initialisation |
 | 2 — Accéder et vérifier | Manuel | `/api/health` renvoie 200 ; terminer la configuration du superutilisateur PocketBase et connecter un agent |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, respecter le blocage à une seule réplique, mettre à jour la version, inspecter le PVC |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, respecter le blocage à un seul réplica, mettre à jour la version, inspecter le PVC |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC/quota, d'entrée des agents, de verrou SQLite et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC |

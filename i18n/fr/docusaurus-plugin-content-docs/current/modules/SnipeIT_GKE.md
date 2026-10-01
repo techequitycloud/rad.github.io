@@ -32,7 +32,7 @@ Snipe-IT s'exécute comme une seule charge de travail web PHP/Apache, récupér�
 directement depuis l'image officielle de Docker Hub. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods PHP/Apache préconstruits `snipe/snipe-it` sur le port 80, 1 vCPU / 2 GiB par défaut |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — le moteur est fixé à `MYSQL_8_0` |
@@ -41,11 +41,11 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données géré par le socle |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé + certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Image officielle préconstruite, sans build personnalisé.** `container_image_source =
   "prebuilt"` déploie `snipe/snipe-it:<application_version>` (tag par défaut
-  `v8-latest`) directement depuis Docker Hub, dupliquée dans Artifact Registry
+  `v8-latest`) directement depuis Docker Hub, mise en miroir dans Artifact Registry
   lorsque `enable_image_mirroring = true`. Il n'y a pas d'étape Cloud
   Build/Dockerfile.
 - **MySQL 8.0 est obligatoire.** `SnipeIT_Common` fixe `database_type =
@@ -66,7 +66,7 @@ ensemble ciblé de services Google Cloud :
   est requis pour la connectivité NFS.
 - **L'affinité de session est `ClientIP`** afin que les requêtes d'un client
   atteignent le même pod.
-- **Deux tâches d'initialisation ordonnées s'exécutent à chaque apply.** `db-init`
+- **Deux jobs d'initialisation ordonnés s'exécutent à chaque apply.** `db-init`
   (crée la base de données et l'utilisateur via `mysql:8.0-debian`) s'exécute
   en premier, puis `migrate` (`php
   artisan migrate --force` sur l'image `snipe/snipe-it`) — toutes deux en
@@ -156,7 +156,7 @@ l'`APP_KEY` Laravel (`base64:<...>`, 32 octets aléatoires encodés en base64). 
 mot de passe de la base de données est géré séparément par le socle. Sur GKE,
 les secrets sont projetés dans les pods via le pilote Secret Store CSI.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~snipeit"
@@ -174,8 +174,8 @@ l'adresse survive aux redéploiements). `enable_custom_domain = true` provisionn
 un Ingress Kubernetes ; ajoutez des noms d'hôte via `application_domains` pour
 obtenir un certificat géré par Google.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC →
-  Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network →
+  IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -192,8 +192,7 @@ métriques de GKE et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests 
 disponibilité et des règles d'alerte facultatifs sont disponibles
 (`uptime_check_config.enabled = false` par défaut).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -210,7 +209,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
   peut être relancée sans risque — `execute_on_apply = true`, `max_retries = 3`).
 - **Tâche de migration explicite, et non une migration automatique au démarrage.**
   Contrairement à certaines applications Laravel qui effectuent leurs
-  migrations au démarrage du conteneur, Snipe-IT exécute ici une tâche
+  migrations au démarrage du conteneur, Snipe-IT exécute ici un job
   d'initialisation `migrate` explicite (`php /var/www/html/artisan migrate --force`,
   qui dépend de `db-init`, `max_retries = 2`) afin que le schéma soit prêt avant
   que la première révision de l'application ne serve du trafic. Le comportement
@@ -239,7 +238,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
   (délai initial de 300 s, période de 60 s, seuil d'échec de 3) — Snipe-IT sert
   sa page de connexion sur `/` sans authentification, ce qui confirme que
   l'application PHP et la connexion à la base de données sont saines.
-- **Inspectez les tâches d'initialisation et la configuration en cours :**
+- **Inspectez les jobs d'initialisation et la configuration en cours :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -351,7 +350,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -369,7 +368,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > nommée avant la création de toute ressource ; la plupart des erreurs
 > ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Snipe-IT nécessite MySQL ; les autres moteurs ne sont pas pris en charge par `SnipeIT_Common`. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
@@ -389,9 +388,9 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et
 Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Snipe-IT
-partagée avec la variante Cloud Run (image, secret `APP_KEY`, tâches
+partagée avec la variante Cloud Run (image, secret `APP_KEY`, jobs
 d'initialisation) est décrite dans `modules/SnipeIT_Common/README.md` — aucun
 guide autonome `docs/modules/
 SnipeIT_Common.md` n'existe encore.

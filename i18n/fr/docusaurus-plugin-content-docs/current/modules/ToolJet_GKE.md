@@ -41,7 +41,7 @@ de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY_BASE`, `LOCKBOX_MASTER_KEY`, `PGRST_JWT_SECRET` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   couche applicative partagée ; choisir un autre moteur empêche le démarrage.
@@ -86,9 +86,9 @@ Les pods ToolJet sont planifiés sur Autopilot, qui facture le CPU et la mémoir
 réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le
 déploiement entre le nombre minimal et le nombre maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail ToolJet pour afficher les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -107,7 +107,7 @@ managée Cloud SQL for PostgreSQL 15, et utilise une **seconde base de données*
 (`tooljet_db`) sur la même instance pour la fonctionnalité intégrée ToolJet Database.
 Les pods y accèdent de manière privée via le sidecar **Cloud SQL Auth Proxy** sur un
 point de terminaison TCP de loopback (`127.0.0.1`) ; aucune IP publique n'est
-exposée. Au premier déploiement, une tâche d'initialisation crée les deux bases de
+exposée. Au premier déploiement, un job d'initialisation crée les deux bases de
 données, le rôle partagé `CREATEROLE`, `pgcrypto` et un schéma `postgrest`
 appartenant à l'application.
 
@@ -155,7 +155,7 @@ les identifiants de sources de données stockés) et `PGRST_JWT_SECRET` (signe l
 PostgREST internes). Le mot de passe de la base de données est géré séparément par
 le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -174,7 +174,7 @@ peut être activé, et une IP statique est réservée afin que l'adresse survive
 redéploiements. `TOOLJET_HOST` (qui détermine les liens générés et les URI de
 redirection OAuth) prend par défaut l'URL calculée du service.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -206,8 +206,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 de GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de
 disponibilité et des règles d'alerte sont disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -218,8 +218,8 @@ disponibilité et des règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application ToolJet {#3-tooljet-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via le Cloud SQL Auth Proxy et crée de manière idempotente la base de métadonnées
   et la ToolJet Database, le rôle partagé `CREATEROLE`, accorde `cloudsqlsuperuser`,
   pré-crée `pgcrypto` et réinitialise le schéma `postgrest` pour qu'il appartienne à
@@ -269,7 +269,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application et de la base de données {#group-3--application--database-identity}
@@ -293,7 +293,7 @@ comportement et leurs valeurs par défaut standard.
 | `enable_vertical_pod_autoscaling` | `false` | VPA pour l'ajustement automatique des demandes. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy — obligatoire sur GKE. |
-| `enable_image_mirroring` | `true` | Duplique l'image ToolJet dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image ToolJet dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -336,12 +336,12 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai initial de 60s | Sonde de démarrage avec un budget large (30 × 15s) pour les migrations du premier démarrage. |
-| `liveness_probe` | HTTP `/`, délai initial de 60s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/`, délai initial de 60s | Sonde de vivacité. |
 | `startup_probe_config` / `health_check_config` | activées, HTTP `/` | Sondes d'infrastructure au niveau d'App_GKE. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -427,7 +427,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | CIDR autorisés à disposer d'un accès privilégié. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -458,7 +458,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket `data` par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -471,14 +471,14 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `LOCKBOX_MASTER_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les identifiants de sources de données stockés — ils ne peuvent plus être déchiffrés. |
 | `SECRET_KEY_BASE` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
@@ -501,7 +501,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à ToolJet partagée
 avec la variante Cloud Run est décrite dans **[ToolJet_Common](ToolJet_Common.md)**.
 

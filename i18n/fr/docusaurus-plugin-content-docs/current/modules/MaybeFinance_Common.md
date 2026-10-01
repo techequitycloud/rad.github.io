@@ -178,13 +178,13 @@ l'`ENTRYPOINT` de l'image) s'exécute avant le démarrage de
   worker distinct dans `additional_services`. Si `REDIS_URL` est vide, Sidekiq
   n'est pas démarré du tout plutôt que de faire planter le conteneur.
 
-La création et la migration du schéma sont entièrement prises en charge par la
-tâche d'initialisation `maybefinance-migrate` décrite ci-dessus ; le point
-d'entrée d'exécution n'exécute jamais de migrations en ligne.
+La création et la migration du schéma sont entièrement prises en charge par le
+job d'initialisation `maybefinance-migrate` décrit ci-dessus ; le point
+d'entrée d'exécution n'exécute jamais de migrations en mode intégré (inline).
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `MaybeFinance_Common` établit l'environnement Rails/Maybe de base afin que
 l'application démarre correctement dès le premier lancement (fusionné avec

@@ -129,7 +129,7 @@ L'image personnalisée est une fine surcouche `FROM ghcr.io/saleor/saleor:${SALE
   que `SALEOR_SUPERUSER_EMAIL` et `DJANGO_SUPERUSER_PASSWORD` soient tous deux définis.
 - **Démarre le worker Celery + le planificateur beat en arrière-plan** chaque fois que
   la commande du conteneur est le `uvicorn` par défaut (c'est-à-dire le serveur d'API
-  principal, et non une tâche d'initialisation invoquant directement son propre
+  principal, et non un job d'initialisation invoquant directement son propre
   script) — `celery -A saleor
   --app=saleor.celeryconf:app worker --loglevel=info -B &`, avec un piège `TERM`/`INT`
   qui arrête proprement le worker à l'arrêt.

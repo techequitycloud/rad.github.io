@@ -39,7 +39,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY` Flask généré automatiquement et stocké au moment du déploiement |
 | Entrée | Cloud Load Balancing | Service LoadBalancer externe ; domaine personnalisé + Gateway API en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est imposé.** Le moteur de base de données est fixé à `POSTGRES_15` par
   `Sample_Common` et ne peut pas être remplacé par MySQL ni par `NONE` dans ce module.
@@ -96,7 +96,7 @@ type de charge de travail (Deployment ou StatefulSet).
 L'application Sample stocke son compteur de visiteurs dans une instance gérée Cloud SQL
 for PostgreSQL 15. Les pods s'y connectent de manière privée via le sidecar **Cloud SQL
 Auth Proxy** sur un socket Unix ; aucune adresse IP publique n'est donc exposée. Au
-premier déploiement, une Job d'initialisation crée la base de données de l'application,
+premier déploiement, un job d'initialisation crée la base de données de l'application,
 l'utilisateur et accorde les privilèges.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
@@ -202,7 +202,7 @@ d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Sample {#3-sample-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une Job d'initialisation
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation
   exécute `db-init.sh` (avec l'image `postgres:15-alpine`), qui crée de manière idempotente
   l'utilisateur de base de données PostgreSQL et la base de données, et accorde les
   privilèges avant le démarrage de l'application.
@@ -335,7 +335,7 @@ leurs valeurs par défaut standard.
 | `uptime_check_config` | `{ enabled = false, path = "/" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -356,7 +356,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 | `enable_nfs` | `true` | Volume Filestore partagé monté sur `nfs_mount_path`. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 | `nfs_instance_name` | `""` | Nom d'une VM NFS existante ; laissez vide pour la découverte automatique. |
-| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM NFS créée en ligne lorsqu'aucune n'existe. |
+| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM NFS créée en mode intégré (inline) lorsqu'aucune n'existe. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
@@ -405,7 +405,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_GKE](App_GKE.md).
 
-### Groupe 19 — Domaine personnalisé, adresse IP statique et réseau {#group-19--custom-domain-static-ip--networking}
+### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -431,7 +431,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -475,12 +475,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES` / `POSTGRES_15` | Critical | PostgreSQL 15 est imposé par `Sample_Common` ; passer à MySQL ou à `NONE` casse la tâche `db-init` et le démarrage. |
 | `application_database_name` / `_user` | défini une seule fois | Critical | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
@@ -503,7 +503,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative partagée (secret Flask,
 initialisation de la base de données, comportement des sondes et sidecar Redis) est
 décrite dans **[Sample_Common](Sample_Common.md)**.

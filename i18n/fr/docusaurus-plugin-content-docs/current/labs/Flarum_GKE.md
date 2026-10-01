@@ -30,13 +30,13 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Vous connecter au cluster GKE, accéder à la charge de travail en cours d’exécution et récupérer
   l’identifiant administrateur généré.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -140,9 +140,9 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
-1. **Inspectez la charge de travail** : Deployment et pods :
+1. **Inspectez la charge de travail** — Deployment et pods :
 
    ```bash
    kubectl get deploy,pods,pvc -n "$NAMESPACE"
@@ -152,7 +152,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l’échelle** en modifiant les paramètres de nombre minimal/maximal d’instances et en cliquant sur **Update** sur la
    page de détails du déploiement : le module est propriétaire de la spécification de la charge de travail, la mise à l’échelle est donc
    une modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de l’application suivante). Conservez `max_instance_count` à `1` sauf si
+   annulée lors du prochain apply). Conservez `max_instance_count` à `1` sauf si
    vous avez vérifié le comportement de Flarum avec plusieurs pods simultanés
    partageant le même volume NFS de ressources et la même base de données. L’affinité de session
    (`ClientIP`) est définie par défaut pour qu’un client soit toujours routé vers le même pod.
@@ -185,7 +185,7 @@ export REGION="us-central1"           # the region you deploy into
    gcloud sql connect "$INSTANCE" --user="$DB_USER" --database="$DB_NAME" --project="$PROJECT"
    ```
 
-6. **Vérifiez la persistance des ressources téléversées** : les avatars et pièces jointes résident sur
+6. **Vérifiez la persistance des ressources téléversées** — les avatars et pièces jointes résident sur
    Cloud Filestore (NFS) dans `/flarum/app/public/assets`, monté parce que
    `enable_nfs = true` par défaut, et partagé entre les pods :
 
@@ -197,7 +197,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis `kubectl` ou l’explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis `kubectl` ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NAMESPACE" deploy/"$(kubectl get deploy -n "$NAMESPACE" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -206,7 +206,7 @@ export REGION="us-central1"           # the region you deploy into
    Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
-2. **Surveillance** : ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
+2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
    la mémoire des pods, le nombre de redémarrages et les métriques de requêtes. Le module peut
    provisionner un **test de disponibilité** (lorsqu’il est activé) ; consultez Monitoring → Uptime
    checks et Alerting → Policies.
@@ -258,7 +258,7 @@ et `min_instance_count ≤ max_instance_count`).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : la charge de travail Kubernetes
 et son espace de noms, la base de données Cloud SQL, les secrets Secret Manager, le partage Filestore
@@ -277,4 +277,4 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l’échelle, mettre à jour la version (déploiement Recreate), gérer les secrets/le stockage, accéder à la base, vérifier la persistance NFS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de db-init, de planification, de récupération d’image et de FORUM_URL |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

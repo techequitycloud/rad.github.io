@@ -35,11 +35,11 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
   provisionne.
 - Accéder au service en cours d'exécution, le vérifier et vous connecter avec le
   compte administrateur créé à l'amorçage.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle, mettre à jour,
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour,
   gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -56,7 +56,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le
   projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -76,7 +76,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL
    (MySQL 8.0) avec ses secrets Secret Manager (`APP_SECRET`, `ADMINPASS` et le mot de
    passe de la base de données), le bucket Cloud Storage `storage`, construit l'image
-   d'enveloppe personnalisée qui compose `DATABASE_URL`, et exécute la tâche
+   d'enveloppe personnalisée qui compose `DATABASE_URL`, et exécute le job
    d'initialisation `db-init` (qui crée la base de données, l'utilisateur et les
    droits). Un premier déploiement prend environ **15–25 minutes** (la création de
    Cloud SQL et le build de l'image en représentent l'essentiel).
@@ -126,7 +126,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente qui est saine) :
@@ -140,7 +140,7 @@ export REGION="us-central1"          # the region you deploy into
    cliquant sur **Update** sur la page de détails du déploiement — le module gère la
    spécification du service ; la mise à l'échelle est donc une modification de
    configuration, et non une modification manuelle via `gcloud` (une modification
-   manuelle serait annulée lors de l'application suivante).
+   manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant `application_version`
    dans la plateforme RAD et en l'appliquant via **Update** ; une nouvelle image est
@@ -181,7 +181,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -208,8 +208,8 @@ d'une version de Kimai à l'autre.
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
-- **Erreurs de connexion à la base de données au premier démarrage.** Vérifiez que la
-  tâche `db-init` s'est terminée avec succès avant que le propre `kimai:install` de
+- **Erreurs de connexion à la base de données au premier démarrage.** Vérifiez que le
+  job `db-init` s'est terminé avec succès avant que le propre `kimai:install` de
   l'application (qui s'exécute à chaque démarrage du conteneur) n'ait eu l'occasion de
   s'exécuter :
   ```bash
@@ -242,7 +242,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -261,9 +261,9 @@ Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas suppr
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (MySQL 8.0), les secrets, le bucket de stockage, et exécute la tâche `db-init` |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (MySQL 8.0), les secrets, le bucket de stockage, et exécute le job `db-init` |
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé renvoie 200 sur `/en/login` ; connexion en tant que `admin` avec le secret `ADMINPASS` généré ; création d'une entrée de feuille de temps de test |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base, configurer l'API/les utilisateurs |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de port et de build |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

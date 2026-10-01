@@ -35,7 +35,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle et mettre à jour.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -51,7 +51,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - (Facultatif) Un client CalDAV/CardDAV pour vérifier la synchronisation de bout en bout — par exemple Thunderbird, Apple Calendar/Contacts ou DAVx5.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -176,7 +176,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez
    le nombre de requêtes, la latence, le nombre d'instances et l'utilisation CPU/mémoire. Le
-   module peut provisionner un **contrôle de disponibilité** (uptime check, désactivé par défaut) ; s'il est
+   module peut provisionner un **test de disponibilité** (uptime check, désactivé par défaut) ; s'il est
    activé, vérifiez qu'il est au vert dans Monitoring → Uptime checks.
 
 ---
@@ -225,7 +225,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible. Si un
@@ -239,13 +239,13 @@ séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, un bucket de stockage GCS, un secret administrateur généré, et exécute le job de création des collections par défaut |
 | 2 — Accéder et vérifier | Manuel | 302 sur `/` ; récupérer le mot de passe administrateur généré ; connecter un client CalDAV/CardDAV et voir les collections par défaut pré-créées |
 | 3 — Exploiter | Manuel | Inspecter les révisions, comprendre la limite de mise à l'échelle `max=1`, mettre à jour la version, inspecter le stockage |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le contrôle de disponibilité |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de job de création, de MKCOL/périphérie Cloud Run et d'authentification |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris toutes les collections stockées |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris toutes les collections stockées |

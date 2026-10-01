@@ -45,7 +45,7 @@ Le nom de clé `INITIAL_API_KEY` utilise des tirets bas simples comme séparateu
 
 ## 3. Image de conteneur — pas de point d'entrée personnalisé {#3-container-image--no-custom-entrypoint}
 
-L'image officielle de Shlink lit toute sa configuration (`DB_*`, `DEFAULT_DOMAIN`, `IS_HTTPS_ENABLED`, `INITIAL_API_KEY`, …) directement depuis les variables d'environnement et **exécute automatiquement ses migrations de base de données au démarrage du conteneur** ; `Shlink_Common` utilise donc l'image telle quelle : le Dockerfile est une fine surcouche `FROM shlinkio/shlink:stable` qui n'existe que pour donner quelque chose à construire au pipeline Cloud Build de la plateforme, et l'image est dupliquée dans Artifact Registry pour éviter les limites de débit de Docker Hub.
+L'image officielle de Shlink lit toute sa configuration (`DB_*`, `DEFAULT_DOMAIN`, `IS_HTTPS_ENABLED`, `INITIAL_API_KEY`, …) directement depuis les variables d'environnement et **exécute automatiquement ses migrations de base de données au démarrage du conteneur** ; `Shlink_Common` utilise donc l'image telle quelle : le Dockerfile est une fine surcouche `FROM shlinkio/shlink:stable` qui n'existe que pour donner quelque chose à construire au pipeline Cloud Build de la plateforme, et l'image est mise en miroir dans Artifact Registry pour éviter les limites de débit de Docker Hub.
 
 Le tag `stable` suit la dernière version stable de Shlink ; épinglez une version précise en remplaçant `application_version` (p. ex. `4.4.0`) pour des builds reproductibles.
 

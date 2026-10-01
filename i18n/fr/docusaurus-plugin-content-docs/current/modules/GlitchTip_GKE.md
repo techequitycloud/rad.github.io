@@ -13,7 +13,7 @@ GlitchTip est une plateforme open source de suivi des erreurs et de surveillance
 performances compatible avec Sentry (Django/Python). Vos applications envoient leurs
 exceptions et leurs traces au point de terminaison d'ingestion de GlitchTip, qui parle le
 protocole Sentry, et GlitchTip les stocke, les déduplique et déclenche des alertes.
-Ce module déploie GlitchTip sur **GKE Autopilot** au-dessus de la fondation
+Ce module déploie GlitchTip sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
@@ -22,7 +22,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -36,13 +36,13 @@ services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Django/Granian, 2 vCPU / 4 GiB par défaut ; un minimum de 1 réplica maintient le worker/beat actif |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — GlitchTip ne prend en charge ni MySQL ni d'autres moteurs |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — GlitchTip ne prend en charge ni MySQL ni d'autres moteurs |
 | File de tâches et cache | Cloud SQL (PostgreSQL) | `VALKEY_URL = ""` fait passer la file Celery, le cache et les sessions par Postgres ; Redis est facultatif |
 | Stockage d'objets / de fichiers | Cloud Storage + NFS | Un bucket de données `storage` ; NFS monté sur `/opt/glitchtip/storage` pour les pièces jointes téléversées |
 | Secrets | Secret Manager | `SECRET_KEY` Django et mot de passe du superutilisateur initial générés automatiquement ; mot de passe de la base de données |
 | Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut recommandées à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la couche
   applicative partagée ; choisir un autre moteur empêche le démarrage.
@@ -64,7 +64,7 @@ services Google Cloud :
   `Recreate` afin d'éviter que deux pods se disputent le volume partagé pendant une mise à
   jour.
 - **`SECRET_KEY` et le mot de passe du superutilisateur sont générés automatiquement** et
-  stockés dans Secret Manager, puis matérialisés dans le namespace via le pilote Secret
+  stockés dans Secret Manager, puis matérialisés dans l'espace de noms via le pilote Secret
   Store CSI.
 - **Le propriétaire initial est pré-créé, il ne s'inscrit pas lui-même.**
   `glitchtip-migrate` crée `admin@techequity.cloud` ; `ENABLE_OPEN_USER_REGISTRATION`
@@ -76,7 +76,7 @@ services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail GlitchTip {#a-gke-autopilot--the-glitchtip-workload}
@@ -99,10 +99,10 @@ la disponibilité pendant les mises à niveau des nœuds.
 Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot, le scaling et le type de
 charge de travail sont gérés.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 GlitchTip stocke toutes les données de l'application (projets, problèmes, événements,
-utilisateurs et la file Celery) dans une instance gérée Cloud SQL pour PostgreSQL 15. Les
+utilisateurs et la file Celery) dans une instance gérée Cloud SQL for PostgreSQL 15. Les
 pods y accèdent en privé via le sidecar **Cloud SQL Auth Proxy** sur l'interface de
 bouclage (`127.0.0.1`) ; aucune IP publique n'est exposée. Lors du premier déploiement,
 les Jobs `db-init` et `glitchtip-migrate` créent la base de données et l'utilisateur,
@@ -156,9 +156,9 @@ l'IP de la VM du serveur NFS.
 
 Deux secrets sont générés automatiquement : la `SECRET_KEY` Django et le mot de passe du
 superutilisateur initial (consommé par le job de migration). Le mot de passe de la base de
-données est géré séparément par la fondation.
+données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -167,14 +167,14 @@ données est géré séparément par la fondation.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google
 peut être activé (`enable_custom_domain = true`), et une IP statique est réservée par
 défaut afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -239,14 +239,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement (utilisez `gke` pour l'exécuter à côté de la variante Cloud Run). |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de monitoring. |
@@ -254,16 +254,16 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `glitchtip` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `GlitchTip Error Tracking` | Nom lisible affiché dans la console. |
 | `application_description` | `GlitchTip Open-source Error Tracking on GKE Autopilot` | Brève description de l'application. |
 | `application_version` | `6.2.0` | Tag de l'image GlitchTip ; pilote la construction `FROM glitchtip/glitchtip:<tag>`. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | GlitchTip est une fine construction personnalisée ; conservez `custom`. |
@@ -276,7 +276,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Ne définissez pas `SECRET_KEY`, `DATABASE_URL` ni `VALKEY_URL` ici. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager. |
@@ -285,7 +285,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `workload_type` | `null` | `Deployment` (par défaut) ou `StatefulSet`. |
@@ -296,21 +296,21 @@ leurs valeurs par défaut standard.
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Active des PVC par pod. Inutile — l'état de GlitchTip réside dans PostgreSQL/NFS. |
 | `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | `10Gi` / `/data` / `standard-rwo` | Paramètres du modèle de PVC. |
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Crée un ResourceQuota de namespace. |
+| `enable_resource_quota` | `false` | Crée un ResourceQuota d'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires** (`"4Gi"`) — les entiers nus sont des octets et bloquent la planification. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles lors des perturbations volontaires. |
@@ -318,7 +318,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 60s, fenêtre d'échec de 30 × 15s | Sonde de démarrage. Prévoyez plusieurs minutes au premier démarrage. |
 | `liveness_probe` | HTTP `/`, délai de 60s | Sonde de vivacité. |
@@ -328,7 +328,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init` + `glitchtip-migrate`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
@@ -342,7 +342,7 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Stockage NFS des pièces jointes. |
 | `nfs_mount_path` | `/opt/glitchtip/storage` | Chemin de montage dans le conteneur. |
@@ -350,7 +350,7 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée des buckets GCS supplémentaires en plus du bucket de données provisionné automatiquement. |
 | `storage_buckets` | (bucket de données) | Un bucket de données `storage` est déclaré par `GlitchTip_Common`. |
@@ -358,9 +358,9 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 | `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | `7` / `true` / `30` | Politique de nettoyage d'Artifact Registry. |
 
-### Groupe 15 — Cache et file Redis {#group-15--redis-cache--queue}
+### Groupe 15 — Cache et file d'attente Redis {#group-15--redis-cache--queue}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Utilise Redis/Valkey pour la file et le cache au lieu de PostgreSQL. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
@@ -369,7 +369,7 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixe — GlitchTip nécessite PostgreSQL 15. |
 | `application_database_name` | `glitchtip` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -379,7 +379,7 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -393,7 +393,7 @@ provisionnement.
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés + un certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -406,7 +406,7 @@ provisionnement.
 > N'activez IAP que pour un déploiement limité au tableau de bord, dans lequel les SDK
 > utilisent un chemin d'ingestion distinct.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google devant GlitchTip. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
@@ -414,16 +414,16 @@ provisionnement.
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une politique Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées à un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définis)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -439,7 +439,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -464,32 +464,32 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les événements et projets stockés. |
-| `SECRET_KEY` (générée automatiquement) | Ne jamais la faire tourner à la légère | Élevé | Sa rotation invalide toutes les sessions et déconnecte tous les utilisateurs. |
-| `min_instance_count` | `1` | Élevé | GKE impose min ≥ 1 ; conserver 1 maintient actif le worker/beat intégré au processus, de sorte que l'ingestion et la purge liée à la rétention s'exécutent. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans le namespace. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_iap` | déploiements limités au tableau de bord | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion des événements par les SDK. |
-| `ENABLE_OPEN_USER_REGISTRATION` (fixé à `false`) | sans objet | Élevé | Non exposé comme variable sur cette variante — `GlitchTip_Common` le définit toujours à `false`, de sorte que l'inscription reste limitée aux invitations par un administrateur. |
-| `network_tags` inclut `nfsserver` | conserver la valeur par défaut | Élevé | Le retirer alors que `enable_nfs = true` bloque l'accès des pods à la VM du serveur NFS → pods bloqués au montage. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions du tableau de bord basculent d'un pod à l'autre. |
-| `container_resources` mémoire | `4Gi` | Moyen | En dessous d'environ 1 GiB, les processus Django + worker + beat risquent un OOM lors des pics d'événements. |
-| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les événements et projets stockés. |
+| `SECRET_KEY` (générée automatiquement) | Ne jamais la faire tourner à la légère | High | Sa rotation invalide toutes les sessions et déconnecte tous les utilisateurs. |
+| `min_instance_count` | `1` | High | GKE impose min ≥ 1 ; conserver 1 maintient actif le worker/beat intégré au processus, de sorte que l'ingestion et la purge liée à la rétention s'exécutent. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_iap` | déploiements limités au tableau de bord | High | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion des événements par les SDK. |
+| `ENABLE_OPEN_USER_REGISTRATION` (fixé à `false`) | sans objet | High | Non exposé comme variable sur cette variante — `GlitchTip_Common` le définit toujours à `false`, de sorte que l'inscription reste limitée aux invitations par un administrateur. |
+| `network_tags` inclut `nfsserver` | conserver la valeur par défaut | High | Le retirer alors que `enable_nfs = true` bloque l'accès des pods à la VM du serveur NFS → pods bloqués au montage. |
+| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions du tableau de bord basculent d'un pod à l'autre. |
+| `container_resources` mémoire | `4Gi` | Medium | En dessous d'environ 1 GiB, les processus Django + worker + beat risquent un OOM lors des pics d'événements. |
+| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à GlitchTip, partagée avec

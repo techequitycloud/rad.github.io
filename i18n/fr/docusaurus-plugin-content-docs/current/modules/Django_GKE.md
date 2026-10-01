@@ -29,11 +29,11 @@ que de les répéter ici.
 Django s'exécute comme une charge de travail web Python/Gunicorn. Le déploiement assemble un ensemble
 ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Python/Gunicorn, 1 vCPU / 512 MiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le `DB_ENGINE` de Django est fixé à `django.db.backends.postgresql` |
-| Fichiers partagés | Filestore (NFS) | Médias et téléversements partagés entre toutes les réplicas |
+| Fichiers partagés | Filestore (NFS) | Médias et téléversements partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket de médias dédié provisionné par Django_Common |
 | Secrets | Secret Manager | `SECRET_KEY` Django et mot de passe de la base de données générés automatiquement |
 | Cache (facultatif) | Redis / Cloud Memorystore | Désactivé par défaut ; à activer pour le stockage des sessions et la mise en cache |
@@ -49,7 +49,7 @@ ciblé de services Google Cloud :
   `hstore`, `citext`) par le job `db-init`, vous n'avez donc pas à les configurer.
 - **Deux jobs d'initialisation s'exécutent par défaut** — `db-init` (crée la base de données et
   l'utilisateur) et `db-migrate` (exécute `manage.py migrate` et `collectstatic`).
-- **NFS est activé par défaut.** Toutes les réplicas de pods partagent le même volume Filestore
+- **NFS est activé par défaut.** Tous les réplicas de pods partagent le même volume Filestore
   pour les fichiers médias téléversés. L'affinité de session vaut par défaut `ClientIP`.
 - **Redis est désactivé par défaut.** Activez-le avec `enable_redis = true` et pointez-le vers une
   instance Cloud Memorystore pour le stockage des sessions et la mise en cache en production.
@@ -62,8 +62,8 @@ ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Django {#a-gke-autopilot--the-django-workload}
 
@@ -106,13 +106,13 @@ accorde les privilèges. Le job `db-migrate` exécute ensuite `manage.py migrate
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le
-mot de passe sont tous exposés dans les [Outputs](#5-outputs). Pour le modèle de connexion,
+mot de passe sont tous exposés dans les [sorties](#5-outputs). Pour le modèle de connexion,
 les sauvegardes automatiques et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
 Les médias téléversés sont écrits sur un partage **Filestore (NFS)** monté dans chaque pod, afin que
-toutes les réplicas voient les mêmes fichiers. Un bucket de médias **Cloud Storage** dédié est également
+tous les réplicas voient les mêmes fichiers. Un bucket de médias **Cloud Storage** dédié est également
 provisionné automatiquement par `Django_Common` ; le compte de service de la charge de travail y reçoit
 l'accès.
 
@@ -159,7 +159,7 @@ Le mot de passe du superutilisateur (si vous en créez un via `DJANGO_SUPERUSER_
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base de données figure dans les [Outputs](#5-outputs). Consultez
+Le nom du secret du mot de passe de la base de données figure dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -239,14 +239,14 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails bénéficiant de l'accès au projet et des alertes de surveillance. |
@@ -254,7 +254,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `django` | Nom de base des ressources. **Ne pas modifier après le premier déploiement.** |
 | `application_display_name` | `Django Application` | Nom convivial affiché dans la console. |
@@ -263,7 +263,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | `custom` construit l'image via Cloud Build ; `prebuilt` déploie une URI d'image existante. |
@@ -277,7 +277,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. N'y incluez pas `SECRET_KEY` ni `DB_*`. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager (par ex. `DJANGO_SUPERUSER_PASSWORD`). |
@@ -286,7 +286,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service. |
 | `session_affinity` | `ClientIP` | Routage persistant (sticky) recommandé pour le stockage des sessions en processus. |
@@ -295,7 +295,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 7 — StatefulSet / PVC {#group-7--statefulset--pvc}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Activer les modèles de PVC dans un StatefulSet. Normalement inutile pour Django. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage de chaque PVC par pod. |
@@ -304,14 +304,14 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Plafonner le CPU, la mémoire et le nombre d'objets du namespace. |
+| `enable_resource_quota` | `false` | Plafonner le CPU, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers nus sont interprétés comme des octets et bloquent la planification. |
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `false` | Protéger la disponibilité lors des mises à niveau des nœuds. Désactivé par défaut car la valeur par défaut de `max_instance_count` est 1. |
 | `pdb_min_available` | `1` | Augmentez `min_instance_count` au-dessus de 1 si vous avez besoin d'une marge pour les évictions. |
@@ -319,7 +319,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `GET /`, 90s initial delay | Sonde de démarrage transmise à `Django_Common`. Augmentez le délai pour les ensembles de migrations volumineux. |
 | `liveness_probe` | HTTP `GET /`, 60s initial delay | Sonde de vivacité transmise à `Django_Common`. Utilisez un point de terminaison `/healthz/` léger. |
@@ -330,7 +330,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` (uses built-in `db-init` + `db-migrate`) | Laissez vide pour utiliser les jobs par défaut de configuration de la base de données et de migration. Fournissez une liste non vide pour les remplacer par des jobs personnalisés. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (par ex. `clearsessions`, `cleartokens`). |
@@ -344,26 +344,26 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Volume Filestore partagé pour les médias Django (à garder activé en multi-réplica). |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. Doit correspondre à `MEDIA_ROOT` dans `settings.py`. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionner le bucket de données supplémentaire. Le bucket de médias est toujours provisionné par `Django_Common`. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires en plus du bucket de médias provisionné automatiquement. |
 | `gcs_volumes` | `[]` | Montages GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 | `max_images_to_retain` | `7` | Nombre maximal d'images de conteneur récentes conservées dans Artifact Registry par déploiement. |
-| `delete_untagged_images` | `true` | Supprimer automatiquement les images sans tag ou orphelines du dépôt créé en ligne. |
+| `delete_untagged_images` | `true` | Supprimer automatiquement les images sans tag ou orphelines du dépôt créé en mode intégré (inline). |
 | `image_retention_days` | `30` | Nombre de jours au-delà duquel les images deviennent éligibles à la suppression ; `0` désactive la suppression fondée sur l'âge. |
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Activer Redis pour le stockage des sessions et la mise en cache. |
 | `redis_host` | `""` | IP ou nom d'hôte Redis. Laissez vide pour revenir à l'IP du serveur NFS lorsque Redis est activé. |
@@ -372,7 +372,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES` | **PostgreSQL obligatoire.** Django ne prend pas en charge MySQL via ce module. |
 | `application_database_name` | `gkeapp` | Nom de la base de données. **Recommandé : définir `django_db`.** Immuable après le premier déploiement. |
@@ -384,7 +384,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -398,7 +398,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionner un Ingress pour les noms d'hôte personnalisés + un certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -406,7 +406,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exiger une connexion Google devant Django. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
@@ -415,7 +415,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associer une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés pour l'accès privilégié. |
@@ -423,7 +423,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -431,15 +431,15 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de
 localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP pour les services des étapes Cloud Deploy. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -486,7 +486,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `application_version` | tag épinglé, pas `latest` | Medium | `latest` rend le retour arrière ambigu ; Kubernetes ne peut pas distinguer deux tirages de `latest`. |
 | `enable_redis` | `true` en cas de sessions stockées dans Redis | Medium | Laissé à `false` avec un `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache ou aux sessions. |
 | `session_affinity` | `ClientIP` pour les sessions stockées en base de données | Medium | `None` avec une mise en cache en processus : les requêtes d'un même utilisateur peuvent atteindre des pods différents et perdre le cache. |
-| `enable_pod_disruption_budget` | `false` lorsque `max_instance_count = 1` | High | `true` avec une seule réplica bloque le drainage des nœuds et paralyse la maintenance du cluster. |
+| `enable_pod_disruption_budget` | `false` lorsque `max_instance_count = 1` | High | `true` avec un seul réplica bloque le drainage des nœuds et paralyse la maintenance du cluster. |
 | `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration Django est accessible publiquement. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
 

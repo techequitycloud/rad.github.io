@@ -38,7 +38,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle et mettre à jour.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -55,7 +55,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - (Facultatif) Une instance Jellyfin, Plex ou Emby existante, ainsi que Sonarr/Radarr, à connecter pendant l'assistant de configuration de Seerr.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -175,7 +175,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    ```
 
 2. **Surveillance** — ouvrez le tableau de bord GKE Workloads de la charge de travail et
-   examinez l'utilisation CPU/mémoire et le nombre de répliques.
+   examinez l'utilisation CPU/mémoire et le nombre de réplicas.
 
 ---
 
@@ -224,7 +224,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible. Si un
@@ -238,7 +238,7 @@ SQL elle-même) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
@@ -247,4 +247,4 @@ SQL elle-même) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le déploiement progressif, comprendre le compromis concurrence/écriture des paramètres, mettre à jour la version, gérer le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes d'autorisations GCS-FUSE, de repli DB_TYPE et de santé des pods |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le stockage et la base de données |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le stockage et la base de données |

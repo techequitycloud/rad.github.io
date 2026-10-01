@@ -75,7 +75,7 @@ services dont il a réellement besoin :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service phpMyAdmin {#a-cloud-run--the-phpmyadmin-service}
 
@@ -151,7 +151,7 @@ stockés. Vous pouvez néanmoins ajouter vos propres `secret_environment_variabl
 exemple pour injecter un `PMA_PASSWORD`/`PMA_USER` fixe pour une cible en
 authentification unique), que le socle monte depuis Secret Manager.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~phpmyadmin"
@@ -166,7 +166,7 @@ Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et
 Armor peut être ajouté ; IAP peut conditionner l'accès à une connexion Google —
 vivement recommandé pour un outil d'administration de bases de données.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -181,8 +181,8 @@ Les journaux du conteneur Apache/PHP sont envoyés vers Cloud Logging ; les mét
 Cloud Run vers Cloud Monitoring, avec des tests de disponibilité et des règles
 d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -277,11 +277,11 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `max_instance_count` | `3` | Plafond de coût / limite de concurrence. |
 | `execution_environment` | `gen2` | gen2 recommandé. |
 | `container_protocol` | `http1` | phpMyAdmin sert en HTTP/1.1. |
-| `enable_image_mirroring` | `true` | Duplique l'image phpMyAdmin dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image phpMyAdmin dans Artifact Registry. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -331,12 +331,12 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -378,7 +378,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à phpMyAdmin,
 partagée avec la variante GKE, est décrite dans
 **[PhpMyAdmin_Common](PhpMyAdmin_Common.md)**.

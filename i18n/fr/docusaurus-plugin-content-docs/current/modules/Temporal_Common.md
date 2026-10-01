@@ -16,7 +16,7 @@ l'interface de déploiement — mais comprendre ce qu'elle fournit explique les 
 que vous voyez dans les sorties de la plateforme.
 
 Pour l'infrastructure qui exécute réellement Temporal, consultez le guide de la plateforme
-([Temporal_GKE](Temporal_GKE.md)) et les guides de la fondation
+([Temporal_GKE](Temporal_GKE.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 
 > **GKE uniquement.** Il n'existe pas de variante `Temporal_CloudRun`. L'architecture de Temporal fondée sur gRPC
@@ -56,10 +56,10 @@ de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Temporal exige **PostgreSQL** ; MySQL n'est pas pris en charge. `Temporal_Common` cible
-l'instance Cloud SQL pour PostgreSQL gérée par Services_GCP (découverte par libellé d'instance
+l'instance Cloud SQL for PostgreSQL gérée par Services_GCP (découverte par libellé d'instance
 ou par un nom explicite de remplacement). À chaque déploiement, il effectue de manière idempotente les opérations suivantes :
 
 1. Crée l'utilisateur PostgreSQL (partagé par les deux bases de données).

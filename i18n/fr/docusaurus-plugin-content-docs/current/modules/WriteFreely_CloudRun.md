@@ -139,7 +139,7 @@ e-mail stockées (`email-key`). Elles sont injectées sous les noms `WF_KEY_COOK
 `WF_KEY_COOKIES_ENC` et `WF_KEY_EMAIL` et écrites dans le répertoire `keys/` du conteneur
 au démarrage. Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" \
@@ -158,7 +158,7 @@ Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et
 Armor peut y être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la
 connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -175,7 +175,7 @@ règles d'alerte facultatifs. Le point d'entrée journalise sa progression
 (`WriteFreely: rendered config.ini …`, `… seeded stable encryption keys …`,
 `… starting server …`), ce qui est utile pour diagnostiquer le premier démarrage.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -358,7 +358,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à WriteFreely,
 partagée avec la variante GKE, est décrite dans
 **[WriteFreely_Common](WriteFreely_Common.md)**.

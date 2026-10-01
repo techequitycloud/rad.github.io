@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer Cal.diy sur Google Clo
 Cal.diy est le fork sous licence MIT et auto-hébergeable de Cal.com — la plateforme
 de planification open source utilisée par des millions de personnes dans le monde
 pour en finir avec les allers-retours de coordination des réunions.
-Ce module déploie Cal.diy sur **Cloud Run v2** au-dessus de la fondation
+Ce module déploie Cal.diy sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
@@ -22,7 +22,7 @@ commande. Pour les mécanismes communs à toute application Cloud Run — identi
 service, entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle
 de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,7 +31,7 @@ de vie du déploiement — reportez-vous au
 Cal.diy s'exécute sous la forme d'un conteneur Next.js (Node.js) sur Cloud Run v2.
 Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Next.js, 2 vCPU / 2 GiB par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Cal.diy utilise l'ORM Prisma ciblant PostgreSQL |
@@ -39,7 +39,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` générés automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Sélectionner MySQL ou `NONE` empêche le démarrage.
 - **La mise à l'échelle jusqu'à zéro est le comportement par défaut** (`min_instance_count = 0`).
@@ -224,7 +224,7 @@ disponibilité et des règles d'alerte facultatifs.
   signal, tant que le service est réduit à zéro — le correctif documenté étant de
   passer à `cpu_always_allocated = true` + `min_instance_count = 1` (le même schéma que
   pour n8n). **`CalDiy_CloudRun` ne permet actuellement pas d'appliquer ce correctif** :
-  `cpu_always_allocated` est une variable de la fondation (`App_CloudRun`) qui n'est ni
+  `cpu_always_allocated` est une variable du socle (`App_CloudRun`) qui n'est ni
   déclarée dans `CalDiy_CloudRun/variables.tf` ni transmise dans `main.tf`, si bien
   qu'elle ne peut pas être définie via les entrées de ce module. `min_instance_count = 1`
   seul (déjà exposé) évite la mise à l'échelle jusqu'à zéro, mais laisse non traitée la
@@ -277,12 +277,12 @@ comportement standard.
 | `execution_environment` | `gen2` | Gen2 recommandé ; obligatoire pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale par requête. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Duplique l'image Cal.diy dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Cal.diy dans Artifact Registry. |
 | `min_instance_count` | `0` | Nombre minimal d'instances (0 = mise à l'échelle jusqu'à zéro). Définissez `1` pour éviter la latence de démarrage à froid en production. |
 | `max_instance_count` | `5` | Nombre maximal d'instances. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. La somme de toutes les entrées doit être égale à 100. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -352,7 +352,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement alias en plus des variables `DB_*` standard. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -377,7 +377,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -417,12 +417,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Cal.diy nécessite PostgreSQL avec Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
 | `container_port` | `3000` | Critical | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé de Cloud Run et le routage du trafic. |
@@ -439,7 +439,7 @@ d'explorer les ressources en cours d'exécution.
 | `enable_redis` | `true` en multi-instance | High | Sans Redis, les sessions sont propres à chaque instance ; les utilisateurs sont déconnectés lors d'une mise à l'échelle jusqu'à zéro ou d'une rotation d'instances. |
 | `redis_host` | obligatoire lorsque `enable_redis=true` | High | Un `redis_host` vide avec Redis activé injecte une URL malformée ; les opérations de session échouent à l'exécution. |
 | `min_instance_count` | `1` en production | Medium | La mise à l'échelle jusqu'à zéro est le comportement par défaut ; le démarrage à froid de 4 à 5 minutes de Cal.diy ajoute une latence inacceptable pour la planification en production. |
-| flux planifiés / pilotés par cron | non pris en charge sans modification du module | Medium | Selon l'audit `cpu_always_allocated` de CLAUDE.md (2026-07-10 OPEN CAVEAT), les composants planificateur/worker/cron/file d'attente de Cal.diy nécessitent `cpu_always_allocated = true` pour se déclencher de façon fiable lorsqu'ils sont réduits à zéro — mais ce module ne déclare ni ne transmet cette variable de la fondation, elle ne peut donc pas être définie aujourd'hui. |
+| flux planifiés / pilotés par cron | non pris en charge sans modification du module | Medium | Selon l'audit `cpu_always_allocated` de CLAUDE.md (2026-07-10 OPEN CAVEAT), les composants planificateur/worker/cron/file d'attente de Cal.diy nécessitent `cpu_always_allocated = true` pour se déclencher de façon fiable lorsqu'ils sont réduits à zéro — mais ce module ne déclare ni ne transmet cette variable du socle, elle ne peut donc pas être définie aujourd'hui. |
 | `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Medium | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais envoyés. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | Si vous utilisez Memorystore Redis, son IP privée peut ne pas figurer dans les plages VPC par défaut ; passez à `ALL_TRAFFIC` ou assurez un routage VPC correct. |
 | `organization_id` | défini explicitement pour VPC-SC | Medium | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
@@ -447,10 +447,9 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Cal.diy partagée avec la variante GKE est décrite dans
 **[CalDiy_Common](CalDiy_Common.md)**.
 

@@ -18,7 +18,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Calibre-Web, consultez les
 guides des plateformes ([CalibreWeb_GKE](CalibreWeb_GKE.md),
-[CalibreWeb_CloudRun](CalibreWeb_CloudRun.md)) et les guides de fondation
+[CalibreWeb_CloudRun](CalibreWeb_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -29,7 +29,7 @@ guides des plateformes ([CalibreWeb_GKE](CalibreWeb_GKE.md),
 |---|---|---|
 | Authentification | Livré avec l'identifiant par défaut de LinuxServer `admin` / `admin123` (à modifier lors de la première connexion) ; génère **également** un mot de passe d'administration aléatoire de 24 caractères et le stocke dans **Secret Manager** | Interface web de Calibre-Web lors du premier accès ; secret injecté sous `CALIBRE_ADMIN_PASSWORD` |
 | Secret du mot de passe d'administration | Crée toujours `secret-<prefix>-<app>-admin-password` et l'expose sous forme de variable d'environnement `CALIBRE_ADMIN_PASSWORD` | Sorties `secret_ids` / `admin_password_secret_id` ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Enveloppe légèrement l'image officielle `lscr.io/linuxserver/calibre-web` afin que la fondation puisse la dupliquer dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe légèrement l'image officielle `lscr.io/linuxserver/calibre-web` afin que le socle puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Calibre-Web utilise des bases SQLite internes sous `/config` (`database_type = "NONE"`) | §Base de données dans les guides des plateformes |
 | Initialisation de la base de données | **Aucune** — il n'y a pas de job `db-init` ; Calibre-Web gère son propre stockage | n/a |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/config` sur Cloud Run | Sortie `storage_buckets` |
@@ -50,8 +50,8 @@ stocke dans Secret Manager, si bien qu'un secret SERVICE existe dans la sortie
   (`special = false`) stockée dans Secret Manager sous
   `secret-<prefix>-<app>-admin-password` (par exemple
   `secret-<prefix>-calibreweb-admin-password`). Elle est injectée dans le conteneur sous
-  forme de variable d'environnement secrète via le mécanisme `module_secret_env_vars` de
-  la fondation. La clé ne contient pas de `__`, c'est donc un `targetKey` GKE SecretSync
+  forme de variable d'environnement secrète via le mécanisme `module_secret_env_vars` du
+  socle. La clé ne contient pas de `__`, c'est donc un `targetKey` GKE SecretSync
   valide.
 
 > **Remarque sur la première connexion.** L'image amont LinuxServer de Calibre-Web
@@ -78,7 +78,7 @@ Workload Identity.
 
 ---
 
-## 3. Moteur et initialisation de la base de données {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Calibre-Web n'utilise **pas** de base de données externe. Tout son état — la base de
 données de l'application (`app.db`), la base de métadonnées de la bibliothèque Calibre
@@ -112,11 +112,11 @@ ARG CALIBREWEB_VERSION=0.6.24
 FROM lscr.io/linuxserver/calibre-web:${CALIBREWEB_VERSION}
 ```
 
-- **`image_source = "custom"`** — défini uniquement pour que la fondation construise ou
-  duplique l'image dans Artifact Registry (via Cloud Build / Kaniko) ; aucun code
+- **`image_source = "custom"`** — défini uniquement pour que le socle construise ou
+  mette en miroir l'image dans Artifact Registry (via Cloud Build / Kaniko) ; aucun code
   applicatif n'est ajouté par-dessus.
 - **ARG de build propre à l'application** — le Dockerfile lit `CALIBREWEB_VERSION`, et
-  **non** l'`APP_VERSION` générique qu'injecte la fondation (et qu'elle forcerait à
+  **non** l'`APP_VERSION` générique qu'injecte le socle (et qu'elle forcerait à
   `latest`). Lorsque `application_version = "latest"`, la couche Common épingle le
   build sur `0.6.24` ; sinon, elle transmet telle quelle la version demandée.
 - **Aucune traduction du point d'entrée** — comme Calibre-Web n'a besoin d'aucun câblage
@@ -126,7 +126,7 @@ FROM lscr.io/linuxserver/calibre-web:${CALIBREWEB_VERSION}
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `CalibreWeb_Common` établit l'environnement minimal dont Calibre-Web a besoin pour
 démarrer au premier lancement et écrire son état sur le volume persistant :
@@ -170,15 +170,15 @@ indépendamment de toute connexion administrateur.
 
 ## 7. Stockage d'objets {#7-object-storage}
 
-Un seul bucket **Cloud Storage** est déclaré ici et provisionné par la fondation, qui
+Un seul bucket **Cloud Storage** est déclaré ici et provisionné par le socle, qui
 accorde aussi l'accès au compte de service de la charge de travail :
 
 - **`name_suffix = "storage"`**, classe de stockage **STANDARD**, `force_destroy = true`,
   versionnage désactivé, avec `public_access_prevention = "enforced"`.
-- L'emplacement du bucket est laissé vide afin que la fondation le résolve vers la
+- L'emplacement du bucket est laissé vide afin que le socle le résolve vers la
   région de déploiement découverte automatiquement (`coalesce(bucket.location, region)`),
   à l'instar des modules testés, ce qui évite un remplacement forcé du bucket, dont
-  l'emplacement est immuable, lors d'une nouvelle application dans une autre région.
+  l'emplacement est immuable, lors d'un nouvel apply dans une autre région.
 - Sur Cloud Run, il sert de support à `/config` via GCS FUSE ; il contient donc les bases
   SQLite de Calibre-Web (`app.db`, `metadata.db`), sa configuration, son cache et ses
   journaux.

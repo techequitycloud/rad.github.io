@@ -30,12 +30,12 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d’exécution.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -129,9 +129,9 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
-1. **Inspectez la charge de travail** : StatefulSet, pods et PVC propre à chaque pod :
+1. **Inspectez la charge de travail** — StatefulSet, pods et PVC propre à chaque pod :
 
    ```bash
    kubectl get statefulset,pods,pvc -n "$NS"
@@ -140,7 +140,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Mettez à l’échelle avec prudence.** C’est en modifiant les paramètres de nombre minimal/maximal d’instances et en cliquant sur
    **Update** sur la page de détails du déploiement que le module reste propriétaire de la spécification de la charge de travail
-   (un `kubectl scale` manuel serait annulé lors de l’application suivante), mais contrairement aux applications
+   (un `kubectl scale` manuel serait annulé lors du prochain apply), mais contrairement aux applications
    dont l’état réside entièrement dans une base de données partagée, les **pièces jointes** des tableaux de Focalboard
    résident sur un PVC en mode bloc propre à chaque pod, et non sur un système de fichiers partagé. Porter
    `max_instance_count` au-delà de `1` répartit silencieusement les pièces jointes téléversées entre des
@@ -176,7 +176,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis `kubectl` ou l’explorateur de journaux (Logs Explorer). Le point d’entrée affiche au démarrage
+1. **Journaux** — depuis `kubectl` ou l’explorateur de journaux (Logs Explorer). Le point d’entrée affiche au démarrage
    l’hôte, le nom, l’utilisateur et le `sslmode` de la base tels qu’ils ont été résolus (sur GKE, il s’agit toujours du cas
    de la boucle locale, en clair jusqu’au sidecar) :
 
@@ -187,7 +187,7 @@ export REGION="us-central1"           # the region you deploy into
    Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
-2. **Surveillance** : ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
+2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l’utilisation du processeur et de
    la mémoire des pods, le nombre de redémarrages et les métriques de requêtes. Le test de disponibilité du module
    (`uptime_check_config`) est **désactivé par défaut** ; activez-le et vérifiez qu’il passe
    au vert sous Monitoring → Uptime checks si vous avez besoin d’une surveillance synthétique de la
@@ -221,7 +221,7 @@ des diagnostics au niveau de la plateforme, qui ne changent pas d’une version 
   le bon volume. Focalboard écrit les pièces jointes sur le PVC en mode bloc monté sur
   `stateful_pvc_mount_path` (par défaut `/data`), et **non** sur le montage Filestore (NFS) de
   `nfs_mount_path` (`/opt/focalboard/storage`), qui est provisionné par défaut mais
-  inutilisé par le chemin de stockage propre à Focalboard. Si vous avez dépassé une réplique, chaque pod
+  inutilisé par le chemin de stockage propre à Focalboard. Si vous avez dépassé un réplica, chaque pod
   dispose de son propre PVC isolé : une pièce jointe téléversée via un pod est invisible depuis
   un autre (voir la tâche 3).
 - **Pod en attente (Pending) / pas d’adresse IP externe :** consultez les événements de `kubectl describe pod` pour repérer des problèmes de ressources
@@ -238,7 +238,7 @@ de fait immuables après le premier déploiement).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : le StatefulSet Kubernetes
 et son espace de noms (y compris son PVC propre à chaque pod), la base de données Cloud SQL, l’instance Filestore (NFS),
@@ -257,4 +257,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter la charge de travail/le PVC, mettre à l’échelle avec prudence (stockage propre à chaque pod), mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d’initialisation, de chemin de stockage, de planification et de récupération d’image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

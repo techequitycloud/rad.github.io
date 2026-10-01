@@ -48,7 +48,7 @@ de machine learning distinct, préconstruit.
 | Build de l'image | Cloud Build + Artifact Registry | Build personnalisé minimal ajoutant l'entrypoint cloud |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **`enable_nfs = true` est validé, et pas seulement une valeur par défaut.** Toute la
   bibliothèque de photos et de vidéos réside dans `IMMICH_MEDIA_LOCATION` ; sans NFS,
@@ -385,7 +385,7 @@ comportement et leurs valeurs par défaut standard.
 | `redis_host` | `""` | Vide = l'IP du Redis hébergé sur le serveur NFS est injectée. |
 | `enable_cloud_armor` | `false` | Associer une règle WAF au backend de l'Ingress. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Entrées App_GKE standard : `enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`,
 `organization_id`, `enable_audit_logging`. Consultez [App_GKE](App_GKE.md).
@@ -412,16 +412,16 @@ Entrées App_GKE standard : `enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` et sorties GitHub/déclencheur | État et détails de la CI/CD. |
-| `kubernetes_ready` | Indique si toutes les ressources Kubernetes ont été déployées (false lors de la première application d'un nouveau cluster en ligne). |
+| `kubernetes_ready` | Indique si toutes les ressources Kubernetes ont été déployées (false lors du premier apply d'un nouveau cluster intégré (inline)). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État des journaux d'audit et de CMEK. |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan.** `Immich_GKE` comporte ses propres garde-fous de
 > validation en plus des contrôles du socle [App_GKE](App_GKE.md) : `enable_nfs = false`,
@@ -429,28 +429,28 @@ Entrées App_GKE standard : `enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`
 > sans identifiants OAuth font tous échouer le **plan** avec une erreur nommée avant la
 > création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` (validé) | Critique | Avec NFS désactivé, toute la médiathèque se trouve sur le disque éphémère du pod — **chaque replanification du pod efface toutes les photos et vidéos**. Immich n'a aucun backend S3/GCS de repli. Bloqué au moment du plan. |
-| `max_instance_count` | `1` (validé) | Critique | Plus d'un réplica signifie plusieurs rédacteurs sur une même bibliothèque NFS et des workers de jobs dupliqués dans les processus — corruption de la bibliothèque et jobs concurrents. Bloqué au moment du plan. |
-| `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données ou l'utilisateur et rend orphelines toutes les métadonnées des ressources, les albums et les utilisateurs. |
-| `backup_retention_days` | À augmenter en production | Élevé | La bibliothèque NFS est l'unique copie des médias ; 7 jours de sauvegardes, c'est peu pour une archive de photos. |
-| `enable_redis` / `redis_host` | `true` / `""` (validé) | Élevé | Sans Redis, le serveur s'arrête au démarrage (l'entrypoint échoue immédiatement avec une erreur explicite). Avec Redis activé mais sans NFS ni hôte explicite, `REDIS_HOST` est vide — également bloqué au moment du plan. |
-| Surcharge ML de `IMMICH_PORT` | Conservez la valeur intégrée `IMMICH_PORT = "3003"` sur le service ML | Élevé | Le socle propage l'environnement du serveur aux services additionnels, et l'image ML lit la **même variable `IMMICH_PORT`** que le serveur — sans la surcharge, le conteneur ML hérite de `2283`, écoute sur le mauvais port et sa sonde de démarrage `:3003` ne réussit jamais (le Deployment ML ne devient jamais Ready). |
-| `IMMICH_MACHINE_LEARNING_URL` | Ne modifiez pas l'URL DNS réelle injectée | Élevé | Le mécanisme `output_env_var_name` du socle compose l'URL à partir du nom nu du service additionnel (`http://ml:3003`), mais le Service qu'il crée s'appelle `<service>-ml` — le nom nu ne se résout pas et la recherche intelligente ainsi que la reconnaissance faciale échouent. Le module injecte l'URL DNS réelle du Service via `module_env_vars` et met de côté la valeur composée par le socle dans la variable inutilisée `IMMICH_ML_URL_FOUNDATION_UNUSED`. |
-| `ml_memory_limit` | `4Gi` (par défaut ; à considérer comme un plancher) | Moyen | En deçà des quelque 2–3Gi que les modèles CLIP + visages doivent garder résidents, le chargement des modèles provoque un arrêt OOM du pod ML — **la recherche intelligente et la reconnaissance faciale échouent sans bruit alors que l'application principale paraît parfaitement saine** (les envois et la navigation fonctionnent toujours). Surveillez les redémarrages `OOMKilled` du pod ML. |
-| `enable_iap` | `false` sauf si l'accès mobile est géré | Moyen | IAP intercepte l'API appelée par les applications mobiles ; la sauvegarde automatique est cassée pour les appareils qui ne peuvent pas mener à bien la connexion Google. |
-| `application_version` | `latest` (→ `release`) ou un `vX.Y.Z` figé | Moyen | Définir un tag qui n'existe pas en amont fait échouer le build ou le tirage ; les tags serveur et ML sont maintenus alignés automatiquement — ne les faites pas pointer manuellement vers des versions différentes. |
-| Mises à jour de version | Prévoir une brève interruption | Faible | Les applications adossées à NFS sont déployées avec la stratégie `Recreate` — l'ancien pod s'arrête avant le démarrage du nouveau. C'est intentionnel (les mises à jour progressives provoquent un interblocage sur la bibliothèque partagée). |
-| pgvector ou VectorChord | Accepter pgvector sur Cloud SQL | Faible | La construction des index de recherche intelligente et les requêtes sont plus lentes qu'avec VectorChord, l'extension privilégiée par Immich — attendu sur Cloud SQL, qui ne propose pas VectorChord. Fonctionnellement complet, simplement plus lent sur les grandes bibliothèques. |
-| Latence de la première requête ML | Prévoir une première recherche lente | Faible | Les modèles CLIP/visages sont téléchargés lors de la première utilisation (cache sur disque éphémère, de nouveau téléchargé après une replanification du pod ML) — la première requête de recherche intelligente après un déploiement est lente. |
-| Chemin de la sonde de démarrage | `/api/server/ping` | Faible | Tout point de terminaison authentifié renvoie 401/403 à la sonde kubelet non authentifiée et bloque le déploiement ; conservez la valeur par défaut. |
+| `enable_nfs` | `true` (validé) | Critical | Avec NFS désactivé, toute la médiathèque se trouve sur le disque éphémère du pod — **chaque replanification du pod efface toutes les photos et vidéos**. Immich n'a aucun backend S3/GCS de repli. Bloqué au moment du plan. |
+| `max_instance_count` | `1` (validé) | Critical | Plus d'un réplica signifie plusieurs rédacteurs sur une même bibliothèque NFS et des workers de jobs dupliqués dans les processus — corruption de la bibliothèque et jobs concurrents. Bloqué au moment du plan. |
+| `db_name` / `db_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données ou l'utilisateur et rend orphelines toutes les métadonnées des ressources, les albums et les utilisateurs. |
+| `backup_retention_days` | À augmenter en production | High | La bibliothèque NFS est l'unique copie des médias ; 7 jours de sauvegardes, c'est peu pour une archive de photos. |
+| `enable_redis` / `redis_host` | `true` / `""` (validé) | High | Sans Redis, le serveur s'arrête au démarrage (l'entrypoint échoue immédiatement avec une erreur explicite). Avec Redis activé mais sans NFS ni hôte explicite, `REDIS_HOST` est vide — également bloqué au moment du plan. |
+| Surcharge ML de `IMMICH_PORT` | Conservez la valeur intégrée `IMMICH_PORT = "3003"` sur le service ML | High | Le socle propage l'environnement du serveur aux services additionnels, et l'image ML lit la **même variable `IMMICH_PORT`** que le serveur — sans la surcharge, le conteneur ML hérite de `2283`, écoute sur le mauvais port et sa sonde de démarrage `:3003` ne réussit jamais (le Deployment ML ne devient jamais Ready). |
+| `IMMICH_MACHINE_LEARNING_URL` | Ne modifiez pas l'URL DNS réelle injectée | High | Le mécanisme `output_env_var_name` du socle compose l'URL à partir du nom nu du service additionnel (`http://ml:3003`), mais le Service qu'il crée s'appelle `<service>-ml` — le nom nu ne se résout pas et la recherche intelligente ainsi que la reconnaissance faciale échouent. Le module injecte l'URL DNS réelle du Service via `module_env_vars` et met de côté la valeur composée par le socle dans la variable inutilisée `IMMICH_ML_URL_FOUNDATION_UNUSED`. |
+| `ml_memory_limit` | `4Gi` (par défaut ; à considérer comme un plancher) | Medium | En deçà des quelque 2–3Gi que les modèles CLIP + visages doivent garder résidents, le chargement des modèles provoque un arrêt OOM du pod ML — **la recherche intelligente et la reconnaissance faciale échouent sans bruit alors que l'application principale paraît parfaitement saine** (les envois et la navigation fonctionnent toujours). Surveillez les redémarrages `OOMKilled` du pod ML. |
+| `enable_iap` | `false` sauf si l'accès mobile est géré | Medium | IAP intercepte l'API appelée par les applications mobiles ; la sauvegarde automatique est cassée pour les appareils qui ne peuvent pas mener à bien la connexion Google. |
+| `application_version` | `latest` (→ `release`) ou un `vX.Y.Z` figé | Medium | Définir un tag qui n'existe pas en amont fait échouer le build ou le tirage ; les tags serveur et ML sont maintenus alignés automatiquement — ne les faites pas pointer manuellement vers des versions différentes. |
+| Mises à jour de version | Prévoir une brève interruption | Low | Les applications adossées à NFS sont déployées avec la stratégie `Recreate` — l'ancien pod s'arrête avant le démarrage du nouveau. C'est intentionnel (les mises à jour progressives provoquent un interblocage sur la bibliothèque partagée). |
+| pgvector ou VectorChord | Accepter pgvector sur Cloud SQL | Low | La construction des index de recherche intelligente et les requêtes sont plus lentes qu'avec VectorChord, l'extension privilégiée par Immich — attendu sur Cloud SQL, qui ne propose pas VectorChord. Fonctionnellement complet, simplement plus lent sur les grandes bibliothèques. |
+| Latence de la première requête ML | Prévoir une première recherche lente | Low | Les modèles CLIP/visages sont téléchargés lors de la première utilisation (cache sur disque éphémère, de nouveau téléchargé après une replanification du pod ML) — la première requête de recherche intelligente après un déploiement est lente. |
+| Chemin de la sonde de démarrage | `/api/server/ping` | Low | Tout point de terminaison authentifié renvoie 401/403 à la sonde kubelet non authentifiée et bloque le déploiement ; conservez la valeur par défaut. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'image — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La couche applicative partagée propre à Immich (image,
 entrypoint, amorçage de la base de données, sondes) est décrite dans
 **[Immich_Common](Immich_Common.md)**.

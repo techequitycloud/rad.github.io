@@ -17,7 +17,7 @@ les valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Castopod, consultez les guides des
 plateformes ([Castopod_GKE](Castopod_GKE.md), [Castopod_CloudRun](Castopod_CloudRun.md)) et
-les guides de la fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -60,7 +60,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~analytics-salt"
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le nom
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le nom
 de son secret figure dans les sorties du déploiement de la plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle partagé des
 secrets et de Workload Identity.
@@ -119,7 +119,7 @@ déploiement de la plateforme.
 L'image personnalisée est un **build léger FROM `castopod/castopod:<version>`** (la valeur
 par défaut de la campagne, `latest`, est épinglée sur la version stable actuelle, `1.15.5`,
 pour des builds reproductibles). Le tag de base est fourni via l'ARG de build propre à
-l'application `CASTOPOD_VERSION` — **et non** via le `APP_VERSION` générique, que la fondation
+l'application `CASTOPOD_VERSION` — **et non** via le `APP_VERSION` générique, que le socle
 écraserait sinon par `latest` en l'emportant lors de la fusion des `build_args`. L'image greffe
 un petit point d'entrée de surcouche de la plateforme (`entrypoint.sh`) qui écrit la
 configuration de base de données de CI4, exécute explicitement le `spark migrate --all` de
@@ -132,7 +132,7 @@ au point d'entrée FrankenPHP/Caddy amont, qui sert le HTTP sur `:8080` :
   contenir de points ; la plateforme ne peut donc pas les injecter en tant que variables
   d'environnement du conteneur — le point d'entrée les écrit par conséquent dans `.env`
   (chargé par CI4 au démarrage) à partir des `DB_HOST`/`DB_IP`/
-  `DB_NAME`/`DB_USER`/`DB_PASSWORD` injectés par la fondation. Sans cela, Castopod se
+  `DB_NAME`/`DB_USER`/`DB_PASSWORD` injectés par le socle. Sans cela, Castopod se
   connecte à `localhost` et chaque route adossée à la base (y compris `/`) renvoie une erreur
   500.
 - **Résout un hôte de base de données TCP.** Le pilote `mysqli` de CI4 a besoin d'un véritable
@@ -142,7 +142,7 @@ au point d'entrée FrankenPHP/Caddy amont, qui sert le HTTP sur `:8080` :
   utilisé directement.
 - **Dérive `CP_BASEURL`.** Castopod a besoin de son URL de base publique. Lorsqu'elle n'est pas
   définie explicitement, le point d'entrée la dérive du `GKE_SERVICE_URL` ou du
-  `CLOUDRUN_SERVICE_URL` injecté par la fondation et l'écrit sous `app.baseURL` dans `.env`.
+  `CLOUDRUN_SERVICE_URL` injecté par le socle et l'écrit sous `app.baseURL` dans `.env`.
 - **Exécute explicitement les migrations CodeIgniter** (`php spark migrate --all`) une fois
   `.env`/la connectivité à la base en place — voir §3 pour comprendre pourquoi cela doit être
   explicite plutôt que supposé automatique.
@@ -187,8 +187,8 @@ l'application démarrée et connectée à MySQL ; les sondes la ciblent donc dir
 
 ## 7. Stockage d'objets et persistance des médias {#7-object-storage-and-media-persistence}
 
-Un bucket **Cloud Storage** dédié (suffixe `media`) est déclaré ici et provisionné par la
-fondation, qui accorde également l'accès au compte de service de la charge de travail.
+Un bucket **Cloud Storage** dédié (suffixe `media`) est déclaré ici et provisionné par le
+socle, qui accorde également l'accès au compte de service de la charge de travail.
 Castopod stocke l'audio des épisodes de podcast, les illustrations de couverture et les autres
 fichiers téléversés sous `/var/www/castopod/public/media` ; les deux variantes de plateforme
 activent en outre un système de fichiers partagé (**Cloud Filestore / NFS**,

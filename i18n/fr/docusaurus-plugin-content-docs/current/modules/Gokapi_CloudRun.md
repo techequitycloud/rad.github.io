@@ -15,7 +15,7 @@ fichiers et génèrent des liens de téléchargement partageables, avec en optio
 date d'expiration, une limite du nombre de téléchargements et une protection par
 mot de passe, le tout adossé à une base de données SQLite interne (aucune base de
 données externe requise). Ce module déploie Gokapi sur **Cloud Run v2** au-dessus
-de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Gokapi et sur la manière de
@@ -24,7 +24,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run —
 identité du service, ingress et équilibrage de charge, scaling et concurrence,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
 cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -48,7 +48,7 @@ restreint et ciblé de services Google Cloud :
 - **Jamais de Cloud SQL.** `database_type` est fixé en dur à `NONE` par
   `Gokapi_Common` — les variables de base de données génériques de ce module
   (`sql_instance_name`, `application_database_name`, `db_*_env_var_name`, etc.)
-  ne sont transmises à la fondation que pour la compatibilité de mise en miroir des
+  ne sont transmises au socle que pour la compatibilité de mise en miroir des
   variables et n'ont aucun effet.
 - **SQLite et les fichiers téléversés persistent via un montage GCS Fuse, et non
   un véritable volume en mode bloc.** Cloud Run n'a pas d'équivalent PVC/StatefulSet ;
@@ -84,7 +84,7 @@ restreint et ciblé de services Google Cloud :
   Il vaut `true` par défaut ici (contrairement à la valeur par défaut `false` de
   `Gokapi_Common`) en raison de la garde au moment du plan décrite ci-dessous.
 - **Redis est désactivé de force.** `main.tf` code en dur `enable_redis = false`
-  vers la fondation, quelle que soit la valeur de la variable — Gokapi n'a aucun
+  vers le socle, quelle que soit la valeur de la variable — Gokapi n'a aucun
   usage de Redis.
 - **L'ingress public est activé par défaut, et il est conditionné à la clé API au
   moment du plan.** `ingress_settings = "all"` correspond à la finalité de Gokapi,
@@ -100,9 +100,9 @@ restreint et ciblé de services Google Cloud :
   `"internal-and-cloud-load-balancing"`).
 - **Construit comme une image personnalisée légère, épinglée pour éviter le piège
   du tag `latest`.** L'image est un wrapper d'une ligne
-  `FROM f0rc3/gokapi:${GOKAPI_VERSION}` afin que la fondation puisse la mettre en
+  `FROM f0rc3/gokapi:${GOKAPI_VERSION}` afin que le socle puisse la mettre en
   miroir dans Artifact Registry. `GOKAPI_VERSION` (un argument de build propre à
-  l'application, que l'injection générique `APP_VERSION` de la fondation ne
+  l'application, que l'injection générique `APP_VERSION` du socle ne
   touche pas) se résout en une version épinglée `v1.9.6` lorsque
   `application_version = "latest"`.
 
@@ -158,7 +158,7 @@ travail de type base de données, et la [section 6](#6-configuration-pitfalls--s
 ci-dessous pour comprendre pourquoi cela importe spécifiquement pour la base de
 données SQLite de Gokapi.
 
-### C. Secret Manager — la clé API facultative {#c-secret-manager--the-optional-api-key}
+### C. Secret Manager et la clé d'API facultative {#c-secret-manager--the-optional-api-key}
 
 Gokapi ne crée **aucun secret obligatoire**. Le seul secret que ce module peut
 créer est le jeton de commodité d'opérateur facultatif `GOKAPI_API_KEY`,
@@ -176,7 +176,7 @@ par son nom.
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails sur l'injection et la
 rotation des secrets.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app` (`ingress_settings =
 "all"`), conformément à la finalité de Gokapi, qui génère des liens de
@@ -209,7 +209,7 @@ d'alerte facultatifs (tous deux désactivés par défaut).
 
 ## 3. Comportement de l'application Gokapi {#3-gokapi-application-behaviour}
 
-- **Aucune tâche d'initialisation ne s'exécute par défaut.** `Gokapi_Common` ne
+- **Aucun job d'initialisation ne s'exécute par défaut.** `Gokapi_Common` ne
   fournit aucune entrée `initialization_jobs` par défaut — Gokapi gère son propre
   stockage et n'a aucune base de données à amorcer. Seules les tâches fournies par
   l'utilisateur (chargement de données ou migration personnalisés) apparaissent
@@ -240,7 +240,7 @@ d'alerte facultatifs (tous deux désactivés par défaut).
   variable est transmise.** Contrairement à `Gokapi_GKE` (où la variable
   équivalente `container_port` est déclarée mais jamais transmise), le
   `gokapi.tf` de cette variante Cloud Run fusionne `container_port = var.container_port`
-  dans la configuration propre à l'application qui atteint la fondation — la
+  dans la configuration propre à l'application qui atteint le socle — la
   valeur est donc techniquement active ici. Cependant, le port d'écoute propre à
   Gokapi est codé en dur séparément sous la forme `GOKAPI_PORT = "53842"` dans les
   `environment_variables` de `Gokapi_Common` ; remplacer `container_port` par une
@@ -287,7 +287,7 @@ avec leur comportement standard.
 | `application_version` | `latest` | Tag de l'image Gokapi ; se résout en une version épinglée `v1.9.6` lorsqu'il vaut `latest`, via l'argument de build propre à l'application `GOKAPI_VERSION`. |
 | `enable_api_key` | `true` | Génère une clé API d'opérateur aléatoire dans Secret Manager, injectée en tant que `GOKAPI_API_KEY`. Simple jeton de commodité — Gokapi crée ses propres véritables clés API depuis l'interface d'administration. Vaut `true` par défaut, car la garde au moment du plan de `validation.tf` rejette la valeur par défaut du module `ingress_settings = "all"` lorsque ce paramètre vaut `false`. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -305,7 +305,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec les conventions ; non référencée par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle des accès et de l'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -328,8 +328,7 @@ avec leur comportement standard.
 Les variables standard de tâches de sauvegarde/importation d'`App_CloudRun`
 (`backup_schedule`, `backup_retention_days`, `enable_backup_import`,
 `backup_source`, `backup_uri`, `backup_format`) sont déclarées et transmises, mais
-**sans effet pour Gokapi** — les mécanismes de sauvegarde et d'importation de la
-fondation ne fonctionnent que lorsque `database_type` n'est pas `NONE`, et celui de
+**sans effet pour Gokapi** — les mécanismes de sauvegarde et d'importation du socle ne fonctionnent que lorsque `database_type` n'est pas `NONE`, et celui de
 Gokapi est fixé à `NONE`. Il n'existe aucune sauvegarde automatisée de la base
 SQLite ni des fichiers téléversés ; sauvegardez directement le bucket GCS
 `storage` si nécessaire.
@@ -347,10 +346,10 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 |---|---|---|
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé / `""` | Sans effet — Gokapi n'a pas de base de données SQL sur laquelle exécuter des scripts. |
 | `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante à utiliser à la place de la découverte automatique. Pertinent uniquement si vous redirigez manuellement le stockage de Gokapi vers NFS (voir le groupe 11). |
-| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM GCE NFS en ligne, si elle est créée. |
+| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM GCE NFS intégrée (inline), si elle est créée. |
 | `nfs_volume_name` | `nfs-data-volume` | Nom du volume Cloud Run pour le montage NFS. |
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -370,8 +369,8 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur si NFS est activé — distinct de `/data`. |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse supplémentaires ; le montage `/data` du bucket `storage` est toujours ajouté en plus de cette liste. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
-| `enable_redis` | `true` (valeur par défaut de la variable) | **Sans effet** — `main.tf` code en dur `enable_redis = false` vers la fondation, quelle que soit la valeur de cette variable. Gokapi n'a aucun usage de Redis. |
-| `redis_host` / `redis_port` / `redis_auth` | — | Déclarées uniquement par souci de cohérence avec les conventions ; jamais transmises à la fondation. |
+| `enable_redis` | `true` (valeur par défaut de la variable) | **Sans effet** — `main.tf` code en dur `enable_redis = false` vers le socle, quelle que soit la valeur de cette variable. Gokapi n'a aucun usage de Redis. |
+| `redis_host` / `redis_port` / `redis_auth` | — | Déclarées uniquement par souci de cohérence avec les conventions ; jamais transmises au socle. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
@@ -380,15 +379,15 @@ Toutes les variables du groupe 12 (`database_type`, `sql_instance_name`,
 `db_*_env_var_name`, `enable_postgres_extensions`, `enable_mysql_plugins`, etc.)
 sont déclarées uniquement pour la compatibilité avec la mise en miroir des
 conventions. `database_type` est fixé à `NONE` dans `Gokapi_Common`, et aucune des
-variables de base de données associées n'est transmise à la fondation par
+variables de base de données associées n'est transmise au socle par
 `main.tf` — Gokapi n'a pas de base de données SQL.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Aucune tâche par défaut n'est injectée ; utilisez cette variable uniquement pour des tâches personnalisées de chargement de données ou de migration. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes ; Gokapi n'a aucune tâche de maintenance planifiée intégrée. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents ; Gokapi n'a aucune tâche de maintenance planifiée intégrée. |
 | `backup_file` | `backup.sql` | Sans effet — voir le groupe 7 ; aucune base de données dans laquelle restaurer. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -454,7 +453,7 @@ directement avec `gcloud secrets list --filter="name~api-key"` (voir la
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de la moindre ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de la moindre ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -471,7 +470,7 @@ directement avec `gcloud secrets list --filter="name~api-key"` (voir la
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, scaling et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
 Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration

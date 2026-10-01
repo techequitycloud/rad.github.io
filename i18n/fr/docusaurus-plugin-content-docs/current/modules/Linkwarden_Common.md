@@ -73,7 +73,7 @@ partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Linkwarden nécessite **PostgreSQL** (ce module fige **PostgreSQL 15**) ; le moteur
 est imposé et MySQL ou les autres moteurs ne sont pas pris en charge — le schéma
@@ -148,7 +148,7 @@ l'apply et prend effet à l'apply suivant sans reconstruction.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Linkwarden_Common` établit l'environnement Linkwarden de référence afin que
 l'application démarre correctement dès le premier lancement :

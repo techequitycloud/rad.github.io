@@ -15,11 +15,11 @@ description: "Lab pratique : déployer ActualBudget sur Cloud Run dans votre pro
 
 Une application de budget personnel fondée sur la méthode des enveloppes pour suivre les revenus et les dépenses. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **ActualBudget on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit ActualBudget. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit ActualBudget. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -41,7 +41,7 @@ Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -54,7 +54,7 @@ export REGION="us-central1"          # the region you deploy into
 
 1. Ouvrez **Solutions → Solution Catalog → RAD modules** dans la navigation supérieure de la plateforme RAD, ouvrez **ActualBudget (Cloud Run)** depuis la liste **Platform Modules** pour démarrer la configuration, choisissez **Configuration Form** sous *How would you like to configure this deployment?* (le formulaire s'ouvre sur le **Conversational Assistant** si vous détenez des crédits achetés ou si vous êtes partenaire ou administrateur), renseignez `project_id` et passez en revue les paramètres. Ne configurez que ce dont vous avez besoin — le [Guide de configuration](https://docs.radmodules.dev/docs/modules/ActualBudget_CloudRun) documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme provisionne le service Cloud Run et un bucket de données GCS, et construit l'image du conteneur. Aucune base de données ni tâche d'initialisation n'est nécessaire. Les premiers déploiements prennent environ **10–20 minutes** (la construction de l'image en représente l'essentiel).
+2. La plateforme provisionne le service Cloud Run et un bucket de données GCS, et construit l'image du conteneur. Aucune base de données ni job d'initialisation n'est nécessaire. Les premiers déploiements prennent environ **10–20 minutes** (la construction de l'image en représente l'essentiel).
 
 3. Une fois terminé, repérez les ressources avec des filtres indépendants des noms (afin que les commandes continuent de fonctionner quel que soit le suffixe du déploiement) :
 
@@ -69,7 +69,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. **Vérifiez que le service est en bonne santé** en interrogeant le point de terminaison de liveness (le chemin de sonde de démarrage/liveness configuré par le module) :
 
@@ -77,7 +77,7 @@ export REGION="us-central1"          # the region you deploy into
    curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/"
    ```
 
-   Attendez-vous à une réponse HTTP 200 confirmant que le service s'exécute et écoute — il s'agit du même chemin racine que celui vérifié par les sondes de démarrage et de liveness du déploiement.
+   Attendez-vous à une réponse HTTP 200 confirmant que le service s'exécute et écoute — il s'agit du même chemin racine que celui vérifié par les sondes de démarrage et de vivacité du déploiement.
 
 2. **Ouvrez l'interface d'ActualBudget** dans votre navigateur en accédant à `$SERVICE_URL`. ActualBudget ne nécessite pas d'identifiants initiaux — il vous sera demandé de créer ou d'importer un fichier de budget lors du premier accès. Aucune récupération de mot de passe n'est nécessaire avant de commencer.
 
@@ -113,7 +113,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de requêtes, la latence des requêtes (P50/P95/P99), le nombre d'instances (comportement de mise à l'échelle) et l'utilisation du CPU / de la mémoire. Le module provisionne également un **test de disponibilité** (uptime check) ; vérifiez qu'il est au vert sous Monitoring → Uptime checks, et consultez Alerting → Policies.
@@ -147,7 +147,7 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Service Cloud Run et bucket GCS provisionnés ; image construite et déployée |
-| 2 — Accès et vérification | Manuel | Le point de terminaison de liveness renvoie 200 ; l'interface de budget se charge dans le navigateur |
+| 2 — Accéder et vérifier | Manuel | Le point de terminaison de liveness renvoie 200 ; l'interface de budget se charge dans le navigateur |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les échecs de révision, les erreurs de build et les problèmes d'autorisation |

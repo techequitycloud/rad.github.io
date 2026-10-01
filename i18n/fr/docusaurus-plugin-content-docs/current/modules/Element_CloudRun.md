@@ -44,7 +44,7 @@ assemble un ensemble volontairement réduit de services Google Cloud :
 | Base de données | — | **Aucune.** C'est le serveur d'accueil Matrix qui conserve tout l'état, pas Element |
 | Stockage d'objets | — | **Aucun.** Element est sans état |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Element est sans état.** L'ensemble de l'état des conversations, des clés de
   chiffrement et des médias réside sur le serveur d'accueil Matrix et dans le navigateur
@@ -164,7 +164,7 @@ publiquement accessible.
   `HOMESERVER_NAME`, puis passe la main à nginx. Changer de serveur d'accueil revient à
   redéployer avec de nouvelles valeurs d'environnement — sans reconstruire l'image.
 - **Ni base de données, ni migrations.** Element sert des assets statiques ; il n'y a ni
-  schéma, ni tâche d'initialisation, ni fenêtre de migration au premier démarrage. Le
+  schéma, ni job d'initialisation, ni fenêtre de migration au premier démarrage. Le
   service est prêt (Ready) dès que nginx écoute sur le port 80.
 - **La connexion est un échange entre le navigateur et le serveur d'accueil.** Element
   authentifie l'utilisateur directement auprès du serveur d'accueil Matrix configuré ;
@@ -210,7 +210,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -233,7 +233,7 @@ comportement standard.
 | `cpu_limit` | `1000m` | CPU par instance. |
 | `memory_limit` | `512Mi` | Mémoire par instance (le plancher gen2 est de 512 MiB). |
 | `container_port` | `80` | nginx écoute sur le port 80. |
-| `min_instance_count` | `0` | **Codé en dur, non ajustable.** `element.tf` fixe cette valeur à `0` dans l'appel au module Foundation et dans la fusion de configuration ; `var.min_instance_count` n'est jamais transmise, de sorte que l'augmenter (par ex. pour éliminer les démarrages à froid) est ignoré sans avertissement. La mise à l'échelle jusqu'à zéro s'applique toujours — un serveur statique ne coûte rien au repos, quelle que soit la valeur saisie. |
+| `min_instance_count` | `0` | **Codé en dur, non ajustable.** `element.tf` fixe cette valeur à `0` dans l'appel au module socle et dans la fusion de configuration ; `var.min_instance_count` n'est jamais transmise, de sorte que l'augmenter (par ex. pour éliminer les démarrages à froid) est ignoré sans avertissement. La mise à l'échelle jusqu'à zéro s'applique toujours — un serveur statique ne coûte rien au repos, quelle que soit la valeur saisie. |
 | `max_instance_count` | `3` | Limite supérieure de la mise à l'échelle automatique — réellement ajustable ; transmise via `var.max_instance_count`. |
 | `cpu_always_allocated` | `false` | Facturation à la requête (moins chère) — Element n'effectue aucun travail en arrière-plan. |
 | `execution_environment` | `gen2` | Environnement d'exécution Cloud Run. |
@@ -271,7 +271,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 9 — Équilibreur de charge, CDN et conservation des images {#group-9--load-balancer-cdn--image-retention}
+### Groupe 9 — Équilibreur de charge, CDN et rétention des images {#group-9--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -293,11 +293,11 @@ Hérité d'[App_CloudRun](App_CloudRun.md) et **sans effet** — `Element_Common
 `database_type = "NONE"`. Aucune instance Cloud SQL, aucun utilisateur ni mot de passe
 n'est créé.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Element ne déclare aucune tâche d'initialisation. |
+| `initialization_jobs` | `[]` | Element ne déclare aucun job d'initialisation. |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -315,7 +315,7 @@ Hérité d'[App_CloudRun](App_CloudRun.md) et **sans effet** — une SPA statiqu
 cache ni file d'attente côté serveur. `enable_redis`, `redis_host`, `redis_port`,
 `redis_auth`.
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -340,7 +340,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide pour Element). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration (aucune pour Element). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -351,14 +351,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `timeout_seconds` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | High | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
 | `application_version` | Épinglez un véritable tag `element-web` | High | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un `latest` défini à la main dans un ARG de build brut échouerait avec `MANIFEST_UNKNOWN`. |

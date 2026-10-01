@@ -21,7 +21,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier, et créer le premier espace de travail et le compte administrateur.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Comprendre le rôle de PostgreSQL, Redis et NFS dans une charge de travail d'édition collaborative.
@@ -43,7 +43,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -123,7 +123,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max puis en cliquant sur **Update** sur la
    page de détails du déploiement — le module est propriétaire de la spécification du service, la mise à l'échelle est donc un
    changement de configuration, et non une modification manuelle via `gcloud` (une modification manuelle serait annulée
-   lors de l'application suivante). La valeur par défaut est `min = 0` (mise à l'échelle jusqu'à zéro) / `max = 1` ; définissez
+   lors du prochain apply). La valeur par défaut est `min = 0` (mise à l'échelle jusqu'à zéro) / `max = 1` ; définissez
    `min_instance_count = 1` pour garder le point de terminaison de collaboration actif, et n'augmentez
    `max_instance_count` qu'avec Redis activé (il l'est par défaut) afin que les instances restent
    coordonnées.
@@ -157,7 +157,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -169,7 +169,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
    requêtes, la latence des requêtes (P50/P95/P99), le nombre d'instances (surveillez les démarrages à froid avec la
    mise à l'échelle jusqu'à zéro) et l'utilisation du CPU / de la mémoire ; les métriques Cloud SQL se trouvent sur la
-   page SQL. Le module provisionne également un **uptime check** (le point de terminaison est public
+   page SQL. Le module provisionne également un **test de disponibilité** (uptime check) (le point de terminaison est public
    par défaut) ; vérifiez qu'il est au vert sous Monitoring → Uptime checks, et examinez
    Alerting → Policies.
 
@@ -228,6 +228,6 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), Redis, NFS, un bucket GCS, des secrets, et exécute l'initialisation de la base de données |
 | 2 — Accéder et vérifier | Manuel | `/api/health` répond ; création du premier espace de travail et du compte administrateur ; vérification de l'édition en temps réel |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle (coordination par Redis), mettre à jour la version, gérer les secrets/sauvegardes, accès à la base de données |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et l'uptime check |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de Redis/collaboration, de NFS, de build et d'IAM |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

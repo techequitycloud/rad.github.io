@@ -72,7 +72,7 @@ données à l'exécution, puis passe la main au point d'entrée propre à Forgej
   court-circuite l'assistant d'installation web de Forgejo ; l'image
   `forgejo/forgejo` crée et migre son propre schéma au démarrage du conteneur,
   dans la base de données vide préparée par la tâche `db-init`.
-- **Aucun compte administrateur n'est amorcé par Terraform.** Aucune tâche
+- **Aucun compte administrateur n'est amorcé par Terraform.** Aucun job
   d'initialisation ne crée d'utilisateur administrateur Forgejo — consultez la
   [section 3](#3-forgejo-application-behaviour) pour les options côté opérateur.
 - **`SECRET_KEY` et `INTERNAL_TOKEN` sont générés automatiquement** et stockés
@@ -140,7 +140,7 @@ tickets, pull requests, exécutions Actions) dans une instance gérée Cloud SQL
 PostgreSQL 15. Par défaut (`enable_cloudsql_volume = false`), le service se
 connecte en **TCP direct sur IP privée** avec `sslmode=require` ; définir
 `enable_cloudsql_volume = true` bascule plutôt vers le socket Unix du Cloud SQL
-Auth Proxy (`sslmode=disable`). Lors du premier déploiement, une tâche Cloud Run
+Auth Proxy (`sslmode=disable`). Lors du premier déploiement, un job Cloud Run
 `db-init` crée le rôle et la base de données de l'application et accorde les
 privilèges sur le schéma ; Forgejo crée et migre ensuite son propre schéma au
 premier démarrage du conteneur.
@@ -255,7 +255,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Cloud Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des
-vérifications de disponibilité et des règles d'alerte en option.
+tests de disponibilité et des règles d'alerte en option.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -281,7 +281,7 @@ vérifications de disponibilité et des règles d'alerte en option.
   de Forgejo est ignoré ; le point d'entrée d'origine `forgejo/forgejo` crée et
   migre le schéma dans la base de données vide au premier démarrage, puis
   applique les migrations suivantes lors des mises à niveau de version.
-- **Aucun compte administrateur n'est créé automatiquement.** Aucune tâche
+- **Aucun compte administrateur n'est créé automatiquement.** Aucun job
   d'initialisation n'exécute d'étape `forgejo admin user create` (ou équivalente),
   et l'inscription libre est activée (`GITEA__service__DISABLE_REGISTRATION = "false"`) :
   toute personne pouvant joindre le service peut donc créer un compte.
@@ -423,7 +423,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 un bucket GCS après le provisionnement. Le schéma propre de Forgejo ne nécessite
 aucun SQL personnalisé. Consultez [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -441,7 +441,7 @@ aucun SQL personnalisé. Consultez [App_CloudRun](App_CloudRun.md).
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires au-delà du bucket de données provisionné automatiquement (inutilisé). |
 | `enable_nfs` | `true` | NFS est activé par défaut afin que les dépôts, les objets LFS et les pièces jointes persistent. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur ; définit `GITEA__server__APP_DATA_PATH`. Remplace la valeur par défaut interne `/data` de `Forgejo_Common`. |
-| `nfs_instance_name` / `nfs_instance_base_name` | _(découverte automatique)_ | Cible ou nomme un serveur NFS existant ou créé en ligne. |
+| `nfs_instance_name` / `nfs_instance_base_name` | _(découverte automatique)_ | Cible ou nomme un serveur NFS existant ou créé en mode intégré (inline). |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (requiert gen2) ; non utilisés par Forgejo par défaut. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -453,10 +453,10 @@ aucun SQL personnalisé. Consultez [App_CloudRun](App_CloudRun.md).
 | `db_user` | `forgejo` | Utilisateur de la base de données, injecté sous `GITEA__database__USER`. Mot de passe généré automatiquement et exposé sous l'alias `GITEA__database__PASSWD` (via un `db_password_env_var_name` défini dans `main.tf`, et non une variable exposée à l'utilisateur). |
 | `database_type` | `POSTGRES_15` | Le seul moteur pris en charge par `db-init.sh` — ne le modifiez pas. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
-| `sql_instance_name` / `sql_instance_base_name` | _(découverte automatique)_ | Cible ou nomme une instance Cloud SQL existante ou créée en ligne. |
+| `sql_instance_name` / `sql_instance_base_name` | _(découverte automatique)_ | Cible ou nomme une instance Cloud SQL existante ou créée en mode intégré. |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivée | Rotation du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -519,7 +519,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (inutilisés par Forgejo). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -547,7 +547,7 @@ d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `false` (par défaut) ou `true` | High | Par défaut, la connexion se fait en TCP direct sur IP privée avec SSL obligatoire — assurez-vous que `vpc_egress_setting` et les règles de pare-feu l'autorisent. Définir `true` bascule vers le socket Unix ; la sélection du mode SSL par le point d'entrée suppose le mode réellement actif. |
 | `public_domain` / `public_url` | Le véritable nom d'hôte externe | High | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
 | `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | High | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
-| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucune tâche d'initialisation n'amorce d'administrateur ; Cloud Run n'a pas d'équivalent à `kubectl exec`, si bien que la reprise exige une entrée ponctuelle dans `initialization_jobs` ou l'exécution de la CLI sur la même base de données. |
+| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucun job d'initialisation n'amorce d'administrateur ; Cloud Run n'a pas d'équivalent à `kubectl exec`, si bien que la reprise exige une entrée ponctuelle dans `initialization_jobs` ou l'exécution de la CLI sur la même base de données. |
 | `enable_iap` | uniquement si l'accès par la CLI Git n'est pas nécessaire | High | IAP exige une connexion Google interactive que la CLI `git` ne peut pas effectuer — le clonage et le push via HTTPS échouent pour tous les clients autres que les navigateurs. |
 | `ingress_settings` | `all` | High | La définir sur `internal` bloque tout clonage et push Git externes ainsi que l'accès web. |
 | `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Medium | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |

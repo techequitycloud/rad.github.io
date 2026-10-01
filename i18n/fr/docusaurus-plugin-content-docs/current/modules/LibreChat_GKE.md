@@ -37,7 +37,7 @@ services Google Cloud :
 | Cache et sessions | Redis (facultatif) | Requis pour les déploiements multi-réplicas afin de garantir la cohérence des sessions |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de Cloud SQL.** LibreChat utilise MongoDB. `mongodb_uri` vaut `""` par défaut, mais `main.tf`
   le remplace par l'URI calculée d'un service auxiliaire `mongo:7` dans l'espace de noms
@@ -220,7 +220,7 @@ et des règles d'alerte facultatifs sont disponibles.
 ## 3. Comportement de l'application LibreChat {#3-librechat-application-behaviour}
 
 - **Aucune tâche de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
-  aucune tâche d'initialisation distincte n'est nécessaire.
+  aucun job d'initialisation distinct n'est nécessaire.
 - **Service auxiliaire `mongo:7` dans l'espace de noms par défaut, et non Firestore.** `mongodb_uri` vaut `""` par défaut,
   mais `main.tf` le remplace par l'URI calculée d'un service auxiliaire `mongo:7` dans l'espace de noms avant même
   d'appeler `LibreChat_Common` — voir §1 et §2.B. Le provisionnement automatique de Firestore ENTERPRISE (découverte
@@ -348,7 +348,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `uptime_check_config` | désactivé, `/` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -433,7 +433,7 @@ les mécanismes partagés.
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -465,18 +465,18 @@ d'explorer les ressources en cours d'exécution.
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster et la charge de travail sont prêts. Vaut false lors du premier apply d'un nouveau cluster créé en ligne — relancez l'apply pour terminer. |
+| `kubernetes_ready` | Indique si le cluster et la charge de travail sont prêts. Vaut false lors du premier apply d'un nouveau cluster créé en mode intégré (inline) — relancez l'apply pour terminer. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État des journaux d'audit et de CMEK. |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critical | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
 | `mongodb_uri` | conserver la valeur par défaut (service auxiliaire `mongo:7` dans l'espace de noms) ou la définir explicitement | Critical | LibreChat nécessite MongoDB. Le service auxiliaire `mongo:7` dans l'espace de noms par défaut a besoin de `enable_nfs = true` pour son répertoire de données ; remplacer `mongodb_uri` par `""` dans l'appel à `LibreChat_Common` (en contournant le câblage par défaut de ce module) avec une configuration Firestore/Atlas défaillante fait planter le pod au démarrage, qui ne sert alors aucun trafic. |

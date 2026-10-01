@@ -178,7 +178,7 @@ bash) s'exécute avant le démarrage du serveur Rails et se charge de :
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Chatwoot_Common` établit l'environnement de base de Chatwoot/Rails afin que
 l'application démarre correctement dès le premier lancement :
@@ -246,7 +246,7 @@ dans le conteneur.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** dédié (`name_suffix = "storage"`, classe `STANDARD`,
 `force_destroy = true`, versionnage désactivé, `public_access_prevention

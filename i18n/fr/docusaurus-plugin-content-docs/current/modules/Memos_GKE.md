@@ -30,7 +30,7 @@ Memos s'exécute comme une unique charge de travail web Go. Le déploiement asse
 ensemble volontairement restreint de services Google Cloud — Memos n'a ni file
 d'attente, ni cache, ni workers d'arrière-plan :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Go, 1 vCPU / 512 MiB par défaut, mise à l'échelle horizontale automatique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — ce module standardise sur Postgres via une unique URL de connexion `MEMOS_DSN` |
@@ -98,7 +98,7 @@ du type de charge de travail (Deployment ou StatefulSet).
 Memos stocke toutes les données applicatives (notes, tags, utilisateurs, métadonnées des
 ressources) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent de
 manière privée via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1` ; aucune adresse
-IP publique n'est exposée. Lors du premier déploiement, une tâche d'initialisation crée
+IP publique n'est exposée. Lors du premier déploiement, un job d'initialisation crée
 la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
@@ -128,7 +128,7 @@ démarrage.
   gcloud secrets versions access latest --secret=<db-password-secret-name> --project "$PROJECT"
   ```
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est exposé via un Service Kubernetes (`LoadBalancer` par défaut) doté d'une
 adresse IP externe. Une Gateway/un Ingress avec un domaine personnalisé et un certificat
@@ -160,8 +160,8 @@ règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application Memos {#3-memos-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Elle se
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le sidecar cloud-sql-proxy et crée de manière idempotente le rôle et la
   base de données de l'application. La tâche peut être relancée sans risque.
 - **Migrations de schéma au démarrage.** Memos applique sa propre mise en place du
@@ -194,14 +194,14 @@ standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du cluster et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
@@ -209,7 +209,7 @@ standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `memos` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Memos` | Nom lisible affiché dans la console. |
@@ -218,7 +218,7 @@ standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | Construit l'image wrapper avec le point d'entrée qui calcule le DSN. |
@@ -228,10 +228,10 @@ standard.
 | `max_instance_count` | `1` | maxReplicas du HPA ; augmentez-le pour une charge simultanée plus élevée. |
 | `container_port` | `5230` | Port natif par défaut de Memos — aucun remappage n'est effectué. |
 | `enable_cloudsql_volume` | `true` | Sidecar cloud-sql-proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Duplique l'image Memos dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Memos dans Artifact Registry. |
 | `session_affinity` | `None` | Aucune session au niveau du pod n'est requise. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 Paramètres standard d'exposition du service et d'IAP d'App_GKE — consultez
 [App_GKE](App_GKE.md). Entrées clés : `service_type` (`LoadBalancer` par défaut),
@@ -239,14 +239,14 @@ Paramètres standard d'exposition du service et d'IAP d'App_GKE — consultez
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Toute valeur `MEMOS_*` documentée par Memos peut être définie ici. La connexion à la base de données (`MEMOS_DSN`, `MEMOS_DRIVER`) est calculée automatiquement — ne les définissez pas ici. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager. |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
 | `backup_retention_days` | `7` | Rétention ; augmentez-la pour la production. |
@@ -258,7 +258,7 @@ Intégration Cloud Build standard d'App_GKE — consultez [App_GKE](App_GKE.md).
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `storage_buckets` | `[]` | Aucun bucket provisionné par défaut. |
 | `enable_nfs` | `false` | Non utilisé — Memos ne conserve aucun état hors de PostgreSQL dans le câblage de ce module. |
@@ -267,21 +267,21 @@ Intégration Cloud Build standard d'App_GKE — consultez [App_GKE](App_GKE.md).
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixé par `Memos_Common`. |
 | `application_database_name` | `memos` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `application_database_user` | `memos` | Utilisateur de la base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` délai de 30s | Sonde de démarrage — cible la page de connexion publique. |
 | `liveness_probe` | HTTP `/` délai de 30s | Sonde de vivacité. |
@@ -289,7 +289,7 @@ Intégration Cloud Build standard d'App_GKE — consultez [App_GKE](App_GKE.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `enable_audit_logging` | `false` | Cloud Audit Logs détaillés. |
@@ -344,7 +344,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload Identity,
 ingress, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La
 configuration applicative propre à Memos partagée avec la variante Cloud Run est décrite
 dans **[Memos_Common](Memos_Common.md)**.
 

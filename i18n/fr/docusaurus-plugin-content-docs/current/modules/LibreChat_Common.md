@@ -151,7 +151,7 @@ Les `environment_variables` supplémentaires du module appelant sont fusionnées
 
 ---
 
-## 6. Comportement de la sonde de santé {#6-health-probe-behaviour}
+## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 Les deux sondes ciblent le chemin racine de LibreChat (`/`), qui renvoie HTTP 200 une fois l'application
 entièrement initialisée et connectée à MongoDB.

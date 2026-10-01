@@ -106,7 +106,7 @@ L'image Excalidraw est une fine surcouche personnalisée `FROM excalidraw/excali
 que Cloud Build produit et pousse dans l'Artifact Registry du projet (`enable_image_mirroring
 = true`). Aucun pull depuis Docker Hub n'est nécessaire à l'exécution.
 
-- **Console :** Artifact Registry → Dépôts.
+- **Console :** Artifact Registry → Repositories.
 - **CLI :**
   ```bash
   gcloud artifacts repositories list --project "$PROJECT" --location "$REGION"
@@ -140,7 +140,7 @@ par-dessus ; les paramètres d'entrée et la sortie VPC contrôlent la connectiv
 charge utile étant constituée d'éléments statiques, Cloud CDN est particulièrement
 adapté pour réduire la latence et les coûts.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -156,8 +156,8 @@ les métriques Cloud Run sont envoyées à Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte facultatifs. Un test de disponibilité public sur
 le chemin racine constitue un signal de santé naturel pour le frontend statique.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -275,7 +275,7 @@ autres modules, mais se résolvent ici en valeurs vides.
 | `storage_buckets` | Buckets Cloud Storage créés — vide pour Excalidraw. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration — vide pour Excalidraw. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

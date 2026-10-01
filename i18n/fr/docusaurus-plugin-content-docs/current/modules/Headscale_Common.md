@@ -29,9 +29,9 @@ les guides des plateformes ([Headscale_GKE](Headscale_GKE.md),
 
 | Domaine | Fourni par Headscale_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Encapsule `headscale/headscale:<version>-debug` (une base construite avec `ko`) avec un `config.yaml` et un point d'entrée intégrés ; construite via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule `headscale/headscale:<version>-debug` (une base construite avec `ko`) avec un `config.yaml` et un point d'entrée intégrés ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe `database_type = "NONE"` — Headscale repose entièrement sur un SQLite intégré | §Base de données dans les guides des plateformes |
-| Stockage | Déclare le bucket GCS `storage` et le montage `/var/lib/headscale` (GCS Fuse sur Cloud Run ; de manière conditionnelle sur GKE) | Output `storage_buckets` |
+| Stockage | Déclare le bucket GCS `storage` et le montage `/var/lib/headscale` (GCS Fuse sur Cloud Run ; de manière conditionnelle sur GKE) | Sortie `storage_buckets` |
 | Application d'une instance unique | Code en dur `max_instance_count = 1` dans la `config` assemblée — la valeur de la variable de l'appelant n'est jamais lue | Exécution et mise à l'échelle dans les guides des plateformes |
 | Configuration de base | `config.yaml` intégré : backend SQLite, DERP intégré désactivé, MagicDNS désactivé, les champs `noise.private_key_path`/`dns` qu'exige Headscale 0.26.1 | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/health` | §Observabilité dans les guides des plateformes |

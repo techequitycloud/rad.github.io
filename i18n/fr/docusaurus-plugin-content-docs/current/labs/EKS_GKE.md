@@ -19,11 +19,11 @@ Ce lab parcourt l'intégralité du cycle de vie opérationnel du module : le dé
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser ce qu'il provisionne sur AWS comme sur Google Cloud.
+- Déployer le module depuis la plateforme RAD et repérer ce qu'il provisionne sur AWS comme sur Google Cloud.
 - Vérifier que le cluster EKS est enregistré dans la Fleet et y accéder via la Connect gateway.
-- Effectuer les opérations du jour 2 (day-2) — inspecter le cluster, mettre à l'échelle le groupe de nœuds, mettre à niveau les versions et accorder des accès.
+- Effectuer les opérations du jour 2 — inspecter le cluster, mettre à l'échelle le groupe de nœuds, mettre à niveau les versions et accorder des accès.
 - Observer le cluster EKS avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -116,7 +116,7 @@ gcloud config set project "$PROJECT"
      --query 'nodegroup.scalingConfig'
    ```
 
-2. **Mettez à l'échelle le groupe de nœuds** en modifiant les paramètres de nombre minimal/souhaité/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement — le module est propriétaire de la spécification du groupe de nœuds : la mise à l'échelle est donc une modification de configuration, et non une modification manuelle dans AWS (une modification manuelle serait annulée lors de l'application suivante). Notez qu'une montée en charge au-delà du nombre souhaité nécessite un cluster autoscaler, que ce module n'installe pas.
+2. **Mettez à l'échelle le groupe de nœuds** en modifiant les paramètres de nombre minimal/souhaité/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement — le module est propriétaire de la spécification du groupe de nœuds : la mise à l'échelle est donc une modification de configuration, et non une modification manuelle dans AWS (une modification manuelle serait annulée lors du prochain apply). Notez qu'une montée en charge au-delà du nombre souhaité nécessite un cluster autoscaler, que ce module n'installe pas.
 
 3. **Mettez à niveau la version de Kubernetes** en modifiant **à la fois** `k8s_version` et `platform_version` avec des valeurs concordantes dans le même **Update** — Google Cloud rejette toute incohérence lors de l'enregistrement.
 

@@ -11,7 +11,7 @@ description: "Lab pratique : déployez SearXNG sur Cloud Run dans votre propre p
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 60 minutes
+**Durée estimée :** 30–60 minutes
 
 SearXNG est un métamoteur de recherche auto-hébergé et respectueux de la vie privée, qui agrège
 les résultats de plus de 70 services de recherche sans pister les utilisateurs ni afficher de publicités. Ce lab
@@ -28,7 +28,7 @@ le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -50,7 +50,7 @@ le temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -133,7 +133,7 @@ export REGION="us-central1"          # the region you deploy into
    invalide toutes les sessions utilisateur actives — évitez de la renouveler sauf nécessité.
 
 5. **Inspectez les jobs Cloud Run** (SearXNG ne requiert par défaut aucun job d'initialisation ni job planifié,
-   mais les tâches cron que vous configurez apparaissent ici) :
+   mais les jobs cron que vous configurez apparaissent ici) :
 
    ```bash
    gcloud run jobs list --project="$PROJECT" --region="$REGION"
@@ -149,7 +149,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le

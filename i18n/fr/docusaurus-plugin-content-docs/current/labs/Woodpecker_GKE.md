@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Woodpecker CI sur GKE Autopilot dans votr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 Woodpecker CI est un moteur CI/CD léger et natif conteneurs — une alternative
 plus simple et auto-hébergeable à Drone. Les pipelines sont définis dans des fichiers YAML, et
@@ -44,7 +44,7 @@ dans la durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne.
 - Comprendre pourquoi le serveur refuse de démarrer sans forge configurée, et
   enregistrer une véritable application OAuth Gitea/Forgejo pour rendre le déploiement
@@ -55,7 +55,7 @@ dans la durée.
   RBAC et l'activité des pods de pipeline.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et de connexion les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -263,7 +263,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" "$POD" --tail=100 -f
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord GKE Workloads et examinez l'utilisation du CPU et
@@ -353,7 +353,7 @@ de la source dont ce module a été cloné).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -383,4 +383,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le pod regroupé et son autorisation RBAC, mettre à jour la version, comprendre la limite de mise à l'échelle `max=1` |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; observer en direct l'activité des pods de pipeline |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de forge au démarrage, de RBAC, d'exposition et de sondes |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris la base de données Cloud SQL et le secret de l'agent |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris la base de données Cloud SQL et le secret de l'agent |

@@ -266,7 +266,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `support_users` | _(défini)_ | Adresses e-mail des utilisateurs à qui accorder l'accès au projet Google Cloud, aux alertes de supervision et aux notifications (p. ex. ['admin@example.com', 'ops@example.com']). |
+| `support_users` | _(défini)_ | Adresses e-mail des utilisateurs à qui accorder l'accès au projet Google Cloud, aux alertes de surveillance et aux notifications (p. ex. ['admin@example.com', 'ops@example.com']). |
 | `resource_labels` | _(défini)_ | Libellés clé-valeur appliqués à toutes les ressources créées par ce module. Permet d'appliquer des politiques de marquage organisationnelles, telles que centre de coûts, environnement ou équipe propriétaire. (p. ex. `{ env = "prod", team = "engineering" }`) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
@@ -283,7 +283,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -374,7 +374,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -402,7 +402,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les tâches d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour un chargement de données ou des migrations personnalisés. |
+| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les jobs d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour un chargement de données ou des migrations personnalisés. |
 | `cron_jobs` | _(défini)_ | Liste des CronJobs à déployer à côté de Chroma (p. ex. pour des instantanés de collections ou des tâches de maintenance). |
 | `additional_services` | _(défini)_ | Liste de services Kubernetes supplémentaires à déployer à côté de Chroma (p. ex. sidecars, services d'appoint). |
 
@@ -581,7 +581,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `statefulset_name` | Nom du StatefulSet (avec un stockage adossé à un PVC). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
@@ -596,26 +596,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_auth_token` | `true` pour tout déploiement joignable depuis l'extérieur | Critique | Sans jeton, tout appelant pouvant atteindre l'API de Chroma peut lire, écrire ou supprimer chaque collection. |
-| `stateful_pvc_enabled` | `true` pour la production | Élevé | Sans PVC, Chroma stocke ses données dans le système de fichiers éphémère du conteneur. Un redémarrage du pod efface toutes les collections et tous les vecteurs. |
-| `stateful_pvc_mount_path` | `/data` | Critique | Si le chemin de montage ne correspond pas au répertoire de stockage de Chroma, les données sont écrites dans la couche éphémère et perdues sans avertissement au redémarrage. |
-| `stateful_pvc_size` | `20Gi` (dimensionnez généreusement) | Élevé | Un PVC plein fait planter Chroma avec des erreurs de disque saturé. La capacité d'un PVC ne peut pas être réduite après son provisionnement. |
-| `max_instance_count` | `1` | Élevé | Plusieurs pods Chroma sur le même stockage corrompront les collections — Chroma ne dispose d'aucun verrou d'écriture distribué. |
-| `memory_limit` | `4Gi` ou plus pour la production | Élevé | Chroma charge les index HNSW en mémoire. La valeur par défaut `1Gi` ne convient qu'à de très petites collections ; les arrêts pour OOM interrompent les requêtes en cours. |
-| `workload_type` | défini par `stateful_pvc_enabled` | Élevé | Définir explicitement `"Deployment"` en même temps que `stateful_pvc_enabled = true` échoue au moment du plan. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods. |
-| `application_version` | figer un tag précis | Moyen | Utiliser `latest` rend les déploiements non reproductibles. Les formats de données de Chroma peuvent changer d'une version majeure à l'autre. |
-| `iap_oauth_client_id` / `_secret` | à définir avant d'activer IAP | Élevé | Définir `enable_iap = true` sans identifiants OAuth valides bloque tout le trafic. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les services joignables depuis l'extérieur | Élevé | Sans authentification, un point de terminaison Chroma exposé à l'extérieur est entièrement ouvert. |
-| `backup_retention_days` | à augmenter pour la production | Moyen | Trop court pour la reprise après sinistre ; les instantanés réguliers GCS ou PVC constituent la principale voie de restauration. |
-| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne la suppression du pod ; après la remontée en charge, Chroma doit recharger ses index depuis le PVC ou GCS, ce qui allonge le démarrage. |
-| `database_type` / `sql_instance_name` / `application_database_name`\_`user` / `redis_host`\_`port`\_`auth` | laisser la valeur par défaut | Faible | Ces entrées des groupes 15/16 sont transmises à `App_GKE` uniquement pour la parité des conventions ; `Chroma_Common` fixe `database_type = "NONE"` et `main.tf` code en dur `enable_redis = false`, de sorte que les modifier n'a aucun effet. |
-| `container_image_source` / `container_protocol` / `container_build_config` | laisser la valeur par défaut | Faible | Non référencées par ce module — la source de l'image, le build et le protocole sont fixés par `Chroma_Common`. Les modifier n'a aucun effet. |
+| `enable_auth_token` | `true` pour tout déploiement joignable depuis l'extérieur | Critical | Sans jeton, tout appelant pouvant atteindre l'API de Chroma peut lire, écrire ou supprimer chaque collection. |
+| `stateful_pvc_enabled` | `true` pour la production | High | Sans PVC, Chroma stocke ses données dans le système de fichiers éphémère du conteneur. Un redémarrage du pod efface toutes les collections et tous les vecteurs. |
+| `stateful_pvc_mount_path` | `/data` | Critical | Si le chemin de montage ne correspond pas au répertoire de stockage de Chroma, les données sont écrites dans la couche éphémère et perdues sans avertissement au redémarrage. |
+| `stateful_pvc_size` | `20Gi` (dimensionnez généreusement) | High | Un PVC plein fait planter Chroma avec des erreurs de disque saturé. La capacité d'un PVC ne peut pas être réduite après son provisionnement. |
+| `max_instance_count` | `1` | High | Plusieurs pods Chroma sur le même stockage corrompront les collections — Chroma ne dispose d'aucun verrou d'écriture distribué. |
+| `memory_limit` | `4Gi` ou plus pour la production | High | Chroma charge les index HNSW en mémoire. La valeur par défaut `1Gi` ne convient qu'à de très petites collections ; les arrêts pour OOM interrompent les requêtes en cours. |
+| `workload_type` | défini par `stateful_pvc_enabled` | High | Définir explicitement `"Deployment"` en même temps que `stateful_pvc_enabled = true` échoue au moment du plan. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods. |
+| `application_version` | figer un tag précis | Medium | Utiliser `latest` rend les déploiements non reproductibles. Les formats de données de Chroma peuvent changer d'une version majeure à l'autre. |
+| `iap_oauth_client_id` / `_secret` | à définir avant d'activer IAP | High | Définir `enable_iap = true` sans identifiants OAuth valides bloque tout le trafic. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les services joignables depuis l'extérieur | High | Sans authentification, un point de terminaison Chroma exposé à l'extérieur est entièrement ouvert. |
+| `backup_retention_days` | à augmenter pour la production | Medium | Trop court pour la reprise après sinistre ; les instantanés réguliers GCS ou PVC constituent la principale voie de restauration. |
+| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro entraîne la suppression du pod ; après la remontée en charge, Chroma doit recharger ses index depuis le PVC ou GCS, ce qui allonge le démarrage. |
+| `database_type` / `sql_instance_name` / `application_database_name`\_`user` / `redis_host`\_`port`\_`auth` | laisser la valeur par défaut | Low | Ces entrées des groupes 15/16 sont transmises à `App_GKE` uniquement pour la parité des conventions ; `Chroma_Common` fixe `database_type = "NONE"` et `main.tf` code en dur `enable_redis = false`, de sorte que les modifier n'a aucun effet. |
+| `container_image_source` / `container_protocol` / `container_build_config` | laisser la valeur par défaut | Low | Non référencées par ce module — la source de l'image, le build et le protocole sont fixés par `Chroma_Common`. Les modifier n'a aucun effet. |
 
 ---
 

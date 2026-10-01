@@ -54,7 +54,7 @@ déjà documentée pour ClickHouse, Elasticsearch et MongoDB dans ce catalogue.
 `VictoriaMetrics_GKE` exige donc un véritable PersistentVolumeClaim de type bloc
 (`stateful_pvc_enabled = true` par défaut) et n'a pas d'équivalent Cloud Run.
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données SQL, aucun Redis.** VictoriaMetrics gère sa propre
   TSDB intégrée. Aucune instance Cloud SQL n'est créée ; `enable_redis` est codé
@@ -86,7 +86,7 @@ déjà documentée pour ClickHouse, Elasticsearch et MongoDB dans ce catalogue.
   L'`ENTRYPOINT` de l'image personnalisée fixe directement `-storageDataPath`,
   `-httpListenAddr` et `-retentionPeriod` — voir le §4.
 - **Un unique point de terminaison `/health`** sert à la fois la sonde de
-  démarrage et la sonde d'activité — il n'y a pas de distinction séparée entre
+  démarrage et la sonde de vivacité — il n'y a pas de distinction séparée entre
   disponibilité et activité.
 
 ---
@@ -105,9 +105,9 @@ que le pod demande réellement. `max_instance_count = 1` maintient un seul pod e
 fonctionnement — la mise à l'échelle horizontale n'est volontairement pas prise
 en charge pour ce déploiement à nœud unique.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
   de travail VictoriaMetrics pour voir les pods, les événements et l'utilisation
-  des ressources. Kubernetes Engine → Services et Ingress affiche la ClusterIP (ou
+  des ressources. Kubernetes Engine → Services & Ingress affiche la ClusterIP (ou
   l'IP externe si `LoadBalancer` est utilisé).
 - **CLI :**
   ```bash
@@ -127,8 +127,8 @@ de ce catalogue, il n'existe aucun repli GCS FUSE — un véritable
 PersistentVolumeClaim de type bloc est requis. La classe de stockage est
 `standard` (HDD `pd-standard`) par défaut.
 
-- **Console :** Kubernetes Engine → Stockage → PersistentVolumeClaims.
-  Compute Engine → Disques pour voir le Persistent Disk sous-jacent.
+- **Console :** Kubernetes Engine → Storage → PersistentVolumeClaims.
+  Compute Engine → Disks pour voir le Persistent Disk sous-jacent.
 - **CLI :**
   ```bash
   # PVC status
@@ -159,8 +159,7 @@ Prometheus `remote_write` s'exécutant dans le même cluster. Passez `service_ty
 d'interroger les données depuis l'extérieur du cluster (et ajoutez d'abord vos
 propres contrôles d'accès — VictoriaMetrics lui-même n'en applique aucun).
 
-- **Console :** Kubernetes Engine → Services et Ingress ; Réseau VPC → Adresses
-  IP (lorsqu'une IP statique est réservée).
+- **Console :** Kubernetes Engine → Services & Ingress ; VPC network → IP addresses (lorsqu'une IP statique est réservée).
 - **CLI :**
   ```bash
   kubectl get svc -n "$NAMESPACE"
@@ -178,8 +177,7 @@ métriques GKE sont envoyées vers Cloud Monitoring. Des tests de disponibilité
 n'ont de sens qu'une fois le service accessible depuis l'endroit d'où part le
 test.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -190,9 +188,9 @@ test.
 
 ## 3. Comportement de l'application VictoriaMetrics {#3-victoriametrics-application-behaviour}
 
-- **Aucun amorçage de base de données, aucune tâche d'initialisation.**
+- **Aucun amorçage de base de données, aucun job d'initialisation.**
   VictoriaMetrics gère sa propre TSDB intégrée. C'est un binaire autonome sans
-  notion de schéma ni de migration — aucune tâche d'initialisation n'est injectée
+  notion de schéma ni de migration — aucun job d'initialisation n'est injecté
   par défaut, et aucune n'est nécessaire. La charge de travail commence à servir
   dès que son répertoire de données est monté.
 - **Point de terminaison de santé.** Un unique point de terminaison `/health` non
@@ -333,11 +331,11 @@ standard.
 | `uptime_check_config` | `disabled` | Test de disponibilité Cloud Monitoring facultatif sur `/health`. Utile uniquement si le service est accessible depuis l'endroit d'où part le test. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | VictoriaMetrics ne nécessite aucune tâche d'initialisation par défaut — il est autonome, sans notion de schéma ni de migration. |
+| `initialization_jobs` | `[]` | VictoriaMetrics ne nécessite aucun job d'initialisation par défaut — il est autonome, sans notion de schéma ni de migration. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour la maintenance périodique, par exemple un export scripté d'instantané `vmbackup`. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de VictoriaMetrics — par exemple un sidecar `vmagent` de collecte et de transfert. |
 
@@ -369,7 +367,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Planification cron des sauvegardes automatiques (UTC). Aucun mécanisme de sauvegarde par défaut n'est câblé pour VictoriaMetrics au-delà du point d'accroche générique de planification du Foundation — utilisez `cron_jobs` avec `vmbackup` pour des sauvegardes par instantané tenant compte de l'application. |
+| `backup_schedule` | `0 2 * * *` | Planification cron des sauvegardes automatiques (UTC). Aucun mécanisme de sauvegarde par défaut n'est câblé pour VictoriaMetrics au-delà du point d'accroche générique de planification du socle — utilisez `cron_jobs` avec `vmbackup` pour des sauvegardes par instantané tenant compte de l'application. |
 | `backup_retention_days` | `7` | Durée de rétention. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
@@ -397,7 +395,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — consultez
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
 | `enable_cdn` | `false` | Activer Cloud CDN via GCPBackendPolicy. Sans intérêt pour une API de métriques. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -453,12 +451,12 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 7. Pièges de configuration et valeurs par défaut raisonnables {#7-configuration-pitfalls--sensible-defaults}
+## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` (par défaut, requis) | Critical | Sans PVC, il n'existe aucun mode de stockage pris en charge pour ce module — les fichiers de données de VictoriaMetrics, mappés en mémoire, ne sont pas compatibles avec GCS FUSE, même comme repli. Ne le désactivez pas. |
 | `stateful_pvc_mount_path` | `/victoria-metrics-data` (par défaut) | Critical | Doit correspondre au flag `-storageDataPath` intégré à l'image personnalisée. En cas de discordance, le PVC est monté à un endroit où le binaire n'écrit jamais, et toutes les données résident dans la couche éphémère du pod — perdues à chaque redémarrage. |
@@ -479,7 +477,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images —
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à
 VictoriaMetrics est décrite dans **[VictoriaMetrics_Common](VictoriaMetrics_Common.md)**.
 

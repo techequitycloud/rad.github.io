@@ -39,7 +39,7 @@ services Google Cloud :
 | Jeton d'authentification | Secret Manager | Jeton d'API facultatif — `CHROMA_SERVER_AUTHN_CREDENTIALS` injecté à l'exécution |
 | Entrée | URL interne Cloud Run | `ingress_settings = "internal"` par défaut ; équilibreur de charge HTTPS + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Ni base de données SQL ni Redis.** Chroma gère son propre stockage intégré.
   Aucune instance Cloud SQL n'est créée et aucune connexion Redis n'est configurée.
@@ -119,7 +119,7 @@ Chroma est généré et stocké sous forme de secret Secret Manager. Il est inje
 dans le service à l'exécution sous la forme `CHROMA_SERVER_AUTHN_CREDENTIALS` ; la
 valeur en clair n'apparaît jamais dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -137,7 +137,7 @@ Par défaut, le service n'est accessible qu'au sein du VPC
 domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres
 de sortie déterminent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -154,7 +154,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 sont envoyées à Cloud Monitoring, avec un test de disponibilité facultatif sur
 `/api/v2/heartbeat` et des règles d'alerte.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -165,8 +165,8 @@ sont envoyées à Cloud Monitoring, avec un test de disponibilité facultatif su
 ## 3. Comportement de l'application Chroma {#3-chroma-application-behaviour}
 
 - **Aucun amorçage de base de données.** Chroma gère son propre stockage intégré
-  et ne nécessite aucune tâche d'initialisation de base de données. Aucune tâche
-  `db-init` n'est injectée. Si vous fournissez des `initialization_jobs`
+  et ne nécessite aucun job d'initialisation de base de données. Aucune tâche
+  `db-init` n'est injecté. Si vous fournissez des `initialization_jobs`
   personnalisées, elles s'exécutent en tant que Cloud Run Jobs avant la mise à
   jour du service.
 - **Chargement des index au démarrage à froid.** Lorsqu'une nouvelle instance
@@ -252,7 +252,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `cpu_always_allocated` | `false` | Facturation à la requête par défaut ; définissez `true` pour conserver le CPU alloué entre les requêtes et éviter les dépassements de délai des opérations d'index en arrière-plan. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. Augmentez-la pour de grandes recherches par similarité par lots. |
 | `enable_cloudsql_volume` | `false` | Sans objet — Chroma n'a pas de base de données SQL. |
-| `enable_image_mirroring` | `true` | Duplique l'image Chroma dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Chroma dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `traffic_split` | `[]` | Répartition du trafic canary/blue-green entre révisions. |
 | `max_revisions_to_retain` | `7` | Nombre maximal de révisions Cloud Run à conserver. |
 
@@ -313,7 +313,7 @@ aucun effet. Voir [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne les buckets GCS. Le bucket `<prefix>-data` est provisionné automatiquement par Chroma_Common. |
 | `storage_buckets` / `gcs_volumes` | _(définies)_ | Buckets / montages GCS FUSE supplémentaires. |
-| `enable_nfs` | `false` | Monte un partage NFS Cloud Filestore (nécessite gen2). Chroma utilise GCS pour son stockage principal ; à n'activer que pour des tâches d'initialisation personnalisées. |
+| `enable_nfs` | `false` | Monte un partage NFS Cloud Filestore (nécessite gen2). Chroma utilise GCS pour son stockage principal ; à n'activer que pour des jobs d'initialisation personnalisés. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage NFS dans le conteneur. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -326,11 +326,11 @@ ignorées : `database_type` (fixée à
 `rotation_propagation_delay_sec`, `db_host_env_var_name`, `db_user_env_var_name`,
 `db_name_env_var_name`, `db_port_env_var_name`, `service_url_env_var_name`.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Chroma ne nécessite aucune tâche d'initialisation par défaut. Fournissez des tâches uniquement pour un chargement de données personnalisé. |
+| `initialization_jobs` | `[]` | Chroma ne nécessite aucun job d'initialisation par défaut. Fournissez des tâches uniquement pour un chargement de données personnalisé. |
 | `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler (par exemple, instantanés des collections). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -338,11 +338,11 @@ ignorées : `database_type` (fixée à
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/api/v2/heartbeat` | Sonde de démarrage HTTP — Chroma renvoie 200 une fois entièrement initialisé. Le chemin de la sonde est fixe. |
-| `liveness_probe` / `health_check_config` | `/api/v2/heartbeat` | Sonde d'activité. |
+| `liveness_probe` / `health_check_config` | `/api/v2/heartbeat` | Sonde de vivacité. |
 | `uptime_check_config` | `enabled=false, path=/api/v2/heartbeat` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques. |
 
-### Groupe 23 — VPC Service Controls et journaux d'audit {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -377,32 +377,32 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_auth_token` | `true` pour tout déploiement accessible de l'extérieur | Critique | Sans jeton, tout appelant capable d'atteindre l'API Chroma peut lire, écrire ou supprimer toutes les collections. |
-| `ingress_settings` | `internal` (par défaut) | Élevé | Passer à `"all"` sans `enable_auth_token = true` expose une base de données vectorielle non authentifiée à l'internet public (bloqué au moment du plan). |
-| `max_instance_count` | `1` | Élevé | Plusieurs instances sur le même chemin GCS FUSE corrompront les collections — Chroma ne dispose d'aucun verrou d'écriture distribué. |
-| `execution_environment` | `gen2` | Élevé | GCS FUSE nécessite Gen2. Un déploiement avec `gen1` alors que des volumes GCS sont configurés échoue. |
-| `memory_limit` | `4Gi` ou plus pour la production | Élevé | Chroma charge les index HNSW en mémoire. La valeur par défaut `1Gi` ne prend en charge que de très petites collections ; les arrêts pour dépassement de mémoire (OOM) interrompent les requêtes en cours. |
-| `cpu_always_allocated` | `true` | Moyen | Définir `false` entraîne une limitation du CPU entre les requêtes, ce qui ralentit les opérations d'index et peut provoquer des dépassements de délai des contrôles de santé. |
-| `application_version` | épingler une étiquette précise | Moyen | Utiliser `latest` rend les déploiements non reproductibles. Les formats de données de Chroma peuvent changer d'une version majeure à l'autre. |
-| `timeout_seconds` | augmenter pour les grandes collections | Moyen | Les grandes recherches par similarité sur des millions de vecteurs peuvent prendre plusieurs secondes ; des erreurs 504 sont renvoyées aux clients si le délai est trop court. |
-| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro provoque des démarrages à froid pendant lesquels les index HNSW doivent être rechargés depuis GCS, ce qui ajoute de la latence à la première requête après une période d'inactivité. |
-| `enable_iap` / `enable_cloud_armor` | activer pour les services accessibles de l'extérieur | Élevé | Sans authentification, un point de terminaison Chroma exposé à l'extérieur est entièrement ouvert. |
-| `backup_retention_days` | augmenter pour la production | Moyen | Les instantanés réguliers du bucket GCS constituent le principal moyen de récupération ; une rétention trop courte limite les options de récupération. |
-| `enable_cloudsql_volume` | `false` | Faible | Chroma n'a pas de base de données SQL ; l'activer injecte un sidecar Cloud SQL Auth Proxy qui consomme inutilement des ressources. |
+| `enable_auth_token` | `true` pour tout déploiement accessible de l'extérieur | Critical | Sans jeton, tout appelant capable d'atteindre l'API Chroma peut lire, écrire ou supprimer toutes les collections. |
+| `ingress_settings` | `internal` (par défaut) | High | Passer à `"all"` sans `enable_auth_token = true` expose une base de données vectorielle non authentifiée à l'internet public (bloqué au moment du plan). |
+| `max_instance_count` | `1` | High | Plusieurs instances sur le même chemin GCS FUSE corrompront les collections — Chroma ne dispose d'aucun verrou d'écriture distribué. |
+| `execution_environment` | `gen2` | High | GCS FUSE nécessite Gen2. Un déploiement avec `gen1` alors que des volumes GCS sont configurés échoue. |
+| `memory_limit` | `4Gi` ou plus pour la production | High | Chroma charge les index HNSW en mémoire. La valeur par défaut `1Gi` ne prend en charge que de très petites collections ; les arrêts pour dépassement de mémoire (OOM) interrompent les requêtes en cours. |
+| `cpu_always_allocated` | `true` | Medium | Définir `false` entraîne une limitation du CPU entre les requêtes, ce qui ralentit les opérations d'index et peut provoquer des dépassements de délai des contrôles de santé. |
+| `application_version` | épingler une étiquette précise | Medium | Utiliser `latest` rend les déploiements non reproductibles. Les formats de données de Chroma peuvent changer d'une version majeure à l'autre. |
+| `timeout_seconds` | augmenter pour les grandes collections | Medium | Les grandes recherches par similarité sur des millions de vecteurs peuvent prendre plusieurs secondes ; des erreurs 504 sont renvoyées aux clients si le délai est trop court. |
+| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro provoque des démarrages à froid pendant lesquels les index HNSW doivent être rechargés depuis GCS, ce qui ajoute de la latence à la première requête après une période d'inactivité. |
+| `enable_iap` / `enable_cloud_armor` | activer pour les services accessibles de l'extérieur | High | Sans authentification, un point de terminaison Chroma exposé à l'extérieur est entièrement ouvert. |
+| `backup_retention_days` | augmenter pour la production | Medium | Les instantanés réguliers du bucket GCS constituent le principal moyen de récupération ; une rétention trop courte limite les options de récupération. |
+| `enable_cloudsql_volume` | `false` | Low | Chroma n'a pas de base de données SQL ; l'activer injecte un sidecar Cloud SQL Auth Proxy qui consomme inutilement des ressources. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Chroma, partagée avec la variante GKE, est décrite dans
 **[Chroma_Common](Chroma_Common.md)**.
 

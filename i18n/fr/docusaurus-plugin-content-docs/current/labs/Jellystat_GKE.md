@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Jellystat sur GKE Autopilot dans votre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 75 minutes
+**Durée estimée :** 45–75 minutes
 
 Jellystat est un tableau de bord open source de statistiques et d'analyse pour les serveurs
 multimédias Jellyfin. Ce lab vous fait parcourir tout le cycle de vie opérationnel
@@ -28,7 +28,7 @@ le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -55,7 +55,7 @@ le temps.
   déployez-en un d'abord avec le module **Jellyfin (GKE)** ou **Jellyfin (Cloud Run)**
   si vous n'en avez pas déjà un.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -174,7 +174,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU

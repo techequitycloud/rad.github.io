@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Matomo sur GKE Autopilot dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Matomo est la principale plateforme open source d'analyse web — une alternative
 auto-hébergée à Google Analytics, axée sur la confidentialité, sans échantillonnage des données et avec la
@@ -28,7 +28,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et terminer l'installateur web de premier démarrage de Matomo.
@@ -73,10 +73,10 @@ export REGION="us-central1"           # the region you deploy into
    partage NFS Filestore qui conserve la racine documentaire de Matomo (`/var/www/html`), un
    bucket GCS `data` dédié, recopie l'image officielle `matomo:5-apache` dans
    Artifact Registry (pas d'étape Cloud Build — il s'agit d'un module **préconstruit**), et exécute
-   une tâche ponctuelle `db-init` qui crée la base de données vide et l'utilisateur. Les premiers déploiements
+   un job ponctuel `db-init` qui crée la base de données vide et l'utilisateur. Les premiers déploiements
    prennent environ **20 à 35 minutes** (la création de Cloud SQL et de Filestore en représente l'essentiel).
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -114,7 +114,7 @@ export REGION="us-central1"           # the region you deploy into
 3. Ouvrez `http://${EXTERNAL_IP}` dans un navigateur. Sur un nouveau déploiement, Matomo présente son
    **installateur web** : l'écran de connexion à la base de données est prérempli à partir des
    variables d'environnement `MATOMO_DATABASE_HOST`/`USERNAME`/`DBNAME`/`PASSWORD`
-   injectées (la tâche `db-init` a déjà créé la base de données vide et l'utilisateur, et
+   injectées (le job `db-init` a déjà créé la base de données vide et l'utilisateur, et
    la plateforme fait correspondre les identifiants Cloud SQL propres au déploiement à ces
    noms natifs de Matomo — le même schéma « remplacer les variables d'environnement génériques de base de données pour suivre la
    convention propre à l'application » utilisé ailleurs sur cette plateforme, par exemple la correspondance de style
@@ -161,9 +161,9 @@ export REGION="us-central1"           # the region you deploy into
    (utilisez un tag de **variante Apache**, par exemple `5.11-apache`, `latest`) et en l'appliquant via
    **Update** ; l'image recopiée est mise à jour et un déploiement `Recreate` remplace le pod.
    Matomo exécute ses propres migrations de schéma depuis la racine documentaire persistante — il n'y a
-   pas de tâche de migration sans interface.
+   pas de job de migration sans interface.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -194,7 +194,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -243,13 +243,13 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
 - **Erreurs de connexion à la base de données :** Matomo atteint Cloud SQL via le **sidecar Cloud SQL
   Auth Proxy sur `127.0.0.1:3306`** (`enable_cloudsql_volume = true` est
   requis sur GKE). Confirmez que l'instance MySQL 8.0 est `RUNNABLE`, que le secret du mot de passe
-  de la base de données a été matérialisé dans le namespace et que la tâche `db-init` s'est terminée — elle
-  vérifie les identifiants de l'utilisateur de l'application ; une tâche `db-init` au vert écarte donc la plupart des
+  de la base de données a été matérialisé dans l'espace de noms et que le job `db-init` s'est terminé — il
+  vérifie les identifiants de l'utilisateur de l'application ; un job `db-init` au vert écarte donc la plupart des
   problèmes d'authentification.
   ```bash
   kubectl exec -n "$NS" deploy/<service-name> -- env | grep MATOMO_DATABASE
   ```
-- **Échec de la tâche `db-init` :** inspectez la tâche et les journaux de son pod :
+- **Échec du job `db-init` :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<db-init-job-name>
@@ -286,10 +286,10 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL, le secret Secret Manager, le bucket de données GCS,
+et l'espace de noms, la base de données Cloud SQL, le secret Secret Manager, le bucket de données GCS,
 le partage NFS Filestore et les images Artifact Registry. Les ressources appartenant à
 **Services_GCP** (le VPC, le cluster GKE, le Cloud SQL partagé, le registre) sont gérées
 séparément et ne sont pas supprimées ici.
@@ -304,5 +304,5 @@ séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification de santé réussit ; terminer l'installateur web de Matomo et vérifier le suivi |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage, accéder à la base de données, remarque sur la tâche d'archivage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de NFS, d'image, de stratégie de déploiement et de Redis |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de NFS, d'image, de stratégie de déploiement et de Redis |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

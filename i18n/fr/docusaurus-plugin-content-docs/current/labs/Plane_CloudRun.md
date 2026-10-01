@@ -15,11 +15,11 @@ description: "Lab pratique : déployer Plane sur Cloud Run dans votre propre pro
 
 Plane est une plateforme open source de gestion de projet — une alternative à Jira / Linear pour les tickets, les cycles, les modules et les feuilles de route. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Plane on Cloud Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Plane. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Plane_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Plane. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Plane_CloudRun) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris le sidecar RabbitMQ et les migrations du premier démarrage.
@@ -42,7 +42,7 @@ Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -64,7 +64,7 @@ export REGION="us-central1"          # the region you deploy into
    une base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager
    (dont les `SECRET_KEY` et `LIVE_SERVER_SECRET_KEY` générés automatiquement), Redis sur
    l'hôte NFS partagé, un bucket GCS dédié `storage`, construit l'image de conteneur
-   personnalisée via Cloud Build et exécute une tâche ponctuelle `db-init`. Les premiers déploiements prennent
+   personnalisée via Cloud Build et exécute un job ponctuel `db-init`. Les premiers déploiements prennent
    environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Une fois terminé, repérez les ressources avec des filtres indépendants des noms (afin que les
@@ -81,7 +81,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est en bonne santé. Le chemin de santé de Plane est `/health`, servi par le
    proxy Caddy interne une fois que le migrator du premier démarrage a terminé (prévoyez plusieurs
@@ -137,7 +137,7 @@ export REGION="us-central1"          # the region you deploy into
    en amont ; utilisez donc `stable` ou un vrai tag de version) et une nouvelle révision est déployée.
    Le migrator applique automatiquement les modifications de schéma au démarrage.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~plane"
@@ -166,7 +166,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux (Logs Explorer) :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
@@ -191,7 +191,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL (PostgreSQL 15) est
-  `RUNNABLE`, que le secret du mot de passe de la base existe, que la tâche `db-init` s'est terminée et que le
+  `RUNNABLE`, que le secret du mot de passe de la base existe, que le job `db-init` s'est terminé et que le
   point d'entrée a journalisé `Composed DATABASE_URL ... sslmode=require`.
 - **Erreurs Celery / du broker (le worker ne peut pas se connecter) :** Plane exige RabbitMQ ; sur
   Cloud Run, il s'agit du sidecar `mq` dans le pod, sur `127.0.0.1:5672`. Recherchez dans les journaux
@@ -201,7 +201,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   compatible S3 n'est pas raccordé — Plane a besoin de `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` (clés HMAC
   GCS ou S3 externe) via `environment_variables`. C'est propre à Plane et
   documenté dans la section Pitfalls du Guide de configuration.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -232,8 +232,8 @@ gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run (conteneur AIO + sidecar RabbitMQ), Cloud SQL (PostgreSQL 15), Redis, un bucket GCS, les secrets, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | `/health` répond ; URL de connexion composées ; administrateur de l'instance créé via `/god-mode/` |
+| 2 — Accéder et vérifier | Manuel | `/health` répond ; URL de connexion composées ; administrateur de l'instance créé via `/god-mode/` |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de broker, d'envoi de fichiers, de tâche d'initialisation, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de broker, d'envoi de fichiers, de job d'initialisation, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

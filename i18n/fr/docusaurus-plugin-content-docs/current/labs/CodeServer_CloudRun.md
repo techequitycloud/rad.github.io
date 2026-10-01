@@ -21,7 +21,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à l'éditeur via son entrée publique par défaut (`all`), récupérer le mot de passe généré et vérifier le service.
 - Effectuer les opérations du jour 2 — inspecter les révisions, gérer l'espace de travail adossé à GCS et mettre à jour la version.
 - Comprendre pourquoi le module est limité à une seule instance et comment modifier la mise à l'échelle en toute sécurité.
@@ -42,7 +42,7 @@ Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -143,7 +143,7 @@ export REGION="us-central1"          # the region you deploy into
    sessions et risquerait des écritures concurrentes dans `/home/coder`. Les modifications de ressources
    (`cpu_limit`, `memory_limit` pour les serveurs de langage gourmands) passent par **Update** sur
    la page de détails du déploiement, et non par des modifications manuelles avec `gcloud` (une modification manuelle serait
-   annulée lors de l'application suivante).
+   annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur
    la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
@@ -167,7 +167,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -196,7 +196,7 @@ probablement. Ce sont des diagnostics au niveau de la plateforme, qui ne changen
   (tâche 2) avant de lire les journaux.
 - **La révision ne devient jamais Ready :** vérifiez les chemins des sondes. Les sondes doivent cibler
   `/healthz`, non authentifié ; les faire pointer vers `/health` alors qu'un mot de passe est défini
-  renvoie 401 et la révision échoue au contrôle de disponibilité même si l'application a bien démarré :
+  renvoie 401 et la révision échoue au test de disponibilité même si l'application a bien démarré :
   ```bash
   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100

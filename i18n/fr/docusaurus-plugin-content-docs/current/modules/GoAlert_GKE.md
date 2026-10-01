@@ -14,7 +14,7 @@ d'astreintes et d'escalade des alertes d'incident, créée à l'origine par Targ
 exploitée en production à grande échelle. Elle permet aux équipes de définir des
 politiques d'escalade, des rotations et des plannings d'astreinte, et d'envoyer des
 notifications sortantes par e-mail, webhook ou (en option) SMS/appel vocal Twilio. Ce
-module déploie GoAlert sur **GKE Autopilot** au-dessus de la fondation
+module déploie GoAlert sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
@@ -23,7 +23,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -35,8 +35,8 @@ Autopilot. Le déploiement assemble un ensemble ciblé de services Google Cloud 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod du binaire Go, 1 vCPU / 512 MiB par défaut, `min_instance_count = 1`, `max_instance_count = 1` |
-| Base de données | Cloud SQL pour PostgreSQL (`POSTGRES_17`) | Obligatoire — GoAlert ne prend en charge ni MySQL ni d'autres moteurs ; l'extension `pgcrypto` est installée automatiquement |
-| Secrets | Secret Manager | Mot de passe administrateur et clé de chiffrement des données générés automatiquement ; mot de passe de la base de données géré par la fondation |
+| Base de données | Cloud SQL for PostgreSQL (`POSTGRES_17`) | Obligatoire — GoAlert ne prend en charge ni MySQL ni d'autres moteurs ; l'extension `pgcrypto` est installée automatiquement |
+| Secrets | Secret Manager | Mot de passe administrateur et clé de chiffrement des données générés automatiquement ; mot de passe de la base de données géré par le socle |
 | Ingress | Cloud Load Balancing | Service LoadBalancer externe par défaut, domaine personnalisé + certificat géré en option |
 
 Ce tableau ne comporte **aucune ligne de stockage d'objets** — la sortie
@@ -45,7 +45,7 @@ fonctionnalité de téléversement de fichiers ou de pièces jointes ; tout l'é
 l'application (politiques d'escalade, plannings, alertes, historique des notifications,
 utilisateurs) réside dans PostgreSQL.
 
-**Valeurs par défaut recommandées à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** `database_type = "POSTGRES_17"` est fixé par
   `GoAlert_Common` ; choisir un autre moteur empêche le démarrage.
@@ -71,8 +71,8 @@ utilisateurs) réside dans PostgreSQL.
   GoAlert n'accepte qu'une seule variable d'environnement de chaîne de connexion Postgres,
   et le `DB_PASSWORD` issu de Secret Manager à l'exécution ne peut être encodé pour une URL
   qu'au démarrage effectif du conteneur — `entrypoint.sh` (ainsi que chaque script de job
-  d'initialisation) la construit à partir des valeurs `DB_*` distinctes injectées par la
-  fondation, selon que l'hôte résolu est l'interface de bouclage du cloud-sql-proxy
+  d'initialisation) la construit à partir des valeurs `DB_*` distinctes injectées par le
+  socle, selon que l'hôte résolu est l'interface de bouclage du cloud-sql-proxy
   (`127.0.0.1`, sans TLS) ou un véritable socket/une véritable IP.
 - **`public_url` n'a pas de valeur par défaut calculée automatiquement sur GKE.**
   Contrairement à `GoAlert_CloudRun`, ce module transmet `public_url = var.public_url`
@@ -87,7 +87,7 @@ utilisateurs) réside dans PostgreSQL.
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail GoAlert {#a-gke-autopilot--the-goalert-workload}
@@ -107,7 +107,7 @@ GoAlert s'exécute sous la forme d'un unique pod toujours actif sur Autopilot
 Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot et le type de charge de
 travail (Deployment ou StatefulSet) sont gérés.
 
-### B. Cloud SQL pour PostgreSQL {#b-cloud-sql-for-postgresql}
+### B. Cloud SQL for PostgreSQL {#b-cloud-sql-for-postgresql}
 
 GoAlert stocke toutes les données de l'application — politiques d'escalade, plannings,
 rotations, alertes, historique des notifications et utilisateurs — dans une instance gérée
@@ -135,23 +135,23 @@ Deux secrets sont générés automatiquement par `GoAlert_Common` et stockés da
 Manager : le **mot de passe administrateur** (consommé par le job d'initialisation
 `admin-bootstrap`) et une **clé de chiffrement des données** (recommandée par la
 documentation amont de GoAlert). Le mot de passe de la base de données est géré séparément
-par la fondation.
+par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~goalert"
   gcloud secrets versions access latest --secret=<admin-password-secret-id> --project "$PROJECT"
   ```
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google
 peut être activé, et une IP statique peut être réservée afin que l'adresse survive aux
 redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc -n "$NAMESPACE"
@@ -232,14 +232,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. Utilisez une valeur distincte (par ex. `gke`) de celle de tout `GoAlert_CloudRun` déployé en parallèle (`cr`) pour éviter une collision de noms. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de monitoring. |
@@ -247,7 +247,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application et de la base de données {#group-3--application--database-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `goalert` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `GoAlert` | Nom lisible affiché dans la console. |
@@ -256,9 +256,9 @@ leurs valeurs par défaut standard.
 | `admin_email` | `admin@techequity.cloud` | Adresse e-mail du compte administrateur initial. |
 | `public_url` | `""` | **Aucune valeur par défaut calculée automatiquement sur GKE.** Définissez-la explicitement dès que l'IP du LoadBalancer externe ou le domaine personnalisé est connu. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | Requêtes et limites de CPU/mémoire. |
@@ -270,32 +270,32 @@ leurs valeurs par défaut standard.
 
 ### Groupe 9 — Configuration du backend GKE {#group-9--gke-backend-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `workload_type` | `null` (résolu en `Deployment`) | `"Deployment"` ou `"StatefulSet"`. |
 | `session_affinity` | `ClientIP` | Affinité de session du Service Kubernetes. |
-| `namespace_name` | `""` (généré automatiquement) | Namespace Kubernetes. |
+| `namespace_name` | `""` (généré automatiquement) | Espace de noms Kubernetes. |
 
 ### Groupe 16/17 — Configuration de la base de données {#group-1617--database-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_17` | Moteur Cloud SQL. GoAlert nécessite PostgreSQL. |
 | `application_database_name` | `admin` | Nom de la base de données PostgreSQL — voir la remarque sur l'incohérence de nommage dans la Vue d'ensemble. |
 | `application_database_user` | `admin` | Utilisateur applicatif PostgreSQL. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 
-### Groupe 11/12 — Automatisation de la charge de travail {#group-1112--workload-automation}
+### Groupe 11/12 — Automatisation des charges de travail {#group-1112--workload-automation}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour la chaîne par défaut de 3 jobs de `GoAlert_Common` (`db-init` → `db-migrate` → `admin-bootstrap`). |
 | `cron_jobs` | `[]` | GoAlert ne comporte par défaut aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 22 — Observabilité et santé {#group-22--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | TCP, délai de 30s, 30 tentatives | Absorbe la latence des migrations au premier démarrage (`db-migrate`). |
 | `health_check_config` | TCP, délai de 30s, 3 tentatives | Sonde de vivacité Kubernetes. |
@@ -303,20 +303,20 @@ leurs valeurs par défaut standard.
 
 ### Groupe 15 — Redis {#group-15--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Non requis par GoAlert ; présent pour la compatibilité avec la plateforme. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés. |
 | `reserve_static_ip` | `true` | Réserve une IP statique globale stable pour l'équilibreur de charge — recommandé afin que `public_url` n'ait pas à changer après chaque redéploiement. |
 
 Toutes les autres entrées (métadonnées du module, variables d'environnement et secrets,
 CI/CD et intégration GitHub, SQL personnalisé, stockage et système de fichiers, IAP et
-Cloud Armor, configuration StatefulSet, VPC Service Controls, politiques de fiabilité)
+Cloud Armor, configuration StatefulSet, VPC Service Controls, règles de fiabilité)
 sont héritées d'`App_GKE` avec leur comportement standard — consultez
 [App_GKE](App_GKE.md) pour la liste complète, organisée par groupe.
 
@@ -330,7 +330,7 @@ les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` / `service_external_ip` | ClusterIP interne au cluster / IP externe du LoadBalancer. |
 | `service_url` | URL pour accéder à GoAlert. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
@@ -340,37 +340,37 @@ les ressources en cours d'exécution.
 | `storage_buckets` | Toujours `[]` — GoAlert ne provisionne aucun bucket de stockage. |
 | `container_image` | Image déployée. |
 | `initialization_jobs` | Noms des jobs d'initialisation créés (`db-init`, `db-migrate`, `admin-bootstrap`). |
-| `kubernetes_ready` | Indique si le point de terminaison du cluster est disponible et si toutes les ressources de la charge de travail sont déployées. `false` lors de la première application d'un nouveau cluster inline — une nouvelle exécution termine le déploiement. |
+| `kubernetes_ready` | Indique si le point de terminaison du cluster est disponible et si toutes les ressources de la charge de travail sont déployées. `false` lors du premier apply d'un nouveau cluster inline — une nouvelle exécution termine le déploiement. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par
-> le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs et leurs
+> le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
 > combinaisons au moment du plan. Une configuration invalide fait échouer le **plan**
 > avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_17` | Critique | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
-| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critique | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification des pods, seulement l'attente de Terraform — la garantie d'ordre provient entièrement de `depends_on_jobs`. |
-| `public_url` | À définir explicitement dès que l'IP du LoadBalancer ou le domaine est connu | Élevé | Ce module ne calcule **pas** automatiquement d'URL de service (contrairement à la variante Cloud Run) — une `public_url` non définie se rabat sur la valeur propre à GoAlert, `http://localhost:8081`, ce qui casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants. |
-| `min_instance_count` | `1` | Élevé | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro réplica, les escalades d'alertes réelles sont totalement manquées, sans aucun signal. |
-| `application_database_name` / `application_database_user` | Vérifiez les valeurs réelles (`admin`/`admin` par défaut, et non `goalert`) | Moyen | Chercher dans Cloud SQL une base de données littéralement nommée `goalert` ne donnera rien avec les valeurs par défaut de cette variante. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
-| `reserve_static_ip` | `true` | Moyen | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute `public_url` que vous avez configurée. |
-| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Moyen | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
-| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Moyen | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only`. |
+| `database_type` | `POSTGRES_17` | Critical | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
+| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critical | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification des pods, seulement l'attente de Terraform — la garantie d'ordre provient entièrement de `depends_on_jobs`. |
+| `public_url` | À définir explicitement dès que l'IP du LoadBalancer ou le domaine est connu | High | Ce module ne calcule **pas** automatiquement d'URL de service (contrairement à la variante Cloud Run) — une `public_url` non définie se rabat sur la valeur propre à GoAlert, `http://localhost:8081`, ce qui casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants. |
+| `min_instance_count` | `1` | High | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro réplica, les escalades d'alertes réelles sont totalement manquées, sans aucun signal. |
+| `application_database_name` / `application_database_user` | Vérifiez les valeurs réelles (`admin`/`admin` par défaut, et non `goalert`) | Medium | Chercher dans Cloud SQL une base de données littéralement nommée `goalert` ne donnera rien avec les valeurs par défaut de cette variante. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
+| `reserve_static_ip` | `true` | Medium | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute `public_url` que vous avez configurée. |
+| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Medium | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
+| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Medium | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only`. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — Workload Identity,
+Pour le comportement du socle évoqué tout au long de ce guide — Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à GoAlert, partagée avec la variante Cloud Run, est

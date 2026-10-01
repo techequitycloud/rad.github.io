@@ -39,7 +39,7 @@ ni workers en arrière-plan :
 | Secrets | Secret Manager | Uniquement le mot de passe de la base de données (géré par le socle) ; Memos lui-même n'a pas de secret applicatif |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le moteur standardisé.** `Memos_Common` impose
   `database_type = "POSTGRES_15"`. Memos prend aussi en charge MySQL et SQLite en
@@ -69,7 +69,7 @@ ni workers en arrière-plan :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de service et de
-ressources figurent dans les [Outputs](#5-outputs) (sorties) du déploiement.
+ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Memos {#a-cloud-run--the-memos-service}
 
@@ -93,7 +93,7 @@ l'environnement d'exécution et la répartition du trafic.
 Memos stocke toutes les données applicatives (notes, tags, utilisateurs, métadonnées des ressources) dans une
 instance gérée Cloud SQL for PostgreSQL 15. Le service se connecte de façon privée
 via le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune adresse IP publique n'est exposée.
-Lors du premier déploiement, une tâche d'initialisation crée la base de données et l'utilisateur applicatifs.
+Lors du premier déploiement, un job d'initialisation crée la base de données et l'utilisateur applicatifs.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -104,7 +104,7 @@ Lors du premier déploiement, une tâche d'initialisation crée la base de donn�
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les
-[Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le
+[Sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le
 modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Secret Manager {#c-secret-manager}
@@ -151,8 +151,8 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 
 ## 3. Comportement de l'application Memos {#3-memos-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche d'initialisation exécute
-  `create-db-and-user.sh` à l'aide de `postgres:15-alpine`. Elle se connecte via le Cloud
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute
+  `create-db-and-user.sh` à l'aide de `postgres:15-alpine`. Il se connecte via le Cloud
   SQL Auth Proxy et crée de manière idempotente le rôle et la base de données applicatifs. La
   tâche peut être réexécutée sans risque.
 - **Migrations de schéma au démarrage.** Memos applique sa propre configuration de schéma interne par
@@ -186,14 +186,14 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails disposant d'un accès au projet et recevant les alertes de surveillance. |
@@ -201,7 +201,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `memos` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Memos` | Nom lisible affiché dans la console. |
@@ -210,7 +210,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour ne provisionner que l'infrastructure. |
 | `container_image_source` | `custom` | Construit l'image d'encapsulation avec le point d'entrée qui calcule le DSN. `"prebuilt"` déploie directement l'image officielle mais impose alors de raccorder manuellement `MEMOS_DRIVER`/`MEMOS_DSN` via `environment_variables`. |
@@ -228,7 +228,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Entrée publique ; Memos n'a pas de chemin d'ingestion non authentifié distinct à protéger. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'achemine via le VPC que le trafic RFC 1918. |
@@ -237,7 +237,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Toute valeur `MEMOS_*` documentée par Memos peut être définie ici (par exemple `MEMOS_INSTANCE_URL`). La connexion à la base de données (`MEMOS_DSN`, `MEMOS_DRIVER`) est calculée automatiquement — ne les définissez pas ici. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager. |
@@ -246,7 +246,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Planification cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; à augmenter en production. |
@@ -268,7 +268,7 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles du WAF. |
@@ -278,7 +278,7 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée les buckets GCS définis dans `storage_buckets` — vide par défaut, puisque les pièces jointes de Memos ne reposent pas sur GCS dans ce module. |
 | `storage_buckets` | `[]` | Aucun bucket provisionné par défaut. |
@@ -287,7 +287,7 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Imposé par `Memos_Common`. |
 | `application_database_name` | `memos` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -295,16 +295,16 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré (16 à 64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laisser vide pour utiliser la tâche `db-init` intégrée. |
 | `cron_jobs` | `[]` | Non utilisé — Memos n'a aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 30s | Sonde de démarrage — cible la page de connexion publique. |
 | `liveness_probe` | HTTP `/`, délai de 30s | Sonde de vivacité. |
@@ -313,13 +313,13 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 16 — Redis {#group-16--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Memos ne dépend d'aucun cache ni d'aucune file d'attente ; laissez `false`, sauf pour intégrer une instance Redis externe à des fins personnalisées. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définis)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -357,7 +357,7 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -368,7 +368,7 @@ ressources en cours d'exécution.
 > et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées
 > en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
 | Premier compte créé par inscription | Le créer immédiatement après le déploiement | Critical | Le **premier** compte inscrit devient l'hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'approprie ce rôle. |

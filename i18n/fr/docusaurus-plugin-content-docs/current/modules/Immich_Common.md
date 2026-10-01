@@ -174,8 +174,7 @@ Ressources par défaut : `cpu_limit = "2000m"`, `memory_limit = "4Gi"`.
 
 Le **conteneur de machine learning** (recherche intelligente CLIP, reconnaissance
 faciale — inférence sur CPU, sans GPU) ne fait volontairement *pas* partie du
-`config` de cette couche (`additional_services = []` ici) : la variante GKE le définit
-en ligne afin que la liste des services soit connue au moment du plan (un chemin
+`config` de cette couche (`additional_services = []` ici) : la variante GKE le définit en mode intégré (inline) afin que la liste des services soit connue au moment du plan (un chemin
 provenant d'une sortie de module serait « known after apply » et casserait la
 planification de `for_each`). La variante consomme `resolved_version` pour le taguer,
 surcharge `IMMICH_PORT = "3003"` dans son environnement (l'image ML lit la même

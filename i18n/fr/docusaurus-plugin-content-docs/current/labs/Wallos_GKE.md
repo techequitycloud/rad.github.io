@@ -21,7 +21,7 @@ cycle de vie opérationnel du module **Wallos on GKE Autopilot** sur Google Clou
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Wallos. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Wallos_GKE) —
@@ -30,7 +30,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution, y compris la
@@ -58,7 +58,7 @@ temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -83,7 +83,7 @@ export REGION="us-central1"           # the region you deploy into
    la base de données SQLite, ainsi qu'un bucket GCS FUSE monté sur
    `/var/www/html/images/uploads/logos` pour les logos personnalisés des fournisseurs, puis récupère
    l'image préconstruite `bellamy/wallos`. Il n'y a ni instance Cloud SQL, ni
-   secret applicatif dans Secret Manager, ni tâche d'initialisation de la base de données — Wallos
+   secret applicatif dans Secret Manager, ni job d'initialisation de la base de données — Wallos
    est autonome. Les premiers déploiements se terminent généralement en **10–15 minutes**.
 
 3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
@@ -99,7 +99,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute (un StatefulSet à réplica unique par défaut) et
    trouvez son adresse :
@@ -189,7 +189,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -205,7 +205,7 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de Wallos.
 
 - **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. Les sondes de démarrage et de
-  liveness ciblent `/` ; un échec de montage ou une image défectueuse empêchera le pod de
+  vivacité ciblent `/` ; un échec de montage ou une image défectueuse empêchera le pod de
   devenir Ready.
   ```bash
   kubectl describe pod -n "$NS" <pod>          # Events section shows scheduling/probe/mount errors
@@ -260,8 +260,8 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail StatefulSet GKE, un PVC HDD pour la base de données et un bucket GCS pour les fichiers envoyés ; pas de Cloud SQL, pas de tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; se connecter avec l'identifiant initialisé `admin`/`admin` et changer immédiatement le mot de passe |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail StatefulSet GKE, un PVC HDD pour la base de données et un bucket GCS pour les fichiers envoyés ; pas de Cloud SQL, pas de job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; se connecter avec l'identifiant initialisé `admin`/`admin` et changer immédiatement le mot de passe |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, maintenir exactement 1 réplica, mettre à jour la version, ajuster l'ingress, inspecter l'état persistant |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de montage, d'autorisations du PVC, de planification et de récupération d'image |

@@ -28,7 +28,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 Docmost s'exécute comme un conteneur Node.js (NestJS) sur Cloud Run v2. Le déploiement assemble
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service NestJS sur le port 3000, 1 vCPU / 1 GiB par défaut, autoscaling serverless ; mise à l'échelle à zéro prise en charge |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Docmost ne prend en charge ni MySQL ni d'autres moteurs |
@@ -70,7 +70,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources sont
-indiqués dans les [Outputs](#5-outputs) du déploiement.
+indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Docmost {#a-cloud-run--the-docmost-service}
 
@@ -107,7 +107,7 @@ automatiquement ses propres migrations de schéma au démarrage.
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [Outputs](#5-outputs).
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [sorties](#5-outputs).
 Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation
 des mots de passe.
 
@@ -231,14 +231,14 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(required)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails bénéficiant de l'accès au projet et des alertes de surveillance. |
@@ -246,7 +246,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `docmost` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `display_name` | `Docmost` | Nom lisible affiché dans la console. |
@@ -254,7 +254,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance (1 vCPU). |
@@ -268,9 +268,9 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Monte le socket du Cloud SQL Auth Proxy (utilisé par `db-init`). |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image construite dans Artifact Registry. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | `all` autorise l'accès public aux pages partagées et au point de terminaison de collaboration. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'acheminer que le trafic RFC 1918 via le VPC. |
@@ -279,7 +279,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Les valeurs principales (`NODE_ENV`, `STORAGE_DRIVER`, `APP_URL`) sont définies automatiquement — n'y définissez pas `APP_SECRET`, `DATABASE_URL` ni `REDIS_URL`. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. |
@@ -289,7 +289,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Créer les buckets GCS définis dans `storage_buckets`. |
 | `enable_nfs` | `true` | NFS est **activé** par défaut — il sert de support au chemin des pièces jointes `/app/data/storage`. |
@@ -299,7 +299,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Imposé — Docmost exige PostgreSQL 15. |
 | `db_name` | `docmost` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -309,7 +309,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/health` 60s delay | Sonde de démarrage. Prévoyez environ 2 minutes au premier démarrage. |
 | `liveness_probe` | HTTP `/api/health` 60s delay | Sonde de vivacité. |
@@ -318,7 +318,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 21 — Cache et file d'attente Redis {#group-21--redis-cache--queue}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | **Obligatoire** — Docmost utilise Redis pour l'édition en temps réel et les files d'attente. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS. |
@@ -327,7 +327,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Default | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(set)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -337,12 +337,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
 ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -372,7 +372,7 @@ ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|

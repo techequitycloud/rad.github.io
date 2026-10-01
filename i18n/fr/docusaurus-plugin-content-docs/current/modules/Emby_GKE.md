@@ -17,14 +17,14 @@ option payante achetée séparément dans l'application, conditionne le transcod
 les applications mobiles/TV complètes, le DVR/la TV en direct et la synchronisation hors ligne ; cela diffère de
 Jellyfin (également présent dans ce catalogue), un fork communautaire de la base de code d'origine d'Emby Server,
 entièrement open source et sans palier restreint équivalent. Ce module
-déploie Emby sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md),
+déploie Emby sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md),
 qui provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud qu'utilise Emby et sur la manière de les explorer et
 de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes
 communs à toutes les applications GKE — Workload Identity, ingress, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
-cycle de vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
+cycle de vie du déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md)
 plutôt que de les répéter ici.
 
 ---
@@ -36,7 +36,7 @@ une véritable médiathèque** : un StatefulSet adossé à un véritable **PVC e
 offre une sémantique de système de fichiers POSIX correcte pour SQLite et le cache de transcodage. Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod de StatefulSet, 1 vCPU / 1 GiB par défaut |
 | Persistance | Persistent Disk (PVC en mode bloc) | `/config` sur un PVC par pod — le stockage recommandé pour SQLite + le cache de transcodage |
@@ -50,7 +50,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 - **Il n'y a pas de base de données externe.** Emby stocke la totalité de son état — les bases SQLite
   de la médiathèque et de lecture, la configuration, les métadonnées et illustrations en cache,
   les plugins, le cache de transcodage et les journaux — sous `/config`. Aucune instance Cloud SQL, aucun
-  job `db-init` et aucun Redis ne sont utilisés (`database_type = NONE` ; les variables Redis de la fondation
+  job `db-init` et aucun Redis ne sont utilisés (`database_type = NONE` ; les variables Redis du socle
   sont sans effet pour Emby).
 - **Un PVC en mode bloc sur `/config` est la meilleure option.** `stateful_pvc_enabled = true`
   fait de la charge de travail un **StatefulSet** avec un PVC par pod monté sur `/config`,
@@ -65,8 +65,8 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   sur le port 8096 plutôt qu'un chemin HTTP supposé.
 - **Il n'existe aucun identifiant par défaut.** Au premier accès, l'assistant de configuration crée le
   compte administrateur et ajoute les médiathèques. Rien n'est utilisable avant cela.
-- **Réplique unique.** `min_instance_count = 1` / `max_instance_count = 1` — une seule
-  médiathèque SQLite partagée sur un seul volume. **N'exécutez pas plusieurs répliques** ; des écritures
+- **Réplica unique.** `min_instance_count = 1` / `max_instance_count = 1` — une seule
+  médiathèque SQLite partagée sur un seul volume. **N'exécutez pas plusieurs réplicas** ; des écritures
   concurrentes sur un même fichier SQLite corrompent la médiathèque.
 - **NFS est facultatif, pour les grandes médiathèques.** `enable_nfs = false` par défaut. Activez-le
   pour monter un volume Filestore partagé destiné à une grande collection multimédia qui dépasse
@@ -194,7 +194,7 @@ L'authentification principale reste le compte administrateur de l'assistant.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, `service_type = LoadBalancer` (Emby est un serveur multimédia interactif exposé
 aux clients), ce qui donne une IP externe au Service. Définissez `service_type = ClusterIP`
@@ -238,11 +238,11 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
   StatefulSet maintient le PVC lié à l'identité du pod d'un redémarrage à l'autre.
 - **L'image personnalisée est une encapsulation légère.** Le Dockerfile est
   `ARG EMBY_VERSION=4.10.0.15` / `FROM emby/embyserver:${EMBY_VERSION}` ; ainsi
-  la fondation la réplique dans Artifact Registry (`enable_image_mirroring = true`)
+  le socle la met en miroir dans Artifact Registry (`enable_image_mirroring = true`)
   et définit `imagePullPolicy = Always` pour l'image répliquée.
   `application_version = "latest"` se résout en la version figée `4.10.0.15` via l'ARG de build
   propre à l'application `EMBY_VERSION` — elle n'est **pas** écrasée par l'injection
-  générique `APP_VERSION` de la fondation. Une vérification locale par `docker build` + `docker
+  générique `APP_VERSION` du socle. Une vérification locale par `docker build` + `docker
   run` a confirmé que l'image démarre proprement avec seulement `EMBY_CONFIG_DIR`
   et atteint la véritable logique de démarrage d'Emby Server.
 - **fsGroup pour un PVC accessible en écriture au groupe.** Emby s'exécute avec l'UID 1000 / le GID 2000 ;
@@ -276,7 +276,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -288,19 +288,19 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 | `application_version` | `latest` | Tag de l'image Emby ; `latest` est figé sur `4.10.0.15` via l'ARG de build `EMBY_VERSION`. |
 | `enable_api_key` | `false` | Génère une clé d'API aléatoire dans Secret Manager (`EMBY_API_KEY`). Recommandé lorsque le service est accessible hors de l'espace de noms. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par pod ; à augmenter pour le transcodage en direct. |
 | `memory_limit` | `1Gi` | Mémoire par pod ; à augmenter pour les grandes médiathèques. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; à maintenir à 1 (médiathèque partagée unique). |
-| `max_instance_count` | `1` | **À maintenir à 1.** Une seule médiathèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; à maintenir à 1 (médiathèque partagée unique). |
+| `max_instance_count` | `1` | **À maintenir à 1.** Une seule médiathèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs réplicas. |
 | `container_port` | `8096` | Port web/API d'Emby (défini par Emby_Common ; non transmis à App_GKE). |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Emby n'a pas de Cloud SQL — laissez `false`. |
-| `enable_image_mirroring` | `true` | Réplique `emby/embyserver` dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Réplica `emby/embyserver` dans Artifact Registry. |
 | `enable_vertical_pod_autoscaling` | `false` | Le VPA optimise les requêtes de ressources ; désactive le HPA lorsqu'il est actif. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -401,12 +401,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir
 `database_type` (`NONE`), `database_password_length`, `application_database_name`
 (`embydb`), `application_database_user` (`embyuser`), `enable_mysql_plugins`,
 `enable_postgres_extensions`, `db_*` / `db_*_env_var_name` — **tous sans effet pour
-Emby** (aucune base de données SQL) ; conservés et transmis pour la compatibilité avec la fondation.
+Emby** (aucune base de données SQL) ; conservés et transmis pour la compatibilité avec le socle.
 
-### Groupe 15 — Redis (transmis pour la compatibilité avec la fondation) {#group-15--redis-forwarded-for-foundation-compatibility}
+### Groupe 15 — Redis (transmis pour la compatibilité avec le socle) {#group-15--redis-forwarded-for-foundation-compatibility}
 
 `enable_redis`, `redis_host`, `redis_port`, `redis_auth` — **non applicables à
-Emby**, qui n'utilise ni cache ni file d'attente. Transmis à la fondation uniquement pour la
+Emby**, qui n'utilise ni cache ni file d'attente. Transmis au socle uniquement pour la
 compatibilité ; laissez les valeurs par défaut.
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
@@ -473,7 +473,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (vide pour un déploiement Emby par défaut). |
 | `statefulset_name` | Nom du StatefulSet. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
@@ -487,38 +487,38 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, IAP sans identité autorisée, `quota_memory_*` sans suffixe d'unité binaire, une valeur `timeout_seconds`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, IAP sans identité autorisée, `quota_memory_*` sans suffixe d'unité binaire, une valeur `timeout_seconds`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC `/config` | Ne jamais le supprimer | Critique | Le PVC contient la médiathèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
-| `stateful_pvc_enabled` | `true` | Critique | Sans PVC persistant, `/config` est éphémère et la médiathèque est perdue à chaque redémarrage du pod. |
-| `max_instance_count` | `1` | Critique | Plusieurs répliques écrivent dans une même médiathèque SQLite et la corrompent. |
-| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critique | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `stateful_pvc_size` | Adaptée à la médiathèque | Élevé | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
-| `stateful_fs_group` | `3000` | Élevé | Un fsGroup incorrect rend le PVC non accessible en écriture pour Emby (UID 1000 / GID 2000) — le démarrage échoue. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes médiathèques) | Élevé | Une mémoire insuffisante provoque l'arrêt du pod pour OOM pendant l'analyse ou le transcodage d'une grande médiathèque. |
-| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | Élevé | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
-| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| Type de `startup_probe`/`liveness_probe` | `TCP` (par défaut) | Élevé | Un chemin HTTP `/health` supposé renvoie 404 sur Emby (vérifié en conditions réelles) — une sonde HTTP ne réussirait jamais ici. |
-| `service_type` | `LoadBalancer` (par défaut), sauf si le service doit délibérément rester interne | Moyen | Un remplacement injustifié par `ClusterIP` rend un serveur multimédia interactif inaccessible depuis un navigateur. |
-| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour restaurer un instantané plus ancien de la médiathèque. |
-| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des contraintes de quota | Moyen | Emby est une application multimédia/SQLite — la valeur par défaut `standard-rwo` consomme le quota régional restreint `SSD_TOTAL_GB`, et la mise à l'échelle à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; basculez vers des HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture d'Emby n'a pas besoin des IOPS des SSD. |
-| `enable_api_key` | Comprendre qu'elle est réservée aux opérateurs | Faible | Emby lui-même ne lit jamais `EMBY_API_KEY` au démarrage — créez des clés d'API dans l'application sous Dashboard → API Keys pour l'authentification REST réelle d'Emby. |
+| PVC `/config` | Ne jamais le supprimer | Critical | Le PVC contient la médiathèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
+| `stateful_pvc_enabled` | `true` | Critical | Sans PVC persistant, `/config` est éphémère et la médiathèque est perdue à chaque redémarrage du pod. |
+| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans une même médiathèque SQLite et la corrompent. |
+| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critical | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `stateful_pvc_size` | Adaptée à la médiathèque | High | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
+| `stateful_fs_group` | `3000` | High | Un fsGroup incorrect rend le PVC non accessible en écriture pour Emby (UID 1000 / GID 2000) — le démarrage échoue. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes médiathèques) | High | Une mémoire insuffisante provoque l'arrêt du pod pour OOM pendant l'analyse ou le transcodage d'une grande médiathèque. |
+| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | High | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
+| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| Type de `startup_probe`/`liveness_probe` | `TCP` (par défaut) | High | Un chemin HTTP `/health` supposé renvoie 404 sur Emby (vérifié en conditions réelles) — une sonde HTTP ne réussirait jamais ici. |
+| `service_type` | `LoadBalancer` (par défaut), sauf si le service doit délibérément rester interne | Medium | Un remplacement injustifié par `ClusterIP` rend un serveur multimédia interactif inaccessible depuis un navigateur. |
+| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour restaurer un instantané plus ancien de la médiathèque. |
+| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des contraintes de quota | Medium | Emby est une application multimédia/SQLite — la valeur par défaut `standard-rwo` consomme le quota régional restreint `SSD_TOTAL_GB`, et la mise à l'échelle à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; basculez vers des HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture d'Emby n'a pas besoin des IOPS des SSD. |
+| `enable_api_key` | Comprendre qu'elle est réservée aux opérateurs | Low | Emby lui-même ne lit jamais `EMBY_API_KEY` au démarrage — créez des clés d'API dans l'application sous Dashboard → API Keys pour l'authentification REST réelle d'Emby. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload Identity,
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Emby partagée avec
 la variante Cloud Run est décrite dans **[Emby_Common](Emby_Common.md)**. Pour
 une présentation guidée, consultez le [lab Emby_GKE](../labs/Emby_GKE.md).

@@ -100,7 +100,7 @@ sorties du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Strapi_Common` établit l'environnement Strapi de référence :
 

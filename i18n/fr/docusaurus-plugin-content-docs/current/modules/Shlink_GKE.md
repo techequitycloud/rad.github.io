@@ -30,7 +30,7 @@ Shlink s'exécute comme une seule charge de travail PHP/Swoole sans état, dont
 tout l'état réside dans PostgreSQL — il n'y a aucune persistance de système de
 fichiers à gérer.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Un seul conteneur sur le port `8080`, `1000m` de CPU / `512Mi` de mémoire par défaut |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le moteur est fixé à `POSTGRES_15` |
@@ -38,7 +38,7 @@ fichiers à gérer.
 | Secrets | Secret Manager | `INITIAL_API_KEY` généré automatiquement (première clé d'API REST) et mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé + certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type = "POSTGRES_15"` est fixé
   par le module Common ; les autres moteurs ne sont pas pris en charge.
@@ -143,7 +143,7 @@ premier démarrage) et le mot de passe de la base de données (géré par le
 socle). Sur GKE, les secrets sont projetés dans les pods via le pilote Secret
 Store CSI / SecretSync.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~shlink"
@@ -160,8 +160,8 @@ externe (`service_type = LoadBalancer`, `reserve_static_ip = true` afin que
 l'adresse survive aux redéploiements). Un domaine personnalisé avec un
 certificat géré par Google peut être activé.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC →
-  Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network →
+  IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -177,8 +177,7 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les
 métriques de GKE et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests de
 disponibilité et des règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -238,7 +237,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles.
   géolocalisation des visiteurs via une base de données MaxMind GeoLite2 si un
   `GEOLITE_LICENSE_KEY` est fourni ; ce module ne le définit pas — ajoutez-le
   via `environment_variables` si vous souhaitez la géolocalisation. {/* TODO: verify exact env var name and download behaviour against the running image */}
-- **Inspectez la tâche d'initialisation et la configuration en cours :**
+- **Inspectez le job d'initialisation et la configuration en cours :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -347,7 +346,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -361,7 +360,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > nommée avant la création de toute ressource ; la plupart des erreurs
 > ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (fixe) | Critical | Non modifiable — Shlink ne prend en charge que PostgreSQL. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins toutes les URL courtes et l'historique des visites. |
@@ -380,7 +379,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et
 Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Shlink
 partagée avec la variante Cloud Run est décrite dans **[Shlink_Common](Shlink_Common.md)**.
 

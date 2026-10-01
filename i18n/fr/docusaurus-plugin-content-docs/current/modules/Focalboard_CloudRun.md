@@ -30,7 +30,7 @@ que de les répéter ici.
 Focalboard s'exécute dans un unique conteneur Go sur Cloud Run v2. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go sur le port 8000, 2 vCPU / 4 GiB par défaut ; autoscaling serverless avec mise à l'échelle jusqu'à zéro |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le moteur est fixe (`database_type = POSTGRES_15`) |
@@ -38,7 +38,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `FOCALBOARD_ADMIN_PASSWORD` généré automatiquement ; mot de passe de la base de données géré par le socle |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
   couche applicative partagée ; Focalboard n'a aucune voie MySQL ou SQLite dans ce module.
@@ -58,8 +58,8 @@ assemble un ensemble ciblé de services Google Cloud :
   `max_instance_count = 5`). Les démarrages à froid ajoutent quelques secondes de
   latence à la première requête après une période d'inactivité ; définissez
   `min_instance_count = 1` pour garder une instance active.
-- **L'image est une build personnalisée dupliquée.** L'image officielle
-  `mattermost/focalboard` est légèrement encapsulée et dupliquée dans Artifact
+- **L'image est une build personnalisée mise en miroir.** L'image officielle
+  `mattermost/focalboard` est légèrement encapsulée et mise en miroir dans Artifact
   Registry ; `application_version` vaut `7.11.4` par défaut, et `latest` correspond à ce
   tag figé au moment du build (`latest` n'est pas un tag Focalboard publié).
 - **Authentification native, le premier utilisateur est propriétaire.**
@@ -261,7 +261,7 @@ leur comportement standard.
 | `max_instance_count` | `5` | Nombre maximal d'instances. Peut être augmenté sans risque — l'état des tableaux réside dans PostgreSQL, pas dans chaque instance. |
 | `container_port` | `8000` | Focalboard écoute sur le port 8000. |
 | `enable_cloudsql_volume` | `true` | Socket Cloud SQL Auth Proxy ; le point d'entrée se rabat également sur une connexion TCP via l'IP privée. |
-| `enable_image_mirroring` | `true` | Duplique l'image `mattermost/focalboard` dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image `mattermost/focalboard` dans Artifact Registry. |
 | `cpu_always_allocated` | `false` | Facturation à la requête (avec démarrage à froid). Focalboard n'a ni processus d'arrière-plan ni serveur WebSocket ; la mise à l'échelle jusqu'à zéro est donc sans risque. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -273,7 +273,7 @@ leur comportement standard.
 | `application_database_user` | `crappuser` | Utilisateur de base de données de l'application, injecté sous `DB_USER`. Mot de passe généré automatiquement dans Secret Manager. |
 | `enable_auto_password_rotation` | `false` | Rotation facultative du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -317,7 +317,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket des pièces jointes). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -328,7 +328,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -341,7 +341,7 @@ d'explorer les ressources en cours d'exécution.
 > configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant
 > la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Injectés sous `DB_NAME`/`DB_USER` et immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données des tableaux. |
 | Bucket des pièces jointes / `enable_gcs_storage_volume` | Conserver le montage gcsfuse sur `/data` | Critical | Sans montage persistant sur `filespath`, les pièces jointes téléversées sont écrites sur le disque éphémère de l'instance et perdues au redémarrage / lors de la mise à l'échelle jusqu'à zéro. |
@@ -357,7 +357,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle mentionné tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Focalboard
 partagée avec la variante GKE est décrite dans
 **[Focalboard_Common](Focalboard_Common.md)**.

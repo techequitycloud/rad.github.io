@@ -17,7 +17,7 @@ Pour l'infrastructure qui provisionne et exécute réellement ActualBudget, cons
 
 | Domaine | Fourni par ActualBudget_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Encapsule légèrement l'image officielle `actualbudget/actual-server` afin que le socle la construise/la duplique dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
+| Image de conteneur | Encapsule légèrement l'image officielle `actualbudget/actual-server` afin que le socle la construise/la mette en miroir dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
 | Épinglage de version | ARG de build propre à l'application `ACTUALBUDGET_VERSION` ; `latest` fige la version sur `25.7.1` | Tag de l'image dans Artifact Registry |
 | Moteur de base de données | **Aucun** — les données de budget résident dans des fichiers SQLite sous `/data` (`database_type = "NONE"`) | §Base de données dans les guides de plateforme |
 | Amorçage de la base de données | **Aucun** — pas de tâche `db-init` ; le serveur initialise ses propres fichiers au premier démarrage | sans objet |

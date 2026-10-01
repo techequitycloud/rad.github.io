@@ -64,7 +64,7 @@ CMD » ; seul `CMD` est donc remplacé :
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 PostHog n'a besoin de **PostgreSQL** que pour les métadonnées de sa propre application
 Django — `PostHog_Common` épingle `POSTGRES_15`. **Chaque événement analytique, fiche de
@@ -171,7 +171,7 @@ propres à PostHog (vérifiés dans le code source `posthog/health.py`) :
 - **`GET /_readyz`** — contrôles approfondis des dépendances (état des migrations Postgres,
   ClickHouse, Kafka, broker Celery, cache). `failure_threshold = 145` avec une période de
   10 secondes (~25 minutes) est délibérément élevé — vérifié en conditions réelles sur une
-  base Cloud SQL neuve, l'étape `migrate` de Django exécutée en ligne par PostHog déroule
+  base Cloud SQL neuve, l'étape `migrate` de Django exécutée en mode intégré (inline) par PostHog déroule
   l'intégralité de son très volumineux historique de migrations multi-applications et a
   dépassé un budget précédent plus serré.
 - **`GET /_livez`** — le contrôle de vivacité léger ; il ne vérifie pas les dépendances en

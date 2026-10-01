@@ -877,9 +877,9 @@ ou de l'exploitation de la plateforme partagée. Ces techniques ne changent pas 
   application très longue) mette fin à l'application *après* que la ressource a effectivement été créée,
   la laissant active mais non gérée. C'est récupérable, il n'y a pas de perte de données :
   - **Relancez le déploiement.** Un état partiel reprend simplement — la plupart des ressources
-    sont déjà présentes, si bien que la nouvelle application se termine rapidement sans reconstruire
+    sont déjà présentes, si bien que le nouvel apply se termine rapidement sans reconstruire
     l'image ni les ressources lentes.
-  - **Si une ressource signale « already exists » lors de la nouvelle application, importez-la** au lieu
+  - **Si une ressource signale « already exists » lors de le nouvel apply, importez-la** au lieu
     de la supprimer et de la recréer (ce qui est lent et, pour Cloud SQL, bloqué par la réservation
     du nom). Par exemple, pour adopter une instance Cloud SQL créée mais non
     enregistrée :
@@ -922,7 +922,7 @@ Lorsque vous avez terminé, ouvrez la page **Deployments** de la plateforme RAD,
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Action | Phase | Automatisé |
 |---|---|---|

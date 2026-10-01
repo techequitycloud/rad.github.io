@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Mattermost sur Cloud Run dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Mattermost est une plateforme open source et auto-hébergée de messagerie d'équipe et de collaboration.
 Ce lab vous fait parcourir tout le cycle de vie opérationnel du module **Mattermost on Cloud
@@ -26,7 +26,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -67,7 +67,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL)
    avec ses secrets Secret Manager, un stockage GCS FUSE et Redis facultatifs, construit
-   l'image de conteneur et exécute une tâche ponctuelle d'initialisation de la base de données. Les premiers déploiements
+   l'image de conteneur et exécute un job ponctuel d'initialisation de la base de données. Les premiers déploiements
    prennent environ **20 à 35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Une fois terminé, repérez les ressources à l'aide de filtres indépendants des noms (afin que les
@@ -119,7 +119,7 @@ export REGION="us-central1"          # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée.
 
-4. **Gérez les secrets, les sauvegardes et les tâches :**
+4. **Gérez les secrets, les sauvegardes et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~mattermost"
@@ -140,7 +140,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -169,8 +169,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base de données existe et que la tâche d'initialisation s'est terminée avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  secret du mot de passe de la base de données existe et que le job d'initialisation s'est terminé avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -186,7 +186,7 @@ chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS et les images
@@ -201,7 +201,7 @@ sont gérées séparément et ne sont pas supprimées ici.
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL), les secrets, le stockage GCS, et exécute l'initialisation de la base de données |
 | 2 — Accéder et vérifier | Manuel | La vérification de santé réussit ; l'assistant de configuration de Mattermost est accessible |
-| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/sauvegardes/tâches, accéder à la base de données |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/sauvegardes/jobs, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'initialisation, de build, de WebSocket et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'initialisation, de build, de WebSocket et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

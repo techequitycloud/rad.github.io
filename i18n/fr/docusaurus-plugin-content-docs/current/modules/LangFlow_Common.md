@@ -136,7 +136,7 @@ reproductibilité.
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `LangFlow_Common` établit l'environnement LangFlow de référence afin que
 l'application démarre correctement dès le premier démarrage :

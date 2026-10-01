@@ -29,12 +29,12 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Accéder à la charge de travail en cours d’exécution, la vérifier, définir `APP_URL` et créer le premier compte administrateur.
-- Effectuer les opérations du jour 2 : inspecter les pods, mettre à l’échelle, mettre à jour, gérer les secrets et les sauvegardes, et raccorder le point de terminaison cron.
+- Effectuer les opérations du jour 2 — inspecter les pods, mettre à l’échelle, mettre à jour, gérer les secrets et les sauvegardes, et raccorder le point de terminaison cron.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -113,7 +113,7 @@ export NAMESPACE="<workload-namespace>"   # from the deployment Outputs
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez les pods et les événements :**
 
@@ -124,7 +124,7 @@ export NAMESPACE="<workload-namespace>"   # from the deployment Outputs
    ```
 
 2. **Mettez à l’échelle** en modifiant les paramètres de nombre minimal/maximal d’instances et en cliquant sur **Update** : le
-   module est propriétaire de la spécification du Deployment. GKE exige au moins 1 réplique ; il n’y a pas de
+   module est propriétaire de la spécification du Deployment. GKE exige au moins 1 réplica ; il n’y a pas de
    mise à l’échelle à zéro. `session_affinity = ClientIP` maintient la session d’un utilisateur sur un seul pod.
 
 3. **Mettez à jour la version de l’application** dans la plateforme RAD et appliquez via **Update** ; une
@@ -155,14 +155,14 @@ export NAMESPACE="<workload-namespace>"   # from the deployment Outputs
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
      --project="$PROJECT" --limit=50
    ```
 
-2. **Surveillance** : ouvrez le tableau de bord de la charge de travail GKE et examinez le processeur et la mémoire des pods,
+2. **Surveillance** — ouvrez le tableau de bord de la charge de travail GKE et examinez le processeur et la mémoire des pods,
    les redémarrages et la latence des requêtes. Examinez les métriques Cloud SQL relatives aux connexions et au processeur. Si
    vous avez activé un test de disponibilité, vérifiez qu’il est au vert sous Monitoring → Uptime checks.
 
@@ -197,7 +197,7 @@ Consultez la section *Configuration Pitfalls* (pièges de configuration) du Guid
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : la charge de travail GKE
 et son Service, la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS, le volume NFS et les
@@ -215,4 +215,4 @@ le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas su
 | 3 — Exploiter | Manuel | Inspecter les pods, mettre à l’échelle, mettre à jour la version, raccorder le cron, gérer les secrets/sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d’initialisation, d’URL, de cron et de NFS |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

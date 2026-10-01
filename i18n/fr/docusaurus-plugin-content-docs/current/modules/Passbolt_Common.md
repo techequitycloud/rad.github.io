@@ -253,7 +253,7 @@ Les deux utilisent la classe de stockage `STANDARD`, `force_destroy = true`,
 
 | Sortie | Description |
 |---|---|
-| `config` | Objet complet de configuration applicative destiné au module de socle |
+| `config` | Objet complet de configuration applicative destiné au module socle |
 | `secret_ids` | `{}` — toujours vide. |
 | `secret_values` | `{}` — toujours vide (sensible). |
 | `storage_buckets` | `[{ name_suffix = "storage", ... }, { name_suffix = "jwt", ... }]` |

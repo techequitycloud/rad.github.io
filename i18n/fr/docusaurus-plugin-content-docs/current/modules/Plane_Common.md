@@ -17,12 +17,12 @@ Pour l'infrastructure qui provisionne et exécute réellement Plane, consultez l
 
 | Domaine | Fourni par Plane_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Dockerfile wrapper minimal `FROM makeplane/plane-aio-community:<version>` — l'image tout-en-un qui regroupe api + worker + beat + web/space/admin + live + migrator derrière un proxy Caddy interne sur :80 | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Dockerfile wrapper minimal `FROM makeplane/plane-aio-community:<version>` — l'image tout-en-un qui regroupe api + worker + beat + web/space/admin + live + migrator derrière un proxy Caddy interne sur :80 | Sortie `container_image` du déploiement de la plateforme |
 | Point d'entrée personnalisé | Compose `DATABASE_URL` / `REDIS_URL` / `AMQP_URL` à partir des valeurs distinctes `DB_*` / `REDIS_*` / `RABBITMQ_*` injectées par le socle, puis exécute le `/app/start.sh` intégré de Plane | Comportement de l'application dans les guides des plateformes |
-| Secrets | Génère automatiquement le `SECRET_KEY` Django (50 caractères) et `LIVE_SERVER_SECRET_KEY` (40 caractères) dans Secret Manager | Outputs `secret_ids` / `secret_values`, injectés en tant que variables d'environnement secrètes |
+| Secrets | Génère automatiquement le `SECRET_KEY` Django (50 caractères) et `LIVE_SERVER_SECRET_KEY` (40 caractères) dans Secret Manager | Sorties `secret_ids` / `secret_values`, injectés en tant que variables d'environnement secrètes |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (PostgreSQL standard, sans extension) | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit le job `db-init` (`postgres:15-alpine`) qui crée de façon idempotente la base de données et l'utilisateur | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket **Cloud Storage** `storage` (le câblage des téléversements S3 est un TODO documenté) | Output `storage_buckets` |
+| Initialisation de la base de données | Définit le job `db-init` (`postgres:15-alpine`) qui crée de façon idempotente la base de données et l'utilisateur | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket **Cloud Storage** `storage` (le câblage des téléversements S3 est un TODO documenté) | Sortie `storage_buckets` |
 | Environnement principal | `WEB_URL` / `DOMAIN_NAME` / `CORS_ALLOWED_ORIGINS` à partir de l'URL de service prévue, `SITE_ADDRESS=:80`, `GUNICORN_WORKERS=2`, `DEBUG=0`, points de terminaison Redis et RabbitMQ, valeurs fictives de stockage `AWS_*` | Environnement du conteneur en cours d'exécution |
 | Contrôles de santé | Sondes par défaut de démarrage (`/health`, délai de 30 s, 30 échecs × 10 s) et de vivacité (`/health`, délai de 30 s, période de 30 s) | §Observabilité dans les guides des plateformes |
 
@@ -71,7 +71,7 @@ Un `time_sleep` de 30 secondes après la création des versions de secrets absor
 
 ---
 
-## 4. Moteur de base de données et initialisation {#4-database-engine-and-bootstrap}
+## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
 Plane exige **PostgreSQL** ; le moteur est fixé à `POSTGRES_15` (aucune extension requise). À chaque apply, le job `db-init` (`postgres:15-alpine`), de façon idempotente :
 

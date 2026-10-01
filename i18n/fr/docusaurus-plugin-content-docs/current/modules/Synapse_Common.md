@@ -30,10 +30,10 @@ guides des plateformes ([Synapse_GKE](Synapse_GKE.md),
 | Domaine | Fourni par Synapse_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère un `registration_shared_secret` stable (injecté sous le nom `REGISTRATION_SHARED_SECRET` via l'output `secret_ids`) et un mot de passe de superutilisateur, tous deux stockés dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Enveloppe l'image officielle `matrixdotorg/synapse` avec un point d'entrée cloud qui génère `homeserver.yaml` et une clé de signature persistante, et raccorde le PostgreSQL de la plateforme ; build via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe l'image officielle `matrixdotorg/synapse` avec un point d'entrée cloud qui génère `homeserver.yaml` et une clé de signature persistante, et raccorde le PostgreSQL de la plateforme ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit les jobs du premier déploiement : `db-init` (crée la base de données avec la **collation `C` obligatoire** et le rôle de l'application) et `create-admin` (enregistre le superutilisateur initial) | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket de données **Cloud Storage** | Output `storage_buckets` |
+| Amorçage de la base de données | Définit les jobs du premier déploiement : `db-init` (crée la base de données avec la **collation `C` obligatoire** et le rôle de l'application) et `create-admin` (enregistre le superutilisateur initial) | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket de données **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement de référence de Synapse : `server_name`, port de l'écouteur HTTP (`8008`), répertoire de données, envoi de statistiques, enregistrement | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de démarrage, de vivacité et de disponibilité par défaut ciblant `/health` | §Observabilité dans les guides des plateformes |
 
@@ -159,7 +159,7 @@ le socle ne puisse pas imposer un tag d'image de base `latest` invalide.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Synapse_Common` établit l'environnement de référence de Synapse afin que le
 homeserver démarre correctement dès le premier démarrage :
@@ -215,7 +215,7 @@ réellement appliqué à la révision déployée (`gcloud run revisions describe
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket de données **Cloud Storage** dédié est déclaré ici et provisionné par le
 socle, qui accorde également l'accès au compte de service de la charge de travail. Le

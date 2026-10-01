@@ -32,7 +32,7 @@ services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Next.js, 2 vCPU / 2 GiB par défaut, autoscaling horizontal |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Cal.com (Prisma/`pg`) cible uniquement PostgreSQL |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Cal.com (Prisma/`pg`) cible uniquement PostgreSQL |
 | Stockage d'objets | Cloud Storage (aucun par défaut) | Cal.com stocke tout son état dans PostgreSQL ; aucun bucket de téléversement n'est créé |
 | Cache | Redis (facultatif) | Désactivé par défaut ; utilisé pour la mise en cache / la limitation de débit |
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` générés automatiquement ; mot de passe de la base de données |
@@ -68,7 +68,7 @@ services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Cal.com {#a-gke-autopilot--the-calcom-workload}
 
@@ -89,10 +89,10 @@ et le nombre maximal de réplicas.
 Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type de charge de travail
 (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Cal.com stocke toutes les données applicatives (utilisateurs, types d'événements, réservations, identifiants des calendriers
-connectés) dans une instance gérée Cloud SQL pour PostgreSQL 15. Les pods y accèdent de façon privée
+connectés) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent de façon privée
 via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1` ; aucune IP publique n'est exposée. Lors du
 premier déploiement, un Job d'initialisation crée la base de données et le rôle de l'application, et
 Cal.com applique son schéma via Prisma au démarrage.
@@ -107,7 +107,7 @@ Cal.com applique son schéma via Prisma au démarrage.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le
-mot de passe figurent tous dans les [Outputs](#5-outputs). Pour le modèle de connexion,
+mot de passe figurent tous dans les [sorties](#5-outputs). Pour le modèle de connexion,
 les sauvegardes automatiques et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage {#c-cloud-storage}
@@ -153,7 +153,7 @@ séparément par le socle.
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base de données figure dans les [Outputs](#5-outputs). Consultez
+Le nom du secret du mot de passe de la base de données figure dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -256,7 +256,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | `min_instance_count` | `0` | Nombre minimal de réplicas. |
 | `max_instance_count` | `3` | Nombre maximal de réplicas. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy pour les connexions par socket/loopback. Laissez à `true` pour la connectivité PostgreSQL. |
-| `enable_image_mirroring` | `true` | Réplique l'image Cal.com dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Cal.com dans Artifact Registry avant le déploiement. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -353,12 +353,12 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le plus rapide de localiser
 et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -374,7 +374,7 @@ et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -416,7 +416,7 @@ et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration
 applicative propre à Cal.com, partagée avec la variante Cloud Run, est décrite dans
 **[CalCom_Common](CalCom_Common.md)**.
 

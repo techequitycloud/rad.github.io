@@ -17,7 +17,7 @@ fournit explique les valeurs par défaut que vous voyez dans la documentation de
 
 Pour l'infrastructure qui provisionne et exécute réellement Emby, consultez les
 guides de plateforme ([Emby_GKE](Emby_GKE.md),
-[Emby_CloudRun](Emby_CloudRun.md)) et les guides de fondation
+[Emby_CloudRun](Emby_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -28,7 +28,7 @@ guides de plateforme ([Emby_GKE](Emby_GKE.md),
 |---|---|---|
 | Authentification | **Aucun secret généré obligatoire** — le compte administrateur est créé via l'assistant de configuration initiale d'Emby | Interface web d'Emby au premier accès |
 | Clé d'API facultative | Lorsque `enable_api_key = true`, génère une clé d'API aléatoire de 32 caractères et la stocke dans **Secret Manager**, injectée sous la forme `EMBY_API_KEY` | Injectée automatiquement ; récupérez-la via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Encapsulation légère de l'image officielle `emby/embyserver` afin que la fondation puisse la répliquer dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsulation légère de l'image officielle `emby/embyserver` afin que le socle puisse la répliquer dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Emby utilise des bases SQLite internes sous `/config` (`database_type = "NONE"`) | §Base de données dans les guides de plateforme |
 | Amorçage de la base de données | **Aucun** — il n'y a pas de job `db-init` ; Emby gère son propre stockage | n/a |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/config` sur Cloud Run | Sortie `storage_buckets` |
@@ -50,7 +50,7 @@ Le **seul secret facultatif** est une clé d'API, conditionnée par `enable_api_
 - Lorsque `enable_api_key = true`, une valeur aléatoire de 32 caractères est générée et stockée
   dans Secret Manager sous le nom `secret-<prefix>-<app>-api-key` (par exemple
   `secret-<prefix>-emby-api-key`), puis injectée dans le conteneur sous la forme `EMBY_API_KEY`
-  via le mécanisme `module_secret_env_vars` de la fondation, sur Cloud Run comme sur GKE.
+  via le mécanisme `module_secret_env_vars` du socle, sur Cloud Run comme sur GKE.
 - Lorsque `enable_api_key = false` (valeur par défaut), aucun secret n'est créé et la table des
   secrets du module est vide.
 
@@ -107,11 +107,11 @@ ARG EMBY_VERSION=4.10.0.15
 FROM emby/embyserver:${EMBY_VERSION}
 ```
 
-- **`image_source = "custom"`** — ce réglage sert uniquement à ce que la fondation
-  construise/réplique l'image dans Artifact Registry ; aucun code applicatif n'est
+- **`image_source = "custom"`** — ce réglage sert uniquement à ce que le socle
+  construise/mette en miroir l'image dans Artifact Registry ; aucun code applicatif n'est
   ajouté par-dessus.
 - **ARG de build propre à l'application** — le Dockerfile lit `EMBY_VERSION`, **et non** l'`APP_VERSION`
-  générique que la fondation injecte (et qu'elle forcerait à `latest`).
+  générique que le socle injecte (et qu'elle forcerait à `latest`).
   Lorsque `application_version = "latest"`, la couche Common fige le build sur
   `4.10.0.15` ; sinon, elle transmet directement la version demandée.
 - **Aucune traduction du point d'entrée** — comme Emby n'a besoin d'aucun câblage de base de données ni de réécriture
@@ -165,7 +165,7 @@ qui n'a pas été vérifié en amont.
 
 ## 7. Stockage d'objets {#7-object-storage}
 
-Un seul bucket **Cloud Storage** est déclaré ici et provisionné par la fondation,
+Un seul bucket **Cloud Storage** est déclaré ici et provisionné par le socle,
 qui accorde également l'accès au compte de service de la charge de travail :
 
 - **`name_suffix = "storage"`**, classe de stockage **STANDARD**, avec

@@ -40,7 +40,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `ENCRYPTION_KEY`, `AUTH_SECRET`, `ADMIN_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type` vaut `POSTGRES_15` par défaut et
   c'est la seule valeur prise en charge par Infisical.
@@ -188,7 +188,7 @@ d'alerte en option.
   d'initialisation `db-init` exécute `postgres:15-alpine`, se connecte via le socket
   du Cloud SQL Auth Proxy et crée de manière idempotente le rôle et la base de données
   applicatifs (correspondant aux `DB_USER`/`DB_NAME` injectés par le socle).
-  `execute_on_apply = true` : il s'exécute donc à chaque application et peut être
+  `execute_on_apply = true` : il s'exécute donc à chaque apply et peut être
   relancé sans risque.
 - **La chaîne de connexion à la base de données est assemblée au démarrage du
   conteneur, et non figée au moment du plan.** Infisical accepte un unique
@@ -318,7 +318,7 @@ Intégration standard Cloud Build / Cloud Deploy d'`App_CloudRun` — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 Entrées standard d'`App_CloudRun` pour Cloud Armor, le CDN et la conservation dans
 Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
@@ -366,7 +366,7 @@ Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
 | `redis_auth` | `""` (sensible) | Lorsqu'il est défini, fait basculer Infisical sur le secret `REDIS_URL` propre à `Infisical_Common` au lieu de l'injection en variables d'environnement en clair du socle. |
 | `cubejs_api_url` / `hub_api_url` | URL localhost | **Déclarées mais non transmises à `Infisical_Common` — inertes, sans effet.** |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Entrées standard — consultez [App_CloudRun](App_CloudRun.md).
 
@@ -399,31 +399,31 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs et leurs combinaisons au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ENCRYPTION_KEY` (généré automatiquement) | Ne jamais le faire pivoter après le premier démarrage | Critique | Le faire pivoter rend définitivement indéchiffrable chaque secret stocké auparavant. |
-| `AUTH_SECRET` (généré automatiquement) | Ne le faire pivoter que pendant une fenêtre de maintenance | Critique | Le faire pivoter invalide toutes les sessions utilisateur actives. |
-| `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données ou l'utilisateur et détruit toutes les données. |
-| `enable_redis` | Transmettre `var.enable_redis` sans condition à `App_CloudRun` | Critique | Le figer à `false` dans l'appel au socle laisse `REDIS_URL` totalement indéfini dans le cas courant sans authentification — Infisical plante au démarrage avec « Either REDIS_URL, REDIS_SENTINEL_HOSTS or REDIS_CLUSTER_HOSTS must be defined ». |
-| `database_type` | `POSTGRES_15` | Critique | Toute valeur autre que Postgres est rejetée par la validation, ou (si elle était définie d'une manière ou d'une autre) Infisical ne parviendrait pas du tout à se connecter — MySQL n'est pas pris en charge. |
-| `startup_probe` / `liveness_probe` | Conserver les valeurs par défaut du module (démarrage TCP, vivacité désactivée) | Élevé | Faire pointer l'une ou l'autre vers HTTP `/api/status` empêche la révision Cloud Run de devenir Ready — ce point de terminaison ne renvoie 2xx qu'après une disponibilité complète (base de données + Redis + dépendances), et Cloud Run n'achemine pas de trafic vers un service qui attend encore sa propre sonde de démarrage. |
-| Job `admin-bootstrap` | Le déclencher manuellement après le premier déploiement sain | Élevé | Sans ce déclenchement, aucun compte administrateur n'existe et l'instance est inutilisable depuis l'interface ou l'API tant que le job n'a pas été exécuté. |
-| `site_url` | Laisser vide pour l'URL `run.app` calculée automatiquement, ou définir explicitement pour un domaine personnalisé | Moyen | Une valeur incorrecte casse les liens d'invitation et d'e-mail, le CORS et la cible du job `admin-bootstrap`. |
-| `smtp_host` / `smtp_user` / `smtp_password` / `mail_from` / `cubejs_api_url` / `hub_api_url` | N/A | Faible | Ces variables sont déclarées par souci de parité avec les conventions, mais ne sont jamais transmises à `Infisical_Common` — les définir est sans effet. |
-| `memory_limit` | `2Gi` (par défaut) ou plus | Moyen | Des valeurs inférieures exposent à des arrêts OOM sous une charge concurrente de récupération de secrets. |
+| `ENCRYPTION_KEY` (généré automatiquement) | Ne jamais le faire pivoter après le premier démarrage | Critical | Le faire pivoter rend définitivement indéchiffrable chaque secret stocké auparavant. |
+| `AUTH_SECRET` (généré automatiquement) | Ne le faire pivoter que pendant une fenêtre de maintenance | Critical | Le faire pivoter invalide toutes les sessions utilisateur actives. |
+| `db_name` / `db_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données ou l'utilisateur et détruit toutes les données. |
+| `enable_redis` | Transmettre `var.enable_redis` sans condition à `App_CloudRun` | Critical | Le figer à `false` dans l'appel au socle laisse `REDIS_URL` totalement indéfini dans le cas courant sans authentification — Infisical plante au démarrage avec « Either REDIS_URL, REDIS_SENTINEL_HOSTS or REDIS_CLUSTER_HOSTS must be defined ». |
+| `database_type` | `POSTGRES_15` | Critical | Toute valeur autre que Postgres est rejetée par la validation, ou (si elle était définie d'une manière ou d'une autre) Infisical ne parviendrait pas du tout à se connecter — MySQL n'est pas pris en charge. |
+| `startup_probe` / `liveness_probe` | Conserver les valeurs par défaut du module (démarrage TCP, vivacité désactivée) | High | Faire pointer l'une ou l'autre vers HTTP `/api/status` empêche la révision Cloud Run de devenir Ready — ce point de terminaison ne renvoie 2xx qu'après une disponibilité complète (base de données + Redis + dépendances), et Cloud Run n'achemine pas de trafic vers un service qui attend encore sa propre sonde de démarrage. |
+| Job `admin-bootstrap` | Le déclencher manuellement après le premier déploiement sain | High | Sans ce déclenchement, aucun compte administrateur n'existe et l'instance est inutilisable depuis l'interface ou l'API tant que le job n'a pas été exécuté. |
+| `site_url` | Laisser vide pour l'URL `run.app` calculée automatiquement, ou définir explicitement pour un domaine personnalisé | Medium | Une valeur incorrecte casse les liens d'invitation et d'e-mail, le CORS et la cible du job `admin-bootstrap`. |
+| `smtp_host` / `smtp_user` / `smtp_password` / `mail_from` / `cubejs_api_url` / `hub_api_url` | N/A | Low | Ces variables sont déclarées par souci de parité avec les conventions, mais ne sont jamais transmises à `Infisical_Common` — les définir est sans effet. |
+| `memory_limit` | `2Gi` (par défaut) ou plus | Medium | Des valeurs inférieures exposent à des arrêts OOM sous une charge concurrente de récupération de secrets. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'image — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Infisical,
 partagée avec la variante GKE, est décrite dans
 **[Infisical_Common](Infisical_Common.md)**.

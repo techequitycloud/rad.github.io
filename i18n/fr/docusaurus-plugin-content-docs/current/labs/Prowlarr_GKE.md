@@ -46,7 +46,7 @@ dans le temps.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (ou plutôt, comprendre pourquoi il ne faut pas le faire) et mettre à jour.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, y compris comprendre pourquoi Cloud Run n'est jamais la bonne cible pour cette application.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -63,7 +63,7 @@ dans le temps.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -183,7 +183,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    de manière soutenue indique généralement une boucle de synchronisation d'indexeur ou un indexeur défaillant,
    et non un problème de plateforme).
 
-3. **Contrôles de disponibilité** — désactivés par défaut (`uptime_check_config.enabled =
+3. **Tests de disponibilité** — désactivés par défaut (`uptime_check_config.enabled =
    false`). Si vous l'activez, vérifiez que `path` a été remplacé par `/ping`
    — le `path` par défaut de la variable est un `/api/health` obsolète hérité de
    la source à partir de laquelle ce module a été cloné, et fera échouer chaque contrôle s'il n'est pas modifié.
@@ -225,21 +225,21 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
   kubectl get svc -n "$NAMESPACE" -o wide
   ```
 
-- **Contrôle de disponibilité toujours en échec après son activation :** le `path` par défaut de la
+- **Test de disponibilité toujours en échec après son activation :** le `path` par défaut de la
   variable `uptime_check_config` est un `/api/health` obsolète
   — remplacez-le par `/ping`. C'est la seule variable liée aux sondes qui n'est
   PAS corrigée automatiquement ailleurs dans le module (contrairement aux propres sondes de
   démarrage/liveness du pod, qui utilisent déjà `/ping`).
 
 - **Erreurs 403 / d'autorisation :** vérifiez la liaison Workload Identity du
-  compte de service d'exécution du namespace.
+  compte de service d'exécution de l'espace de noms.
 
 Consultez la section *Configuration Pitfalls* du Guide de configuration pour les pièges
 propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -253,13 +253,13 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne le StatefulSet GKE avec un PVC en mode bloc et un Service `LoadBalancer` ; ni base de données, ni job d'initialisation à attendre |
 | 2 — Accéder et vérifier | Manuel | Pod `1/1 Running` ; `/ping` renvoie `200 {"status":"OK"}` ; interface ouverte sans identifiant par défaut sauf configuration |
 | 3 — Exploiter | Manuel | Inspecter le déploiement progressif, comprendre la limite de mise à l'échelle `max=1`, mettre à jour la version, gérer le PVC |
-| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; corriger le chemin obsolète du contrôle de disponibilité si vous l'activez |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; corriger le chemin obsolète du test de disponibilité si vous l'activez |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC et d'exposition du Service ; comprendre pourquoi Cloud Run n'est jamais la solution ici |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et toutes les configurations d'indexeurs stockées |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et toutes les configurations d'indexeurs stockées |

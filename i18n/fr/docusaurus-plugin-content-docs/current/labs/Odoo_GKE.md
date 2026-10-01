@@ -19,7 +19,7 @@ opérationnel du module **Odoo on GKE Autopilot** sur Google Cloud : le déploye
 et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
 démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit Odoo. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Odoo_GKE) — ce
@@ -27,7 +27,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une base de données
    Cloud SQL (PostgreSQL) avec ses secrets Secret Manager, un partage Filestore NFS pour
    le filestore et les sessions d'Odoo, un bucket Cloud Storage pour les addons, construit l'image du
-   conteneur et exécute deux tâches d'initialisation ponctuelles : `nfs-init` (configure la propriété
+   conteneur et exécute deux jobs d'initialisation ponctuels : `nfs-init` (configure la propriété
    des répertoires NFS) et `db-init` (crée la base de données et l'utilisateur PostgreSQL). Les premiers déploiements
    prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -87,7 +87,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -142,7 +142,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -170,7 +170,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -192,11 +192,11 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   ```
 - **Vérification d'état autre que 200 au premier démarrage :** Odoo effectue des migrations de schéma qui peuvent prendre
   2–10 minutes. La sonde de démarrage vérifie `GET /web/health` avec un délai initial de 180 secondes
-  et jusqu'à 3 nouvelles tentatives de 120 secondes chacune. Attendez que les deux tâches d'initialisation soient terminées
+  et jusqu'à 3 nouvelles tentatives de 120 secondes chacune. Attendez que les deux jobs d'initialisation soient terminés
   avant de compter sur une réponse du point de terminaison de santé.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que la tâche `db-init` s'est terminée.
-- **Échec d'une tâche d'initialisation :** inspectez les tâches et les journaux de leurs pods :
+  secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que le job `db-init` s'est terminé.
+- **Échec d'un job d'initialisation :** inspectez les jobs et les journaux de leurs pods :
   ```bash
   kubectl get jobs -n "$NS"          # jobs are named <service>-nfs-init and <service>-db-init
   kubectl logs -n "$NS" "$(kubectl get jobs -n "$NS" -o name | grep nfs-init)"
@@ -227,8 +227,8 @@ ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL, Filestore NFS, GCS, les secrets, et exécute nfs-init + db-init |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le mot de passe maître est récupéré dans Secret Manager |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage/les tâches, accéder à la base |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; le mot de passe maître est récupéré dans Secret Manager |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage/les jobs, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de délai du premier démarrage, de base de données, de tâche d'initialisation, de planification et de récupération d'image |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de délai du premier démarrage, de base de données, de job d'initialisation, de planification et de récupération d'image |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

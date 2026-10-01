@@ -73,7 +73,7 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 
 ---
 
-## Groupe 1 : projet et identité {#group-1-project--identity}
+## Groupe 1 : Projet et identité {#group-1-project--identity}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
@@ -84,7 +84,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
 ---
 
-## Groupe 2 : identité de l'application {#group-2-application-identity}
+## Groupe 2 : Identité de l'application {#group-2-application-identity}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot) pour leurs descriptions.
 
@@ -99,7 +99,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 
 ---
 
-## Groupe 3 : exécution et mise à l'échelle {#group-3-runtime--scaling}
+## Groupe 3 : Exécution et mise à l'échelle {#group-3-runtime--scaling}
 
 La plupart des variables se comportent de manière identique à `App_GKE`. Voir [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -120,7 +120,7 @@ Les autres variables d'exécution (`deploy_application`, `container_image`, `con
 
 ---
 
-## Groupe 4 : accès et réseau {#group-4-access--networking}
+## Groupe 4 : Accès et réseau {#group-4-access--networking}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress) et [App_GKE](./App_GKE.md#d-networking--network-policies).
 
@@ -144,7 +144,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 
 ---
 
-## Groupe 5 : variables d'environnement et secrets {#group-5-environment-variables--secrets}
+## Groupe 5 : Variables d'environnement et secrets {#group-5-environment-variables--secrets}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#3-core-service-configuration).
 
@@ -165,7 +165,7 @@ Les variables de secrets standard (`environment_variables`, `secret_environment_
 
 ---
 
-## Groupe 6 : sauvegarde et maintenance {#group-6-backup--maintenance}
+## Groupe 6 : Sauvegarde et maintenance {#group-6-backup--maintenance}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
@@ -197,7 +197,7 @@ Variables disponibles : `enable_cicd_trigger`, `github_repository_url`, `github_
 
 ---
 
-## Groupe 8 : jobs et tâches planifiées {#group-8-jobs--scheduled-tasks}
+## Groupe 8 : Jobs et tâches planifiées {#group-8-jobs--scheduled-tasks}
 
 Ces variables se comportent comme décrit dans [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
@@ -220,7 +220,7 @@ La variable `cron_jobs` est disponible pour des tâches telles que la reclassifi
 
 ---
 
-## Groupe 9 : stockage et système de fichiers — NFS {#group-9-storage--filesystem--nfs}
+## Groupe 9 : Stockage et système de fichiers — NFS {#group-9-storage--filesystem--nfs}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -233,7 +233,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 
 ---
 
-## Groupe 10 : stockage et système de fichiers — GCS {#group-10-storage--filesystem--gcs}
+## Groupe 10 : Stockage et système de fichiers — GCS {#group-10-storage--filesystem--gcs}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -260,7 +260,7 @@ Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_
 
 ---
 
-## Groupe 11 : configuration de la base de données {#group-11-database-configuration}
+## Groupe 11 : Configuration de la base de données {#group-11-database-configuration}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
@@ -290,7 +290,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 
 ---
 
-## Groupe 12 : scripts SQL personnalisés {#group-12-custom-sql-scripts}
+## Groupe 12 : Scripts SQL personnalisés {#group-12-custom-sql-scripts}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
 
@@ -298,7 +298,7 @@ Variables disponibles : `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`
 
 ---
 
-## Groupe 13 : observabilité et santé {#group-13-observability--health}
+## Groupe 13 : Observabilité et santé {#group-13-observability--health}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -349,7 +349,7 @@ Il s'agit de chemins parallèles, et non d'alias. Modifier `startup_probe` n'a a
 
 ---
 
-## Groupe 14 : règles de fiabilité {#group-14-reliability-policies}
+## Groupe 14 : Règles de fiabilité {#group-14-reliability-policies}
 
 Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
@@ -364,7 +364,7 @@ Variables disponibles : `enable_pod_disruption_budget`, `pdb_min_available`, `en
 
 ---
 
-## Groupe 15 : paramètres de l'application Paperless-ngx {#group-15-paperless-ngx-application-settings}
+## Groupe 15 : Paramètres de l'application Paperless-ngx {#group-15-paperless-ngx-application-settings}
 
 Ces variables sont propres à Paperless-ngx et sont transmises directement à `Paperless Common`. Elles contrôlent le comportement de l'application à l'exécution et n'existent pas dans `App_GKE`.
 
@@ -441,7 +441,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "celery\|broker\|ready"
 
 ---
 
-## Groupe 17 : configuration du backend GKE {#group-17-gke-backend-configuration}
+## Groupe 17 : Configuration du backend GKE {#group-17-gke-backend-configuration}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -457,7 +457,7 @@ Variables disponibles : `gke_cluster_name`, `namespace_name`, `workload_type`, `
 
 ---
 
-## Groupe 18 : charges de travail avec état {#group-18-stateful-workloads}
+## Groupe 18 : Charges de travail avec état {#group-18-stateful-workloads}
 
 Identique à `App_GKE`. Voir la configuration StatefulSet décrite dans [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
@@ -500,11 +500,11 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | *(obligatoire)* | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `enable_redis` | `true` | **Critical** | Redis est le broker Celery. Le désactiver arrête tout traitement en arrière-plan. Les documents déposés dans le répertoire d'ingestion sont mis en file d'attente sans avertissement mais jamais traités. L'interface web de Paperless-ngx reste accessible mais n'affiche aucun nouveau document ingéré. |
@@ -517,8 +517,8 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 | `ocr_language` | `"eng"` | **Medium** | Un mauvais pack de langue produit un résultat OCR inexploitable. La recherche plein texte et l'étiquetage automatique fondés sur le contenu ne fonctionneront pas correctement pour les documents non anglais si le bon pack de langue n'est pas indiqué. |
 | `time_zone` | `"UTC"` | **Low** | Un fuseau horaire incorrect décale de plusieurs heures les dates extraites des noms de fichiers et des métadonnées. Les règles de classement basées sur la date et les tâches planifiées s'exécutent à des moments inattendus. |
 | `admin_email` | `"admin@example.com"` | **Medium** | Le compte administrateur initial est créé avec cette adresse. Indiquez une adresse réelle pour permettre la récupération du mot de passe. |
-| `db_name` | `"paperless"` | **Critical** | Immuable après le déploiement — la modifier recrée la base de données et détruit toutes les métadonnées des documents, les étiquettes, les correspondants et les règles de classement. |
-| `db_user` | `"paperless"` | **Critical** | Immuable après le déploiement — la modifier recrée l'utilisateur, invalide les identifiants et rompt la connexion de Paperless-ngx à la base de données. |
+| `db_name` | `"paperless"` | **Critical** | Immuable après le déploiement — modifier cette valeur recrée la base de données et détruit toutes les métadonnées des documents, les étiquettes, les correspondants et les règles de classement. |
+| `db_user` | `"paperless"` | **Critical** | Immuable après le déploiement — modifier cette valeur recrée l'utilisateur, invalide les identifiants et rompt la connexion de Paperless-ngx à la base de données. |
 | `stateful_pvc_size` | `"10Gi"` | **Medium** | Si vous utilisez un StatefulSet avec PVC pour le stockage local, 10 Gi peut se remplir rapidement de fichiers de travail OCR temporaires. Surveillez l'utilisation du disque et agrandissez-le au besoin. |
 | `backup_retention_days` | `7` | **Medium** | Insuffisant pour des archives documentaires soumises à des exigences de conformité. Passez à 30–90 jours pour les déploiements de gestion de documents juridiques ou réglementaires. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Des entiers nus sont interprétés comme des octets et empêchent la planification de tous les pods. |

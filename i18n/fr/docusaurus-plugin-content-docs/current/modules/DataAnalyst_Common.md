@@ -24,8 +24,8 @@ Pour l'infrastructure qui provisionne et exécute réellement l'agent, consultez
 | Domaine | Fourni par DataAnalyst_Common | Où cela apparaît |
 |---|---|---|
 | Aucun identifiant d'aucune sorte | Ne déclare aucun secret Secret Manager — l'authentification à Vertex AI repose sur le propre compte de service d'exécution du service Cloud Run | Aucun secret n'apparaît dans le déploiement |
-| Aucune base de données, aucun bucket | Définit `database_type = NONE` et ne provisionne aucun bucket GCS | Aucune instance Cloud SQL, tâche d'initialisation ni bucket n'apparaît dans le déploiement |
-| Image de conteneur | Construit une image personnalisée (Python, FastAPI + Google ADK) à partir du `Dockerfile` de `scripts/` | Output `container_image` du déploiement de la plateforme |
+| Aucune base de données, aucun bucket | Définit `database_type = NONE` et ne provisionne aucun bucket GCS | Aucune instance Cloud SQL, job d'initialisation ni bucket n'apparaît dans le déploiement |
+| Image de conteneur | Construit une image personnalisée (Python, FastAPI + Google ADK) à partir du `Dockerfile` de `scripts/` | Sortie `container_image` du déploiement de la plateforme |
 | Exécution de code en bac à sable | Héberge l'agent ADK, ses outils (`list_uploaded_files`, `inspect_file`, `execute_code`) et l'encapsuleur d'exécution du sandbox launcher | Comportement de l'application dans le guide de la plateforme |
 | Stockage éphémère des téléversements | Chaque fichier téléversé réside sous `UPLOAD_ROOT/<session_id>/` uniquement dans le stockage local du conteneur | N'apparaît jamais dans aucune ressource Google Cloud durable |
 | Contrôles de santé | Fournit des sondes HTTP ciblant `GET /_health` — délibérément pas `/healthz` | §Observabilité dans le guide de la plateforme |

@@ -22,7 +22,7 @@ module **ClickHouse_GKE**, qui fournit le magasin d'événements dans lequel cha
 des sites). Vous allez déployer ClickHouse, raccorder ses sorties à Plausible, déployer
 Plausible, le vérifier de bout en bout, l'exploiter, puis démanteler les deux dans le bon ordre.
 
-Le lab se concentre sur l'exploitation des **modules GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation des **modules GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Plausible. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Plausible_GKE) —
@@ -30,7 +30,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer ClickHouse_GKE et vérifier qu'il est en bonne santé avant que quoi que ce soit n'en dépende.
 - Récupérer les sorties de ClickHouse et les raccorder à la configuration de Plausible.
@@ -187,7 +187,7 @@ Remarques sur le raccordement :
    avec ses secrets Secret Manager (`SECRET_KEY_BASE`, `TOTP_VAULT_KEY` et le mot de passe
    de la base de données), construit l'image personnalisée minimale (`FROM
    ghcr.io/plausible/community-edition`, figée sur `v3.2.1` lorsque
-   `application_version = "latest"`) et exécute la tâche ponctuelle `db-init`. Les premiers
+   `application_version = "latest"`) et exécute le job ponctuel `db-init`. Les premiers
    déploiements prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Repérez la charge de travail avec des filtres indépendants des noms :
@@ -333,7 +333,7 @@ gérées séparément et ne sont pas supprimées ici.
 | 1 — Prérequis et authentification | Manuel | gcloud/kubectl/tofu authentifiés ; plateforme Services_GCP confirmée |
 | 2 — Déployer ClickHouse_GKE | Automatisé | Magasin d'événements déployé ; `/ping` répond `Ok.` avant que quoi que ce soit n'en dépende |
 | 3 — Récupérer et raccorder les sorties | Manuel | Quatre valeurs `tofu output` collées dans les tfvars de déploiement de Plausible |
-| 4 — Déployer Plausible_GKE | Automatisé | Charge de travail, Cloud SQL PG15, secrets, image personnalisée, tâche `db-init` ; le point d'entrée compose les deux URL de base de données et effectue les migrations |
+| 4 — Déployer Plausible_GKE | Automatisé | Charge de travail, Cloud SQL PG15, secrets, image personnalisée, job `db-init` ; le point d'entrée compose les deux URL de base de données et effectue les migrations |
 | 5 — Vérifier et premier compte | Manuel | `/api/health` renvoie 200 avec un corps d'état JSON non vide ; premier compte enregistré sur `/register` ; site ajouté ; extrait de suivi récupéré |
 | 6 — Exploiter (jour 2) | Manuel | Inscriptions fermées ; secrets et autorisation inter-modules inspectés ; journaux examinés |
 | 7 — Démanteler | Automatisé | Plausible détruit en premier, puis ClickHouse |

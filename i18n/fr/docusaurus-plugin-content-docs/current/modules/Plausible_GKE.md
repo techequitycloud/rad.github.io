@@ -50,7 +50,7 @@ Cloud :
 | Build de l'image | Cloud Build + Artifact Registry | Build personnalisé léger FROM `ghcr.io/plausible/community-edition` |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **ClickHouse n'est pas facultatif.** Une garde de validation au moment du plan
   **bloque l'apply lorsque `clickhouse_url` est vide**, et `module_dependency`
@@ -97,7 +97,7 @@ Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Plausible {#a-gke-autopilot--the-plausible-workload}
 
@@ -296,9 +296,9 @@ standard.
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 | `clickhouse_url` | `""` | **Obligatoire en pratique** — le plan est bloqué si elle est vide. Point de terminaison de base `http(s)://host[:port]` nu, sans identifiants ni chemin : `clickhouse_internal_endpoint` de ClickHouse_GKE (à privilégier) ou `clickhouse_endpoint`. |
-| `clickhouse_password_secret` | `""` | Output `clickhouse_password_secret_id` de ClickHouse_GKE. Le socle accorde l'accès au compte de service de la charge de travail et injecte `CLICKHOUSE_PASSWORD`. |
-| `clickhouse_db` | `plausible_events_db` | Output `clickhouse_database` de ClickHouse_GKE. |
-| `clickhouse_user` | `plausible` | Output `clickhouse_username` de ClickHouse_GKE. |
+| `clickhouse_password_secret` | `""` | Sortie `clickhouse_password_secret_id` de ClickHouse_GKE. Le socle accorde l'accès au compte de service de la charge de travail et injecte `CLICKHOUSE_PASSWORD`. |
+| `clickhouse_db` | `plausible_events_db` | Sortie `clickhouse_database` de ClickHouse_GKE. |
+| `clickhouse_user` | `plausible` | Sortie `clickhouse_username` de ClickHouse_GKE. |
 | `base_url` | `""` | `BASE_URL` publique — pilote l'extrait de suivi et les liens des e-mails. Vide, elle utilise l'URL de service prévue par la plateforme. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -376,13 +376,13 @@ d'App_GKE — consultez [App_GKE](App_GKE.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le
 moyen le plus rapide de localiser et d'explorer les ressources en cours
 d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -403,13 +403,13 @@ d'exécution.
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub du CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt (réexécutez l'apply si `false` sur un nouveau cluster en ligne). |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt (réexécutez l'apply si `false` sur un nouveau cluster intégré (inline)). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -421,7 +421,7 @@ d'exécution.
 > `min > max`, IAP sans identifiants OAuth et un sidecar Cloud SQL avec
 > `database_type = "NONE"` — le tout avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `application_version` de ClickHouse_GKE | Conservez l'épinglage `24.12-alpine` | Critical | Remplacer l'épinglage de ClickHouse par une version non testée a déjà cassé Plausible en amont (plausible/analytics#3855) — les migrations ou les requêtes échouent contre un ClickHouse incompatible. Plausible épingle la version de ClickHouse pour une bonne raison. |
 | `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation | Critical | La rotation invalide toutes les sessions Phoenix — tous les utilisateurs sont déconnectés d'un coup. |

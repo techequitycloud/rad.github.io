@@ -31,7 +31,7 @@ vie du déploiement — reportez-vous au
 Gotify s'exécute sous la forme d'un conteneur Go à binaire unique sur Cloud Run v2.
 Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go, 1 vCPU / 512 MiB par défaut, CPU toujours alloué pour les flux WebSocket |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — ce module n'utilise jamais le SQLite intégré de Gotify |
@@ -39,7 +39,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Build du conteneur | Cloud Build + Artifact Registry | Encapsule `ghcr.io/gotify/server` avec un point d'entrée de mappage de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type = "POSTGRES_15"` est fixé par la
   couche applicative partagée ; le mode SQLite de Gotify n'est pas utilisé, aucun
@@ -102,7 +102,7 @@ l'environnement d'exécution et la répartition du trafic.
 Gotify stocke toutes les données de l'application (messages, applications, clients,
 utilisateurs) dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y
 connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune
-IP publique n'est exposée. Lors du premier déploiement, une tâche d'initialisation
+IP publique n'est exposée. Lors du premier déploiement, un job d'initialisation
 crée la base de données et le rôle de l'application ; Gotify applique ensuite son
 propre schéma par auto-migration GORM au premier démarrage.
 
@@ -125,7 +125,7 @@ Le mot de passe administrateur (`GOTIFY_DEFAULTUSER_PASS`) est généré automat
 et stocké dans Secret Manager. Le mot de passe de la base de données est géré
 séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~gotify"
@@ -138,10 +138,10 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de ro
 
 L'image personnalisée encapsule `ghcr.io/gotify/server` avec un point d'entrée de
 mappage de la base de données. Cloud Build la construit et la pousse vers Artifact
-Registry ; `enable_image_mirroring = true` duplique l'image de base amont dans
+Registry ; `enable_image_mirroring = true` met en miroir l'image de base amont dans
 Artifact Registry afin d'éviter les limites de débit des registres.
 
-- **Console :** Cloud Build → Historique ; Artifact Registry → Dépôts.
+- **Console :** Cloud Build → History ; Artifact Registry → Repositories.
 - **CLI :**
   ```bash
   gcloud builds list --project "$PROJECT" --limit 5
@@ -155,7 +155,7 @@ nécessaire aux applications émettrices et aux clients récepteurs. Un équilib
 charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être
 ajouté par-dessus.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -171,8 +171,8 @@ Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec un test de
 disponibilité facultatif sur `/health` (désactivé par défaut) et des règles d'alerte
 facultatives.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -182,8 +182,8 @@ facultatives.
 
 ## 3. Comportement de l'application Gotify {#3-gotify-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Elle se
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de
   données et le rôle de l'application, puis accorde les privilèges. La tâche peut être
   relancée sans risque.
@@ -240,7 +240,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -271,7 +271,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -341,7 +341,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `enable_postgres_extensions` / `postgres_extensions` | désactivé | Extensions PostgreSQL facultatives. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -367,7 +367,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_host` | `""` | Point de terminaison Redis (utilisé uniquement lorsque `enable_redis = true`). |
 | `redis_port` | `6379` | Port Redis. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -397,14 +397,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres instances (bus de messages interne au processus). |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
@@ -423,8 +423,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
 propre à Gotify partagée avec la variante GKE est décrite dans
 **[Gotify_Common](Gotify_Common.md)**.
 

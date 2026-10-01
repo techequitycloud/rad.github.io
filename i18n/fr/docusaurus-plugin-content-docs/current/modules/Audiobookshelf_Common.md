@@ -18,7 +18,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Audiobookshelf, consultez
 les guides des plateformes ([Audiobookshelf_GKE](Audiobookshelf_GKE.md),
-[Audiobookshelf_CloudRun](Audiobookshelf_CloudRun.md)) et les guides de fondation
+[Audiobookshelf_CloudRun](Audiobookshelf_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -51,11 +51,11 @@ générer :
 En conséquence, `Audiobookshelf_Common` expose des sorties `secret_ids` et
 `secret_values` **vides**. Les deux wrappers de variante les raccordent néanmoins de
 manière uniforme (via `module_secret_env_vars` / `explicit_secret_values`) afin que
-l'appel à la fondation soit identique d'une plateforme à l'autre — il n'y a
+l'appel au socle soit identique d'une plateforme à l'autre — il n'y a
 simplement rien à injecter.
 
 Il n'y a donc aucun secret applicatif à récupérer dans Secret Manager pour ce module.
-(La fondation peut néanmoins créer des secrets au niveau de la plateforme sans lien
+(Le socle peut néanmoins créer des secrets au niveau de la plateforme sans lien
 avec l'application ; voir [App_Common](App_Common.md).)
 
 ---
@@ -121,11 +121,11 @@ gcloud storage ls gs://<data-bucket>/          # bucket name is in the platform 
 ## 5. Image de conteneur et épinglage de version {#5-container-image-and-version-pinning}
 
 L'image est un **wrapper léger** construit `FROM ghcr.io/advplyr/audiobookshelf` afin
-que la fondation puisse la mettre en miroir dans Artifact Registry :
+que le socle puisse la mettre en miroir dans Artifact Registry :
 
 - Le build passe par **Cloud Build avec Kaniko** et respecte l'ARG de build propre à
   l'application **`AUDIOBOOKSHELF_VERSION`** — délibérément *pas* l'`APP_VERSION`
-  générique qu'injecte la fondation (qu'elle forcerait à `latest`). Lorsque
+  générique qu'injecte le socle (qu'elle forcerait à `latest`). Lorsque
   `application_version = "latest"`, l'ARG correspond à la valeur épinglée par défaut
   `2.17.0` ; sinon, il utilise le tag demandé.
 - `enable_image_mirroring = true` par défaut : l'image est donc récupérée une seule
@@ -141,7 +141,7 @@ gcloud artifacts docker images list \
 
 ---
 
-## 6. Paramètres applicatifs de base {#6-core-application-settings}
+## 6. Paramètres principaux de l'application {#6-core-application-settings}
 
 `Audiobookshelf_Common` établit l'environnement de référence afin que l'application
 démarre correctement dès le premier lancement :
@@ -161,7 +161,7 @@ orphelines la base de données SQLite existante et les métadonnées en cache.
 
 ---
 
-## 7. Comportement des sondes d'état {#7-health-probe-behaviour}
+## 7. Comportement des sondes de santé {#7-health-probe-behaviour}
 
 Les sondes de démarrage et de vivacité par défaut ciblent **`/healthcheck`** — le point
 de terminaison non authentifié d'Audiobookshelf qui renvoie `200` dès que le serveur

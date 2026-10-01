@@ -13,7 +13,7 @@ Nextcloud est la principale plateforme auto-hébergée de synchronisation de fic
 de collaboration, utilisée par 400 millions d'utilisateurs dans plus de 100 000
 organisations — dont des administrations et des établissements de santé à la recherche
 d'une alternative à Google Drive et OneDrive conforme au RGPD. Ce module déploie
-Nextcloud sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui
+Nextcloud sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Nextcloud et sur la manière de
@@ -21,7 +21,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de
 commande. Pour les mécanismes communs à toute application GKE — Workload Identity,
 entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -30,13 +30,13 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 Nextcloud s'exécute en tant que charge de travail PHP/Apache. Le déploiement assemble
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods PHP/Apache, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — Nextcloud ne prend pas en charge PostgreSQL dans ce déploiement |
-| Fichiers partagés | Filestore (NFS) | Répertoires `config/` et `data/` partagés entre toutes les répliques |
+| Fichiers partagés | Filestore (NFS) | Répertoires `config/` et `data/` partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket `nc-data` provisionné par déploiement |
-| Cache et verrouillage | Redis | Activé par défaut ; évite les conflits de verrouillage de fichiers entre répliques |
+| Cache et verrouillage | Redis | Activé par défaut ; évite les conflits de verrouillage de fichiers entre réplicas |
 | Secrets | Secret Manager | Mot de passe administrateur généré automatiquement ; secrets de configuration post-installation |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré facultatifs |
 
@@ -44,11 +44,11 @@ un ensemble ciblé de services Google Cloud :
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixe ; choisir
   PostgreSQL ou `NONE` empêche le démarrage.
-- **NFS est activé par défaut.** Toutes les répliques doivent partager `config.php` et
+- **NFS est activé par défaut.** Tous les réplicas doivent partager `config.php` et
   le répertoire des données utilisateur. Sans NFS, chaque redémarrage de pod supprime
   les fichiers.
 - **Redis est activé par défaut.** Sans cache et backend de verrouillage partagés, les
-  écritures concurrentes entre répliques provoquent des erreurs « File is locked ».
+  écritures concurrentes entre réplicas provoquent des erreurs « File is locked ».
 - **Les limites PHP sont intégrées à l'image du conteneur** au moment du build.
   Modifier `php_memory_limit`, `upload_max_filesize` ou `post_max_size` nécessite une
   nouvelle exécution de Cloud Build.
@@ -65,18 +65,18 @@ un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Nextcloud {#a-gke-autopilot--the-nextcloud-workload}
 
 Les pods Nextcloud sont planifiés sur Autopilot, qui facture le CPU et la mémoire que
 les pods demandent réellement. L'autoscaling horizontal des pods (Horizontal Pod
 Autoscaling) dimensionne le déploiement entre les nombres minimal et maximal de
-répliques.
+réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Nextcloud pour voir les pods, les révisions et les événements. Kubernetes
-  Engine → Services et Ingress affiche l'IP externe.
+  Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -110,7 +110,7 @@ et l'utilisateur de l'application avec la collation `utf8mb4`.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour
 le modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe,
 consultez [App_GKE](App_GKE.md).
 
@@ -118,7 +118,7 @@ consultez [App_GKE](App_GKE.md).
 
 Les données des fichiers utilisateur de Nextcloud sont écrites sur un partage
 **Filestore (NFS)** monté dans chaque pod. `entrypoint.sh` définit
-`NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` afin que toutes les répliques partagent
+`NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` afin que tous les réplicas partagent
 les mêmes fichiers utilisateur. `config.php` n'est **pas** stocké sur NFS — il est
 reconstruit localement sur chaque pod à partir des secrets de Secret Manager (voir §3
 « Secrets de configuration post-installation » ci-dessous). Un bucket **Cloud
@@ -142,7 +142,7 @@ CMEK.
 ### D. Cache Redis et verrouillage de fichiers {#d-redis-cache-and-file-locking}
 
 Redis sert de support au cache distribué de Nextcloud (`memcache.distributed`) et au
-verrouillage de fichiers (`filelocking.enabled`). Avec plus d'une réplique, il est
+verrouillage de fichiers (`filelocking.enabled`). Avec plus d'un réplica, il est
 obligatoire — sans lui, les écritures concurrentes produisent des erreurs HTTP 503
 « File is locked ». Lorsqu'aucun hôte Redis externe n'est configuré et que NFS est
 activé, l'IP du serveur NFS est utilisée comme point de terminaison Redis.
@@ -163,7 +163,7 @@ Manager et injectés dans les pods à l'exécution. Les trois secrets de configu
 commencent avec la valeur provisoire `"UNSET"` ; le hook post-installation du
 conteneur écrit les vraies valeurs une fois `occ maintenance:install` terminé.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~nextcloud"
@@ -171,7 +171,7 @@ conteneur écrit les vraies valeurs une fois `occ maintenance:install` terminé.
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store
+[Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store
 CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -182,7 +182,7 @@ statique peut être réservée afin que l'adresse survive aux redéploiements. L
 domaines personnalisés sont également ajoutés automatiquement à la liste
 `NEXTCLOUD_TRUSTED_DOMAINS` de Nextcloud.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -198,8 +198,8 @@ Les flux stdout/stderr des pods sont envoyés à Cloud Logging ; les métriques 
 Cloud SQL sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règles
 d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -235,9 +235,9 @@ d'alerte facultatifs sont disponibles.
 - **NFS uniquement pour les données utilisateur.** NFS ne sert de support qu'au
   répertoire partagé des données utilisateur
   (`NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data`). `config.php` n'est ni stocké sur NFS
-  ni partagé via un lien symbolique — chaque réplique le reconstruit localement à
-  partir des valeurs Secret Manager décrites ci-dessus, ce qui permet à toutes les
-  répliques de converger vers la même configuration sans dépendre de NFS pour l'état
+  ni partagé via un lien symbolique — chaque réplica le reconstruit localement à
+  partir des valeurs Secret Manager décrites ci-dessus, ce qui permet à tous les
+  réplicas de converger vers la même configuration sans dépendre de NFS pour l'état
   de la configuration.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/status.php`,
   qui renvoie un HTTP 200 avec un objet JSON d'état quel que soit l'état de
@@ -267,7 +267,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts/de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -287,8 +287,8 @@ comportement et leurs valeurs par défaut standard.
 | `cpu_limit` | `2000m` | CPU par pod ; 2 vCPU recommandés. |
 | `memory_limit` | `4Gi` | Mémoire par pod ; 4 GiB recommandés. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | Objet de ressources structuré ; remplace `cpu_limit`/`memory_limit` lorsqu'il est défini. |
-| `min_instance_count` | `1` | Nombre minimal de répliques. Conservez ≥ 1 pour les clients WebDAV qui maintiennent des connexions persistantes. |
-| `max_instance_count` | `5` | Nombre maximal de répliques. Exige Redis + NFS lorsqu'il est > 1. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Conservez ≥ 1 pour les clients WebDAV qui maintiennent des connexions persistantes. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas. Exige Redis + NFS lorsqu'il est > 1. |
 | `container_port` | `80` | Nextcloud/Apache écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
@@ -369,7 +369,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Volume Filestore partagé pour la configuration et les données de Nextcloud. **Requis pour plusieurs répliques.** |
+| `enable_nfs` | `true` | Volume Filestore partagé pour la configuration et les données de Nextcloud. **Requis pour plusieurs réplicas.** |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 | `nfs_volume_name` | `nfs-data-volume` | Nom du volume Kubernetes pour le montage NFS. |
 | `nfs_instance_name` | `""` | Nom de la VM GCE NFS existante. Découvert automatiquement s'il est vide. |
@@ -394,7 +394,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 16 — Base de données {#group-16--database-backend}
+### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -474,12 +474,12 @@ les valeurs de votre relais de messagerie pour activer l'e-mail.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -495,7 +495,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -522,13 +522,13 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `application_domains` | inclure tous les noms d'hôte d'accès | Critical | Nextcloud bloque les requêtes provenant de domaines non listés avec « Access through untrusted domain ». |
 | `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
-| `enable_redis` | `true` | High | Avec plus d'une réplique, les verrous de fichiers deviennent obsolètes et les écritures concurrentes renvoient HTTP 503. |
+| `enable_redis` | `true` | High | Avec plus d'un réplica, les verrous de fichiers deviennent obsolètes et les écritures concurrentes renvoient HTTP 503. |
 | `redis_host` | `""` ou IP explicite | High | Aucun point de terminaison Redis valide lorsque NFS est désactivé et qu'aucun hôte n'est défini. |
 | `upload_max_filesize` / `post_max_size` | à augmenter pour les gros fichiers | High | Intégrées à l'image ; les fichiers dépassant la limite échouent silencieusement. `post_max_size` doit être ≥ `upload_max_filesize`. |
 | `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des OOM PHP lors de gros téléversements ou de la génération de miniatures. |
 | `NEXTCLOUD_UPDATE` | `1` (par défaut) ou `0` | High | Laisser `1` lors d'une mise à niveau de version majeure peut corrompre la base de données. Définissez `0` et exécutez `occ upgrade` manuellement d'une version majeure à l'autre. |
 | `min_instance_count` | `1` | High | `0` provoque des déconnexions liées aux démarrages à froid pour les clients de synchronisation WebDAV. |
-| `max_instance_count > 1` | exige Redis + NFS | High | Plusieurs répliques sans Redis provoquent des erreurs de verrouillage de fichiers et une possible corruption des données. |
+| `max_instance_count > 1` | exige Redis + NFS | High | Plusieurs réplicas sans Redis provoquent des erreurs de verrouillage de fichiers et une possible corruption des données. |
 | `pdb_min_available` vs `min_instance_count` | laisser une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
 | `nextcloud_admin_user` | à changer par rapport à `admin` | Medium | La valeur par défaut `admin` est une cible courante d'attaques par force brute sur les déploiements publics. |
 | `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sans ces options, le panneau d'administration de Nextcloud est accessible publiquement. |
@@ -537,7 +537,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Nextcloud, partagée

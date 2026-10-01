@@ -39,7 +39,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secret des identifiants | Secret Manager | `NODE_RED_CREDENTIAL_SECRET`, généré automatiquement, chiffre les identifiants des flux |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est requise.** Node-RED stocke tout son état dans son
   répertoire `/data` ; `database_type` vaut `"NONE"` par défaut.
@@ -194,9 +194,9 @@ facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Node-RED {#3-node-red-application-behaviour}
 
-- **Ni base de données, ni tâche d'initialisation.** Node-RED stocke tout son état
+- **Ni base de données, ni job d'initialisation.** Node-RED stocke tout son état
   dans son répertoire `/data`. Aucune instance Cloud SQL n'est provisionnée et
-  aucune tâche d'initialisation de schéma n'est requise. Le premier démarrage crée
+  aucun job d'initialisation de schéma n'est requis. Le premier démarrage crée
   automatiquement les fichiers de flux par défaut si `/data` est vide.
 - **Chiffrement des identifiants des flux.** `NODE_RED_CREDENTIAL_SECRET` est
   injecté à l'exécution depuis Secret Manager. Cette clé chiffre le fichier
@@ -323,15 +323,15 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/`, délai de 30s | Sonde HTTP sur le chemin de l'éditeur Node-RED. |
-| `health_check_config` | HTTP `/`, délai de 30s | Sonde d'activité — redémarre le conteneur si l'éditeur ne répond pas. |
+| `health_check_config` | HTTP `/`, délai de 30s | Sonde de vivacité — redémarre le conteneur si l'éditeur ne répond pas. |
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring facultatif. Désactivé par défaut ; activez-le pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Node-RED ne nécessite aucune tâche d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
+| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour les opérations de maintenance périodiques. |
 | `additional_services` | `[]` | Deployments Kubernetes complémentaires déployés aux côtés de Node-RED. |
 
@@ -413,7 +413,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'Ingress. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -451,12 +451,12 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_nfs` | `true` | Critical | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage ou replanification de pod. |
 | `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critical | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |

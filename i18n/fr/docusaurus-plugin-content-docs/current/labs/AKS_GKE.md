@@ -32,7 +32,7 @@ ne reprend volontairement pas.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer ce qu'il provisionne dans les deux clouds.
 - Vérifier que le cluster AKS est enregistré dans la fleet et l'atteindre via le Connect gateway.
@@ -54,7 +54,7 @@ ne reprend volontairement pas.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -95,7 +95,7 @@ export ARM_SUBSCRIPTION_ID="<azure-subscription-id>"
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Confirmez que le cluster est enregistré dans la fleet et que l'appartenance est prête :
 
@@ -173,7 +173,7 @@ export ARM_SUBSCRIPTION_ID="<azure-subscription-id>"
      --project "$PROJECT" --limit 20
    ```
 
-   Filtre de l'explorateur de journaux (Logs Explorer) :
+   Filtre du Logs Explorer :
    `resource.labels.cluster_name="<cluster-name>"`.
 
 2. **Métriques** — Managed Prometheus transmet les métriques Kubernetes à Cloud Monitoring :
@@ -251,7 +251,7 @@ kubectl config delete-context "connectgateway_${PROJECT}_global_${CLUSTER}"
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module crée le cluster Azure AKS et l'enregistre comme membre de la fleet avec journalisation et métriques gérées |
-| 2 — Accès et vérification | Manuel | L'appartenance est `READY` ; le cluster est joignable via le Connect gateway avec `kubectl get nodes` |
+| 2 — Accéder et vérifier | Manuel | L'appartenance est `READY` ; le cluster est joignable via le Connect gateway avec `kubectl get nodes` |
 | 3 — Exploiter | Manuel | Inspecter le cluster, accorder l'accès passerelle + RBAC, mettre à niveau la version de la plateforme, redimensionner le pool de nœuds |
 | 4 — Observer | Manuel | Interroger les journaux AKS dans Cloud Logging ; consulter les métriques Kubernetes et les tableaux de bord GKE dans Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes d'appartenance, de rattachement, d'identifiants Azure, d'accès à la passerelle et de propagation des API |

@@ -37,7 +37,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
   la persistance sur GKE.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -54,7 +54,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -75,14 +75,14 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme construit une image personnalisée légère (`FROM classicpress/classicpress`) via
    Cloud Build, déploie la charge de travail dans le cluster GKE Autopilot sous la forme d'un
    **StatefulSet** avec, par pod, un PVC en mode bloc `standard-rwo` de 10Gi monté sur
-   `/var/www/html`, provisionne une base de données Cloud SQL pour MySQL 8.0 avec ses secrets
+   `/var/www/html`, provisionne une base de données Cloud SQL for MySQL 8.0 avec ses secrets
    Secret Manager (`CLASSICPRESS_SALT_SEED` et le mot de passe de la base de données), une
    instance Filestore (NFS) (`enable_nfs = true` par défaut), un bucket Cloud Storage
    `classicpress-uploads`, puis exécute un job ponctuel d'initialisation de la base de données (`db-init`)
    qui crée la base de données de l'application et son utilisateur. Un premier déploiement prend environ
    **20 à 35 minutes** (la création de Cloud SQL domine).
 
-3. Connectez-vous au cluster et identifiez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et identifiez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -138,7 +138,7 @@ export REGION="us-central1"           # the region you deploy into
    page de détails du déploiement — le module possède la spécification de la charge de travail, la mise à l'échelle est donc une
    modification de configuration et non un `kubectl scale` manuel (une modification manuelle serait
    annulée lors de la prochaine application). Conservez `max_instance_count = 1` : `stateful_pvc_enabled
-   = true` donne à chaque pod du StatefulSet son **propre** PVC ; une seconde réplique exécuterait donc
+   = true` donne à chaque pod du StatefulSet son **propre** PVC ; un second réplica exécuterait donc
    sa propre copie distincte et non synchronisée de l'installation au lieu de la partager.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version dans la plateforme
@@ -180,10 +180,10 @@ export REGION="us-central1"           # the region you deploy into
    téléversés, les extensions et les thèmes sous `wp-content`, et la logique de copie au premier démarrage
    du point d'entrée amont ignore explicitement un répertoire `wp-content` existant ; ce
    montage NFS constitue donc lui aussi un véritable chemin de persistance confirmé pour ces données — et non
-   un stockage de réserve inutilisé. Sur un StatefulSet à une seule réplique, le PVC suffit déjà à
+   un stockage de réserve inutilisé. Sur un StatefulSet à un seul réplica, le PVC suffit déjà à
    assurer la persistance ; NFS fournit en plus une copie *partagée* (et non propre à chaque pod) de
    `wp-content`, ce qui compte si `stateful_pvc_enabled` est un jour désactivé ou si la
-   charge de travail passe à plusieurs répliques. **Cloud Run** (sans volume en mode bloc par
+   charge de travail passe à plusieurs réplicas. **Cloud Run** (sans volume en mode bloc par
    instance) s'appuie sur ce même montage NFS sur `/var/www/html/wp-content` comme
    mécanisme de persistance principal pour les fichiers téléversés, extensions et thèmes — voir le
    [lab ClassicPress_CloudRun](https://docs.radmodules.dev/docs/labs/ClassicPress_CloudRun).
@@ -204,7 +204,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et
    mémoire des pods, le nombre de redémarrages et les métriques de requêtes. Vérifiez aussi l'utilisation du PVC
    sous Kubernetes Engine → Storage à mesure que la médiathèque grandit. Le module peut
-   provisionner un contrôle de disponibilité (uptime check, lorsqu'il est activé) ; consultez Monitoring → Uptime checks et
+   provisionner un test de disponibilité (uptime check, lorsqu'il est activé) ; consultez Monitoring → Uptime checks et
    Alerting → Policies.
 
 ---
@@ -254,17 +254,17 @@ pour les pièges propres à chaque paramètre (notamment la règle essentielle d
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes,
-son namespace et son PVC, la base de données Cloud SQL, les secrets Secret Manager, l'instance Filestore,
+son espace de noms et son PVC, la base de données Cloud SQL, les secrets Secret Manager, l'instance Filestore,
 le bucket GCS et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le
 VPC, le cluster GKE, l'instance Cloud SQL partagée, le registre) sont gérées séparément et ne sont pas
 supprimées ici.
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|
@@ -273,4 +273,4 @@ supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base ; comprendre comment le PVC et le montage NFS de `wp-content` assurent ensemble la persistance |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et l'utilisation du PVC |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -61,7 +61,7 @@ ou protégé :
 C'est pourquoi les variables Base de données, Redis, Sauvegarde et (sur GKE)
 StatefulSet/NFS des guides des plateformes sont documentées comme **héritées mais sans
 effet** — elles n'existent que pour satisfaire la reproduction des variables du
-Foundation et n'ont aucun effet pour Element.
+socle et n'ont aucun effet pour Element.
 
 ---
 
@@ -87,7 +87,7 @@ nginx :
 Le build est défini par `scripts/Dockerfile` et poussé par `scripts/cloudbuild.yaml`
 (un build Kaniko). Le tag de version est défini via un **ARG de build propre à
 l'application, `ELEMENT_VERSION`**, plutôt que via l'`APP_VERSION` générique — le
-Foundation injecte `APP_VERSION` et écraserait sinon le tag par `latest`, qui n'est pas
+socle injecte `APP_VERSION` et écraserait sinon le tag par `latest`, qui n'est pas
 un tag `element-web` valide. `Element_Common` résout `application_version = "latest"`
 en `v1.11.86` épinglé avant de définir l'ARG.
 

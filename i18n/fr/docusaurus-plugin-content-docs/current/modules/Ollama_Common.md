@@ -25,7 +25,7 @@ du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Domaine | Fourni par Ollama_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Épingle l'image préconstruite `ollama/ollama` et active la duplication des images | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Épingle l'image préconstruite `ollama/ollama` et active la mise en miroir des images | Sortie `container_image` du déploiement de la plateforme |
 | Aucun identifiant | Produit des maps `secret_ids` et `secret_values` vides — Ollama ne requiert ni identifiants de base de données ni mots de passe | Aucune entrée Secret Manager n'est créée |
 | Stockage des modèles | Déclare le bucket **Cloud Storage** `<prefix>-models` et ajoute le montage de volume GCS Fuse `ollama-models` | Sorties `models_bucket` et `storage_buckets` |
 | Paramètres de base | Fixe `container_port = 11434`, `database_type = "NONE"`, `enable_cloudsql_volume = false` et injecte les trois variables d'environnement Ollama obligatoires | Comportement de l'application dans les guides des plateformes |
@@ -84,7 +84,7 @@ gcloud storage buckets describe gs://<models-bucket> --project "$PROJECT"
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Ollama_Common` établit la configuration de base d'Ollama afin que le service démarre
 correctement dès le premier lancement :

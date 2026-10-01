@@ -87,8 +87,8 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Documenso {#a-gke-autopilot--the-documenso-workload}
 
@@ -130,11 +130,11 @@ migrations Prisma au démarrage du conteneur.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez
+contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatiques et
 la rotation des mots de passe.
 
-### C. Cloud Storage et fichiers persistants {#c-cloud-storage--file-persistence}
+### C. Cloud Storage et persistance des fichiers {#c-cloud-storage--file-persistence}
 
 Un bucket **Cloud Storage** dédié (suffixe `uploads`, CORS activé pour un accès
 direct depuis le navigateur) et un compte de service détenant une **clé HMAC** sont
@@ -273,22 +273,22 @@ dans le [README du module](https://github.com/techequitycloud/partner-modules/bl
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `documenso` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Documenso` | Nom lisible affiché dans la console GCP. |
@@ -300,7 +300,7 @@ dans le [README du module](https://github.com/techequitycloud/partner-modules/bl
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `2000m` | 2 vCPU par pod (surcharge propre à l'application ; la variable générique `container_resources` n'est pas transmise pour ce module). |
 | `memory_limit` | `2Gi` | Mémoire par pod. |
@@ -310,12 +310,12 @@ dans le [README du module](https://github.com/techequitycloud/partner-modules/bl
 | `container_protocol` | `http1` | HTTP/1.1 ; `h2c` est disponible si une future version amont a besoin de gRPC/HTTP2. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy — requis pour la connectivité à la base sur GKE. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 | `container_image_source` / `container_image` / `container_resources` / `container_build_config` | — | **Non référencées.** `Documenso_Common` effectue toujours le build personnalisé et fixe ses propres limites de ressources à partir de `cpu_limit`/`memory_limit` ; ces variables reprises du socle n'ont aucun effet sur ce module. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Variables d'environnement supplémentaires en clair ; les variables essentielles de Documenso sont injectées automatiquement. |
 | `secret_environment_variables` | `{}` | Références Secret Manager supplémentaires injectées comme variables d'environnement. |
@@ -325,15 +325,15 @@ dans le [README du module](https://github.com/techequitycloud/partner-modules/bl
 | `smtp_password` | `""` | Génère automatiquement une valeur dans Secret Manager lorsqu'il est laissé vide et que `smtp_host` est défini. |
 | `mail_from` | `""` | Adresse d'expéditeur des e-mails sortants de Documenso. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP externe / Gateway pour l'interface Documenso. |
 | `workload_type` | `Deployment` | Documenso n'utilise ni StatefulSet ni PVC. |
 | `session_affinity` | `ClientIP` | Routage persistant afin qu'un client atteigne toujours le même pod. |
 | `network_tags` | `["nfsserver"]` | Requis pour la connectivité NFS lorsque `enable_nfs = true` (par défaut). |
-| `gke_cluster_name` / `namespace_name` | `""` | Laissez vide pour la découverte automatique / un nom de namespace généré automatiquement. |
+| `gke_cluster_name` / `namespace_name` | `""` | Laissez vide pour la découverte automatique / un nom d'espace de noms généré automatiquement. |
 | `gke_cluster_selection_mode` / `enable_multi_cluster_service` / `prereq_gke_subnet_cidr` / `extra_service_ports` | — | **Non référencées** par ce module — variables reprises du socle sans effet ici. |
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
@@ -348,14 +348,14 @@ module — elles n'ont aucun effet sur le déploiement de Documenso.
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, `failure_threshold=20`, `period_seconds=30` | Sonde propre à Documenso, transmise via la sortie `config` du module Common ; remplace en pratique la valeur par défaut générique `startup_probe_config` du socle pour cette application. |
 | `liveness_probe` | HTTP `/`, `initial_delay_seconds=60`, `failure_threshold=3` | Même mécanisme que `startup_probe` ; remplace la valeur par défaut générique `health_check_config`. |
@@ -363,7 +363,7 @@ module — elles n'ont aucun effet sur le déploiement de Documenso.
 
 ### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` (qui crée uniquement la base de données et le rôle). |
 | `cron_jobs` / `additional_services` | `[]` | Aucun job planifié ni sidecar par défaut. |
@@ -379,7 +379,7 @@ groupe 12 dans d'autres modules).
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisionne Filestore. Non utilisé par défaut pour le stockage des documents — voir la [Vue d'ensemble](#1-overview). Pertinent surtout comme hôte Redis de repli si `enable_redis` est activé ultérieurement. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur (inutilisé par la configuration par défaut de l'application). |
@@ -388,7 +388,7 @@ groupe 12 dans d'autres modules).
 
 ### Groupe 14 — Cloud Storage {#group-14--cloud-storage}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `storage_buckets` | `[{ name_suffix = "data" }]` | `Documenso_Common` provisionne en outre toujours son propre bucket `uploads` (CORS activé), indépendamment de ce paramètre. |
 | `gcs_volumes` | `[]` | Aucun volume GCS Fuse monté par défaut. |
@@ -397,7 +397,7 @@ groupe 12 dans d'autres modules).
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Documenso utilise un fournisseur de jobs local adossé à PostgreSQL et ne nécessite pas Redis. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Pertinentes uniquement si vous faites passer Documenso au fournisseur de jobs `bullmq`. |
@@ -405,7 +405,7 @@ groupe 12 dans d'autres modules).
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | **Non imposée au moment du plan** — la remplacer par autre chose que Postgres casse le schéma Prisma de Documenso à l'exécution au lieu de faire échouer le plan. |
 | `db_name` | `documenso` | La base de données réellement créée et injectée comme `DB_NAME`. |
@@ -425,7 +425,7 @@ sur ce module mais ne sont **pas transmises** au socle — `main.tf` câble
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
 | `backup_retention_days` | `7` | Rétention ; à augmenter pour la production / la conformité. |
@@ -440,7 +440,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne une Gateway + une IP statique par défaut (contrairement à la plupart des autres modules, qui le désactivent par défaut). |
 | `application_domains` | `[]` | S'il est vide, un nom d'hôte `nip.io` basé sur l'IP statique générée automatiquement est utilisé. |
@@ -484,15 +484,15 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen
 le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -504,7 +504,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket `uploads`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -532,7 +532,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `webapp_url` | À définir dès que l'URL / le domaine est connu | High | Non définie, `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL` suivent la valeur que prend `GKE_SERVICE_URL` à chaque démarrage ; une valeur explicite maintient les callbacks d'authentification et les liens des e-mails stables d'un redéploiement à l'autre. |
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour le chemin de connectivité à la base par défaut du point d'entrée sur GKE. |
 | `db_name` / `db_user` | À définir une fois | High | Les renommer après le premier déploiement fait pointer l'application vers un rôle / une base différents (vides) — `application_database_name`/`application_database_user` sont des leurres inertes ; les modifier n'a aucun effet. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | `enable_nfs` | `true` (par défaut) ou `false` si Redis reste désactivé | Medium | Filestore est facturé que l'application y écrive ou non ; avec `enable_redis = false` (par défaut), le montage NFS est un surcoût inutilisé. |
 | `smtp_host` | À définir pour la production | Medium | Laissé vide, aucune variable `NEXT_PRIVATE_SMTP_*` n'est injectée — aucun e-mail d'invitation ni de notification de signature n'est envoyé. |
 | `enable_custom_domain` / `reserve_static_ip` | `true` (par défaut) | Medium | Sans IP ou domaine stable, le nom d'hôte de repli `nip.io` peut changer, ce qui casse `webapp_url` et les callbacks OAuth d'un redéploiement à l'autre. |
@@ -542,7 +542,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Documenso partagée
 avec la variante Cloud Run (secrets, job `db-init` et point d'entrée personnalisé)
 est décrite dans **Documenso_Common** (source du module :

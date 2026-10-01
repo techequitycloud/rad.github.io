@@ -71,12 +71,12 @@ gcloud run services logs read <service-name> --project "$PROJECT" --region "$REG
 
 ## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
-Keycloak nécessite **PostgreSQL** ; le moteur est fixé à `POSTGRES_15` dans `Keycloak_Common`. À chaque application, une tâche ponctuelle `db-init` (`postgres:15-alpine`, jusqu'à 3 nouvelles tentatives) effectue de manière idempotente les opérations suivantes :
+Keycloak nécessite **PostgreSQL** ; le moteur est fixé à `POSTGRES_15` dans `Keycloak_Common`. À chaque apply, une tâche ponctuelle `db-init` (`postgres:15-alpine`, jusqu'à 3 nouvelles tentatives) effectue de manière idempotente les opérations suivantes :
 
 1. Crée le rôle applicatif (ou met à jour son mot de passe s'il existe) et l'accorde à `postgres` afin que le superutilisateur puisse gérer ses objets.
 2. Crée la base de données Keycloak appartenant à ce rôle (ou corrige le propriétaire si elle existe).
 3. Accorde tous les privilèges sur la base de données **et sur `SCHEMA public`** — requis pour PostgreSQL 15+, où `public` n'est plus accessible en écriture à tous.
-4. Envoie un signal d'arrêt `POST /quitquitquit` au sidecar Cloud SQL Proxy afin que la Job se termine proprement sur GKE.
+4. Envoie un signal d'arrêt `POST /quitquitquit` au sidecar Cloud SQL Proxy afin que le Job se termine proprement sur GKE.
 
 Keycloak crée et migre lui-même le schéma au premier démarrage. Inspectez directement la base de données :
 
@@ -112,7 +112,7 @@ Ne réduisez pas le budget de démarrage : au premier démarrage, Keycloak doit 
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Aucun. Keycloak conserve les realms, clients, utilisateurs et sessions entièrement dans PostgreSQL — `Keycloak_Common` déclare `storage_buckets = []` et aucun volume GCS, si bien qu'une sauvegarde de la base de données capture l'état complet du déploiement.
 

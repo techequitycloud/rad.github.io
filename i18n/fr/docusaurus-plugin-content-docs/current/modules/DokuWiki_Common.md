@@ -28,7 +28,7 @@ les guides des plateformes ([DokuWiki_GKE](DokuWiki_GKE.md),
 | Domaine | Fourni par DokuWiki_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | **Aucun.** DokuWiki stocke les identifiants administrateur dans le répertoire de données à fichiers plats (créés via `/install.php`), et non dans une variable d'environnement secrète d'exécution — `secret_ids` est une table vide | n/a |
-| Image de conteneur | Build personnalisé léger **FROM `dokuwiki/dokuwiki`** avec un point d'entrée enveloppe ; construit via Cloud Build (Kaniko) | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Build personnalisé léger **FROM `dokuwiki/dokuwiki`** avec un point d'entrée enveloppe ; construit via Cloud Build (Kaniko) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** (`database_type = "NONE"`). DokuWiki est un wiki à fichiers plats — ni Cloud SQL, ni MySQL, ni PostgreSQL | Section Base de données des guides des plateformes |
 | Initialisation de la base | **Aucune.** `initialization_jobs = []` — il n'y a aucun schéma à créer | n/a |
 | Stockage persistant | Déclare le bucket de données **Cloud Storage** qui adosse `/storage` (montage gcsfuse sur Cloud Run). GKE le remplace par un PVC bloc | `storage_buckets` / `gcs_volumes` dans les guides des plateformes |
@@ -94,7 +94,7 @@ ENTRYPOINT ["/usr/local/bin/dokuwiki-entrypoint.sh"]
   `docker-php-entrypoint apache2-foreground`.
 
 L'image est construite avec Cloud Build à l'aide de Kaniko (voir
-`scripts/cloudbuild.yaml`) et, par défaut, dupliquée dans Artifact Registry
+`scripts/cloudbuild.yaml`) et, par défaut, mise en miroir dans Artifact Registry
 (`enable_image_mirroring = true`).
 
 ---

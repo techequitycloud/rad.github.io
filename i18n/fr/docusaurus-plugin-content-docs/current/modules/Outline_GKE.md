@@ -35,11 +35,11 @@ Redis obligatoire (utilisée pour la coordination de la collaboration en temps
 réel et des sessions, pas seulement comme cache). Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Node.js sur le port 3000, 1 vCPU / 2 GiB par défaut |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Outline (Sequelize) ne prend en charge que Postgres |
-| Cache / coordination | Redis (autogéré, co-hébergé sur la VM NFS par défaut) | **Obligatoire**, et non facultatif — Outline en a besoin même avec une seule réplique |
+| Cache / coordination | Redis (autogéré, co-hébergé sur la VM NFS par défaut) | **Obligatoire**, et non facultatif — Outline en a besoin même avec un seul réplica |
 | Persistance des fichiers | Cloud Filestore (NFS) | Les fichiers téléversés sont conservés sous `/var/lib/outline/data`, partagés entre les pods |
 | Stockage d'objets | Cloud Storage | Deux buckets provisionnés par défaut (`...-storage`, `...-data`) ; aucun n'est monté dans le pod d'emblée |
 | Secrets | Secret Manager | `SECRET_KEY` et `UTILS_SECRET` générés automatiquement ; mot de passe de la base de données |
@@ -55,12 +55,12 @@ ensemble ciblé de services Google Cloud :
   défaut ; avec `enable_nfs = true` (également par défaut), le socle fait
   pointer `REDIS_HOST` vers l'IP du serveur NFS, qui co-héberge Redis — aucune
   instance Memorystore séparée n'est nécessaire.
-- **Plusieurs répliques par défaut** (`min_instance_count = 1`,
+- **Plusieurs réplicas par défaut** (`min_instance_count = 1`,
   `max_instance_count = 3`) — contrairement à la plupart des applications
-  adossées à NFS ici, Outline est conçu pour exécuter plusieurs répliques
+  adossées à NFS ici, Outline est conçu pour exécuter plusieurs réplicas
   simultanément (Redis coordonne l'état).
 - **Les déploiements adossés à NFS utilisent toujours `Recreate`,** ce qui arrête
-  **toutes** les répliques avant de démarrer le nouvel ensemble — avec
+  **tous** les réplicas avant de démarrer le nouvel ensemble — avec
   `max_instance_count = 3`, cela représente une brève interruption totale à
   chaque redéploiement, et non un déploiement progressif.
 - **Deux buckets Cloud Storage sont créés mais inutilisés par défaut** — l'un
@@ -88,7 +88,7 @@ ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
 autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Outline {#a-gke-autopilot--the-outline-workload}
@@ -96,7 +96,7 @@ autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 Les pods Outline sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. Comme `enable_nfs = true`, le Deployment
 utilise la stratégie `Recreate` — avec `max_instance_count > 1`, chaque
-déploiement arrête toutes les répliques avant de démarrer l'ensemble de
+déploiement arrête tous les réplicas avant de démarrer l'ensemble de
 remplacement.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail
@@ -281,8 +281,8 @@ l'application accessible en HTTPS.
 - **Contraintes de mise à l'échelle.** `min_instance_count = 1`,
   `max_instance_count =
   3` par défaut. Comme `enable_nfs = true`, les déploiements utilisent la
-  stratégie `Recreate` — toutes les répliques sont arrêtées avant que les
-  nouvelles ne démarrent ; attendez-vous donc à une courte interruption totale à
+  stratégie `Recreate` — tous les réplicas sont arrêtés avant que les
+  nouveaux ne démarrent ; attendez-vous donc à une courte interruption totale à
   chaque redéploiement (et non à un déploiement progressif sans interruption).
 - **Inspecter le job d'initialisation et la configuration en cours d'exécution :**
   ```bash
@@ -314,7 +314,7 @@ leur comportement et leurs valeurs par défaut standard.
 |---|---|---|
 | `container_port` | `3000` | Le serveur Node.js d'Outline écoute sur le port 3000. |
 | `container_resources.cpu_limit` / `.memory_limit` | `1000m` / `2Gi` | 1 vCPU / 2 GiB recommandés au minimum. |
-| `min_instance_count` / `max_instance_count` | `1` / `3` | Plafond par défaut plus élevé que la plupart des modules — Outline prend en charge plusieurs répliques grâce à la coordination par Redis. |
+| `min_instance_count` / `max_instance_count` | `1` / `3` | Plafond par défaut plus élevé que la plupart des modules — Outline prend en charge plusieurs réplicas grâce à la coordination par Redis. |
 | `enable_cloudsql_volume` | `true` | Side-car Auth Proxy (boucle locale `127.0.0.1:5432`) — obligatoire sur GKE. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -336,7 +336,7 @@ leur comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Indispensable pour que les fichiers téléversés persistent et soient partagés entre les répliques. |
+| `enable_nfs` | `true` | Indispensable pour que les fichiers téléversés persistent et soient partagés entre les réplicas. |
 | `nfs_mount_path` | `/var/lib/outline/data` | Doit correspondre à `FILE_STORAGE_LOCAL_ROOT_DIR` défini par `Outline_Common`. |
 
 ### Groupe 14 — Cloud Storage {#group-14--cloud-storage}
@@ -384,7 +384,7 @@ d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -432,11 +432,11 @@ d'exécution.
 | `SECRET_KEY` (généré automatiquement) | Ne jamais modifier | Critical | Sa rotation invalide tous les cookies de session existants ainsi que toutes les données chiffrées au repos avec l'ancienne clé. |
 | `URL` / `GKE_SERVICE_URL` injecté automatiquement | Laissé non défini (automatique) ou explicitement égal à la véritable URL publique | Critical | S'il correspond au mauvais hôte, le `redirect_uri` OIDC d'Outline ne correspondra pas à celui enregistré auprès de l'IdP, et/ou aucun fournisseur ne s'enregistrera — page de connexion inutilisable. |
 | HTTPS devant le Service | Configurer `enable_custom_domain` + `application_domains` + TLS avant d'activer l'authentification | Critical | Passport définit le cookie OAuth `state` avec `secure: true` ; derrière le LoadBalancer L4 en HTTP simple par défaut, `/auth/<provider>` renvoie `500 — Cannot send secure cookie over unencrypted connection`. La page d'accueil se charge normalement, ce qui masque la véritable cause. |
-| `enable_redis` | `true` | Critical | Outline exige Redis même avec une seule réplique ; le désactiver casse la coordination en temps réel et des sessions, et l'application ne fonctionnera pas correctement. |
-| `enable_nfs` | `true` | High | Le désactiver rend les fichiers téléversés éphémères — perdus à la recréation du pod — et empêche leur partage entre les répliques. |
+| `enable_redis` | `true` | Critical | Outline exige Redis même avec un seul réplica ; le désactiver casse la coordination en temps réel et des sessions, et l'application ne fonctionnera pas correctement. |
+| `enable_nfs` | `true` | High | Le désactiver rend les fichiers téléversés éphémères — perdus à la recréation du pod — et empêche leur partage entre les réplicas. |
 | `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` passés du texte en clair à une valeur adossée à un secret | À définir uniquement dans `secret_environment_variables` ; à retirer de `environment_variables` lors du même apply | High | Ces variables sont livrées sous forme de **variables d'environnement en clair contenant une chaîne vide**. Contrairement au `gcloud run services update` impératif de Cloud Run (qui exige d'abord une étape `--remove-env-vars`, avec l'erreur « already set with a different type »), le basculement sur GKE est déclaratif — `tofu apply` produit en une seule passe toute la liste `env` souhaitée. Mais laisser la clé dans **les deux** maps à la fois place **deux entrées `env` portant le même nom** dans la spécification du Pod (l'une `value`, l'autre `valueFrom.secretKeyRef`) ; Kubernetes l'accepte, mais la valeur effectivement vue par le processus n'est pas vérifiée ici — retirez la clé en texte clair lorsque vous ajoutez celle adossée au secret. {/* TODO: verify observed env precedence for a duplicate plain+secret env name on this cluster's container runtime */} |
-| `max_instance_count` avec `enable_nfs = true` | Comprendre le compromis de `Recreate` | High | Chaque redéploiement arrête **toutes** les répliques en cours d'exécution (et pas seulement un pod de surplus) avant de démarrer l'ensemble de remplacement — une brève interruption totale à chaque mise à jour, pire que le cas à réplique unique de la plupart des autres modules adossés à NFS. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans le namespace. |
+| `max_instance_count` avec `enable_nfs = true` | Comprendre le compromis de `Recreate` | High | Chaque redéploiement arrête **tous** les réplicas en cours d'exécution (et pas seulement un pod de surplus) avant de démarrer l'ensemble de remplacement — une brève interruption totale à chaque mise à jour, pire que le cas à réplica unique de la plupart des autres modules adossés à NFS. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 | `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, l'URI de redirection OIDC enregistrée et `URL`. |
 | `uptime_check_config.enabled` | `false` par défaut | Medium | Aucune alerte automatique en cas d'interruption tant que vous ne l'activez pas — il est judicieux de la laisser désactivée jusqu'à la configuration de HTTPS et de l'authentification, puisque l'application est censée être inutilisable (redémarrages en boucle ou erreur 500 à la connexion) d'ici là. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |

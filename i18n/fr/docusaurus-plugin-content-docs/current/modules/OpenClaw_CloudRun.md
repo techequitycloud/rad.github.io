@@ -30,7 +30,7 @@ que de les répéter ici.
 OpenClaw s'exécute sous forme de conteneur Node.js sur Cloud Run v2 (Gen2). Le déploiement associe
 un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 (Gen2) | Service Node.js, 1 vCPU / 1 GiB par défaut, CPU toujours alloué |
 | Stockage de l'espace de travail | Cloud Storage (GCS Fuse) | Bucket d'espace de travail par tenant monté sur `/data` via GCS Fuse |
@@ -38,7 +38,7 @@ un ensemble ciblé de services Google Cloud :
 | Entrée | URL Cloud Run / Cloud Load Balancing | Public (`all`) par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 | Secrets | Secret Manager | Tous les identifiants sont injectés à l'exécution ; jamais en clair dans la configuration |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Ni base de données, ni Redis.** OpenClaw est une passerelle Node.js avec état reposant entièrement sur GCS
   Fuse sur `/data`. Cloud SQL et Redis ne sont jamais provisionnés.
@@ -155,7 +155,7 @@ des tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application OpenClaw {#3-openclaw-application-behaviour}
 
-- **Aucune tâche d'initialisation de base de données.** OpenClaw ne nécessite ni Cloud SQL ni tâche d'initialisation. L'état des agents
+- **Aucun job d'initialisation de base de données.** OpenClaw ne nécessite ni Cloud SQL ni job d'initialisation. L'état des agents
   réside entièrement sur GCS ; le premier démarrage du conteneur crée automatiquement les répertoires de l'espace de travail
   via `entrypoint.sh`.
 - **Configuration régénérée à chaque démarrage.** `entrypoint.sh` réécrit toujours `openclaw.json`
@@ -226,7 +226,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `traffic_split` | `[]` | Répartition du trafic canary/blue-green. La somme de toutes les entrées doit être égale à 100. |
 | `max_revisions_to_retain` | `7` | Anciennes révisions à conserver après chaque déploiement. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -279,12 +279,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `gcs_volumes` | `[]` | Montages GCS Fuse supplémentaires. Le volume `openclaw-data` sur `/data` est toujours ajouté. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | OpenClaw n'a pas de tâche d'initialisation par défaut. À utiliser pour un amorçage personnalisé de l'espace de travail. |
-| `cron_jobs` | `[]` | Tâches Cloud Run récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | OpenClaw n'a pas de job d'initialisation par défaut. À utiliser pour un amorçage personnalisé de l'espace de travail. |
+| `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -327,19 +327,19 @@ en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées. |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Dépôt GitHub connecté. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `anthropic_api_key` | Définie au premier déploiement | Critical | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
 | Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critical | Effectuer la rotation du jeton dans Secret Manager sans redéployer le service entraîne le rejet de toutes les requêtes clientes jusqu'au redéploiement du service. |
@@ -360,7 +360,7 @@ en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à OpenClaw partagée avec la variante GKE est décrite dans
 **[OpenClaw_Common](OpenClaw_Common.md)**.
 

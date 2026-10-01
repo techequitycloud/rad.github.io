@@ -138,7 +138,7 @@ Les variables réseau suivantes sont disponibles dans `Listmonk GKE` :
 |---|---|---|
 | `service_type` | `"LoadBalancer"` | Type de service Kubernetes. `"LoadBalancer"` provisionne un équilibreur de charge externe GCP. Utilisez `"ClusterIP"` avec `enable_custom_domain = true` pour un routage via Gateway. |
 | `enable_network_segmentation` | `false` | Déploie une NetworkPolicy Kubernetes qui limite le trafic entre pods aux chemins explicitement autorisés. |
-| `namespace_name` | `""` | Namespace Kubernetes de la charge de travail Listmonk. Généré automatiquement à partir de `application_name` et `tenant_id` s'il est vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes de la charge de travail Listmonk. Généré automatiquement à partir de `application_name` et `tenant_id` s'il est vide. |
 | `network_tags` | `["nfsserver"]` | Tags de pare-feu appliqués aux nœuds du cluster GKE. |
 | `enable_iap` | `false` | Active l'authentification Identity-Aware Proxy sur l'équilibreur de charge. |
 | `iap_authorized_users` | `[]` | Utilisateurs individuels ou comptes de service autorisés via IAP. |
@@ -342,13 +342,13 @@ Listmonk expose un point de terminaison HTTP dédié `/api/health`, mais depuis 
 |---|---|---|
 | `health_check_config` | `{ enabled = true, type = "TCP", path = "/api/health", initial_delay_seconds = 30, period_seconds = 30, failure_threshold = 3 }` | Sonde de vivacité Kubernetes. Contrôle TCP sur le port 9000 — le champ `path` est conservé dans le schéma mais inutilisé pour un contrôle TCP. |
 | `startup_probe_config` | `{ enabled = true, type = "TCP", path = "/api/health", initial_delay_seconds = 30, period_seconds = 10, failure_threshold = 30 }` | Sonde de démarrage Kubernetes. `failure_threshold = 30` laisse à Listmonk jusqu'à 300 secondes (30 × 10 s) pour démarrer avant que Kubernetes ne redémarre le pod — suffisant même pour les migrations de schéma lors d'un démarrage à froid. |
-| `uptime_check_config` | `{ enabled = false, path = "/api/health" }` | Contrôle de disponibilité Cloud Monitoring. **Désactivé par défaut** — activez-le explicitement si vous souhaitez qu'une alerte soit envoyée à `support_users` lorsque le point de terminaison ne répond plus (notez que `/api/health` exige une session : un contrôle de disponibilité HTTP devrait donc cibler `/health` à la place). |
+| `uptime_check_config` | `{ enabled = false, path = "/api/health" }` | Test de disponibilité Cloud Monitoring. **Désactivé par défaut** — activez-le explicitement si vous souhaitez qu'une alerte soit envoyée à `support_users` lorsque le point de terminaison ne répond plus (notez que `/api/health` exige une session : un test de disponibilité HTTP devrait donc cibler `/health` à la place). |
 
 La variable `alert_policies` est disponible et se comporte comme décrit dans [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
-## Groupe 14 : Stratégies de fiabilité {#group-14-reliability-policies}
+## Groupe 14 : Règles de fiabilité {#group-14-reliability-policies}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
@@ -439,7 +439,7 @@ Listmonk stocke tout son état persistant dans PostgreSQL plutôt que sur le dis
 | `service_external_ip` | Adresse IP externe de l'équilibreur de charge |
 | `project_id` | ID du projet GCP |
 | `deployment_id` | Suffixe de l'ID du déploiement |
-| `namespace` | Namespace Kubernetes |
+| `namespace` | Espace de noms Kubernetes |
 | `database_instance_name` | Nom de l'instance Cloud SQL |
 | `database_name` | Nom de la base de données de l'application |
 | `database_user` | Nom de l'utilisateur de la base de données de l'application |
@@ -448,7 +448,7 @@ Listmonk stocke tout son état persistant dans PostgreSQL plutôt que sur le dis
 | `container_image` | Image de conteneur utilisée pour le déploiement |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé |
 | `github_repository_url` | URL du dépôt GitHub connecté pour la CI/CD |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est joignable et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster en ligne — le cluster est créé mais son point de terminaison n'est pas encore lisible, de sorte que les ressources Kubernetes sont ignorées. Le pipeline CI/CD doit relancer l'apply pour terminer le déploiement. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est joignable et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré (inline) — le cluster est créé mais son point de terminaison n'est pas encore lisible, de sorte que les ressources Kubernetes sont ignorées. Le pipeline CI/CD doit relancer l'apply pour terminer le déploiement. |
 
 ---
 
@@ -460,9 +460,9 @@ Une fois votre déploiement Listmonk GKE terminé, la console GCP offre une vue 
 
 Accédez à **Kubernetes Engine → Workloads** dans la console GCP. Sélectionnez votre cluster dans la liste déroulante des clusters.
 
-- **Deployment Listmonk :** vous devriez voir un Deployment nommé `listmonk-<tenant_id>` dans le namespace `listmonk-<tenant_id>`. La colonne **Pods** doit afficher au moins `1/1` pod en cours d'exécution si `min_instance_count = 1`. Ouvrez le Deployment pour consulter le modèle de pod, les variables d'environnement (y compris la configuration `LISTMONK_*`), les demandes et limites de ressources, ainsi que le conteneur sidecar Cloud SQL Auth Proxy.
-- **Job db-init :** lors du premier déploiement, un Job terminé nommé `db-init` apparaît dans le même namespace sous **Kubernetes Engine → Workloads** (filtrez par type de ressource : Job). Une coche verte indique que la base de données PostgreSQL et l'utilisateur ont été créés avec succès. Si le job affiche un état d'échec en rouge, ouvrez les journaux de son pod pour diagnostiquer le problème de connexion à Cloud SQL ou d'identifiants.
-- **Pods :** accédez à **Kubernetes Engine → Pods** et filtrez par namespace. Chaque pod en cours d'exécution comporte deux conteneurs : le conteneur de l'application Listmonk (`listmonk`) et le sidecar Cloud SQL Auth Proxy (`cloud-sql-proxy`). Cliquez sur un pod et sélectionnez l'onglet **Logs** pour suivre en direct les journaux de l'application depuis la console.
+- **Deployment Listmonk :** vous devriez voir un Deployment nommé `listmonk-<tenant_id>` dans l'espace de noms `listmonk-<tenant_id>`. La colonne **Pods** doit afficher au moins `1/1` pod en cours d'exécution si `min_instance_count = 1`. Ouvrez le Deployment pour consulter le modèle de pod, les variables d'environnement (y compris la configuration `LISTMONK_*`), les demandes et limites de ressources, ainsi que le conteneur sidecar Cloud SQL Auth Proxy.
+- **Job db-init :** lors du premier déploiement, un Job terminé nommé `db-init` apparaît dans le même espace de noms sous **Kubernetes Engine → Workloads** (filtrez par type de ressource : Job). Une coche verte indique que la base de données PostgreSQL et l'utilisateur ont été créés avec succès. Si le job affiche un état d'échec en rouge, ouvrez les journaux de son pod pour diagnostiquer le problème de connexion à Cloud SQL ou d'identifiants.
+- **Pods :** accédez à **Kubernetes Engine → Pods** et filtrez par espace de noms. Chaque pod en cours d'exécution comporte deux conteneurs : le conteneur de l'application Listmonk (`listmonk`) et le sidecar Cloud SQL Auth Proxy (`cloud-sql-proxy`). Cliquez sur un pod et sélectionnez l'onglet **Logs** pour suivre en direct les journaux de l'application depuis la console.
 - **Services et Ingress :** accédez à **Kubernetes Engine → Services & Ingress**. Le service LoadBalancer de Listmonk apparaît avec une colonne **External endpoints** indiquant l'adresse IP et le port provisionnés. Si `enable_custom_domain = true`, une ressource Gateway ou Ingress apparaît à côté.
 
 ### Cloud SQL {#cloud-sql}
@@ -479,7 +479,7 @@ Accédez à **SQL** dans la console GCP.
 
 Accédez à **Security → Secret Manager** dans la console GCP.
 
-- **Mot de passe de la base de données :** un secret nommé `secret-<resource_prefix>-<app>-db-password` (ou similaire, géré par Foundation) contient l'identifiant de base de données généré automatiquement. Cliquez sur le secret et accédez à **Versions** pour confirmer qu'une version actuelle `ENABLED` existe. Ne désactivez pas et ne détruisez pas cette version — elle est montée dans le pod Listmonk à l'exécution.
+- **Mot de passe de la base de données :** un secret nommé `secret-<resource_prefix>-<app>-db-password` (ou similaire, géré par le socle) contient l'identifiant de base de données généré automatiquement. Cliquez sur le secret et accédez à **Versions** pour confirmer qu'une version actuelle `ENABLED` existe. Ne désactivez pas et ne détruisez pas cette version — elle est montée dans le pod Listmonk à l'exécution.
 - **Mot de passe administrateur :** un secret nommé `secret-<resource_prefix>-listmonk-admin-password` (injecté sous la forme `LISTMONK_ADMIN_PASSWORD`) contient le mot de passe généré aléatoirement de l'interface d'administration de Listmonk (le nom d'utilisateur est `admin`, codé en dur). Ouvrez la dernière version et utilisez **Access secret value** pour récupérer le mot de passe de votre première connexion. Enregistrez immédiatement cet identifiant dans un gestionnaire de mots de passe.
 - **Jeton d'API :** un secret nommé `secret-<resource_prefix>-listmonk-api-token` (injecté sous la forme `LISTMONK_API_TOKEN`) contient le jeton d'API déterministe de l'utilisateur d'API programmatique auto-réparateur.
 - **Journal d'accès :** l'onglet **Access log** de chaque secret affiche un journal Cloud Audit Logs de chaque accès à une version, avec le compte de service concerné et l'adresse IP d'origine. Vérifiez que seul le compte de service Workload Identity de Listmonk accède au secret du mot de passe de la base de données.
@@ -496,9 +496,9 @@ Accédez à **Artifact Registry → Repositories** dans la console GCP.
 
 Accédez à **Monitoring → Dashboards** ou **Monitoring → Uptime checks** dans la console GCP.
 
-- **Contrôles de disponibilité :** `uptime_check_config.enabled` vaut `false` par défaut. S'il est explicitement activé, un contrôle de disponibilité ciblant `GET /api/health` sur le point de terminaison du service Listmonk apparaît (notez que ce chemin renvoie 403 sans authentification — ciblez plutôt `/health` pour un contrôle significatif). Un indicateur vert confirme que le point de terminaison répond. Un état rouge ou jaune déclenche une alerte vers `support_users`.
-- **Stratégies d'alerte :** accédez à **Monitoring → Alerting**. Deux stratégies d'alerte sont provisionnées automatiquement : l'une pour les échecs du contrôle de disponibilité et l'autre pour le seuil d'échec du contrôle. Cliquez sur chaque stratégie pour confirmer que les canaux de notification (adresses e-mail de `support_users`) sont correctement configurés.
-- **Metrics Explorer :** accédez à **Monitoring → Metrics Explorer** et interrogez `kubernetes.io/container/cpu/request_utilisation` et `kubernetes.io/container/memory/used_bytes` pour le conteneur `listmonk` de votre namespace. Comparez-les au `cpu_limit` (`1000m`) et au `memory_limit` (`512Mi`) configurés pour valider le dimensionnement des ressources pendant les envois de campagnes actifs.
+- **Tests de disponibilité :** `uptime_check_config.enabled` vaut `false` par défaut. S'il est explicitement activé, un test de disponibilité ciblant `GET /api/health` sur le point de terminaison du service Listmonk apparaît (notez que ce chemin renvoie 403 sans authentification — ciblez plutôt `/health` pour un contrôle significatif). Un indicateur vert confirme que le point de terminaison répond. Un état rouge ou jaune déclenche une alerte vers `support_users`.
+- **Stratégies d'alerte :** accédez à **Monitoring → Alerting**. Deux stratégies d'alerte sont provisionnées automatiquement : l'une pour les échecs du test de disponibilité et l'autre pour le seuil d'échec du contrôle. Cliquez sur chaque stratégie pour confirmer que les canaux de notification (adresses e-mail de `support_users`) sont correctement configurés.
+- **Metrics Explorer :** accédez à **Monitoring → Metrics Explorer** et interrogez `kubernetes.io/container/cpu/request_utilisation` et `kubernetes.io/container/memory/used_bytes` pour le conteneur `listmonk` de votre espace de noms. Comparez-les au `cpu_limit` (`1000m`) et au `memory_limit` (`512Mi`) configurés pour valider le dimensionnement des ressources pendant les envois de campagnes actifs.
 - **Vue d'ensemble du cluster GKE :** accédez à **Kubernetes Engine → Clusters**, cliquez sur votre cluster et sélectionnez l'onglet **Observability** pour afficher l'utilisation du CPU et de la mémoire au niveau des nœuds. GKE Autopilot provisionne les nœuds à la demande — pendant l'envoi d'une grosse campagne, vous pouvez observer un événement de provisionnement de nœud lorsque les besoins en ressources des pods augmentent temporairement.
 
 ### Cloud Build (si la CI/CD est activée) {#cloud-build-if-cicd-enabled}
@@ -512,7 +512,7 @@ Accédez à **Cloud Build → History** dans la console GCP.
 
 ## Explorer avec gcloud / kubectl {#exploring-with-gcloud--kubectl}
 
-Les commandes suivantes vous permettent d'inspecter chaque couche d'un déploiement Listmonk GKE depuis la ligne de commande. Remplacez `PROJECT_ID`, `REGION`, `CLUSTER_NAME`, `NAMESPACE` et `POD_NAME` par vos valeurs réelles. Le namespace et le nom du déploiement sont généralement `listmonk-<tenant_id>`.
+Les commandes suivantes vous permettent d'inspecter chaque couche d'un déploiement Listmonk GKE depuis la ligne de commande. Remplacez `PROJECT_ID`, `REGION`, `CLUSTER_NAME`, `NAMESPACE` et `POD_NAME` par vos valeurs réelles. L'espace de noms et le nom du déploiement sont généralement `listmonk-<tenant_id>`.
 
 ```bash
 # ── Cluster Access ──────────────────────────────────────────────────────────
@@ -659,7 +659,7 @@ kubectl top nodes
 | `backup_retention_days` | `7` | **Medium** | Trop court pour des listes de diffusion actives. Une importation d'abonnés corrompue ou la suppression accidentelle d'une liste peut ne pas être découverte en 7 jours. Portez-la à 30 jours ou plus en production. |
 | `enable_pod_disruption_budget` | `true` | **Medium** | Déjà activé. Le désactiver permet que tous les pods Listmonk soient arrêtés simultanément lors des mises à niveau des nœuds GKE, ce qui interrompt le service pour les envois de campagnes en cours. |
 | `pdb_min_available` | `"1"` | **Medium** | Avec un seul réplica, le PDB empêche indéfiniment le drainage volontaire des nœuds. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive sans bloquer les mises à niveau du cluster. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (spécifique à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Kubernetes interprète les entiers nus comme des octets, ce qui empêche la planification de tous les pods dans le namespace. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (spécifique à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Kubernetes interprète les entiers nus comme des octets, ce qui empêche la planification de tous les pods dans l'espace de noms. |
 | `termination_grace_period_seconds` | `30` | **Medium** | À l'arrêt, Listmonk traite les requêtes en cours et peut avoir des goroutines d'envoi de campagne actives. Si Listmonk est en plein envoi d'un gros lot de campagne, 30 secondes peuvent ne pas suffire pour vider la file d'attente. Envisagez de passer à `60` ou `120` pour les charges d'envoi à fort volume. |
 | `enable_auto_password_rotation` | `false` | **Low** | Désactivé par défaut. Lorsqu'elle est activée, la rotation redémarre tous les pods Listmonk. Planifiez les rotations pendant les fenêtres de maintenance pour ne pas interrompre les envois de campagnes actifs. |
 | `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, l'interface d'administration de Listmonk (`/`) n'est protégée que par l'authentification propre à Listmonk. Activez Cloud Armor et configurez `admin_ip_ranges` pour tout déploiement de production accessible publiquement. |

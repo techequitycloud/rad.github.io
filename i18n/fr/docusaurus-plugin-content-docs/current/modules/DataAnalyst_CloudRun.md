@@ -70,7 +70,7 @@ que de les répéter ici.
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources figurent
-dans les [Outputs](#5-outputs) du déploiement.
+dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service de l'agent {#a-cloud-run--the-agent-service}
 
@@ -234,7 +234,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -259,7 +259,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `container_protocol` | `http1` | HTTP/1.1 simple + WebSocket. |
 | `timeout_seconds` | `600` | Volontairement généreux, car le WebSocket de discussion reste ouvert pendant tout un tour. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -317,9 +317,9 @@ Options standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut — ouvrez-la pour discuter avec l'agent. |
@@ -328,7 +328,7 @@ Options standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `network_name` / `network_exists` | Réseau VPC utilisé, et s'il a été découvert (partagé) plutôt que créé en interne. |
 | `storage_buckets` | Toujours vide — ce module ne provisionne aucun bucket GCS. |
-| `monitoring_enabled` | État de la supervision. |
+| `monitoring_enabled` | État de la surveillance. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 
@@ -353,7 +353,7 @@ Options standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité de service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative partagée (build du conteneur, gestion des téléversements et modèle d'exécution de code
 en bac à sable) est décrite dans **[DataAnalyst_Common](DataAnalyst_Common.md)**.
 

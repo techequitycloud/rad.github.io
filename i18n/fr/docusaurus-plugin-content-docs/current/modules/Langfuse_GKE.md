@@ -37,7 +37,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `SALT` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Langfuse v2 (PostgreSQL uniquement) est figé.** L'image est construite `FROM langfuse/langfuse:2`
   via l'ARG de build `LANGFUSE_VERSION` ; `application_version = "latest"` se résout en `2`.
@@ -89,7 +89,7 @@ StatefulSet).
 Langfuse stocke toutes les données applicatives (traces, observations, scores, prompts, utilisateurs, projets,
 clés d'API) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent de manière privée via
 le sidecar **Cloud SQL Auth Proxy** sur un écouteur en boucle locale ; aucune IP publique n'est exposée. Au
-premier déploiement, une Job d'initialisation crée le rôle et la base de données de l'application ; Langfuse
+premier déploiement, un job d'initialisation crée le rôle et la base de données de l'application ; Langfuse
 applique ensuite son schéma via `prisma migrate deploy` au démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
@@ -167,9 +167,9 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application Langfuse {#3-langfuse-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une Job d'initialisation exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente
-  le rôle et la base de données de l'application, puis accorde les droits. Elle ne crée **pas** les tables — la
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente
+  le rôle et la base de données de l'application, puis accorde les droits. Il ne crée **pas** les tables — la
   tâche peut être relancée sans risque.
 - **Migrations Prisma au démarrage.** Le point d'entrée cloud compose `DATABASE_URL` et délègue au
   démarrage propre de Langfuse, qui exécute `prisma migrate deploy` avant de lancer le serveur.
@@ -301,7 +301,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -393,7 +393,7 @@ principales : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `e
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -437,14 +437,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
 | `SALT` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'émission de nouvelles clés. |

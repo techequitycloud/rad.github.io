@@ -29,10 +29,10 @@ consultez les guides des plateformes ([Ghostfolio_GKE](Ghostfolio_GKE.md),
 | Domaine | Fourni par Ghostfolio_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère `ACCESS_TOKEN_SALT` et `JWT_SECRET_KEY` (deux chaînes aléatoires de 32 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Encapsule l'image officielle `ghostfolio/ghostfolio` de Docker Hub avec un point d'entrée cloud personnalisé (reprend la technique de `Langfuse_Common`) ; construite via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule l'image officielle `ghostfolio/ghostfolio` de Docker Hub avec un point d'entrée cloud personnalisé (reprend la technique de `Langfuse_Common`) ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (ORM Prisma) comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`), qui crée la base de données, le rôle et les autorisations — PAS de job de migration distinct, car le conteneur de Ghostfolio exécute lui-même les migrations Prisma à chaque démarrage | Output `initialization_jobs` |
-| Stockage objet | Aucun — Ghostfolio n'a besoin d'aucun stockage de fichiers/médias en masse | Output `storage_buckets` (toujours `[]`) |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`), qui crée la base de données, le rôle et les autorisations — PAS de job de migration distinct, car le conteneur de Ghostfolio exécute lui-même les migrations Prisma à chaque démarrage | Sortie `initialization_jobs` |
+| Stockage objet | Aucun — Ghostfolio n'a besoin d'aucun stockage de fichiers/médias en masse | Sortie `storage_buckets` (toujours `[]`) |
 | Paramètres principaux | Définit `NODE_ENV=production` et le port du conteneur (3333) | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/v1/health` (vérifie la base de données et Redis) | §Observabilité dans les guides des plateformes |
 
@@ -168,7 +168,7 @@ plutôt que de simple ping de vivacité.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Aucun. Ghostfolio n'a besoin d'aucun stockage de fichiers/médias en masse —
 `storage_buckets` vaut toujours `[]`.

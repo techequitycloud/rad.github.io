@@ -40,7 +40,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY` Flask généré automatiquement et stocké au moment du déploiement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est imposé.** Le moteur de base de données est fixé à `POSTGRES_15` par
   `Sample_Common` et ne peut pas être remplacé par MySQL ni par `NONE` dans ce module.
@@ -90,7 +90,7 @@ l'environnement d'exécution et la répartition du trafic.
 
 L'application Sample stocke son compteur de visiteurs dans une instance gérée Cloud SQL
 for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth
-Proxy** sur un socket Unix (sans adresse IP publique). Au premier déploiement, une Job
+Proxy** sur un socket Unix (sans adresse IP publique). Au premier déploiement, un job
 d'initialisation crée la base de données de l'application, l'utilisateur et accorde les
 privilèges.
 
@@ -186,10 +186,10 @@ règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application Sample {#3-sample-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une Job d'initialisation
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation
   exécute `db-init.sh` (avec l'image `postgres:15-alpine`), qui crée de manière idempotente
   l'utilisateur de base de données PostgreSQL et la base de données, et accorde les
-  privilèges. Elle peut être relancée sans risque.
+  privilèges. Il peut être relancé sans risque.
 - **Sondes de santé.** La sonde de démarrage est de type TCP (elle vérifie que le port 8080
   est ouvert). La sonde de vivacité cible `GET /healthz`, qui renvoie
   `{"status": "healthy"}` immédiatement, sans requête à la base de données.
@@ -264,7 +264,7 @@ leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -319,7 +319,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_nfs` | `true` | Volume Filestore partagé. Nécessite l'environnement d'exécution `gen2`. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 | `nfs_instance_name` | `""` | Nom d'une VM NFS existante ; laissez vide pour la découverte automatique. |
-| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM NFS créée en ligne lorsqu'aucune n'existe. |
+| `nfs_instance_base_name` | `app-nfs` | Nom de base d'une VM NFS créée en mode intégré (inline) lorsqu'aucune n'existe. |
 | `create_cloud_storage` / `storage_buckets` / `gcs_volumes` | _(défini)_ | Bucket de données / buckets supplémentaires / montages GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -330,7 +330,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -356,7 +356,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -396,12 +396,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` (via `Sample_Common`) | PostgreSQL 15 (imposé) | Critical | Le script `db-init` utilise des commandes propres à PostgreSQL ; un autre moteur casse la configuration de la base de données. |
 | `application_database_name` / `_user` | défini une seule fois | Critical | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
@@ -422,7 +422,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative partagée (secret Flask,
 initialisation de la base de données, comportement des sondes et sidecar Redis) est
 décrite dans **[Sample_Common](Sample_Common.md)**.

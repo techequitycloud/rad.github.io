@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Speedtest Tracker sur Cloud Run dans votr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 60 minutes
+**Durée estimée :** 45–60 minutes
 
 Speedtest Tracker est un outil open source et auto-hébergé de surveillance du débit internet,
 qui exécute des tests de débit automatisés selon une planification et en présente les résultats sous forme de graphiques
@@ -30,14 +30,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (correctement, compte tenu du planificateur cron),
   mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, y compris le
   mode de défaillance « semble sain mais la planification ne se déclenche jamais ».
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -153,7 +153,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -217,7 +217,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL et les secrets Secret Manager. Les ressources appartenant à **Services_GCP**
@@ -235,4 +235,4 @@ ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle avec prudence (max=1), mettre à jour la version, gérer les secrets et sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; confirmer que la planification produit réellement de nouveaux résultats |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de « sain mais sans résultats », de base de données, de job d'initialisation et d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

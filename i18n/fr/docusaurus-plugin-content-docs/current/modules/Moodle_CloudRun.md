@@ -31,7 +31,7 @@ vie du déploiement — reportez-vous au
 Moodle s'exécute sous forme de conteneur PHP 8.3/Apache sur Cloud Run v2. Le
 déploiement associe un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service PHP 8.3/Apache, 1 vCPU / 2 GiB par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Moodle ne prend pas en charge MySQL dans ce déploiement |
@@ -42,7 +42,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 | Planificateur | Cloud Scheduler | Tâche cron provisionnée automatiquement (toutes les minutes) sur `/admin/cron.php` |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixe et `MOODLE_DB_TYPE =
   "pgsql"` est codé en dur ; sélectionner MySQL ou `NONE` empêche le démarrage.
@@ -66,7 +66,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Moodle {#a-cloud-run--the-moodle-service}
 
@@ -97,7 +97,7 @@ Moodle stocke toutes les données applicatives (cours, utilisateurs, notes, jour
 d'activité) dans une instance gérée Cloud SQL for PostgreSQL 15. Chaque instance
 Cloud Run s'y connecte en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket
 Unix, si bien qu'aucune adresse IP publique n'est exposée. Lors du premier déploiement,
-une tâche d'initialisation crée la base de données et l'utilisateur, et active
+un job d'initialisation crée la base de données et l'utilisateur, et active
 l'extension `pg_trgm` pour la recherche en texte intégral de Moodle.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
@@ -111,7 +111,7 @@ l'extension `pg_trgm` pour la recherche en texte intégral de Moodle.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour le
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour le
 modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe,
 consultez [App_CloudRun](App_CloudRun.md).
 
@@ -168,7 +168,7 @@ de configuration.
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Après le déploiement, mettez à jour le secret du mot de passe
+[Sorties](#5-outputs). Après le déploiement, mettez à jour le secret du mot de passe
 SMTP avec votre véritable identifiant SMTP :
 ```bash
 echo -n "your-smtp-password" | \
@@ -230,7 +230,7 @@ tests de disponibilité et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Moodle {#3-moodle-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Deux tâches
+- **Configuration de la base de données au premier déploiement.** Deux jobs
   d'initialisation s'exécutent avant que le service Cloud Run soit en ligne. La tâche
   `db-init` crée la base de données et l'utilisateur Moodle, active l'extension
   `pg_trgm` et accorde les privilèges (idempotente, peut être relancée sans risque). La
@@ -377,12 +377,12 @@ ou injecter des données initiales. Consultez [App_CloudRun](App_CloudRun.md).
 | `database_password_length` | `32` | Longueur du mot de passe généré. |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
 
-### Groupe 13 — Tâches {#group-13--jobs}
+### Groupe 13 — Jobs {#group-13--jobs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init` et `nfs-init`. |
-| `cron_jobs` | `[]` | Tâches Cloud Run Jobs complémentaires déclenchées par Cloud Scheduler (la tâche de planification cron de Moodle est toujours créée séparément). |
+| `cron_jobs` | `[]` | Jobs Cloud Run complémentaires déclenchés par Cloud Scheduler (la tâche de planification cron de Moodle est toujours créée séparément). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -412,12 +412,12 @@ ou injecter des données initiales. Consultez [App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut pour accéder à Moodle. |

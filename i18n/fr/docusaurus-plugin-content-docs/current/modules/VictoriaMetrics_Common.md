@@ -137,7 +137,7 @@ ENTRYPOINT ["/victoria-metrics-prod", "-storageDataPath=/victoria-metrics-data",
   `tofu taint` sur la ressource de build du module).
 - **Nommage de l'argument de build** — l'épinglage de version du Dockerfile
   utilise l'ARG de build propre à l'application `VM_VERSION`, et non l'ARG
-  générique `APP_VERSION` que le module Foundation injecte dans `build_args` et
+  générique `APP_VERSION` que le module socle injecte dans `build_args` et
   qui l'emporterait sinon silencieusement lors de la fusion.
   `application_version = "latest"` est associé, au moment du build, à la version
   épinglée et éprouvée `v1.148.0` (l'image amont n'a pas de tag `latest` flottant
@@ -157,7 +157,7 @@ utilisé par les deux sondes :
 
 | Point de terminaison | Rôle | Utilisé par |
 |---|---|---|
-| `/health` | Renvoie `OK` dès que le processus est démarré et sert les requêtes | Sonde de démarrage **et** sonde d'activité |
+| `/health` | Renvoie `OK` dès que le processus est démarré et sert les requêtes | Sonde de démarrage **et** sonde de vivacité |
 
 Contrairement aux applications dont la séquence de démarrage est plus lourde et
 qui nécessitent des sémantiques distinctes de disponibilité et d'activité (par
@@ -169,11 +169,11 @@ sonde.
 
 ---
 
-## 6. Aucune tâche d'initialisation {#6-no-initialization-job}
+## 6. Aucun job d'initialisation {#6-no-initialization-job}
 
 VictoriaMetrics gère son propre moteur de stockage intégré et ne nécessite ni
-schéma, ni migration, ni données d'amorçage — c'est un binaire autonome. Aucune
-tâche d'initialisation n'est injectée par défaut. Si `var.initialization_jobs`
+schéma, ni migration, ni données d'amorçage — c'est un binaire autonome. Aucun
+job d'initialisation n'est injecté par défaut. Si `var.initialization_jobs`
 n'est pas vide dans l'encapsuleur (pour une tâche d'amorçage personnalisée que
 vous ajoutez vous-même), ces tâches sont transmises au socle après normalisation
 des types de champs ; sinon, aucune n'est créée.

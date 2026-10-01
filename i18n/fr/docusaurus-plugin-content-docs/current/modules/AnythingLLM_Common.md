@@ -18,7 +18,7 @@ défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement AnythingLLM, consultez les
 guides des plateformes ([AnythingLLM_GKE](AnythingLLM_GKE.md),
-[AnythingLLM_CloudRun](AnythingLLM_CloudRun.md)) et les guides des fondations
+[AnythingLLM_CloudRun](AnythingLLM_CloudRun.md)) et les guides des socles
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -29,7 +29,7 @@ guides des plateformes ([AnythingLLM_GKE](AnythingLLM_GKE.md),
 |---|---|---|
 | Secrets applicatifs | Génère et stocke quatre secrets — `JWT_SECRET`, `AUTH_TOKEN`, `SIG_KEY`, `SIG_SALT` — dans **Secret Manager** | À récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Épingle l'image Node.js d'AnythingLLM et le pipeline Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
 | Amorçage de la base de données | Définit le job `db-init` qui crée la base de données et l'utilisateur avant le démarrage de l'application | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket de documents **Cloud Storage** `anythingllm-docs` ; injecte son nom sous `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement d'exécution de référence d'AnythingLLM (`SERVER_PORT`, `STORAGE_DIR`, `UID`, `GID`) | Comportement de l'application dans les guides des plateformes |
@@ -59,7 +59,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~anythingllm"
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de base de données est généré et géré séparément par la fondation ; le
+Le mot de passe de base de données est généré et géré séparément par le socle ; le
 nom de son secret est indiqué dans les sorties du déploiement de la plateforme
 (`database_password_secret`). Voir [App_Common](App_Common.md) pour le modèle partagé de
 secrets et de Workload Identity.
@@ -92,7 +92,7 @@ sorties du déploiement de la plateforme.
 
 ---
 
-## 4. Paramètres de base de l'application {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `AnythingLLM_Common` établit l'environnement d'exécution de référence d'AnythingLLM afin
 que l'application démarre correctement dès le premier lancement :
@@ -119,8 +119,7 @@ que l'application démarre correctement dès le premier lancement :
   de stockage des documents.
 
 Ne remplacez pas `SERVER_PORT`, `UID` ni `GID` via `environment_variables` dans le
-module de plateforme — ils sont définis ici et fusionnés avant d'être transmis à la
-fondation. `STORAGE_DIR` est la seule exception : il EST remplacé, par les propres
+module de plateforme — ils sont définis ici et fusionnés avant d'être transmis au socle. `STORAGE_DIR` est la seule exception : il EST remplacé, par les propres
 `module_env_vars` des modules de plateforme et non par `environment_variables`, dès que
 `enable_nfs = true` (voir ci-dessus).
 
@@ -161,7 +160,7 @@ repli TCP n'est donc nécessaire, quelle que soit la plateforme.
 ## 6. Stockage d'objets {#6-object-storage}
 
 Un bucket de documents **Cloud Storage** dédié (avec le suffixe `anythingllm-docs`) est
-déclaré ici et provisionné par la fondation, qui accorde également l'accès au compte de
+déclaré ici et provisionné par le socle, qui accorde également l'accès au compte de
 service de la charge de travail. Le nom du bucket est injecté automatiquement sous
 `GOOGLE_CLOUD_STORAGE_BUCKET_NAME`. Associé aux PVC de StatefulSet ou à un volume NFS
 Filestore, cela offre à AnythingLLM un stockage durable des documents qui survit aux

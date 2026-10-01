@@ -40,7 +40,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Cinq secrets cryptographiques générés automatiquement, plus le mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est obligatoire.** La couche de données de Strapi est câblée sur
   PostgreSQL ; MySQL et `NONE` empêchent le démarrage.
@@ -82,9 +82,9 @@ Les pods Strapi sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le
 déploiement entre les nombres minimal et maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Strapi pour voir les pods, les révisions et les événements. Kubernetes
-  Engine → Services et entrées affiche l'IP externe.
+  Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -101,7 +101,7 @@ Strapi stocke toutes les données applicatives (types de contenu, contenu,
 utilisateurs, jetons d'API) dans une instance gérée Cloud SQL for PostgreSQL 15. Les
 pods y accèdent de manière privée via le sidecar **Cloud SQL Auth Proxy** sur un
 socket Unix, si bien qu'aucune IP publique n'est exposée. Lors du premier déploiement,
-une tâche d'initialisation crée la base de données et l'utilisateur de l'application.
+un job d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
   sauvegardes, les flags et les métriques.
@@ -151,7 +151,7 @@ stockés dans Secret Manager : `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT
 passe de la base de données y est également stocké. Tous les secrets sont injectés
 dans les pods à l'exécution ; aucune valeur en clair n'apparaît dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -184,7 +184,7 @@ Par défaut, la charge de travail est exposée via une IP externe Cloud Load Bal
 Un domaine personnalisé avec certificat géré par Google peut être activé, et une IP
 statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -200,8 +200,7 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de disponibilité et
 des règles d'alerte sont disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -212,7 +211,7 @@ des règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application Strapi {#3-strapi-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation s'exécute avec `postgres:15-alpine` et crée de manière idempotente
   la base de données et l'utilisateur Strapi, accorde les privilèges nécessaires (dont
   `CREATEDB`, requis par le système de migration de Strapi) et signale au Cloud SQL
@@ -271,7 +270,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -356,7 +355,7 @@ comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -448,7 +447,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -478,7 +477,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -489,12 +488,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `APP_KEYS` / `JWT_SECRET` / `ADMIN_JWT_SECRET` / `API_TOKEN_SALT` (générés automatiquement) | générés une fois, jamais modifiés | Critical | Leur rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API actifs ; tous les utilisateurs sont déconnectés et toutes les intégrations clientes cessent de fonctionner. |
 | `database_type` | `POSTGRES` ou `POSTGRES_15` | Critical | Strapi requiert PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |

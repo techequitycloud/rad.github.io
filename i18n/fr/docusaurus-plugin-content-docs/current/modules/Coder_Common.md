@@ -59,7 +59,7 @@ Coder exige **PostgreSQL 13+** ; le moteur est fixé à `POSTGRES_15` dans `Code
 1. Crée le rôle de l'application avec `LOGIN CREATEDB` (ou réinitialise son mot de passe s'il existe).
 2. Crée la base de données (appartenant à `postgres` — le super-utilisateur de Cloud SQL ne peut pas faire `SET ROLE` vers les rôles applicatifs).
 3. Accorde tous les privilèges sur la base de données et sur le schéma `public` au rôle de l'application, puis lui réattribue la propriété du schéma `public` — les migrations de Coder y créent tous les objets.
-4. Envoie un signal d'arrêt `POST /quitquitquit` au side-car Cloud SQL Proxy afin que le pod de la Job se termine proprement.
+4. Envoie un signal d'arrêt `POST /quitquitquit` au side-car Cloud SQL Proxy afin que le pod du Job se termine proprement.
 
 Coder applique lui-même les migrations de schéma à chaque démarrage du serveur ; la tâche ne touche donc jamais au schéma. Pour examiner directement la base de données :
 

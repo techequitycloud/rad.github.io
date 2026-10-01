@@ -78,7 +78,7 @@ Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Beszel {#a-cloud-run--the-beszel-service}
 
@@ -126,7 +126,7 @@ secret JWT, ni mot de passe de base de données à gérer (la base est un SQLite
 intégré et l'administrateur est créé dans l'interface). La liste des secrets ne
 montre que ceux que le socle crée lui-même.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~beszel"
@@ -143,7 +143,7 @@ ce qui permet aux agents distants d'envoyer (POST) leurs métriques au hub. Un
 équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud
 Armor peut être ajouté par-dessus.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -225,7 +225,7 @@ avec leur comportement standard.
 | `max_instance_count` | `1` | **Ne l'augmentez pas.** Plus d'une instance corrompt la base SQLite partagée. |
 | `container_port` | `8090` | Le hub Beszel écoute sur 8090. |
 | `execution_environment` | `gen2` | Requis pour le montage GCS FUSE `/beszel_data`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Beszel dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Beszel dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
@@ -267,12 +267,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `beszel_url` | URL du service pour l'interface/API du hub Beszel. |
@@ -282,7 +282,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket de données `/beszel_data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -316,7 +316,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images —
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Beszel, partagée avec la variante GKE, est décrite dans
 **[Beszel_Common](Beszel_Common.md)**.

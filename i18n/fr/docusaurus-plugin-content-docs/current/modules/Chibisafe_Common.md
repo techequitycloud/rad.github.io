@@ -250,7 +250,7 @@ comprendre la configuration partagée :
 - **`enable_redis` et `enable_cloudsql_volume` sont décidés au-dessus de cette
   couche.** `Chibisafe_Common` ne déclare aucune variable `enable_redis` ; le
   propre `main.tf` de chaque variante code en dur `enable_redis = false` dans son
-  appel au module du socle, quelle que soit la valeur d'une éventuelle variable
+  appel au module socle, quelle que soit la valeur d'une éventuelle variable
   reprise. `enable_cloudsql_volume = false` **est** défini dans
   `Chibisafe_Common` lui-même (codé en dur dans la sortie `config`, §3) — chaque
   variante en hérite inconditionnellement.
@@ -276,7 +276,7 @@ meurt est malgré tout détecté, car il entraîne l'arrêt de tout le conteneur
 - **Chibisafe_CloudRun** fixe par défaut ses `startup_probe`/`liveness_probe` à
   **`path = "/api/health"`**.
 - **Chibisafe_GKE** fait de même et transmet les deux à `App_GKE` (`main.tf`) ;
-  la `HealthCheckPolicy` de la Gateway reflète la sonde d'activité.
+  la `HealthCheckPolicy` de la Gateway reflète la sonde de vivacité.
 
 Les deux variantes comportent aussi des variables `health_check_config`/`startup_probe_config`
 (déclarées uniquement pour refléter les variables du socle), dont la valeur par
@@ -302,8 +302,8 @@ est déclaré ici et provisionné par le socle :
   false`, `public_access_prevention = "enforced"`.
 - `location` est laissé vide afin que le socle le résolve via
   `coalesce(bucket.location, local.region)` — l'épingler ici pourrait forcer le
-  remplacement du bucket (dont l'emplacement est immuable) lors d'une
-  réapplication ultérieure dans une autre région.
+  remplacement du bucket (dont l'emplacement est immuable) lors d'un
+  nouvel apply ultérieur dans une autre région.
 - Ce bucket est le stockage sous-jacent de tout le montage `/data` décrit aux
   §3/§4/§5. Le fait qu'il soit effectivement *monté* (et non simplement
   provisionné) dépend de la plateforme : toujours monté sur Cloud Run, monté sur

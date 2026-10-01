@@ -158,11 +158,11 @@ Identique à `App_GKE` — aucune valeur par défaut propre à Formbricks.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster GKE cible. Laissez vide pour la découverte automatique. |
-| `namespace_name` | `""` | Namespace Kubernetes. Laissez vide pour le générer automatiquement à partir de `application_name` + `tenant_id`. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Laissez vide pour le générer automatiquement à partir de `application_name` + `tenant_id`. |
 | `workload_type` | `"Deployment"` | `"Deployment"` ou `"StatefulSet"`. |
 | `service_type` | `"LoadBalancer"` | `"LoadBalancer"`, `"ClusterIP"` ou `"NodePort"`. |
-| `configure_service_mesh` | `false` | Active l'injection du sidecar Istio/Anthos Service Mesh pour le namespace. |
-| `enable_network_segmentation` | `false` | Crée des NetworkPolicies Kubernetes limitant le trafic de pod à pod au même namespace. |
+| `configure_service_mesh` | `false` | Active l'injection du sidecar Istio/Anthos Service Mesh pour l'espace de noms. |
+| `enable_network_segmentation` | `false` | Crée des NetworkPolicies Kubernetes limitant le trafic de pod à pod au même espace de noms. |
 | `termination_grace_period_seconds` | `30` | Secondes d'attente de Kubernetes entre SIGTERM et SIGKILL. |
 | `deployment_timeout` | `1800` | Secondes pendant lesquelles Terraform attend la fin du rollout lors de l'apply. |
 | `network_name` | `""` | Réseau VPC à utiliser. Non référencée — sans effet dans ce module applicatif. |
@@ -215,18 +215,18 @@ Identique à `App_GKE`. Exécute des scripts SQL arbitraires depuis un bucket GC
 
 ## Groupe 4c : Quotas de ressources {#group-4c-resource-quotas}
 
-Identique à `App_GKE`. Crée un ResourceQuota Kubernetes qui limite le total de CPU, de mémoire et le nombre d'objets dans le namespace Formbricks — utile dans les clusters partagés. Les valeurs de mémoire exigent des suffixes binaires (`Gi`/`Mi`) ; les entiers nus sont interprétés comme des octets et bloquent toute planification de pods.
+Identique à `App_GKE`. Crée un ResourceQuota Kubernetes qui limite le total de CPU, de mémoire et le nombre d'objets dans l'espace de noms Formbricks — utile dans les clusters partagés. Les valeurs de mémoire exigent des suffixes binaires (`Gi`/`Mi`) ; les entiers nus sont interprétés comme des octets et bloquent toute planification de pods.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans le namespace. |
+| `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans l'espace de noms. |
 | `quota_cpu_requests` | `""` | Total des requêtes CPU autorisées. Vide = aucun quota. |
 | `quota_cpu_limits` | `""` | Total des limites CPU autorisées. Vide = aucun quota. |
 | `quota_memory_requests` | `""` | Total des requêtes mémoire autorisées (par ex. `"4Gi"`). Vide = aucun quota. |
 | `quota_memory_limits` | `""` | Total des limites mémoire autorisées (par ex. `"8Gi"`). Vide = aucun quota. |
-| `quota_max_pods` | `""` | Nombre maximal de pods dans le namespace. Vide = aucun quota. |
-| `quota_max_services` | `""` | Nombre maximal de Services Kubernetes dans le namespace. Vide = aucun quota. |
-| `quota_max_pvcs` | `""` | Nombre maximal de PVC dans le namespace. Pertinent uniquement lorsque `workload_type = "StatefulSet"`. Vide = aucun quota. |
+| `quota_max_pods` | `""` | Nombre maximal de pods dans l'espace de noms. Vide = aucun quota. |
+| `quota_max_services` | `""` | Nombre maximal de Services Kubernetes dans l'espace de noms. Vide = aucun quota. |
+| `quota_max_pvcs` | `""` | Nombre maximal de PVC dans l'espace de noms. Pertinent uniquement lorsque `workload_type = "StatefulSet"`. Vide = aucun quota. |
 
 ---
 
@@ -342,7 +342,7 @@ Remplacez `initialization_jobs` par une liste non vide pour substituer des jobs 
 
 | Variable | Valeur par défaut | Remarques |
 |---|---|---|
-| `enable_nfs` | `true` | Le stockage NFS est activé par défaut. Formbricks stocke sur le volume NFS les fichiers téléversés partagés, les ressources mises en cache et les données de session, afin que toutes les répliques de pod accèdent au même système de fichiers. |
+| `enable_nfs` | `true` | Le stockage NFS est activé par défaut. Formbricks stocke sur le volume NFS les fichiers téléversés partagés, les ressources mises en cache et les données de session, afin que tous les réplicas de pod accèdent au même système de fichiers. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Chemin de montage du volume NFS dans le conteneur Formbricks. |
 | `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour la découverte automatique. |
 | `nfs_instance_base_name` | `"app-nfs"` | Nom de base d'une VM GCE NFS intégrée lorsqu'il n'en existe aucune. |
@@ -358,7 +358,7 @@ Remplacez `initialization_jobs` par une liste non vide pour substituer des jobs 
 |---|---|---|
 | Provisionné automatiquement | `uploads` | Téléversements de fichiers Formbricks via l'API XML GCS compatible S3 |
 
-Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain` (par défaut `7`), `delete_untagged_images` (par défaut `true`) et `image_retention_days` (par défaut `30`) se comportent de manière identique à `App_GKE` — les trois dernières régissent le nettoyage des images Artifact Registry pour le dépôt créé en ligne.
+Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain` (par défaut `7`), `delete_untagged_images` (par défaut `true`) et `image_retention_days` (par défaut `30`) se comportent de manière identique à `App_GKE` — les trois dernières régissent le nettoyage des images Artifact Registry pour le dépôt créé en mode intégré (inline).
 
 ---
 
@@ -473,7 +473,7 @@ Les deux valent `path = "/"` par défaut. Pour des contrôles de santé précis 
 
 ---
 
-## Groupe 14 : Stratégies de fiabilité {#group-14-reliability-policies}
+## Groupe 14 : Règles de fiabilité {#group-14-reliability-policies}
 
 Identique à `App_GKE`. Variables disponibles : `enable_pod_disruption_budget` (par défaut `true`), `pdb_min_available` (par défaut `"1"`), `enable_topology_spread` (par défaut `false`), `topology_spread_strict` (par défaut `false`).
 
@@ -510,7 +510,7 @@ Lorsque `stateful_pvc_enabled = true`, le module utilise automatiquement le type
 | `service_external_ip` | Adresse IP externe de l'équilibreur de charge. |
 | `project_id` | ID du projet GCP. |
 | `deployment_id` | Suffixe de l'ID de déploiement. |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `database_instance_name` | Nom de l'instance Cloud SQL PostgreSQL. |
 | `database_name` | Nom de la base de données applicative. |
 | `database_user` | Nom de l'utilisateur de la base de données applicative. |
@@ -529,20 +529,20 @@ Après le déploiement, utilisez la console GCP pour observer et exploiter le d�
 
 **Charges de travail GKE :**
 - Accédez à **Kubernetes Engine → Workloads** et sélectionnez votre projet et votre cluster.
-- Filtrez sur le namespace Formbricks (par ex. `formbricks-demo`). Vous verrez le `Deployment` ou le `StatefulSet` Formbricks ainsi que les éventuels Jobs `db-init`.
+- Filtrez sur l'espace de noms Formbricks (par ex. `formbricks-demo`). Vous verrez le `Deployment` ou le `StatefulSet` Formbricks ainsi que les éventuels Jobs `db-init`.
 - Cliquez sur la charge de travail pour voir le nombre de pods, l'état de la mise à jour progressive et les requêtes/limites de ressources.
 - L'onglet **Events** affiche les décisions du planificateur Kubernetes, l'état du pull des images et les échecs de sonde. C'est le premier endroit à consulter lorsque des pods ne démarrent pas.
 - L'onglet **YAML** affiche le manifeste Kubernetes complet, y compris toutes les variables d'environnement injectées et les montages de volumes de secrets.
 
 **Services et Ingress GKE :**
-- Accédez à **Kubernetes Engine → Services & Ingress** et sélectionnez le namespace Formbricks.
+- Accédez à **Kubernetes Engine → Services & Ingress** et sélectionnez l'espace de noms Formbricks.
 - Le Service Formbricks (de type `LoadBalancer`) affiche son IP externe. C'est l'IP à utiliser comme base de `webapp_url` lors du premier déploiement.
 - Si `enable_custom_domain = true`, une ressource Gateway apparaît ici avec l'état du certificat SSL associé.
 - L'onglet **Backend health** de l'Ingress/de la Gateway indique si l'équilibreur de charge considère les pods Formbricks comme sains.
 
 **HPA (Horizontal Pod Autoscaler) :**
 - Accédez à **Kubernetes Engine → Workloads**, sélectionnez le déploiement Formbricks, puis consultez la section **Horizontal Pod Autoscaler**.
-- Le nombre actuel de répliques, l'utilisation CPU cible et les événements de mise à l'échelle y sont visibles.
+- Le nombre actuel de réplicas, l'utilisation CPU cible et les événements de mise à l'échelle y sont visibles.
 - Vous pouvez aussi accéder au cluster dans **Kubernetes Engine → Clusters** et utiliser le Cloud Shell intégré : `kubectl get hpa -n formbricks-demo`.
 
 **Secret Manager :**
@@ -570,7 +570,7 @@ Après le déploiement, utilisez la console GCP pour observer et exploiter le d�
 
 Les commandes suivantes sont utiles pour les opérations quotidiennes. Remplacez `PROJECT_ID`, `REGION`, `CLUSTER_NAME` et `NAMESPACE` par vos valeurs.
 
-**Récupérer les identifiants du cluster et définir le contexte de namespace :**
+**Récupérer les identifiants du cluster et définir le contexte d'espace de noms :**
 ```bash
 gcloud container clusters get-credentials CLUSTER_NAME \
   --region=REGION \
@@ -690,15 +690,15 @@ gcloud builds list \
 | `db_user` | `"formbricks"` | **Critical** | Immuable après le premier déploiement — la modifier recrée l'utilisateur de la base de données et casse toutes les références d'identifiants existantes. |
 | `database_type` | `"POSTGRES_15"` | **Critical** | Le schéma Prisma de Formbricks cible PostgreSQL. La définir sur `MYSQL_8_0` ou `NONE` fait échouer Formbricks au démarrage avec une erreur du client Prisma. |
 | `enable_redis` | `true` | **High** | Redis est activé par défaut. Lorsque `redis_host = ""`, le module se replie sur l'IP du serveur NFS. Si `enable_nfs = false` et que `redis_host` est également vide, Formbricks échoue au démarrage. Avec `max_instance_count > 1`, Redis est indispensable — sans lui, chaque pod conserve un cache isolé, ce qui rend la limitation de débit et le comportement des réponses incohérents. |
-| `session_affinity` | `"ClientIP"` | **High** | Sans affinité de session, les requêtes du panneau d'administration Formbricks sont acheminées vers différents pods. Les caches de session en mémoire divergent, ce qui provoque des échecs d'authentification intermittents et des déconnexions inattendues. Conservez `"ClientIP"` pour tous les déploiements Formbricks multi-répliques. |
-| `enable_nfs` | `true` | **High** | Sans NFS, les ressources de sondage téléversées sont stockées sur le système de fichiers éphémère du pod. Tous les téléversements sont perdus au redémarrage du pod ou lors d'une mise à jour progressive. Plusieurs répliques servent alors des contenus de fichiers incohérents. |
+| `session_affinity` | `"ClientIP"` | **High** | Sans affinité de session, les requêtes du panneau d'administration Formbricks sont acheminées vers différents pods. Les caches de session en mémoire divergent, ce qui provoque des échecs d'authentification intermittents et des déconnexions inattendues. Conservez `"ClientIP"` pour tous les déploiements Formbricks multi-réplicas. |
+| `enable_nfs` | `true` | **High** | Sans NFS, les ressources de sondage téléversées sont stockées sur le système de fichiers éphémère du pod. Tous les téléversements sont perdus au redémarrage du pod ou lors d'une mise à jour progressive. Plusieurs réplicas servent alors des contenus de fichiers incohérents. |
 | `memory_limit` | `"2Gi"` | **High** | La valeur par défaut de base de `container_resources` sur GKE n'est que de `"512Mi"`. Le runtime Next.js de Formbricks nécessite au moins 1 Gi ; le pool de connexions Prisma et la mise en cache des réponses sous un trafic de sondages actif nécessitent 2 Gi. Un sous-dimensionnement provoque des plantages OOM de Node.js. |
 | `smtp_host` | `""` | **High** | Sans SMTP, Formbricks ne peut pas envoyer d'invitations aux utilisateurs, de notifications de réponse aux sondages ni d'e-mails de connexion par lien magique. Configurez un fournisseur SMTP valide avant d'inviter des membres de l'équipe. |
 | `min_instance_count` | `0` | **Medium** | Le scale-to-zero provoque des démarrages à froid de 15 à 20 secondes. Les répondants qui accèdent à un sondage juste après une période d'inactivité subissent ce délai. Définissez `1` pour les sondages de production soumis à des exigences de SLA. |
 | `backup_retention_days` | `7` | **Medium** | Sept jours ne suffisent pas pour des déploiements de sondages actifs. Portez cette valeur à 30 jours ou plus pour tout déploiement Formbricks de production qui collecte des réponses de valeur. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent entièrement la planification des pods. |
 | `enable_pod_disruption_budget` | `true` | **Medium** | Déjà activé. Le désactiver permet l'arrêt simultané de tous les pods lors des mises à niveau des nœuds GKE Autopilot, ce qui provoque une panne totale du service. |
-| `pdb_min_available` | `"1"` | **Medium** | Avec une seule réplique, le PDB empêche toute interruption volontaire jusqu'à ce que le pod soit replanifié. Utilisez au moins 2 répliques en production pour permettre une maintenance progressive. |
+| `pdb_min_available` | `"1"` | **Medium** | Avec un seul réplica, le PDB empêche toute interruption volontaire jusqu'à ce que le pod soit replanifié. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive. |
 | `stateful_pvc_size` | `"10Gi"` | **Medium** | Les fichiers téléversés via les sondages croissent rapidement. `10Gi` est un minimum pour le développement. Prévoyez 50 à 100Gi pour les déploiements de production actifs qui acceptent des pièces jointes. La taille d'un PVC peut être augmentée mais pas réduite sans migration des données. |
 | `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, le panneau d'administration Formbricks n'est protégé que par l'authentification propre à Formbricks. Activez-le pour tout déploiement de production accessible publiquement. |
 

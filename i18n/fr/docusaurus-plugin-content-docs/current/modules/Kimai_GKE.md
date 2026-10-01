@@ -30,9 +30,9 @@ Kimai s'exécute comme un pod Symfony/PHP (l'image officielle `kimai/kimai2:apac
 enveloppée dans un build personnalisé léger) sur GKE Autopilot. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Pod Symfony/PHP, 1 vCPU / 2 GiB par défaut ; réplique unique par défaut (GKE n'a pas de mise à l'échelle à zéro) |
+| Calcul | GKE Autopilot | Pod Symfony/PHP, 1 vCPU / 2 GiB par défaut ; réplica unique par défaut (GKE n'a pas de mise à l'échelle à zéro) |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — `Kimai_Common` fixe le moteur ; PostgreSQL n'est pas pris en charge |
 | Stockage objet | Cloud Storage | Un bucket `storage`, monté via GCS FUSE sur `/opt/kimai/var/data` pour les logos/modèles de factures téléversés et les données des plugins |
 | Secrets | Secret Manager | `APP_SECRET` (clé de signature Symfony) et `ADMINPASS` (mot de passe administrateur) générés automatiquement ; mot de passe de la base de données |
@@ -62,7 +62,7 @@ assemble un ensemble ciblé de services Google Cloud :
   pour les garder stables.
 - **Pas de mise à l'échelle à zéro.** `min_instance_count = 1`,
   `max_instance_count = 1` par défaut ; GKE Autopilot maintient le nombre de
-  répliques d'un Deployment au minimum configuré ou au-dessus.
+  réplicas d'un Deployment au minimum configuré ou au-dessus.
 - **`enable_nfs` vaut `true` par défaut mais est inutilisé en pratique.** Il monte
   un partage NFS Cloud Filestore sur `/var/lib/kimai`, mais le véritable chemin de
   stockage persistant est le bucket `storage` monté via GCS FUSE sur
@@ -79,12 +79,12 @@ assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Kimai {#a-gke-autopilot--the-kimai-workload}
 
-Kimai s'exécute par défaut comme un Deployment à réplique unique. Autopilot facture
+Kimai s'exécute par défaut comme un Deployment à réplica unique. Autopilot facture
 le CPU et la mémoire effectivement demandés par le pod. Un sidecar Cloud SQL Auth
 Proxy s'exécute à côté du conteneur principal (`enable_cloudsql_volume = true`).
 
@@ -119,7 +119,7 @@ premier démarrage du conteneur.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez
+contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatiques et
 la rotation des mots de passe.
 
@@ -161,7 +161,7 @@ Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing
 externe ; un Ingress Kubernetes pour les domaines personnalisés et une IP statique
 réservée peuvent s'y ajouter (les deux valeurs par défaut du module sont `true`,
 bien que le déploiement réel de ce module ait été exécuté avec les deux à
-`false` — voir les [Outputs](#5-outputs) et §4).
+`false` — voir les [sorties](#5-outputs) et §4).
 
 - **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
@@ -264,13 +264,13 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_image_source` | `custom` | Construit via Cloud Build l'image wrapper qui compose `DATABASE_URL` — requise, et non facultative, pour ce module. |
-| `min_instance_count` / `max_instance_count` | `1` / `1` | GKE n'a pas de mise à l'échelle à zéro ; réplique unique par défaut. |
+| `min_instance_count` / `max_instance_count` | `1` / `1` | GKE n'a pas de mise à l'échelle à zéro ; réplica unique par défaut. |
 | `container_port` | `8001` | La variante d'image `:apache` de Kimai écoute sur 8001, confirmé par des tests locaux et un déploiement réel. |
 | `cpu_limit` / `memory_limit` | `1000m` / `2Gi` | Limites de ressources par pod. |
 | `php_memory_limit` | `512M` | `memory_limit` de PHP (le point d'entrée de l'éditeur lit directement la variable d'environnement en minuscules `memory_limit`). |
 | `enable_cloudsql_volume` | `false` | Sidecar Cloud SQL Auth Proxy sur `127.0.0.1`. **Conservez `true` sur GKE** — l'alias `DB_IP` du wrapper en dépend. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -329,15 +329,15 @@ groupe 21, VPC-SC du groupe 22) se comportent exactement comme documenté dans
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `service_cluster_ip` / `service_external_ip` | IP interne / externe. |
 | `service_url` | URL du service. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
@@ -380,7 +380,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — Workload Identity,
 entrée, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**. La
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La
 configuration applicative propre à Kimai, partagée avec la variante Cloud Run, est
 décrite dans **[Kimai_Common](Kimai_Common.md)**.
 

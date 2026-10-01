@@ -112,7 +112,7 @@ Identique à `App_GKE`.
 | `max_instance_count` | `5` | `3` | Plafond plus élevé pour les pics de traitement des factures. |
 | `container_image_source` | `"prebuilt"` | `"custom"` | L'image officielle `invoiceninja/invoiceninja:5` est prête pour la production sans personnalisation. |
 | `enable_cloudsql_volume` | `true` | `true` | Le sidecar Cloud SQL Auth Proxy est nécessaire pour la connexion MySQL par socket Unix. |
-| `session_affinity` | `"ClientIP"` | `"None"` | **Important pour Invoice Ninja.** Sans `"ClientIP"`, les administrateurs sont déconnectés lorsque des requêtes sont acheminées vers un autre pod, car les sessions PHP ne sont pas partagées entre les répliques. |
+| `session_affinity` | `"ClientIP"` | `"None"` | **Important pour Invoice Ninja.** Sans `"ClientIP"`, les administrateurs sont déconnectés lorsque des requêtes sont acheminées vers un autre pod, car les sessions PHP ne sont pas partagées entre les réplicas. |
 | `timeout_seconds` | `300` | `300` | Portez à `600` pour les déploiements à fort volume où la génération PDF ou les exports de rapports par lots peuvent prendre plus de temps. |
 
 Les variables `deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `container_protocol`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels` et `enable_cloudsql_volume` se comportent comme décrit dans la documentation de App_GKE.
@@ -193,13 +193,13 @@ Identique à `App_GKE`. Variables disponibles : `enable_cicd_trigger`, `github_r
 
 ---
 
-## Groupe 9 : Politiques de fiabilité {#group-9-reliability-policies}
+## Groupe 9 : Règles de fiabilité {#group-9-reliability-policies}
 
 Identique à `App_GKE`.
 
 Variables disponibles : `enable_pod_disruption_budget` (par défaut `true`), `pdb_min_available` (par défaut `"1"`), `enable_topology_spread` (par défaut `false`), `topology_spread_strict` (par défaut `false`).
 
-> **Remarque :** avec `pdb_min_available = "1"` et une seule réplique, le PDB empêche indéfiniment les interruptions volontaires. Utilisez au moins 2 répliques en production pour permettre une maintenance progressive.
+> **Remarque :** avec `pdb_min_available = "1"` et un seul réplica, le PDB empêche indéfiniment les interruptions volontaires. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive.
 
 ---
 
@@ -211,7 +211,7 @@ Variables disponibles : `enable_pod_disruption_budget` (par défaut `true`), `pd
 |---|---|---|
 | `service_type` | `"LoadBalancer"` | Expose Invoice Ninja via un équilibreur de charge externe GKE. |
 | `workload_type` | `null` | Vaut `Deployment` par défaut. Définir `stateful_pvc_enabled = true` bascule automatiquement sur `StatefulSet`. |
-| `session_affinity` | `"ClientIP"` | **Obligatoire pour Invoice Ninja.** Les sessions PHP sont stockées par pod. Sans `"ClientIP"`, les administrateurs sont déconnectés lorsque des requêtes sont acheminées vers une autre réplique. |
+| `session_affinity` | `"ClientIP"` | **Obligatoire pour Invoice Ninja.** Les sessions PHP sont stockées par pod. Sans `"ClientIP"`, les administrateurs sont déconnectés lorsque des requêtes sont acheminées vers un autre réplica. |
 | `namespace_name` | `""` | Généré automatiquement à partir de `application_name` et `tenant_id` lorsqu'il est vide. |
 | `gke_cluster_name` | `""` | Laissez vide pour découvrir automatiquement un cluster géré par Services_GCP. |
 | `deployment_timeout` | `1800` | Délai de déploiement progressif de 30 minutes. Invoice Ninja peut nécessiter plus de temps pour les migrations initiales sur une base de données volumineuse. |
@@ -469,7 +469,7 @@ Définir `stateful_pvc_enabled = true` bascule automatiquement `workload_type` s
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Active les modèles de PVC dans le StatefulSet. Sélectionne automatiquement StatefulSet lorsque `true`. |
-| `stateful_pvc_size` | `"10Gi"` | Stockage par réplique de pod. Le stockage PDF temporaire d'Invoice Ninja peut croître rapidement — prévoyez 20 à 50 Gi pour les déploiements actifs. La taille d'un PVC peut être augmentée mais pas réduite. |
+| `stateful_pvc_size` | `"10Gi"` | Stockage par réplica de pod. Le stockage PDF temporaire d'Invoice Ninja peut croître rapidement — prévoyez 20 à 50 Gi pour les déploiements actifs. La taille d'un PVC peut être augmentée mais pas réduite. |
 | `stateful_pvc_mount_path` | `"/data"` | Chemin du conteneur pour le PVC par pod. |
 | `stateful_pvc_storage_class` | `"standard-rwo"` | StorageClass Kubernetes. `"standard-rwo"` (PD équilibré, ReadWriteOnce) est la valeur par défaut de GKE Autopilot. |
 | `stateful_headless_service` | `null` | Crée un Service headless pour un DNS de pod stable. À définir lorsque les pods Invoice Ninja ont besoin d'une découverte entre pairs. |
@@ -744,11 +744,11 @@ gcloud alpha monitoring policies list \
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"MYSQL_8_0"` | **Critical** | Invoice Ninja exige exclusivement MySQL. Le définir sur `POSTGRES` fait échouer l'application au démarrage avec une erreur de pilote PDO. Le module GKE câble automatiquement les identifiants MySQL — un type de base de données incohérent casse toute l'injection d'identifiants. |
@@ -757,16 +757,16 @@ gcloud alpha monitoring policies list \
 | `enable_redis` | `true` | **Critical** | Invoice Ninja EXIGE Redis pour le traitement de la file d'attente en arrière-plan. Sans Redis, la génération PDF et l'envoi des e-mails sont synchrones — ils bloquent les requêtes HTTP, provoquent des dépassements de délai côté client et échouent sous charge concurrente. L'envoi des factures devient peu fiable. |
 | `redis_host` | `""` | **High** | Se résout automatiquement vers l'IP du serveur NFS. Si NFS est désactivé et qu'aucun `redis_host` explicite n'est défini, Invoice Ninja ne peut pas se connecter à son backend de file d'attente au démarrage. Les pods démarrent, mais les jobs de la file d'attente échouent silencieusement. |
 | `enable_nfs` | `true` | **High** | Invoice Ninja écrit les documents téléversés, les logos clients et les données mises en cache dans le système de fichiers du conteneur. Sans NFS, le répertoire `/var/www/app/public/storage` est isolé par pod — le contenu téléversé sur un pod est invisible pour les autres et perdu au redémarrage du pod. |
-| `session_affinity` | `"ClientIP"` | **High** | Invoice Ninja utilise des sessions PHP côté serveur stockées dans Redis. Sans `"ClientIP"`, les requêtes d'administration peuvent être acheminées vers un pod sans le contexte de session actif, déconnectant les utilisateurs en cours de session. Conservez toujours `"ClientIP"` pour tout déploiement à plusieurs répliques. |
+| `session_affinity` | `"ClientIP"` | **High** | Invoice Ninja utilise des sessions PHP côté serveur stockées dans Redis. Sans `"ClientIP"`, les requêtes d'administration peuvent être acheminées vers un pod sans le contexte de session actif, déconnectant les utilisateurs en cours de session. Conservez toujours `"ClientIP"` pour tout déploiement à plusieurs réplicas. |
 | `container_resources.memory_limit` | `"2Gi"` | **High** | En dessous de 1 Gi, Chromium est tué pour manque de mémoire (OOM) pendant la génération PDF et renvoie aux clients des PDF vides ou corrompus. Les environnements de facturation actifs avec des rendus PDF concurrents nécessitent 4 Gi. |
 | `invoiceninja_admin_email` | `"admin@example.com"` | **Medium** | La valeur fictive par défaut doit être remplacée par une adresse réelle. L'administrateur ne peut ni recevoir les notifications système ni mener à bien une réinitialisation de mot de passe avec une adresse fictive. |
 | `mail_from_address` | `"ninja@example.com"` | **High** | Les e-mails d'envoi de factures provenant d'un domaine non vérifié sont rejetés par les serveurs de messagerie des clients ou classés comme spam. Configurez un domaine d'expédition vérifié avant d'envoyer des factures aux clients. |
 | `backup_retention_days` | `7` | **Medium** | Nettement insuffisant pour des données de facturation. De nombreuses juridictions exigent une conservation des factures de 5 à 7 ans. Portez-la à 90 jours minimum ; envisagez 365 jours ou plus pour la conformité. |
-| `pdb_min_available` | `"1"` | **Medium** | Avec une seule réplique, le PDB empêche indéfiniment les interruptions volontaires — les mises à niveau de nœuds et la maintenance du cluster sont bloquées. Utilisez au moins 2 répliques en production pour permettre une maintenance progressive. |
+| `pdb_min_available` | `"1"` | **Medium** | Avec un seul réplica, le PDB empêche indéfiniment les interruptions volontaires — les mises à niveau de nœuds et la maintenance du cluster sont bloquées. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive. |
 | `startup_probe` initial_delay_seconds | `90` | **High** | Invoice Ninja exécute l'amorçage PHP et d'éventuelles migrations au premier démarrage. Descendre en dessous de 60 amène Kubernetes à redémarrer le pod avant qu'Invoice Ninja soit prêt, créant une boucle de redémarrage avec un délai d'attente croissant. |
 | `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, le panneau d'administration d'Invoice Ninja (`/`) n'est protégé que par l'authentification applicative. Le trafic de bots et les attaques par bourrage d'identifiants contre le formulaire de connexion sont fréquents. À activer pour tout déploiement accessible publiquement. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers nus sont interprétés comme des octets, ce qui empêche la planification de tous les pods et provoque une panne complète du déploiement. |
-| `enable_topology_spread` | `false` | **Medium** | Sans répartition topologique, toutes les répliques peuvent se retrouver dans la même zone GKE. Une panne de zone met hors service l'ensemble du déploiement Invoice Ninja. À activer pour les déploiements de production avec `min_instance_count > 1`. |
+| `enable_topology_spread` | `false` | **Medium** | Sans répartition topologique, tous les réplicas peuvent se retrouver dans la même zone GKE. Une panne de zone met hors service l'ensemble du déploiement Invoice Ninja. À activer pour les déploiements de production avec `min_instance_count > 1`. |
 | `APP_URL env var` | _(non défini par défaut)_ | **Medium** | Si Invoice Ninja s'initialise sans `APP_URL` correct, tous les liens des factures envoyées et des e-mails du portail client pointent vers `localhost` ou une URL incorrecte. Définissez `APP_URL` dans `environment_variables` avant le premier démarrage. |
 
 <!-- related-guides -->

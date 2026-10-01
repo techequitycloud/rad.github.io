@@ -34,10 +34,10 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il
   provisionne, y compris le Service sidecar de recherche Meilisearch requis.
 - Accéder à la charge de travail en cours d'exécution, la vérifier et créer le premier compte (administrateur).
-- Effectuer les opérations du jour 2 : inspecter, connaître les limites de mise à l'échelle, mettre à jour et gérer les sauvegardes.
+- Effectuer les opérations du jour 2 — inspecter, connaître les limites de mise à l'échelle, mettre à jour et gérer les sauvegardes.
 - Observer la charge de travail et son sidecar de recherche avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -53,7 +53,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -108,7 +108,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail et l'historique de ses déploiements :**
 
@@ -169,7 +169,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
   Meilisearch est probablement arrêté ou l'injection de `MEILI_ADDR` a échoué —
   vérifiez indépendamment l'état et les journaux de son pod (tâche 3, étape 5).
 - **Les favoris ne sont pas conservés / erreurs SQLite dans les journaux :** vérifiez
-  que le volume NFS a bien été monté et qu'aucune seconde réplique n'écrit en même temps.
+  que le volume NFS a bien été monté et qu'aucun second réplica n'écrit en même temps.
 - **Déploiement bloqué après une mise à jour :** les applications reposant sur NFS
   utilisent automatiquement la stratégie de déploiement `Recreate` pour éviter que deux
   pods s'exécutent brièvement sur le même fichier SQLite — vérifiez que l'ancien pod
@@ -181,7 +181,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). Delete exécute `terraform destroy` et est irréversible. Si un
@@ -204,4 +204,4 @@ pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter le déploiement, mettre à jour la version, gérer les secrets, inspecter le sidecar indépendamment |
 | 4 — Observer | Manuel | Interroger Cloud Logging pour les deux charges de travail ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de NFS, de sidecar et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime les deux Services et les secrets |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime les deux Services et les secrets |

@@ -27,7 +27,7 @@ Windmill s'exécute sous forme de charge de travail combinée serveur+worker. Le
 | Secrets | Secret Manager | Mot de passe de la base de données généré automatiquement et secret SMTP provisoire |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 16 est obligatoire.** Windmill utilise des fonctionnalités propres à PostgreSQL ; le moteur de base de données est fixe. Sélectionner une version plus ancienne ou `NONE` fait échouer le job d'initialisation.
 - **Mode combiné serveur+worker.** `MODE=server,worker` et `NUM_WORKERS=3` exécutent le serveur d'API et les workers d'exécution de scripts dans le même pod. Pour une mise à l'échelle indépendante des workers, définissez des Deployments Kubernetes supplémentaires via `additional_services`.
@@ -231,7 +231,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | `/api/version`, période de 10s, 10 échecs | Sonde HTTP sur le point de terminaison de version de Windmill. |
-| `health_check_config` | `/api/version`, période de 30s, 3 échecs | Sonde d'activité. |
+| `health_check_config` | `/api/version`, période de 30s, 3 échecs | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Vérification de disponibilité Cloud Monitoring facultative. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
@@ -356,12 +356,12 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_16` | Critical | Windmill nécessite PostgreSQL 16 ; une version plus ancienne fait échouer le job d'initialisation et la base de données reste non initialisée. |
 | `db_name` / `db_user` | défini une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tous les scripts, flux et l'historique des jobs. |

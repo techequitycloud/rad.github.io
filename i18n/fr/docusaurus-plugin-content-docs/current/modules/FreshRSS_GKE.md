@@ -75,7 +75,7 @@ assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail FreshRSS {#a-gke-autopilot--the-freshrss-workload}
 
@@ -84,9 +84,9 @@ réellement demandés par les pods. Comme le répertoire de données repose sur 
 Deployment utilise la stratégie de mise à jour `Recreate` plutôt qu'une mise à jour
 progressive.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail FreshRSS pour consulter les pods et les événements. Kubernetes Engine →
-  Services et Ingress affiche l'adresse IP externe.
+  Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -116,7 +116,7 @@ l'application, et l'installateur de FreshRSS crée le schéma.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent tous dans les [Outputs](#5-outputs). Pour le modèle de connexion, les
+figurent tous dans les [sorties](#5-outputs). Pour le modèle de connexion, les
 sauvegardes et la rotation du mot de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Stockage persistant (NFS / PVC) {#c-persistent-storage-nfs--pvc}
@@ -127,7 +127,7 @@ par utilisateur, les articles mis en cache et les favicons. Ce module ne déclar
 **aucun bucket GCS**. Un PVC en mode bloc (StatefulSet) constitue un mode de
 persistance alternatif, via les variables StatefulSet du groupe 7.
 
-- **Console :** Filestore → Instances (NFS géré) ; Kubernetes Engine → Stockage
+- **Console :** Filestore → Instances (NFS géré) ; Kubernetes Engine → Storage
   (PVC).
 - **CLI :**
   ```bash
@@ -158,7 +158,7 @@ initialise le compte `admin` par défaut et son mot de passe d'API lors de la
 première installation. Le mot de passe de la base de données est géré séparément
 par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~freshrss"
@@ -166,7 +166,7 @@ par le socle.
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret
+[Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret
 Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -176,7 +176,7 @@ externe avec une adresse IP statique réservée, et un Ingress de domaine person
 est provisionné. Ajoutez des noms d'hôte via `application_domains` pour obtenir un
 certificat géré par Google.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -192,8 +192,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 de GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de
 disponibilité et des règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -230,7 +230,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles.
   de cette application avec état se bloquerait sur les verrous de fichiers et de
   base de données.
 - **Chemin de santé.** La sonde de démarrage est une vérification TCP sur le
-  port 80 ; la sonde d'activité est un HTTP GET sur `/` (200). FreshRSS sert
+  port 80 ; la sonde de vivacité est un HTTP GET sur `/` (200). FreshRSS sert
   également un point de terminaison JSON `/status` non authentifié, adapté aux
   tests de disponibilité. Prévoyez une fenêtre généreuse au premier démarrage, le
   temps que l'installateur crée le schéma.
@@ -302,7 +302,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP `/` 30s delay, threshold 20 | Sonde de démarrage ; le seuil élevé laisse le temps à l'installation du premier démarrage. |
-| `liveness_probe` | HTTP `/` 300s delay | Sonde d'activité ; `/status` est un point de terminaison JSON non authentifié alternatif. |
+| `liveness_probe` | HTTP `/` 300s delay | Sonde de vivacité ; `/status` est un point de terminaison JSON non authentifié alternatif. |
 | `uptime_check_config` | `{enabled=false, path="/"}` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
@@ -349,12 +349,12 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |

@@ -40,7 +40,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service RAGFlow construit sur mesure, 2 vCPU / 4 GiB par défaut, démarrage à froid (`min_instance_count = 0`) par défaut |
-| Base de données | Cloud SQL pour MySQL 8.0 | Obligatoire — RAGFlow ne prend pas en charge PostgreSQL |
+| Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — RAGFlow ne prend pas en charge PostgreSQL |
 | Recherche vectorielle | Elasticsearch (Elasticsearch_GKE) | Dépendance externe — doit être déployée au préalable ; `elasticsearch_hosts` est obligatoire |
 | File de tâches | Redis (Memorystore) | Obligatoire pour les workers de traitement des documents |
 | Stockage objet | Cloud Storage | Un bucket `ragflow-documents` dédié |
@@ -83,7 +83,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [Outputs](#5-outputs) du
+service et des ressources sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service RAGFlow {#a-cloud-run--the-ragflow-service}
@@ -106,10 +106,10 @@ déploiements progressifs sûrs.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
+### B. Cloud SQL for MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
 RAGFlow stocke toutes les métadonnées de l'application (comptes utilisateur, bases de
-connaissances, état des tâches) dans une instance gérée Cloud SQL pour MySQL 8.0. Le
+connaissances, état des tâches) dans une instance gérée Cloud SQL for MySQL 8.0. Le
 service s'y connecte de manière privée via le sidecar **Cloud SQL Auth Proxy**, par
 un socket Unix. Un pont `socat` dans le conteneur fait correspondre ce socket à
 `127.0.0.1:3306` pour le client MySQL TCP de RAGFlow. Au premier déploiement, un Job
@@ -124,7 +124,7 @@ d'initialisation crée la base de données et l'utilisateur de l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Elasticsearch — recherche vectorielle {#c-elasticsearch--vector-search}
@@ -276,7 +276,7 @@ lui sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -409,12 +409,12 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -428,7 +428,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -441,36 +441,36 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / interruption / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critique | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté si la valeur est vide et que `deploy_application = true`. |
-| `enable_redis` | `true` | Critique | Sans Redis, la file de traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
-| `database_type` | `MYSQL_8_0` | Critique | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critique | RAGFlow se connecte via un socket Unix relié en TCP par socat ; désactiver le sidecar du proxy provoque un échec de connexion à la base de données au démarrage. |
-| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `redis_host` | laisser vide pour utiliser le repli Redis du serveur NFS, ou définir une IP Memorystore explicite | Élevé | Lorsque `redis_host = ""` et `enable_redis = true`, App_CloudRun injecte `REDIS_HOST = <NFS server IP>` (exige `enable_nfs = true`, la valeur par défaut) — comme la variante GKE. Si NFS est désactivé et que `redis_host` est laissé vide, aucun hôte Redis n'est injecté et les workers documentaires asynchrones ne s'exécutent jamais, sans aucun message. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour une ingestion continue | Élevé | Les valeurs par défaut sont `0` / `false` (démarrage à froid) : le traitement des documents en arrière-plan s'arrête en cas d'inactivité et les démarrages à froid prennent 2 à 3 minutes. Définissez les deux pour une ingestion permanente. |
-| `memory_limit` | `4Gi` (≥ `8Gi` en production) | Élevé | Les modèles d'embedding et le serveur applicatif exigent beaucoup de RAM ; une valeur trop faible provoque des arrêts pour manque de mémoire (OOM). |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Élevé | Memorystore Redis utilise une IP VPC privée ; un mauvais routage de sortie casse la file de tâches. |
-| `execution_environment` | `gen2` | Élevé | Les montages NFS exigent gen2 ; passer à gen1 avec `enable_nfs = true` échoue au moment du plan. |
-| `elasticsearch_username` | `""` ou l'utilisateur correct | Élevé | Si la sécurité Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et casse toute l'indexation. |
-| `enable_nfs` | `true` | Élevé | Les déploiements multi-instances sans stockage partagé présentent des vues incohérentes des documents d'une instance à l'autre. |
-| `ingress_settings` / `enable_iap` | à restreindre en production | Élevé | Une entrée publique sans IAP expose RAGFlow à des appelants non authentifiés. |
-| `max_instance_count` | `1` (à augmenter uniquement avec NFS) | Moyen | Dépasser 1 sans NFS provoque un accès aux documents en « split-brain » entre les instances. |
-| `timeout_seconds` | `600` | Moyen | Le téléversement de documents volumineux peut prendre plusieurs minutes ; une valeur trop courte provoque des erreurs 504 avant la fin du traitement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
-| `application_version` | `v0.13.0` | Moyen | L'incrémenter déclenche une reconstruction de l'image et le déploiement d'une nouvelle révision ; vérifiez la compatibilité du schéma MySQL lors des changements de version majeure. |
+| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critical | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté si la valeur est vide et que `deploy_application = true`. |
+| `enable_redis` | `true` | Critical | Sans Redis, la file de traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
+| `database_type` | `MYSQL_8_0` | Critical | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critical | RAGFlow se connecte via un socket Unix relié en TCP par socat ; désactiver le sidecar du proxy provoque un échec de connexion à la base de données au démarrage. |
+| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `redis_host` | laisser vide pour utiliser le repli Redis du serveur NFS, ou définir une IP Memorystore explicite | High | Lorsque `redis_host = ""` et `enable_redis = true`, App_CloudRun injecte `REDIS_HOST = <NFS server IP>` (exige `enable_nfs = true`, la valeur par défaut) — comme la variante GKE. Si NFS est désactivé et que `redis_host` est laissé vide, aucun hôte Redis n'est injecté et les workers documentaires asynchrones ne s'exécutent jamais, sans aucun message. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour une ingestion continue | High | Les valeurs par défaut sont `0` / `false` (démarrage à froid) : le traitement des documents en arrière-plan s'arrête en cas d'inactivité et les démarrages à froid prennent 2 à 3 minutes. Définissez les deux pour une ingestion permanente. |
+| `memory_limit` | `4Gi` (≥ `8Gi` en production) | High | Les modèles d'embedding et le serveur applicatif exigent beaucoup de RAM ; une valeur trop faible provoque des arrêts pour manque de mémoire (OOM). |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Memorystore Redis utilise une IP VPC privée ; un mauvais routage de sortie casse la file de tâches. |
+| `execution_environment` | `gen2` | High | Les montages NFS exigent gen2 ; passer à gen1 avec `enable_nfs = true` échoue au moment du plan. |
+| `elasticsearch_username` | `""` ou l'utilisateur correct | High | Si la sécurité Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et casse toute l'indexation. |
+| `enable_nfs` | `true` | High | Les déploiements multi-instances sans stockage partagé présentent des vues incohérentes des documents d'une instance à l'autre. |
+| `ingress_settings` / `enable_iap` | à restreindre en production | High | Une entrée publique sans IAP expose RAGFlow à des appelants non authentifiés. |
+| `max_instance_count` | `1` (à augmenter uniquement avec NFS) | Medium | Dépasser 1 sans NFS provoque un accès aux documents en « split-brain » entre les instances. |
+| `timeout_seconds` | `600` | Medium | Le téléversement de documents volumineux peut prendre plusieurs minutes ; une valeur trop courte provoque des erreurs 504 avant la fin du traitement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `application_version` | `v0.13.0` | Medium | L'incrémenter déclenche une reconstruction de l'image et le déploiement d'une nouvelle révision ; vérifiez la compatibilité du schéma MySQL lors des changements de version majeure. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à RAGFlow, partagée avec la variante GKE, est décrite dans
 **[RAGFlow_Common](RAGFlow_Common.md)**.
 

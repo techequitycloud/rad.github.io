@@ -61,7 +61,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   aussi définir `stateful_pvc_enabled = true` (ce qui sélectionne automatiquement un
   StatefulSet) avec `stateful_pvc_mount_path = /data/docuseal` pour un PVC bloc par
   pod.
-- **Au moins 1 réplique** (GKE ne prend pas en charge la mise à zéro) ;
+- **Au moins 1 réplica** (GKE ne prend pas en charge la mise à zéro) ;
   `session_affinity` vaut `ClientIP` par défaut et une IP statique est réservée afin
   que l'adresse du LoadBalancer survive aux redéploiements.
 - **Pas de Redis.** DocuSeal utilise une file d'attente / un cache adossés à
@@ -76,14 +76,14 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail DocuSeal {#a-gke-autopilot--the-docuseal-workload}
 
 Les pods DocuSeal sont ordonnancés sur Autopilot, qui facture le CPU et la mémoire
 demandés par les pods. L'autoscaling horizontal des pods dimensionne le déploiement
-entre les nombres minimal et maximal de répliques. Lorsqu'un PVC bloc est activé, la
+entre les nombres minimal et maximal de réplicas. Lorsqu'un PVC bloc est activé, la
 charge de travail devient un StatefulSet.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail
@@ -118,7 +118,7 @@ d'initialisation crée la base de données et le rôle de l'application.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour
 le modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe,
 consultez [App_GKE](App_GKE.md).
 
@@ -170,7 +170,7 @@ socle.
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base figure dans les [Outputs](#5-outputs).
+Le nom du secret du mot de passe de la base figure dans les [sorties](#5-outputs).
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -253,48 +253,48 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `docuseal` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_version` | `latest` | Tag de l'image DocuSeal (`FROM docuseal/docuseal:<tag>`) ; épinglez une version précise en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` | Limites et demandes de CPU / mémoire du conteneur DocuSeal. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; GKE exige ≥ 1. |
-| `max_instance_count` | `5` | Nombre maximal de répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE exige ≥ 1. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas. |
 | `container_port` | `3000` | Puma écoute sur 3000 ; les sondes doivent correspondre. Ne le modifiez pas. |
-| `enable_image_mirroring` | `true` | Duplique l'image DocuSeal dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image DocuSeal dans Artifact Registry. |
 | `container_image_source` | `custom` | Enveloppe légère construite à partir de `docuseal/docuseal`. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Les valeurs essentielles (`RAILS_LOG_TO_STDOUT`, `WORKDIR`) sont définies automatiquement. |
 | `secret_environment_variables` | `{}` | Table variable d'environnement → nom de secret Secret Manager. `SECRET_KEY_BASE` est injecté automatiquement. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `workload_type` | `null` | Sélectionne automatiquement Deployment ; devient StatefulSet lorsque `stateful_pvc_enabled = true`. |
@@ -305,7 +305,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` | Définissez `true` pour un PVC bloc par pod (sélectionne automatiquement un StatefulSet), en alternative à NFS. |
 | `stateful_pvc_mount_path` | `/data/docuseal` | Chemin de montage du PVC — doit correspondre au `WORKDIR` de DocuSeal. |
@@ -314,7 +314,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/up`, délai de 60 s, timeout de 10 s, période de 15 s, 30 tentatives | Sonde de démarrage sur le point de terminaison de santé de Rails. |
 | `liveness_probe` | HTTP `/up`, délai de 60 s, timeout de 5 s, période de 30 s, 3 tentatives | Sonde de vivacité. |
@@ -322,26 +322,26 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` (crée le rôle + la base de données). |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Monte le volume NFS partagé sur `/data/docuseal` pour des documents persistants (le modèle de persistance par défaut). |
 | `nfs_mount_path` | `/data/docuseal` | Chemin de montage — doit correspondre au `WORKDIR` de DocuSeal. |
 
 ### Groupe 15 — Cache et file d'attente Redis {#group-15--redis-cache--queue}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | DocuSeal utilise une file d'attente / un cache adossés à PostgreSQL ; laissez-le désactivé. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_database_name` | `docuseal` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `application_database_user` | `docuseal` | Utilisateur de la base de données de l'application. Immuable après le premier déploiement. |
@@ -350,15 +350,15 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen
 le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Table des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -371,7 +371,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -401,7 +401,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy fournit le chemin en boucle locale qu'attend le point d'entrée ; le désactiver casse la connectivité à la base sur GKE. |
 | `workload_type` | `null` / `StatefulSet` | High | Imposer `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan. |
 | `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions de signature en plusieurs étapes peuvent être routées vers des pods différents. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | `memory_limit` | `4Gi` | Medium | Le rendu et la signature des PDF sont gourmands en mémoire ; trop réduire expose à des arrêts OOM en charge. |
 | `application_version` | À épingler en production | Medium | `latest` peut récupérer une nouvelle version majeure au redéploiement et appliquer des migrations que vous n'avez pas examinées. |
 
@@ -409,7 +409,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à DocuSeal, partagée
 avec la variante Cloud Run, est décrite dans **[Docuseal_Common](Docuseal_Common.md)**.
 

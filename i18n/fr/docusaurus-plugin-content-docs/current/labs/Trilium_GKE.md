@@ -19,7 +19,7 @@ vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Tr
 Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien,
 l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Trilium. Pour la liste complète des services provisionnés et
 de chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Trilium_GKE) — ce
@@ -27,7 +27,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, découvrir l'espace de noms et confirmer que le pod est en cours d'exécution.
@@ -52,7 +52,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -94,7 +94,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le pod est Ready et récupérez l'IP externe (le module utilise par défaut
    `service_type = LoadBalancer`, Trilium est donc accessible depuis un navigateur dès
@@ -149,7 +149,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Ne procédez pas à une mise à l'échelle horizontale.** Le module fixe délibérément
    `min_instance_count = max_instance_count = 1` : la base de données SQLite intégrée ne prend
-   pas en charge plusieurs écrivains — une seconde réplique risque de corrompre `document.db`.
+   pas en charge plusieurs écrivains — un second réplica risque de corrompre `document.db`.
    Les modifications de ressources passent par **Update** sur la page de détails du déploiement, et non par un
    `kubectl edit` manuel (une modification manuelle serait annulée lors de la prochaine application).
 
@@ -166,7 +166,7 @@ export REGION="us-central1"           # the region you deploy into
    le pod. Trilium applique lui-même ses migrations de schéma au démarrage.
 
 5. **Il n'y a aucune session de base de données à ouvrir.** `database_type = "NONE"` — pas d'instance Cloud
-   SQL, pas de tâche db-init, pas de mot de passe de base de données. Le seul état durable est
+   SQL, pas de job db-init, pas de mot de passe de base de données. Le seul état durable est
    le volume de données.
 
 6. **Sauvegardez les notes :**
@@ -196,7 +196,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
    (Utilisez `statefulset/<name>` au lieu de `deploy/<name>` lorsque `stateful_pvc_enabled =
-   true`.) Filtre de l'explorateur de journaux :
+   true`.) Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et
@@ -269,7 +269,7 @@ GKE, Artifact Registry) sont gérées séparément et ne sont pas supprimées ic
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image et provisionne le pod GKE et le stockage des données (GCS FUSE ou PVC bloc ; pas de base de données, pas de Redis) |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit sur `/api/health-check` ; effectuer l'étape « Set Password » du premier lancement ; vérifier la persistance des notes |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit sur `/api/health-check` ; effectuer l'étape « Set Password » du premier lancement ; vérifier la persistance des notes |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, conserver une mise à l'échelle à instance unique, choisir entre GCS FUSE et PVC bloc, mettre à jour la version, sauvegarder les notes |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de chemin de sonde, d'exposition (ingress), de quota de PVC, d'autorisations et de persistance |

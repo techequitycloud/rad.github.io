@@ -46,7 +46,7 @@ ensemble ciblé de services Google Cloud :
 | Entrée | URL Cloud Run / Cloud Load Balancing | `internal` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 | Distribution de l'image | Artifact Registry | L'image `emby/embyserver` est mise en miroir avant le déploiement |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Il n'y a pas de base de données externe.** Emby stocke l'intégralité de sa
   bibliothèque — bases de données SQLite, configuration, métadonnées, illustrations,
@@ -168,7 +168,7 @@ via `storage_buckets`.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les options de montage GCS FUSE et CMEK.
 
-### D. Configuration initiale et bibliothèque multimédia {#d-first-run-setup--the-media-library}
+### D. Configuration initiale et médiathèque {#d-first-run-setup--the-media-library}
 
 Au premier accès, Emby sert un **assistant de configuration** interactif sur `/web`
 (et `/`) qui crée le compte administrateur, définit la langue préférée et vous permet
@@ -259,11 +259,11 @@ facultatifs.
   avec PVC en mode bloc.
 - **L'image personnalisée est une simple surcouche.** Le Dockerfile est
   `ARG EMBY_VERSION=4.10.0.15` / `FROM emby/embyserver:${EMBY_VERSION}` ; ainsi
-  `image_source = "custom"` et le Foundation la met en miroir dans Artifact Registry
+  `image_source = "custom"` et le socle la met en miroir dans Artifact Registry
   (`enable_image_mirroring = true`). `application_version = "latest"` se résout vers la
   version épinglée `4.10.0.15` via l'argument de build propre à l'application
   `EMBY_VERSION` — il n'est **pas** écrasé par l'injection générique d'`APP_VERSION`
-  effectuée par le Foundation. Une vérification locale par `docker build` + `docker run`
+  effectuée par le socle. Une vérification locale par `docker build` + `docker run`
   a confirmé que l'image démarre proprement avec seulement `EMBY_CONFIG_DIR` et atteint
   la véritable logique de démarrage d'Emby Server.
 - **Aucun chemin de santé dédié — sondes TCP.** Les sondes de démarrage et de vivacité
@@ -303,7 +303,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -374,7 +374,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 conservées pour la compatibilité avec le socle. Ce groupe héberge également
 `nfs_instance_name` / `nfs_instance_base_name` pour la découverte NFS.
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -404,11 +404,11 @@ conservées pour la compatibilité avec le socle. Ce groupe héberge également
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Non applicable — aucune base de données SQL. |
 | `db_*_env_var_name` / `service_url_env_var_name` | `""` | Alias de variables d'environnement supplémentaires facultatifs ; laissez vide pour Emby. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Emby n'a besoin d'aucune tâche d'initialisation ; n'en fournissez que pour des tâches personnalisées de chargement de données. |
+| `initialization_jobs` | `[]` | Emby n'a besoin d'aucun job d'initialisation ; n'en fournissez que pour des tâches personnalisées de chargement de données. |
 | `cron_jobs` | `[]` | Jobs Cloud Run facultatifs pour les tâches de maintenance. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -422,7 +422,7 @@ conservées pour la compatibilité avec le socle. Ce groupe héberge également
 | `uptime_check_config` | `{ enabled=false }` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
-### Groupe 23 — VPC Service Controls et journaux d'audit {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -447,7 +447,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `/config`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration (vide pour un déploiement Emby par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -458,14 +458,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, un `container_port`/`backup_retention_days`/`timeout_seconds` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Bucket GCS `/config` | Ne jamais le supprimer ni le faire pointer ailleurs | Critical | Le bucket `/config` contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'ensemble du serveur. |
 | `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |

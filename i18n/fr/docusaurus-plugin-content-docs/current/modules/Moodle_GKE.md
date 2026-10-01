@@ -29,7 +29,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 Moodle s'exécute comme une charge de travail web PHP 8.3/Apache adossée à PostgreSQL.
 Le déploiement associe un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods PHP 8.3/Apache, 2 vCPU / 4 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Moodle ne prend pas en charge MySQL dans ce déploiement |
@@ -40,7 +40,7 @@ Le déploiement associe un ensemble ciblé de services Google Cloud :
 | Planificateur | Cloud Scheduler | Tâche cron provisionnée automatiquement (toutes les minutes) sur `/admin/cron.php` |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé facultatif + certificat géré |
 
-**Valeurs par défaut judicieuses à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixe et `MOODLE_DB_TYPE =
   "pgsql"` est codé en dur ; sélectionner MySQL ou `NONE` empêche le démarrage.
@@ -67,7 +67,7 @@ Le déploiement associe un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Moodle {#a-gke-autopilot--the-moodle-workload}
 
@@ -93,7 +93,7 @@ l'échelle et le type de charge de travail (Deployment ou StatefulSet).
 Moodle stocke toutes les données applicatives (cours, utilisateurs, notes, journaux
 d'activité) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods s'y
 connectent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix, si bien
-qu'aucune adresse IP publique n'est exposée. Lors du premier déploiement, une tâche
+qu'aucune adresse IP publique n'est exposée. Lors du premier déploiement, un job
 d'initialisation crée la base de données et l'utilisateur de l'application, et active
 l'extension `pg_trgm` pour la recherche en texte intégral de Moodle.
 
@@ -108,7 +108,7 @@ l'extension `pg_trgm` pour la recherche en texte intégral de Moodle.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs). Pour le
+Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Pour le
 modèle de connexion, les sauvegardes automatiques et la rotation des mots de passe,
 consultez [App_GKE](App_GKE.md).
 
@@ -164,7 +164,7 @@ base de données est généré et géré par le socle. Les trois sont injectés 
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Après le déploiement, mettez à jour le secret du mot de passe
+[Sorties](#5-outputs). Après le déploiement, mettez à jour le secret du mot de passe
 SMTP avec votre véritable identifiant SMTP :
 ```bash
 echo -n "your-smtp-password" | \
@@ -224,7 +224,7 @@ d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Moodle {#3-moodle-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Deux tâches
+- **Configuration de la base de données au premier déploiement.** Deux jobs
   d'initialisation s'exécutent avant le démarrage de l'application. La tâche `db-init`
   crée la base de données et l'utilisateur Moodle, active l'extension `pg_trgm` et
   accorde les privilèges (idempotente, peut être relancée sans risque). La tâche
@@ -347,7 +347,7 @@ et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -448,12 +448,12 @@ ou injecter des données initiales. Consultez [App_GKE](App_GKE.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |

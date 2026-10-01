@@ -43,7 +43,7 @@ Kubernetes Qdrant et Ollama. Le déploiement assemble un ensemble ciblé de serv
 | Secrets | Secret Manager | `N8N_ENCRYPTION_KEY` et `N8N_SMTP_PASS` générés automatiquement ; synchronisés vers des Secrets Kubernetes |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option via la Gateway API |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   configuration commune ; passer `database_type` à MySQL empêche le démarrage.
@@ -286,7 +286,7 @@ valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -363,7 +363,7 @@ valeurs par défaut standard.
 | `liveness_probe` | HTTP `/` — délai de 30 s | Sonde de vivacité de n8n. |
 | `startup_probe_config` | TCP — activée | Sonde de démarrage standard d'App_GKE. |
 | `health_check_config` | HTTP `/` — activée | Sonde de vivacité standard d'App_GKE. |
-| `uptime_check_config` | désactivé | À activer pour la supervision en production. |
+| `uptime_check_config` | désactivé | À activer pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
 ### Groupe 11 — Automatisation des charges de travail {#group-11--workload-automation}
@@ -456,7 +456,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | _(défini)_ | Nom de la règle. |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -498,7 +498,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de données d'IA). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -511,12 +511,12 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `N8N_ENCRYPTION_KEY` (généré automatiquement) | À sauvegarder immédiatement | Critical | Le modifier après la première exécution détruit définitivement tous les identifiants n8n enregistrés. |
 | `application_name` | `n8nai` — défini une seule fois | Critical | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes avec perte de données. |
@@ -539,7 +539,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à n8n AI partagée avec la
 variante Cloud Run est décrite dans **[N8N_AI_Common](N8N_AI_Common.md)**.
 

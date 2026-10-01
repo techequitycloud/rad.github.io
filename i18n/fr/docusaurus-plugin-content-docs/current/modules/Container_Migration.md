@@ -50,7 +50,7 @@ Toutes les commandes supposent que `PROJECT`, `REGION` et `ZONE` sont définis c
 
 Migrate to Containers est fourni sous forme de deux outils en ligne de commande plutôt que d'un service cloud géré. La CLI **`mcdc`** s'exécute sur chaque VM source pour collecter des données système et produire un rapport d'aptitude à la conteneurisation (en évaluant la charge de travail selon les parcours GKE, GKE Autopilot, Cloud Run et Compute Engine). La CLI **`m2c`** s'exécute sur la VM de poste de travail pour copier le système de fichiers d'une VM source, l'analyser afin d'en tirer un plan de migration, migrer les données persistantes vers GKE et générer des Dockerfiles et des manifestes Kubernetes. Les deux sont préinstallées par les scripts de démarrage du module.
 
-- **Console :** il n'existe pas d'interface de console dédiée pour ce workflow basé sur la CLI. Suivez la progression via les VM sources (Compute Engine) et les charges de travail obtenues (Kubernetes Engine → Charges de travail).
+- **Console :** il n'existe pas d'interface de console dédiée pour ce workflow basé sur la CLI. Suivez la progression via les VM sources (Compute Engine) et les charges de travail obtenues (Kubernetes Engine → Workloads).
 - **CLI (à exécuter sur la VM de poste de travail via SSH) :**
   ```bash
   # Connect to the workstation, then verify the toolchain:
@@ -86,7 +86,7 @@ Trois VM Compute Engine sont provisionnées, toutes sous Ubuntu 22.04 avec des I
 
 Un cluster GKE standard zonal reçoit les conteneurs migrés. Son pool de nœuds par défaut est remplacé par un pool géré par le module, dimensionné par `gke_node_count` (3 par défaut) et `gke_node_machine_type` (`e2-medium` par défaut), dont les nœuds reçoivent le scope `cloud-platform` afin de pouvoir extraire des images et communiquer avec les autres API Google Cloud. Le cluster utilise un réseau de VPC natif avec des plages de pods et de services attribuées automatiquement.
 
-- **Console :** Kubernetes Engine → Clusters pour le cluster et le pool de nœuds ; Charges de travail et Services et entrées pour les applications migrées une fois déployées.
+- **Console :** Kubernetes Engine → Clusters pour le cluster et le pool de nœuds ; Workloads et Services & Ingress pour les applications migrées une fois déployées.
 - **CLI :**
   ```bash
   gcloud container clusters list --project "$PROJECT"
@@ -99,7 +99,7 @@ Un cluster GKE standard zonal reçoit les conteneurs migrés. Son pool de nœuds
 
 Le module crée un VPC en mode automatique et les règles de pare-feu dont le lab a besoin : trafic interne entre instances, SSH (22) et ICMP depuis n'importe où, et HTTP sur le port 8080 vers les instances portant le tag `tomcat` afin que l'application PetClinic soit consultable. Le poste de travail de migration atteint les VM sources via ce réseau interne pour copier leurs systèmes de fichiers.
 
-- **Console :** Réseau VPC → Réseaux VPC pour le réseau ; Réseau VPC → Pare-feu pour les règles.
+- **Console :** VPC network → Réseaux VPC pour le réseau ; VPC network → Pare-feu pour les règles.
 - **CLI :**
   ```bash
   gcloud compute networks list --project "$PROJECT"
@@ -201,12 +201,12 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `deployment_id` | défini une seule fois | Critical | Intégré à chaque nom de ressource. Le modifier après le déploiement force la recréation du VPC, des VM et du cluster GKE. |
 | `create_vpc` | `true` | High | Définir `false` exige un VPC préexistant nommé exactement `mig-<id>-vpc` — aucune variable ne permet de désigner un réseau nommé différemment ; l'apply échoue donc s'il est absent. |

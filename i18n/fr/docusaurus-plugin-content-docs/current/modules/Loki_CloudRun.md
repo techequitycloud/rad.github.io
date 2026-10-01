@@ -128,7 +128,7 @@ d'authentification par proxy inverse).
   gcloud secrets list --project "$PROJECT"
   ```
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app` (`ingress_settings =
 "all"`), ce qui permet aux clients d'expédition de journaux (Promtail, Alloy) situés en dehors du VPC
@@ -274,7 +274,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 |---|---|---|
 | `database_type` | `NONE` | Fixe — le stockage durable de Loki est le bucket GCS, pas Cloud SQL. Toutes les autres variables du Groupe 12 sont inertes. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -322,8 +322,8 @@ ressources en cours d'exécution.
 
 ## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
@@ -350,14 +350,14 @@ ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | Laisser la valeur par défaut (de fait épinglée à `1`) | Critique | Même si `Loki_Common` la force à `1` dans la configuration qu'il transmet au socle, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — l'anneau en mémoire et le compactor singleton ne sont pas conçus pour des instances simultanées. |
-| `container_port` | `3100` (ne pas modifier sans modifier aussi le gabarit de configuration) | Critique | Le `server.http_listen_port` de Loki est intégré au fichier de configuration, et non lu depuis `container_port` à l'exécution — une incohérence entre les deux casse le routage entre Cloud Run et le conteneur. |
-| `ingress_settings` | `all` pour l'expédition de journaux externe | Élevé | Définir `internal` empêche les agents Promtail/Alloy s'exécutant en dehors du VPC du projet d'envoyer des journaux. |
-| `enable_iap` | `false`, sauf si tous les clients d'expédition de journaux peuvent s'authentifier via IAP | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris l'API d'envoi utilisée par les agents d'expédition de journaux. |
-| Contrôle d'accès | Aucun par défaut (`auth_enabled: false`) | Élevé | L'API HTTP de Loki (envoi et requête) n'a aucune authentification intégrée. Quiconque peut atteindre l'URL du service peut envoyer ou interroger des journaux. Placez devant elle IAP, une règle Cloud Armor ou une couche d'authentification par proxy inverse si cela compte pour votre déploiement. |
-| `application_version` | Épingler un tag explicite (p. ex. `3.6.12`) en production | Moyen | `"latest"` se résout silencieusement en le tag qu'épingle actuellement le Dockerfile de `Loki_Common`, qui ne change que lorsque la source du module change — ce n'est pas un `latest` amont en direct, mais pas non plus une valeur que vous maîtrisez par déploiement sans définir de tag explicite. |
-| `memory_limit` | Augmenter au-delà de `512Mi` pour des libellés à forte cardinalité ou une charge de requêtes importante | Moyen | Le moteur de requêtes de Loki et son cache d'index en mémoire peuvent manquer de mémoire (OOM) sous charge avec la valeur par défaut prudente. |
-| `database_type` | Laisser à `NONE` | Faible | Toute autre valeur est sans effet — `Loki_Common` ne câble jamais de connexion à une base de données dans la configuration de Loki, quoi qu'il arrive. |
+| `max_instance_count` | Laisser la valeur par défaut (de fait épinglée à `1`) | Critical | Même si `Loki_Common` la force à `1` dans la configuration qu'il transmet au socle, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — l'anneau en mémoire et le compactor singleton ne sont pas conçus pour des instances simultanées. |
+| `container_port` | `3100` (ne pas modifier sans modifier aussi le gabarit de configuration) | Critical | Le `server.http_listen_port` de Loki est intégré au fichier de configuration, et non lu depuis `container_port` à l'exécution — une incohérence entre les deux casse le routage entre Cloud Run et le conteneur. |
+| `ingress_settings` | `all` pour l'expédition de journaux externe | High | Définir `internal` empêche les agents Promtail/Alloy s'exécutant en dehors du VPC du projet d'envoyer des journaux. |
+| `enable_iap` | `false`, sauf si tous les clients d'expédition de journaux peuvent s'authentifier via IAP | High | IAP bloque toutes les requêtes non authentifiées, y compris l'API d'envoi utilisée par les agents d'expédition de journaux. |
+| Contrôle d'accès | Aucun par défaut (`auth_enabled: false`) | High | L'API HTTP de Loki (envoi et requête) n'a aucune authentification intégrée. Quiconque peut atteindre l'URL du service peut envoyer ou interroger des journaux. Placez devant elle IAP, une règle Cloud Armor ou une couche d'authentification par proxy inverse si cela compte pour votre déploiement. |
+| `application_version` | Épingler un tag explicite (p. ex. `3.6.12`) en production | Medium | `"latest"` se résout silencieusement en le tag qu'épingle actuellement le Dockerfile de `Loki_Common`, qui ne change que lorsque la source du module change — ce n'est pas un `latest` amont en direct, mais pas non plus une valeur que vous maîtrisez par déploiement sans définir de tag explicite. |
+| `memory_limit` | Augmenter au-delà de `512Mi` pour des libellés à forte cardinalité ou une charge de requêtes importante | Medium | Le moteur de requêtes de Loki et son cache d'index en mémoire peuvent manquer de mémoire (OOM) sous charge avec la valeur par défaut prudente. |
+| `database_type` | Laisser à `NONE` | Low | Toute autre valeur est sans effet — `Loki_Common` ne câble jamais de connexion à une base de données dans la configuration de Loki, quoi qu'il arrive. |
 
 ---
 

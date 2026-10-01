@@ -75,7 +75,7 @@ assemble un ensemble volontairement minimal de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail code-server {#a-gke-autopilot--the-code-server-workload}
 
@@ -124,7 +124,7 @@ Lorsque `enable_password = true` (valeur par défaut), un `PASSWORD` aléatoire 
 comme variable d'environnement `PASSWORD` via SecretSync pour protéger la page de
 connexion. Il n'y a pas de mot de passe de base de données (pas de base de données).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~codeserver AND name~password"
@@ -161,7 +161,7 @@ géré par Google via la Gateway API. Une IP statique est réservée par défaut
 > pratique ; cela signifie toutefois que le Service *brut* n'est pas accessible sans
 > passer par la Gateway.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -178,8 +178,8 @@ sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règles d
 facultatifs sont disponibles (un test de disponibilité nécessite un point de
 terminaison externe accessible).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -237,7 +237,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -258,7 +258,7 @@ comportement et leurs valeurs par défaut standard.
 | `min_instance_count` | `1` | Laissez à 1 — éditeur à instance unique. GKE ne descend pas à zéro. |
 | `max_instance_count` | `1` | Laissez à 1 — un seul volume d'espace de travail, session en mémoire. |
 | `enable_cloudsql_volume` | `false` | code-server n'a pas de Cloud SQL — laissez à false. |
-| `enable_image_mirroring` | `true` | Réplique l'image code-server dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image code-server dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -323,12 +323,12 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -341,7 +341,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `statefulset_name` | Nom du StatefulSet (lorsqu'un PVC bloc est activé). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuels jobs d'initialisation fournis par l'utilisateur (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -378,7 +378,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à code-server et
 partagée avec la variante Cloud Run est décrite dans
 **[CodeServer_Common](CodeServer_Common.md)**.

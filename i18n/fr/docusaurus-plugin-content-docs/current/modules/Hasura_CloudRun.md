@@ -22,12 +22,12 @@ Hasura s'exécute sous forme d'un unique conteneur Haskell sur Cloud Run v2. Le 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Haskell, 1 vCPU / 512 MiB par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro prise en charge |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — le catalogue de métadonnées de Hasura et sa source de données par défaut résident tous deux dans Postgres |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le catalogue de métadonnées de Hasura et sa source de données par défaut résident tous deux dans Postgres |
 | Stockage d'objets | Aucun | Hasura est sans état ; aucun bucket n'est provisionné |
 | Secrets | Secret Manager | `HASURA_GRAPHQL_ADMIN_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la couche applicative partagée ; Hasura conserve son propre catalogue de métadonnées dans Postgres, aucun autre moteur n'est donc pris en charge.
 - **Le secret administrateur protège tout ce qui est sensible.** `HASURA_GRAPHQL_ADMIN_SECRET` est généré automatiquement et stocké dans Secret Manager. Il protège l'interface `/console` ainsi que les API `/v1/graphql` et `/v1/metadata`. `/healthz` reste public pour les sondes de santé.
@@ -57,9 +57,9 @@ Hasura s'exécute sous forme d'un service Cloud Run v2 qui s'adapte automatiquem
 
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Hasura stocke son catalogue de métadonnées (tables suivies, relations, permissions, déclencheurs d'événements) **et** vos données applicatives dans une instance gérée Cloud SQL pour PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Au premier déploiement, une tâche d'initialisation crée la base de données et l'utilisateur de l'application ; Hasura installe son schéma de métadonnées au premier démarrage.
+Hasura stocke son catalogue de métadonnées (tables suivies, relations, permissions, déclencheurs d'événements) **et** vos données applicatives dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Au premier déploiement, un job d'initialisation crée la base de données et l'utilisateur de l'application ; Hasura installe son schéma de métadonnées au premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -112,7 +112,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 
 ## 3. Comportement de l'application Hasura {#3-hasura-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement.** Une tâche d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Elle se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. La tâche peut être réexécutée sans risque.
+- **Initialisation de la base de données au premier déploiement.** Un job d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. La tâche peut être réexécutée sans risque.
 - **Catalogue de métadonnées au démarrage.** Hasura installe et migre son propre schéma de catalogue de métadonnées dans Postgres au démarrage ; la mise à niveau de la version de l'image applique donc les modifications du catalogue sans étape de migration distincte. Les métadonnées de vos tables suivies persistent dans la base de données d'une révision à l'autre.
 - **Deux URL de connexion, assemblées dans le conteneur.** Le point d'entrée construit à la fois `HASURA_GRAPHQL_DATABASE_URL` et `HASURA_GRAPHQL_METADATA_DATABASE_URL` à partir des variables `DB_*` injectées, en encodant le mot de passe pour l'URL et en distinguant selon `DB_HOST` (répertoire de socket → forme socket libpq ; loopback → simple ; IP privée → `sslmode=require`).
 - **Le secret administrateur est la frontière de sécurité.** Envoyez-le dans l'en-tête `x-hasura-admin-secret`. Pour le récupérer :
@@ -179,7 +179,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `execution_environment` | `gen2` | Gen2 recommandé. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (à augmenter pour les abonnements/flux longs). |
 | `enable_cloudsql_volume` | `true` | Socket du Cloud SQL Auth Proxy pour la connexion Postgres. |
-| `enable_image_mirroring` | `true` | Duplique l'image Hasura dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Hasura dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
@@ -246,7 +246,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir [App_Cl
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `enable_postgres_extensions` / `postgres_extensions` | désactivé / `[]` | Extensions Postgres facultatives. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -273,7 +273,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir [App_Cl
 | `redis_host` | `""` | Utilisé uniquement lorsque `enable_redis = true`. |
 | `redis_port` | `6379` | Port Redis. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -302,7 +302,7 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches d'initialisation. |
+| `initialization_jobs` | Noms des jobs d'initialisation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `cicd_configuration` | État et détails du CI/CD. |
@@ -312,14 +312,14 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critical | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
@@ -335,7 +335,7 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 
 ---
 
-Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Hasura partagée avec la variante GKE est décrite dans **[Hasura_Common](Hasura_Common.md)**.
+Pour le comportement du socle mentionné tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Hasura partagée avec la variante GKE est décrite dans **[Hasura_Common](Hasura_Common.md)**.
 
 <!-- related-guides -->
 

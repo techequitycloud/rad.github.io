@@ -322,7 +322,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -336,7 +336,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `php_memory_limit` | `512M` | Accepté mais n'est actuellement relié à aucun paramètre PHP — voir la section 3. |
 | `upload_max_filesize` / `post_max_size` | `64M` / `64M` | Même réserve que ci-dessus ; validés au moment du plan (`upload_max_filesize ≤ post_max_size`) mais pas appliqués par ailleurs. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -354,7 +354,7 @@ héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements par étapes. |
 | `max_revisions_to_retain` | `7` | Déclarée pour la parité des conventions ; non référencée par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -393,7 +393,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 |---|---|---|
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. |
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -479,7 +479,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (`data` et `classicpress-uploads`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -492,26 +492,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur explicite et nommée avant la création de toute ressource. ClassicPress exécute également sa propre précondition (`validations.tf`) pour `upload_max_filesize ≤ post_max_size`.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Persistance des médias et extensions sur `/var/www/html/wp-content` | Conservez `enable_nfs = true` (la valeur par défaut) | Faible | Avec `enable_nfs = true`, Filestore est monté sur `/var/www/html/wp-content` et la logique de copie du point d'entrée amont l'ignore au démarrage ; les médias téléversés et les extensions et thèmes installés via wp-admin survivent donc aux démarrages à froid. Désactiver `enable_nfs` supprime cette persistance — chaque instance démarrée à froid repartirait alors d'un `wp-content` vide. |
-| `CLASSICPRESS_SALT_SEED` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Sa rotation invalide tous les cookies signés et toutes les sessions connectées sur l'ensemble des instances. |
-| `database_type` | Laisser la valeur par défaut (`MYSQL_8_0`) | Critique | Le job `db-init` et le point d'entrée de `ClassicPress_Common` sont propres à MySQL ; la valeur est codée en dur quelle que soit la variable, mais compter sur la variable pour choisir un moteur est une impasse. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données. |
-| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `max_instance_count` | `1` | Moyen | `wp-content` (téléversements, extensions, thèmes) est partagé via le montage NFS, mais les fichiers de base de ClassicPress situés en dehors sont copiés indépendamment pour chaque instance ; dépasser 1 n'a pas été validé quant à la sûreté des écritures concurrentes sur `wp-content`. |
-| Configuration de l'administrateur au premier lancement | Terminez `/wp-admin/install.php` rapidement après le déploiement | Élevé | Tant que le programme d'installation n'a pas été exécuté, le site n'a ni schéma ni compte administrateur — aucun secret de mot de passe administrateur généré ne permet de le récupérer. |
-| `enable_nfs` | `true` | Moyen | Provisionne et facture une instance Filestore montée sur `/var/www/html/wp-content` — le mécanisme confirmé de persistance des téléversements, extensions et thèmes (voir la section 3). La désactiver supprime cette persistance. |
-| `php_memory_limit` / `upload_max_filesize` / `post_max_size` | N'importe quelle valeur | Faible | Ne sont actuellement reliés à aucun paramètre PHP — ne supposez pas que les modifier affecte les limites de téléversement ou la mémoire PHP du conteneur déployé. |
-| `memory_limit` | `2Gi` | Moyen | En dessous d'environ 512Mi, le conteneur PHP/Apache risque un OOM sous charge ou avec des extensions plus lourdes. |
-| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute une latence de démarrage à froid pendant la recopie des fichiers de base dans `/var/www/html` ; les téléversements, extensions et thèmes sous `wp-content` ne sont pas affectés puisqu'ils persistent via NFS. |
-| `enable_cloud_armor` | à activer pour la production | Moyen | L'interface d'administration et le site public sont joignables sans protection WAF par défaut. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| Persistance des médias et extensions sur `/var/www/html/wp-content` | Conservez `enable_nfs = true` (la valeur par défaut) | Low | Avec `enable_nfs = true`, Filestore est monté sur `/var/www/html/wp-content` et la logique de copie du point d'entrée amont l'ignore au démarrage ; les médias téléversés et les extensions et thèmes installés via wp-admin survivent donc aux démarrages à froid. Désactiver `enable_nfs` supprime cette persistance — chaque instance démarrée à froid repartirait alors d'un `wp-content` vide. |
+| `CLASSICPRESS_SALT_SEED` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Sa rotation invalide tous les cookies signés et toutes les sessions connectées sur l'ensemble des instances. |
+| `database_type` | Laisser la valeur par défaut (`MYSQL_8_0`) | Critical | Le job `db-init` et le point d'entrée de `ClassicPress_Common` sont propres à MySQL ; la valeur est codée en dur quelle que soit la variable, mais compter sur la variable pour choisir un moteur est une impasse. |
+| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données. |
+| `enable_backup_import` | `false` sauf pour une restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `max_instance_count` | `1` | Medium | `wp-content` (téléversements, extensions, thèmes) est partagé via le montage NFS, mais les fichiers de base de ClassicPress situés en dehors sont copiés indépendamment pour chaque instance ; dépasser 1 n'a pas été validé quant à la sûreté des écritures concurrentes sur `wp-content`. |
+| Configuration de l'administrateur au premier lancement | Terminez `/wp-admin/install.php` rapidement après le déploiement | High | Tant que le programme d'installation n'a pas été exécuté, le site n'a ni schéma ni compte administrateur — aucun secret de mot de passe administrateur généré ne permet de le récupérer. |
+| `enable_nfs` | `true` | Medium | Provisionne et facture une instance Filestore montée sur `/var/www/html/wp-content` — le mécanisme confirmé de persistance des téléversements, extensions et thèmes (voir la section 3). La désactiver supprime cette persistance. |
+| `php_memory_limit` / `upload_max_filesize` / `post_max_size` | N'importe quelle valeur | Low | Ne sont actuellement reliés à aucun paramètre PHP — ne supposez pas que les modifier affecte les limites de téléversement ou la mémoire PHP du conteneur déployé. |
+| `memory_limit` | `2Gi` | Medium | En dessous d'environ 512Mi, le conteneur PHP/Apache risque un OOM sous charge ou avec des extensions plus lourdes. |
+| `min_instance_count` | `1` pour la production | Medium | La mise à l'échelle à zéro (`0`) ajoute une latence de démarrage à froid pendant la recopie des fichiers de base dans `/var/www/html` ; les téléversements, extensions et thèmes sous `wp-content` ne sont pas affectés puisqu'ils persistent via NFS. |
+| `enable_cloud_armor` | à activer pour la production | Medium | L'interface d'administration et le site public sont joignables sans protection WAF par défaut. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
 
 ---
 

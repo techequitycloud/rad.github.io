@@ -25,12 +25,12 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | Domaine | Fourni par Django_Common | Où cela apparaît |
 |---|---|---|
 | `SECRET_KEY` Django | Génère une clé aléatoire de 50 caractères et la stocke dans **Secret Manager** | Injectée sous le nom `SECRET_KEY` à l'exécution ; récupérable via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Épingle l'image Django/Gunicorn et la source Cloud Build, UID 2000 | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Épingle l'image Django/Gunicorn et la source Cloud Build, UID 2000 | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit le job `db-init` qui crée la base de données et l'utilisateur, et installe les extensions | Output `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` qui crée la base de données et l'utilisateur, et installe les extensions | Sortie `initialization_jobs` |
 | Migrations de schéma | Définit le job `db-migrate` qui exécute `manage.py migrate` + `collectstatic` | S'exécute automatiquement à chaque déploiement |
 | Extensions PostgreSQL | Installe automatiquement `pg_trgm`, `unaccent`, `hstore`, `citext` | Aucune action requise de l'utilisateur |
-| Stockage d'objets | Déclare le bucket de médias **Cloud Storage** | Output `storage_buckets` |
+| Stockage d'objets | Déclare le bucket de médias **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres principaux | Définit le port du conteneur (8080), la source de l'image (`custom`), l'indicateur d'extensions, le serveur Gunicorn | Comportement de l'application dans les guides des plateformes |
 | Sondes de santé | Transmet `startup_probe`/`liveness_probe` sans modification (valeur par défaut `null` ici — la variante CloudRun utilise par défaut `/healthz`, la variante GKE `/`) | §Observabilité dans les guides des plateformes |
 

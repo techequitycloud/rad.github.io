@@ -15,11 +15,11 @@ description: "Lab pratique : déployer Plane sur GKE Autopilot dans votre propre
 
 Plane est un outil open source de gestion de projet et de suivi des tickets — une alternative à Jira / Linear / Asana couvrant les tickets, les sprints, les cycles, les modules et les feuilles de route. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module **Plane on GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Plane. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Plane_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur les fonctionnalités du produit Plane. Pour la liste complète des services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Plane_GKE) — ce lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail Plane en cours d'exécution.
@@ -43,7 +43,7 @@ Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Googl
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -68,7 +68,7 @@ export REGION="us-central1"           # the region you deploy into
    de la base de données), un broker **RabbitMQ** sous la forme d'un second Deployment dans le cluster (interne uniquement,
    obligatoire — le `start.sh` de Plane refuse de démarrer sans `AMQP_URL`), Redis sur
    la VM NFS partagée, un bucket GCS `storage` (le raccordement des envois de fichiers est un TODO
-   documenté — voir la tâche 5), construit l'image de conteneur personnalisée et exécute une tâche ponctuelle
+   documenté — voir la tâche 5), construit l'image de conteneur personnalisée et exécute un job ponctuel
    `db-init`. Les premiers déploiements prennent environ **20–35 minutes** (la création de Cloud SQL
    en représente l'essentiel).
 
@@ -88,7 +88,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -99,7 +99,7 @@ export REGION="us-central1"           # the region you deploy into
    echo "External IP: $EXTERNAL_IP"
    ```
 
-2. Vérifiez que le service est en bonne santé. Les sondes de démarrage et de liveness ciblent toutes deux
+2. Vérifiez que le service est en bonne santé. Les sondes de démarrage et de vivacité ciblent toutes deux
    `GET /health` sur le proxy Caddy interne ; sur un nouveau déploiement, prévoyez plusieurs
    minutes pour que l'étape `migrator` intégrée (les migrations de schéma Django propres à Plane,
    exécutées sous supervisord avant le démarrage d'api/worker/beat/web) se termine — la
@@ -165,7 +165,7 @@ export REGION="us-central1"           # the region you deploy into
    et une mise à jour progressive remplace les pods. Le migrator réapplique
    les éventuelles modifications de schéma au démarrage du nouveau pod.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -207,7 +207,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')-mq" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux (Logs Explorer) :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la
@@ -254,8 +254,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   du premier démarrage s'est bien déroulée simplement parce que le pod indique Ready.
 
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`,
-  que le secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que la tâche `db-init`
-  s'est terminée (elle crée le rôle/la base de données et accorde les privilèges avant même que le
+  que le secret du mot de passe de la base a bien été matérialisé dans l'espace de noms et que le job `db-init`
+  s'est terminé (il crée le rôle/la base de données et accorde les privilèges avant même que le
   migrator ne s'exécute) :
   ```bash
   kubectl get jobs -n "$NS"
@@ -278,7 +278,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   compatible S3 n'est pas raccordé — voir la tâche 2, étape 5. C'est propre à Plane et documenté
   dans la section Pitfalls du Guide de configuration.
 
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -313,8 +313,8 @@ GKE, le Cloud SQL partagé, le registre, l'hôte NFS/Redis) sont gérées sépar
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE (image tout-en-un + Deployment RabbitMQ), Cloud SQL (PostgreSQL 15), Redis, un bucket de stockage, les secrets, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; `/health` répond ; URL de connexion composées ; administrateur de l'instance créé via `/god-mode/` |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail/RabbitMQ, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage/les tâches, accéder à la base |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; `/health` répond ; URL de connexion composées ; administrateur de l'instance créé via `/god-mode/` |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail/RabbitMQ, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage/les jobs, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de broker, d'envoi de fichiers, de tâche d'initialisation et de build d'image — y compris la boucle d'échec non résolue du migrator (diagnostic par exec requis) |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de broker, d'envoi de fichiers, de job d'initialisation et de build d'image — y compris la boucle d'échec non résolue du migrator (diagnostic par exec requis) |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

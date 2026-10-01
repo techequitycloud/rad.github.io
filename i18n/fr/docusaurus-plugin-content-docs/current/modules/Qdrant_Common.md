@@ -27,13 +27,13 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Domaine | Fourni par Qdrant_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Épingle l'image officielle `qdrant/qdrant` et le build qui l'étend | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Épingle l'image officielle `qdrant/qdrant` et le build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Aucune base de données SQL | Fixe `database_type = "NONE"` — Qdrant est un stockage autonome | Aucune instance Cloud SQL ni aucun identifiant de base de données n'est créé |
 | Aucun Redis | Aucune dépendance de cache — Qdrant gère ses propres structures en mémoire | `enable_redis` est codé en dur à `false` dans les modules wrapper |
 | Chemin de stockage | Définit `QDRANT__STORAGE__STORAGE_PATH=/qdrant/storage`, aligné sur le montage GCS FUSE ou PVC | Environnement du conteneur ; montage du bucket GCS / du PVC dans les guides de plateforme |
 | Port HTTP | Définit explicitement `QDRANT__SERVICE__HTTP_PORT=6333` | Environnement du conteneur |
 | Clé d'API (facultative) | Génère une clé d'API de 32 caractères, la stocke dans **Secret Manager** et l'injecte sous la forme `QDRANT__SERVICE__API_KEY` | À récupérer via Secret Manager (voir ci-dessous) |
-| Stockage objet | Déclare le bucket de stockage **Cloud Storage** (`<prefix>-storage`) sur `/qdrant/storage` | Output `storage_buckets` |
+| Stockage objet | Déclare le bucket de stockage **Cloud Storage** (`<prefix>-storage`) sur `/qdrant/storage` | Sortie `storage_buckets` |
 | Sondes de santé | Fournit la configuration par défaut des sondes de démarrage (`/readyz`) et de vivacité (`/livez`), avec des points de terminaison distincts | §Observabilité dans les guides de plateforme |
 
 ---
@@ -101,7 +101,7 @@ kubectl get pvc -n "$NAMESPACE"
 
 ---
 
-## 4. Paramètres applicatifs de base {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Qdrant_Common` établit l'environnement de référence de Qdrant afin que
 l'application démarre correctement dès le premier lancement :
@@ -120,7 +120,7 @@ l'application démarre correctement dès le premier lancement :
   données. Si `initialization_jobs` n'est pas vide dans le wrapper, ces jobs sont
   transmis ; sinon, aucun job n'est créé.
 - **Source de l'image** — `Qdrant_Common` utilise `image_source = "custom"` afin
-  que le socle exécute un pipeline Cloud Build qui duplique l'image `qdrant/qdrant`
+  que le socle exécute un pipeline Cloud Build qui met en miroir l'image `qdrant/qdrant`
   dans Artifact Registry avant le déploiement.
 
 ---
@@ -147,7 +147,7 @@ affecté par les paramètres TLS.
 
 ---
 
-## 6. Stockage objet {#6-object-storage}
+## 6. Stockage d'objets {#6-object-storage}
 
 Un bucket de stockage **Cloud Storage** dédié (`<prefix>-storage`) est déclaré ici
 et provisionné par le socle. Le bucket utilise la classe de stockage `STANDARD`
@@ -159,7 +159,7 @@ gcloud storage ls gs://<prefix>-storage/
 ```
 
 Le compte de service de la charge de travail se voit accorder un accès en lecture
-et en écriture via Workload Identity par le module du socle. Pour le
+et en écriture via Workload Identity par le module socle. Pour le
 fonctionnement de GCS FUSE, les rôles IAM supplémentaires sont gérés
 automatiquement.
 

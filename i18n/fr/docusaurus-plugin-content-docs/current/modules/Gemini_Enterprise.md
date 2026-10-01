@@ -19,7 +19,7 @@ Les ressources portent le suffixe de déploiement `<id>` : bucket `<project>-ge-
 
 ## 1. Vue d'ensemble {#1-overview}
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Application d'espace de travail agentique | Gemini Enterprise (Discovery Engine) | Application `APP_TYPE_INTRANET`, niveau de recherche Enterprise avec le module complémentaire LLM, nom d'entreprise « Cymbal Pools » |
 | Identité | Configuration ACL de Gemini Enterprise | Google Identity (`GSUITE`) sélectionné pour l'emplacement de l'application |
@@ -155,14 +155,14 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et emplacement {#group-1--project--location}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet cible. Il doit déjà exister. Pour Qwiklabs, le projet du lab avec le compte étudiant, afin que les connecteurs et l'application partagent une même identité Workspace. |
 | `region` | `us-central1` | Région Agent Runtime de l'agent ADK. Elle doit être autorisée par toute règle `constraints/gcp.resourceLocations`. |
 
 ### Groupe 2 — Application Gemini Enterprise {#group-2--gemini-enterprise-app}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_gemini_enterprise_app` | `true` | Crée l'application et le data store de documents Cymbal Pools. Nécessite que l'essai gratuit (ou une licence) ait été démarré au préalable. |
 | `ge_location` | `global` | `global`, `us` ou `eu`. L'application, les data stores, l'IdP, les connecteurs et l'enregistrement de l'agent doivent tous le partager. |
@@ -172,7 +172,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 3 — Contenu de démonstration {#group-3--demo-content}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `bucket_location` | `US` | Emplacement du bucket de contenu. |
 | `public_announcement_image` | `true` | Rend uniquement `pool party.png` lisible publiquement afin que l'annonce s'affiche pour tous les utilisateurs. |
@@ -181,7 +181,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 4 — Agent ADK personnalisé {#group-4--custom-adk-agent}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_adk_agent` | `true` | Déploie l'agent BigQuery sur Agent Runtime et accorde à son agent de service Vertex AI User, BigQuery User et BigQuery Data Editor. |
 | `agent_display_name` | `BigQuery Pool Data Agent` | Nom d'affichage Agent Runtime ; l'ID de déploiement y est ajouté. |
@@ -191,7 +191,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 5 — Model Armor {#group-5--model-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_model_armor_template` | `true` | Crée le modèle Model Armor de démonstration. |
 | `model_armor_location` | _(vide → `ge_location`, avec `global` → `us`)_ | Emplacement du modèle. Model Armor n'a pas de modèles `global`. |
@@ -226,7 +226,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `deployment_id` | défini une seule fois | Critical | Intégré dans chaque nom de ressource. Le modifier recrée l'application (en perdant les connecteurs et enregistrements d'agents rattachés manuellement), le bucket, le data store et l'agent. |
 | `create_gemini_enterprise_app` | `true` | High | Si la création de l'application échoue avec une erreur de licence, Gemini Enterprise n'est pas activé dans le projet : démarrez l'essai gratuit dans la console et redéployez, ou définissez `false` et créez l'application manuellement. (Inutile sur le projet Qwiklabs sur lequel ce module a été testé.) |

@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Mealie sur Cloud Run dans votre propre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 60 minutes
+**Durée estimée :** 30–60 minutes
 
 Mealie est un gestionnaire de recettes et planificateur de repas open source et auto-hébergé, avec
 extraction automatique des recettes par import d'URL. Ce lab vous fait parcourir tout le
@@ -27,7 +27,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et vous connecter avec l'identifiant administrateur par défaut.
@@ -50,7 +50,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"

@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer Cal.diy sur GKE Autopi
 Cal.diy est le fork sous licence MIT et auto-hébergeable de Cal.com — la plateforme
 de planification open source utilisée par des millions de personnes dans le monde
 pour en finir avec les allers-retours de coordination des réunions.
-Ce module déploie Cal.diy sur **GKE Autopilot** au-dessus de la fondation
+Ce module déploie Cal.diy sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
@@ -21,7 +21,7 @@ les explorer et de les exploiter depuis la Google Cloud Console et la ligne de
 commande. Pour les mécanismes communs à toute application GKE — Workload Identity,
 entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -30,7 +30,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 Cal.diy s'exécute sous la forme d'une charge de travail web Next.js (Node.js). Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Next.js, 2 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Cal.diy utilise l'ORM Prisma ciblant PostgreSQL |
@@ -38,7 +38,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` générés automatiquement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixe ;
   sélectionner MySQL ou `NONE` empêche le démarrage.
@@ -273,7 +273,7 @@ et leurs valeurs par défaut standard.
 | `min_instance_count` | `1` | Nombre minimal de réplicas. GKE Autopilot n'a pas de mise à l'échelle jusqu'à zéro par défaut ; conservez ≥ 1. |
 | `max_instance_count` | `5` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. Doit valoir `true` lorsque `database_type != "NONE"`. |
-| `enable_image_mirroring` | `true` | Duplique l'image Cal.diy dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Cal.diy dans Artifact Registry avant le déploiement. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
 | `timeout_seconds` | `300` | Nombre maximal de secondes pendant lesquelles l'équilibreur de charge attend la réponse d'un pod. |
 
@@ -325,7 +325,7 @@ et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -423,7 +423,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR bénéficiant d'un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle Cloud Armor. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -466,12 +466,12 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critical | Cal.diy nécessite PostgreSQL avec l'ORM Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
 | `container_port` | `3000` | Critical | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé et le routage du trafic. |
@@ -495,9 +495,9 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Cal.diy partagée avec
 la variante Cloud Run est décrite dans **[CalDiy_Common](CalDiy_Common.md)**.
 

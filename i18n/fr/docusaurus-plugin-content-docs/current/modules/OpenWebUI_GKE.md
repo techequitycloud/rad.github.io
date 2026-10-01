@@ -38,7 +38,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `WEBUI_SECRET_KEY` et mot de passe de la base de données générés automatiquement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Open WebUI ne prend pas en charge MySQL ni aucun
   autre moteur ; le type de base de données est fixé en interne.
@@ -152,7 +152,7 @@ données sont stockés sous forme de secrets Secret Manager et injectés dans le
 l'exécution ; le texte en clair n'apparaît jamais dans la configuration ni dans les
 journaux.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -169,7 +169,7 @@ Par défaut, la charge de travail est exposée via une IP externe Cloud Load Bal
 domaine personnalisé avec certificat géré par Google peut être activé, et une IP
 statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -185,8 +185,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 et Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de disponibilité et des
 règles d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read \
@@ -322,7 +322,7 @@ comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -399,7 +399,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -442,12 +442,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_cloudsql_volume` | `true` | Critical | Le désactiver rompt toutes les connexions à la base de données avec Cloud SQL. Ne le désactivez que pour vous connecter à un PostgreSQL externe en TCP. |
 | `WEBUI_SECRET_KEY` (généré automatiquement) | immuable après la première utilisation | Critical | La rotation de la clé déconnecte immédiatement tous les utilisateurs actifs et invalide tous les jetons « se souvenir de moi ». |

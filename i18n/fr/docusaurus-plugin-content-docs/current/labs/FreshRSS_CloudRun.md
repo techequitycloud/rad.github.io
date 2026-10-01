@@ -30,14 +30,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris l'installation au premier démarrage et la connexion administrateur.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et la base de données.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Démonter proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -53,7 +53,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -75,7 +75,7 @@ export REGION="us-central1"          # the region you deploy into
    secrets `FRESHRSS_ADMIN_PASSWORD` et du mot de passe de la base de données
    dans Secret Manager, un volume NFS monté sur
    `/var/www/FreshRSS/data` (aucun bucket GCS n'est créé), construit l'image de
-   conteneur personnalisée et exécute une tâche ponctuelle `db-init`. Les
+   conteneur personnalisée et exécute un job ponctuel `db-init`. Les
    premiers déploiements prennent environ **15–25 minutes** (la création de
    Cloud SQL représente l'essentiel de ce temps).
 
@@ -139,9 +139,9 @@ export REGION="us-central1"          # the region you deploy into
    déploiement — le module est propriétaire de la spécification du service : la
    mise à l'échelle est donc une modification de configuration, et non une
    modification manuelle via `gcloud` (une modification manuelle serait annulée
-   lors de l'application suivante). Par défaut, `min_instance_count = 0` (mise à
+   lors du prochain apply). Par défaut, `min_instance_count = 0` (mise à
    l'échelle jusqu'à zéro) et
-   `max_instance_count = 1`. La tâche cron d'actualisation des flux dans le
+   `max_instance_count = 1`. Le job cron d'actualisation des flux dans le
    conteneur (`CRON_MIN = */15`) ne se déclenche que tant qu'une instance est
    active ; si vous avez besoin que les flux s'actualisent selon un calendrier
    fixe plutôt qu'à la requête suivante, définissez `min_instance_count = 1`.
@@ -185,7 +185,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour Logs Explorer :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez
@@ -215,8 +215,8 @@ qui ne changent pas d'une version de FreshRSS à l'autre.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud
   SQL est `RUNNABLE`, que le secret du mot de passe de la base de données
   existe, que `enable_cloudsql_volume = true` (socket de l'Auth Proxy) et que
-  la tâche `db-init` s'est terminée avec succès.
-- **Échec de la tâche `db-init` :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  le job `db-init` s'est terminé avec succès.
+- **Échec du job `db-init` :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -241,7 +241,7 @@ essentielles concernant `enable_nfs`,
 
 ---
 
-## Tâche 6 — Démonter [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run,
 la base de données et l'utilisateur Cloud SQL, les secrets Secret Manager et le
@@ -260,4 +260,4 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets et la base de données, régler le cron d'actualisation |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de `db-init`, de NFS et de cron d'actualisation |
-| 6 — Démonter | Automatisé | La suppression (Trash) retire toutes les ressources du module |
+| 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

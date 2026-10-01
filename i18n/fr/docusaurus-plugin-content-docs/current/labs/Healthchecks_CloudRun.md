@@ -13,14 +13,14 @@ description: "Lab pratique : déployer Healthchecks sur Cloud Run dans votre pro
 
 **Durée estimée :** 45–60 minutes
 
-Healthchecks est un service open source et auto-hébergé de surveillance des tâches cron et des
+Healthchecks est un service open source et auto-hébergé de surveillance des jobs cron et des
 signaux de vie (heartbeat) : les tâches planifiées lui envoient un « ping » en cas de succès, et il vous alerte lorsqu'un ping est
 en retard ou absent. Ce lab vous fait parcourir l'intégralité du cycle de vie opérationnel
 du module **Healthchecks on Cloud Run** sur Google Cloud : le déployer, y accéder et
 le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et
 le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
 Cloud**, et non sur les fonctionnalités du produit Healthchecks. Pour la liste complète des
 services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez
 le [Guide de configuration](https://docs.radmodules.dev/docs/modules/Healthchecks_CloudRun) —
@@ -29,7 +29,7 @@ temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution, le vérifier et vous connecter avec le compte administrateur pré-créé.
@@ -52,7 +52,7 @@ temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -71,7 +71,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager (`SECRET_KEY`, `ADMIN_PASSWORD`
-   et le mot de passe de la base de données), et exécute deux tâches ponctuelles : `db-init` (crée
+   et le mot de passe de la base de données), et exécute deux jobs ponctuels : `db-init` (crée
    la base de données et le rôle) et `admin-bootstrap` (exécute les migrations et crée le
    compte superutilisateur initial). Les premiers déploiements prennent environ **15–25 minutes**
    (la création de Cloud SQL en représente l'essentiel).
@@ -90,7 +90,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service est démarré et sert la page de connexion (Healthchecks n'a pas de
    point de terminaison de santé dédié — la page racine est le signal public, sans
@@ -173,7 +173,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez
@@ -199,7 +199,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est
-  `RUNNABLE`, que le secret du mot de passe de la base existe et que la tâche `db-init` s'est terminée
+  `RUNNABLE`, que le secret du mot de passe de la base existe et que le job `db-init` s'est terminé
   avec succès.
 - **La page de connexion se charge mais l'application semble utiliser SQLite / les données sont réinitialisées au
   redémarrage :** vérifiez que la variable d'environnement `DB` a bien été résolue en `"postgres"` sur la
@@ -208,8 +208,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run revisions describe <revision-name> --project="$PROJECT" --region="$REGION" \
     --format=json | grep -A2 '"name": "DB"'
   ```
-- **Impossible de se connecter avec l'identifiant pré-créé :** vérifiez que la tâche `admin-bootstrap`
-  s'est bien terminée (elle dépend de l'achèvement préalable de `db-init`) :
+- **Impossible de se connecter avec l'identifiant pré-créé :** vérifiez que le job `admin-bootstrap`
+  s'est bien terminé (il dépend de l'achèvement préalable de `db-init`) :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-admin-bootstrap" \
     --project="$PROJECT" --region="$REGION"
@@ -248,7 +248,7 @@ gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (PostgreSQL 15), les secrets, et exécute `db-init` + `admin-bootstrap` |
-| 2 — Accès et vérification | Manuel | La page de connexion se charge ; se connecter avec l'identifiant administrateur pré-créé ; créer un check de test |
+| 2 — Accéder et vérifier | Manuel | La page de connexion se charge ; se connecter avec l'identifiant administrateur pré-créé ; créer un check de test |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à jour la version, gérer les secrets, configurer SMTP, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de moteur de base de données, d'admin-bootstrap et de SMTP |

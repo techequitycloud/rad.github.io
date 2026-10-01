@@ -60,7 +60,7 @@ indépendants, chacun avec un rôle distinct, et aucun n'est facultatif :
 | Secrets | Secret Manager | `SECRET_KEY` de Django, paire de clés HMAC d'interopérabilité S3, mot de passe de la base de données, `CLICKHOUSE_PASSWORD` externe facultatif |
 | Entrée | Cloud Load Balancing | Service LoadBalancer externe ; domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est imposé, et ce n'est PAS là que résident vos données analytiques.**
   Postgres ne contient que les métadonnées applicatives de Django. Chaque événement,
@@ -139,7 +139,7 @@ PostHog stocke les métadonnées de sa propre application Django (comptes utilis
 équipes/projets, définitions des feature flags, tableaux de bord) dans une instance
 Cloud SQL for PostgreSQL 15 gérée, atteinte de manière privée via le sidecar
 **Cloud SQL Auth Proxy** sur `127.0.0.1`. **Ce n'est PAS là que résident les données
-analytiques** — voir §C. Lors du premier déploiement, une tâche d'initialisation
+analytiques** — voir §C. Lors du premier déploiement, un job d'initialisation
 (`db-init`) crée la base de données et l'utilisateur de l'application ; les migrations
 Django de PostHog s'exécutent automatiquement à chaque démarrage du conteneur.
 
@@ -291,12 +291,12 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
 
 ## 3. Comportement de l'application PostHog {#3-posthog-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`, `postgres:15-alpine`) crée la base de données PostgreSQL et
   l'utilisateur avant le démarrage de l'application. Aucune extension n'est installée —
   contrairement à de nombreuses applications de ce catalogue, PostHog n'en a besoin
   d'aucune ; tout le stockage propre à l'analytique est dans ClickHouse.
-- **Une seconde tâche d'initialisation dédiée, `clickhouse-migrate`, s'exécute jusqu'à son
+- **Un second job d'initialisation dédié, `clickhouse-migrate`, s'exécute jusqu'à son
   terme avant le démarrage de l'application.** Le `bin/migrate` de PostHog (exécuté à chaque
   démarrage du conteneur) lance la migration du schéma ClickHouse dans un sous-shell *en
   arrière-plan* qui s'exécute en parallèle de la migration Postgres au premier plan — et
@@ -414,7 +414,7 @@ S'applique uniquement lorsque `workload_type = "StatefulSet"` ou
 | `health_check_config` / `liveness_probe` | HTTP `/_livez` | Contrôle de vivacité léger — ne vérifie pas les dépendances en aval. |
 | `uptime_check_config` | `{ enabled=false, path="/_livez" }` | Test de disponibilité Cloud Monitoring facultatif ; désactivé par défaut. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -506,12 +506,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_redis` | `true` (ne peut pas être désactivé) | Critical | Le broker Celery, le pub/sub du plugin-server et le cache Django de PostHog nécessitent tous Redis ; le serveur refuse de démarrer sans lui. |
 | `clickhouse_host` / `enable_inline_clickhouse` | l'un des deux doit être résolu | Critical | Sans point de terminaison ClickHouse joignable, l'ensemble du pipeline d'événements analytiques de PostHog ne peut pas fonctionner — ni événements, ni insights, ni relecture de session. |
@@ -532,7 +532,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à PostHog est décrite dans
 **[PostHog_Common](PostHog_Common.md)**.
 

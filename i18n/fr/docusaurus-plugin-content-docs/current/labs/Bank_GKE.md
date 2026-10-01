@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Bank of Anthos sur GKE Autopilot dans vot
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 60 à 120 minutes
+**Durée estimée :** 60–120 minutes
 
 Bank of Anthos est l'application bancaire de référence open source de Google Cloud — une démonstration
 de microservices polyglotte (services Python et Java avec deux bases de données PostgreSQL) qui imite une
@@ -31,12 +31,12 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, atteindre l'interface de Bank of Anthos et confirmer que les pods et les sidecars du mesh s'exécutent.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour et redémarrer progressivement les charges de travail.
 - Observer la charge de travail avec les tableaux de bord du service mesh, Cloud Monitoring et Cloud Logging.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -70,11 +70,11 @@ export NS="bank-of-anthos"           # the application namespace
 
 2. La plateforme crée un VPC et un sous-réseau dédiés, un cluster GKE Autopilot, enregistre le
    cluster dans la flotte, active Cloud Service Mesh, puis déploie les charges de travail Bank of Anthos `v0.6.10`
-   dans le namespace `bank-of-anthos` et configure les services et les
+   dans l'espace de noms `bank-of-anthos` et configure les services et les
    SLO Cloud Monitoring. Comme l'apply Terraform attend que le plan de contrôle du mesh soit actif avant de déployer
    l'application, les premiers déploiements prennent environ **30 à 45 minutes**.
 
-3. Connectez-vous au cluster et confirmez que le namespace existe :
+3. Connectez-vous au cluster et confirmez que l'espace de noms existe :
 
    ```bash
    gcloud container clusters get-credentials "$CLUSTER" --region="$REGION" --project="$PROJECT"
@@ -167,7 +167,7 @@ export NS="bank-of-anthos"           # the application namespace
    gcloud monitoring services list --project="$PROJECT"
    ```
 
-3. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+3. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/frontend --tail=50
@@ -194,7 +194,7 @@ au niveau de la plateforme, qui ne changent pas avec les versions de Bank of Ant
   ```
 - **Pod bloqué à l'état Pending :** sur Autopilot, il s'agit généralement d'un quota régional ou d'une spécification de pod
   non prise en charge. Consultez les événements de `kubectl describe pod` et essayez une autre région si le quota est en cause.
-- **Les pods affichent 1/1 au lieu de 2/2 (pas de sidecar) :** confirmez que le libellé de namespace
+- **Les pods affichent 1/1 au lieu de 2/2 (pas de sidecar) :** confirmez que le libellé d'espace de noms
   `istio.io/rev=asm-managed` est présent et que le mesh est `ACTIVE`
   (`gcloud container fleet mesh describe`). Redémarrez les pods concernés une fois le mesh prêt.
 - **Frontend injoignable / pas d'adresse IP externe :** confirmez que le Service `frontend` dispose d'une adresse IP
@@ -207,12 +207,11 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**).
 La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour
-l'historique). Cela supprime tout ce que le module a créé — les charges de travail Bank of Anthos et le
-namespace (y compris toutes les données de `accounts-db` et `ledger-db`), le cluster GKE, l'adhésion
+l'historique). Cela supprime tout ce que le module a créé — les charges de travail Bank of Anthos et l'espace de noms (y compris toutes les données de `accounts-db` et `ledger-db`), le cluster GKE, l'adhésion
 à la flotte et la fonctionnalité Cloud Service Mesh, les services de surveillance et les SLO, l'adresse IP
 statique réservée, ainsi que le VPC avec son sous-réseau, Cloud NAT, son routeur et ses règles de pare-feu.
 
@@ -232,4 +231,4 @@ le déploiement). Après une purge, nettoyez manuellement les ressources restant
 | 3 — Exploiter | Manuel | Inspecter les charges de travail, mettre à l'échelle, redémarrer progressivement et appliquer les modifications de configuration via Update |
 | 4 — Observer | Manuel | Examiner la télémétrie du mesh, les SLO Cloud Monitoring, les journaux et les traces |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'injection de sidecar, de réseau et de disponibilité du mesh |
-| 6 — Supprimer | Automatisé | Delete (Trash) détruit toutes les ressources du module ; Purge le retire uniquement de RAD |
+| 6 — Démanteler | Automatisé | Delete (Trash) détruit toutes les ressources du module ; Purge le retire uniquement de RAD |

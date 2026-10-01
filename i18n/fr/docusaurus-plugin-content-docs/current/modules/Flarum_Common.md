@@ -28,16 +28,16 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Domaine | Fourni par Flarum_Common | Où cela apparaît |
 |---|---|---|
 | Identifiant d'administration | Génère le mot de passe administrateur de premier lancement `FLARUM_ADMIN_PASS` (24 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement comme variable d'environnement secrète `FLARUM_ADMIN_PASS` ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Enveloppe minimale de l'image officielle `mondedie/flarum` (nginx + php-fpm), épinglée via l'ARG de build propre à l'application `FLARUM_VERSION` et construite via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Enveloppe minimale de l'image officielle `mondedie/flarum` (nginx + php-fpm), épinglée via l'ARG de build propre à l'application `FLARUM_VERSION` et construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** (`MYSQL_8_0`) comme moteur | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket **Cloud Storage** `flarum-assets` | Output `storage_buckets` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket **Cloud Storage** `flarum-assets` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Flarum de référence utilisé par l'installateur mondedie : connexion à la base de données, préfixe des tables, identité de l'administrateur, URL du forum | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage TCP et la sonde de vivacité HTTP ciblant `/` par défaut | §Observabilité dans les guides des plateformes |
 
 ---
 
-## 2. Identifiant d'administration dans Secret Manager {#2-admin-credential-in-secret-manager}
+## 2. Identifiant administrateur dans Secret Manager {#2-admin-credential-in-secret-manager}
 
 Un secret est généré automatiquement et stocké dans Secret Manager :
 
@@ -127,16 +127,16 @@ L'image personnalisée est une **enveloppe minimale** construite `FROM mondedie/
   socle n'injecte **pas**). `application_version = "latest"` correspond au tag `stable`
   de l'image, recommandé pour la production ; toute autre valeur est utilisée telle
   quelle.
-- **Construite via Cloud Build, image de base dupliquée dans Artifact Registry.**
+- **Construite via Cloud Build, image de base mise en miroir dans Artifact Registry.**
   `image_source = "custom"` et `enable_image_mirroring = true`, de sorte que l'image de
-  base Docker Hub est dupliquée dans Artifact Registry pour que Cloud Build puisse la
+  base Docker Hub est mise en miroir dans Artifact Registry pour que Cloud Build puisse la
   récupérer.
 
 Flarum sert **nginx + php-fpm sur le port 8888** (`container_port = 8888`).
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Flarum_Common` établit l'environnement de référence utilisé par l'installateur
 mondedie afin que le forum démarre correctement dès le premier lancement :
@@ -178,7 +178,7 @@ Une fois installé, Flarum sert la page d'accueil publique de son forum à `/` (
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** dédié (`flarum-assets`) est déclaré ici et provisionné par
 le socle, qui accorde également l'accès au compte de service de la charge de travail.

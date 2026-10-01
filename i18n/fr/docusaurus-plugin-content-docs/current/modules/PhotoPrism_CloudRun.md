@@ -15,7 +15,7 @@ médiathèque personnelle avec étiquetage automatique, reconnaissance faciale e
 recherche plein texte/visuelle, le tout servi par un unique binaire Go doté
 d'une base de données SQLite embarquée — sans moteur de base de données externe
 ni processus worker distinct. Ce module déploie PhotoPrism sur **Cloud Run v2**
-en mode **SQLite embarqué, adossé à GCS**, au-dessus de la fondation
+en mode **SQLite embarqué, adossé à GCS**, au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
@@ -25,7 +25,7 @@ ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
 Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -35,7 +35,7 @@ PhotoPrism s'exécute sous la forme d'un conteneur à binaire Go unique sur Clou
 Run v2, épinglé à exactement une instance. Le déploiement assemble un ensemble
 volontairement restreint de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur à binaire Go sur le port 2342, 1 vCPU / 1 GiB par défaut ; **toujours une seule instance** (`min=1`, `max=1`) — pas de mise à l'échelle à zéro, pas de mise à l'échelle horizontale |
 | Base de données | Aucune | SQLite embarqué (`PHOTOPRISM_DATABASE_DRIVER=sqlite`) — aucune instance Cloud SQL n'est provisionnée par défaut |
@@ -49,7 +49,7 @@ volontairement restreint de services Google Cloud :
   `"NONE"` par défaut et `enable_cloudsql_volume` est codé en dur à `false` dans `main.tf` — PhotoPrism
   gère son propre fichier SQLite sous `/photoprism/storage`. Contrairement à la variante GKE
   (qui code en dur `database_type = "NONE"` sans condition), **ce module Cloud
-  Run transmet toujours `var.database_type` à la fondation** — voir le piège
+  Run transmet toujours `var.database_type` au socle** — voir le piège
   décrit en §6 si vous la changez pour une autre valeur que `NONE`.
 - **GCS FUSE est le seul mécanisme de persistance — il n'existe pas d'option de PVC
   bloc sur Cloud Run.** La description même du module l'énonce clairement : *« This module
@@ -63,7 +63,7 @@ volontairement restreint de services Google Cloud :
   sont tous deux définis par défaut et décrits comme fixes — PhotoPrism sert une seule bibliothèque
   SQLite partagée depuis un seul volume accessible en écriture ; exécuter deux instances sur le même
   bucket monté via gcsfuse expose à une corruption de la base de données et de l'index.
-- **Redis est forcé à off, quelle que soit la variable.** La valeur par défaut de la fondation
+- **Redis est forcé à off, quelle que soit la variable.** La valeur par défaut du socle
   App_CloudRun pour `enable_redis` est `true`, mais `main.tf` code en dur
   `enable_redis = false` sans condition — PhotoPrism n'a aucune intégration Redis et
   aucune variable `REDIS_HOST`/`REDIS_PORT` n'est jamais injectée.
@@ -73,7 +73,7 @@ volontairement restreint de services Google Cloud :
   variable `admin_username` (valeur par défaut `admin`).
 - **Le build d'image personnalisé est un simple miroir, pas de la logique applicative.** Le build encapsule
   l'image amont `photoprism/photoprism` (`FROM photoprism/photoprism:${PHOTOPRISM_VERSION}`)
-  afin que la fondation puisse la mettre en miroir dans Artifact Registry ; l'ARG de build propre à l'application
+  afin que le socle puisse la mettre en miroir dans Artifact Registry ; l'ARG de build propre à l'application
   est `PHOTOPRISM_VERSION` (et non l'`APP_VERSION` générique), épinglé à `240915` lorsque
   `application_version = "latest"`.
 - **L'environnement d'exécution `gen2` est obligatoire.** Les volumes GCS FUSE exigent
@@ -145,7 +145,7 @@ de base de données à gérer, puisqu'aucune instance Cloud SQL n'existe par dé
 
 Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app` (`ingress_settings =
 "all"`), ce qui permet un accès direct à l'interface web. Un équilibreur de charge HTTPS externe
@@ -228,7 +228,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -260,7 +260,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec la convention ; non référencée par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle de l'accès et de l'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -331,7 +331,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `NONE` | PhotoPrism n'utilise aucune base de données SQL. Contrairement à la variante GKE, **cette valeur est toujours transmise à la fondation** — voir le piège décrit en §6 avant de la modifier. |
+| `database_type` | `NONE` | PhotoPrism n'utilise aucune base de données SQL. Contrairement à la variante GKE, **cette valeur est toujours transmise au socle** — voir le piège décrit en §6 avant de la modifier. |
 | `database_password_length` | `32` | Sans effet — aucun mot de passe de base de données n'est jamais généré tant que `database_type = NONE`. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
@@ -380,7 +380,7 @@ ressources en fonctionnement.
 | `storage_buckets` | Buckets Cloud Storage créés, y compris le bucket GCS FUSE `storage` de PhotoPrism. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés (vide par défaut). |
@@ -399,13 +399,13 @@ défaut (contrairement aux modules de type Activepieces/BookStack).
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` / `min_instance_count` | `1` / `1` | Critical | Dépasser 1 donne à deux instances une unique base de données SQLite accessible en écriture et montée via gcsfuse — risque de corruption et de contention de verrous, pire qu'avec un PVC bloc, car le modèle de cohérence de gcsfuse est plus faible. |
 | `execution_environment` | `gen2` | Critical | `gen1` ne peut pas monter de volumes GCS FUSE — tout le répertoire de données `/photoprism` (base, médias) ne parvient pas à s'attacher et l'application ne peut pas démarrer. |
-| `database_type` | `NONE` | Medium | Contrairement à `PhotoPrism_GKE` (qui code `NONE` en dur), ce module transmet toujours la variable à la fondation. La définir sur `MYSQL`/`POSTGRES` provisionne une véritable instance Cloud SQL facturée que `PhotoPrism_Common` ne raccorde jamais à l'application (aucune variable `DB_HOST`/`DB_USER` n'est consommée) — un coût inutile sans aucun bénéfice fonctionnel. |
+| `database_type` | `NONE` | Medium | Contrairement à `PhotoPrism_GKE` (qui code `NONE` en dur), ce module transmet toujours la variable au socle. La définir sur `MYSQL`/`POSTGRES` provisionne une véritable instance Cloud SQL facturée que `PhotoPrism_Common` ne raccorde jamais à l'application (aucune variable `DB_HOST`/`DB_USER` n'est consommée) — un coût inutile sans aucun bénéfice fonctionnel. |
 | `enable_redis` | Forcé à `false` dans `main.tf` | Low | Aucune action requise — le forçage est intentionnel et ne peut pas être contourné en définissant la variable sur `true`. |
 | `enable_cloudsql_volume` | `false` (par défaut et codé en dur) | Low | Ne peut pas être activé, même en définissant la variable — à titre informatif uniquement. |
 | `memory_limit` | `2Gi` par défaut — à augmenter pour de vraies bibliothèques | High | La valeur de base de `PhotoPrism_Common` est `4Gi` pour les charges d'indexation et de reconnaissance faciale ; 2Gi est le plancher qui maintient ces fonctionnalités actives, mais peut tout de même entraîner des arrêts OOM dès qu'une bibliothèque contient un volume significatif de photos/vidéos. |
@@ -419,7 +419,7 @@ défaut (contrairement aux modules de type Activepieces/BookStack).
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, mise à l'échelle et
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et
 concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à PhotoPrism

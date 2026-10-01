@@ -147,7 +147,7 @@ base de données**, que le socle génère et gère.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. L'émetteur OIDC de Logto et toutes
 les URL de redirection absolues sont construits à partir d'`ENDPOINT`, que le point d'entrée dérive de
@@ -265,7 +265,7 @@ propres à Logto ou notables pour lui sont listés ; toutes les autres entrées 
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 | `enable_cloudsql_volume` | `true` | Injecte le sidecar Auth Proxy ; Logto se connecte malgré tout via `DB_IP` (DSN par socket non pris en charge par slonik). |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -313,7 +313,7 @@ Logto n'a besoin d'aucun système de fichiers partagé.
 | `db_user` | `logto` | Utilisateur de la base de données applicative (doté de `CREATEROLE`). Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -364,7 +364,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches d'initialisation. |
+| `initialization_jobs` | Noms des jobs d'initialisation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -376,26 +376,26 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `database_type` non PostgreSQL, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, `enable_cloudsql_volume` sans base de données. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Base de données Cloud SQL | La sauvegarder ; ne jamais l'effacer | Critique | Les clés de signature OIDC de Logto résident dans la base. L'effacer régénère de nouvelles clés et invalide chaque jeton émis et chaque client enregistré. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/le rôle et détruit toutes les données d'identité. |
-| `database_type` | `POSTGRES_15` | Critique | MySQL et les autres moteurs sont rejetés au moment du plan ; Logto ne fonctionne que sur PostgreSQL. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
-| `ENDPOINT` | Hôte réellement vu par le navigateur | Élevé | Un émetteur incohérent casse la découverte OIDC, les URI de redirection et chaque callback OAuth. |
-| `container_port` | `3001` | Élevé | Le cœur écoute sur 3001 ; un mauvais port fait échouer chaque sonde et chaque requête. La console d'administration (3002) n'est volontairement pas publiée. |
-| `enable_iap` | `false` pour un IdP public | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les parcours OIDC/de connexion que Logto existe pour servir. |
-| `memory_limit` | `4Gi` (≥ 2 GiB) | Élevé | En dessous d'environ 2 GiB, Logto est sujet aux OOM sous charge. |
-| Accès à la console d'administration (3002) | Prévoir une route avant la mise en service | Élevé | L'interface de premier administrateur/de configuration est sur 3002, inaccessible via l'URL `run.app` — la configuration initiale est bloquée sans chemin distinct. |
-| `enable_cloudsql_volume` | `true` | Moyen | Le sidecar proxy est injecté par parité, mais Logto se connecte via `DB_IP` ; le désactiver supprime le sidecar sans nuire au chemin par IP privée de l'application. |
-| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute une latence de démarrage à froid à la première connexion après inactivité (sans risque pour les données par ailleurs). |
-| `enable_redis` | `false` | Faible | Logto n'utilise pas Redis ; l'activer câble une dépendance inutilisée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| Base de données Cloud SQL | La sauvegarder ; ne jamais l'effacer | Critical | Les clés de signature OIDC de Logto résident dans la base. L'effacer régénère de nouvelles clés et invalide chaque jeton émis et chaque client enregistré. |
+| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/le rôle et détruit toutes les données d'identité. |
+| `database_type` | `POSTGRES_15` | Critical | MySQL et les autres moteurs sont rejetés au moment du plan ; Logto ne fonctionne que sur PostgreSQL. |
+| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
+| `ENDPOINT` | Hôte réellement vu par le navigateur | High | Un émetteur incohérent casse la découverte OIDC, les URI de redirection et chaque callback OAuth. |
+| `container_port` | `3001` | High | Le cœur écoute sur 3001 ; un mauvais port fait échouer chaque sonde et chaque requête. La console d'administration (3002) n'est volontairement pas publiée. |
+| `enable_iap` | `false` pour un IdP public | High | IAP bloque toutes les requêtes non authentifiées, y compris les parcours OIDC/de connexion que Logto existe pour servir. |
+| `memory_limit` | `4Gi` (≥ 2 GiB) | High | En dessous d'environ 2 GiB, Logto est sujet aux OOM sous charge. |
+| Accès à la console d'administration (3002) | Prévoir une route avant la mise en service | High | L'interface de premier administrateur/de configuration est sur 3002, inaccessible via l'URL `run.app` — la configuration initiale est bloquée sans chemin distinct. |
+| `enable_cloudsql_volume` | `true` | Medium | Le sidecar proxy est injecté par parité, mais Logto se connecte via `DB_IP` ; le désactiver supprime le sidecar sans nuire au chemin par IP privée de l'application. |
+| `min_instance_count` | `1` pour la production | Medium | La mise à l'échelle à zéro (`0`) ajoute une latence de démarrage à froid à la première connexion après inactivité (sans risque pour les données par ailleurs). |
+| `enable_redis` | `false` | Low | Logto n'utilise pas Redis ; l'activer câble une dépendance inutilisée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
 
 ---
 

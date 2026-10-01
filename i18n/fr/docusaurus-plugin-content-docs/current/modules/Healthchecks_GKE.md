@@ -35,7 +35,7 @@ ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod uWSGI, 1 vCPU / 512 MiB par défaut, réplica unique |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — la variable d'environnement `DB` est explicitement définie à `postgres`, ce qui remplace le repli SQLite de l'image |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — la variable d'environnement `DB` est explicitement définie à `postgres`, ce qui remplace le repli SQLite de l'image |
 | Secrets | Secret Manager | `SECRET_KEY` et mot de passe administrateur initial générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée par défaut |
 
@@ -85,7 +85,7 @@ ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Healthchecks {#a-gke-autopilot--the-healthchecks-workload}
 
@@ -104,11 +104,11 @@ facture le CPU et la mémoire que le pod demande réellement.
 Consultez [App_GKE](App_GKE.md) pour l'ordonnancement Autopilot et le type de
 charge de travail (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Healthchecks stocke toutes les données applicatives (vérifications, pings,
 intégrations, utilisateurs, historique des alertes) dans une instance gérée
-Cloud SQL pour PostgreSQL 15. Les pods s'y connectent de manière privée via le
+Cloud SQL for PostgreSQL 15. Les pods s'y connectent de manière privée via le
 sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1`. Lors du premier déploiement,
 des Jobs d'initialisation créent la base de données et le rôle de l'application,
 puis créent le compte administrateur initial.
@@ -124,7 +124,7 @@ puis créent le compte administrateur initial.
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret
 Secret Manager contenant le mot de passe figurent tous dans les
-[Outputs](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques
+[Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques
 et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
 ### C. Secret Manager {#c-secret-manager}
@@ -271,9 +271,9 @@ standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -309,7 +309,7 @@ standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Healthchecks,
 partagée avec la variante Cloud Run, est décrite dans
 **[Healthchecks_Common](Healthchecks_Common.md)**.

@@ -30,12 +30,12 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu’il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu’il provisionne.
 - Accéder au service en cours d’exécution, le vérifier et récupérer l’identifiant administrateur généré.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et les sauvegardes.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -119,7 +119,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente en bonne santé) :
@@ -132,7 +132,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l’échelle** en modifiant les paramètres de nombre minimal/maximal d’instances et en cliquant sur **Update** sur la
    page de détails du déploiement : le module est propriétaire de la spécification du service, la mise à l’échelle est donc une
    modification de configuration, et non une modification manuelle via `gcloud` (une modification manuelle serait
-   annulée lors de l’application suivante). Conservez `max_instance_count` à `1` sauf si vous
+   annulée lors du prochain apply). Conservez `max_instance_count` à `1` sauf si vous
    avez vérifié le comportement de Flarum avec plusieurs instances simultanées
    partageant le même volume NFS de ressources et la même base de données.
 
@@ -161,7 +161,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud sql connect "$INSTANCE" --user="$DB_USER" --database="$DB_NAME" --project="$PROJECT"
    ```
 
-6. **Vérifiez la persistance des ressources téléversées** : les avatars et pièces jointes résident sur
+6. **Vérifiez la persistance des ressources téléversées** — les avatars et pièces jointes résident sur
    Cloud Filestore (NFS) dans `/flarum/app/public/assets`, monté parce que
    `enable_nfs = true` par défaut ; ils survivent donc aux redémarrages et à la mise à l’échelle à zéro :
 
@@ -173,7 +173,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** : depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
+1. **Journaux** — depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -182,7 +182,7 @@ export REGION="us-central1"          # the region you deploy into
    Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
-2. **Surveillance** : ouvrez le tableau de bord Cloud Run du service et examinez le nombre
+2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
    de requêtes, la latence des requêtes (P50/P95/P99), le nombre d’instances (comportement de mise à l’échelle) et
    l’utilisation du processeur / de la mémoire. Le **test de disponibilité du module est désactivé par
    défaut** (`uptime_check_config.enabled = false`) ; activez-le via la
@@ -230,7 +230,7 @@ après le premier déploiement, et la raison pour laquelle `php_memory_limit`/`u
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l’état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) : cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé : le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, le partage Filestore (NFS), les buckets
@@ -249,4 +249,4 @@ séparément et ne sont pas supprimées ici.
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l’échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base, vérifier la persistance NFS |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de db-init, de build, de perte d’accès administrateur et d’IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

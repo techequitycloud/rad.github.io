@@ -86,7 +86,7 @@ Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region $REGION --project $PROJECT`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Cloudreve {#a-gke-autopilot--the-cloudreve-workload}
 
@@ -160,7 +160,7 @@ par Cloudreve et affiché dans les journaux du conteneur au premier démarrage, 
 `secret_environment_variables` restent projetés par le mécanisme Secret Store CSI
 standard.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~cloudreve"
@@ -178,8 +178,8 @@ Google). `service_type` vaut `ClusterIP` par défaut — c'est la Gateway, et no
 Service, qui constitue le point d'entrée externe, sauf si vous passez à
 `LoadBalancer`.
 
-- **Console :** Services réseau → Équilibrage de charge / Gateways ; Réseau VPC →
-  Adresses IP.
+- **Console :** Network services → Load balancing / Gateways ; VPC network →
+  IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,gateway,httproute -n "$NAMESPACE"
@@ -195,8 +195,8 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriq
 sont envoyées à Cloud Monitoring. Des tests de disponibilité et des règles d'alerte
 facultatifs sont disponibles (`uptime_check_config.enabled` vaut `false` par défaut).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -276,7 +276,7 @@ comportement et leurs valeurs par défaut standard.
 | `min_instance_count` / `max_instance_count` | `1` / `1` | Cloudreve n'a pas de mode distribué/clustering — laissez les deux à 1. |
 | `container_port` | `5212` | Fixé par `Cloudreve_Common` ; la variable n'est pas transmise à App_GKE et n'a aucun effet. |
 | `enable_cloudsql_volume` | `false` | Cloudreve n'a pas de base Cloud SQL. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -340,12 +340,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -356,7 +356,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (le bucket `storage`, monté uniquement si `stateful_pvc_enabled = false`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `initialization_jobs` | Noms des éventuels jobs d'initialisation fournis par l'utilisateur (Cloudreve n'en injecte aucun par défaut). |
@@ -402,7 +402,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Cloudreve et
 partagée avec la variante Cloud Run est décrite dans le module `Cloudreve_Common`
 (`modules/Cloudreve_Common`) ; un guide `Cloudreve_Common.md` dédié n'existe pas

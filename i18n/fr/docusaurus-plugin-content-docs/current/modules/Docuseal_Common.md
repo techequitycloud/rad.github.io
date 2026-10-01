@@ -35,11 +35,11 @@ les guides des plateformes ([Docuseal_GKE](Docuseal_GKE.md),
 | Domaine | Fourni par Docuseal_Common | Où cela apparaît |
 |---|---|---|
 | Secret cryptographique | Génère un `SECRET_KEY_BASE` Rails stable (64 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement comme variable d'environnement secrète ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Construit une **enveloppe personnalisée légère** `FROM docuseal/docuseal:<version>` avec un point d'entrée cloud ; dupliquée dans Artifact Registry via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Construit une **enveloppe personnalisée légère** `FROM docuseal/docuseal:<version>` avec un point d'entrée cloud ; mise en miroir dans Artifact Registry via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
-| Initialisation de la base | Définit le job du premier déploiement (`db-init`) qui crée le rôle, la base de données et les autorisations | Output `initialization_jobs` |
+| Initialisation de la base | Définit le job du premier déploiement (`db-init`) qui crée le rôle, la base de données et les autorisations | Sortie `initialization_jobs` |
 | Documents persistants | Déclare `WORKDIR = /data/docuseal` pour les documents et pièces jointes téléversés, adossé à NFS (Cloud Run) ou à un PVC bloc (GKE) | Section Persistance des guides des plateformes |
-| Stockage objet | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Output `storage_buckets` |
+| Stockage objet | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit l'environnement DocuSeal de base : port 3000, journalisation sur stdout, répertoire de travail persistant | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes par défaut de démarrage / vivacité / disponibilité ciblant `/up` | Section Observabilité des guides des plateformes |
 
@@ -77,7 +77,7 @@ partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 DocuSeal nécessite **PostgreSQL 15** (`database_type = "POSTGRES_15"`) ; le moteur est
 fixé, et MySQL ou d'autres moteurs ne sont pas pris en charge. DocuSeal lit une
@@ -117,7 +117,7 @@ outputs du déploiement de la plateforme.
 ## 4. Image de conteneur et point d'entrée {#4-container-image-and-entrypoint}
 
 L'image personnalisée est une **enveloppe légère** `FROM docuseal/docuseal:<version>`
-(construite via Cloud Build et dupliquée dans Artifact Registry). Elle ajoute un point
+(construite via Cloud Build et mise en miroir dans Artifact Registry). Elle ajoute un point
 d'entrée cloud en `sh` POSIX qui s'exécute avant le démarrage de Puma, puis `exec`
 tel quel la propre commande Puma de l'image
 (`/app/bin/bundle exec puma -C /app/config/puma.rb`) :
@@ -144,7 +144,7 @@ tel quel la propre commande Puma de l'image
 
 ---
 
-## 5. Paramètres essentiels de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Docuseal_Common` établit l'environnement DocuSeal de base afin que l'application
 démarre correctement dès le premier lancement :

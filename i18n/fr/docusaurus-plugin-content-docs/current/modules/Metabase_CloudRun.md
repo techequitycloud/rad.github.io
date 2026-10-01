@@ -30,7 +30,7 @@ répéter ici.
 Metabase s'exécute comme un conteneur Java/JVM (Jetty) sur Cloud Run v2. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service JVM, 2 vCPU / 4 GiB par défaut, mise à l'échelle automatique selon les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Metabase stocke tout l'état de l'application (questions, tableaux de bord, utilisateurs) dans PostgreSQL |
@@ -94,8 +94,8 @@ l'environnement d'exécution et la répartition du trafic.
 Metabase stocke l'intégralité de l'état de son application — questions, tableaux de bord,
 collections, utilisateurs, autorisations et paramètres — dans une instance gérée Cloud SQL
 for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth
-Proxy** sur un socket Unix (pas d'adresse IP publique). Lors du premier déploiement, une
-tâche d'initialisation crée la base de données et l'utilisateur de l'application.
+Proxy** sur un socket Unix (pas d'adresse IP publique). Lors du premier déploiement, un
+job d'initialisation crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
   flags et les métriques.
@@ -124,7 +124,7 @@ service à l'exécution. Metabase gère séparément ses propres clés de chiffr
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app`. Un équilibreur de charge HTTPS
 externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les
@@ -155,10 +155,10 @@ avec des tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application Metabase {#3-metabase-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation s'exécute avant le démarrage du service. Elle utilise
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation s'exécute avant le démarrage du service. Il utilise
   `postgres:15-alpine` pour se connecter à Cloud SQL et créer de manière idempotente la
-  base de données et l'utilisateur de l'application. Elle peut être relancée sans risque.
+  base de données et l'utilisateur de l'application. Il peut être relancé sans risque.
 - **Aucune migration automatique au démarrage.** Metabase applique les migrations dans le
   cadre de son propre processus de démarrage — la tâche `db-init` doit d'abord réussir
   pour que la base de données et l'utilisateur existent déjà lorsque Metabase démarre.
@@ -191,14 +191,14 @@ comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
@@ -206,7 +206,7 @@ comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `metabase` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Metabase Analytics` | Nom convivial affiché dans la console. |
@@ -215,7 +215,7 @@ comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | Processeur par instance ; 1 vCPU minimum, 2 vCPU recommandés. |
@@ -230,9 +230,9 @@ comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Réseaux autorisés à joindre le service. Utilisez `internal-and-cloud-load-balancing` en production. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Manière dont le trafic sortant est acheminé via le VPC. |
@@ -241,7 +241,7 @@ comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `MB_JETTY_PORT` et `JAVA_TIMEZONE` sont injectés automatiquement — ne les remplacez pas. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager (par exemple, mot de passe SMTP). |
@@ -249,7 +249,7 @@ comportement standard.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
 | `backup_retention_days` | `7` | Rétention ; augmentez-la pour la production/la conformité. |
@@ -264,14 +264,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ### Groupe 9 — Scripts SQL personnalisés et NFS {#group-9--custom-sql-scripts--nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_sql_scripts` / `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | désactivé | Exécute du SQL depuis un bucket GCS après le provisionnement. Consultez [App_CloudRun](App_CloudRun.md). |
 | `nfs_instance_name` / `nfs_instance_base_name` | _(défini)_ | Stockage NFS — non requis pour Metabase. |
 
 ### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_domains` | `[]` | Noms d'hôte personnalisés pour l'équilibreur de charge externe. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend du LB. |
@@ -280,7 +280,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne des buckets GCS lorsque `storage_buckets` n'est pas vide. |
 | `storage_buckets` | `[]` | Vide par défaut — Metabase n'a pas besoin de stockage d'objets. |
@@ -290,7 +290,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixé — ne le modifiez pas. Metabase requiert PostgreSQL. |
 | `db_name` | `metabase` | Nom de la base de données. Immuable après le premier déploiement. |
@@ -298,16 +298,16 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
 | `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | `/api/health`, délai initial de 120s, seuil d'échec de 15 | Sonde de démarrage HTTP ; tolérance totale d'environ 270s pour la JVM. Ne la réduisez pas. |
 | `liveness_probe` | `/api/health`, délai initial de 120s, seuil d'échec de 3 | Sonde de vivacité. |
@@ -316,14 +316,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ### Groupe 21 — Redis {#group-21--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Metabase n'utilise pas Redis ; laissez-le désactivé. |
 | `redis_host` / `redis_port` / `redis_auth` | _(défini)_ | Pertinent uniquement si un plugin ou une configuration personnalisée requiert Redis. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -388,7 +388,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise
 à l'échelle et simultanéité, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Metabase
 partagée avec la variante GKE est décrite dans
 **[Metabase_Common](Metabase_Common.md)**.

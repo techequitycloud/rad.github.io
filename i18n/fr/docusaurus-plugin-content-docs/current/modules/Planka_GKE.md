@@ -41,7 +41,7 @@ assemble un ensemble restreint et ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY` et `DEFAULT_ADMIN_PASSWORD` — deux secrets réels et fonctionnels — ainsi que le mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, IP statique réservée, domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est le seul moteur pris en charge.** `Planka_Common` impose
   `database_type = "POSTGRES_15"`.
@@ -256,9 +256,9 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` / `service_url` / `service_external_ip` | Identité et adresse du Service Kubernetes. |
 | `database_instance_name` / `database_name` / `database_user` / `database_host` / `database_port` | Détails de connexion Cloud SQL. |
@@ -267,12 +267,12 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
 | `container_image_source` | `custom` (par défaut) | High | `"prebuilt"` déploie directement l'image officielle en ignorant le point d'entrée cloud — Planka démarre sans `DATABASE_URL`. |

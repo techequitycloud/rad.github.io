@@ -29,7 +29,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 Metabase s'exécute comme une charge de travail web Java/JVM (Jetty). Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods JVM, 2 vCPU / 4 GiB par défaut, mise à l'échelle horizontale automatique |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Metabase stocke tout l'état de l'application (questions, tableaux de bord, utilisateurs) dans PostgreSQL |
@@ -90,7 +90,7 @@ Metabase stocke l'intégralité de l'état de son application — questions, tab
 collections, utilisateurs, autorisations et paramètres — dans une instance gérée Cloud SQL
 for PostgreSQL 15. Les pods y accèdent de manière privée via le sidecar **Cloud SQL Auth
 Proxy** sur un socket Unix, de sorte qu'aucune adresse IP publique n'est exposée. Lors du
-premier déploiement, une tâche d'initialisation crée la base de données et l'utilisateur
+premier déploiement, un job d'initialisation crée la base de données et l'utilisateur
 de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
@@ -125,7 +125,7 @@ Le nom du secret du mot de passe de la base de données figure dans les
 [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI
 et la rotation.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 `enable_custom_domain = true` par défaut, donc App_GKE provisionne d'emblée un ingress
 HTTPS basé sur une Gateway. Si aucun `application_domains` n'est défini, il dérive un nom
@@ -163,11 +163,11 @@ disponibles.
 
 ## 3. Comportement de l'application Metabase {#3-metabase-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation s'exécute avant la charge de travail applicative ; elle utilise
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation s'exécute avant la charge de travail applicative ; il utilise
   `postgres:15-alpine` pour se connecter à Cloud SQL via l'Auth Proxy et créer de manière
-  idempotente la base de données et l'utilisateur de l'application. Elle peut être
-  relancée sans risque.
+  idempotente la base de données et l'utilisateur de l'application. Il peut être
+  relancé sans risque.
 - **Aucune migration automatique au démarrage.** Contrairement à certaines autres
   applications, Metabase n'exécute pas de migrations de schéma à chaque démarrage. Les
   migrations s'exécutent dans le cadre du processus applicatif Metabase au premier
@@ -205,14 +205,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
@@ -220,7 +220,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `metabase` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Metabase Analytics` | Nom convivial affiché dans la console. |
@@ -229,7 +229,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` | Limites de processeur/mémoire. La JVM requiert au moins 2 GiB ; 4 GiB recommandés en production. |
@@ -241,14 +241,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `MB_JETTY_PORT` et `JAVA_TIMEZONE` sont injectés automatiquement — ne les remplacez pas. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager (par exemple, mot de passe SMTP). |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Manière dont le Service est exposé. |
 | `session_affinity` | `ClientIP` | Routage persistant requis pour maintenir les sessions de navigateur sur un même pod lors de l'augmentation du nombre de pods par le HPA. |
@@ -262,14 +262,14 @@ Non recommandé pour Metabase — l'application est sans état. Consultez
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Plafonne le processeur, la mémoire et le nombre d'objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers bruts sont interprétés comme des octets et bloquent la planification. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Augmentez `min_instance_count` au-delà de 1 si vous avez besoin de marge pour les évictions. |
@@ -277,16 +277,16 @@ Non recommandé pour Metabase — l'application est sans état. Consultez
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | `/api/health`, délai initial de 60s, seuil d'échec de 18 | Sonde HTTP ; tolérance totale d'environ 240s pour le démarrage de la JVM. Ne la réduisez pas. |
 | `health_check_config` | `/api/health`, délai initial de 120s, seuil d'échec de 3 | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés pour toute tâche récurrente. |
@@ -299,13 +299,13 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Le stockage NFS n'est pas requis pour Metabase — tout l'état se trouve dans PostgreSQL. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionne des buckets GCS lorsque `storage_buckets` n'est pas vide. |
 | `storage_buckets` | `[]` | Vide par défaut — Metabase n'a pas besoin de stockage d'objets. N'ajoutez des buckets ici qu'en cas de besoin (par exemple pour le stockage S3 de Metabase Enterprise). |
@@ -313,7 +313,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixé — ne le modifiez pas. Metabase requiert PostgreSQL. |
 | `application_database_name` | `metabase` | Entrée générique d'App_GKE pour le nom de la base de données. **Sans effet pour ce module** — App_GKE dérive le nom réel de la base de données de la configuration `db_name` du module (voir ci-dessous), et non de cette variable. |
@@ -325,7 +325,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production/la conformité. |
@@ -339,7 +339,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne l'ingress HTTPS de la Gateway ; dérive un nom d'hôte `<ip>.nip.io` sans configuration lorsque `application_domains` est vide. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -348,7 +348,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google devant Metabase. Vivement recommandé — sinon, la page de connexion propre à Metabase est joignable publiquement. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
@@ -357,7 +357,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 21 — Cloud Armor et CDN {#group-21--cloud-armor--cdn}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
@@ -366,7 +366,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -434,7 +434,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 mise à l'échelle automatique, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Metabase partagée avec la
 variante Cloud Run est décrite dans **[Metabase_Common](Metabase_Common.md)**.
 

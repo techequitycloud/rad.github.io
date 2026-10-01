@@ -29,7 +29,7 @@ guides des plateformes ([Unleash_GKE](Unleash_GKE.md),
 |---|---|---|
 | Identifiant d'amorçage | Génère un jeton d'API administrateur d'amorçage et le stocke dans **Secret Manager** | Injecté sous le nom `INIT_ADMIN_API_TOKENS` ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `unleashorg/unleash-server` avec un script de point d'entrée personnalisé ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
 | Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Chaîne de connexion | Compose `DATABASE_URL` au démarrage du conteneur à partir des variables `DB_*` injectées par la plateforme, avec un SSL sécurisé par défaut pour les connexions TCP directes par IP privée | Section Comportement de l'application des guides des plateformes |
 | Paramètres principaux | Définit l'environnement Unleash de base : port d'écoute 4242, gestion du TLS de la base de données | Comportement de l'application dans les guides des plateformes |
@@ -172,7 +172,7 @@ Diriger une sonde vers un chemin authentifié de l'Admin API (`/api/admin/*`) re
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Unleash est **sans état** — toutes les données de flags, de bascules, de stratégies et
 d'audit résident dans PostgreSQL. `Unleash_Common` ne déclare donc **aucun** bucket

@@ -164,7 +164,7 @@ peuvent le sonder directement même lorsque la clé maître est définie sur l'A
 
 ---
 
-## 7. Tâches d'initialisation et stockage d'objets {#7-initialization-jobs-and-object-storage}
+## 7. Jobs d'initialisation et stockage d'objets {#7-initialization-jobs-and-object-storage}
 
 Meilisearch gère son propre stockage et ne nécessite **aucune initialisation de base de données** ;
 `Meilisearch_Common` n'injecte donc aucune tâche `db-init` par défaut. L'entrée `initialization_jobs`

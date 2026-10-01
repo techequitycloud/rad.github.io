@@ -26,13 +26,13 @@ lab ne reprend volontairement pas ce détail, afin de rester exact dans la duré
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE, découvrir l'espace de noms et accéder à la charge de travail en cours d'exécution.
 - Récupérer l'identifiant administrateur généré automatiquement et vérifier que la charge de travail est en bonne santé et
   connectée à sa base de données.
-- Réaliser les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, le stockage NFS
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets, le stockage NFS
   et la base de données.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
@@ -50,10 +50,10 @@ lab ne reprend volontairement pas ce détail, afin de rester exact dans la duré
   `gcloud auth application-default login` effectués.
 - Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
 - **Vous apportez votre propre projet ?** Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes affichées en tant que Owner du projet, puis **Verify**) et d'attribuer le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous ne nécessite ni l'un ni l'autre.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du locataire et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -146,7 +146,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la
    page de détails du déploiement — le module est propriétaire de la spécification de la charge de travail, la mise à l'échelle est donc une
    modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de l'application suivante). `max_instance_count` vaut `1` par défaut ; l'affinité de
+   annulée lors du prochain apply). `max_instance_count` vaut `1` par défaut ; l'affinité de
    session (`ClientIP`) est définie par défaut pour maintenir les requêtes d'un client sur le même
    pod dès que vous dépassez un réplica. Comme la charge de travail repose sur NFS, la
    fondation utilise la stratégie de mise à jour `Recreate`, afin que deux pods n'écrivent jamais sur le même
@@ -183,7 +183,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou l'Explorateur de journaux. Le conteneur affiche au démarrage du pod ses valeurs
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer). Le conteneur affiche au démarrage du pod ses valeurs
    `ESPOCRM_DATABASE_*` et `ESPOCRM_SITE_URL` résolues, un moyen rapide de
    confirmer l'hôte de base de données et l'URL du site utilisés :
 
@@ -191,7 +191,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'Explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du processeur et
@@ -258,7 +258,7 @@ NFS Filestore, le registre) sont gérées séparément et ne sont pas supprimée
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Tâche | Type | Résultat |
 |---|---|---|

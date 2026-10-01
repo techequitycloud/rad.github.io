@@ -17,7 +17,7 @@ fournit explique les valeurs par défaut que vous voyez dans la documentation de
 
 Pour l'infrastructure qui provisionne et exécute réellement Payload, consultez les
 guides de plateforme ([Payload_GKE](Payload_GKE.md),
-[Payload_CloudRun](Payload_CloudRun.md)) et les guides de fondation
+[Payload_CloudRun](Payload_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -28,7 +28,7 @@ guides de plateforme ([Payload_GKE](Payload_GKE.md),
 |---|---|---|
 | Secret | Génère `PAYLOAD_SECRET` (chaîne aléatoire de 32 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement ; récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Construit une véritable application de démarrage Payload à partir des sources via Cloud Build — il n'existe **aucune image upstream** à encapsuler | Sortie `container_image` du déploiement de plateforme |
-| Moteur de base de données | Impose **Cloud SQL pour PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
+| Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
 | Initialisation de la base de données | Définit deux jobs séquentiels de premier déploiement : `db-init` (création du rôle et de la base) et `payload-migrate` (migration du schéma via la CLI `payload`) | Sortie `initialization_jobs` |
 | Stockage d'objets | Aucun — la sortie `storage_buckets` est une liste vide statique | N/A |
 | Paramètres de base | Définit le port du conteneur (3000), le nom et l'utilisateur de la base, les limites de ressources | Comportement de l'application dans les guides de plateforme |
@@ -91,7 +91,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~-secret"
 gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
 ```
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ; le nom de son secret est
+Le mot de passe de la base de données est généré et géré séparément par le socle ; le nom de son secret est
 indiqué dans les sorties du déploiement de plateforme (`database_password_secret`). Consultez
 [App_Common](App_Common.md) pour le modèle partagé de secrets et de Workload Identity.
 
@@ -100,7 +100,7 @@ ou les pods ne tentent de lire `PAYLOAD_SECRET`.
 
 ---
 
-## 4. Moteur de base de données et initialisation {#4-database-engine-and-bootstrap}
+## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
 Payload nécessite **PostgreSQL** ; le moteur est fixé à `POSTGRES_15`. Contrairement à de nombreuses applications de ce
 catalogue, l'adaptateur Postgres de Payload ne crée **pas** son schéma au démarrage en production —
@@ -129,7 +129,7 @@ Les noms de l'instance, de la base de données et de l'utilisateur figurent dans
 
 ---
 
-## 5. Comportement des sondes d'état {#5-health-probe-behaviour}
+## 5. Comportement des sondes de santé {#5-health-probe-behaviour}
 
 Les sondes par défaut ciblent **`/admin`** — la route de l'interface d'administration de Payload, qui renvoie un
 `200` sans authentification (elle sert le formulaire de connexion/de création du premier utilisateur) dès que le serveur Node.js et

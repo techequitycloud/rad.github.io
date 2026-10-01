@@ -148,7 +148,7 @@ des secrets préexistants via `secret_environment_variables`.
 
 Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est joignable par défaut à son URL `run.app`. Un équilibreur de charge HTTPS
 externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté par-dessus ;
@@ -166,7 +166,7 @@ Voir [App_CloudRun](App_CloudRun.md).
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de Cloud Run et de Cloud SQL sont envoyées à
-Cloud Monitoring, avec des contrôles de disponibilité et des stratégies d'alerte en option.
+Cloud Monitoring, avec des tests de disponibilité et des stratégies d'alerte en option.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -234,7 +234,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant de l'accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -262,7 +262,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket Unix. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -345,7 +345,7 @@ Voir [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `startup_probe` | `/health/readiness` | Sonde HTTP ; valide la connectivité à la base de données et les migrations Prisma avant de marquer le service comme prêt. |
 | `liveness_probe` | `/health/liveliness` | Sonde HTTP ; confirme que le processus du proxy est en cours d'exécution. |
-| `uptime_check_config` | désactivé | Contrôle de disponibilité Cloud Monitoring sur `/health/liveliness` ; à activer explicitement. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring sur `/health/liveliness` ; à activer explicitement. |
 | `alert_policies` | `[]` | Stratégies d'alerte sur métriques. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
@@ -386,7 +386,7 @@ ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, contrôles de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

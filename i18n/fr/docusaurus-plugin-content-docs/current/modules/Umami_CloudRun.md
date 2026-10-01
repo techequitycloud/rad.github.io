@@ -348,7 +348,7 @@ Lorsque `enable_backup_import = true`, un Job Cloud Run dédié restaure une sau
 | `alert_policies` | 14 | `[]` | Règles d'alerte sur les métriques. Chacune : `name`, `metric_type`, `comparison`, `threshold_value`, `duration_seconds`, `aggregation_period`. |
 | `support_users` | 2 | `[]` | Adresses e-mail notifiées par les tests de disponibilité et les déclenchements des règles d'alerte. |
 
-### D. Exploration avec la console GCP {#d-exploring-with-the-gcp-console}
+### D. Explorer avec la console GCP {#d-exploring-with-the-gcp-console}
 
 Après un déploiement réussi, explorez l'installation d'Umami dans la console GCP :
 
@@ -380,7 +380,7 @@ Accédez à **Artifact Registry**. Trouvez le dépôt de ce déploiement. Clique
 **Tests de disponibilité Cloud Monitoring :**
 Si `uptime_check_config.enabled = true` a été défini, accédez à **Monitoring → Uptime checks** et trouvez le test de ce déploiement d'Umami ciblant `/api/heartbeat`. Consultez les résultats des tests, le temps de réponse et l'historique des échecs dans les différentes régions GCP.
 
-### E. Exploration avec gcloud {#e-exploring-with-gcloud}
+### E. Explorer avec gcloud {#e-exploring-with-gcloud}
 
 Utilisez ces commandes gcloud pour inspecter le déploiement d'Umami depuis la ligne de commande. Remplacez `PROJECT_ID`, `REGION` et `DEPLOYMENT_ID` par vos valeurs.
 
@@ -605,11 +605,11 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou fortement dégradé) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"POSTGRES_15"` | **Critical** | Umami ne prend en charge que PostgreSQL. Choisir MySQL ou un autre moteur casse la construction de `DATABASE_URL` et fait échouer le démarrage d'Umami avec une erreur de connexion à la base de données. |
@@ -623,7 +623,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 | `ingress_settings` | `"all"` | **Medium** | `"all"` expose Umami publiquement. Le point de terminaison du script de suivi doit être accessible publiquement pour que les sites suivis transmettent leurs données, mais le tableau de bord d'administration doit être restreint pour les déploiements sensibles. Envisagez d'utiliser IAP ou un domaine personnalisé à accès restreint pour les chemins d'administration. |
 | `min_instance_count` | `0` | **Low** | La mise à l'échelle à zéro est sans risque pour Umami — les démarrages à froid sont rapides (quelques secondes). La première requête après un démarrage à froid subit toutefois une légère latence. Définissez `1` pour les tableaux de bord d'analyse sensibles au temps de réponse. |
 | `memory_limit` | `"512Mi"` | **Medium** | 512Mi est la valeur par défaut et suffit pour un trafic modéré. Les sites à fort trafic, avec de nombreux utilisateurs simultanés du tableau de bord ou des requêtes complexes, peuvent subir des OOM. Passez à `1Gi` si vous observez une pression mémoire dans Cloud Monitoring. |
-| `enable_backup_import` | `false` | **Critical** | Nécessite qu'un fichier de sauvegarde valide soit accessible à `backup_file`. L'activer avec un chemin invalide fait échouer la tâche Cloud Run de restauration pendant l'apply. |
+| `enable_backup_import` | `false` | **Critical** | Nécessite qu'un fichier de sauvegarde valide soit accessible à `backup_file`. L'activer avec un chemin invalide fait échouer le job Cloud Run de restauration pendant l'apply. |
 | `backup_retention_days` | `7` | **Medium** | Sept jours est un minimum pour des analyses en production. La perte de l'historique d'analyse a un impact direct sur l'activité. Passez à 30 jours ou plus pour tout déploiement d'analyse à long terme. |
 | `secret_propagation_delay` | `30` | **Low** | Parfois insuffisant dans les configurations multirégionales. Passez à 60–90 s si des erreurs de lecture de secrets sont observées pendant l'apply. |
 | `enable_cloudsql_volume` | `true` | **Critical** | Sur Cloud Run, cela monte l'intégration *native* du socket Cloud SQL — il n'y a ni sidecar Auth Proxy ni écouteur TCP `127.0.0.1:5432` (cela n'existe que sur GKE). Le point d'entrée partagé `Umami_Common` (`umami-entrypoint.sh`) résout sans condition un `DB_HOST` de type chemin de socket en `127.0.0.1` avant de construire `DATABASE_URL`, ce qui n'est valable que sur GKE — sur Cloud Run, cela produit `ECONNREFUSED 127.0.0.1:5432` dans les journaux de la révision et la sonde de démarrage échoue. Si Umami ne démarre pas, vérifiez les `DB_HOST`/`DB_IP` injectés dans la révision déployée (`gcloud run revisions describe … --format=json`) plutôt que de supposer que la substitution par l'adresse de bouclage fonctionne. |
@@ -631,9 +631,9 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 
 ---
 
-## Suppression des ressources {#destroying-resources}
+## Destruction des ressources {#destroying-resources}
 
-### Problème de suppression connu : libération des adresses IPv4 serverless {#known-deletion-issue-serverless-ipv4-address-release}
+### Problème de suppression connu : libération des adresses IPv4 sans serveur {#known-deletion-issue-serverless-ipv4-address-release}
 
 Lors de la suppression d'un déploiement Cloud Run, vous pouvez rencontrer une erreur semblable à celle-ci :
 

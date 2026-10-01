@@ -91,7 +91,7 @@ services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants figurent dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Keycloak {#a-gke-autopilot--the-keycloak-workload}
@@ -118,7 +118,7 @@ Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'éc
 Keycloak stocke toutes les données applicatives (realms, clients, utilisateurs, groupes,
 sessions) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods l'atteignent
 via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune IP
-publique n'est exposée. Lors du premier déploiement, la Job `db-init` crée de manière idempotente le
+publique n'est exposée. Lors du premier déploiement, le Job `db-init` crée de manière idempotente le
 rôle et la base de données de l'application, attribue la propriété et accorde les privilèges sur
 `SCHEMA public` (requis sur PostgreSQL 15+, où `public` n'est plus
 accessible en écriture à tous) — Keycloak crée et migre ensuite lui-même son schéma au
@@ -159,7 +159,7 @@ sont projetés dans les pods via le pilote Secret Store CSI.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### D. Réseau et ingress {#d-networking--ingress}
+### D. Réseau et entrée {#d-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing
 externe (`service_type = LoadBalancer`, `reserve_static_ip = true` afin que l'adresse
@@ -194,13 +194,13 @@ Keycloak sert une page d'accueil publique sur `/`, qui est la cible de
 
 ## 3. Comportement de l'application Keycloak {#3-keycloak-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La Job `db-init` exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle attend `pg_isready`, puis crée de manière idempotente
+- **Configuration de la base de données au premier déploiement.** Le Job `db-init` exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il attend `pg_isready`, puis crée de manière idempotente
   le rôle applicatif (ou met à jour son mot de passe), accorde ce rôle à
   `postgres` afin que le superutilisateur puisse gérer ses objets, crée la
   base de données et en devient propriétaire, et accorde les privilèges sur la base de données et sur `SCHEMA public`. Elle
   se termine en envoyant un `POST /quitquitquit` au sidecar Cloud SQL Proxy
-  sur `127.0.0.1:9091` afin que le pod de la Job puisse s'arrêter et être marqué Succeeded sur
+  sur `127.0.0.1:9091` afin que le pod du Job puisse s'arrêter et être marqué Succeeded sur
   GKE. La tâche peut être relancée sans risque (`execute_on_apply = true`, `max_retries =
   3`).
 - **Pas de tâche de migration distincte — Keycloak migre son propre schéma au premier
@@ -330,7 +330,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Mappage des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP du LoadBalancer externe (lorsqu'une IP statique est réservée). |
@@ -342,7 +342,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide — Keycloak ne stocke aucun état en dehors de PostgreSQL). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (optionnelle). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -357,8 +357,8 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs
@@ -371,20 +371,20 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (fixe) | Critique | Choisir un moteur autre que Postgres casse l'amorçage du schéma de Keycloak et toutes les requêtes. |
-| `db_name` / `db_user` (la paire qui fait foi) | À définir une fois, avant le premier déploiement | Critique | Pratiquement immuables — `App_GKE` résout à partir d'eux la base de données/l'utilisateur Cloud SQL réels, et les modifier après le premier déploiement fait pointer Keycloak vers une base de données/un rôle différent (vide), rendant orphelins tous les realms et utilisateurs. |
-| `application_database_name` / `application_database_user` | À laisser identiques à `db_name`/`db_user` | Moyen | Elles sont transmises au socle mais masquées par `db_name`/`db_user` dans la résolution de la configuration par application d'`App_GKE` — ne modifier que cette paire n'a silencieusement aucun effet sur le nom réel de la base de données, ce qui peut faire croire à tort à un opérateur qu'un renommage a eu lieu. |
-| `min_instance_count` / `max_instance_count` | Sachez qu'elles sont informatives ici | Moyen | Ce module code en dur les bornes effectives de réplicas à `1`/`5` dans `main.tf`, quelles que soient les valeurs de ces variables — définir `max_instance_count = 1` pour maîtriser les coûts ne limitera **pas** réellement les réplicas à 1. |
-| `cpu_limit` / `memory_limit` | Définissez plutôt `container_resources` | Moyen | `container_resources` a toujours une valeur par défaut non nulle et est fusionné en dernier, si bien que modifier uniquement les anciennes variables `cpu_limit`/`memory_limit` est ignoré silencieusement. |
-| `KC_BOOTSTRAP_ADMIN_PASSWORD` (généré automatiquement) | Récupérer, se connecter, puis changer le mot de passe ou désactiver le compte | Élevé | L'administrateur d'amorçage est destiné à être temporaire ; le laisser actif indéfiniment constitue un risque permanent lié aux identifiants. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE ; le désactiver sans autre chemin TCP casse tous les appels à la base de données. |
-| Chemins des sondes | TCP sur le port 8080 (par défaut) | Élevé | Le `/health` de Keycloak se trouve sur le port de gestion 9000, et non 8080 — une sonde HTTP sur `8080/health` renvoie toujours 404 et le pod ne devient jamais Ready alors que Keycloak a bien démarré. |
-| `max_instance_count > 1` (clustering des sessions) | Vérifiez la réplication Infinispan/des sessions avant de vous y fier | Élevé | Si la pile de cache de l'image déployée n'est pas réellement distribuée entre les pods (non confirmé — voir [§3](#3-keycloak-application-behaviour)), les utilisateurs peuvent être renvoyés vers un pod qui ignore leur session, ce qui impose une nouvelle authentification. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les requêtes passent d'un pod à l'autre plus que nécessaire tant que la mise en garde ci-dessus sur le clustering n'est pas levée. |
-| `application_version` | Ne jamais rétrograder | Critique | Les migrations de schéma de Keycloak sont à sens unique ; rétrograder après l'exécution d'une migration peut corrompre le schéma. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans le namespace. |
-| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `KC_HOSTNAME`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
+| `database_type` | `POSTGRES_15` (fixe) | Critical | Choisir un moteur autre que Postgres casse l'amorçage du schéma de Keycloak et toutes les requêtes. |
+| `db_name` / `db_user` (la paire qui fait foi) | À définir une fois, avant le premier déploiement | Critical | Pratiquement immuables — `App_GKE` résout à partir d'eux la base de données/l'utilisateur Cloud SQL réels, et les modifier après le premier déploiement fait pointer Keycloak vers une base de données/un rôle différent (vide), rendant orphelins tous les realms et utilisateurs. |
+| `application_database_name` / `application_database_user` | À laisser identiques à `db_name`/`db_user` | Medium | Elles sont transmises au socle mais masquées par `db_name`/`db_user` dans la résolution de la configuration par application d'`App_GKE` — ne modifier que cette paire n'a silencieusement aucun effet sur le nom réel de la base de données, ce qui peut faire croire à tort à un opérateur qu'un renommage a eu lieu. |
+| `min_instance_count` / `max_instance_count` | Sachez qu'elles sont informatives ici | Medium | Ce module code en dur les bornes effectives de réplicas à `1`/`5` dans `main.tf`, quelles que soient les valeurs de ces variables — définir `max_instance_count = 1` pour maîtriser les coûts ne limitera **pas** réellement les réplicas à 1. |
+| `cpu_limit` / `memory_limit` | Définissez plutôt `container_resources` | Medium | `container_resources` a toujours une valeur par défaut non nulle et est fusionné en dernier, si bien que modifier uniquement les anciennes variables `cpu_limit`/`memory_limit` est ignoré silencieusement. |
+| `KC_BOOTSTRAP_ADMIN_PASSWORD` (généré automatiquement) | Récupérer, se connecter, puis changer le mot de passe ou désactiver le compte | High | L'administrateur d'amorçage est destiné à être temporaire ; le laisser actif indéfiniment constitue un risque permanent lié aux identifiants. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE ; le désactiver sans autre chemin TCP casse tous les appels à la base de données. |
+| Chemins des sondes | TCP sur le port 8080 (par défaut) | High | Le `/health` de Keycloak se trouve sur le port de gestion 9000, et non 8080 — une sonde HTTP sur `8080/health` renvoie toujours 404 et le pod ne devient jamais Ready alors que Keycloak a bien démarré. |
+| `max_instance_count > 1` (clustering des sessions) | Vérifiez la réplication Infinispan/des sessions avant de vous y fier | High | Si la pile de cache de l'image déployée n'est pas réellement distribuée entre les pods (non confirmé — voir [§3](#3-keycloak-application-behaviour)), les utilisateurs peuvent être renvoyés vers un pod qui ignore leur session, ce qui impose une nouvelle authentification. |
+| `session_affinity` | `ClientIP` | Medium | Sans persistance, les requêtes passent d'un pod à l'autre plus que nécessaire tant que la mise en garde ci-dessus sur le clustering n'est pas levée. |
+| `application_version` | Ne jamais rétrograder | Critical | Les migrations de schéma de Keycloak sont à sens unique ; rétrograder après l'exécution d'une migration peut corrompre le schéma. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `KC_HOSTNAME`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
 
 ---
 

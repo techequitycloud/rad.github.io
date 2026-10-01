@@ -11,8 +11,8 @@ description: "Référence de configuration pour déployer OpenProject sur Google
 
 OpenProject est une suite open source, sous licence GPLv3, de gestion de projet et de
 collaboration d'équipe — lots de travaux, diagrammes de Gantt, tableaux agiles, wikis,
-suivi du temps et budgets. Ce module déploie OpenProject sur **Cloud Run v2** au-dessus de
-la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
+suivi du temps et budgets. Ce module déploie OpenProject sur **Cloud Run v2** au-dessus du
+socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise OpenProject et sur la manière de
@@ -20,7 +20,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de c
 Pour les mécanismes communs à toutes les applications Cloud Run — identité du service,
 ingress et équilibrage de charge, dimensionnement et concurrence, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les
 répéter ici.
 
 ---
@@ -30,7 +30,7 @@ répéter ici.
 OpenProject s'exécute comme un conteneur Ruby on Rails (Puma) sur Cloud Run v2. Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Rails/Puma, 2 vCPU / 4 GiB par défaut, CPU toujours alloué |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — OpenProject ne prend pas en charge MySQL ni d'autres moteurs |
@@ -140,8 +140,8 @@ modèle de serveur NFS.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `SECRET_KEY_BASE` (signature des sessions/cookies Rails et dérivation de la clé des
-colonnes chiffrées). Le mot de passe de la base de données est géré séparément par la
-fondation.
+colonnes chiffrées). Le mot de passe de la base de données est géré séparément par le
+socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -152,7 +152,7 @@ fondation.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS
 externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les
@@ -240,7 +240,7 @@ comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -254,7 +254,7 @@ comportement standard.
 | `db_name` | `openproject` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `openproject` | Utilisateur de la base de données de l'application. |
 
-### Groupe 4 — Exécution et dimensionnement {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -272,7 +272,7 @@ comportement standard.
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements par étapes. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle de l'accès et de l'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -350,7 +350,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `liveness_probe` | **désactivée** | Cloud Run ne propose pas de sonde de vivacité TCP ; une sonde HTTP ferait redémarrer en boucle un conteneur sain. |
 | `startup_probe_config` | HTTP `/`, activée, délai de 60s, failure_threshold 30 | Sonde structurée au niveau d'App_CloudRun (parallèle à `startup_probe`, qui est celle qui conditionne réellement le conteneur). |
 | `health_check_config` | HTTP `/`, activée, délai de 60s, failure_threshold 3 | Sonde de vivacité structurée au niveau d'App_CloudRun (parallèle à `liveness_probe`, qui est désactivée sur le conteneur). |
-| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring ; à activer pour la supervision en production. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring ; à activer pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
@@ -382,7 +382,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`, `db-migrate`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -399,7 +399,7 @@ d'explorer les ressources en cours d'exécution.
 > service dégradé) — **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible :
 > mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une réplique en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -419,7 +419,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation mentionné tout au long de ce guide — identité du
+Pour le comportement du socle mentionné tout au long de ce guide — identité du
 service, dimensionnement et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
 Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à

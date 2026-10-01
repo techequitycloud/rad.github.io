@@ -35,7 +35,7 @@ guides des plateformes ([NodeRED_GKE](NodeRED_GKE.md),
 | Pas de proxy Cloud SQL | Définit `enable_cloudsql_volume = false` | Configuration du sidecar |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Contrôles de santé | Fournit les valeurs par défaut des sondes de démarrage et d'activité HTTP GET `/` | §Observabilité dans les guides des plateformes |
-| Aucune tâche d'initialisation | `initialization_jobs` vide par défaut — aucun schéma ni amorçage de données requis | Sortie `initialization_jobs` |
+| Aucun job d'initialisation | `initialization_jobs` vide par défaut — aucun schéma ni amorçage de données requis | Sortie `initialization_jobs` |
 
 **Différence essentielle avec les modules Common adossés à une base de données.**
 Contrairement à des modules comme Mautic ou WordPress, `NodeRED_Common` ne crée
@@ -130,7 +130,7 @@ gcloud run services describe <service-name> --project "$PROJECT" --region "$REGI
 - **Pas de base de données.** `database_type = "NONE"` est codé en dur ; aucune
   instance Cloud SQL n'est provisionnée et aucun sidecar Cloud SQL Auth Proxy n'est
   injecté.
-- **Aucune tâche d'initialisation.** Contrairement aux applications adossées à une
+- **Aucun job d'initialisation.** Contrairement aux applications adossées à une
   base de données, Node-RED ne nécessite ni initialisation de schéma, ni création
   d'utilisateur, ni amorçage de données. La liste `initialization_jobs` est vide par
   défaut ; ne transmettez des tâches personnalisées que pour des opérations
@@ -147,7 +147,7 @@ entièrement démarrée. Un délai initial de 30 secondes suffit, car Node-RED d
 rapidement, sans migration de base de données ni longue étape d'amorçage.
 
 - **Sonde de démarrage :** HTTP GET `/`, délai initial de 30s, période de 10s, seuil d'échec de 3.
-- **Sonde d'activité :** HTTP GET `/`, délai initial de 30s, période de 30s, seuil d'échec de 3.
+- **Sonde de vivacité :** HTTP GET `/`, délai initial de 30s, période de 30s, seuil d'échec de 3.
 
 Ces valeurs par défaut s'appliquent de manière identique aux variantes GKE et Cloud
 Run. Contrairement à des applications comme Mautic (où le trafic de contrôle de

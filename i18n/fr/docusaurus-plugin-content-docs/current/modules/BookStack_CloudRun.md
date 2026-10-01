@@ -48,7 +48,7 @@ un ensemble ciblé de services Google Cloud :
   charge et choisir un autre moteur empêche le démarrage.
 - **L'image précompilée `linuxserver/bookstack` est utilisée directement.** Il n'y a
   pas de Cloud Build personnalisé pour le déploiement par défaut ; l'image officielle
-  LinuxServer.io est dupliquée dans Artifact Registry (`enable_image_mirroring = true`)
+  LinuxServer.io est mise en miroir dans Artifact Registry (`enable_image_mirroring = true`)
   et déployée telle quelle.
 - **Le conteneur écoute sur le port 80** (`container_port = 80`, `container_protocol = "http1"`).
 - **La persistance NFS des fichiers téléversés est activée par défaut.**
@@ -79,7 +79,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service BookStack {#a-cloud-run--the-bookstack-service}
 
@@ -119,7 +119,7 @@ d'initialisation crée la base de données et l'utilisateur de l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
@@ -164,7 +164,7 @@ l'**`APP_KEY`** Laravel (`base64:<44-char base64>`), utilisé pour chiffrer tout
 données que BookStack stocke sous forme chiffrée. Le mot de passe de la base de
 données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -181,7 +181,7 @@ ce qui permet l'accès public attendu d'un wiki partagé. Un équilibreur de cha
 HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté
 par-dessus ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -262,7 +262,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -280,8 +280,8 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer dupliquée — sans build personnalisé. |
-| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image dupliquée par défaut. |
+| `container_image_source` | `prebuilt` | Déploie directement l'image LinuxServer mise en miroir — sans build personnalisé. |
+| `container_image` | `""` | Remplace la référence de l'image ; laissez vide pour utiliser l'image mise en miroir par défaut. |
 | `cpu_limit` | `1000m` | CPU par instance ; 1 vCPU par défaut. |
 | `memory_limit` | `2Gi` | Mémoire par instance. |
 | `min_instance_count` | `0` | `0` active la mise à zéro. |
@@ -291,7 +291,7 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Connexion en TCP via l'IP privée de Cloud SQL (approprié pour MySQL sur Cloud Run). |
-| `enable_image_mirroring` | `true` | Duplique l'image LinuxServer dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image LinuxServer dans Artifact Registry. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
 ### Groupe 5 — Entrée et VPC {#group-5--ingress--vpc}
@@ -399,12 +399,12 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -418,7 +418,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -457,7 +457,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images —
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 BookStack, partagée avec la variante GKE, est décrite dans
 **[BookStack_Common](BookStack_Common.md)**.

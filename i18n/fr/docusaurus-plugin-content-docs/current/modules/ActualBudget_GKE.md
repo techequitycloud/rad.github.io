@@ -14,7 +14,7 @@ le fonctionnement en local (local-first), fondée sur la budgétisation par enve
 zéro. Le composant `actual-server` est un serveur de synchronisation Node.js léger qui stocke
 chaque budget dans un fichier SQLite et le synchronise entre l'interface web et les clients
 de bureau et mobiles. Ce module déploie ActualBudget sur **GKE Autopilot** sous la forme d'un
-**StatefulSet** doté d'un PVC de type bloc par pod, au-dessus de la fondation
+**StatefulSet** doté d'un PVC de type bloc par pod, au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et Kubernetes
 partagée.
 
@@ -22,7 +22,7 @@ Ce guide se concentre sur les services cloud qu'utilise ActualBudget et sur la m
 explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les
 mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que
+vie du déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que
 de les répéter ici.
 
 ---
@@ -33,7 +33,7 @@ ActualBudget s'exécute comme une charge de travail Node.js `actual-server` uniq
 gère son propre stockage SQLite, le déploiement assemble un ensemble volontairement restreint
 de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods `actual-server`, 1 vCPU / 1 GiB par défaut, réplica unique (`min = max = 1`) exécuté en tant que **StatefulSet** |
 | Base de données | Aucune | Les budgets sont des fichiers SQLite sous `/data` — `database_type = "NONE"` est imposé par `ActualBudget_Common` ; aucune instance Cloud SQL n'est créée |
@@ -54,7 +54,7 @@ de services Google Cloud :
   n'y a ni instance Cloud SQL, ni job `db-init`, et `enable_cloudsql_volume` vaut `false` par
   défaut (pas de sidecar Cloud SQL Auth Proxy).
 - **Redis est désactivé en dur, pas seulement désactivé par défaut.** Le `main.tf` de la
-  variante transmet `enable_redis = false` à la fondation App_GKE sans condition — il ne
+  variante transmet `enable_redis = false` au socle App_GKE sans condition — il ne
   transmet **pas** `var.enable_redis` — de sorte qu'ActualBudget ne reçoit jamais de
   `REDIS_HOST` sur GKE, quelle que soit la valeur de cette variable.
 - **Réplica unique par conception.** `min_instance_count = 1` et `max_instance_count = 1` — le
@@ -83,7 +83,7 @@ de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — le StatefulSet ActualBudget {#a-gke-autopilot--the-actualbudget-statefulset}
 
@@ -152,7 +152,7 @@ l'interface ne soit configurée.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 La charge de travail utilise par défaut `service_type = ClusterIP` — aucune IP externe n'est
 créée d'emblée. `enable_custom_domain = true` provisionne une ressource Kubernetes Gateway
@@ -221,7 +221,7 @@ défaut) nécessite un point de terminaison accessible publiquement, ce que la v
 - **Mises à jour de version.** Modifiez `application_version` et réappliquez — Cloud Build
   produit une nouvelle image et le StatefulSet déploie la nouvelle révision. `latest` construit
   la version épinglée `25.7.1` via l'ARG de build spécifique à l'application
-  `ACTUALBUDGET_VERSION` (et non l'`APP_VERSION` générique que la fondation injecte).
+  `ACTUALBUDGET_VERSION` (et non l'`APP_VERSION` générique que le socle injecte).
 - **Chemin de santé.** Sonde de démarrage : HTTP `GET /`, délai initial de 15s, timeout de
   10s, période de 10s, 10 échecs tolérés. Sonde de vivacité : HTTP `GET /`, délai initial de
   30s, timeout de 5s, période de 30s, 3 échecs tolérés. Les deux renvoient 200 sans
@@ -245,7 +245,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `actualbudget` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Tag de version de l'image ; `latest` construit la version épinglée `25.7.1`. |
@@ -253,7 +253,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` | `1000m` | `actual-server` est un processus Node.js léger ; 1 vCPU suffit. |
 | `memory_limit` | `1Gi` | Une mémoire modeste suffit pour des fichiers de budget typiques. |
@@ -261,11 +261,11 @@ leurs valeurs par défaut standard.
 | `max_instance_count` | `1` | **Conservez 1** — un seul volume SQLite partagé, un seul écrivain. |
 | `container_port` | `5006` | Inerte — `ActualBudget_Common` fixe toujours le port du conteneur à `5006`. |
 | `enable_cloudsql_volume` | `false` | Pas de Cloud SQL — laissez `false`. |
-| `enable_image_mirroring` | `true` | Réplique `actualbudget/actual-server` dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `enable_image_mirroring` | `true` | Réplica `actualbudget/actual-server` dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Accessible depuis l'extérieur par défaut, comme tous les autres modules d'application GKE destinés au navigateur. Définissez `ClusterIP` pour le garder interne uniquement. |
 | `workload_type` | `null` → `StatefulSet` | Résolu automatiquement car `stateful_pvc_enabled = true` par défaut. |
@@ -273,7 +273,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 7 — Configuration du StatefulSet {#group-7--statefulset-configuration}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `true` | Activé par défaut — la base SQLite de budget et les fichiers utilisateur d'`actual-server` nécessitent un stockage bloc, pas GCS FUSE. |
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod ; dimensionnez-la pour les bases de données et fichiers de budget, marge comprise. |
@@ -281,46 +281,46 @@ leurs valeurs par défaut standard.
 | `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD sur SSD ; consomme le quota `SSD_TOTAL_GB` — remplacez par `standard` (HDD) si ce quota est serré. |
 | `stateful_fs_group` | `3000` | Correspond à la convention `fsGroup` du chart Helm d'ActualBudget afin que le conteneur (UID 1000/GID 2000) puisse écrire sur le PVC. |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Activé par défaut (contrairement à la plupart des modules) — protège le réplica unique du StatefulSet lors des interruptions volontaires de nœud. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles lors des interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai initial de 15s, 10 échecs | La sonde de démarrage **effective** (voir §3 « Priorité des sondes »). |
 | `liveness_probe` | HTTP `/`, délai initial de 30s, 3 échecs | La sonde de vivacité **effective**. |
-| `startup_probe_config` / `health_check_config` | HTTP `/` | Déclarées pour refléter les variables de la fondation, mais **inertes** pour ActualBudget — utilisez plutôt `startup_probe` / `liveness_probe` ci-dessus. |
+| `startup_probe_config` / `health_check_config` | HTTP `/` | Déclarées pour refléter les variables du socle, mais **inertes** pour ActualBudget — utilisez plutôt `startup_probe` / `liveness_probe` ci-dessus. |
 | `uptime_check_config` | désactivé | À activer uniquement une fois le point de terminaison accessible publiquement (`LoadBalancer` ou domaine personnalisé). |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée toujours le bucket `storage` que déclare `ActualBudget_Common`. |
 | `gcs_volumes` | `[]` | Montages GCS FUSE supplémentaires ; le bucket `storage` n'est monté automatiquement sur `/data` que lorsque `stateful_pvc_enabled = false`. |
 
 ### Groupe 15 — Cache Redis {#group-15--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` (valeur par défaut de la variable) | **Sans effet** — `main.tf` impose `enable_redis = false` à la fondation, quelle que soit la valeur de cette variable. |
+| `enable_redis` | `true` (valeur par défaut de la variable) | **Sans effet** — `main.tf` impose `enable_redis = false` au socle, quelle que soit la valeur de cette variable. |
 | `redis_host` / `redis_port` / `redis_auth` | inertes | Sans objet — ActualBudget n'a pas d'intégration Redis sur GKE. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` (fixe) | `ActualBudget_Common` le fixe à `NONE` ; aucune instance Cloud SQL n'est créée, quelle que soit cette variable. |
-| `application_database_name` / `application_database_user` | `actualbudgetdb` / `actualbudgetuser` | Transmises uniquement pour la compatibilité avec la fondation — non référencées (il n'existe aucune base de données). |
+| `application_database_name` / `application_database_user` | `actualbudgetdb` / `actualbudgetuser` | Transmises uniquement pour la compatibilité avec le socle — non référencées (il n'existe aucune base de données). |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Activé par défaut, mais avec `application_domains = []`, la Gateway n'a aucun nom d'hôte à router tant que vous n'en fournissez pas un. |
 | `application_domains` | `[]` | À renseigner pour exposer ActualBudget via un domaine personnalisé + certificat géré. |
@@ -366,7 +366,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -385,9 +385,9 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**. La
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La
 configuration applicative propre à ActualBudget, partagée avec la variante Cloud Run, est
 décrite dans **[ActualBudget_Common](ActualBudget_Common.md)**.
 

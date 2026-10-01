@@ -30,7 +30,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder à la charge de travail en cours d'exécution, la vérifier et récupérer le mot de passe administrateur généré.
 - Envoyer un message via l'API REST et le recevoir sur le flux WebSocket.
 - Effectuer les opérations du jour 2 — inspecter les pods, mettre à jour, et gérer les secrets et les sauvegardes.
@@ -54,7 +54,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - Un client WebSocket pour l'exemple pratique — `websocat` (recommandé) ou `curl` 8.x.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -202,7 +202,7 @@ s'y abonne.
 
 ## Tâche 5 — Observer : journalisation et surveillance [Manuel] {#task-5--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud logging read \

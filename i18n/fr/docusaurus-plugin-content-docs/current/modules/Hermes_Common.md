@@ -20,7 +20,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Hermes, consultez les
 guides de plateforme ([Hermes_GKE](Hermes_GKE.md), [Hermes_CloudRun](Hermes_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---

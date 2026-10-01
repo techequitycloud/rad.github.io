@@ -27,7 +27,7 @@ guides des plateformes ([OnlyOffice_GKE](OnlyOffice_GKE.md),
 | Domaine | Fourni par OnlyOffice_Common | Où cela apparaît |
 |---|---|---|
 | Secret cryptographique | Génère un `JWT_SECRET` de 48 caractères et le stocke dans **Secret Manager** | Injecté automatiquement ; récupérable via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Construit une fine surcouche **FROM `onlyoffice/documentserver`** avec un point d'entrée cloud ; l'image amont est dupliquée dans Artifact Registry, puis reconstruite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Construit une fine surcouche **FROM `onlyoffice/documentserver`** avec un point d'entrée cloud ; l'image amont est mise en miroir dans Artifact Registry, puis reconstruite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme moteur pris en charge (Document Server prend en charge PostgreSQL 12 et plus ; MySQL n'est pas pris en charge) | §Base de données dans les guides des plateformes |
 | Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Cache | Requiert un **Redis externe** (`REDIS_SERVER_HOST`) pour l'état partagé d'édition et de session ; le RabbitMQ embarqué reste interne, sur localhost | §Redis dans les guides des plateformes |
@@ -69,7 +69,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Document Server requiert **PostgreSQL** (12 ou plus récent) ; le module fixe
 `database_type = POSTGRES_15`. MySQL et les autres moteurs ne sont pas pris en charge et sont
@@ -110,7 +110,7 @@ en ne laissant que RabbitMQ en interne, sur localhost :
   plutôt son tag de base d'un argument de build propre à l'application, `ONLYOFFICE_VERSION` — une
   `application_version` valant `latest` est épinglée à `8.3.3` au moment du build afin que le tag de base
   se résolve toujours.
-- **Dupliquée puis reconstruite** — l'image amont de Docker Hub est dupliquée dans Artifact
+- **Dupliquée puis reconstruite** — l'image amont de Docker Hub est mise en miroir dans Artifact
   Registry (`enable_image_mirroring = true`), puis reconstruite via Cloud Build sous forme de
   surcouche (`image_source = "custom"`).
 - **`cloud-entrypoint.sh`** s'exécute avant le lanceur amont et fait correspondre les
@@ -147,7 +147,7 @@ proprement (aucune greffe busybox n'est nécessaire).
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `OnlyOffice_Common` établit l'environnement de base de Document Server afin que
 l'application démarre correctement dès le premier lancement :
@@ -185,7 +185,7 @@ servi sans authentification et constitue la bonne cible.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un bucket **Cloud Storage** dédié (déclaré avec le suffixe de nom `storage`) est
 déclaré ici et provisionné par le socle, qui accorde également l'accès au compte de service

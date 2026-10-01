@@ -63,9 +63,9 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Il n'y a pas d'identifiants par défaut.** Au premier accès, l'assistant de
   configuration crée le compte administrateur et ajoute les médiathèques. Rien n'est
   utilisable avant cela.
-- **Réplique unique.** `min_instance_count = 1` / `max_instance_count = 1` — une seule
+- **Réplica unique.** `min_instance_count = 1` / `max_instance_count = 1` — une seule
   bibliothèque SQLite partagée sur un seul volume. **N'exécutez pas plusieurs
-  répliques** ; des écrivains concurrents sur un même fichier SQLite corrompent la
+  réplicas** ; des écrivains concurrents sur un même fichier SQLite corrompent la
   bibliothèque.
 - **NFS est facultatif, pour les grandes médiathèques.** `enable_nfs = false` par
   défaut. Activez-le pour monter un volume Filestore partagé pour une grande
@@ -91,8 +91,8 @@ assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Jellyfin {#a-gke-autopilot--the-jellyfin-workload}
 
@@ -247,8 +247,8 @@ sont disponibles.
   au fil des redémarrages.
 - **L'image personnalisée est un simple wrapper.** Le Dockerfile est
   `ARG JELLYFIN_VERSION=10.10.3` / `FROM jellyfin/jellyfin:${JELLYFIN_VERSION}` ; le
-  socle la duplique donc dans Artifact Registry (`enable_image_mirroring = true`) et
-  définit `imagePullPolicy = Always` pour l'image dupliquée.
+  socle la met en miroir donc dans Artifact Registry (`enable_image_mirroring = true`) et
+  définit `imagePullPolicy = Always` pour l'image mise en miroir.
   `application_version = "latest"` se résout en `10.10.3` épinglé via l'argument de
   build `JELLYFIN_VERSION` propre à l'application — il n'est **pas** écrasé par
   l'injection générique `APP_VERSION` du socle.
@@ -284,7 +284,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -294,7 +294,7 @@ comportement et leurs valeurs par défaut standard.
 | `application_name` | `jellyfin` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Jellyfin Media Server` | Nom lisible affiché dans l'interface de la plateforme. |
 | `application_version` | `latest` | Tag de l'image Jellyfin ; `latest` épingle `10.10.3` via l'argument de build `JELLYFIN_VERSION`. |
-| `enable_api_key` | `false` | Génère une clé d'API aléatoire dans Secret Manager. Recommandé lorsque le service est joignable en dehors du namespace. |
+| `enable_api_key` | `false` | Génère une clé d'API aléatoire dans Secret Manager. Recommandé lorsque le service est joignable en dehors de l'espace de noms. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
@@ -303,8 +303,8 @@ comportement et leurs valeurs par défaut standard.
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par pod ; augmentez-le pour le transcodage en direct. |
 | `memory_limit` | `1Gi` | Mémoire par pod ; augmentez-la pour les grandes bibliothèques. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; conservez 1 (bibliothèque partagée unique). |
-| `max_instance_count` | `1` | **Conservez 1.** Une seule bibliothèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; conservez 1 (bibliothèque partagée unique). |
+| `max_instance_count` | `1` | **Conservez 1.** Une seule bibliothèque SQLite partagée sur un seul volume — n'exécutez jamais plusieurs réplicas. |
 | `container_port` | `8096` | Port web/API de Jellyfin (défini par Jellyfin_Common ; non transmis à App_GKE). |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Jellyfin n'utilise pas Cloud SQL — laissez `false`. |
@@ -320,7 +320,7 @@ comportement et leurs valeurs par défaut standard.
 | `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de poursuivre. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -349,7 +349,7 @@ comportement et leurs valeurs par défaut standard.
 
 `enable_resource_quota` (`false`) ainsi que `quota_cpu_requests` / `quota_cpu_limits` /
 `quota_memory_requests` / `quota_memory_limits` / `quota_max_pods` /
-`quota_max_services` / `quota_max_pvcs` — ResourceQuota du namespace. Les valeurs de
+`quota_max_services` / `quota_max_pvcs` — ResourceQuota de l'espace de noms. Les valeurs de
 quota `*_requests` / `*_limits` ne sont **pas transmises** dans ce module et sont
 inertes ; les valeurs de mémoire, si elles sont utilisées ailleurs, doivent porter des
 suffixes d'unité binaires (`4Gi`, `8192Mi`).
@@ -467,15 +467,15 @@ souci de compatibilité ; laissez les valeurs par défaut.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Correspondance des ClusterIP des services propres à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -484,7 +484,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (vide pour un déploiement Jellyfin par défaut). |
 | `statefulset_name` | Nom du StatefulSet. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
@@ -509,7 +509,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | PVC `/config` | Ne jamais supprimer | Critical | Le PVC contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
 | `stateful_pvc_enabled` | `true` | Critical | Sans PVC persistant, `/config` est éphémère et la bibliothèque est perdue à chaque redémarrage du pod. |
-| `max_instance_count` | `1` | Critical | Plusieurs répliques écrivent dans une même bibliothèque SQLite et la corrompent. |
+| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans une même bibliothèque SQLite et la corrompent. |
 | `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critical | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
 | `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `stateful_pvc_size` | Adaptée à la bibliothèque | High | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
@@ -517,7 +517,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | High | Trop peu de mémoire provoque l'arrêt OOM du pod pendant l'analyse ou le transcodage d'une grande bibliothèque. |
 | `cpu_limit` | `1000m` (à augmenter pour le transcodage) | High | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
 | `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
 | `enable_api_key` | Laisser `false` ; non fonctionnel actuellement | Medium | Le secret généré est fourni sous `QDRANT__SERVICE__API_KEY` (un reliquat de copier-coller de Qdrant_GKE) — Jellyfin ne le lit jamais ; il ne matérialise donc qu'un Secret Kubernetes inutilisé. Créez plutôt les clés d'API dans l'application sous Dashboard → API Keys. |
 | `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour restaurer un instantané plus ancien de la bibliothèque. |
@@ -527,7 +527,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Jellyfin, partagée
 avec la variante Cloud Run, est décrite dans **[Jellyfin_Common](Jellyfin_Common.md)**.
 Pour une présentation guidée, consultez le [lab Jellyfin_GKE](../labs/Jellyfin_GKE.md).

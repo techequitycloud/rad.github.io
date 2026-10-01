@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Mautic sur GKE Autopilot dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Mautic est une plateforme open source d'automatisation marketing pour les campagnes d'e-mailing, la gestion
 des contacts, les pages d'atterrissage et la notation des prospects (lead scoring). Ce lab vous fait parcourir tout le
@@ -27,7 +27,7 @@ lab ne duplique volontairement pas ce détail afin de rester exact dans le temps
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -69,11 +69,11 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (MySQL 8.0) avec ses secrets Secret Manager, NFS/Redis
-   facultatifs, construit l'image de conteneur et exécute une tâche ponctuelle d'installation qui
+   facultatifs, construit l'image de conteneur et exécute un job ponctuel d'installation qui
    crée le schéma Mautic et l'utilisateur administrateur. Les premiers déploiements prennent environ **20 à 35 minutes** (la création de Cloud
    SQL en représente l'essentiel).
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -125,7 +125,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -147,7 +147,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -176,9 +176,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" <pod> --previous       # logs from the crashed container
   ```
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL (MySQL 8.0) est
-  `RUNNABLE`, que le secret du mot de passe de la base de données a été matérialisé dans le namespace et que la
-  tâche d'installation s'est terminée.
-- **Échec de la tâche d'installation :** inspectez la tâche et les journaux de son pod :
+  `RUNNABLE`, que le secret du mot de passe de la base de données a été matérialisé dans l'espace de noms et que le
+  job d'installation s'est terminé.
+- **Échec du job d'installation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -193,10 +193,10 @@ chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS et les images
+et l'espace de noms, la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS et les images
 Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le
 Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées ici.
 
@@ -206,9 +206,9 @@ Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas suppr
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), les secrets, et exécute la tâche d'installation |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), les secrets, et exécute le job d'installation |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification de santé réussit ; se connecter au panneau d'administration |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'installation, de planification et de pull d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'installation, de planification et de pull d'image |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

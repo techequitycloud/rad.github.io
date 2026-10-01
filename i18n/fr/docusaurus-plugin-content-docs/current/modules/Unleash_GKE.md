@@ -32,7 +32,7 @@ ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Node.js, 1 vCPU / 512 MiB par défaut, mise à l'échelle automatique horizontale |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Unleash ne prend en charge ni MySQL ni d'autres moteurs |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Unleash ne prend en charge ni MySQL ni d'autres moteurs |
 | Secrets | Secret Manager | Jeton d'API administrateur d'amorçage généré automatiquement (`INIT_ADMIN_API_TOKENS`) ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé et certificat géré facultatifs |
 
@@ -90,11 +90,11 @@ déploiement entre les nombres minimal et maximal de réplicas.
 Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du
 type de charge de travail.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Unleash stocke toutes les données applicatives (projets, feature flags, stratégies,
 segments, jetons d'API, utilisateurs et journal des modifications/d'audit) dans une
-instance gérée Cloud SQL pour PostgreSQL 15. Les pods y accèdent de manière privée via
+instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent de manière privée via
 le sidecar **Cloud SQL Auth Proxy** ; aucune IP publique n'est exposée. Lors du premier
 déploiement, un Job d'initialisation crée la base de données et l'utilisateur de
 l'application, et Unleash applique ses propres migrations de schéma au démarrage.
@@ -148,7 +148,7 @@ et les IP statiques.
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
 Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métriques de
-GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des contrôles de
+GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Des tests de
 disponibilité et des règles d'alerte facultatifs sont disponibles.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -205,22 +205,22 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `unleash` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Unleash` | Nom lisible affiché dans la console. |
@@ -229,7 +229,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `container_image_source` | `custom` | Cloud Build encapsule `unleashorg/unleash-server` avec le point d'entrée DATABASE_URL. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | CPU/mémoire par pod ; empreinte légère d'Unleash. |
@@ -238,11 +238,11 @@ comportement et leurs valeurs par défaut standard.
 | `max_instance_count` | `10` | maxReplicas du HPA. |
 | `workload_type` | `Deployment` | Sans état — aucun StatefulSet nécessaire. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour la connectivité. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `DATABASE_URL` est assemblée à l'exécution — ne la définissez pas ici. |
 | `secret_environment_variables` | `{}` | Map variable d'environnement → nom du secret Secret Manager. |
@@ -251,7 +251,7 @@ comportement et leurs valeurs par défaut standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Mode d'exposition du Service Kubernetes. |
 | `session_affinity` | `None` | Sans état — n'importe quel pod traite n'importe quelle requête ; aucune affinité nécessaire. |
@@ -267,30 +267,30 @@ laissez les entrées StatefulSet à leurs valeurs par défaut.
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Crée un ResourceQuota dans l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doivent utiliser des suffixes binaires** (`4Gi`, `8192Mi`) — les entiers nus sont des octets et bloquent la planification. |
 
 ### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/health`, délai de 30 s, 30 tentatives | Sonde de démarrage. Marge pour les migrations du premier démarrage. |
 | `health_check_config` | HTTP `/health`, délai de 30 s | Sonde de vivacité (liveness). |
-| `uptime_check_config` | `{ enabled=false, path="/health" }` | Contrôle de disponibilité Cloud Monitoring ; désactivé par défaut. |
+| `uptime_check_config` | `{ enabled=false, path="/health" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
@@ -304,14 +304,14 @@ Principales entrées : `enable_cicd_trigger`, `github_repository_url`, `github_t
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | NFS est désactivé — Unleash est sans état. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur (inutilisé par défaut). |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée des buckets GCS supplémentaires. |
 | `storage_buckets` | `[]` | Vide — Unleash est sans état. |
@@ -321,7 +321,7 @@ Principales entrées : `enable_cicd_trigger`, `github_repository_url`, `github_t
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES` | Unleash nécessite PostgreSQL ; `Unleash_Common` provisionne PostgreSQL 15. |
 | `application_database_name` | `unleash` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -338,7 +338,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés et un certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -351,7 +351,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 > jeton vers l'API Unleash. N'activez IAP que si l'API n'a pas besoin d'être atteinte
 > directement par des clients SDK.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google devant Unleash. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder. |
@@ -359,7 +359,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une règle Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | CIDR bénéficiant d'un accès privilégié. |
@@ -368,7 +368,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (détecte automatiquement `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définies)_ | CIDR du niveau d'accès / mode simulation (dry-run). |

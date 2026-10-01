@@ -36,7 +36,7 @@ Snipe-IT s'exécute sous la forme du conteneur PHP/Apache officiel
 de build personnalisée. Le déploiement assemble un ensemble ciblé de services
 Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Image PHP/Apache préconstruite `snipe/snipe-it`, port 80, 1 vCPU / 2 GiB par défaut ; autoscaling serverless avec mise à l'échelle à zéro |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — imposé par `SnipeIT_Common` ; les autres moteurs ne sont pas pris en charge |
@@ -46,11 +46,11 @@ Google Cloud :
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données géré par le socle |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Image officielle préconstruite uniquement.** `container_image_source = "prebuilt"`
   est la valeur par défaut — le module déploie directement
-  `snipe/snipe-it:<application_version>` (tag par défaut `v8-latest`), dupliquée
+  `snipe/snipe-it:<application_version>` (tag par défaut `v8-latest`), mise en miroir
   dans Artifact Registry lorsque `enable_image_mirroring = true`. Il n'y a pas
   d'étape Cloud Build/Dockerfile.
 - **MySQL 8.0 est obligatoire.** `SnipeIT_Common` fixe `database_type` à
@@ -90,7 +90,7 @@ Google Cloud :
 - **Redis est activé par défaut** (`enable_redis = true`) pour décharger le
   cache et les sessions Laravel ; laisser `redis_host` vide revient à la
   résolution standard du point de terminaison Redis de la plateforme.
-- **Deux tâches d'initialisation ordonnées s'exécutent à chaque apply.**
+- **Deux jobs d'initialisation ordonnés s'exécutent à chaque apply.**
   `db-init` (crée la base de données et l'utilisateur via `mysql:8.0-debian`)
   s'exécute en premier, puis `migrate` (`php
   artisan migrate --force` sur l'image `snipe/snipe-it`) — toutes deux sont en
@@ -130,7 +130,7 @@ accessoires, consommables, utilisateurs, piste d'audit) dans une instance géré
 Cloud SQL for MySQL 8.0. Par défaut, le service la joint via **l'IP privée en
 TCP** (`enable_cloudsql_volume = false`), et non via le socket Unix du Cloud SQL
 Auth Proxy utilisé par la plupart des autres modules App_CloudRun. Lors du
-premier déploiement, la tâche d'initialisation `db-init` crée la base de données
+premier déploiement, le job d'initialisation `db-init` crée la base de données
 et l'utilisateur de l'application (en essayant d'abord le chemin du socket, puis
 en se rabattant sur TCP vers `DB_IP`), suivie de la tâche `migrate`, qui exécute
 `artisan migrate --force` de Laravel.
@@ -191,7 +191,7 @@ Un secret Snipe-IT est généré automatiquement et stocké dans Secret Manager 
 l'`APP_KEY` Laravel (`base64:<...>`, 32 octets aléatoires encodés en base64). Le
 mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~snipeit"
@@ -208,8 +208,7 @@ Le service est accessible par défaut à son URL `run.app` (`ingress_settings =
 Cloud CDN et Cloud Armor peuvent s'y ajouter ; les paramètres d'entrée et la
 sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -224,8 +223,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de
 Cloud Run et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte facultatifs (désactivés par défaut).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -235,16 +233,16 @@ disponibilité et des règles d'alerte facultatifs (désactivés par défaut).
 
 ## 3. Comportement de l'application Snipe-IT {#3-snipe-it-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  d'initialisation `db-init` s'exécute sur `mysql:8.0-debian`. Elle vérifie
+- **Configuration de la base de données au premier déploiement.** Le job
+  d'initialisation `db-init` s'exécute sur `mysql:8.0-debian`. Il vérifie
   d'abord la présence d'un socket Unix Cloud SQL monté (présent uniquement si
   `enable_cloudsql_volume = true`) et, en son absence, se rabat sur TCP vers
-  `DB_IP` (l'IP privée de l'instance) — le chemin par défaut du module. Elle
+  `DB_IP` (l'IP privée de l'instance) — le chemin par défaut du module. Il
   crée de manière idempotente la base de données et l'utilisateur de
   l'application, accorde les privilèges et vérifie que l'utilisateur de
   l'application peut réellement se connecter (ce qui préchauffe également le
   cache d'authentification `caching_sha2_password` côté serveur de MySQL 8).
-  Elle peut être relancée sans risque.
+  Il peut être relancé sans risque.
 - **Tâche de migration explicite, et pas seulement une migration automatique au démarrage.**
   Une tâche `migrate` distincte exécute `php /var/www/html/artisan migrate --force`
   (`depends_on_jobs = ["db-init"]`, `max_retries = 2`) afin que le schéma
@@ -352,11 +350,11 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `execution_environment` | `gen2` | Requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | **TCP par défaut** — délibéré pour cette application Laravel-mysql ; `true` monte à la place le socket de l'Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image Docker Hub dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Docker Hub dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclaré pour la parité des conventions ; non référencé par le déploiement de ce module. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -429,7 +427,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé / `90` | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Déclarées pour la parité des conventions ; **inertes** pour ce module — `main.tf` code en dur directement le mappage natif de Laravel `DB_USERNAME`/`DB_DATABASE`/`DB_PASSWORD` et ne transmet pas ces variables. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -454,7 +452,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -496,7 +494,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -511,7 +509,7 @@ d'explorer les ressources en cours d'exécution.
 > toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en
 > amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` (fixe) | Critical | Snipe-IT nécessite MySQL ; `SnipeIT_Common` ignore les autres valeurs. |
 | `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
@@ -534,9 +532,9 @@ d'explorer les ressources en cours d'exécution.
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et
-duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
+mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La
 configuration applicative propre à Snipe-IT partagée avec la variante GKE
-(image, secret `APP_KEY`, tâches d'initialisation) est décrite dans
+(image, secret `APP_KEY`, jobs d'initialisation) est décrite dans
 `modules/SnipeIT_Common/README.md` — aucun guide autonome
 `docs/modules/SnipeIT_Common.md` n'existe encore.
 

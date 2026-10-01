@@ -39,7 +39,7 @@ un ensemble ciblé de services Google Cloud :
 **Ni Cloud SQL, ni Redis, ni buckets GCS** — Elasticsearch est entièrement autonome ;
 toutes les données résident dans son PVC.
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Un StatefulSet avec PVC est le type de charge de travail requis.** Définir
   `stateful_pvc_enabled =
@@ -257,7 +257,7 @@ facultatifs peuvent sonder `/_cluster/health`.
   la création du premier index conduit Elasticsearch à considérer les données
   existantes du PVC comme étrangères et à ne pas démarrer. Un renommage exige de
   détruire le PVC et de réindexer tous les documents.
-- **Aucune tâche d'initialisation n'est requise.** Elasticsearch s'initialise lui-même au
+- **Aucun job d'initialisation n'est requis.** Elasticsearch s'initialise lui-même au
   premier démarrage. Il n'y a aucune étape de création de base de données ou
   d'utilisateur.
 - **Délai de grâce de terminaison.** Kubernetes attend 120 secondes après l'envoi de
@@ -286,7 +286,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -383,7 +383,7 @@ résident dans le PVC.
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/_cluster/health`. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -457,7 +457,7 @@ sont présentes par souci d'exhaustivité.
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Non applicable à Elasticsearch. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -485,7 +485,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (liste vide — aucun bucket n'est provisionné). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration exécutées avant la charge de travail. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -500,12 +500,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `stateful_pvc_enabled` | `true` | Critical | Sans PVC, tous les index sont stockés dans le système de fichiers éphémère du pod et définitivement perdus à chaque redémarrage, mise à jour progressive ou éviction de nœud. |
 | `stateful_pvc_mount_path` | `/usr/share/elasticsearch/data` | Critical | Doit correspondre à `path.data`. Une incohérence écrit les index sans avertissement dans la couche éphémère — les données sont perdues à chaque redémarrage. |

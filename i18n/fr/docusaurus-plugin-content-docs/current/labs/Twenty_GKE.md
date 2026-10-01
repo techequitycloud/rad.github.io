@@ -19,7 +19,7 @@ cycle de vie opérationnel du module **Twenty on GKE Autopilot** sur Google Clou
 le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les
 problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit Twenty. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Twenty_GKE) — ce
@@ -27,7 +27,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -71,7 +71,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, un stockage
-   Redis/GCS facultatif, construit l'image du conteneur et exécute trois tâches ponctuelles
+   Redis/GCS facultatif, construit l'image du conteneur et exécute trois jobs ponctuels
    d'initialisation à la suite (`db-init`, puis `twenty-migrate`, puis
    `twenty-verify` — une tâche de garde qui fait échouer le déploiement si le schéma se retrouve vide).
    Les premiers déploiements prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
@@ -89,7 +89,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail est en cours d'exécution et trouvez son adresse externe :
 
@@ -130,7 +130,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -158,7 +158,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -180,9 +180,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
   secret du mot de passe de la base a bien été matérialisé dans l'espace de noms, que `enable_cloudsql_volume` vaut
-  `true` et que les trois tâches d'initialisation (`db-init`, `twenty-migrate`,
+  `true` et que les trois jobs d'initialisation (`db-init`, `twenty-migrate`,
   `twenty-verify`) se sont terminées.
-- **Échec d'une tâche d'initialisation :** inspectez les tâches et les journaux de leurs pods :
+- **Échec d'un job d'initialisation :** inspectez les jobs et les journaux de leurs pods :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/db-init
@@ -190,7 +190,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl logs -n "$NS" job/twenty-verify
   ```
 - **« Unable to Reach Back-end » dans l'interface alors que le pod est par ailleurs Ready (spécifique à Twenty) :**
-  l'échec d'une tâche d'initialisation ne fait PAS échouer à lui seul l'application du module ; une tâche
+  l'échec d'un job d'initialisation ne fait PAS échouer à lui seul l'application du module ; un job
   `twenty-migrate` en situation de concurrence ou en échec sur un nouveau tenant peut donc laisser le pod Ready et servant des requêtes sur une base de données
   **vide** — chaque requête du backend échoue alors avec
   `relation "core.keyValuePair" does not exist`. C'est précisément le mode de défaillance que la
@@ -227,8 +227,8 @@ partagé, le registre) sont gérées séparément et ne sont pas supprimées ici
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL, les secrets, et exécute db-init + twenty-migrate + twenty-verify |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; créer l'espace de travail via le navigateur |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; créer l'espace de travail via le navigateur |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation (y compris la garde contre une base vide), de Redis, de planification et de récupération d'image |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation (y compris la garde contre une base vide), de Redis, de planification et de récupération d'image |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

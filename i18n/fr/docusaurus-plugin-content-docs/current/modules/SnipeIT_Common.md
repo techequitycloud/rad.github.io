@@ -31,7 +31,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Génère l'`APP_KEY` Laravel (`base64:` + 32 octets aléatoires encodés en base64) et le stocke dans **Secret Manager** | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Déploie directement l'image officielle `snipe/snipe-it:<application_version>` — pas de build personnalisé, pas de point d'entrée personnalisé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for MySQL 8.0** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la chaîne ordonnée de tâches d'initialisation (`db-init` → `migrate`) qui crée la base de données/l'utilisateur et exécute les migrations Laravel | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit la chaîne ordonnée de jobs d'initialisation (`db-init` → `migrate`) qui crée la base de données/l'utilisateur et exécute les migrations Laravel | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `snipeit-uploads` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement de référence de Snipe-IT (Laravel) : `APP_ENV`, `DB_CONNECTION`, pilotes de sessions/de cache/de file d'attente, `APP_URL`, raccordement à Redis | Comportement de l'application dans les guides des plateformes |
 | Tests de santé | Fournit la sonde de démarrage TCP et la sonde de vivacité HTTP par défaut, identiques dans les deux variantes de plateforme | §Observabilité dans les guides des plateformes |
@@ -162,7 +162,7 @@ les sorties du déploiement de la plateforme.
   Common qui encapsulent leur image de base dans un point d'entrée shell pour
   traduire des variables d'environnement ou corriger des URL à l'exécution, le
   répertoire `scripts/` de `SnipeIT_Common` ne contient que `db-init.sh` (un
-  script de tâche d'initialisation, et non un point d'entrée de conteneur) — il
+  script de job d'initialisation, et non un point d'entrée de conteneur) — il
   n'y a ici ni `entrypoint.sh` ni `Dockerfile`. Tout le comportement au
   démarrage (lancement d'Apache, corrections de permissions, vérifications de
   la clé et de la configuration Laravel) correspond à ce que fait déjà en
@@ -184,7 +184,7 @@ les sorties du déploiement de la plateforme.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `SnipeIT_Common` établit l'environnement de référence de Snipe-IT (Laravel)
 afin que l'application démarre correctement dès le premier démarrage, en

@@ -28,10 +28,10 @@ guides de plateforme ([Karakeep_GKE](Karakeep_GKE.md),
 | Domaine | Fourni par Karakeep_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère `NEXTAUTH_SECRET` (44 caractères alphanumériques) et `MEILI_MASTER_KEY` (32 caractères alphanumériques) et les stocke dans **Secret Manager** | Injectés automatiquement ; récupérables via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Référence directement l'image officielle `ghcr.io/karakeep-app/karakeep` — aucun build personnalisé | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Référence directement l'image officielle `ghcr.io/karakeep-app/karakeep` — aucun build personnalisé | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | **Aucun** — `database_type = "NONE"` ; Karakeep n'utilise aucune instance Cloud SQL | §Base de données dans les guides de plateforme |
 | Persistance | Ne déclare aucun job d'amorçage de base de données ; l'état réside entièrement sur le volume NFS de la plateforme, câblé au niveau du module applicatif | Sans objet — aucun `initialization_jobs` provenant de cette couche |
-| Stockage objet | Aucun — `storage_buckets = []` | Output `storage_buckets` (vide) |
+| Stockage objet | Aucun — `storage_buckets = []` | Sortie `storage_buckets` (vide) |
 | Paramètres principaux | Définit le port de base (3000) et les cibles des sondes | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
 

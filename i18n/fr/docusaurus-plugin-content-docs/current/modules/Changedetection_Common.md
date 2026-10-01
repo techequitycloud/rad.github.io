@@ -18,7 +18,7 @@ que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement changedetection.io, consultez les
 guides des plateformes ([Changedetection_GKE](Changedetection_GKE.md),
-[Changedetection_CloudRun](Changedetection_CloudRun.md)) et les guides de la fondation
+[Changedetection_CloudRun](Changedetection_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -27,7 +27,7 @@ guides des plateformes ([Changedetection_GKE](Changedetection_GKE.md),
 
 | Domaine | Fourni par Changedetection_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Encapsule l'image officielle `ghcr.io/dgtlmoon/changedetection.io` dans un Dockerfile minimal, puis la construit et la réplique via Cloud Build (Kaniko) dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule l'image officielle `ghcr.io/dgtlmoon/changedetection.io` dans un Dockerfile minimal, puis la construit et la met en miroir via Cloud Build (Kaniko) dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **`database_type = "NONE"`** — changedetection.io est autonome et n'utilise aucune base de données SQL | §Base de données dans les guides des plateformes |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** de stockage de données (suffixe `storage`) qui contient toutes les données des surveillances | Sortie `storage_buckets` |
 | Stockage de données persistant | Définit `DATASTORE_PATH = /datastore` et monte le stockage de données sur `/datastore` (GCS FUSE sur Cloud Run, PVC bloc sur GKE) | §Persistance dans les guides des plateformes |
@@ -41,8 +41,8 @@ guides des plateformes ([Changedetection_GKE](Changedetection_GKE.md),
 
 changedetection.io est une application **Python/Flask** auto-hébergée qui surveille les
 modifications de pages web et envoie des notifications. Le module n'utilise pas directement
-l'image amont ; il fournit un `Dockerfile` minimal servant de surcouche, afin que la
-Foundation puisse construire et répliquer une copie locale au projet dans Artifact Registry :
+l'image amont ; il fournit un `Dockerfile` minimal servant de surcouche, afin que le
+socle puisse construire et répliquer une copie locale au projet dans Artifact Registry :
 
 ```dockerfile
 ARG CHANGEDETECTION_VERSION=0.50.19
@@ -53,7 +53,7 @@ FROM ghcr.io/dgtlmoon/changedetection.io:${CHANGEDETECTION_VERSION}
   L'image est construite via Cloud Build avec Kaniko et poussée dans le dépôt Artifact
   Registry du déploiement.
 - **ARG de version propre à l'application.** Le Dockerfile lit **`CHANGEDETECTION_VERSION`**,
-  et non le `APP_VERSION` générique qu'injecte la Foundation (et qui est forcé à `latest`).
+  et non le `APP_VERSION` générique qu'injecte le socle (et qui est forcé à `latest`).
   Lorsque `application_version = "latest"`, le build épingle un tag connu pour fonctionner
   (`0.50.19`) ; sinon, il utilise la version demandée. Cela évite de résoudre un tag de base
   inexistant dérivé de `:latest`.
@@ -92,7 +92,7 @@ dans un répertoire de stockage de données unique. Le module le normalise sur
 
 - **`storage_buckets`** déclare un bucket (`name_suffix = "storage"`,
   classe `STANDARD`, `force_destroy = true`, gestion des versions désactivée,
-  `public_access_prevention = enforced`). La Foundation le provisionne sous le nom
+  `public_access_prevention = enforced`). Le socle le provisionne sous le nom
   `gcs-<service_name>-storage` dans la région du déploiement et accorde l'accès au compte de
   service de la charge de travail.
 - **`enable_gcs_storage_volume`** (par défaut `true`) monte ce bucket en tant que volume

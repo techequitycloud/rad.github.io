@@ -19,7 +19,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 Run** sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien,
 l'observer, diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google Cloud**,
 et non sur les fonctionnalités du produit Hoppscotch. Pour la liste complète des services provisionnés et de
 chaque paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Hoppscotch_CloudRun) —
@@ -27,7 +27,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -49,7 +49,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -67,7 +67,7 @@ export REGION="us-central1"          # the region you deploy into
    avec les journaux en temps réel.
 
 2. La plateforme construit avec Cloud Build une image de conteneur personnalisée minimale (`FROM
-   hoppscotch/hoppscotch-frontend`), la réplique dans Artifact
+   hoppscotch/hoppscotch-frontend`), le réplica dans Artifact
    Registry et provisionne un service Cloud Run à l'écoute sur le port 3000. Hoppscotch est
    volontairement sans état — aucune instance Cloud SQL, aucun secret Secret Manager et aucun
    bucket Cloud Storage ne sont créés. Sans base de données à provisionner, un premier déploiement
@@ -87,7 +87,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que le service répond. Hoppscotch n'a aucun backend qui devrait être joignable —
    le chemin racine renvoie l'interface de l'application dès que Caddy se lie au port 3000 :
@@ -145,7 +145,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre de
@@ -198,7 +198,7 @@ supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne le service Cloud Run — sans base de données, secrets ni bucket de stockage |
-| 2 — Accès et vérification | Manuel | La vérification d'état réussit ; ouvrir l'URL et utiliser Hoppscotch immédiatement (aucun compte administrateur) |
+| 2 — Accéder et vérifier | Manuel | La vérification d'état réussit ; ouvrir l'URL et utiliser Hoppscotch immédiatement (aucun compte administrateur) |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle (sans contrainte), mettre à jour la version, confirmer l'absence de secrets |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de build, de port et d'IAM |

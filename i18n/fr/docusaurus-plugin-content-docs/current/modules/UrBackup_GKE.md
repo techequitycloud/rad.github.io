@@ -207,7 +207,7 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
   `1` — la base de données SQLite intégrée et la déduplication par liens
   physiques ne prennent pas en charge des instances de serveur concurrentes sur
   les mêmes données.
-- **Le Service multiport personnalisé dépend du module du socle.** Il utilise son
+- **Le Service multiport personnalisé dépend du module socle.** Il utilise son
   propre bloc `provider "kubernetes" {}` (`provider-auth.tf`), car un module
   parent ne peut pas accéder à la configuration de provider interne propre à
   `App_GKE` — le même modèle déjà établi pour les ressources RBAC de
@@ -251,9 +251,9 @@ des entrées, groupe par groupe.
 | `memory_limit` | `1Gi` | Limite de mémoire du conteneur UrBackup. |
 | `min_instance_count` | `1` | SANS mise à l'échelle à zéro — voir §1. |
 | `max_instance_count` | `1` | Plafonné en pratique. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 
-### Groupe 6 — Back-end et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -364,7 +364,7 @@ n'utilise pas de cache) et Cloud Armor, VPC Service Controls. Consultez
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et
 Workload Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC et duplication des images — consultez
+Binary Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à UrBackup est
 décrite dans **[UrBackup_Common](UrBackup_Common.md)**.
 

@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud qu'utilise Ghost et sur la manière
 
 Ghost s'exécute sous la forme d'un conteneur Node.js sur Cloud Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 512 MiB par défaut, facturation à la requête avec mise à l'échelle jusqu'à zéro |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — Ghost 6.x ne prend pas en charge PostgreSQL |
@@ -112,7 +112,7 @@ Le mot de passe de la base de données est stocké dans Secret Manager et inject
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails de l'injection et de la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les paramètres d'ingress et l'egress VPC contrôlent la connectivité.
 
@@ -155,22 +155,22 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `ghost` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Ghost Publishing` | Nom convivial affiché dans la console. |
@@ -179,7 +179,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance ; dimensionné pour un usage léger à typique — passez à `2000m` en production avec un traitement d'images intensif ou des adhésions. |
@@ -193,9 +193,9 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google via Identity-Aware Proxy. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
@@ -204,7 +204,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{SMTP_HOST="", SMTP_PORT="587", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | Paramètres SMTP pré-remplis pour l'envoi d'e-mails par Ghost (utilisez le port 587 STARTTLS ou 465 SSL — Google Cloud bloque le port sortant 25). `database__client=mysql` est injecté automatiquement. |
 | `secret_environment_variables` | `{}` | Map variable d'environnement → nom du secret Secret Manager. |
@@ -213,7 +213,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Rétention ; augmentez-la pour la production ou la conformité. |
@@ -229,7 +229,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_domains` | `[]` | Noms d'hôte personnalisés pour l'équilibreur de charge externe. Ghost doit connaître son URL publique — assurez-vous que le domaine correspond. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend du LB. |
@@ -238,7 +238,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Volume Filestore partagé pour le contenu Ghost. Nécessite gen2. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
@@ -247,7 +247,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `MYSQL_8_0` | Ghost nécessite MySQL 8.0 — ne le modifiez pas. |
 | `db_name` | `ghost` | Nom de la base de données MySQL. Immuable après le premier déploiement. |
@@ -258,14 +258,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (`mysql:8.0-debian`). |
 | `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai initial de 90s, 10 échecs | Sonde de démarrage HTTP sur le chemin racine de Ghost. Délai généreux pour les migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/`, délai initial de 60s | Sonde de vivacité ciblant le chemin racine de Ghost. |
@@ -274,7 +274,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | Utilise Redis pour la mise en cache des pages de Ghost. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP de l'hôte NFS. |
@@ -283,7 +283,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez [A
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -309,7 +309,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `ghost-content`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -345,7 +345,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Ghost, partagée avec la variante GKE, est décrite dans **[Ghost_Common](Ghost_Common.md)**.
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Ghost, partagée avec la variante GKE, est décrite dans **[Ghost_Common](Ghost_Common.md)**.
 
 <!-- related-guides -->
 

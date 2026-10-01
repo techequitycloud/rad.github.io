@@ -30,8 +30,8 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Un seul binaire Go dans un Deployment, mis à l'échelle horizontalement entre `min`/`max` répliques |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Miniflux stocke **tout** son état ici ; pas de MySQL ni d'autre moteur |
+| Calcul | GKE Autopilot | Un seul binaire Go dans un Deployment, mis à l'échelle horizontalement entre `min`/`max` réplicas |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Miniflux stocke **tout** son état ici ; pas de MySQL ni d'autre moteur |
 | Stockage objet | Cloud Storage (aucun) | Miniflux n'a besoin d'aucun bucket ; un montage NFS Filestore facultatif est disponible mais inutilisé par défaut |
 | Cache et file d'attente | Aucun | Miniflux ne dépend pas de Redis et n'a pas de worker séparé |
 | Secrets | Secret Manager | `ADMIN_PASSWORD` généré automatiquement (propriétaire initial) ; mot de passe de la base de données |
@@ -43,7 +43,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   couche applicative partagée ; choisir un autre moteur empêche le démarrage.
 - **Le collecteur de flux s'exécute dans le processus.** Miniflux n'a pas de worker
   séparé — le même pod sert l'interface et actualise les flux selon
-  `POLLING_FREQUENCY`. Gardez au moins une réplique active pour que la collecte se
+  `POLLING_FREQUENCY`. Gardez au moins un réplica actif pour que la collecte se
   poursuive (GKE ne descend pas à zéro).
 - **Le propriétaire initial est pré-créé, pas auto-inscrit.** `CREATE_ADMIN = 1` crée
   le compte `admin` à partir du secret `ADMIN_PASSWORD` au premier démarrage ;
@@ -54,7 +54,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   applique automatiquement les changements de schéma.
 - **Pas de Redis.** `enable_redis = false` — Miniflux conserve chaque flux, entrée et
   session dans PostgreSQL. Laissez-le désactivé. Comme il n'y a pas de file d'attente
-  partagée, exécuter plusieurs répliques revient simplement à répartir la charge des
+  partagée, exécuter plusieurs réplicas revient simplement à répartir la charge des
   requêtes (chacune continue de collecter les flux indépendamment).
 - **L'affinité de session est `ClientIP`.** Elle maintient un client sur un même pod
   pour une session d'interface cohérente.
@@ -70,18 +70,18 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Miniflux {#a-gke-autopilot--the-miniflux-workload}
 
 Les pods Miniflux s'exécutent comme un Deployment sur Autopilot qui écoute sur le
 port **8080**, facturé selon la CPU et la mémoire qu'ils demandent. L'autoscaling
 horizontal des pods dimensionne le déploiement entre le nombre minimal et le nombre
-maximal de répliques.
+maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Miniflux pour voir les pods, les révisions et les événements. Kubernetes
-  Engine → Services et Ingress affiche l'IP externe.
+  Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -92,10 +92,10 @@ maximal de répliques.
 Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et
 du type de charge de travail (Deployment ou StatefulSet).
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Miniflux stocke **toutes** les données applicatives (flux, entrées, utilisateurs,
-sessions, catégories) dans une instance gérée Cloud SQL pour PostgreSQL 15. Les pods
+sessions, catégories) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods
 y accèdent de manière privée via le sidecar **Cloud SQL Auth Proxy** sur le loopback
 (`127.0.0.1`) ; aucune IP publique n'est exposée. Au premier déploiement, le Job
 `db-init` crée la base de données et le rôle `miniflux` et installe l'extension
@@ -112,10 +112,10 @@ y accèdent de manière privée via le sidecar **Cloud SQL Auth Proxy** sur le l
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Pour le modèle de connexion, les sauvegardes
+figurent dans les [sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes
 automatisées et la rotation des mots de passe, consultez [App_GKE](App_GKE.md).
 
-### C. Cloud Storage / NFS {#c-cloud-storage--nfs}
+### C. Cloud Storage et NFS {#c-cloud-storage--nfs}
 
 Miniflux n'a besoin d'**aucun** stockage objet — il conserve tout son état dans
 PostgreSQL, de sorte que la couche applicative ne provisionne aucun bucket de
@@ -139,7 +139,7 @@ Un secret est généré automatiquement : `ADMIN_PASSWORD` — le mot de passe d
 propriétaire initial, injecté dans Miniflux au premier démarrage. Le mot de passe de
 la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~miniflux"
@@ -147,7 +147,7 @@ la base de données est géré séparément par le socle.
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store
+[Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store
 CSI et la rotation.
 
 ### E. Réseau et entrée {#e-networking--ingress}
@@ -158,7 +158,7 @@ géré par Google peut être activé, et une IP statique peut être réservée a
 l'adresse survive aux redéploiements. Lorsqu'un domaine personnalisé est utilisé,
 définissez `BASE_URL` pour que Miniflux produise des liens absolus corrects.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -176,8 +176,8 @@ règles d'alerte facultatifs sont disponibles. Le point d'entrée journalise au
 démarrage son mode de connexion `DATABASE_URL` — utile pour diagnostiquer la
 connectivité à la base de données.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -215,7 +215,7 @@ connectivité à la base de données.
   authentifiées.
 - **Le collecteur de flux s'exécute dans le processus.** Les flux sont actualisés
   selon `POLLING_FREQUENCY` dans chaque pod. Gardez `min_instance_count >= 1` pour que
-  la collecte s'exécute ; les répliques supplémentaires collectent chacune
+  la collecte s'exécute ; les réplicas supplémentaires collectent chacune
   indépendamment (aucune file d'attente partagée ne les coordonne).
 - **`BASE_URL` détermine les liens absolus.** Sa valeur par défaut est l'URL du
   service interne injectée ; définissez-la explicitement (via `environment_variables`)
@@ -250,7 +250,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
@@ -269,12 +269,12 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; gardez 1 pour que le collecteur de flux reste actif. |
-| `max_instance_count` | `5` | Nombre maximal de répliques. Miniflux n'a pas de file d'attente partagée — les pods supplémentaires ne font que répartir la charge des requêtes. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; gardez 1 pour que le collecteur de flux reste actif. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas. Miniflux n'a pas de file d'attente partagée — les pods supplémentaires ne font que répartir la charge des requêtes. |
 | `container_port` | `8080` | Miniflux écoute sur 8080. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour la connectivité (obligatoire sur GKE). |
-| `enable_image_mirroring` | `true` | Duplique l'image Miniflux dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Miniflux dans Artifact Registry avant le déploiement. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -324,7 +324,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 |---|---|---|
 | `startup_probe` | HTTP `/`, 60s delay, 15s period, 30 failures | Sonde de démarrage. Fenêtre généreuse pour les migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/`, 60s delay, 30s period | Sonde de vivacité. |
-| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif ; activez-le pour la supervision en production. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif ; activez-le pour la surveillance en production. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques facultatives. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
@@ -418,12 +418,12 @@ consultez [App_GKE](App_GKE.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -439,7 +439,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (un bucket `data` par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -480,7 +480,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Miniflux, partagée
 avec la variante Cloud Run, est décrite dans **[Miniflux_Common](Miniflux_Common.md)**.
 

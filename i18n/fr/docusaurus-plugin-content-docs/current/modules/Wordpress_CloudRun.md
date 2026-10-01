@@ -87,7 +87,7 @@ Le répertoire `wp-content` de WordPress est placé sur un partage **Filestore (
 
 Consultez [App_CloudRun](App_CloudRun.md) pour le montage NFS, GCS Fuse et CMEK.
 
-### D. Cache d'objets Redis {#d-redis-object-cache}
+### D. Redis (cache d'objets) {#d-redis-object-cache}
 
 Redis sert de cache d'objets à WordPress via l'extension **WP Redis**, en conservant en mémoire les résultats des requêtes coûteuses vers la base de données. Lorsque `redis_host` est laissé vide et que NFS est activé, l'adresse IP du serveur NFS est utilisée comme point de terminaison Redis (le modèle de déploiement partagé par défaut).
 
@@ -102,7 +102,7 @@ Redis sert de cache d'objets à WordPress via l'extension **WP Redis**, en conse
 
 Le mot de passe de la base de données WordPress ainsi que les huit clés et sels d'authentification WordPress sont stockés dans Secret Manager et injectés dans le service à l'exécution ; les valeurs en clair n'apparaissent jamais dans l'état Terraform.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -117,7 +117,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de ro
 
 Le service est joignable par défaut via son URL `run.app`. Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -130,7 +130,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de Cloud Run et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -238,7 +238,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le provisionnement. Consultez
 [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Domaine, CDN, Cloud Armor et conservation des images {#group-10--domain-cdn-cloud-armor--image-retention}
+### Groupe 10 — Domaine, CDN, Cloud Armor et rétention des images {#group-10--domain-cdn-cloud-armor--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -359,7 +359,7 @@ Renvoyées lorsqu'un déploiement réussit — le moyen le plus rapide de locali
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à WordPress, partagée
 avec la variante GKE, est décrite dans **[Wordpress_Common](Wordpress_Common.md)**.
 

@@ -33,10 +33,10 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et le stockage.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -53,7 +53,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans la durée.
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -71,13 +71,13 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne
    une base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, un
-   bucket de stockage GCS dédié, construit l'image de conteneur et exécute une tâche
-   ponctuelle d'initialisation de la base de données. Un premier déploiement prend
+   bucket de stockage GCS dédié, construit l'image de conteneur et exécute un job
+   ponctuel d'initialisation de la base de données. Un premier déploiement prend
    environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel ; le
    démarrage de la JVM de Kestra ajoute du temps au premier lancement pendant
    l'application des migrations de la base de données).
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -121,7 +121,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — le Deployment, les pods et (s'ils sont activés)
    l'autoscaler horizontal et les volumes persistants :
@@ -141,7 +141,7 @@ export REGION="us-central1"           # the region you deploy into
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods, les migrations
    de schéma étant appliquées automatiquement.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -169,7 +169,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -197,8 +197,8 @@ d'une version de Kestra à l'autre.
   avant de conclure à une panne.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est
   `RUNNABLE`, que le secret du mot de passe de la base de données a bien été matérialisé
-  dans le namespace et que la tâche `db-init` s'est terminée.
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+  dans l'espace de noms et que le job `db-init` s'est terminé.
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -214,10 +214,10 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes et
-son namespace, la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS
+son espace de noms, la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS
 et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le
 cluster GKE, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas
 supprimées ici.
@@ -232,5 +232,5 @@ supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; le contrôle de santé réussit (`{"status":"UP"}`) ; connexion à l'interface de Kestra |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de démarrage de la JVM, de base de données, de tâche d'initialisation, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de démarrage de la JVM, de base de données, de job d'initialisation, de planification et de récupération d'image |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

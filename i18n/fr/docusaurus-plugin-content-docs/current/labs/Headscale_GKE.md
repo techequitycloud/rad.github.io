@@ -23,7 +23,7 @@ démanteler. Contrairement à la plupart des modules de ce catalogue, il n'y a *
 externe** à attendre — Headscale est entièrement autonome autour d'un fichier SQLite
 intégré, adossé ici à un véritable PVC de stockage en mode bloc.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google
 Cloud**, et non sur les concepts réseau de Tailscale/WireGuard. Pour la liste complète
 des services provisionnés et de chaque paramètre de configuration (organisés par
 groupe), consultez le
@@ -33,7 +33,7 @@ dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution, y compris via son véritable point de terminaison `/health`.
@@ -60,7 +60,7 @@ dans le temps.
 - *(Facultatif, pour la tâche 2)* le [client Tailscale](https://tailscale.com/download)
   installé sur un appareil que vous pouvez utiliser pour tester un véritable enregistrement.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -84,7 +84,7 @@ export REGION="us-central1"           # the region you deploy into
    à laquelle s'ajoute une configuration intégrée), provisionne le StatefulSet GKE avec son
    PVC de stockage en mode bloc par pod (monté sur `/var/lib/headscale`), une adresse IP
    statique réservée et un Ingress Gateway API pour un nom d'hôte personnalisé. Il n'y a **ni
-   instance Cloud SQL ni tâche d'initialisation de base de données** à attendre —
+   instance Cloud SQL ni job d'initialisation de base de données** à attendre —
    SQLite se crée lui-même au premier démarrage — si bien que les premiers déploiements se terminent généralement
    en **10–20 minutes** environ (le provisionnement du cluster/de la Gateway en représente l'essentiel).
 
@@ -102,7 +102,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail est en cours d'exécution et trouvez son adresse externe :
 
@@ -203,7 +203,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" "$POD" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU
@@ -277,8 +277,8 @@ directement) le fait.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne le StatefulSet + le PVC en mode bloc, l'IP statique réservée et la Gateway ; ni Cloud SQL, ni tâche d'initialisation |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; `/health` renvoie 200 ; créer le premier utilisateur + une clé de pré-authentification via `kubectl exec` ; enregistrer un vrai client Tailscale |
+| 1 — Déployer | Automatisé | Le module construit l'image personnalisée et provisionne le StatefulSet + le PVC en mode bloc, l'IP statique réservée et la Gateway ; ni Cloud SQL, ni job d'initialisation |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; `/health` renvoie 200 ; créer le premier utilisateur + une clé de pré-authentification via `kubectl exec` ; enregistrer un vrai client Tailscale |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC ; comprendre pourquoi `max_instance_count` n'a aucun effet ; mettre à jour la version ; lister les nœuds |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC, d'enregistrement des clients et de récupération d'image |

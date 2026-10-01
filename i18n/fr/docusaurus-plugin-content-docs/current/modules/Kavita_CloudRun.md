@@ -34,7 +34,7 @@ données ni cache externes** — tout ce dont il a besoin (paramètres, base de
 données SQLite interne et index de la bibliothèque) se trouve sur le disque sous
 `/kavita/config`.
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur web .NET sur le port 5000, `1000m` de CPU / `1Gi` de mémoire par défaut ; `min=1`/`max=1` |
 | Base de données | **Aucune** — SQLite interne | `database_type` est fixé à `NONE` par `Kavita_Common` ; aucune instance Cloud SQL n'est créée |
@@ -43,7 +43,7 @@ données SQLite interne et index de la bibliothèque) se trouve sur le disque so
 | Secrets | Secret Manager | **Aucun secret généré** — l'assistant de configuration du premier lancement crée le compte administrateur ; `secret_ids`/`secret_values` sont vides |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Ici, SQLite n'a pas d'autre choix que de résider sur GCS Fuse.** Cloud Run
   n'offre pas d'option de volume persistant bloc, si bien que `/kavita/config`
@@ -142,7 +142,7 @@ dans Secret Manager. Les secrets que vous ajoutez vous-même via
 `secret_environment_variables` transitent par Secret Manager comme pour tout
 autre module d'application.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~kavita"
@@ -159,8 +159,7 @@ clients OPDS de l'atteindre directement. Un équilibreur de charge HTTPS externe
 avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les
 paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -175,8 +174,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques Cl
 Run vers Cloud Monitoring, avec des tests de disponibilité et des règles
 d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord
-  / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards
+  / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -204,7 +203,7 @@ d'alerte facultatifs.
   le point de terminaison public et non authentifié **`/api/health`**. La sonde
   de démarrage utilise une marge d'échecs plus large (`initial_delay_seconds = 15`,
   `period_seconds = 10`, `failure_threshold = 10`) pour tolérer une indexation de
-  la bibliothèque plus lente au premier démarrage, avant que la sonde d'activité
+  la bibliothèque plus lente au premier démarrage, avant que la sonde de vivacité
   (`initial_delay_seconds = 30`, `period_seconds = 30`, `failure_threshold = 3`)
   prenne le relais.
 - **Inscription / comportement au premier lancement.** Il n'existe ni compte
@@ -289,7 +288,7 @@ lui sont listés ; toutes les autres entrées sont héritées de
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec la convention ; non référencée par le déploiement de ce module. |
 | `service_annotations` / `service_labels` | `{}` | Annotations/libellés personnalisés sur la ressource de service Cloud Run. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -366,7 +365,7 @@ Toutes les autres variables liées à la base de données de ce groupe
 uniquement pour refléter les variables du socle et n'ont aucun effet sur un
 déploiement Kavita.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -378,7 +377,7 @@ déploiement Kavita.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/health`, délai de 15 s | Sonde de démarrage ; la marge de 10 tentatives tolère l'indexation de la bibliothèque au premier démarrage. |
-| `liveness_probe` | HTTP `/api/health`, délai de 30 s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/health`, délai de 30 s | Sonde de vivacité. |
 | `startup_probe_config` / `health_check_config` | variante désactivée / HTTP `/api/health` | Sondes structurées alternatives (inactives par défaut ; ce sont `startup_probe`/`liveness_probe` qui s'appliquent). |
 | `uptime_check_config` | `{ enabled=false, path="/api/health" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
@@ -389,7 +388,7 @@ déploiement Kavita.
 |---|---|---|
 | `network_name` | `""` | Déclarée par souci de cohérence avec la convention ; non transmise à `App_CloudRun` par ce module — le réseau VPC est découvert automatiquement à la place. |
 
-### Groupe 23 — VPC Service Controls et journaux d'audit {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -415,7 +414,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées que vous avez fournies (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés que vous avez fournies (aucune par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -428,14 +427,14 @@ instance Cloud SQL.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec un montage GCS Fuse, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `/kavita/config` sur GCS Fuse | À n'accepter que pour les bibliothèques de petite ou moyenne taille | Critical | GCS Fuse est la seule option de persistance de Cloud Run ; les écritures concurrentes ou les analyses intensives de métadonnées sur un fichier SQLite adossé à gcsfuse risquent de corrompre l'index de la bibliothèque. Pour les grandes bibliothèques, utilisez plutôt le PVC bloc de [Kavita_GKE](Kavita_GKE.md). |
 | `max_instance_count` | `1` | Critical | Kavita n'offre pas de clustering ; une seconde instance écrivant dans le même fichier SQLite monté via gcsfuse corrompt l'index de la bibliothèque ainsi que les données des administrateurs et des utilisateurs. |

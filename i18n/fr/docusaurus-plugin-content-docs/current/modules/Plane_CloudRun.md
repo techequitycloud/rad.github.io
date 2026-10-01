@@ -46,7 +46,7 @@ La pile auto-hébergée amont de Plane comporte plusieurs services : `web` / `sp
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Plane (avec le sidecar RabbitMQ) {#a-cloud-run--the-plane-service-with-the-rabbitmq-sidecar}
 
@@ -74,7 +74,7 @@ Plane stocke les espaces de travail, projets, tickets, cycles et utilisateurs da
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Redis (backend Celery et cache) {#c-redis-celery-backend-and-cache}
 
@@ -102,7 +102,7 @@ Un bucket `storage` dédié (`gcs-<service-name>-storage`) est provisionné pour
 
 Trois secrets sont gérés automatiquement : le `SECRET_KEY` Django, le `LIVE_SERVER_SECRET_KEY` (authentification de la collaboration en temps réel) et le mot de passe Cloud SQL. Tous sont injectés à l'exécution ; le texte en clair n'apparaît jamais dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~plane"
@@ -115,7 +115,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour le détail de l'injection et de l
 
 Le service est joignable par défaut à son URL `run.app` ; l'URL prévue est injectée en tant que `WEB_URL` / `DOMAIN_NAME` / `CORS_ALLOWED_ORIGINS` afin que les redirections OAuth, CORS et les liens des e-mails fonctionnent d'emblée. Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté — dans ce cas, le domaine doit correspondre à ces variables d'URL.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -128,7 +128,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux du conteneur (y compris la sortie supervisord de chaque sous-service intégré et du sidecar `mq`) sont envoyés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL vers Cloud Monitoring, avec un test de disponibilité facultatif sur `/health` (désactivé par défaut) et des règles d'alerte facultatives.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Tests de disponibilité.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Tests de disponibilité.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -202,7 +202,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -277,11 +277,11 @@ Comportement standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_s
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `web_url` | URL de l'interface web de Plane (le proxy Caddy interne sert web/space/admin/api sur cette URL unique). |
@@ -332,7 +332,7 @@ Les validations au moment du plan détectent plusieurs de ces erreurs ; les autr
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Plane, partagée avec la variante GKE, est décrite dans **[Plane_Common](Plane_Common.md)**.
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Plane, partagée avec la variante GKE, est décrite dans **[Plane_Common](Plane_Common.md)**.
 
 <!-- related-guides -->
 

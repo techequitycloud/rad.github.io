@@ -24,11 +24,11 @@ socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_
 
 | Domaine | Fourni par Cyclos_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Épingle l'image officielle `cyclos/cyclos` et la configuration de build qui l'encapsule | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Épingle l'image officielle `cyclos/cyclos` et la configuration de build qui l'encapsule | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Extensions PostgreSQL | Déclare les six extensions requises installées par `db-init` | Output `initialization_jobs` |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui crée l'utilisateur, la base de données et installe les extensions | Output `initialization_jobs` |
-| Stockage de fichiers GCS | Définit `cyclos.storedFileContentManager = gcs` et dérive le nom du bucket du préfixe de ressource | Output `storage_buckets` ; variables d'environnement injectées automatiquement |
+| Extensions PostgreSQL | Déclare les six extensions requises installées par `db-init` | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui crée l'utilisateur, la base de données et installe les extensions | Sortie `initialization_jobs` |
+| Stockage de fichiers GCS | Définit `cyclos.storedFileContentManager = gcs` et dérive le nom du bucket du préfixe de ressource | Sortie `storage_buckets` ; variables d'environnement injectées automatiquement |
 | Environnement principal | Injecte `DB_HOST`, `DB_PORT`, `CYCLOS_HOME` et le nom du bucket GCS | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage et de vivacité (HTTP `/api` avec des délais JVM étendus) | §Observabilité dans les guides des plateformes |
 

@@ -20,7 +20,7 @@ module **Immich on GKE Autopilot** : le déployer, créer le compte administrate
 photo, prouver que la recherche intelligente sollicite réellement le service d'apprentissage automatique,
 prouver que la photothèque adossée à NFS survit à la perte d'un pod, puis le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non
 sur les fonctionnalités du produit Immich. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Immich_GKE) — ce
@@ -28,7 +28,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Attendre que la charge de travail soit en bonne santé et la vérifier de bout en bout.
@@ -57,7 +57,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -79,7 +79,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. La plateforme construit l'image serveur personnalisée minimale (basée sur
    `ghcr.io/immich-app/immich-server` — `latest` se résout vers le tag évolutif
-   `release` d'Immich), provisionne Cloud SQL (PostgreSQL 15), exécute la tâche ponctuelle
+   `release` d'Immich), provisionne Cloud SQL (PostgreSQL 15), exécute le job ponctuel
    `db-init` (base de données, utilisateur, extensions `pgvector` + `earthdistance`), monte
    la photothèque NFS sur `/usr/src/app/upload` et déploie deux charges de travail : le
    serveur Immich (port 2283) et le service d'apprentissage automatique (port 3003,
@@ -229,7 +229,7 @@ même photothèque). Simulez la perte d'un pod et vérifiez que rien n'est perdu
    kubectl get pods -n "$NS"
    ```
 
-   Attendez-vous à une courte fenêtre sans **aucun** pod serveur (Recreate, réplique unique) —
+   Attendez-vous à une courte fenêtre sans **aucun** pod serveur (Recreate, réplica unique) —
    c'est voulu, et non un défaut.
 
 2. Vérifiez que le point de terminaison de santé répond de nouveau et que la photo est toujours là :

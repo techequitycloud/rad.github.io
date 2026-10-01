@@ -20,7 +20,7 @@ GKE Autopilot** sur Google Cloud : le déployer, y accéder et le vérifier, ouv
 console et exécuter une requête GraphQL, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes
 courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 le fonctionnement interne du produit Hasura. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/Hasura_GKE) —
@@ -28,7 +28,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -53,7 +53,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -72,7 +72,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager
    (`HASURA_GRAPHQL_ADMIN_SECRET` et le mot de passe de la base de données), construit l'image
-   du conteneur (une fine surcouche de `hasura/graphql-engine`) et exécute une tâche ponctuelle
+   du conteneur (une fine surcouche de `hasura/graphql-engine`) et exécute un job ponctuel
    d'initialisation de la base de données. Les premiers déploiements prennent environ **20–35 minutes** (la création de Cloud SQL
    en représente l'essentiel).
 
@@ -89,7 +89,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail est en cours d'exécution et trouvez son adresse externe :
 
@@ -123,7 +123,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exemple concret : suivre une table et exécuter une requête GraphQL [Manuel] {#task-3--worked-example-track-a-table-and-run-a-graphql-query-manual}
+## Tâche 3 — Exemple guidé : suivre une table et exécuter une requête GraphQL [Manuel] {#task-3--worked-example-track-a-table-and-run-a-graphql-query-manual}
 
 1. **Créez une table.** Dans la console, allez dans **Data → default → public → Create Table**.
    Nommez-la `todos` avec les colonnes `id` (Integer, auto-incrément, clé primaire) et
@@ -181,7 +181,7 @@ export REGION="us-central1"           # the region you deploy into
    et en l'appliquant via **Update** ; une nouvelle image est construite et une mise à jour progressive remplace les
    pods. Les métadonnées de vos tables suivies sont conservées dans la base de données lors de la mise à niveau.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -211,7 +211,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -237,9 +237,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   transmis. Récupérez-le à nouveau (tâche 2, étape 3) et envoyez-le en tant que `x-hasura-admin-secret`. Ne
   pointez jamais les sondes de santé vers ces chemins — utilisez `/healthz`.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le secret du
-  mot de passe de la base a bien été matérialisé dans l'espace de noms et que la tâche d'initialisation s'est terminée. Sur GKE,
+  mot de passe de la base a bien été matérialisé dans l'espace de noms et que le job d'initialisation s'est terminé. Sur GKE,
   le sidecar Auth Proxy écoute sur `127.0.0.1` ; le DSN est un simple loopback (sans SSL).
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<job-name>
@@ -268,9 +268,9 @@ le registre) sont gérées séparément et ne sont pas supprimées ici.
 | Tâche | Type | Résultat |
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (PostgreSQL 15), les secrets, et exécute l'initialisation de la base |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la vérification d'état réussit ; récupérer le secret d'administration ; ouvrir la console |
-| 3 — Exemple concret | Manuel | Suivre une table et exécuter une insertion + une requête GraphQL de bout en bout |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification d'état réussit ; récupérer le secret d'administration ; ouvrir la console |
+| 3 — Exemple guidé | Manuel | Suivre une table et exécuter une insertion + une requête GraphQL de bout en bout |
 | 4 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 5 — Observer | Manuel | Interroger Cloud Logging ; consulter les métriques Cloud Monitoring et le test de disponibilité |
-| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'authentification (401), de base de données, de tâche d'initialisation, de planification et de récupération d'image |
+| 6 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, d'authentification (401), de base de données, de job d'initialisation, de planification et de récupération d'image |
 | 7 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

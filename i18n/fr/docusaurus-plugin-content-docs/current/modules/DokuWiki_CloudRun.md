@@ -75,7 +75,7 @@ assemble un ensemble volontairement restreint de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service DokuWiki {#a-cloud-run--the-dokuwiki-service}
 
@@ -219,14 +219,14 @@ avec leur comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `dokuwiki` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_version` | `latest` | Tag de l'image DokuWiki ; `latest` est résolu au moment du build en une version datée épinglée (`2024-02-06b`). Épinglez une version précise pour la production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance. Gen2 avec CPU toujours alloué exige ≥ 1 vCPU ; DokuWiki est léger. |
@@ -237,11 +237,11 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 est requis pour les montages de volumes gcsfuse. |
 | `container_port` | `8080` | Apache écoute sur 8080. |
 | `enable_cloudsql_volume` | `false` | Pas de base de données — laissez false. |
-| `enable_image_mirroring` | `true` | Duplique l'image DokuWiki dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image DokuWiki dans Artifact Registry. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | `all` expose publiquement le wiki via son URL `run.app`. |
 | `enable_iap` | `false` | Exige une connexion Google devant DokuWiki. |
@@ -249,7 +249,7 @@ avec leur comportement standard.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée le bucket `gcs-dokuwiki<tenant-prefix>-data` qui adosse `/storage`. |
 | `gcs_volumes` | _(valeur par défaut définie par Common)_ | Le montage gcsfuse `/storage`. Laissez tel quel, sauf si vous fournissez un volume personnalisé. |
@@ -257,7 +257,7 @@ avec leur comportement standard.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `NONE` | **Doit rester `NONE`.** Une garde au moment du plan rejette toute autre valeur. |
 
@@ -265,12 +265,12 @@ _Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](Ap
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -280,7 +280,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris `gcs-dokuwiki<tenant-prefix>-data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (vide — DokuWiki n'en a aucun). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -314,8 +314,8 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à DokuWiki, partagée avec la variante GKE, est décrite dans
 **[DokuWiki_Common](DokuWiki_Common.md)**.
 

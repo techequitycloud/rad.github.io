@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Castopod sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Castopod est une plateforme open source d'hébergement de podcasts, nativement compatible ActivityPub, construite sur
 CodeIgniter 4 (PHP 8) et servie par FrankenPHP/Caddy. Ce lab vous fait parcourir
@@ -27,7 +27,7 @@ lab ne duplique volontairement pas ce détail afin de rester exact dans le temps
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail Castopod en cours d'exécution.
@@ -52,7 +52,7 @@ lab ne duplique volontairement pas ce détail afin de rester exact dans le temps
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -150,7 +150,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max et en cliquant sur **Update** sur la
    page de détails du déploiement — le module possède la spécification de la charge de travail, donc la mise à l'échelle est une
    modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors de la prochaine application). Castopod utilise par défaut une seule réplique
+   annulée lors de la prochaine application). Castopod utilise par défaut un seul réplica
    (`min_instance_count = max_instance_count = 1`) ; ne dépassez pas 1 sans
    avoir vérifié que le répertoire de médias NFS partagé et le cache d'objets basé sur le système de fichiers
    (`CP_CACHE_HANDLER = file`) se comportent correctement sur plusieurs pods. La
@@ -204,7 +204,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et
@@ -287,7 +287,7 @@ séparément et ne sont pas supprimées ici.
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), le NFS, les buckets de stockage et les secrets, construit l'image et exécute l'initialisation de la base |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la page d'accueil renvoie 200 ; terminer l'assistant d'installation ; téléverser un épisode de test et vérifier le flux |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (une seule réplique par défaut), mettre à jour la version, gérer les secrets/le stockage/Redis, accéder à la base |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (un seul réplica par défaut), mettre à jour la version, gérer les secrets/le stockage/Redis, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de médias NFS, de déploiement et d'image |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

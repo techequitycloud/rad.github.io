@@ -19,7 +19,7 @@ Pour l'infrastructure qui provisionne et exécute effectivement Grocy, consultez
 |---|---|---|
 | Authentification | Livré avec l'identifiant par défaut LinuxServer `admin` / `admin` (à changer à la première connexion). Il n'existe pas d'identifiant administrateur injectable. | Interface web de Grocy au premier accès |
 | Secrets du service | **Aucun.** `secret_ids` et `secret_values` sont tous deux des maps volontairement vides. | n/a |
-| Image de conteneur | Encapsule légèrement l'image officielle `lscr.io/linuxserver/grocy` afin que le socle puisse la dupliquer dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule légèrement l'image officielle `lscr.io/linuxserver/grocy` afin que le socle puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Grocy utilise une base de données SQLite interne sous `/config` (`database_type = "NONE"`), confirmée comme réellement exclusivement SQLite d'après le code source amont | §3 |
 | Initialisation de la base de données | **Aucune** — il n'y a pas de tâche `db-init` ; Grocy gère son propre schéma SQLite au premier démarrage | n/a |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` | Sortie `storage_buckets` |
@@ -36,7 +36,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Grocy n'utilise **pas** de base de données externe. Tout son état — la base de données SQLite embarquée (`grocy.db`), `config.php`, les images et pièces jointes téléversées et les sauvegardes — réside sous `/config`. Confirmé par la lecture du code source amont de Grocy (`services/DatabaseService.php`) : il est réellement exclusivement SQLite, sans aucune prise en charge de MySQL/Postgres, et n'active jamais le mode WAL — il n'existe aucun PRAGMA `journal_mode` nulle part dans le code (Grocy utilise le mode de journal par défaut de SQLite, DELETE/rollback-journal). En conséquence :
 
@@ -57,7 +57,7 @@ ARG GROCY_VERSION=v4.6.0-ls333
 FROM lscr.io/linuxserver/grocy:${GROCY_VERSION}
 ```
 
-- **`image_source = "custom"`** — défini uniquement pour que le socle construise/duplique l'image dans Artifact Registry ; aucun code applicatif n'est ajouté par-dessus.
+- **`image_source = "custom"`** — défini uniquement pour que le socle construise/mette en miroir l'image dans Artifact Registry ; aucun code applicatif n'est ajouté par-dessus.
 - **ARG de build propre à l'application** — le Dockerfile lit `GROCY_VERSION`, et **non** l'`APP_VERSION` générique que le socle injecte (et qu'il forcerait à `latest`). Lorsque `application_version = "latest"`, la couche Common épingle le build sur `v4.6.0-ls333` ; sinon, elle transmet telle quelle la version demandée.
 - **Aucune traduction du point d'entrée** — Grocy n'a besoin d'aucun câblage de base de données ni de réécriture d'URL au démarrage ; le démarrage par défaut de l'image amont est donc utilisé tel quel.
 

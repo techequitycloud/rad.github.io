@@ -43,7 +43,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Seul le mot de passe de la base de données est généré par le socle — Passbolt lui-même n'apporte aucun secret (la sortie `secret_ids` de `Passbolt_Common` est toujours vide) |
 | Entrée | Cloud Load Balancing | Service LoadBalancer externe par défaut, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL est obligatoire.** `database_type` se résout en `MYSQL_8_0` (imposé par
   `Passbolt_Common`) ; Passbolt repose sur CakePHP avec un schéma exclusivement
@@ -411,7 +411,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
@@ -421,7 +421,7 @@ d'explorer les ressources en cours d'exécution.
 > combinaisons au moment du plan. Une configuration invalide fait échouer le
 > **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | se résout en `MYSQL_8_0` | Critical | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
 | `enable_gcs_storage_volume` | `true` | Critical | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du pod. |

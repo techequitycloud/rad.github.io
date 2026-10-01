@@ -22,7 +22,7 @@ voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement TechnitiumDNS, consultez les guides des
 plateformes ([TechnitiumDNS_GKE](TechnitiumDNS_GKE.md), [TechnitiumDNS_CloudRun](TechnitiumDNS_CloudRun.md))
-et les guides des fondations ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
+et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
 
@@ -84,7 +84,7 @@ gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT
   démarrage, et sert la racine de sa console (`/`) sans authentification avec HTTP 200 (~600KB de HTML
   de console, pas un corps vide) — aucun point d'entrée wrapper n'est nécessaire, contrairement à la
   plupart des modules construits sur mesure de ce dépôt.
-- `enable_image_mirroring = true` — réplique `technitium/dns-server` dans l'Artifact Registry du projet
+- `enable_image_mirroring = true` — réplica `technitium/dns-server` dans l'Artifact Registry du projet
   pour éviter les limites de débit de Docker Hub en production.
 
 ---

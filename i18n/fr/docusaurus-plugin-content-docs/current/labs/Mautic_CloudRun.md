@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Mautic sur Cloud Run dans votre propre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Mautic est une plateforme open source d'automatisation marketing pour les campagnes d'e-mailing, la gestion
 des contacts, les pages d'atterrissage et la notation des prospects (lead scoring). Ce lab vous fait parcourir tout le
@@ -27,7 +27,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
@@ -68,7 +68,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (MySQL 8.0)
    avec ses secrets Secret Manager, NFS/Redis facultatifs, construit l'image de conteneur
-   et exécute une tâche ponctuelle d'installation qui crée le schéma Mautic et l'utilisateur
+   et exécute un job ponctuel d'installation qui crée le schéma Mautic et l'utilisateur
    administrateur. Les premiers déploiements
    prennent environ **20 à 35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -146,7 +146,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -175,9 +175,9 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** confirmez que l'instance Cloud SQL (MySQL 8.0) est
-  `RUNNABLE`, que le secret du mot de passe de la base de données existe et que la tâche d'installation s'est terminée
+  `RUNNABLE`, que le secret du mot de passe de la base de données existe et que le job d'installation s'est terminé
   avec succès.
-- **Échec de la tâche d'installation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'installation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-mautic-install" \
     --project="$PROJECT" --region="$REGION"
@@ -190,7 +190,7 @@ chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — elle retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
 la base de données Cloud SQL, les secrets Secret Manager, les buckets GCS et les images
@@ -203,9 +203,9 @@ sont gérées séparément et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (MySQL 8.0), les secrets, et exécute la tâche d'installation |
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run, Cloud SQL (MySQL 8.0), les secrets, et exécute le job d'installation |
 | 2 — Accéder et vérifier | Manuel | La vérification de santé réussit ; se connecter au panneau d'administration |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer secrets/sauvegardes, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de tâche d'installation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données, de job d'installation, de build et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

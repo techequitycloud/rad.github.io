@@ -75,7 +75,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+service et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Dolibarr {#a-cloud-run--the-dolibarr-service}
 
@@ -116,7 +116,7 @@ l'utilisateur et les droits ; l'installateur Dolibarr crée ensuite le schéma.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour
 le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage et persistance des fichiers {#c-cloud-storage--file-persistence}
@@ -337,7 +337,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Dolibarr,
 partagée avec la variante GKE, est décrite dans **[Dolibarr_Common](Dolibarr_Common.md)**.
 

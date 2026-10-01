@@ -11,7 +11,7 @@ description: "Référence de configuration pour déployer Castopod sur Google Cl
 
 Castopod est une plateforme open source d'hébergement de podcasts, nativement compatible
 ActivityPub, construite sur CodeIgniter 4 (PHP 8) et servie par FrankenPHP/Caddy. Ce module
-déploie Castopod sur **Cloud Run v2** au-dessus de la fondation
+déploie Castopod sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud
 partagée.
 
@@ -20,7 +20,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 mécanismes communs à toutes les applications Cloud Run — identité du service, ingress et
 équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement —
-reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les
 répéter ici.
 
 ---
@@ -30,7 +30,7 @@ répéter ici.
 Castopod s'exécute comme un conteneur PHP/FrankenPHP sur Cloud Run v2, à l'écoute sur le port
 8080. Le déploiement assemble un ensemble restreint de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service FrankenPHP/Caddy, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à zéro prise en charge |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — Castopod ne prend en charge ni PostgreSQL ni aucun autre moteur |
@@ -77,7 +77,7 @@ Castopod s'exécute comme un conteneur PHP/FrankenPHP sur Cloud Run v2, à l'éc
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et
-des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Castopod {#a-cloud-run--the-castopod-service}
 
@@ -118,7 +118,7 @@ de données et l'utilisateur de l'application.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent
-dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de
+dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de
 connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Cloud Storage et persistance des médias {#c-cloud-storage--media-persistence}
@@ -159,7 +159,7 @@ terminaison Redis.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret Manager :
 `CP_ANALYTICS_SALT` (utilisé pour anonymiser les statistiques d'écoute du podcast). Le mot de
-passe de la base de données est géré séparément par la fondation.
+passe de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -170,7 +170,7 @@ passe de la base de données est géré séparément par la fondation.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`, qui autorise l'accès public requis
 pour les flux de podcast publics et les téléchargements de médias. Un équilibreur de charge
@@ -224,7 +224,7 @@ facultatifs.
 - **La configuration de la base de données réside dans `.env`, injectée à l'exécution.** Le
   point d'entrée écrit `database.default.hostname|database|username|password|port` et
   `app.baseURL` dans le `.env` de Castopod à partir des valeurs `DB_*` et
-  `CLOUDRUN_SERVICE_URL` injectées par la fondation. Il résout l'hôte de la base de données vers
+  `CLOUDRUN_SERVICE_URL` injectées par le socle. Il résout l'hôte de la base de données vers
   l'adresse TCP de l'IP privée, car le pilote `mysqli` de CI4 ne peut pas utiliser le
   répertoire de socket Cloud SQL.
 - **`CP_ANALYTICS_SALT` doit rester stable après le premier démarrage.** Il est généré une
@@ -257,7 +257,7 @@ standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
@@ -266,7 +266,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 
@@ -274,7 +274,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `castopod` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `display_name` | `Castopod` | Nom lisible affiché dans la console. |
@@ -284,7 +284,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance ; Castopod nécessite au minimum 1 vCPU. |
@@ -296,9 +296,9 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | `all` est requis pour les flux de podcast publics et les téléchargements de médias. |
 
@@ -306,7 +306,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisionne Cloud Filestore pour conserver les médias téléversés entre les redémarrages ; requis pour des médias durables. |
 | `nfs_mount_path` | `/var/lib/castopod` | Chemin de montage du volume NFS dans le conteneur. |
@@ -316,7 +316,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `MYSQL_8_0` | Moteur MySQL 8.0 fixe. Ne le modifiez pas — Castopod ne prend pas en charge PostgreSQL. |
 | `db_name` | `castopod` | Nom de la base de données MySQL. Immuable après le premier déploiement. |
@@ -326,7 +326,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP, délai de 30s | Sonde de démarrage TCP sur le port du conteneur ; la fenêtre de 20 tentatives couvre les migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/`, délai de 300s | Sonde de vivacité sur la page d'accueil non authentifiée de Castopod (renvoie 200 une fois démarrée). |
@@ -335,7 +335,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Bascule le cache d'objets de Castopod vers Redis ; injecte `REDIS_HOST`/`REDIS_PORT`. |
 | `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
@@ -380,7 +380,7 @@ les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -398,9 +398,9 @@ les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service,
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Castopod, partagée
 avec la variante GKE, est décrite dans **[Castopod_Common](Castopod_Common.md)**.
 

@@ -40,7 +40,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `LANGFLOW_SECRET_KEY` et `LANGFLOW_SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   couche applicative partagée (`database_type = "POSTGRES_15"`) ; choisir un autre
@@ -103,7 +103,7 @@ LangFlow stocke toutes les données applicatives (flux, composants, identifiants
 historique d'exécution, utilisateurs) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods y accèdent de façon privée via le sidecar **Cloud SQL Auth
 Proxy** sur `127.0.0.1` ; aucune IP publique n'est exposée. Au premier déploiement,
-une tâche d'initialisation crée la base de données applicative, le rôle et les
+un job d'initialisation crée la base de données applicative, le rôle et les
 droits.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
@@ -171,7 +171,7 @@ Cloud CDN et l'IP statique.
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
 Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriques GKE
-et Cloud SQL à Cloud Monitoring. Des vérifications de disponibilité et des règles
+et Cloud SQL à Cloud Monitoring. Des tests de disponibilité et des règles
 d'alerte facultatives sont disponibles.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -185,13 +185,13 @@ d'alerte facultatives sont disponibles.
 
 ## 3. Comportement de l'application LangFlow {#3-langflow-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `create-db-and-user.sh` à l'aide de
-  `postgres:15-alpine`. Elle attend PostgreSQL, puis crée de manière idempotente le
+  `postgres:15-alpine`. Il attend PostgreSQL, puis crée de manière idempotente le
   rôle applicatif et la base de données, définit le propriétaire et accorde les
   privilèges sur la base et sur le schéma `public`, puis signale au sidecar Cloud
   SQL Auth Proxy de s'arrêter (`POST /quitquitquit`) afin que le pod de la tâche se
-  termine proprement. Elle peut être relancée sans risque.
+  termine proprement. Il peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** LangFlow exécute ses **migrations Alembic à
   chaque démarrage du conteneur** ; les tables sont donc créées et mises à niveau par
   l'application elle-même — la tâche `db-init` ne gère que le rôle, la base et les
@@ -278,7 +278,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Limites et demandes de CPU/mémoire par pod. Relevé depuis `1Gi` après un bug confirmé d'OOMKilled au démarrage — ne descendez pas en dessous de `2Gi`. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour la connectivité. |
-| `enable_image_mirroring` | `true` | Duplique l'image de base LangFlow dans Artifact Registry avant le build personnalisé. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base LangFlow dans Artifact Registry avant le build personnalisé. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -348,7 +348,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -506,14 +506,14 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), complété d'un garde-fou `validation.tf` qui vérifie les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, Redis activé sans source d'hôte, IAP sans identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `LANGFLOW_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation casse définitivement chaque identifiant stocké intégré dans un flux — ceux-ci ne peuvent plus être déchiffrés et doivent être ressaisis. |
 | `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit tous les flux et identifiants. |

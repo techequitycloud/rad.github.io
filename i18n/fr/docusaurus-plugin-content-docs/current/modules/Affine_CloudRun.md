@@ -9,9 +9,9 @@ description: "Référence de configuration pour déployer AFFiNE sur Google Clou
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Affine_CloudRun.png" alt="AFFiNE sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-AFFiNE est une base de connaissances open source, centrée sur la confidentialité, qui réunit documents, tableaux blancs et bases de données dans un même espace de travail — une alternative auto-hébergeable à Notion et Miro. Ce module déploie AFFiNE sur **Cloud Run v2**, au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
+AFFiNE est une base de connaissances open source, centrée sur la confidentialité, qui réunit documents, tableaux blancs et bases de données dans un même espace de travail — une alternative auto-hébergeable à Notion et Miro. Ce module déploie AFFiNE sur **Cloud Run v2**, au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud qu'utilise AFFiNE et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud qu'utilise AFFiNE et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud qu'utilise AFFiNE et sur la manièr
 
 Le serveur auto-hébergé d'AFFiNE s'exécute comme un conteneur Node.js unique sur Cloud Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Node.js, 2 vCPU / 4 GiB par défaut, instance unique toujours active |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — AFFiNE ne prend pas en charge MySQL (vérifié au moment du plan) |
@@ -46,7 +46,7 @@ Le serveur auto-hébergé d'AFFiNE s'exécute comme un conteneur Node.js unique 
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du service et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service AFFiNE {#a-cloud-run--the-affine-service}
 
@@ -74,7 +74,7 @@ AFFiNE stocke les espaces de travail, les documents, les utilisateurs et sa prop
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Redis — collaboration en temps réel {#c-redis--real-time-collaboration}
 
@@ -114,7 +114,7 @@ Le mot de passe de la base de données généré automatiquement est le seul sec
 
 Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'ingress et la sortie VPC contrôlent la connectivité. Le point d'entrée cloud définit par défaut `AFFINE_SERVER_EXTERNAL_URL` sur l'URL du service injectée, afin que les invitations et les liens de partage se résolvent correctement.
 
@@ -143,7 +143,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 
 - **Configuration de la base de données en deux étapes.** À l'application, `db-init` (image `postgres:15-alpine`) crée de manière idempotente le rôle et la base de données AFFiNE, accorde les privilèges et tente d'accorder `cloudsqlsuperuser` afin que les migrations puissent exécuter `CREATE EXTENSION`. Ensuite, `affine-migrate` exécute `node ./scripts/self-host-predeploy` d'AFFiNE à l'aide de l'image applicative construite — migration idempotente du schéma **et génération de la clé de signature**. Les deux peuvent être réexécutés sans risque ; `affine-migrate` effectue jusqu'à 3 tentatives.
 - **La clé de signature réside dans la base de données.** Contrairement à la plupart des applications, il n'y a pas de variable d'environnement de type `APP_SECRET` : la clé générée par `self-host-predeploy` est conservée dans PostgreSQL, de sorte que le déploiement ne porte aucun secret applicatif susceptible de se désynchroniser ou à faire tourner.
-- **Assemblage du DSN au démarrage.** Le point d'entrée cloud construit `DATABASE_URL` à partir des variables `DB_*` injectées par la fondation (en encodant les identifiants pour l'URL) et associe `REDIS_HOST/PORT/AUTH` aux `REDIS_SERVER_*` d'AFFiNE. Sur Cloud Run, il se connecte à l'IP privée de Cloud SQL avec `sslmode=require` ; une variable d'environnement `DATABASE_URL` prédéfinie est prioritaire.
+- **Assemblage du DSN au démarrage.** Le point d'entrée cloud construit `DATABASE_URL` à partir des variables `DB_*` injectées par le socle (en encodant les identifiants pour l'URL) et associe `REDIS_HOST/PORT/AUTH` aux `REDIS_SERVER_*` d'AFFiNE. Sur Cloud Run, il se connecte à l'IP privée de Cloud SQL avec `sslmode=require` ; une variable d'environnement `DATABASE_URL` prédéfinie est prioritaire.
 - **URL externe.** `AFFINE_SERVER_EXTERNAL_URL` vaut par défaut l'URL du service Cloud Run. Définissez-la explicitement (via `environment_variables`) une fois un domaine personnalisé en service, afin que les liens de partage et les e-mails d'invitation utilisent le bon hôte.
 - **Configuration du premier lancement.** Ouvrez l'URL du service et créez le premier compte — sur une nouvelle instance AFFiNE auto-hébergée, le premier utilisateur inscrit devient l'administrateur du serveur, et le panneau d'administration se trouve à `<url>/admin`.
 - **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/`, qui renvoie HTTP 200 une fois le serveur prêt (fenêtre de démarrage : délai initial de 60 s + jusqu'à 30 × 15 s).
@@ -165,14 +165,14 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès IAM et les alertes de surveillance. |
@@ -181,7 +181,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `affine` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `stable` | Tag d'image pour `ghcr.io/toeverything/affine` ; `latest` correspond à `stable`. Incrémentez-le pour déclencher un nouveau build et une nouvelle révision. |
@@ -190,7 +190,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `cpu_limit` / `memory_limit` | `2000m` / `4Gi` | AFFiNE a besoin d'au moins 2Gi pour fonctionner de manière fiable. |
 | `container_port` | `3010` | Port natif du serveur auto-hébergé d'AFFiNE. |
@@ -205,7 +205,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Fusionnées par-dessus les valeurs par défaut d'`Affine_Common` (`NODE_ENV`, `AFFINE_SERVER_HOST/PORT`, `AFFINE_CONFIG_PATH`, `AFFINE_INDEXER_ENABLED=false`). Ne définissez jamais `PORT` — c'est un nom réservé de Cloud Run qui fait échouer la création des Jobs. |
 | `secret_environment_variables` | `{}` | AFFiNE n'a besoin d'aucun secret applicatif par défaut. |
@@ -214,7 +214,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Stockage des blobs **et** hôte Redis par défaut. Conservez true sauf si un `redis_host` externe est fourni. |
 | `nfs_mount_path` | `/root/.affine/storage` | Emplacement où AFFiNE conserve les blobs téléversés. |
@@ -223,7 +223,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun. Le b
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | AFFiNE nécessite PostgreSQL — MySQL est rejeté au moment du plan. |
 | `db_name` / `db_user` | `affine` / `affine` | Immuables après le premier déploiement. |
@@ -232,7 +232,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init` (`postgres:15-alpine`) + `affine-migrate` (image applicative construite). |
 
@@ -240,7 +240,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 60 s, 30 échecs | Fenêtre généreuse pour le premier démarrage. |
 | `liveness_probe` | HTTP `/`, délai de 60 s | Le chemin racine renvoie 200 une fois prêt. |
@@ -250,7 +250,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 21 — Redis {#group-21--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | **Obligatoire** — la validation au moment du plan rejette `false`. Pub/sub Yjs + file de jobs. |
 | `redis_host` | `""` | Laissez vide pour utiliser l'IP de l'hôte NFS. |
@@ -320,7 +320,7 @@ Une validation croisée des variables s'exécute au moment du plan (`validation.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et réplication d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à AFFiNE, partagée avec la variante GKE, est décrite dans **[Affine_Common](Affine_Common.md)**.
+Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à AFFiNE, partagée avec la variante GKE, est décrite dans **[Affine_Common](Affine_Common.md)**.
 
 <!-- related-guides -->
 

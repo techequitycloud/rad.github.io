@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud utilisés par Matomo et sur la mani
 
 Matomo s'exécute sous forme de conteneur PHP/Apache (l'image officielle `matomo:5-apache`) sur Cloud Run v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service PHP/Apache, 1 vCPU / 2 GiB par défaut, mise à l'échelle automatique selon les requêtes |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — Matomo ne prend en charge que MySQL/MariaDB |
@@ -29,7 +29,7 @@ Matomo s'exécute sous forme de conteneur PHP/Apache (l'image officielle `matomo
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Matomo exige MySQL/MariaDB ; PostgreSQL n'est pas pris en charge.
 - **L'image officielle précompilée est déployée directement.** `container_image_source = "prebuilt"` signifie qu'il n'y a pas d'étape Cloud Build — l'image `matomo:<application_version>` est mise en miroir dans Artifact Registry (pour éviter les limites de débit de Docker Hub) et déployée telle quelle.
@@ -103,7 +103,7 @@ Redis sert de cache d'objets à Matomo, ce qui réduit la charge de la base de d
 
 Le mot de passe de la base de données est stocké dans Secret Manager et injecté dans le service à l'exécution sous la forme `MATOMO_DATABASE_PASSWORD` ; il n'apparaît jamais en clair dans la configuration. Matomo ne nécessite aucun autre secret applicatif.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -116,7 +116,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de ro
 
 Le service est accessible par défaut via son URL `run.app`. Un équilibreur de charge HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité. L'extrait de suivi que vous intégrez dans vos sites web pointe vers cette URL (ou vers votre domaine personnalisé).
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -129,7 +129,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de Cloud Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -314,12 +314,12 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Matomo ne prend en charge que MySQL/MariaDB ; tout autre moteur fait échouer l'installateur. |
 | `db_name` / `db_user` | défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données d'analyse. |

@@ -10,15 +10,14 @@ description: "Référence de configuration pour déployer EspoCRM sur GKE Autopi
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/EspoCRM_GKE.png" alt="EspoCRM sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 EspoCRM est une plateforme open source de gestion de la relation client (CRM), sous licence GPLv3,
-construite sur PHP et Apache. Ce module déploie EspoCRM sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google Cloud et
+construite sur PHP et Apache. Ce module déploie EspoCRM sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google Cloud et
 Kubernetes.
 
 Ce guide se concentre sur les services cloud qu'utilise EspoCRM et sur la manière de les explorer et de les exploiter
 depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à
 toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous
-au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+au [guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -27,7 +26,7 @@ au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 EspoCRM s'exécute comme une charge de travail web PHP/Apache. Le déploiement assemble un ensemble ciblé de
 services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Apache/PHP, 1 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — EspoCRM ne prend pas en charge PostgreSQL ; accessible via le sidecar Auth Proxy |
@@ -51,11 +50,11 @@ services Google Cloud :
   d'installation/migration au démarrage du pod.
 - **NFS est activé par défaut.** `enable_nfs = true` monte un volume Filestore partagé sur
   `/var/www/html/data`, de sorte que les pièces jointes envoyées et les données d'exécution d'EspoCRM persistent d'un
-  redémarrage de pod à l'autre et sont partagées entre les répliques.
-- **Réplique unique par défaut.** `min_instance_count = 1`, `max_instance_count = 1` — GKE
+  redémarrage de pod à l'autre et sont partagées entre les réplicas.
+- **Réplica unique par défaut.** `min_instance_count = 1`, `max_instance_count = 1` — GKE
   maintient au moins un pod en cours d'exécution (pas de mise à l'échelle à zéro) afin que le CRM soit toujours accessible.
 - **L'affinité de session est `ClientIP` par défaut**, ce qui achemine les requêtes d'un client vers le même
-  pod — utile dès que vous dépassez une réplique.
+  pod — utile dès que vous dépassez un réplica.
 - **`ESPOCRM_SITE_URL` est dérivé de l'URL du service** afin que les liens absolus et les
   vérifications de l'installateur d'EspoCRM utilisent l'hôte accessible plutôt que `localhost`.
 
@@ -72,7 +71,7 @@ sont indiqués dans les [Sorties](#5-outputs) du déploiement.
 
 Les pods EspoCRM sont planifiés sur Autopilot, qui facture le CPU et la mémoire que les pods demandent
 réellement. Le Horizontal Pod Autoscaling dimensionne le déploiement entre le nombre minimal et maximal
-de répliques. Comme l'application s'appuie sur NFS, la fondation utilise la stratégie de mise à jour `Recreate`
+de réplicas. Comme l'application s'appuie sur NFS, le socle utilise la stratégie de mise à jour `Recreate`
 afin que deux pods n'écrivent jamais sur le même volume NFS pendant un déploiement progressif.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail EspoCRM pour voir les pods et
@@ -142,7 +141,7 @@ du serveur NFS est utilisée comme point de terminaison Redis.
 
 Le mot de passe administrateur initial (`ESPOCRM_ADMIN_PASSWORD`) est généré automatiquement et
 stocké dans Secret Manager, puis injecté dans le pod sous forme de variable d'environnement secrète via le pilote Secret
-Store CSI. Le mot de passe de la base de données est géré séparément par la fondation.
+Store CSI. Le mot de passe de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -154,7 +153,7 @@ Store CSI. Le mot de passe de la base de données est géré séparément par la
 Le nom du secret du mot de passe de la base de données figure dans les [Sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour l'intégration du Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load Balancing
 (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google peut être
@@ -204,7 +203,7 @@ moyen rapide de vérifier l'hôte de base de données et l'URL du site.
   Modifiez-le dans l'interface d'EspoCRM (Administration → Users) une fois connecté.
 - **Les fichiers envoyés persistent sur NFS.** Avec `enable_nfs = true` (par défaut), les pièces jointes et
   les données d'exécution d'EspoCRM résident sous le montage Filestore partagé `/var/www/html/data`, survivent aux
-  redémarrages de pod et sont partagées entre les répliques.
+  redémarrages de pod et sont partagées entre les réplicas.
 - **L'URL du site doit correspondre à l'hôte accessible.** EspoCRM construit les liens absolus à partir de
   `ESPOCRM_SITE_URL` ; le point d'entrée la définit à partir de l'URL du service. Une fois que l'IP du LoadBalancer
   ou le domaine personnalisé est connu, assurez-vous que l'URL du site reflète l'hôte externe afin que les liens et
@@ -240,15 +239,15 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | `php_memory_limit` | `512M` | Limite de mémoire PHP ; à augmenter pour les plugins lourds ou les médias volumineux. |
 | `upload_max_filesize` / `post_max_size` | `64M` | Limites de taille des fichiers envoyés / des requêtes POST ; `post_max_size` doit être ≥ `upload_max_filesize`. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par pod ; minimum 1 vCPU pour EspoCRM + MySQL. |
 | `memory_limit` | `2Gi` | Mémoire par pod ; minimum 512Mi (PHP 8.x). |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; GKE en maintient ≥ 1 afin que le CRM soit toujours accessible. |
-| `max_instance_count` | `1` | Nombre maximal de répliques. À augmenter uniquement après confirmation du NFS partagé et de l'affinité `ClientIP`. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE en maintient ≥ 1 afin que le CRM soit toujours accessible. |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. À augmenter uniquement après confirmation du NFS partagé et de l'affinité `ClientIP`. |
 | `container_port` | `80` | Apache écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy (adresse de bouclage `127.0.0.1:3306`). |
 
@@ -308,7 +307,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux de notification. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -321,34 +320,34 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut recommandées {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — quotas de mémoire en unités binaires, conflit avec `StatefulSet`, IAP sans identité autorisée, une valeur `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — quotas de mémoire en unités binaires, conflit avec `StatefulSet`, IAP sans identité autorisée, une valeur `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critique | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critique | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
-| `enable_nfs` | `true` | Critique | Le désactiver stocke les fichiers envoyés sur le disque éphémère du pod — les pièces jointes sont perdues lors d'un redémarrage ou d'une replanification du pod. |
-| `DB_HOST` (remplacé par `127.0.0.1`) | Laisser tel quel | Élevé | EspoCRM se connecte au sidecar Auth Proxy sur l'adresse de bouclage ; le modifier casse la connectivité à la base de données. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE. |
-| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL du LoadBalancer externe / du domaine personnalisé | Élevé | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
-| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
-| `max_instance_count` | `1` sauf si l'affinité et le NFS sont confirmés | Élevé | Un scaling avec un `RollingUpdate` sur une application adossée à NFS peut provoquer un blocage ; la fondation utilise `Recreate` pour les applications NFS. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions multi-répliques rebondissent d'un pod à l'autre. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Moyen | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
-| `application_version` | À figer en production | Moyen | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
+| `database_type` | `MYSQL_8_0` | Critical | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critical | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
+| `enable_nfs` | `true` | Critical | Le désactiver stocke les fichiers envoyés sur le disque éphémère du pod — les pièces jointes sont perdues lors d'un redémarrage ou d'une replanification du pod. |
+| `DB_HOST` (remplacé par `127.0.0.1`) | Laisser tel quel | High | EspoCRM se connecte au sidecar Auth Proxy sur l'adresse de bouclage ; le modifier casse la connectivité à la base de données. |
+| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE. |
+| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL du LoadBalancer externe / du domaine personnalisé | High | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
+| `memory_limit` | `2Gi` | High | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
+| `max_instance_count` | `1` sauf si l'affinité et le NFS sont confirmés | High | Un scaling avec un `RollingUpdate` sur une application adossée à NFS peut provoquer un blocage ; le socle utilise `Recreate` pour les applications NFS. |
+| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions multi-réplicas rebondissent d'un pod à l'autre. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Medium | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
+| `application_version` | À figer en production | Medium | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload Identity,
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et réplication d'images — consultez **[App_GKE](App_GKE.md)**. La configuration
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**. La configuration
 applicative propre à EspoCRM partagée avec la variante Cloud Run est décrite dans
 **[EspoCRM_Common](EspoCRM_Common.md)**.
 

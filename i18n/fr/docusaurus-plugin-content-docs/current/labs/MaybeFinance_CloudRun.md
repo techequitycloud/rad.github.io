@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Maybe Finance sur Cloud Run dans votre pr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Maybe (Maybe Finance) est une alternative open source et auto-hébergée à
 Mint/Monarch pour la finance personnelle et la gestion de patrimoine — budget,
@@ -31,7 +31,7 @@ le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris ses dépendances obligatoires PostgreSQL
@@ -79,7 +79,7 @@ export REGION="us-central1"          # the region you deploy into
    base de données Cloud SQL (PostgreSQL 15), monte le volume NFS Filestore partagé
    sur `/opt/maybefinance/storage` (également la source par défaut de l'hôte
    Redis), crée le secret `SECRET_KEY_BASE` dans Secret Manager, provisionne
-   un bucket de données `storage`, et exécute deux tâches ponctuelles enchaînées — `db-init`
+   un bucket de données `storage`, et exécute deux jobs ponctuels enchaînées — `db-init`
    (crée la base de données, l'utilisateur et les droits, et précrée `pgcrypto`) suivie de
    `maybefinance-migrate` (`rails db:prepare`). Les premiers déploiements prennent environ
    **20 à 35 minutes** (la création de Cloud SQL en représente l'essentiel).
@@ -176,7 +176,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -212,8 +212,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   `RUNNABLE`. Cloud Run l'atteint par défaut via l'**adresse IP privée de l'instance avec
   `sslmode=require`** (`enable_cloudsql_volume=false`, car le pilote
   `pg` de Rails ne sait pas analyser le DSN de socket Cloud SQL) — vérifiez que
-  `PGSSLMODE=require` a été correctement résolu et que la tâche `db-init` s'est terminée.
-- **Échec de la tâche d'initialisation/de migration :** listez les exécutions et lisez les journaux de celle
+  `PGSSLMODE=require` a été correctement résolu et que le job `db-init` s'est terminé.
+- **Échec du job d'initialisation/de migration :** listez les exécutions et lisez les journaux de celle
   qui a échoué, en vérifiant `db-init` avant `maybefinance-migrate` (la seconde
   dépend de la première) :
   ```bash
@@ -237,7 +237,7 @@ sauf PostgreSQL et un hôte Redis fonctionnel).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement
@@ -261,5 +261,5 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | La vérification de santé `/up` réussit ; enregistrer le compte administrateur initial dans l'interface ; confirmer que Sidekiq a démarré |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle (en tenant compte du compromis Sidekiq/mise à l'échelle à zéro), mettre à jour la version, gérer secrets/sauvegardes, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données (mode SSL), de tâche d'initialisation/de migration, de tâches d'arrière-plan, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module ; le NFS/Redis partagé et l'hôte Cloud SQL ne sont pas touchés |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données (mode SSL), de job d'initialisation/de migration, de tâches d'arrière-plan, de build et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module ; le NFS/Redis partagé et l'hôte Cloud SQL ne sont pas touchés |

@@ -67,11 +67,11 @@ partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Grafana nécessite **PostgreSQL 15** ; le moteur est fixe et aucune alternative n'est
 prise en charge. Contrairement à des applications comme Mautic, Grafana ne nécessite
-PAS de tâche d'initialisation de la base de données distincte. Grafana se connecte à
+PAS de job d'initialisation de la base de données distinct. Grafana se connecte à
 l'instance PostgreSQL provisionnée au premier démarrage, puis crée et migre
 automatiquement son schéma.
 
@@ -140,7 +140,7 @@ sans modification sur les variantes GKE et Cloud Run.
 
 ---
 
-## 6. Stockage objet {#6-object-storage}
+## 6. Stockage d'objets {#6-object-storage}
 
 Un bucket **Cloud Storage** dédié `grafana-data` est déclaré ici et provisionné par le
 socle, qui accorde également l'accès au compte de service de la charge de travail. Ce

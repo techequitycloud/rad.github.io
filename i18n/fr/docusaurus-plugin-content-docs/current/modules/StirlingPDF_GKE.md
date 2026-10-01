@@ -34,7 +34,7 @@ assemble un ensemble volontairement restreint de services Google Cloud —
 Stirling-PDF est sans état ; il n'y a donc ni base de données, ni stockage
 persistant, ni secrets à gérer :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Java, 1 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Image de conteneur | Artifact Registry | Image officielle `stirlingtools/stirling-pdf`, dupliquée par défaut |
@@ -42,7 +42,7 @@ persistant, ni secrets à gérer :
 | Redis (inerte) | Redis | Désactivé par défaut. `enable_redis` amène seulement le socle à injecter les variables d'environnement `REDIS_*` — Stirling-PDF ne les lit jamais, cela n'apporte donc ni limitation de débit ni détection de bots |
 | Observabilité | Cloud Logging / Cloud Monitoring | Journaux des pods, métriques, test de disponibilité et alertes facultatifs |
 
-**Valeurs par défaut pertinentes à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Sans état — ni base de données, ni stockage, ni secrets.** `database_type = "NONE"`,
   aucun bucket GCS, pas de NFS, `workload_type = Deployment` et une map de secrets
@@ -50,7 +50,7 @@ persistant, ni secrets à gérer :
   à la requête, supprimé à la fin du traitement.
 - **Image préconstruite.** `container_image_source = "prebuilt"` déploie directement
   l'image officielle `stirlingtools/stirling-pdf` ; `enable_image_mirroring = true`
-  la duplique dans Artifact Registry pour éviter les limites de débit de Docker Hub.
+  la met en miroir dans Artifact Registry pour éviter les limites de débit de Docker Hub.
 - **La connexion est désactivée par défaut.** `enable_login = false`
   (`SECURITY_ENABLELOGIN=false`) livre une instance ouverte. Activez-la et placez la
   charge de travail derrière IAP ou Cloud Armor pour un déploiement privé.
@@ -75,8 +75,8 @@ persistant, ni secrets à gérer :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Stirling-PDF {#a-gke-autopilot--the-stirling-pdf-workload}
 
@@ -99,7 +99,7 @@ du type de charge de travail (Deployment ou StatefulSet).
 
 ### B. Artifact Registry — l'image de conteneur {#b-artifact-registry--the-container-image}
 
-L'image officielle `stirlingtools/stirling-pdf` est dupliquée dans Artifact Registry
+L'image officielle `stirlingtools/stirling-pdf` est mise en miroir dans Artifact Registry
 (`enable_image_mirroring = true`) et le cluster la récupère depuis cet emplacement.
 Aucune étape Cloud Build n'est exécutée — l'image est préconstruite en amont.
 
@@ -226,7 +226,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -249,7 +249,7 @@ comportement et leurs valeurs par défaut standard.
 | `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE exige ≥ 1. |
 | `max_instance_count` | `3` | Nombre maximal de réplicas. Peut être augmenté sans risque — aucun état partagé. |
 | `container_port` | `8080` | Stirling-PDF écoute sur le port 8080. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry. |
 | `timeout_seconds` | `60` | Durée maximale d'une requête ; augmentez-la pour les conversions volumineuses. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -286,7 +286,7 @@ comportement et leurs valeurs par défaut standard.
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles lors des interruptions volontaires. |
-| `enable_resource_quota` | `false` | Applique un ResourceQuota au namespace. |
+| `enable_resource_quota` | `false` | Applique un ResourceQuota à l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Doivent utiliser des unités binaires (`4Gi`) — des entiers nus sont des octets et bloquent la planification. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
@@ -383,22 +383,22 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `service_external_ip` | Adresse IP externe du LoadBalancer (lorsqu'une adresse IP statique est réservée). |
 | `service_url` | URL permettant d'accéder à Stirling-PDF. |
 | `storage_buckets` | Buckets Cloud Storage créés (vide — Stirling-PDF est sans état). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | Statut de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | Statut de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | Statut et détails du CI/CD. |
@@ -410,19 +410,19 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut pertinentes {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un StatefulSet imposé avec un type de charge de travail `Deployment`, des `quota_memory_*` exprimés dans des unités non binaires, un `redis_port`/`timeout_seconds` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | High | La valeur par défaut `enable_login = false` associée à un LoadBalancer externe laisse une boîte à outils PDF ouverte, utilisable par quiconque connaît l'adresse IP. |
 | `enable_iap` | À activer pour les instances traitant des documents sensibles | High | Sans IAP (et avec la connexion désactivée), la charge de travail n'est pas authentifiée ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
 | `container_resources.memory_limit` | `2Gi` | High | En dessous d'environ 2Gi, la JVM et LibreOffice sont arrêtés pour manque de mémoire (OOM) pendant les conversions. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 | `timeout_seconds` | `60`, à augmenter pour les gros fichiers | High | Les traitements volumineux d'OCR/de conversion qui dépassent le délai renvoient une erreur 504 en cours d'opération. |
 | `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette `0`. |
 | Fenêtre de `startup_probe` | Conserver la valeur par défaut d'environ 5 minutes | Medium | La raccourcir marque les pods comme non sains avant que LibreOffice n'ait terminé son préchauffage, ce qui bloque le déploiement progressif. |
@@ -433,7 +433,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC et duplication d'images — consultez **[App_GKE](App_GKE.md)**.
+Authorization, VPC-SC et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à Stirling-PDF, partagée avec la variante Cloud
 Run, est décrite dans **[StirlingPDF_Common](StirlingPDF_Common.md)**.
 

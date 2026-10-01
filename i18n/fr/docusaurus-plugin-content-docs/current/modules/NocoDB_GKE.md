@@ -39,7 +39,7 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Secret JWT généré automatiquement (`NC_AUTH_JWT_SECRET`) et mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est la valeur par défaut.** MySQL 8.0 est également pris en
   charge ; définissez `database_type` avant le premier déploiement.
@@ -57,7 +57,7 @@ ensemble ciblé de services Google Cloud :
   N'effectuez pas sa rotation après le premier déploiement — toutes les sessions et
   tous les jetons d'API existants seraient immédiatement invalidés.
 - **NocoDB gère lui-même ses migrations de base de données au premier démarrage.**
-  Aucune tâche d'initialisation externe n'est requise, bien qu'une tâche `db-init`
+  Aucun job d'initialisation externe n'est requis, bien qu'une tâche `db-init`
   soit tout de même fournie pour créer la base de données et l'utilisateur.
 - **Les sondes de santé ciblent `/api/v1/health`**, le point de terminaison de
   santé dédié exposé par NocoDB.
@@ -94,7 +94,7 @@ l'échelle et du type de charge de travail (Deployment ou StatefulSet).
 
 NocoDB stocke toutes les données applicatives (tables, vues, automatisations,
 données des lignes) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods
-la joignent via une connexion TCP sur IP privée. Au premier déploiement, une tâche
+la joignent via une connexion TCP sur IP privée. Au premier déploiement, un job
 d'initialisation crée la base de données et l'utilisateur de l'application ; NocoDB
 exécute ensuite ses propres migrations de schéma au démarrage.
 
@@ -202,9 +202,9 @@ facultatifs sur `/api/v1/health` et des règles d'alerte sont disponibles.
 
 ## 3. Comportement de l'application NocoDB {#3-nocodb-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`) crée la base de données et l'utilisateur NocoDB
-  avant le démarrage de l'application. Elle est idempotente et peut être réexécutée
+  avant le démarrage de l'application. Il est idempotent et peut être réexécuté
   sans risque.
 - **Migrations autogérées.** NocoDB exécute ses propres migrations de schéma de
   base de données au premier démarrage — il est inutile de configurer des tâches de
@@ -223,7 +223,7 @@ facultatifs sur `/api/v1/health` et des règles d'alerte sont disponibles.
   le socle) aux noms `NC_DB_*` attendus par NocoDB. Lorsque
   `container_image_source = "prebuilt"`, cette correspondance n'est pas appliquée —
   configurez manuellement les variables `NC_DB_*` via `environment_variables`.
-- **Chemin de santé.** Les sondes de disponibilité et d'activité ciblent
+- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent
   `/api/v1/health`, qui renvoie HTTP 200 lorsque NocoDB est prêt à accepter des
   requêtes.
 - **Sessions multi-réplicas.** Avec plus d'un pod et sans Redis, NocoDB ne peut pas
@@ -319,11 +319,11 @@ inutiles pour NocoDB, qui stocke son état dans PostgreSQL et GCS.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` / `startup_probe` | `/api/v1/health` | Sonde HTTP, délai initial de 30 s, 30 échecs tolérés. |
-| `health_check_config` / `liveness_probe` | `/api/v1/health` | Sonde d'activité HTTP. |
+| `health_check_config` / `liveness_probe` | `/api/v1/health` | Sonde de vivacité HTTP. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/api/v1/health`. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -411,7 +411,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 | `admin_ip_ranges` | `[]` | Plages CIDR bénéficiant d'un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -454,12 +454,12 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critical | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
 | `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |

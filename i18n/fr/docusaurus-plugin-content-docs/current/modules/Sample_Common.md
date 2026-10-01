@@ -56,7 +56,7 @@ le modèle partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 L'application Sample nécessite **PostgreSQL 15** ; le moteur est fixé à `POSTGRES_15` et
 MySQL n'est pas pris en charge. Au premier déploiement, une tâche ponctuelle `db-init`

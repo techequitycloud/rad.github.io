@@ -27,7 +27,7 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Identifiants IA | Stocke la clé API Anthropic et le jeton de passerelle dans **Secret Manager** ; secrets Telegram et Slack facultatifs | Injectés à l'exécution — à récupérer dans Secret Manager (voir ci-dessous) |
 | Image de conteneur | Fige `ghcr.io/openclaw/openclaw` comme image de base et construit une image personnalisée en ajoutant `entrypoint.sh` par-dessus | Sortie `container_image` du déploiement sur la plateforme |
-| Aucune base de données | Définit `database_type = null` — Cloud SQL et Redis ne sont jamais provisionnés | Aucune instance Cloud SQL ni tâche d'initialisation n'apparaît dans le déploiement |
+| Aucune base de données | Définit `database_type = null` — Cloud SQL et Redis ne sont jamais provisionnés | Aucune instance Cloud SQL ni job d'initialisation n'apparaît dans le déploiement |
 | Espace de travail GCS | Déclare le bucket `<prefix>-storage` et le volume GCS Fuse `openclaw-data`, toujours monté sur `/data` | Sortie `storage_buckets` ; à vérifier avec `gcloud storage ls` |
 | Paramètres de base | Définit les variables d'environnement de référence (`OPENCLAW_STATE_DIR`, `NODE_ENV`, `NODE_OPTIONS`, `NPM_CONFIG_CACHE`, `SKILLS_REPO_URL`, `SKILLS_REPO_REF`) | Comportement de l'application dans les guides des plateformes |
 | Comportement au démarrage | Pilote `entrypoint.sh` — écrit `openclaw.json` à partir des variables d'environnement, synchronise éventuellement le dépôt de skills, puis démarre la passerelle | §Comportement de l'application dans les guides des plateformes |
@@ -87,7 +87,7 @@ tag de version précis dans `application_version` pour des builds reproductibles
 
 ## 4. Espace de travail GCS — aucune base de données {#4-gcs-workspace--no-database}
 
-OpenClaw ne nécessite ni instance Cloud SQL ni tâche d'initialisation de base de données. Tout l'état
+OpenClaw ne nécessite ni instance Cloud SQL ni job d'initialisation de base de données. Tout l'état
 durable des agents est stocké dans un bucket GCS monté par GCS Fuse :
 
 ```
@@ -108,7 +108,7 @@ gcloud storage ls gs://<prefix>-storage/
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `OpenClaw_Common` établit l'environnement de référence afin que la passerelle démarre correctement :
 

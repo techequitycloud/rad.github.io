@@ -18,7 +18,7 @@ plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Cal.diy, consultez les
 guides des plateformes ([CalDiy_GKE](CalDiy_GKE.md), [CalDiy_CloudRun](CalDiy_CloudRun.md))
-et les guides de fondation ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
+et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
 ---
@@ -59,14 +59,14 @@ Une pause de 30 secondes est insérée après la création des secrets pour évi
 conditions de concurrence lorsque le conteneur lit ces secrets pour la première fois
 au démarrage.
 
-Le mot de passe de la base de données est généré et géré séparément par la fondation ;
+Le mot de passe de la base de données est généré et géré séparément par le socle ;
 le nom de son secret figure dans les sorties du déploiement de la plateforme
 (`database_password_secret`). Consultez [App_Common](App_Common.md) pour le modèle
 partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur et initialisation de la base de données {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Cal.diy nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL n'est pas pris en
 charge. Au premier déploiement, trois jobs ponctuels s'exécutent dans l'ordre :
@@ -143,7 +143,7 @@ codée en dur et n'est pas configurable par l'utilisateur.
 
 Cette couche ne déclare aucun bucket propre — sa sortie `storage_buckets` est vide. Un
 bucket Cloud Storage `data` par défaut provient de la valeur par défaut de
-`storage_buckets` des modules de plateforme et est provisionné par la fondation, qui
+`storage_buckets` des modules de plateforme et est provisionné par le socle, qui
 accorde aussi l'accès au compte de service de la charge de travail. Contrairement aux
 applications qui gèrent des envois de médias, Cal.diy ne nécessite pas de NFS
 partagé — tout l'état des réservations réside dans PostgreSQL. Des buckets

@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud utilisés par MongoDB et sur la man
 
 MongoDB s'exécute sous forme de StatefulSet sur GKE Autopilot. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot (StatefulSet) | 1 vCPU / 2 GiB par défaut, mode nœud unique |
 | Stockage persistant | Persistent Disk (PVC SSD) | StorageClass `standard-rwo`, 20 GiB par défaut, monté sur `/data/db` |
@@ -27,7 +27,7 @@ MongoDB s'exécute sous forme de StatefulSet sur GKE Autopilot. Le déploiement 
 | Images de conteneur | Artifact Registry | Image officielle `mongo` mise en miroir dans le registre du projet |
 | Réseau | VPC / Service GKE | `ClusterIP` par défaut pour un accès interne au cluster ; passez à `LoadBalancer` uniquement si un accès externe au protocole filaire brut est nécessaire |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de Cloud SQL.** MongoDB est son propre moteur de base de données ; Cloud SQL n'est pas provisionné et `enable_cloudsql_volume` est codé en dur à `false`.
 - **Un PVC adossé à un SSD est indispensable.** Sans PVC de StatefulSet, toutes les données sont perdues à chaque redémarrage du pod. `stateful_pvc_enabled = true` sélectionne automatiquement un StatefulSet.
@@ -178,7 +178,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `application_name` | `mongodb` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `MongoDB` | Nom convivial affiché dans la console. |
 | `application_description` | _(défini)_ | Annotation de description de la charge de travail. |
-| `application_version` | `7.0` | Tag de version de l'image MongoDB ; incrémentez-le pour déployer une nouvelle version. Les mises à niveau majeures modifient le format sur disque — testez sur une réplique avant de mettre à niveau la production. |
+| `application_version` | `7.0` | Tag de version de l'image MongoDB ; incrémentez-le pour déployer une nouvelle version. Les mises à niveau majeures modifient le format sur disque — testez sur un réplica avant de mettre à niveau la production. |
 | `mongo_root_username` | `admin` | Nom d'utilisateur root (`MONGO_INITDB_ROOT_USERNAME`). **Immuable après la première écriture du PVC.** |
 | `mongo_initdb_database` | `admin` | Base de données initiale créée au premier démarrage. **Immuable après la première écriture du PVC.** |
 
@@ -204,7 +204,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `secret_propagation_delay` | `30` | Nombre de secondes d'attente après la création du secret du mot de passe root avant le démarrage du pod. |
 | `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -217,7 +217,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `deployment_timeout` | `600` | Nombre de secondes pendant lesquelles Terraform attend le déploiement du StatefulSet (couvre le provisionnement du nœud et l'attachement du PVC). |
 | `enable_network_segmentation` | `false` | Crée des ressources NetworkPolicy Kubernetes pour restreindre le trafic entrant/sortant. |
 
-### Groupe 7 — StatefulSet et PVC {#group-7--statefulset--pvc}
+### Groupe 7 — StatefulSet / PVC {#group-7--statefulset--pvc}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -349,28 +349,28 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critique | Sans PVC, toutes les données MongoDB sont perdues à chaque redémarrage de pod, mise à jour progressive ou éviction de nœud. |
-| `stateful_pvc_mount_path` | `/data/db` (par défaut) | Critique | Doit correspondre au `--dbpath` de MongoDB. Un montage ailleurs fait écrire `mongod` dans la couche éphémère — toutes les données sont perdues au redémarrage. |
-| `MONGO_INITDB_ROOT_PASSWORD` | généré automatiquement (par défaut) | Critique | MongoDB démarre sans authentification si la variable d'environnement est absente. Tout appelant à l'intérieur du cluster obtient un accès administrateur sans restriction. Ne la supprimez ni ne la videz jamais. |
-| `mongo_root_username` / `mongo_initdb_database` | à définir une seule fois | Critique | Intégrés au répertoire de données lors de la première initialisation. Les modifier après la création du PVC provoque un échec du démarrage. |
-| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`4Gi`) | Critique | Les entiers nus sont interprétés comme des octets par Kubernetes, ce qui bloque toute planification de pods. |
-| `stateful_pvc_size` | `20Gi` au minimum, à dimensionner selon la charge | Élevé | Un disque plein fait planter `mongod` avec `No space left on device`. Provisionnez 2 à 3 fois le volume de données attendu. La taille ne peut pas être réduite après la création. |
-| `memory_limit` | `4Gi` en production | Élevé | Le cache WiredTiger représente ~50 % de `(limit − 1 GiB)`. Un cache insuffisant provoque des E/S disque excessives et une forte dégradation des requêtes. |
-| `workload_type` | `null` (StatefulSet automatique avec PVC) | Élevé | Définir explicitement `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan. MongoDB autonome nécessite un StatefulSet pour une association stable du PVC. |
-| `application_version` | tester d'abord les mises à niveau majeures | Élevé | Les mises à niveau de version majeure de MongoDB modifient le format de stockage sur disque. Le retour à une version antérieure n'est pas pris en charge. Testez toujours sur une réplique du PVC de production. |
-| `backup_schedule` | actif et testé | Élevé | MongoDB n'a pas de sauvegarde automatique intégrée en dehors du job `mongodump` de ce module. Une sauvegarde manquée combinée à la suppression du volume persistant lors de la destruction entraîne une perte de données définitive. |
-| `service_type` | `ClusterIP` pour les services de la couche base de données (déjà la valeur par défaut) | Élevé | `LoadBalancer` expose le port 27017 avec une adresse IP publique. Conservez la valeur par défaut `ClusterIP` sauf si un accès externe est explicitement requis, et utilisez des règles de pare-feu ou une NetworkPolicy si vous la changez. |
-| `termination_grace_period_seconds` | `60` (par défaut) | Élevé | Un délai de grâce trop court risque de corrompre le journal à l'arrêt si les écritures en cours n'ont pas été vidées. |
-| `cpu_limit` | `2000m` en production | Moyen | Les pipelines d'agrégation et la construction d'index sont gourmands en CPU. En dessous de `500m`, les requêtes complexes se dégradent fortement. |
-| `replica set` | autonome uniquement | Élevé | Ce module est à nœud unique. Les change streams, les transactions et la réplication de l'oplog nécessitent un replica set — utilisez un déploiement basé sur Helm pour les topologies multinœuds. |
-| `enable_iap` | `false` (par défaut) | Faible | IAP ne s'applique pas aux services de base de données. Utilisez plutôt une NetworkPolicy ou ClusterIP pour le contrôle d'accès. |
+| `stateful_pvc_enabled` | `true` | Critical | Sans PVC, toutes les données MongoDB sont perdues à chaque redémarrage de pod, mise à jour progressive ou éviction de nœud. |
+| `stateful_pvc_mount_path` | `/data/db` (par défaut) | Critical | Doit correspondre au `--dbpath` de MongoDB. Un montage ailleurs fait écrire `mongod` dans la couche éphémère — toutes les données sont perdues au redémarrage. |
+| `MONGO_INITDB_ROOT_PASSWORD` | généré automatiquement (par défaut) | Critical | MongoDB démarre sans authentification si la variable d'environnement est absente. Tout appelant à l'intérieur du cluster obtient un accès administrateur sans restriction. Ne la supprimez ni ne la videz jamais. |
+| `mongo_root_username` / `mongo_initdb_database` | à définir une seule fois | Critical | Intégrés au répertoire de données lors de la première initialisation. Les modifier après la création du PVC provoque un échec du démarrage. |
+| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`4Gi`) | Critical | Les entiers nus sont interprétés comme des octets par Kubernetes, ce qui bloque toute planification de pods. |
+| `stateful_pvc_size` | `20Gi` au minimum, à dimensionner selon la charge | High | Un disque plein fait planter `mongod` avec `No space left on device`. Provisionnez 2 à 3 fois le volume de données attendu. La taille ne peut pas être réduite après la création. |
+| `memory_limit` | `4Gi` en production | High | Le cache WiredTiger représente ~50 % de `(limit − 1 GiB)`. Un cache insuffisant provoque des E/S disque excessives et une forte dégradation des requêtes. |
+| `workload_type` | `null` (StatefulSet automatique avec PVC) | High | Définir explicitement `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan. MongoDB autonome nécessite un StatefulSet pour une association stable du PVC. |
+| `application_version` | tester d'abord les mises à niveau majeures | High | Les mises à niveau de version majeure de MongoDB modifient le format de stockage sur disque. Le retour à une version antérieure n'est pas pris en charge. Testez toujours sur un réplica du PVC de production. |
+| `backup_schedule` | actif et testé | High | MongoDB n'a pas de sauvegarde automatique intégrée en dehors du job `mongodump` de ce module. Une sauvegarde manquée combinée à la suppression du volume persistant lors de la destruction entraîne une perte de données définitive. |
+| `service_type` | `ClusterIP` pour les services de la couche base de données (déjà la valeur par défaut) | High | `LoadBalancer` expose le port 27017 avec une adresse IP publique. Conservez la valeur par défaut `ClusterIP` sauf si un accès externe est explicitement requis, et utilisez des règles de pare-feu ou une NetworkPolicy si vous la changez. |
+| `termination_grace_period_seconds` | `60` (par défaut) | High | Un délai de grâce trop court risque de corrompre le journal à l'arrêt si les écritures en cours n'ont pas été vidées. |
+| `cpu_limit` | `2000m` en production | Medium | Les pipelines d'agrégation et la construction d'index sont gourmands en CPU. En dessous de `500m`, les requêtes complexes se dégradent fortement. |
+| `replica set` | autonome uniquement | High | Ce module est à nœud unique. Les change streams, les transactions et la réplication de l'oplog nécessitent un replica set — utilisez un déploiement basé sur Helm pour les topologies multinœuds. |
+| `enable_iap` | `false` (par défaut) | Low | IAP ne s'applique pas aux services de base de données. Utilisez plutôt une NetworkPolicy ou ClusterIP pour le contrôle d'accès. |
 
 ---
 

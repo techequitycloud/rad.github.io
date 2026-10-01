@@ -35,14 +35,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
-- Vous connecter au cluster GKE, trouver le namespace de la charge de travail et
+- Vous connecter au cluster GKE, trouver l'espace de noms de la charge de travail et
   accéder au service en cours d'exécution.
-- Effectuer les opérations du jour 2 : inspecter le StatefulSet et le PVC, comprendre
-  pourquoi la mise à l'échelle est fixée à une seule réplique, mettre à jour la
+- Effectuer les opérations du jour 2 — inspecter le StatefulSet et le PVC, comprendre
+  pourquoi la mise à l'échelle est fixée à un seul réplica, mettre à jour la
   version et gérer les secrets.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -59,7 +59,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -78,18 +78,18 @@ export REGION="us-central1"           # the region you deploy into
    du déploiement avec les journaux en temps réel.
 
 2. La plateforme construit une image d'encapsulation minimale (`FROM budibase/budibase`)
-   et la copie dans Artifact Registry, puis déploie un **StatefulSet** à une seule
-   réplique dans le cluster GKE Autopilot (`stateful_pvc_enabled = true` résout
+   et la copie dans Artifact Registry, puis déploie un **StatefulSet** à un seul
+   réplica dans le cluster GKE Autopilot (`stateful_pvc_enabled = true` résout
    automatiquement `workload_type` en `StatefulSet`) avec un Persistent Disk en mode
    bloc de 20Gi monté sur `/data`, un bucket de données Cloud Storage, un Service
    LoadBalancer externe et sept secrets d'identifiants internes dans Secret Manager
    (`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`,
    `API_ENCRYPTION_KEY`, `REDIS_PASSWORD`, `COUCH_DB_PASSWORD`). Il n'y a **aucune
-   instance Cloud SQL** ni tâche d'initialisation de base de données — Budibase
+   instance Cloud SQL** ni job d'initialisation de base de données — Budibase
    provisionne lui-même ses CouchDB et MinIO intégrés sur le PVC au premier démarrage.
    Un premier déploiement prend environ **15–25 minutes**.
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide d'un filtre indépendant des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide d'un filtre indépendant des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -131,7 +131,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — StatefulSet, pod, PVC et événements :
 
@@ -149,7 +149,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Ne modifiez pas la mise à l'échelle.** `min_instance_count = max_instance_count = 1`
    est une exigence stricte, et non un point de départ — le pod tout-en-un conserve
-   tout son état sur son unique PVC ; une deuxième réplique ne partagerait donc pas le
+   tout son état sur son unique PVC ; un deuxième réplica ne partagerait donc pas le
    stockage de données (split-brain). Ne touchez pas à ces deux paramètres et ne
    forcez jamais `workload_type = "Deployment"` (cela échoue lors du plan avec
    `stateful_pvc_enabled = true`, car un Deployment ne peut pas définir de PVC par pod).
@@ -159,7 +159,7 @@ export REGION="us-central1"           # the region you deploy into
    d'encapsulation minimale (épinglée via l'ARG de build `BUDIBASE_VERSION`) et remplace
    le pod. Le PVC et ses données survivent à la mise à jour.
 
-5. **Gérez les secrets, le stockage et les tâches** — listez-les, mais ne faites
+5. **Gérez les secrets, le stockage et les jobs** — listez-les, mais ne faites
    jamais tourner l'un des sept secrets générés automatiquement après le premier
    démarrage ; les données du PVC sont chiffrées avec ces valeurs exactes et deviennent
    illisibles si l'une d'elles change :
@@ -179,7 +179,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -236,10 +236,10 @@ démarrage, et la raison pour laquelle `stateful_pvc_enabled` doit rester à `tr
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le StatefulSet Kubernetes
-et le namespace, le PVC en mode bloc et ses données, les secrets Secret Manager, le
+et l'espace de noms, le PVC en mode bloc et ses données, les secrets Secret Manager, le
 bucket GCS et les images Artifact Registry. Les ressources appartenant à
 **Services_GCP** (le VPC, le cluster GKE, le registre partagé) sont gérées séparément
 et ne sont pas supprimées ici.
@@ -250,9 +250,9 @@ et ne sont pas supprimées ici.
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module construit une image d'encapsulation minimale et déploie un StatefulSet à une seule réplique avec un PVC de 20Gi sur `/data`, un bucket GCS, un Service LoadBalancer et sept secrets d'identifiants internes — pas de Cloud SQL |
+| 1 — Déployer | Automatisé | Le module construit une image d'encapsulation minimale et déploie un StatefulSet à un seul réplica avec un PVC de 20Gi sur `/data`, un bucket GCS, un Service LoadBalancer et sept secrets d'identifiants internes — pas de Cloud SQL |
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; HTTP `/` renvoie 200 ; création du compte administrateur initial dans l'interface |
 | 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, maintenir la mise à l'échelle fixée à 1/1, mettre à jour la version, gérer les secrets (ne jamais les faire tourner) |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring, l'utilisation du disque du PVC et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC, de planification et de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et ses données persistées |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris le PVC et ses données persistées |

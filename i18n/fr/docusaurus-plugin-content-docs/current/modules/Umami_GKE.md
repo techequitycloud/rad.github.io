@@ -69,8 +69,8 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 5. **Un job `db-init` s'exécute lors du premier déploiement.** `Umami Common` fournit un Job Kubernetes `db-init` par défaut qui pré-crée la base de données PostgreSQL et l'utilisateur d'Umami. Umami exécute ensuite ses propres migrations Prisma au démarrage.
 6. **Les ressources par défaut sont dimensionnées pour Umami.** Les valeurs par défaut de `cpu_limit` (1 vCPU) et de `memory_limit` (512Mi) reflètent l'empreinte légère d'Umami.
 7. **Les sondes de santé ciblent `/api/heartbeat`.** Il s'agit du point de terminaison de santé dédié d'Umami, et non d'un chemin racine générique.
-8. **Redis n'est pas utilisé.** Umami stocke tout dans PostgreSQL ; le module ne raccorde aucune connexion Redis (la déclaration miroir `enable_redis` n'est pas transmise au module Foundation).
-9. **La mise en miroir des images est activée par défaut.** Umami est distribué via GitHub Container Registry (`ghcr.io`). Le module réplique l'image dans Artifact Registry pour éviter les limites de débit en production.
+8. **Redis n'est pas utilisé.** Umami stocke tout dans PostgreSQL ; le module ne raccorde aucune connexion Redis (la déclaration miroir `enable_redis` n'est pas transmise au module socle).
+9. **La mise en miroir des images est activée par défaut.** Umami est distribué via GitHub Container Registry (`ghcr.io`). Le module met en miroir l'image dans Artifact Registry pour éviter les limites de débit en production.
 
 ---
 
@@ -78,7 +78,7 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | ID du projet GCP. **Obligatoire.** |
 | `region` | `"us-central1"` | Région GCP pour Cloud SQL, GCS et les autres ressources. |
@@ -91,7 +91,7 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 **Valeurs par défaut propres à Umami :**
 
-| Variable | Défaut Umami GKE | Défaut App GKE | Remarques |
+| Variable | Valeur par défaut Umami GKE | Valeur par défaut App GKE | Remarques |
 |---|---|---|---|
 | `application_name` | `"umami"` | `"gkeapp"` | Sert de nom de base à toutes les ressources GCP et Kubernetes. **Ne la modifiez pas après le déploiement.** |
 | `application_display_name` | `"Umami"` | `"App GKE Application"` | Affiché dans l'interface et les tableaux de bord de la plateforme. Peut être modifié librement. |
@@ -107,7 +107,7 @@ La plupart des variables se comportent de la même manière que dans `App_GKE`. 
 
 **Valeurs par défaut et comportement propres à Umami :**
 
-| Variable | Défaut Umami GKE | Défaut App GKE | Remarques |
+| Variable | Valeur par défaut Umami GKE | Valeur par défaut App GKE | Remarques |
 |---|---|---|---|
 | `container_port` | `3000` | `8080` | Port Next.js natif d'Umami. Ne le modifiez pas, sauf si votre Dockerfile personnalisé lie Umami à un autre port. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | Mêmes valeurs par défaut — Umami est léger. Augmentez `memory_limit` à `1Gi` pour des tableaux de bord d'analyse à fort trafic. |
@@ -127,7 +127,7 @@ Les autres variables d'exécution (`enable_image_mirroring`, `container_build_co
 
 Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress) et [App_GKE](./App_GKE.md#d-networking--network-policies).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Active l'authentification Identity-Aware Proxy sur l'équilibreur de charge. |
 | `iap_authorized_users` | `[]` | Utilisateurs individuels ou comptes de service autorisés via IAP. |
@@ -165,7 +165,7 @@ environment_variables = {
 }
 ```
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Variables d'environnement en clair injectées dans le pod à l'exécution. |
 | `secret_environment_variables` | `{}` | Références Secret Manager injectées comme variables d'environnement. |
@@ -176,7 +176,7 @@ environment_variables = {
 
 ## Groupe 6 : Cluster GKE {#group-6-gke-cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster GKE Autopilot cible. Laissez vide pour une détection automatique. |
 | `namespace_name` | `""` | Espace de noms Kubernetes. Généré automatiquement à partir de `application_name` et `tenant_id` s'il est vide. |
@@ -192,7 +192,7 @@ environment_variables = {
 
 ## Groupe 7 : Sauvegarde et maintenance {#group-7-backup--maintenance}
 
-| Variable | Défaut | Remarques |
+| Variable | Valeur par défaut | Remarques |
 |---|---|---|
 | `backup_schedule` | `"0 2 * * *"` | Tous les jours à 02:00 UTC. Ajustez selon votre fenêtre de maintenance préférée. |
 | `backup_retention_days` | `7` | Conservation de 7 jours. Augmentez cette valeur pour les déploiements de production (30 à 90 jours recommandés). |
@@ -227,7 +227,7 @@ Remplacez `initialization_jobs` par une liste non vide pour substituer vos propr
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
-| Variable | Défaut | Remarques |
+| Variable | Valeur par défaut | Remarques |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Activé par défaut. Empêche l'éviction simultanée de tous les pods Umami pendant la maintenance du cluster. |
 | `pdb_min_available` | `"1"` | Au moins un pod Umami doit rester disponible pendant les interruptions volontaires. |
@@ -242,11 +242,11 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 **Point de terminaison de santé d'Umami :** Umami expose `/api/heartbeat` comme point de terminaison de santé dédié. Ce point de terminaison renvoie HTTP 200 lorsqu'Umami est en cours d'exécution et connecté à PostgreSQL. Toutes les configurations de sondes par défaut utilisent ce chemin.
 
-| Variable | Défaut Umami GKE | Remarques |
+| Variable | Valeur par défaut Umami GKE | Remarques |
 |---|---|---|
 | `startup_probe_config` | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=30 }` | Le `failure_threshold` élevé tient compte des migrations Prisma du premier démarrage. |
 | `health_check_config` | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=3 }` | Sonde de vivacité (liveness) — redémarre les pods défaillants. |
-| `uptime_check_config` | `{ enabled=false, path="/api/heartbeat" }` | Contrôle de disponibilité Cloud Monitoring. Désactivé par défaut. |
+| `uptime_check_config` | `{ enabled=false, path="/api/heartbeat" }` | Test de disponibilité Cloud Monitoring. Désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte personnalisées sur les métriques Cloud Monitoring. |
 
 **Remarque sur la sonde de démarrage :** un `failure_threshold = 30` associé à `period_seconds = 10` laisse à Umami jusqu'à 5 minutes (plus le délai initial de 30 secondes) pour terminer son démarrage et exécuter les migrations Prisma sur une base de données neuve. Lors des redémarrages suivants (migrations déjà appliquées), le démarrage est beaucoup plus rapide.
@@ -255,7 +255,7 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 ## Groupe 11 : Automatisation des charges de travail (jobs) {#group-11-workload-automation-jobs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Jobs Kubernetes à exécuter avant le démarrage de l'application Umami. Laissez vide pour que `Umami Common` fournisse le job `db-init` par défaut. |
 | `cron_jobs` | `[]` | Ressources Kubernetes CronJob récurrentes. |
@@ -267,7 +267,7 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#6-cicd--delivery).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cicd_trigger` | `false` | Provisionne un déclencheur Cloud Build GitHub. |
 | `github_repository_url` | `""` | URL HTTPS complète du dépôt GitHub. |
@@ -285,12 +285,12 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#6-cicd--delivery).
 
 Umami n'a pas besoin de NFS. `enable_nfs` vaut `false` par défaut. Toutes les données d'Umami sont stockées dans PostgreSQL.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Provisionne une instance Cloud Filestore (NFS). Non requis pour Umami. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Chemin de montage NFS dans le conteneur. Utilisé uniquement lorsque `enable_nfs = true`. |
 | `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante. Détecté automatiquement s'il est vide. |
-| `nfs_instance_base_name` | `"app-nfs"` | Nom de base d'une VM GCE NFS en ligne. |
+| `nfs_instance_base_name` | `"app-nfs"` | Nom de base d'une VM GCE NFS intégrée (créée par le module). |
 | `nfs_volume_name` | `"nfs-data-volume"` | Nom du volume Kubernetes pour le montage NFS. |
 
 ---
@@ -299,7 +299,7 @@ Umami n'a pas besoin de NFS. `enable_nfs` vaut `false` par défaut. Toutes les d
 
 Umami n'a pas besoin de buckets GCS. `storage_buckets` est par défaut une liste vide.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Détermine si le module provisionne les buckets GCS définis dans `storage_buckets`. |
 | `storage_buckets` | `[]` | Configurations des buckets GCS. Vide par défaut — Umami est sans état. |
@@ -318,7 +318,7 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 **Valeurs par défaut et restrictions propres à Umami :**
 
-| Variable | Défaut Umami GKE | Défaut App GKE | Remarques |
+| Variable | Valeur par défaut Umami GKE | Valeur par défaut App GKE | Remarques |
 |---|---|---|---|
 | `database_type` | `"POSTGRES"` | `"POSTGRES"` | Umami nécessite PostgreSQL. Ne la remplacez pas par MySQL ou NONE. |
 | `application_database_name` | `"umami"` | `"gkeappdb"` | **Ne la modifiez pas après le déploiement** — une modification recrée la base de données et détruit toutes les données d'analyse. |
@@ -327,14 +327,14 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 **Rotation automatique des mots de passe :**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_auto_password_rotation` | `false` | Déploie un job automatisé de rotation du mot de passe de la base de données. |
 | `rotation_propagation_delay_sec` | `90` | Nombre de secondes d'attente après la rotation avant de redémarrer les pods. |
 
 **Extensions PostgreSQL :**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_postgres_extensions` | `false` | Active l'installation d'extensions PostgreSQL après le provisionnement. |
 | `postgres_extensions` | `[]` | Liste des extensions à installer (par exemple, `['uuid-ossp', 'pg_trgm']`). |
@@ -345,7 +345,7 @@ Ces variables se comportent de la même manière que dans `App_GKE`. Voir [App_G
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne une ressource Kubernetes Ingress pour le routage des domaines personnalisés. Activé par défaut. |
 | `application_domains` | `[]` | Noms de domaine personnalisés (par exemple, `["analytics.example.com"]`). |
@@ -359,7 +359,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 ## Groupe 21 : Import de sauvegarde {#group-21-backup-import}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_backup_import` | `false` | Déclenche un job ponctuel d'import de la base de données pendant le déploiement. |
 | `backup_source` | `"gcs"` | Source du fichier de sauvegarde : `"gcs"` ou `"gdrive"`. |
@@ -372,7 +372,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-resource-quotas).
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans l'espace de noms de l'application. |
 | `quota_cpu_requests` | `""` | Total des requêtes de CPU autorisées dans l'espace de noms. |
@@ -386,11 +386,11 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-resource-quotas).
 
 ## Cache Redis {#redis-cache}
 
-Umami n'utilise pas Redis — il stocke toutes les données d'analyse directement dans PostgreSQL, sans couche de cache. La variable `enable_redis` n'est déclarée dans `Umami_GKE` que pour satisfaire la mise en miroir des variables du module Foundation ; elle **n'est pas transmise** à l'appel `App_GKE`, si bien que la modifier n'a aucun effet.
+Umami n'utilise pas Redis — il stocke toutes les données d'analyse directement dans PostgreSQL, sans couche de cache. La variable `enable_redis` n'est déclarée dans `Umami_GKE` que pour satisfaire la mise en miroir des variables du module socle ; elle **n'est pas transmise** à l'appel `App_GKE`, si bien que la modifier n'a aucun effet.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Déclaration inerte (mise en miroir du module Foundation uniquement) — non transmise à `App_GKE`, si bien qu'aucune variable d'environnement Redis n'est injectée, quelle que soit sa valeur. |
+| `enable_redis` | `true` | Déclaration inerte (mise en miroir du module socle uniquement) — non transmise à `App_GKE`, si bien qu'aucune variable d'environnement Redis n'est injectée, quelle que soit sa valeur. |
 
 Si vous avez besoin de Redis pour une intégration personnalisée ou un service adjacent, utilisez `additional_services` pour déployer un sidecar Redis, ou configurez Memorystore indépendamment.
 
@@ -398,7 +398,7 @@ Si vous avez besoin de Redis pour une intégration personnalisée ou un service 
 
 ## Groupe 22 : VPC Service Controls {#group-22-vpc-service-controls}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique des périmètres VPC Service Controls autour des API GCP. |
 | `vpc_cidr_ranges` | `[]` | Plages CIDR des sous-réseaux VPC pour le niveau d'accès réseau VPC-SC. |
@@ -442,7 +442,7 @@ Accédez à **Security → Secret Manager**. Repérez le secret `secret-<tenant_
 Accédez à **Artifact Registry**. Repérez le dépôt de ce déploiement. Consultez les images Umami répliquées depuis GitHub Container Registry, leurs tags et la règle de conservation.
 
 **Cloud Monitoring :**
-Si `uptime_check_config.enabled = true` a été défini, accédez à **Monitoring → Uptime checks** pour consulter les résultats du contrôle de disponibilité `/api/heartbeat` dans les différentes régions GCP. Accédez à **Monitoring → Dashboards** pour trouver le tableau de bord GKE provisionné automatiquement, avec les métriques de CPU, de mémoire et de requêtes.
+Si `uptime_check_config.enabled = true` a été défini, accédez à **Monitoring → Uptime checks** pour consulter les résultats du test de disponibilité `/api/heartbeat` dans les différentes régions GCP. Accédez à **Monitoring → Dashboards** pour trouver le tableau de bord GKE provisionné automatiquement, avec les métriques de CPU, de mémoire et de requêtes.
 
 ---
 
@@ -544,7 +544,7 @@ gcloud monitoring uptime list-configs \
 | `container_image` | Image de conteneur utilisée pour le déploiement. |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé. |
 | `github_repository_url` | URL du dépôt GitHub connecté pour la CI/CD. |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est joignable et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster en ligne — relancez l'apply pour terminer le déploiement. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est joignable et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré (créé par le module) — relancez l'apply pour terminer le déploiement. |
 
 ---
 

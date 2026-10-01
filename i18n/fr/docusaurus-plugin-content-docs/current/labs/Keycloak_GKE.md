@@ -24,10 +24,10 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Accéder à la console d'administration de Keycloak avec l'identifiant d'amorçage stocké dans Secret Manager et vérifier le service.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et la base de données.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et la base de données.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -44,7 +44,7 @@ Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -73,7 +73,7 @@ export REGION="us-central1"           # the region you deploy into
    contournement lié au socket. Un premier déploiement prend environ
    **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
-3. Connectez-vous au cluster et repérez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -130,7 +130,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail** — le Deployment, les pods et les événements :
 
@@ -143,7 +143,7 @@ export REGION="us-central1"           # the region you deploy into
    cliquant sur **Update** sur la page de détails du déploiement — le module gère la
    spécification de la charge de travail ; la mise à l'échelle est donc une
    modification de configuration, et non une modification manuelle via `kubectl scale`
-   (une modification manuelle serait annulée lors de l'application suivante). Notez
+   (une modification manuelle serait annulée lors du prochain apply). Notez
    que le `main.tf` de `Keycloak_GKE` code en dur les bornes effectives de réplicas à
    `min_instance_count = 1` / `max_instance_count = 5` pour cette charge de travail,
    quelles que soient les valeurs que vous définissez pour les deux paramètres de
@@ -160,7 +160,7 @@ export REGION="us-central1"           # the region you deploy into
    construite et une mise à jour progressive remplace les pods. **Ne revenez jamais à
    une version antérieure** — les migrations de schéma de Keycloak sont à sens unique.
 
-4. **Gérez les secrets et les tâches :**
+4. **Gérez les secrets et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -190,7 +190,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=100
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez
@@ -225,7 +225,7 @@ d'une version de Keycloak à l'autre.
   `enable_cloudsql_volume` doit rester à `true` — il provisionne le sidecar Cloud SQL
   Auth Proxy qui fournit au pilote JDBC un véritable port d'écoute TCP en boucle
   locale ; sans lui, il n'existe aucun chemin vers la base de données.
-- **Échec de la tâche d'initialisation :** inspectez la tâche et les journaux de son pod :
+- **Échec du job d'initialisation :** inspectez le job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/<db-init-job-name>
@@ -255,10 +255,10 @@ qui peuvent tous rendre silencieusement sans effet la modification d'un paramèt
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — la charge de travail Kubernetes
-et son namespace, la base de données Cloud SQL, les secrets Secret Manager
+et son espace de noms, la base de données Cloud SQL, les secrets Secret Manager
 (administrateur d'amorçage + mot de passe de la base de données) et les images Artifact
 Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le
 Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées ici.
@@ -273,5 +273,5 @@ Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas suppr
 | 2 — Accéder et vérifier | Manuel | Connexion au cluster ; la découverte OIDC renvoie 200 ; connexion avec l'administrateur d'amorçage ; création d'un administrateur permanent |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle (en tenant compte des bornes de réplicas 1/5 codées en dur), mettre à jour la version, gérer les secrets, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de tâche d'initialisation, de planification, de récupération d'image et de nom d'hôte |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de planification, de récupération d'image et de nom d'hôte |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

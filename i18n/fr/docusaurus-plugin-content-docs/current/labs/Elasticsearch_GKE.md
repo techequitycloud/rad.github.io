@@ -27,11 +27,11 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
-- Effectuer les opérations du jour 2 (day-2) — inspecter, mettre à l'échelle, mettre à jour, et gérer le StatefulSet et le PVC.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer le StatefulSet et le PVC.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -74,7 +74,7 @@ export REGION="us-central1"           # the region you deploy into
    s'initialise lui-même au premier démarrage. Les premiers déploiements prennent généralement **10–20 minutes** (GKE
    Autopilot doit provisionner un nœud et attacher le PVC avant que le conteneur ne démarre).
 
-3. Connectez-vous au cluster et découvrez le namespace à l'aide de filtres indépendants des noms :
+3. Connectez-vous au cluster et découvrez l'espace de noms à l'aide de filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -139,7 +139,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module est propriétaire de la spécification de la charge de travail : la mise à l'échelle est donc une modification de configuration, et non un
-   `kubectl scale` manuel (une modification manuelle serait annulée lors de l'application suivante). Notez
+   `kubectl scale` manuel (une modification manuelle serait annulée lors du prochain apply). Notez
    qu'Elasticsearch est déployé en mode nœud unique ; consultez le Guide de configuration avant
    d'augmenter le nombre de réplicas.
 
@@ -167,7 +167,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" \
@@ -226,7 +226,7 @@ propres à chaque paramètre.
 ## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie simplement le déploiement). Cela supprime tout ce que le module a créé — le StatefulSet Kubernetes et
-son namespace, le PersistentVolumeClaim et son disque sous-jacent (toutes les données indexées sont
+son espace de noms, le PersistentVolumeClaim et son disque sous-jacent (toutes les données indexées sont
 définitivement supprimées), les secrets Secret Manager et l'image copiée dans Artifact Registry.
 Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre partagé) sont gérées
 séparément et ne sont pas supprimées ici.

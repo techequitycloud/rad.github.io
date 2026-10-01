@@ -24,11 +24,11 @@ ActualBudget s'exécute sous forme d'un unique conteneur Node.js sur Cloud Run v
 | Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 1 GiB par défaut, instance unique (`min = max = 1`) |
 | Base de données | Aucune | ActualBudget conserve les données de budget dans des fichiers SQLite — `database_type = "NONE"`, pas de Cloud SQL |
 | Données persistantes | Cloud Storage (GCS FUSE) | Un bucket `storage` dédié monté sur `/data` contient les fichiers de budget SQLite et les fichiers utilisateur |
-| Image de conteneur | Artifact Registry + Cloud Build | Build léger encapsulant `actualbudget/actual-server`, dupliqué dans votre registre |
+| Image de conteneur | Artifact Registry + Cloud Build | Build léger encapsulant `actualbudget/actual-server`, mis en miroir dans votre registre |
 | Secrets | Secret Manager | Un jeton d'API (`enable_api_key`), **activé par défaut** et requis dès que `ingress_settings = "all"` |
 | Entrée | URL Cloud Run / Cloud Load Balancing | **Vaut `all` par défaut** (public) — nécessaire pour atteindre directement l'interface web ; passez à `internal` pour un accès limité au VPC |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données externe.** ActualBudget conserve tout sous forme de fichiers SQLite sous `/data` ; il n'y a ni instance Cloud SQL, ni tâche `db-init`, ni Redis (`enable_redis = false`), ni sidecar Cloud SQL Auth Proxy.
 - **Un bucket GCS `storage` est provisionné automatiquement** par `ActualBudget_Common` et monté sur `/data` via GCS FUSE (`enable_gcs_storage_volume = true`). `ACTUAL_SERVER_FILES = /data/server-files` et `ACTUAL_USER_FILES = /data/user-files` font pointer les deux arborescences de persistance vers ce montage, afin que rien n'aboutisse sur le disque éphémère du conteneur.
@@ -125,7 +125,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de C
 
 ## 3. Comportement de l'application ActualBudget {#3-actualbudget-application-behaviour}
 
-- **Aucune tâche d'initialisation.** Il n'y a pas de base de données à amorcer ; le serveur crée ses fichiers SQLite sous `/data` au premier démarrage. Des `initialization_jobs` personnalisées sont acceptées pour des tâches de chargement ou de migration de données, mais aucune n'est fournie par défaut.
+- **Aucun job d'initialisation.** Il n'y a pas de base de données à amorcer ; le serveur crée ses fichiers SQLite sous `/data` au premier démarrage. Des `initialization_jobs` personnalisées sont acceptées pour des tâches de chargement ou de migration de données, mais aucune n'est fournie par défaut.
 - **Configuration de première exécution.** Au premier accès, l'interface web affiche un écran d'accueil sur lequel vous définissez le **mot de passe du serveur** — il n'y a aucun identifiant prédéfini à récupérer. Faites-le immédiatement après le déploiement ; le service est accessible publiquement par défaut (`ingress_settings = "all"`) et, tant qu'aucun mot de passe n'est défini, quiconque atteint l'URL peut s'approprier le serveur.
 - **Organisation des données.** `ACTUAL_SERVER_FILES = /data/server-files` (métadonnées du serveur et base de données des comptes) et `ACTUAL_USER_FILES = /data/user-files` (données de synchronisation par budget). Les deux résident sur le montage GCS FUSE ; les données de budget survivent donc aux redémarrages et aux redéploiements.
 - **Modèle de synchronisation local-first.** Les clients (web, bureau, mobile) conservent une copie locale complète du budget et n'utilisent le serveur que pour synchroniser les modifications chiffrées entre appareils — une brève indisponibilité du serveur n'empêche pas de travailler dans un client.
@@ -159,7 +159,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -227,7 +227,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées de ce groupe sont transmises par souci de compatibilité, mais ne sont pas utilisées.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -244,7 +244,7 @@ Toutes les autres entrées de ce groupe sont transmises par souci de compatibili
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 23 — VPC Service Controls et journaux d'audit {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 `enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_run`, `organization_id`, `enable_audit_logging` — comportement standard d'App_CloudRun ; consultez [App_CloudRun](App_CloudRun.md).
 
@@ -264,7 +264,7 @@ Renvoyées après un déploiement réussi — le moyen le plus rapide de localis
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de stockage `/data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -275,14 +275,14 @@ Renvoyées après un déploiement réussi — le moyen le plus rapide de localis
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 Le module intègre une validation au moment du plan pour les erreurs de configuration les plus dommageables (par exemple `min_instance_count <= max_instance_count`), mais plusieurs paramètres méritent une attention particulière :
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | Plusieurs instances écrivent les mêmes fichiers SQLite sur un seul volume partagé — risque de corruption/de conflit. |
 | Mot de passe du serveur à la première exécution | à définir immédiatement | Critical | Tant qu'aucun mot de passe n'est défini, quiconque atteint l'URL peut s'approprier le serveur et ses données de budget. |
@@ -298,7 +298,7 @@ Le module intègre une validation au moment du plan pour les erreurs de configur
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à ActualBudget partagée avec la variante GKE est décrite dans **[ActualBudget_Common](ActualBudget_Common.md)**.
+Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à ActualBudget partagée avec la variante GKE est décrite dans **[ActualBudget_Common](ActualBudget_Common.md)**.
 
 <!-- related-guides -->
 

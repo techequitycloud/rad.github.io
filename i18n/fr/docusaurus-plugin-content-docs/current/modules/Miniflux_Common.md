@@ -35,9 +35,9 @@ l'application.
 | Domaine | Fourni par Miniflux_Common | Où cela apparaît |
 |---|---|---|
 | Identifiant administrateur | Génère le mot de passe du propriétaire initial `ADMIN_PASSWORD` (24 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Construit une fine surcouche `FROM miniflux/miniflux` avec un point d'entrée cloud ; dupliquée/construite via Cloud Build | Output `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle, les droits et l'extension `hstore` | Output `initialization_jobs` |
+| Image de conteneur | Construit une fine surcouche `FROM miniflux/miniflux` avec un point d'entrée cloud ; dupliquée/construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle, les droits et l'extension `hstore` | Sortie `initialization_jobs` |
 | Stockage objet | Aucun — Miniflux conserve chaque octet de son état dans PostgreSQL (l'output `storage_buckets` est vide) | s.o. |
 | Paramètres de base | Définit l'environnement Miniflux de référence : migrations de schéma au démarrage, création de l'administrateur, adresse d'écoute, URL de base | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité par défaut ciblant `/healthcheck` | §Observabilité dans les guides des plateformes |
@@ -75,7 +75,7 @@ partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Miniflux requiert **PostgreSQL** (fixé à `POSTGRES_15`) ; MySQL et les autres moteurs
 ne sont pas pris en charge. Au premier déploiement, un job ponctuel (`db-init`)
@@ -151,7 +151,7 @@ Miniflux valide et maintenu.
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Miniflux_Common` établit l'environnement Miniflux de référence afin que l'application
 démarre correctement dès le premier lancement :
@@ -190,7 +190,7 @@ aussi bien sur Cloud Run (sonde frontale) que sur GKE (sonde kubelet).
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 **Aucun.** Miniflux conserve chaque octet de son état — flux, entrées, utilisateurs,
 sessions et métadonnées des pièces jointes — dans PostgreSQL, de sorte que

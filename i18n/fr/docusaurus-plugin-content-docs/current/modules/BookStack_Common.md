@@ -28,10 +28,10 @@ les guides des plateformes ([BookStack_GKE](BookStack_GKE.md),
 | Domaine | Fourni par BookStack_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère l'`APP_KEY` Laravel (`base64:<44-char base64>`) et le stocke dans **Secret Manager** | Injecté automatiquement comme variable d'environnement secrète `APP_KEY` |
-| Image de conteneur | Fixe l'image précompilée **`linuxserver/bookstack`** (pas de build personnalisé) | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Fixe l'image précompilée **`linuxserver/bookstack`** (pas de build personnalisé) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Output `initialization_jobs` |
-| Stockage objet | Déclare le bucket **Cloud Storage** `bookstack-uploads` | Output `storage_buckets` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le bucket **Cloud Storage** `bookstack-uploads` | Sortie `storage_buckets` |
 | Fichiers persistants | Déclare le montage **NFS** sur `/var/lib/bookstack` pour les images et pièces jointes téléversées | §Stockage dans les guides des plateformes |
 | Paramètres principaux | Définit `DB_CONNECTION = mysql`, `DB_PORT = 3306`, `APP_URL` et les noms de variables d'environnement de base de données natifs de Laravel | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes par défaut de démarrage (TCP) / de vivacité (HTTP `/status`) | §Observabilité dans les guides des plateformes |
@@ -112,7 +112,7 @@ BookStack est déployé à partir de l'image précompilée officielle de
 **LinuxServer.io**, `linuxserver/bookstack:<version>` — il n'y a **pas de Cloud Build
 personnalisé**. Les modules applicatifs transmettent
 `container_image_source = "prebuilt"` (et `container_build_config.enabled = false`),
-si bien que la plateforme duplique l'image dans Artifact Registry
+si bien que la plateforme met en miroir l'image dans Artifact Registry
 (`enable_image_mirroring = true`) et la déploie directement.
 
 Comme BookStack est une application Laravel, il lit les variables d'environnement de

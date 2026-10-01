@@ -51,7 +51,7 @@ L'objet de configuration de l'application transmis au module de plateforme via `
 | `application_version` | Tag de version (par défaut : `"postgresql-latest"`) |
 | `container_image` | `"ghcr.io/umami-software/umami"` (image source de GitHub Container Registry) |
 | `image_source` | `"custom"` — une image wrapper est construite via Cloud Build pour faire correspondre les variables DB_* à `DATABASE_URL` |
-| `enable_image_mirroring` | `true` (codé en dur) — réplique l'image de GitHub Container Registry vers Artifact Registry |
+| `enable_image_mirroring` | `true` (codé en dur) — met en miroir l'image de GitHub Container Registry vers Artifact Registry |
 | `container_build_config` | `dockerfile_path = "Dockerfile"`, `context_path = "."`, `build_args = { UMAMI_VERSION = <version> }` |
 | `container_port` | `3000` |
 | `database_type` | `"POSTGRES_15"` — Umami nécessite PostgreSQL |
@@ -76,7 +76,7 @@ Map associant les noms de variables d'environnement aux ID de secrets Secret Man
 }
 ```
 
-Cette map est transmise directement comme `module_secret_env_vars` au module Foundation et injectée dans le conteneur à l'exécution sous le nom `APP_SECRET`.
+Cette map est transmise directement comme `module_secret_env_vars` au module socle et injectée dans le conteneur à l'exécution sous le nom `APP_SECRET`.
 
 ### `storage_buckets` {#storage_buckets}
 Renvoie une liste vide `[]`. Umami est un service d'analyse sans état — toutes les données résident dans PostgreSQL. Aucun bucket de stockage applicatif dédié n'est provisionné.
@@ -100,7 +100,7 @@ Le secret est créé avec `replication { auto {} }` (réplication multirégional
 
 ### Application {#application}
 
-| Variable | Type | Défaut | Description |
+| Variable | Type | Valeur par défaut | Description |
 |---|---|---|---|
 | `project_id` | `string` | — | ID du projet GCP. **Obligatoire.** |
 | `application_name` | `string` | `"umami"` | Nom de l'application. Sert de nom de base pour les ressources. |
@@ -122,7 +122,7 @@ Le secret est créé avec `replication { auto {} }` (réplication multirégional
 
 ### Stockage et volumes {#storage--volumes}
 
-| Variable | Type | Défaut | Description |
+| Variable | Type | Valeur par défaut | Description |
 |---|---|---|---|
 | `enable_cloudsql_volume` | `bool` | `true` | Monte le socket Unix de l'instance Cloud SQL (intégration native sur Cloud Run ; sidecar `cloud-sql-proxy` sur GKE). |
 | `region` | `string` | `"us-central1"` | Région GCP (utilisée comme emplacement du bucket si un stockage était provisionné). |
@@ -227,8 +227,8 @@ C'est pourquoi `container_image_source = "custom"` est la valeur par défaut rec
 | `max_instance_count` | `3` (valeur par défaut Cloud Run) | `10` (valeur par défaut HPA de GKE) |
 | `DB_HOST` | Chemin du socket Cloud SQL natif de Cloud Run (`/cloudsql/...`, sans sidecar Auth Proxy) | IP privée Cloud SQL ou socket du sidecar `cloud-sql-proxy` |
 | Enregistrement des sondes de santé | Configuration des sondes startup/liveness de Cloud Run | Spécification des sondes Kubernetes via `App GKE` |
-| Contrôles de disponibilité | Désactivés par défaut (`uptime_check_config.enabled = false`) | Désactivés par défaut (`uptime_check_config.enabled = false`) |
-| Redis | Non utilisé (`enable_redis = false`) | Non utilisé (la déclaration miroir `enable_redis` vaut `true` par défaut mais n'est pas transmise au module Foundation) |
+| Tests de disponibilité | Désactivés par défaut (`uptime_check_config.enabled = false`) | Désactivés par défaut (`uptime_check_config.enabled = false`) |
+| Redis | Non utilisé (`enable_redis = false`) | Non utilisé (la déclaration miroir `enable_redis` vaut `true` par défaut mais n'est pas transmise au module socle) |
 | Buckets de stockage | Aucun (liste vide renvoyée) | Aucun (liste vide renvoyée) |
 
 ---

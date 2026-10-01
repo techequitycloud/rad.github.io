@@ -41,7 +41,7 @@ d'aucun cache ni d'aucun stockage d'objets :
 | Secrets | Secret Manager | Aucun secret généré automatiquement ; uniquement les `secret_environment_variables` fournies par l'utilisateur |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est provisionnée.** `database_type = "NONE"` — ntfy conserve son cache
   de messages dans un fichier SQLite local. Les variables liées à la base de données existent par
@@ -228,7 +228,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `container_protocol` | `http1` | Définissez `h2c` pour un streaming HTTP/2 de bout en bout. |
 | `cpu_always_allocated` | `true` | Requis pour la distribution des flux en temps réel ; passez à `false` uniquement pour réduire les coûts d'une instance peu sollicitée. |
 | `enable_cloudsql_volume` | `false` | Désactivé — ntfy n'a pas de base de données. |
-| `enable_image_mirroring` | `true` | Duplique l'image ntfy dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image ntfy dans Artifact Registry. |
 
 ### Groupe 5 — Accès et réseau {#group-5--access--networking}
 
@@ -259,12 +259,12 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `database_type` | `NONE` | ntfy n'a pas de base de données externe ; conservez `NONE`. |
 | `application_database_name` / `application_database_user` | `ntfy` | Inertes, sauf si une base de données externe est délibérément activée. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | ntfy n'a besoin d'aucune tâche d'initialisation ; laissez vide. |
-| `cron_jobs` | `[]` | Tâches Cloud Run planifiées facultatives. |
+| `initialization_jobs` | `[]` | ntfy n'a besoin d'aucun job d'initialisation ; laissez vide. |
+| `cron_jobs` | `[]` | Jobs Cloud Run planifiés facultatifs. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -312,31 +312,31 @@ ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait transiter sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, environnement d'exécution `gen1` avec montages NFS/GCS, `container_port`/`timeout_seconds` hors plage, valeur de mémoire inférieure au plancher gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` (pour un historique durable) | `true` lorsque l'historique compte | Élevé | Avec le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage/redéploiement — acceptable pour un simple relais, surprenant si vous attendiez de la persistance. |
-| `max_instance_count` | `1` | Élevé | Monter au-delà de 1 répartit les abonnés entre plusieurs instances sans bus partagé : un message publié sur une instance n'est pas distribué aux abonnés rattachés à une autre. |
-| `cpu_always_allocated` | `true` | Élevé | La valeur `false` permet à Cloud Run de brider la CPU entre les requêtes, ce qui suspend la distribution WebSocket/SSE en temps réel lorsque l'instance est inactive. |
-| `ingress_settings` | `all` | Élevé | `internal` empêche les éditeurs et abonnés externes d'atteindre le service. |
-| `enable_iap` | uniquement si un accès authentifié est voulu | Élevé | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés — ce qui n'est généralement pas souhaitable pour un point de terminaison de notification. |
-| `NTFY_BASE_URL` | URL réelle du service | Moyen | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
-| Contrôle d'accès ntfy | À configurer après le déploiement | Moyen | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une URL publique et s'y abonner. |
-| `container_protocol` | `http1` (ou `h2c`) | Moyen | Une incompatibilité avec des clients exigeant le streaming HTTP/2 dégrade ou rompt les flux de longue durée. |
-| `memory_limit` | `512Mi` | Faible | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'application. |
-| `application_version` | Épingler `v2.x.y` en production | Faible | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `enable_nfs` (pour un historique durable) | `true` lorsque l'historique compte | High | Avec le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage/redéploiement — acceptable pour un simple relais, surprenant si vous attendiez de la persistance. |
+| `max_instance_count` | `1` | High | Monter au-delà de 1 répartit les abonnés entre plusieurs instances sans bus partagé : un message publié sur une instance n'est pas distribué aux abonnés rattachés à une autre. |
+| `cpu_always_allocated` | `true` | High | La valeur `false` permet à Cloud Run de brider la CPU entre les requêtes, ce qui suspend la distribution WebSocket/SSE en temps réel lorsque l'instance est inactive. |
+| `ingress_settings` | `all` | High | `internal` empêche les éditeurs et abonnés externes d'atteindre le service. |
+| `enable_iap` | uniquement si un accès authentifié est voulu | High | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés — ce qui n'est généralement pas souhaitable pour un point de terminaison de notification. |
+| `NTFY_BASE_URL` | URL réelle du service | Medium | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
+| Contrôle d'accès ntfy | À configurer après le déploiement | Medium | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une URL publique et s'y abonner. |
+| `container_protocol` | `http1` (ou `h2c`) | Medium | Une incompatibilité avec des clients exigeant le streaming HTTP/2 dégrade ou rompt les flux de longue durée. |
+| `memory_limit` | `512Mi` | Low | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'application. |
+| `application_version` | Épingler `v2.x.y` en production | Low | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service, mise à l'échelle et
 concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à ntfy partagée
 avec la variante GKE est décrite dans **[Ntfy_Common](Ntfy_Common.md)**.
 

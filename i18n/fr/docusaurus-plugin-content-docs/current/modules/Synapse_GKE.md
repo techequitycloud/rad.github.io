@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer Synapse sur GKE Autopi
 Synapse est le homeserver de référence de [Matrix](https://matrix.org/) — le serveur
 Python open source, sous licence Apache 2.0, du protocole Matrix, un standard ouvert de
 communication en temps réel décentralisée et fédérée (messagerie sécurisée et VoIP). Ce
-module déploie Synapse sur **GKE Autopilot** au-dessus de la fondation
+module déploie Synapse sur **GKE Autopilot** au-dessus du socle
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée. Les utilisateurs se connectent au homeserver avec un client Matrix
 tel que l'application web [Element](https://element.io/).
@@ -22,7 +22,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,9 +31,9 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 Synapse s'exécute comme une charge de travail web Python. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods Python, 2 vCPU / 4 GiB par défaut, au moins 1 réplique |
+| Calcul | GKE Autopilot | Pods Python, 2 vCPU / 4 GiB par défaut, au moins 1 réplica |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Synapse ne prend pas en charge MySQL ; la base de données **doit** utiliser la collation `C` |
 | Stockage d'objets | Cloud Storage | Un bucket de données dédié provisionné automatiquement |
 | Fichiers persistants | NFS (Filestore) | Clé de signature + dépôt de médias sous le répertoire de données ; activé par défaut |
@@ -67,7 +67,7 @@ ensemble ciblé de services Google Cloud :
   conteneur et les sondes Kubernetes de démarrage/liveness/readiness doivent tous cibler
   `8008`, sinon le pod ne devient jamais Ready alors même que le homeserver est en bonne
   santé.
-- **Au moins 1 réplique est maintenue.** GKE ne descend pas à zéro, ce qui convient à un
+- **Au moins 1 réplica est maintenu.** GKE ne descend pas à zéro, ce qui convient à un
   homeserver fédéré qui doit rester joignable. Un PodDisruptionBudget le maintient
   disponible pendant les mises à niveau des nœuds.
 - **L'affinité de session est `ClientIP` par défaut.** Elle maintient les requêtes d'un
@@ -93,7 +93,7 @@ identifiants sont indiqués dans les [Sorties](#5-outputs) du déploiement.
 
 Les pods Synapse sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. L'Horizontal Pod Autoscaling dimensionne le déploiement
-entre le nombre minimal et le nombre maximal de répliques.
+entre le nombre minimal et le nombre maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail Synapse
   pour voir les pods, les révisions et les événements. Kubernetes Engine → Services &
@@ -155,7 +155,7 @@ Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
 Un **secret partagé d'enregistrement** est généré automatiquement et stocké dans Secret
 Manager ; il sert à `register_new_matrix_user` pour la création de comptes hors bande. Le
-mot de passe de la base de données est géré séparément par la fondation. Les secrets sont
+mot de passe de la base de données est géré séparément par le socle. Les secrets sont
 matérialisés dans l'espace de noms via le pilote Secret Store CSI.
 
 - **Console :** Security → Secret Manager.
@@ -167,7 +167,7 @@ matérialisés dans l'espace de noms via le pilote Secret Store CSI.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe. Le
 trafic client et de fédération Matrix exige une accessibilité publique. Un domaine
@@ -259,14 +259,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
@@ -274,7 +274,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `synapse` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Synapse Helpdesk` | Nom lisible. |
@@ -282,20 +282,20 @@ leurs valeurs par défaut standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_port` | `8008` | Écouteur client + fédération de Synapse. Les sondes doivent correspondre. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; conservez 1 pour que le homeserver soit toujours joignable par la fédération. |
-| `max_instance_count` | `5` | Nombre maximal de répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; conservez 1 pour que le homeserver soit toujours joignable par la fédération. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions. |
 | `container_image_source` | `custom` | Build personnalisé léger `FROM matrixdotorg/synapse`. |
-| `enable_image_mirroring` | `true` | Réplique l'image de base Synapse dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image de base Synapse dans Artifact Registry. |
 | `enable_vertical_pod_autoscaling` | `false` | VPA pour l'ajustement automatique des requêtes de ressources. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Les valeurs `SYNAPSE_*` principales sont définies automatiquement. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. |
@@ -304,7 +304,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP externe pour le trafic client + fédération Matrix. |
 | `workload_type` | `null` (auto) | `Deployment` ou `StatefulSet` ; s'il n'est pas défini, se résout en `Deployment` sauf si `stateful_pvc_enabled = true` (alors `StatefulSet`). |
@@ -315,7 +315,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `null` (désactivé) | Active les modèles de PVC — utile pour donner à la clé de signature et aux médias une persistance par pod. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage du PVC par pod. |
@@ -325,16 +325,16 @@ leurs valeurs par défaut standard.
 | `stateful_pod_management_policy` | `null` (→ `OrderedReady`) | Ordre de création des pods. |
 | `stateful_update_strategy` | `null` (auto) | Stratégie de mise à jour (`RollingUpdate` ou `OnDelete`). |
 
-### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
+### Groupe 9 — Règles de fiabilité {#group-9--reliability-policies}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/` sur 8008, délai initial de 60s | Sonde de démarrage. Laissez le temps de la mise en place du schéma au premier démarrage. |
 | `liveness_probe` | HTTP `/` sur 8008, délai initial de 60s | Sonde de liveness. |
@@ -343,7 +343,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés : `db-init` (base de données en collation C + rôle) et `create-admin` (enregistre le superutilisateur `admin`). |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
@@ -357,14 +357,14 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS persistant pour le répertoire de données (clé de signature + médias). |
 | `nfs_mount_path` | `/opt/synapse/storage` | Chemin de montage dans le conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée les buckets GCS configurés. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets à provisionner — la valeur par défaut crée le bucket de données dédié. |
@@ -374,14 +374,14 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 15 — Redis {#group-15--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Synapse utilise une file d'attente et un cache adossés à PostgreSQL — laissez `false` sauf en cas d'externalisation. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Point de terminaison Redis (uniquement en cas d'externalisation). |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_database_name` | `synapse` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `application_database_user` | `synapse` | Utilisateur de base de données de l'application. Immuable après le premier déploiement. |
@@ -391,7 +391,7 @@ Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
 | `backup_retention_days` | `7` | Rétention ; portez-la à 30–90 pour la production ou la conformité. |
@@ -405,7 +405,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés + certificat géré (doit correspondre à `server_name`). |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -419,7 +419,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 > externes. N'activez IAP que pour des homeservers privés, réservés aux administrateurs,
 > qui ne sont pas fédérés.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exige une connexion Google devant Synapse. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
@@ -427,7 +427,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une politique Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
@@ -436,7 +436,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -483,7 +483,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, une mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, une mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -499,16 +499,16 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes d'un client se dispersent entre les pods, ce qui perturbe les connexions de synchronisation de longue durée. |
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
 | `enable_iap` | uniquement pour les serveurs privés | High | IAP bloque la fédération et les clients externes ; à n'utiliser que pour les déploiements réservés aux administrateurs. |
-| Mise à jour progressive sur des pods adossés à NFS | `Recreate` (automatique) | High | Deux pods utilisant le même répertoire de données + la même base de données peuvent entrer en concurrence ; la fondation utilise `Recreate` pour les applications adossées à NFS. |
+| Mise à jour progressive sur des pods adossés à NFS | `Recreate` (automatique) | High | Deux pods utilisant le même répertoire de données + la même base de données peuvent entrer en concurrence ; le socle utilise `Recreate` pour les applications adossées à NFS. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Medium | La désactivation permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
 | `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Synapse, partagée avec
 la variante Cloud Run, est décrite dans **[Synapse_Common](Synapse_Common.md)**.
 

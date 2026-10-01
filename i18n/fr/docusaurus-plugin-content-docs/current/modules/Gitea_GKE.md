@@ -64,10 +64,10 @@ ciblé de services Google Cloud :
   tickets/PR persistent et soient partagés entre les pods (`GITEA__server__APP_DATA_PATH`).
 - **Mise à l'échelle jusqu'à zéro par défaut.** `min_instance_count = 0`,
   `max_instance_count = 3`. Comme les données des dépôts résident sur un NFS partagé
-  plutôt que sur un stockage par pod, exécuter plus d'une réplique est généralement
+  plutôt que sur un stockage par pod, exécuter plus d'un réplica est généralement
   sûr pour les requêtes HTTP sans état, mais le verrouillage propre à Git et les
   éventuels jobs d'arrière-plan en cours ne sont pas explicitement coordonnés entre
-  les répliques par ce module — gardez `max_instance_count` prudent tant que cela n'a
+  les réplicas par ce module — gardez `max_instance_count` prudent tant que cela n'a
   pas été vérifié.
 - **Pas d'installateur, pas de compte administrateur automatisé.**
   `GITEA__security__INSTALL_LOCK =
@@ -104,8 +104,8 @@ ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Gitea {#a-gke-autopilot--the-gitea-workload}
 
@@ -143,7 +143,7 @@ privilèges — Gitea crée et migre lui-même son schéma au premier démarrage
   ```
 
 Le nom de l'instance, la base, l'utilisateur et le secret Secret Manager contenant le
-mot de passe figurent tous dans les [Outputs](#5-outputs). Consultez
+mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
 [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatisées et la
 rotation des mots de passe.
 
@@ -286,10 +286,10 @@ comportement et leurs valeurs par défaut standard.
 |---|---|---|
 | `container_port` | `3000` | Port HTTP de Gitea (`GITEA__server__HTTP_PORT`). |
 | `min_instance_count` | `0` | Mise à l'échelle jusqu'à zéro par défaut. |
-| `max_instance_count` | `3` | Plafond de coût ; augmentez-le avec prudence — la coordination des répliques pour les opérations Git/CI d'arrière-plan n'est pas explicitement gérée par ce module. |
+| `max_instance_count` | `3` | Plafond de coût ; augmentez-le avec prudence — la coordination des réplicas pour les opérations Git/CI d'arrière-plan n'est pas explicitement gérée par ce module. |
 | `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (loopback) pour la connectivité Cloud SQL. |
 
-### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -332,15 +332,15 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services par étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -352,7 +352,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide — Gitea persiste sur NFS). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -380,9 +380,9 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_nfs` | `true` | Critical | Le désactiver rend éphémères les dépôts, objets LFS et pièces jointes — perdus à la recréation du pod. |
 | `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour le chemin de connectivité par défaut à la base (socket/loopback). |
 | `public_domain` / `public_url` | Définir sur le nom d'hôte réel | High | Laissés sur `localhost`, les URL de clonage, les callbacks de webhook et les redirections OAuth sont erronés pour tous les utilisateurs. |
-| `max_instance_count` | Rester prudent (`3` par défaut) | High | Aller au-delà sans vérifier la coordination multi-répliques du travail Git/Actions en arrière-plan relève d'un comportement non vérifié. |
+| `max_instance_count` | Rester prudent (`3` par défaut) | High | Aller au-delà sans vérifier la coordination multi-réplicas du travail Git/Actions en arrière-plan relève d'un comportement non vérifié. |
 | `memory_limit` / `cpu_limit` | `512Mi` / `1000m` (valeurs par défaut) | High | En dessous des seuils équivalents gen2 de Kubernetes, le pod subit des OOM ou un bridage sous charge ; augmentez-les pour des dépôts plus volumineux ou des charges CI. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | Création du compte administrateur | Étape manuelle après le déploiement | Medium | Aucun compte n'est amorcé automatiquement ; oublier cette étape alors que l'auto-inscription est ouverte signifie que le premier utilisateur inscrit n'est pas garanti d'être administrateur. |
 | `enable_redis` | Inopérant pour Gitea | Low | Le basculer n'a aucun effet — aucun câblage `GITEA__cache__*`/`GITEA__session__*` n'exploite `REDIS_HOST`. |
 | `reserve_static_ip` | `true` | Medium | Sans lui, l'IP externe peut changer d'un redéploiement à l'autre, cassant le DNS et `public_url`. |
@@ -392,7 +392,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Gitea, partagée avec
 la variante Cloud Run, est décrite dans **[Gitea_Common](Gitea_Common.md)**.
 

@@ -304,7 +304,7 @@ Exécutez simplement `tofu destroy` (ou supprimez le déploiement depuis la plat
 
 ---
 
-## Résumé {#summary}
+## Récapitulatif {#summary}
 
 | Action | Phase | Automatisé |
 |---|---|---|

@@ -13,7 +13,7 @@ NetBox est la « source de vérité » open source de référence pour les équi
 d'ingénierie réseau — gestion des adresses IP (IPAM), inventaire des équipements et
 des baies, câblage et topologie réseau, le tout modélisé sous forme de données
 structurées derrière une API REST/GraphQL complète. Ce module déploie NetBox sur
-**GKE Autopilot** en s'appuyant sur la fondation [App_GKE](App_GKE.md), qui
+**GKE Autopilot** en s'appuyant sur le socle [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise NetBox et sur la manière de
@@ -21,7 +21,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
 Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -32,7 +32,7 @@ Autopilot, qui encapsule l'image officielle `netboxcommunity/netbox` avec un
 processus d'arrière-plan `rqworker --with-scheduler` colocalisé. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods à image construite sur mesure, 2 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — NetBox ne prend en charge ni MySQL ni SQLite en production |
@@ -66,7 +66,7 @@ assemble un ensemble ciblé de services Google Cloud :
   c'est donc la fixation explicite `uid=0`/`gid=0` — correspondant au conteneur de
   NetBox exécuté en root — qui rend réellement le montage accessible en écriture.
 - **Pas de mise à l'échelle jusqu'à zéro.** GKE Autopilot exécute toujours au moins
-  `min_instance_count` répliques (par défaut `1`), ce qui maintient le worker RQ
+  `min_instance_count` réplicas (par défaut `1`), ce qui maintient le worker RQ
   actif en permanence.
 - **Le conteneur s'exécute en tant que root** (uid 0 / gid 0) — l'image officielle
   `netboxcommunity/netbox` ne définit aucun `USER`.
@@ -93,7 +93,7 @@ autres identifiants sont indiqués dans les [sorties](#5-outputs) du déploiemen
 
 Les pods NetBox sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les
 pods demandent effectivement. Le Horizontal Pod Autoscaling dimensionne le
-déploiement entre les nombres minimal et maximal de répliques.
+déploiement entre les nombres minimal et maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail
   NetBox pour voir les pods, les révisions et les événements. Kubernetes Engine →
@@ -174,7 +174,7 @@ Deux secrets cryptographiques sont générés automatiquement et stockés dans S
 Manager : `SECRET_KEY` (secret cryptographique Django utilisé pour les sessions, la
 protection CSRF et les cookies signés) et `SUPERUSER_PASSWORD` (le mot de passe du
 compte administrateur initial). Le mot de passe de la base de données est géré
-séparément par la fondation.
+séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -187,7 +187,7 @@ Le nom du secret du mot de passe de la base de données figure dans les
 [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret
 Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing
 externe. Un domaine personnalisé avec un certificat géré par Google peut être activé,
@@ -321,8 +321,8 @@ comportement et leurs valeurs par défaut standard.
 | `cpu_limit` | `2000m` | CPU par pod ; partagé par le serveur web et le worker RQ. |
 | `memory_limit` | `2Gi` | Mémoire par pod. |
 | `container_port` | `8080` | Le serveur Granian (WSGI) de NetBox écoute sur le port 8080. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; GKE n'a pas de mise à l'échelle jusqu'à zéro. |
-| `max_instance_count` | `3` | Nombre maximal de répliques. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; GKE n'a pas de mise à l'échelle jusqu'à zéro. |
+| `max_instance_count` | `3` | Nombre maximal de réplicas. |
 | `enable_vertical_pod_autoscaling` | `false` | Désactive le HPA lorsqu'il est activé, pour éviter les conflits. |
 | `enable_pod_disruption_budget` / `pdb_min_available` | `false` / `1` | Protection de la disponibilité pendant la maintenance des nœuds. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy. |
@@ -509,7 +509,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un `redis_port`/`backup_retention_days` hors plage, des valeurs `quota_memory_*` données sous forme d'entiers nus. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un `redis_port`/`backup_retention_days` hors plage, des valeurs `quota_memory_*` données sous forme d'entiers nus. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -531,7 +531,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
 Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à NetBox partagée avec

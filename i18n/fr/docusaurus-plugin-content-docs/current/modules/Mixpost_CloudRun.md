@@ -38,7 +38,7 @@ directement.
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur nginx + PHP-FPM + supervisord écoutant sur le port 80, 2 vCPU / 2 GiB par défaut ; autoscaling serverless |
-| Base de données | Cloud SQL pour MySQL 8.0 | Obligatoire et fixe — `Mixpost_Common` code en dur `MYSQL_8_0` |
+| Base de données | Cloud SQL for MySQL 8.0 | Obligatoire et fixe — `Mixpost_Common` code en dur `MYSQL_8_0` |
 | File d'attente, cache et sessions | Redis | Activé par défaut ; pilote `QUEUE_CONNECTION`/`CACHE_DRIVER`/`SESSION_DRIVER` ; utilise par défaut l'IP du serveur NFS colocalisé lorsqu'aucun hôte externe n'est fourni |
 | Stockage objet | Cloud Storage | Un bucket `storage` provisionné automatiquement par `Mixpost_Common` |
 | Secrets | Secret Manager | `APP_KEY` Laravel généré automatiquement ; mot de passe de la base de données |
@@ -103,7 +103,7 @@ directement.
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources sont indiqués dans les [Outputs](#5-outputs) du
+services et des ressources sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Mixpost {#a-cloud-run--the-mixpost-service}
@@ -125,10 +125,10 @@ révisions pour des déploiements progressifs sûrs.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
+### B. Cloud SQL for MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
 Mixpost stocke toutes les données applicatives (comptes sociaux, publications,
-métadonnées des médias, utilisateurs) dans une instance gérée Cloud SQL pour
+métadonnées des médias, utilisateurs) dans une instance gérée Cloud SQL for
 MySQL 8.0. Au premier déploiement, le Job d'initialisation `db-init` crée la base de
 données applicative (`utf8mb4`) et l'utilisateur, puis accorde les privilèges ; la
 méthode de connexion (socket ou TCP) est détectée automatiquement à partir de
@@ -144,7 +144,7 @@ méthode de connexion (socket ou TCP) est détectée automatiquement à partir d
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
@@ -187,7 +187,7 @@ Un secret propre à Mixpost est généré automatiquement : l'`APP_KEY` de Larav
 32 caractères encodée en base64 au format natif de Laravel `base64:<value>`. Le mot
 de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~mixpost"
@@ -216,7 +216,7 @@ Le service est joignable par défaut à son URL `run.app`. Un équilibreur de ch
 HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ;
 les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -231,8 +231,8 @@ Les journaux du conteneur sont envoyés à Cloud Logging ; les métriques Cloud 
 Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des
 règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -313,7 +313,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -331,7 +331,7 @@ avec leur comportement standard.
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
 | `container_image_source` | `prebuilt` | Déploie directement `inovector/mixpost` ; transmis explicitement afin que le socle ne le traite pas comme un build personnalisé sans Dockerfile. |
-| `container_image` | `""` | Remplacez-la par l'URI d'une image dupliquée ou personnalisée. |
+| `container_image` | `""` | Remplacez-la par l'URI d'une image mise en miroir ou personnalisée. |
 | `cpu_limit` | `2000m` | 2 vCPU recommandés. |
 | `memory_limit` | `2Gi` | Mixpost requiert au moins 2Gi pour le traitement des médias et les workers de file d'attente. |
 | `cpu_always_allocated` | `false` | Démarrage à froid / facturation à la requête. Définissez `true` (avec `min_instance_count >= 1`) pour maintenir en permanence le planificateur/worker de file d'attente Laravel ; sinon, externalisez `schedule:run` via Cloud Scheduler. |
@@ -341,7 +341,7 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `false` | Socket Unix du Cloud SQL Auth Proxy. Activez-le pour les connexions par socket ; `db-init.sh` détecte automatiquement socket ou TCP dans tous les cas. |
-| `enable_image_mirroring` | `true` | Duplique l'image Mixpost dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Mixpost dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec la convention ; non référencée par le déploiement de ce module. |
 | `container_protocol` | `http1` | `h2c` est disponible si l'application prend en charge HTTP/2 en clair. |
@@ -466,12 +466,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -485,7 +485,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -522,7 +522,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Mixpost
 (le secret `APP_KEY`, le script `db-init` et les variables d'environnement fusionnées
 dans le conteneur) est partagée avec la variante GKE via le module interne

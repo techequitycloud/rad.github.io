@@ -174,7 +174,7 @@ la main au point d'entrée propre à Forgejo :
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Forgejo_Common` établit l'environnement Forgejo/Gitea de référence afin que
 l'application démarre correctement dès le premier lancement :

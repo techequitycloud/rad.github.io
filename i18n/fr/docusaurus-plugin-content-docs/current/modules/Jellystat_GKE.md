@@ -70,8 +70,8 @@ ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Jellystat {#a-gke-autopilot--the-jellystat-workload}
 
@@ -207,7 +207,7 @@ comportement standard.
 | `container_image_source` | `prebuilt` | Déploie directement l'image officielle `cyfershepard/jellystat`. |
 | `container_port` | `3000` | Fixe — correspond au port interne codé en dur de Jellystat. |
 | `cpu_limit` / `memory_limit` | `1000m` / `1Gi` | Ressources du conteneur. |
-| `min_instance_count` / `max_instance_count` | `0` / `1` | Bornes de mise à l'échelle automatique des répliques. |
+| `min_instance_count` / `max_instance_count` | `0` / `1` | Bornes de mise à l'échelle automatique des réplicas. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy (connexion par boucle locale). |
 
 ### Groupe 6 — Réseau et Service Kubernetes {#group-6--networking--kubernetes-service}
@@ -254,12 +254,12 @@ comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `service_cluster_ip` | ClusterIP du Service Kubernetes. |
 | `service_external_ip` | IP externe du LoadBalancer. |
 | `service_url` | URL du service. |
@@ -295,7 +295,7 @@ comportement standard.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload Identity,
 entrée, mise à l'échelle automatique, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et duplication d'images — consultez **[App_GKE](App_GKE.md)**.
+VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_GKE](App_GKE.md)**.
 La configuration applicative propre à Jellystat, partagée avec la variante Cloud Run,
 est décrite dans **[Jellystat_Common](Jellystat_Common.md)**.
 

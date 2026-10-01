@@ -73,7 +73,7 @@ assemble un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources sont indiqués dans les [Outputs](#5-outputs) du
+services et des ressources sont indiqués dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service FreshRSS {#a-cloud-run--the-freshrss-service}
@@ -115,7 +115,7 @@ l'installateur de FreshRSS crée le schéma.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
+figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
 pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 
 ### C. Stockage persistant (NFS) {#c-persistent-storage-nfs}
@@ -158,7 +158,7 @@ initialise le compte `admin` par défaut et son mot de passe d'API lors de la
 première installation. Le mot de passe de la base de données est géré séparément
 par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~freshrss"
@@ -175,8 +175,7 @@ Le service est accessible par défaut à son URL `run.app` (entrée publique). U
 Armor peut être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la
 connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -191,8 +190,8 @@ Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de
 Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -224,7 +223,7 @@ disponibilité et des règles d'alerte facultatifs.
   dans l'interface de FreshRSS après la première connexion — la seule rotation de la
   valeur dans Secret Manager ne réinitialise pas un compte déjà installé.
 - **Chemin de santé.** La sonde de démarrage est une vérification TCP sur le
-  port 80 ; la sonde d'activité est un HTTP GET sur `/` (200). FreshRSS sert
+  port 80 ; la sonde de vivacité est un HTTP GET sur `/` (200). FreshRSS sert
   également un point de terminaison JSON `/status` non authentifié, adapté aux
   tests de disponibilité. Prévoyez une fenêtre généreuse au premier démarrage, le
   temps que l'installateur crée le schéma.
@@ -276,7 +275,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -313,7 +312,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP `/` 30s delay, threshold 20 | Sonde de démarrage ; le seuil élevé laisse le temps à l'installation du premier démarrage. |
-| `liveness_probe` | HTTP `/` 300s delay | Sonde d'activité ; `/status` est un point de terminaison JSON non authentifié alternatif. |
+| `liveness_probe` | HTTP `/` 300s delay | Sonde de vivacité ; `/status` est un point de terminaison JSON non authentifié alternatif. |
 | `uptime_check_config` | disabled, path `/` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -330,12 +329,12 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lorsqu'un déploiement réussit — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |

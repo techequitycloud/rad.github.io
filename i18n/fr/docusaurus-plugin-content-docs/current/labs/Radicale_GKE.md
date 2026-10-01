@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Radicale sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 60 minutes
+**Durée estimée :** 30–60 minutes
 
 Radicale est un serveur CalDAV/CardDAV open source et auto-hébergé pour la synchronisation
 des calendriers et des contacts. Ce lab vous fait parcourir tout le cycle de vie opérationnel
@@ -27,7 +27,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD (avec un PVC bloc de type production) et repérer les ressources qu'il provisionne.
 - Accéder à la charge de travail en cours d'exécution et la vérifier, récupérer l'identifiant administrateur généré et connecter un client CalDAV/CardDAV.
@@ -52,7 +52,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - (Facultatif) Un client CalDAV/CardDAV pour vérifier la synchronisation de bout en bout — par exemple Thunderbird, Apple Calendar/Contacts ou DAVx5.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"

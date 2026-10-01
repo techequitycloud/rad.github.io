@@ -73,7 +73,7 @@ partagé des secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Firefly III nécessite **PostgreSQL 15** ; le moteur est imposé
 (`database_type = "POSTGRES_15"`, `DB_CONNECTION = "pgsql"`) et MySQL ou les autres
@@ -165,7 +165,7 @@ Ajustements propres à chaque plateforme gérés ici :
 - **La sonde de démarrage** est une sonde **TCP** sur le port 8080 (l'application
   est prête dès qu'Apache se lie à son port), ce qui évite les problèmes de
   redirection/d'authentification sur un chemin HTTP pendant le démarrage.
-- **La sonde d'activité** cible le point de terminaison non authentifié
+- **La sonde de vivacité** cible le point de terminaison non authentifié
   **`/health`** de Firefly III, qui renvoie HTTP 200 sans connexion — un signal de
   santé qui ne nécessite pas de session. Un délai initial généreux absorbe les
   migrations de schéma exécutées au premier démarrage.

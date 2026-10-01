@@ -76,7 +76,7 @@ Identity.
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 LimeSurvey nécessite **MySQL 8.0** ; le moteur est imposé à `MYSQL_8_0` et les autres
 moteurs ne sont pas pris en charge par ce module. Lors du premier déploiement, une
@@ -159,7 +159,7 @@ upstream et limite son travail au minimum :
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `LimeSurvey_Common` établit l'environnement LimeSurvey de référence afin que
 l'application démarre correctement dès le premier lancement :

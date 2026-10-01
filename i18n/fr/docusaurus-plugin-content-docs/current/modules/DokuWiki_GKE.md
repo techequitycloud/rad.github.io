@@ -55,9 +55,9 @@ services Google Cloud :
   défaut du module Common (`gcs_volumes = []`, `module_storage_buckets = []`) ; la
   persistance repose uniquement sur le PVC bloc `/storage` (`stateful_pvc_size = 10Gi`
   par défaut).
-- **Une réplique minimum est maintenue** (GKE ne permet pas la mise à zéro ;
-  `min_instance_count = 1`). Gardez peu de répliques — les PVC par pod d'un
-  StatefulSet ne sont pas partagés, donc plusieurs répliques ne partagent **pas** le
+- **Un réplica minimum est maintenu** (GKE ne permet pas la mise à zéro ;
+  `min_instance_count = 1`). Gardez peu de réplicas — les PVC par pod d'un
+  StatefulSet ne sont pas partagés, donc plusieurs réplicas ne partagent **pas** le
   contenu du wiki.
 - **Aucun secret d'exécution.** Le compte administrateur est créé de manière
   interactive lors de la première visite via `/install.php` et stocké sur le PVC.
@@ -72,7 +72,7 @@ services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont indiqués dans les [Outputs](#5-outputs) du déploiement.
+identifiants sont indiqués dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail DokuWiki {#a-gke-autopilot--the-dokuwiki-workload}
 
@@ -189,8 +189,8 @@ règles d'alerte facultatifs sont disponibles.
   `stateful_pvc_enabled = true` sélectionne automatiquement
   `workload_type = "StatefulSet"`. Ne définissez **pas** `workload_type =
   "Deployment"` en parallèle — cette combinaison échoue au moment du plan.
-- **Les répliques ne partagent pas le contenu.** Chaque pod du StatefulSet reçoit son
-  propre PVC ; passer au-delà d'une réplique donne donc à chaque pod un wiki *distinct
+- **Les réplicas ne partagent pas le contenu.** Chaque pod du StatefulSet reçoit son
+  propre PVC ; passer au-delà d'un réplica donne donc à chaque pod un wiki *distinct
   et vide*. Gardez `min`/`max` à 1, sauf si vous disposez d'une solution de stockage
   partagé externe ; DokuWiki n'offre aucun clustering intégré.
 - **Pas de migrations automatiques.** Mettre à jour `application_version` livre un
@@ -227,12 +227,12 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `min_instance_count` | `1` | Nombre minimum de répliques ; GKE exige ≥ 1. Gardez 1 — les PVC d'un StatefulSet ne sont pas partagés. |
+| `min_instance_count` | `1` | Nombre minimum de réplicas ; GKE exige ≥ 1. Gardez 1 — les PVC d'un StatefulSet ne sont pas partagés. |
 | `max_instance_count` | `3` | Plafond de coût. Ne dépassez pas 1 pour un wiki partagé — chaque pod reçoit son propre PVC vide. |
 | `container_port` | `8080` | Apache écoute sur 8080. |
 | `container_resources` | `{ cpu_limit = "500m", memory_limit = "512Mi" }` | DokuWiki est léger. |
 | `enable_cloudsql_volume` | `false` | Pas de base de données — pas de sidecar Auth Proxy. |
-| `enable_image_mirroring` | `true` | Duplique l'image DokuWiki dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image DokuWiki dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -313,7 +313,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à DokuWiki, partagée avec
 la variante Cloud Run, est décrite dans **[DokuWiki_Common](DokuWiki_Common.md)**.
 

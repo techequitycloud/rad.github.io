@@ -34,10 +34,10 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier.
-- Effectuer les opérations du jour 2 : inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et les sauvegardes.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, gérer les secrets et les sauvegardes.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -52,7 +52,7 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Un accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez une fois ces variables shell ; toutes les tâches ci-dessous les réutilisent :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL
    (PostgreSQL 15) avec ses secrets Secret Manager, un bucket de stockage GCS dédié,
-   construit l'image de conteneur et exécute une tâche ponctuelle d'initialisation de
+   construit l'image de conteneur et exécute un job ponctuel d'initialisation de
    la base de données. Un premier déploiement prend environ **20–35 minutes** (la
    création de Cloud SQL en représente l'essentiel ; le démarrage de la JVM de Kestra
    ajoute du temps au premier lancement pendant l'application des migrations de la base
@@ -118,7 +118,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
    immuable ; le trafic bascule vers la plus récente qui est saine) :
@@ -131,14 +131,14 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres d'instances min/max et en cliquant sur **Update** sur la page de détails du déploiement —
    le module gère la spécification du service ; la mise à l'échelle est donc une
    modification de configuration, et non une modification manuelle via `gcloud` (une
-   modification manuelle serait annulée lors de l'application suivante). Notez que le
+   modification manuelle serait annulée lors du prochain apply). Notez que le
    mode autonome (standalone) de Kestra exige `max_instance_count = 1` pour éviter les
    conflits de verrouillage de la file d'attente.
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une nouvelle révision est déployée, les migrations de schéma
    étant appliquées automatiquement.
 
-4. **Gérez les secrets, les sauvegardes et les tâches :**
+4. **Gérez les secrets, les sauvegardes et les jobs :**
 
    ```bash
    gcloud secrets list --project="$PROJECT" --filter="name~kestra"
@@ -165,7 +165,7 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
    ```
 
-   Filtre pour l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
 
 2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le
@@ -196,9 +196,9 @@ d'une version de Kestra à l'autre.
   ~14 minutes. Consultez les journaux pour suivre la progression de la migration avant
   de conclure à une panne.
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est
-  `RUNNABLE`, que le secret du mot de passe de la base de données existe et que la tâche
+  `RUNNABLE`, que le secret du mot de passe de la base de données existe et que le job
   d'initialisation `db-init` s'est terminée avec succès.
-- **Échec de la tâche d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
   gcloud run jobs executions list --job="${SERVICE}-db-init" \
     --project="$PROJECT" --region="$REGION"
@@ -211,7 +211,7 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). Delete exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). La suppression retire tout ce que le module a créé — le service Cloud Run, la base de
 données Cloud SQL, les secrets Secret Manager, les buckets GCS et les images Artifact
@@ -232,5 +232,5 @@ registre) sont gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit (`{"status":"UP"}`) ; connexion à l'interface de Kestra |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle, mettre à jour la version, gérer les secrets/sauvegardes, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de démarrage de la JVM, de base de données, de tâche d'initialisation, de build et d'IAM |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de démarrage de la JVM, de base de données, de job d'initialisation, de build et d'IAM |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

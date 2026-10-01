@@ -14,7 +14,7 @@ la santé, qui collecte des milliers de métriques à la seconde (CPU, mémoire,
 réseau, conteneurs, services) sans aucune configuration et les visualise sur un
 tableau de bord web interactif intégré. Il est écrit en C pour une surcharge minimale
 et expose une API REST permettant d'interroger les données collectées. Ce module
-déploie Netdata sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md),
+déploie Netdata sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md),
 qui provisionne et gère l'infrastructure Google Cloud et Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Netdata et sur la manière de
@@ -22,7 +22,7 @@ les explorer et de les exploiter depuis la console Google Cloud et la ligne de
 commande. Pour les mécanismes communs à toute application GKE — Workload Identity,
 entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,7 +31,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 Netdata s'exécute en tant que charge de travail Kubernetes unique. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Un seul pod Netdata sur le port `19999`, 1 vCPU / 1 GiB par défaut |
 | Base de données | Aucune | `database_type = "NONE"` — Netdata conserve sa propre base de métriques interne (dbengine) sur disque ; aucune instance Cloud SQL n'est créée |
@@ -62,9 +62,9 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Redis est désactivé de force.** Le `main.tf` de `Netdata_GKE` code en dur
   `enable_redis = false` dans l'appel à `App_GKE`, ce qui remplace la valeur par
   défaut `true` de la variable elle-même — Netdata n'utilise pas Redis.
-- **Une seule réplique par défaut.** `min_instance_count = 1`,
+- **Un seul réplica par défaut.** `min_instance_count = 1`,
   `max_instance_count = 1`. Netdata écrit sa base de métriques sur un seul PVC ;
-  exécuter plusieurs répliques sur le même volume n'est pas pris en charge.
+  exécuter plusieurs réplicas sur le même volume n'est pas pris en charge.
 - **Pas d'authentification intégrée.** Le tableau de bord local de Netdata n'est pas
   authentifié par défaut — quiconque peut atteindre le Service peut consulter toutes
   les métriques collectées. Le secret facultatif `enable_admin_password` ne configure
@@ -80,7 +80,7 @@ assemble un ensemble ciblé de services Google Cloud :
   que `application_domains` n'est pas renseigné).
 - **L'image est un build personnalisé minimal.** `Netdata_Common` fournit un
   `Dockerfile` minimal (`FROM netdata/netdata:${NETDATA_VERSION}`) uniquement pour
-  que la fondation puisse mettre en miroir l'image amont dans Artifact Registry ;
+  que le socle puisse mettre en miroir l'image amont dans Artifact Registry ;
   `application_version = "latest"` épingle le build sur un tag éprouvé (`v2.2.6`) via
   l'ARG de build propre à l'application `NETDATA_VERSION`.
 
@@ -91,7 +91,7 @@ assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Netdata {#a-gke-autopilot--the-netdata-workload}
 
@@ -100,9 +100,9 @@ mémoire que le pod demande réellement. Avec la valeur par défaut `stateful_pv
 = true`, la charge de travail est un **StatefulSet** doté d'une identité de pod
 stable et d'un PVC dédié par pod.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Netdata pour voir les pods, les révisions et les événements. Kubernetes
-  Engine → Services et Ingress affiche la ClusterIP ou l'IP externe.
+  Engine → Services & Ingress affiche la ClusterIP ou l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -124,7 +124,7 @@ Filestore (NFS) est disponible comme montage partagé alternatif (`enable_nfs`, 
 défaut `false`), mais ce n'est pas la voie recommandée pour les fichiers de données
 propres à Netdata.
 
-- **Console :** Kubernetes Engine → Stockage → Persistent Volume Claims ;
+- **Console :** Kubernetes Engine → Storage → Persistent Volume Claims ;
   Filestore → Instances (uniquement si NFS est activé).
 - **CLI :**
   ```bash
@@ -161,7 +161,7 @@ via le chemin Secret Store CSI/SecretSync). Il ne configure pas l'authentificati
 propre à Netdata ; il existe en tant qu'identifiant stable pour un reverse proxy côté
 opérateur ou pour une étape de rattachement à Netdata Cloud.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~netdata-admin-password"
@@ -178,7 +178,7 @@ réservée (`service_type = LoadBalancer`, `reserve_static_ip = true`). Définis
 `application_domains` (avec `enable_custom_domain`, par défaut `true`) pour un accès
 acheminé par Gateway avec un certificat géré.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
@@ -195,8 +195,8 @@ envoyées à Cloud Monitoring. Des tests de disponibilité et des règles d'aler
 facultatifs sont disponibles (`uptime_check_config`, désactivé par défaut ;
 `alert_policies`).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -221,7 +221,7 @@ facultatifs sont disponibles (`uptime_check_config`, désactivé par défaut ;
   `failure_threshold=10`) et la sonde de vivacité (`liveness_probe` :
   `initial_delay=30s`, `timeout=5s`, `period=30s`, `failure_threshold=3`)
   effectuent toutes deux un HTTP `GET /api/v1/info`, sans authentification. Le même
-  chemin est la valeur par défaut des variables de niveau fondation
+  chemin est la valeur par défaut des variables de niveau du socle
   `health_check_config`, `startup_probe_config` et `uptime_check_config`.
   {/* TODO: verify exact response body/status contract of /api/v1/info in the deployed image — variable descriptions reference it as Netdata's "dedicated liveness endpoint" but do not specify the payload. */}
 - **Mise à l'échelle sur une seule instance.** `min_instance_count = 1` /
@@ -231,7 +231,7 @@ facultatifs sont disponibles (`uptime_check_config`, désactivé par défaut ;
 - **Épinglage de la version de l'image.** `application_version = "latest"` est
   résolu au moment du build en la valeur par défaut épinglée du Dockerfile, `v2.2.6`
   (l'ARG de build propre à l'application `NETDATA_VERSION`, et non le `APP_VERSION`
-  générique que la fondation injecte) — définissez une version explicite pour suivre
+  générique que le socle injecte) — définissez une version explicite pour suivre
   une autre version.
 - **Vérifiez la charge de travail en cours d'exécution :**
   ```bash
@@ -275,7 +275,7 @@ comportement et leurs valeurs par défaut standard.
 |---|---|---|
 | `service_type` | `LoadBalancer` | IP publique par défaut ; définissez `ClusterIP` pour le garder uniquement interne. |
 | `workload_type` | `null` → `StatefulSet` | Résolu automatiquement en StatefulSet parce que `stateful_pvc_enabled = true`. |
-| `session_affinity` | `None` | Aucun routage persistant n'est nécessaire avec une seule réplique. |
+| `session_affinity` | `None` | Aucun routage persistant n'est nécessaire avec un seul réplica. |
 
 ### Groupe 7 — Configuration du StatefulSet {#group-7--statefulset-configuration}
 
@@ -292,7 +292,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `GET /api/v1/info` | Sondes au niveau du conteneur, câblées via `Netdata_Common`. |
-| `health_check_config` / `startup_probe_config` | HTTP `GET /api/v1/info` | Configuration des sondes au niveau de la fondation (même point de terminaison). |
+| `health_check_config` / `startup_probe_config` | HTTP `GET /api/v1/info` | Configuration des sondes au niveau du socle (même point de terminaison). |
 | `uptime_check_config` | désactivé, chemin `/api/v1/info` | À activer pour un `google_monitoring_uptime_check_config` externe, utile uniquement une fois le Service accessible publiquement. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
@@ -315,7 +315,7 @@ sans effet pour ce module — aucune connexion Redis n'est jamais injectée.
 base de données ni utilisateur n'est créé. Les variables `application_database_name`
 (`netdatadb`) / `application_database_user` (`netdatauser`) et les variables `db_*`
 associées ne sont déclarées que pour la compatibilité avec la reproduction des
-variables de la fondation et n'ont aucun effet.
+variables du socle et n'ont aucun effet.
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
@@ -329,12 +329,12 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -346,7 +346,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `initialization_jobs` | Noms des éventuels jobs d'initialisation fournis par l'utilisateur (aucun par défaut). |
@@ -366,7 +366,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
-> par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et
+> par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et
 > leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps
 > qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*`
 > exprimés en entiers bruts, un `container_port`/
@@ -392,7 +392,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Netdata, partagée

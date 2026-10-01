@@ -12,7 +12,7 @@ description: "Référence de configuration pour déployer Netdata sur Google Clo
 Netdata est un agent open source de supervision en temps réel de l'infrastructure et
 des applications, qui collecte des milliers de métriques par seconde et sert des
 tableaux de bord d'une granularité d'une seconde ainsi qu'une API REST. Ce module
-déploie Netdata sur **Cloud Run v2** au-dessus de la fondation
+déploie Netdata sur **Cloud Run v2** au-dessus du socle
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google
 Cloud partagée.
 
@@ -22,7 +22,7 @@ commande. Pour les mécanismes communs à toute application Cloud Run — identi
 service, entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
 vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,7 +31,7 @@ vie du déploiement — reportez-vous au
 Netdata s'exécute dans un seul conteneur sur Cloud Run v2, à l'écoute sur le port
 **19999**. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Conteneur unique, 1 vCPU / 1 GiB par défaut ; écoute sur le port 19999 |
 | Base de données | _Aucune_ | Netdata n'a pas de base de données SQL — les métriques sont stockées sur disque sous `/var/lib/netdata` |
@@ -80,7 +80,7 @@ Netdata s'exécute dans un seul conteneur sur Cloud Run v2, à l'écoute sur le 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Netdata {#a-cloud-run--the-netdata-service}
 
@@ -129,7 +129,7 @@ Par défaut (`enable_admin_password = true`), un unique secret de 32 caractères
 `NETDATA_ADMIN_PASSWORD`. Aucun autre secret applicatif n'est créé (il n'y a pas de
 mot de passe de base de données puisqu'il n'y a pas de base de données).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~netdata-admin-password"
@@ -149,7 +149,7 @@ pour un déploiement réellement verrouillé, définissez `ingress_settings = "i
 charge HTTPS externe + une authentification basique. L'output `netdata_url` indique
 l'URL du service (port 19999).
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -164,8 +164,8 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 sont envoyées à Cloud Monitoring, avec un test de disponibilité facultatif (ciblant
 `/api/v1/info`) et des règles d'alerte.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -260,7 +260,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 12 — Base de données {#group-12--database-backend}
+### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -280,12 +280,12 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `netdata_url` | URL du service pour le tableau de bord/l'API Netdata (port 19999) — accessible publiquement par défaut (`ingress_settings = "all"`) ; limitée au VPC si `ingress_settings = "internal"`. |
@@ -295,7 +295,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de données `/var/lib/netdata`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (vide par défaut — Netdata n'en a aucun). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -311,7 +311,7 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. En outre, `Netdata_CloudRun` ajoute ses propres gardes : `min_instance_count ≤ max_instance_count`, et `ingress_settings = "all"` est rejeté sauf si `enable_admin_password = true`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. En outre, `Netdata_CloudRun` ajoute ses propres gardes : `min_instance_count ≤ max_instance_count`, et `ingress_settings = "all"` est rejeté sauf si `enable_admin_password = true`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -327,7 +327,7 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative

@@ -28,7 +28,7 @@ guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Identifiant administrateur | Génère le mot de passe administrateur de Flowise et le stocke dans **Secret Manager** sous `FLOWISE_PASSWORD` | À récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Fige l'image de base `flowiseai/flowise` et le Dockerfile personnalisé qui l'étend avec `flowise-entrypoint.sh` | Sortie `container_image` du déploiement de plateforme |
-| Moteur de base de données | Utilise par défaut **Cloud SQL pour PostgreSQL 15** ; définit `DATABASE_TYPE=postgres` et `DATABASE_PORT=5432` | §Base de données dans les guides de plateforme |
+| Moteur de base de données | Utilise par défaut **Cloud SQL for PostgreSQL 15** ; définit `DATABASE_TYPE=postgres` et `DATABASE_PORT=5432` | §Base de données dans les guides de plateforme |
 | Initialisation de la base de données | Définit la tâche du premier déploiement qui crée la base de données et l'utilisateur, et accorde les privilèges, à l'aide de `postgres:15-alpine` | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** des fichiers téléversés (suffixe de nom `-uploads`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Flowise de référence : `FLOWISE_USERNAME`, `APIKEY_STORAGE_TYPE=db`, `STORAGE_TYPE=gcs`, `GCLOUD_PROJECT` | Comportement de l'application dans les guides de plateforme |
@@ -56,7 +56,7 @@ partagé de secrets et de Workload Identity.
 
 ---
 
-## 3. Moteur et initialisation de la base de données {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Flowise nécessite **PostgreSQL** ; le moteur par défaut est PostgreSQL 15. MySQL
 n'est pas pris en charge. Lors du premier déploiement, une tâche ponctuelle se
@@ -79,7 +79,7 @@ sorties du déploiement de plateforme.
 
 ---
 
-## 4. Paramètres applicatifs de base {#4-core-application-settings}
+## 4. Paramètres principaux de l'application {#4-core-application-settings}
 
 `Flowise_Common` établit l'environnement Flowise de référence afin que l'application
 démarre correctement dès le premier lancement :

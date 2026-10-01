@@ -143,7 +143,7 @@ interprétés — la sonde par défaut est délibérément généreuse :
 - **Sonde de démarrage** — HTTP `/health`, délai initial de 30 s, période de
   20 s, seuil de 40 échecs. Cela accorde jusqu'à environ 14 minutes au premier
   démarrage (préchauffage de la JVM, migrations Flyway, chargement des plugins).
-- **Sonde d'activité** — HTTP `/health`, délai initial de 180 s, période de
+- **Sonde de vivacité** — HTTP `/health`, délai initial de 180 s, période de
   30 s, seuil de 5 échecs. Cela réduit les faux positifs lors des pics
   d'exécution intensifs habituels.
 

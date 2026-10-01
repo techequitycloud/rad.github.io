@@ -27,7 +27,7 @@ VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-v
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Beszel s'exécute comme un **StatefulSet** Kubernetes à réplique unique sur Autopilot,
+Beszel s'exécute comme un **StatefulSet** Kubernetes à réplica unique sur Autopilot,
 servant son interface web et son API REST sur le port 8090 et conservant tout son
 état sur un Persistent Volume bloc monté sur `/beszel_data`. Le déploiement assemble
 un ensemble volontairement restreint de services Google Cloud :
@@ -52,9 +52,9 @@ un ensemble volontairement restreint de services Google Cloud :
   PVC bloc est le support durable adapté à SQLite (contrairement à un montage de
   fichiers réseau). Comme le PVC couvre `/beszel_data`, le volume GCS FUSE sur le même
   chemin est désactivé pour éviter un double montage.
-- **La réplique unique est délibérée.** `min_instance_count = max_instance_count = 1`.
+- **Le réplica unique est délibéré.** `min_instance_count = max_instance_count = 1`.
   Beszel est une application à écrivain unique (un seul fichier SQLite) ;
-  n'augmentez **pas** le nombre de répliques.
+  n'augmentez **pas** le nombre de réplicas.
 - **Mise à jour de type `Recreate`.** Un seul pod peut posséder le PVC SQLite à la
   fois ; le StatefulSet remplace le pod au lieu d'en exécuter deux sur le même volume.
 - **Port 8090.** Le hub Beszel écoute sur 8090 ; le port du conteneur et les sondes
@@ -76,12 +76,12 @@ un ensemble volontairement restreint de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Beszel {#a-gke-autopilot--the-beszel-workload}
 
-Beszel est ordonnancé comme un StatefulSet à réplique unique sur Autopilot, qui
+Beszel est ordonnancé comme un StatefulSet à réplica unique sur Autopilot, qui
 facture le CPU et la mémoire que le pod demande réellement. Comme l'application est à
 écrivain unique, elle n'est pas mise à l'échelle horizontalement.
 
@@ -125,7 +125,7 @@ secret JWT, ni mot de passe de base de données à gérer (la base est un SQLite
 intégré et l'administrateur est créé dans l'interface). La liste des secrets ne
 montre que ceux que le socle crée lui-même.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~beszel"
@@ -142,7 +142,7 @@ Google, ou un LoadBalancer/une Gateway, afin que les agents distants et les
 navigateurs puissent joindre le hub. Une IP statique peut être réservée pour que
 l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -221,7 +221,7 @@ comportement et leurs valeurs par défaut standard.
 | `min_instance_count` | `1` | Maintenu à 1 — un seul écrivain SQLite. |
 | `max_instance_count` | `1` | **Ne l'augmentez pas.** Plus d'un pod corrompt la base SQLite partagée. |
 | `enable_cloudsql_volume` | `false` | Pas de sidecar Cloud SQL Auth Proxy ; Beszel utilise un SQLite intégré. |
-| `enable_image_mirroring` | `true` | Duplique l'image Beszel dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Beszel dans Artifact Registry. |
 
 ### Groupe — Backend et cluster GKE {#group--gke-backend--cluster}
 
@@ -265,15 +265,15 @@ Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace dans lequel s'exécute la charge de travail. |
+| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Map des ClusterIP des services par étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
@@ -282,7 +282,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -311,7 +311,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` / `database_type` | `false` / pas de SQL | High | Beszel n'a pas de base externe ; activer Cloud SQL provisionne une instance inutilisée et perturbe le démarrage. |
 | `service_type` / domaine personnalisé | exposer délibérément | High | Laissé en `ClusterIP` sans Ingress, les agents distants situés hors du cluster ne peuvent pas joindre le hub. |
 | `enable_iap` | uniquement pour l'interface, jamais avec des agents hors Google | High | IAP bloque toutes les requêtes non authentifiées, y compris la remontée des métriques des agents. |
-| `quota_memory_requests` / `_limits` | unités binaires (`1Gi`, `1024Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans le namespace. |
+| `quota_memory_requests` / `_limits` | unités binaires (`1Gi`, `1024Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
 | `container_port` | `8090` | Medium | Le hub n'écoute que sur 8090 ; le modifier sans adapter l'image casse les sondes et le Service. |
 | `application_version` | épinglez-la explicitement | Medium | `latest` résout l'image de base vers la version épinglée `0.9.1` ; épinglez un vrai tag pour maîtriser les mises à niveau et les migrations de schéma. |
 
@@ -319,7 +319,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Beszel, partagée
 avec la variante Cloud Run, est décrite dans **[Beszel_Common](Beszel_Common.md)**.
 

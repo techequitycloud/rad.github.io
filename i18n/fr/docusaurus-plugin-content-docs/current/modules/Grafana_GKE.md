@@ -31,7 +31,7 @@ Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous 
 Grafana s'exécute sous la forme d'une charge de travail web Go. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Go, 1 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Grafana nécessite une base de données relationnelle ; SQLite n'est pas sûr pour les déploiements multi-pods |
@@ -41,7 +41,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Mot de passe de la base de données géré par le socle ; identifiants administrateur injectés via une variable d'environnement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé et certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Grafana conserve les tableaux de bord, les
   utilisateurs, les alertes et l'état des plugins dans une base de données
@@ -50,9 +50,9 @@ assemble un ensemble ciblé de services Google Cloud :
 - **`GF_DATABASE_TYPE=postgres` est injecté automatiquement.** Sans lui, Grafana
   revient à SQLite même lorsque toutes les autres variables `GF_DATABASE_*` sont
   présentes.
-- **Aucune tâche d'initialisation de la base de données n'est nécessaire.** Grafana
-  migre automatiquement son schéma au premier démarrage ; aucune Job Kubernetes
-  `db-init` n'est donc requise.
+- **Aucun job d'initialisation de la base de données n'est nécessaire.** Grafana
+  migre automatiquement son schéma au premier démarrage ; aucun Job Kubernetes
+  `db-init` n'est donc requis.
 - **`stateful_fs_group = 472`.** Grafana s'exécute avec l'UID/GID 472 ; ce paramètre
   garantit que le conteneur peut écrire dans les montages PVC du StatefulSet sans
   erreur de permission.
@@ -78,9 +78,9 @@ Les pods Grafana sont planifiés sur Autopilot, qui facture le CPU et la mémoir
 réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le
 déploiement entre le nombre minimal et le nombre maximal de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Grafana pour consulter les pods, les révisions et les événements.
-  Kubernetes Engine → Services et entrées affiche l'IP externe.
+  Kubernetes Engine → Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -97,8 +97,8 @@ Grafana stocke toutes les données de l'application (tableaux de bord, utilisate
 organisations, règles d'alerte, état des plugins) dans une instance gérée Cloud SQL
 for PostgreSQL 15. Les pods s'y connectent de manière privée via le sidecar **Cloud
 SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est donc exposée. Grafana
-migre automatiquement son schéma au démarrage — aucune tâche d'initialisation
-distincte n'est requise.
+migre automatiquement son schéma au démarrage — aucun job d'initialisation
+distinct n'est requis.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
   sauvegardes, les flags et les métriques.
@@ -155,7 +155,7 @@ et injecté dans les pods à l'exécution. Le mot de passe administrateur de Gra
 n'est pas généré automatiquement par ce module — il doit être injecté via
 `secret_environment_variables` (voir §3 ci-dessous).
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -173,7 +173,7 @@ La charge de travail est exposée via une IP externe Cloud Load Balancing.
 avec un certificat géré par Google pour les noms d'hôte de `application_domains` ;
 une IP statique est réservée par défaut afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -190,8 +190,8 @@ GKE et de Cloud SQL sont envoyées vers Cloud Monitoring. Grafana expose `/api/h
 comme point de terminaison de santé, ciblé à la fois par les sondes de démarrage et de
 vivacité, et éventuellement par un test de disponibilité Cloud Monitoring.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -203,8 +203,8 @@ vivacité, et éventuellement par un test de disponibilité Cloud Monitoring.
 ## 3. Comportement de l'application Grafana {#3-grafana-application-behaviour}
 
 - **Migration du schéma au démarrage.** Grafana se connecte à PostgreSQL et applique
-  les éventuelles migrations de schéma en attente au premier démarrage. Aucune tâche
-  d'initialisation de la base de données distincte n'est nécessaire. La sonde de
+  les éventuelles migrations de schéma en attente au premier démarrage. Aucun job
+  d'initialisation de la base de données distinct n'est nécessaire. La sonde de
   démarrage accorde une tolérance totale d'environ 150 secondes pour les migrations du
   premier démarrage (`initial_delay_seconds=30`, `failure_threshold=12`, `period_seconds=10`).
 - **Identifiant administrateur.** Grafana est livré avec les identifiants par défaut
@@ -262,7 +262,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail recevant un accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -285,7 +285,7 @@ comportement et leurs valeurs par défaut standard.
 | `container_port` | `3000` | Grafana écoute sur le port 3000. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les requêtes de ressources. |
-| `enable_image_mirroring` | `true` | Duplique l'image Grafana dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Grafana dans Artifact Registry avant le déploiement. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
@@ -340,7 +340,7 @@ comportement et leurs valeurs par défaut standard.
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif ciblant `/api/health`. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -431,7 +431,7 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -461,7 +461,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `grafana-data`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -472,12 +472,12 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critical | Grafana est livré avec les identifiants par défaut `admin`/`admin`. Ne pas définir de mot de passe robuste expose l'interface d'administration. |
 | `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critical | La valeur `"true"` expose tous les tableaux de bord sans authentification. |
@@ -499,7 +499,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Grafana partagée avec
 la variante Cloud Run est décrite dans **[Grafana_Common](Grafana_Common.md)**.
 

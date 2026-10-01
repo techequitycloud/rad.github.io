@@ -44,7 +44,7 @@ distinct. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` généré automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le schéma Prisma de Linkwarden code en dur le
   fournisseur `postgresql` ; sélectionner un autre moteur fait échouer la migration
@@ -117,7 +117,7 @@ utilisateurs, métadonnées d'archive) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le point d'entrée cloud se connecte directement à l'IP privée de
 Cloud SQL (`DB_IP`), et non au socket Unix de l'Auth Proxy — une exigence propre à
 Prisma, car un chemin de répertoire de socket casse l'analyse de la partie
-« authority » de l'URL DSN. Lors du premier déploiement, une tâche
+« authority » de l'URL DSN. Lors du premier déploiement, un job
 d'initialisation crée la base de données applicative et l'utilisateur ;
 Linkwarden exécute ensuite son propre `prisma migrate deploy` à chaque démarrage du
 conteneur.
@@ -158,7 +158,7 @@ Un secret est généré automatiquement et stocké dans Secret Manager :
 `NEXTAUTH_SECRET` (signe les JWT de session NextAuth). Le mot de passe de la base de
 données est géré séparément par le socle.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -174,7 +174,7 @@ Le service est accessible par défaut à son URL `run.app`. Un équilibreur de c
 HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut y être
 ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -189,8 +189,8 @@ Les journaux du conteneur sont envoyés à Cloud Logging ; les métriques de Clo
 et de Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et
 des règles d'alerte en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -200,8 +200,8 @@ des règles d'alerte en option.
 
 ## 3. Comportement de l'application Linkwarden {#3-linkwarden-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via l'IP privée de Cloud SQL et crée de manière idempotente la base de données
   applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
   réexécutée sans risque.
@@ -273,7 +273,7 @@ avec leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Conservé par souci de parité ; le point d'entrée se connecte directement via `DB_IP`, et non via le socket. |
 | `enable_image_mirroring` | `true` | Met en miroir l'image Linkwarden dans Artifact Registry. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 `ingress_settings`, `vpc_egress_setting` et `enable_iap` standard — consultez
 [App_CloudRun](App_CloudRun.md).
@@ -302,7 +302,7 @@ avec leur comportement standard.
 | `db_name` | `linkwarden` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `linkwarden` | Utilisateur de base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -347,14 +347,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
 | `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |

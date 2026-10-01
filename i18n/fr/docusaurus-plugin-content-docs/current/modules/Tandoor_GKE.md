@@ -11,8 +11,7 @@ description: "Référence de configuration pour déployer Tandoor sur GKE Autopi
 
 Tandoor Recipes est un gestionnaire de recettes et planificateur de repas auto-hébergé,
 open source et sous licence AGPL-3.0, doté d'un backend d'API REST Python/Django et d'un
-frontend Vue 3 intégré. Ce module déploie Tandoor sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
+frontend Vue 3 intégré. Ce module déploie Tandoor sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
 Kubernetes partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Tandoor et sur la manière de les
@@ -20,7 +19,7 @@ explorer et de les exploiter depuis la console Google Cloud et la ligne de comma
 les mécanismes communs à toutes les applications GKE — Workload Identity, ingress,
 autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
@@ -31,7 +30,7 @@ Tandoor s'exécute comme une charge de travail web unique tout-en-un — nginx s
 qu'aucun sidecar ni aucune entrée `additional_services` n'est nécessaire. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods à conteneur unique (nginx + gunicorn), 1 vCPU / 512Mi par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Tandoor n'a pas de moteur de repli pris en charge en production |
@@ -49,7 +48,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Des variables d'environnement Postgres distinctes, pas une DSN.** Tandoor lit
   directement `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_HOST` / `POSTGRES_PORT` /
   `POSTGRES_DB`. Les valeurs `DB_*` standard de la plateforme sont associées à ces noms
-  via les variables de la fondation `db_*_env_var_name` — sur GKE, cela se résout en la
+  via les variables du socle `db_*_env_var_name` — sur GKE, cela se résout en la
   boucle locale `127.0.0.1` du sidecar Cloud SQL Auth Proxy.
 - **`SECRET_KEY` et le mot de passe du superutilisateur sont générés automatiquement** et
   stockés dans Secret Manager. `SECRET_KEY` ne doit jamais faire l'objet d'une rotation
@@ -80,7 +79,7 @@ identifiants sont indiqués dans les [Sorties](#5-outputs) du déploiement.
 
 Les pods Tandoor sont planifiés sur Autopilot, qui facture le CPU et la mémoire
 réellement demandés par les pods. L'Horizontal Pod Autoscaling dimensionne le déploiement
-entre le nombre minimal et le nombre maximal de répliques.
+entre le nombre minimal et le nombre maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail Tandoor
   pour voir les pods, les révisions et les événements. Kubernetes Engine → Services &
@@ -134,7 +133,7 @@ redémarrages de pods.
 
 Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
-### D. Redis (cache optionnel) {#d-redis-optional-cache}
+### D. Redis (cache facultatif) {#d-redis-optional-cache}
 
 Redis est **désactivé par défaut**. Tandoor n'a ni worker Celery ni file d'attente
 d'arrière-plan — activer Redis ne fait que basculer le backend de cache de Django d'un
@@ -152,7 +151,7 @@ cache en mémoire locale vers une instance Redis partagée.
 
 Deux secrets applicatifs sont générés automatiquement et stockés dans Secret Manager : la
 `SECRET_KEY` Django et `DJANGO_SUPERUSER_PASSWORD`. Le mot de passe de la base de données
-est géré séparément par la fondation.
+est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -163,7 +162,7 @@ est géré séparément par la fondation.
 
 Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing externe avec
 une adresse statique réservée. Un domaine personnalisé avec un certificat géré par Google
@@ -231,14 +230,14 @@ leurs valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région de la charge de travail et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
@@ -246,27 +245,27 @@ leurs valeurs par défaut standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `tandoor` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Tandoor publie un véritable tag `latest`. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `prebuilt` | Tandoor utilise directement l'image officielle. |
 | `container_image` | `""` | Laissez vide pour la valeur par défaut du module (`vabene1111/recipes`). |
-| `min_instance_count` | `0` | Nombre minimal de répliques. |
-| `max_instance_count` | `1` | Nombre maximal de répliques. |
+| `min_instance_count` | `0` | Nombre minimal de réplicas. |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. |
 | `container_port` | `80` | Le nginx de Tandoor écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Réplique l'image Tandoor dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Tandoor dans Artifact Registry avant le déploiement. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires. `DB_ENGINE`, `ALLOWED_HOSTS`, `PGSSLMODE`, `DJANGO_SUPERUSER_USERNAME`/`EMAIL` sont définis automatiquement. |
 | `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. |
@@ -275,7 +274,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | Tandoor est une interface web interactive ; il est donc exposé à l'extérieur par défaut. |
 | `workload_type` | `Deployment` | Sans état — aucun PVC nécessaire. |
@@ -285,7 +284,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 7 — Sauvegarde et maintenance / StatefulSet {#group-7--backup--maintenance--statefulset}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
 | `backup_retention_days` | `7` | Rétention ; à augmenter pour la production ou la conformité. |
@@ -293,15 +292,15 @@ leurs valeurs par défaut standard.
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Crée une ResourceQuota Kubernetes dans l'espace de noms de l'application. |
 | `quota_cpu_requests` / `quota_cpu_limits` | `""` | Total des requêtes/limites CPU autorisées pour l'ensemble des pods. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | Doivent utiliser des suffixes d'unité binaire (p. ex. `4Gi`, `8192Mi`) — des entiers nus sont interprétés en octets et bloquent la planification. |
 
-### Groupe 9 — Politiques de fiabilité et SQL personnalisé {#group-9--reliability-policies--custom-sql}
+### Groupe 9 — Règles de fiabilité et SQL personnalisé {#group-9--reliability-policies--custom-sql}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protège la disponibilité pendant les mises à niveau des nœuds. |
 | `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les interruptions volontaires. |
@@ -309,7 +308,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/accounts/login/` | Réussit une fois la connectivité Postgres et les migrations établies. |
 | `health_check_config` | TCP | Un simple contrôle d'écoute du port. |
@@ -318,7 +317,7 @@ leurs valeurs par défaut standard.
 
 ### Groupe 11 — Stockage et jobs {#group-11--storage--jobs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la paire de jobs intégrés `db-init` + `create-superuser`. |
 | `cron_jobs` | `[]` | Non utilisé — Tandoor n'a pas de tâches récurrentes planifiées par la plateforme. |
@@ -332,14 +331,14 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | NFS est désactivé par défaut. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée des buckets GCS supplémentaires en plus du bucket `data` provisionné automatiquement. |
 | `storage_buckets` | `[]` | Buckets supplémentaires à provisionner. |
@@ -349,7 +348,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Imposé par `Tandoor_Common` ; non transmis. |
 | `application_database_name` | `tandoor` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -366,13 +365,13 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 17 — Import de sauvegarde {#group-17--backup-import}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaure depuis une sauvegarde lors du déploiement. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_custom_domain` | `true` | Provisionne un Ingress pour les noms d'hôte personnalisés + certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte à servir. |
@@ -380,7 +379,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 21 — Redis et Cloud Armor {#group-21--redis--cloud-armor}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Associe une politique Cloud Armor (WAF) au backend de l'Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
@@ -388,7 +387,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — voir
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
@@ -434,7 +433,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
-> par le moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et
+> par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et
 > leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le
 > **plan** avec une erreur claire et nommée avant toute création de ressource.
 
@@ -454,9 +453,9 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Tandoor, partagée avec
 la variante Cloud Run, est décrite dans **[Tandoor_Common](Tandoor_Common.md)**.
 

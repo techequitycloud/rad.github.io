@@ -66,7 +66,7 @@ assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Superset {#a-gke-autopilot--the-superset-workload}
 
@@ -109,7 +109,7 @@ pour appliquer le schéma.
   ```
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret
-Secret Manager contenant le mot de passe figurent tous dans les [Outputs](#5-outputs).
+Secret Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs).
 Pour le modèle de connexion, les sauvegardes automatiques et la rotation du mot de
 passe, consultez [App_GKE](App_GKE.md).
 
@@ -148,7 +148,7 @@ et bloquent les workers Gunicorn.
 de secrets Secret Manager et injectés dans les pods à l'exécution ; aucune valeur en
 clair n'apparaît dans la configuration.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
@@ -156,7 +156,7 @@ clair n'apparaît dans la configuration.
   ```
 
 Le nom du secret du mot de passe de la base de données figure dans les
-[Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret
+[Sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour l'intégration Secret
 Store CSI et la rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
@@ -165,7 +165,7 @@ Par défaut, la charge de travail est exposée via une IP Cloud Load Balancing e
 Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP
 statique peut être réservée pour que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -182,8 +182,8 @@ de Cloud SQL sont envoyées à Cloud Monitoring. Un test de disponibilité facul
 `/health` et des règles d'alerte facultatives sont disponibles (désactivés par
 défaut).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -245,7 +245,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts et de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -416,12 +416,12 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -437,7 +437,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -479,7 +479,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Superset, partagée
 avec la variante Cloud Run, est décrite dans **[Superset_Common](Superset_Common.md)**.
 

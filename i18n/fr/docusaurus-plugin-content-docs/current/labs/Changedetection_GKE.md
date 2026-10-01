@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Changedetection.io sur GKE Autopilot dans
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 30 à 60 minutes
+**Durée estimée :** 30–60 minutes
 
 changedetection.io est un service auto-hébergé qui surveille les modifications de pages web et
 envoie des notifications lorsqu'elles se produisent. Ce lab vous fait parcourir tout le cycle de vie
@@ -27,14 +27,14 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez capable de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Définir un mot de passe initial pour le tableau de bord (ou placer la charge de travail derrière IAP), puisque
   changedetection.io est livré sans connexion.
 - Effectuer les opérations du jour 2 — inspecter le StatefulSet et son PVC, respecter la
-  contrainte de mise à l'échelle à une seule réplique, mettre à jour la version et gérer les secrets/le stockage.
+  contrainte de mise à l'échelle à un seul réplica, mettre à jour la version et gérer les secrets/le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
 - Démanteler proprement le déploiement.
@@ -56,7 +56,7 @@ ce lab ne duplique volontairement pas ce détail afin de rester exact dans le te
 - **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une fois ; chacune des tâches ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -152,9 +152,9 @@ export REGION="us-central1"           # the region you deploy into
    kubectl describe pvc -n "$NS"
    ```
 
-2. **Ne dépassez pas une seule réplique.** `min_instance_count` et `max_instance_count`
+2. **Ne dépassez pas un seul réplica.** `min_instance_count` et `max_instance_count`
    valent tous deux `1` par défaut et doivent le rester — le planificateur de récupération s'exécute dans le processus
-   sur un unique datastore à base de fichiers, et une seconde réplique écrivant sur le même volume
+   sur un unique datastore à base de fichiers, et un second réplica écrivant sur le même volume
    `/datastore` risque de corrompre `url-watches.json`. Il n'y a aucun HPA à gérer
    ici ; la seule « mise à l'échelle » prise en charge est verticale (`cpu_limit`/`memory_limit`),
    via **Update** sur la page de détails du déploiement.
@@ -189,7 +189,7 @@ export REGION="us-central1"           # the region you deploy into
    kubectl logs -n "$NS" statefulset/"$(kubectl get statefulset -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation CPU et mémoire
@@ -258,7 +258,7 @@ le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas su
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie le StatefulSet GKE + PVC en mode bloc, le bucket de données GCS, l'Ingress avec IP statique/certificat géré, et construit l'image — aucune base de données, aucun job d'initialisation |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; le contrôle d'état réussit ; définir un mot de passe pour le tableau de bord (ou IAP) et `BASE_URL` |
-| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, conserver une seule réplique, mettre à jour la version, gérer les secrets/le stockage |
+| 3 — Exploiter | Manuel | Inspecter le StatefulSet/PVC, conserver un seul réplica, mettre à jour la version, gérer les secrets/le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de PVC, d'Ingress/certificat et de récupération d'image |
 | 6 — Démanteler | Automatisé | La suppression (Trash) retire toutes les ressources du module |

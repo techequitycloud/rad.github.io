@@ -11,7 +11,7 @@ description: "Lab pratique : déployez LobeChat sur GKE Autopilot dans votre pro
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 20 à 40 minutes
+**Durée estimée :** 20–40 minutes
 
 Une interface de chat LLM open source et sans état, prenant en charge plusieurs fournisseurs d'IA. Ce lab vous fait parcourir le cycle de vie opérationnel complet
 du module **LobeChat on GKE Autopilot** sur Google Cloud : le déployer, y accéder et
@@ -27,12 +27,12 @@ lab ne reprend volontairement pas ce détail afin de rester exact dans la durée
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et le stockage.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -65,10 +65,10 @@ export REGION="us-central1"           # the region you deploy into
    [Guide de configuration](https://docs.radmodules.dev/docs/modules/LobeChat_GKE)
    documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état du déploiement avec les journaux en temps réel.
 
-2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, construit l'image du conteneur et crée le namespace et le Deployment Kubernetes. Aucune base de données ni aucun job d'initialisation n'est nécessaire. Les premiers déploiements prennent environ
+2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, construit l'image du conteneur et crée l'espace de noms et le Deployment Kubernetes. Aucune base de données ni aucun job d'initialisation n'est nécessaire. Les premiers déploiements prennent environ
    **10 à 20 minutes** (la construction de l'image domine).
 
-3. Connectez-vous au cluster et repérez le namespace avec des filtres indépendants des noms :
+3. Connectez-vous au cluster et repérez l'espace de noms avec des filtres indépendants des noms :
 
    ```bash
    CLUSTER=$(gcloud container clusters list --project="$PROJECT" --format="value(name)" --limit=1)
@@ -115,7 +115,7 @@ export REGION="us-central1"           # the region you deploy into
 
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur la page de détails du déploiement —
    le module détient la spécification de la charge de travail, la mise à l'échelle est donc une modification de configuration et non un
-   `kubectl scale` manuel (une modification manuelle serait annulée lors de l'application suivante).
+   `kubectl scale` manuel (une modification manuelle serait annulée lors du prochain apply).
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
@@ -132,7 +132,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis `kubectl` ou le Logs Explorer :
+1. **Journaux** — depuis `kubectl` ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NS" deploy/"$(kubectl get deploy -n "$NS" -o jsonpath='{.items[0].metadata.name}')" --tail=50
@@ -172,10 +172,10 @@ propres à chaque paramètre.
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — la charge de travail Kubernetes
-et le namespace, les secrets Secret Manager et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre) sont gérées séparément et ne sont pas supprimées ici.
+et l'espace de noms, les secrets Secret Manager et les images Artifact Registry. Les ressources appartenant à **Services_GCP** (le VPC, le cluster GKE, le registre) sont gérées séparément et ne sont pas supprimées ici.
 
 ---
 
@@ -183,9 +183,9 @@ et le namespace, les secrets Secret Manager et les images Artifact Registry. Les
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Charge de travail GKE déployée ; namespace et image créés |
+| 1 — Déployer | Automatisé | Charge de travail GKE déployée ; espace de noms et image créés |
 | 2 — Accéder et vérifier | Manuel | Interface de chat accessible sur le point de terminaison du cluster ; fournisseur(s) d'IA confirmé(s) dans le sélecteur de modèle |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets et le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring |
 | 5 — Dépanner | Manuel | Diagnostiquer les défaillances de pods, CrashLoopBackOff, les erreurs de récupération d'image |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

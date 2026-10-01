@@ -43,7 +43,7 @@ assemble un ensemble volontairement réduit de services Google Cloud :
 | Base de données | — | **Aucune.** C'est le serveur d'accueil Matrix qui conserve tout l'état, pas Element |
 | Stockage d'objets | — | **Aucun.** Element est sans état (ni PVC, ni bucket, ni NFS) |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Element est sans état.** L'ensemble de l'état des conversations, des clés de
   chiffrement et des médias réside sur le serveur d'accueil Matrix et dans le navigateur
@@ -165,7 +165,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles.
   `/app/config.json` à chaque démarrage à partir de `HOMESERVER_URL` /
   `HOMESERVER_NAME`, puis passe la main à nginx. Changer de serveur d'accueil revient à
   redéployer avec de nouvelles valeurs d'environnement — sans reconstruire l'image.
-- **Ni base de données, ni migrations, ni tâche d'initialisation.** Element sert des
+- **Ni base de données, ni migrations, ni job d'initialisation.** Element sert des
   assets statiques ; le pod est prêt (Ready) dès que nginx écoute sur le port 80.
 - **La connexion est un échange entre le navigateur et le serveur d'accueil.** Element
   authentifie l'utilisateur directement auprès du serveur d'accueil Matrix configuré ;
@@ -208,7 +208,7 @@ et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -287,11 +287,11 @@ Hérité et **non utilisé par Element** (Deployment sans état). `stateful_pvc_
 | `uptime_check_config` | désactivé — `/` | Test de disponibilité Cloud Monitoring facultatif ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte facultatives sur les métriques. |
 
-### Groupe 11 — Tâches et tâches planifiées {#group-11--jobs--scheduled-tasks}
+### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Element ne déclare aucune tâche d'initialisation. |
+| `initialization_jobs` | `[]` | Element ne déclare aucun job d'initialisation. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services annexes (sidecar) ou auxiliaires. |
 
@@ -369,7 +369,7 @@ Hérité ; non utilisé par Element. `enable_custom_sql_scripts`, `custom_sql_sc
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la règle. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'Ingress GKE — intéressant pour les assets statiques. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -395,7 +395,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (vide pour Element). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des tâches de configuration (aucune pour Element). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -408,14 +408,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, des valeurs `quota_memory_*` exprimées en entiers nus. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | High | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
 | `application_version` | Épinglez un véritable tag `element-web` | High | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un ARG de build brut `latest` défini à la main échouerait avec `MANIFEST_UNKNOWN`. |

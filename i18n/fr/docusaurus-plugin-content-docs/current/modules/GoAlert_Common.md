@@ -17,7 +17,7 @@ explique les valeurs par défaut que vous voyez dans la documentation des platef
 
 Pour l'infrastructure qui provisionne et exécute réellement GoAlert, consultez les guides
 des plateformes ([GoAlert_GKE](GoAlert_GKE.md), [GoAlert_CloudRun](GoAlert_CloudRun.md))
-et les guides des fondations ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
+et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 
 ---
 
@@ -26,7 +26,7 @@ et les guides des fondations ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun
 | Domaine | Fourni par GoAlert_Common | Où cela apparaît |
 |---|---|---|
 | Image de conteneur | Enveloppe l'image officielle `goalert/goalert` avec un `entrypoint.sh` personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL** (`POSTGRES_17`) comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL** (`POSTGRES_17`) comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Amorçage de la base de données | Définit une chaîne de jobs d'initialisation en 3 étapes — `db-init` → `db-migrate` → `admin-bootstrap` | Sortie `initialization_jobs` |
 | Extension Postgres | Installe `pgcrypto` sans condition (`enable_postgres_extensions = true`, `postgres_extensions = ["pgcrypto"]`), requise par le schéma de GoAlert | Objet `config` |
 | Secrets | Génère et stocke dans **Secret Manager** le mot de passe administrateur initial et une clé de chiffrement des données | Sorties `secret_ids`, `secret_values`, `admin_password_secret_id` |
@@ -125,7 +125,7 @@ ordonnés**, chacun dépendant du précédent via `depends_on_jobs`, tous avec
      le code 0 au lieu d'échouer.
    - Réessaie lui aussi jusqu'à 10 fois en interne.
 
-Les champs `command`/`args` de chaque job sont laissés vides ; la fondation génère
+Les champs `command`/`args` de chaque job sont laissés vides ; le socle génère
 automatiquement `["/bin/sh", "-c", file(script_path)]` lorsque `script_path` est défini,
 en intégrant directement le contenu du script dans la spécification du Job — le modèle
 utilisé par ce catalogue pour éviter de monter `scripts/` en tant que volume dans un
@@ -149,7 +149,7 @@ propre au tenant ne dispose pas du privilège `CREATE EXTENSION` sur Cloud SQL.
 `GoAlert_Common` définit `enable_postgres_extensions = true` et `postgres_extensions = ["pgcrypto"]`
 sans condition dans l'objet `config` qu'il renvoie — ce comportement n'est **pas** piloté
 par une variable d'entrée exposée à l'opérateur ; il a toujours lieu. Le job
-d'initialisation privilégié `postgres-extensions` de la fondation l'installe avant que la
+d'initialisation privilégié `postgres-extensions` du socle l'installe avant que la
 base de données de l'application soit utilisable par ailleurs.
 
 ---
@@ -173,8 +173,8 @@ Deux secrets sont générés automatiquement et stockés dans Secret Manager :
   d'environnement secrète du conteneur. Toutes les instances partageant une base de
   données doivent utiliser la même clé.
 
-Le mot de passe de la base de données lui-même est généré et géré séparément par la
-fondation ; le nom de son secret Secret Manager figure dans les sorties du déploiement de
+Le mot de passe de la base de données lui-même est généré et géré séparément par le
+socle ; le nom de son secret Secret Manager figure dans les sorties du déploiement de
 la plateforme (`database_password_secret`).
 
 ---
@@ -199,8 +199,8 @@ aurait également fonctionné. Un délai initial de 30 secondes et un seuil d'é
 | Sortie | Type | Description |
 |---|---|---|
 | `config` | `object` | Objet de configuration complet de l'application (image, variables d'environnement, paramètres de base de données, sondes, chaîne d'initialisation de 3 jobs). |
-| `secret_ids` | `map(string)` | `{ GOALERT_DATA_ENCRYPTION_KEY = <secret-id> }`. `DB_PASSWORD` est géré par la fondation elle-même. |
-| `secret_values` | `sensitive object` | `{ ADMIN_PASSWORD = <generated-password> }`, transmis comme `explicit_secret_values` afin que la première application puisse matérialiser les secrets avant que les valeurs Secret Manager existent pour être lues par le câblage (nécessaire sur le chemin SecretSync de GKE). |
+| `secret_ids` | `map(string)` | `{ GOALERT_DATA_ENCRYPTION_KEY = <secret-id> }`. `DB_PASSWORD` est géré par le socle lui-même. |
+| `secret_values` | `sensitive object` | `{ ADMIN_PASSWORD = <generated-password> }`, transmis comme `explicit_secret_values` afin que le premier apply puisse matérialiser les secrets avant que les valeurs Secret Manager existent pour être lues par le câblage (nécessaire sur le chemin SecretSync de GKE). |
 | `storage_buckets` | `list(object)` | Toujours `[]`. |
 | `admin_password_secret_id` | `string` | ID du secret Secret Manager contenant le mot de passe administrateur amorcé. |
 | `path` | `string` | Chemin absolu sur le système de fichiers vers le répertoire du module `GoAlert_Common` (utilisé pour résoudre `scripts_dir`). |

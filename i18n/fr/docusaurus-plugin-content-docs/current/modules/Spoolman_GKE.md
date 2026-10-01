@@ -32,16 +32,16 @@ Spoolman s'exécute dans un unique pod Python/FastAPI — il n'y a pas de charge
 travail frontend distincte ; l'interface Vue/Quasar est intégrée et servie par le
 même processus. Le déploiement assemble un ensemble minimal de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Image préconstruite `ghcr.io/donkie/spoolman`, 1 vCPU / 512Mi par défaut |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — ce module se standardise sur Postgres (Spoolman en amont prend aussi en charge MySQL/SQLite/CockroachDB) |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — ce module se standardise sur Postgres (Spoolman en amont prend aussi en charge MySQL/SQLite/CockroachDB) |
 | Stockage objet | Aucun | Spoolman conserve tout son état dans Postgres ; aucun bucket GCS n'est provisionné |
 | Cache | Aucun | Spoolman n'a aucune intégration Redis/cache |
 | Secrets | Secret Manager | Uniquement le mot de passe de base de données généré automatiquement — Spoolman n'a aucun secret d'amorçage administrateur/clé API qui lui soit propre |
 | Entrée | Cloud Load Balancing | LoadBalancer externe par défaut |
 
-**Valeurs par défaut pertinentes à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le seul moteur pris en charge par ce module.** `database_type`
   est fixé par `Spoolman_Common` ; Spoolman en amont prend aussi en charge MySQL et
@@ -76,8 +76,8 @@ même processus. Le déploiement assemble un ensemble minimal de services Google
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. Le namespace et les autres
-identifiants figurent dans les [Outputs](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définies. L'espace de noms et les autres
+identifiants figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Spoolman {#a-gke-autopilot--the-spoolman-workload}
 
@@ -95,10 +95,10 @@ facture le CPU et la mémoire effectivement demandés par le pod.
 
 Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot et de la mise à l'échelle.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Spoolman stocke toutes les données d'inventaire (bobines, filaments, fournisseurs,
-historique de consommation) dans une instance gérée Cloud SQL pour PostgreSQL 15.
+historique de consommation) dans une instance gérée Cloud SQL for PostgreSQL 15.
 Le pod y accède de manière privée via le sidecar **Cloud SQL Auth Proxy** sur la
 boucle locale ; aucune adresse IP publique n'est exposée. Il n'y a pas de job
 d'initialisation — Spoolman applique ses propres migrations de schéma à chaque
@@ -113,7 +113,7 @@ démarrage.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Outputs](#5-outputs). Consultez [App_GKE](App_GKE.md) pour le
+figurent dans les [sorties](#5-outputs). Consultez [App_GKE](App_GKE.md) pour le
 modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Secret Manager {#c-secret-manager}
@@ -246,12 +246,12 @@ Spoolman n'en utilise aucune par défaut.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Namespace Kubernetes. |
+| `namespace` | Espace de noms Kubernetes. |
 | `service_cluster_ip` | ClusterIP interne. |
 | `service_external_ip` | Adresse IP externe du LoadBalancer. |
 | `service_url` | URL complète de la charge de travail déployée. |
@@ -271,12 +271,12 @@ Spoolman n'en utilise aucune par défaut.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut pertinentes {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critical | Quiconque peut atteindre le Service peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
 | `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critical | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage du pod. |
@@ -291,7 +291,7 @@ Spoolman n'en utilise aucune par défaut.
 
 Pour le comportement du socle évoqué tout au long de ce guide — Workload Identity,
 mise à l'échelle, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Spoolman, partagée
 avec la variante Cloud Run, est décrite dans
 **[Spoolman_Common](Spoolman_Common.md)**.

@@ -41,7 +41,7 @@ assemble un ensemble restreint et ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY` et `DEFAULT_ADMIN_PASSWORD` — deux secrets réels et fonctionnels — ainsi que le mot de passe de la base de données |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le seul moteur pris en charge.** `Planka_Common` impose
   `database_type = "POSTGRES_15"` — Knex n'a pas d'autre backend pour Planka.
@@ -90,7 +90,7 @@ assemble un ensemble restreint et ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définies. Les noms
-des services et des ressources figurent dans les [Outputs](#5-outputs) du
+des services et des ressources figurent dans les [sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Planka {#a-cloud-run--the-planka-service}
@@ -259,9 +259,9 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` / `service_url` | Nom du service Cloud Run et URL `run.app` par défaut. |
 | `database_instance_name` / `database_name` / `database_user` / `database_host` / `database_port` | Détails de connexion Cloud SQL. |
@@ -271,12 +271,12 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
 | `container_image_source` | `custom` (par défaut) | High | `"prebuilt"` déploie directement l'image officielle en ignorant le point d'entrée cloud — Planka démarre sans `DATABASE_URL` et ne peut pas joindre la base de données. |

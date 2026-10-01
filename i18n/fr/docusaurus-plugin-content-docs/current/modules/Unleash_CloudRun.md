@@ -33,7 +33,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 512 MiB par défaut, mise à l'échelle automatique sans serveur ; mise à l'échelle à zéro prise en charge |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Unleash ne prend en charge ni MySQL ni d'autres moteurs |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Unleash ne prend en charge ni MySQL ni d'autres moteurs |
 | Secrets | Secret Manager | Jeton d'API administrateur d'amorçage généré automatiquement (`INIT_ADMIN_API_TOKENS`) ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
 
@@ -92,11 +92,11 @@ révisions pour des déploiements sûrs.
 Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la simultanéité,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Unleash stocke toutes les données applicatives (projets, feature flags, stratégies,
 segments, jetons d'API, utilisateurs et journal des modifications/d'audit) dans une
-instance gérée Cloud SQL pour PostgreSQL 15. Le service se connecte de manière privée
+instance gérée Cloud SQL for PostgreSQL 15. Le service se connecte de manière privée
 via le **Cloud SQL Auth Proxy** ; aucune IP publique n'est exposée. Lors du premier
 déploiement, un Job d'initialisation crée la base de données et l'utilisateur de
 l'application, et Unleash applique ses propres migrations de schéma au démarrage.
@@ -151,7 +151,7 @@ Voir [App_CloudRun](App_CloudRun.md).
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
 Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de Cloud
-Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des contrôles de
+Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
 disponibilité et des règles d'alerte facultatifs.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
@@ -211,22 +211,22 @@ comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région du service et des ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `unleash` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
 | `application_display_name` | `Unleash` | Nom lisible affiché dans la console. |
@@ -235,7 +235,7 @@ comportement standard.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | Cloud Build encapsule `unleashorg/unleash-server` avec le point d'entrée DATABASE_URL. |
@@ -248,13 +248,13 @@ comportement standard.
 | `execution_environment` | `gen2` | Gen2 recommandé. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête (0 à 3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Réplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements par étapes. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle de l'accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | `all` permet aux clients SDK et à la CI d'atteindre l'API Unleash. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Achemine uniquement le trafic RFC 1918 via le VPC. |
@@ -263,7 +263,7 @@ comportement standard.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `DATABASE_URL` est assemblée à l'exécution — ne la définissez pas ici. |
 | `secret_environment_variables` | `{}` | Map variable d'environnement → nom du secret Secret Manager. |
@@ -272,7 +272,7 @@ comportement standard.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Expression cron des sauvegardes automatiques (UTC). |
 | `backup_retention_days` | `7` | Durée de conservation ; augmentez-la pour la production ou la conformité. |
@@ -291,9 +291,9 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global et le WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles du WAF. |
@@ -303,7 +303,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Crée les buckets GCS définis dans `storage_buckets`. |
 | `storage_buckets` | `[]` | Vide — Unleash ne nécessite aucun stockage de fichiers. |
@@ -313,7 +313,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixe — Unleash nécessite PostgreSQL. |
 | `application_database_name` | `unleash` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
@@ -324,7 +324,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Cloud Scheduler et Cloud Run Jobs planifiés. |
@@ -332,18 +332,18 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health`, délai de 30 s, 30 tentatives | Sonde de démarrage. Prévoyez une marge pour les migrations du premier démarrage. |
 | `liveness_probe` | HTTP `/health`, délai de 30 s | Sonde de vivacité (liveness). |
 | `startup_probe_config` | HTTP `/health` | Sonde de démarrage Cloud Run structurée. |
 | `health_check_config` | HTTP `/health` | Sonde de vivacité Cloud Run structurée. |
-| `uptime_check_config` | désactivé, `/health` | Contrôle de disponibilité Cloud Monitoring. |
+| `uptime_check_config` | désactivé, `/health` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
 ### Groupe 16 — Redis {#group-16--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Unleash ne nécessite pas Redis ; laissez-le désactivé. |
 | `redis_host` | `""` | Utilisé uniquement lorsque `enable_redis = true`. |
@@ -351,7 +351,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (détecte automatiquement `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définies)_ | CIDR du niveau d'accès / mode simulation (dry-run). |

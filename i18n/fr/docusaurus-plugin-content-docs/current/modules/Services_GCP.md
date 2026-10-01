@@ -195,7 +195,7 @@ L'alternative moins coûteuse à Filestore et Memorystore gérés. Provisionne u
 
 Le MIG est réparti sur **toutes les zones de la région** avec `distribution_policy_target_shape = "ANY"`, de sorte que GCE place l'instance unique là où de la capacité est disponible. Cela remplace un ancien épinglage sur une seule zone, qui restait bloqué indéfiniment sur `ZONE_RESOURCE_POOL_EXHAUSTED` — une défaillance de **capacité**, et non de quota, ce qui explique pourquoi les quotas de CPU/d'instances peuvent sembler entièrement disponibles alors que la VM ne démarre jamais.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `nfs_excluded_zones` | `[]` | Zones à exclure de la règle de distribution du MIG. Nécessaire pour le mode de défaillance résiduel dans lequel même `target_shape = "ANY"` engage l'instance dans une zone en rupture de capacité et y réessaie indéfiniment ; exclure cette zone reconstruit le MIG avec une règle qui ne peut pas la choisir. **Modifier cette liste force le remplacement du MIG** (`distribution_policy_zones` est immuable) — le disque de données survit grâce à l'instantané quotidien, et un déploiement neuf n'a rien à perdre. Ne vaut la peine d'être défini que lorsqu'un *sous-ensemble* de zones est en rupture ; si toutes les zones sont épuisées, les exclusions ne peuvent rien y faire et le MIG se réparera de lui-même dès le retour de la capacité. |
 
@@ -471,7 +471,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir vos services de base.** Ce groupe constitue l'ensemble de décisions le plus lourd de conséquences — il sélectionne les backends de données et de calcul auxquels chaque module applicatif en aval se liera. Les indicateurs de base de données ne s'excluent *pas* mutuellement dans le code, mais choisissez délibérément selon la charge de travail : **`create_postgres`** pour les applications relationnelles généralistes (le choix sûr par défaut) ; **`create_mysql`** spécifiquement pour les applications natives MySQL (WordPress, Moodle, OpenEMR) ; **`enable_alloydb`** à la place de Postgres lorsque la charge de travail est fortement orientée analytique, vectorielle ou IA (moteur en colonnes + pgvector/SCANN) ; **`create_firestore`** en complément, et non en remplacement, lorsqu'une application a besoin d'un magasin de documents serverless avec synchronisation en temps réel. Activer des backends que vous n'utiliserez pas est la source la plus courante de coûts évitables — chacun est facturé, qu'une application s'y connecte ou non. Définissez **`create_google_kubernetes_engine = true`** uniquement si vous comptez déployer des modules applicatifs GKE ; les applications Cloud Run n'en ont pas besoin, et un cluster Autopilot inactif entraîne malgré tout des frais de plan de contrôle.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | *(obligatoire)* | ID du projet GCP dans lequel toutes les ressources du module sont déployées. Le modifier après le déploiement initial recrée toutes les ressources dans le nouveau projet. |
 | `tenant_id` | `"demo"` | Identifiant court (**lettres minuscules et chiffres uniquement, sans tiret** — imposé au moment du plan) utilisé comme préfixe de chaque nom de ressource. Ne le modifiez jamais après le déploiement initial — cela renommerait, et donc recréerait, chaque ressource. |
@@ -484,14 +484,14 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 ### Groupe 2 — Notifications et libellés {#group-2--notifications--labels}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `support_users` | `[]` | Adresses e-mail ajoutées comme destinataires **des alertes de budget de facturation uniquement**, et seulement lorsque `create_billing_budget = true` (fusionnées avec `budget_alert_emails`). N'accorde **aucun** accès IAM et n'alimente **pas** les alertes Cloud Monitoring — les destinataires de la supervision proviennent de `notification_alert_emails` avec `configure_email_notification`. Sans effet tant que `create_billing_budget = false`. |
 | `resource_labels` | `{}` | Libellés clé-valeur appliqués à toutes les ressources créées par le module (centre de coûts, environnement, équipe). |
 
 ### Groupe 3 — Réseau et VPC {#group-3--networking--vpc}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `subnet_cidr_range` | `["10.0.0.0/24"]` | Plages CIDR des sous-réseaux VPC, une par région de disponibilité. Doivent être des plages RFC 1918 valides et ne doivent se chevaucher ni entre elles ni avec les CIDR de pods/services GKE. De 1 à 2 plages prises en charge. |
 
@@ -501,7 +501,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Cloud SQL — PostgreSQL**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `postgres_database_version` | `"POSTGRES_17"` | Version du moteur PostgreSQL (`POSTGRES_17` / `POSTGRES_16` / `POSTGRES_15` / `POSTGRES_14`). Le passage à une version inférieure n'est pas pris en charge. |
 | `postgres_database_availability_type` | `"ZONAL"` | `ZONAL` (zone unique, dev/test) ou `REGIONAL` (haute disponibilité avec basculement automatique, recommandé pour la production). |
@@ -513,7 +513,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Cloud SQL — MySQL**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `mysql_database_version` | `"MYSQL_8_4"` | Version du moteur MySQL (`MYSQL_8_4` / `MYSQL_8_0` / `MYSQL_5_7`). Le passage à une version inférieure n'est pas pris en charge. |
 | `mysql_database_availability_type` | `"ZONAL"` | `ZONAL` (zone unique) ou `REGIONAL` (haute disponibilité). `REGIONAL` est recommandé pour la production. |
@@ -524,7 +524,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Cloud SQL — paramètres de maintenance partagés**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `sql_maintenance_window_day` | `7` | Jour de la semaine (1=lundi … 7=dimanche) de la fenêtre de maintenance Cloud SQL sur les instances principales. |
 | `sql_maintenance_window_hour` | `3` | Heure (0–23, UTC) de la fenêtre de maintenance Cloud SQL. |
@@ -533,7 +533,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **AlloyDB**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `alloydb_cpu_count` | `2` | vCPU par instance AlloyDB (`2` / `4` / `8` / `16` / `32` / `64`). Utilisé uniquement lorsque `enable_alloydb = true`. |
 | `alloydb_database_flags` | `[]` | Indicateurs PostgreSQL appliqués à l'instance principale AlloyDB. |
@@ -542,7 +542,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Firestore**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `firestore_database_id` | `""` | ID de la base de données Firestore (généré automatiquement sous la forme `firestore-db-<random_id>` s'il est vide). Utilisé uniquement lorsque `create_firestore = true`. |
 | `firestore_location_id` | `""` | Emplacement Firestore (par défaut, la région principale s'il est vide). Utilisé uniquement lorsque `create_firestore = true`. |
@@ -551,7 +551,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 ### Groupe 5 — NFS et Redis autogérés {#group-5--self-managed-nfs--redis}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_network_filesystem` | `true` | Provisionne une VM Compute Engine faisant office à la fois de serveur NFS et de cache Redis. L'alternative moins coûteuse à Filestore et Memorystore gérés ; sans SLA et point de défaillance unique — adaptée au dev/test, pas à la production. |
 | `network_filesystem_machine` | `"e2-small"` | Type de machine Compute Engine de la VM NFS/Redis. Sous-dimensionnée pour un NFS à haut débit ou de grands jeux de données Redis — passez à `e2-medium`/`n2-standard-2` pour un usage plus intensif. |
@@ -561,7 +561,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de Redis.** Le choix déterminant est le **niveau** : `BASIC` est un nœud unique sans réplication — un événement de maintenance ou une défaillance du nœud vide l'intégralité du jeu de données et (pour les magasins de sessions) déconnecte tous les utilisateurs ; `STANDARD_HA` ajoute un réplica inter-zones avec basculement automatique pour environ le double du coût, et c'est le seul niveau sur lequel la **persistance** (instantanés `RDB` ou `AOF`) prend effet. Pour tout ce qui conserve un état devant survivre à un basculement — sessions, compteurs de limitation de débit, files de jobs — utilisez `STANDARD_HA` *avec* un mode de persistance autre que `DISABLED` (une instance `STANDARD_HA` de production laissée à `DISABLED` est rejetée au moment du plan). Définir une persistance sur `BASIC` est également rejeté, car elle serait ignorée silencieusement. `redis_connect_mode` ne peut pas être modifié après la création ; décidez donc d'emblée entre l'appairage et Private Service Access.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_redis` | `false` | Provisionne une instance Cloud Memorystore Redis. À activer uniquement lorsque `create_network_filesystem = false`, pour éviter une infrastructure redondante. |
 | `redis_tier` | `"BASIC"` | `BASIC` (nœud unique, sans réplication — cache uniquement) ou `STANDARD_HA` (basculement inter-zones, coût ~2× — requis pour un état durable). |
@@ -575,7 +575,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de Filestore.** Le niveau détermine à la fois les performances et la capacité *minimale* que vous devez payer : `BASIC_HDD` (≥ 1024 GB) pour un débit standard sensible aux coûts ; `BASIC_SSD` (≥ 2560 GB) pour davantage d'IOPS ; `ENTERPRISE` (≥ 1024 GB) pour les performances les plus élevées avec une disponibilité régionale multizone. Le minimum de capacité associé à chaque niveau est imposé au moment du plan, si bien qu'un `BASIC_SSD` sous-dimensionné échoue rapidement plutôt qu'au niveau de l'API. Le niveau ne peut pas être modifié après le provisionnement, et la capacité ne peut qu'augmenter — choisissez donc le niveau délibérément et commencez avec une marge réaliste.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_filestore_nfs` | `false` | Provisionne une instance Cloud Filestore NFS. À activer uniquement lorsque `create_network_filesystem = false`. |
 | `filestore_tier` | `"BASIC_HDD"` | `BASIC_HDD` (min. 1024 GB), `BASIC_SSD` (min. 2560 GB) ou `ENTERPRISE` (min. 1024 GB, haute disponibilité régionale). **Ne peut pas être modifié après le provisionnement.** |
@@ -587,7 +587,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Paramètres du cluster**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name_prefix` | `"gke-cluster"` | Préfixe des noms de cluster ; un index commençant à 1 est ajouté (par exemple `gke-cluster-1`). Ne le modifiez pas après le provisionnement. |
 | `gke_cluster_count` | `1` | Nombre de clusters GKE à provisionner (1–10). |
@@ -596,7 +596,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **CIDR réseau**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_subnet_base_cidr` | `"10.128.0.0/12"` | CIDR de base des sous-réseaux des nœuds GKE. Ne doit pas chevaucher les CIDR de sous-réseau, de pods ou de services. |
 | `gke_pod_base_cidr` | `"10.64.0.0/10"` | CIDR de base des plages d'IP des pods. Ne doit pas chevaucher les autres CIDR. |
@@ -605,7 +605,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Pool de nœuds en mode Standard** *(ignoré en Autopilot)*
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_node_machine_type` | `"e2-standard-4"` | Type de machine du pool de nœuds en mode Standard. |
 | `gke_node_initial_count` | `1` | Nombre initial de nœuds par zone (1–10), ajusté par l'autoscaler. |
@@ -616,7 +616,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 **Modules complémentaires Fleet**
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `configure_cloud_service_mesh` | `false` | Active Cloud Service Mesh (Istio géré) avec mTLS et gestion du trafic. Requiert `create_google_kubernetes_engine = true`. |
 | `configure_config_management` | `false` | Active Config Sync pour la réconciliation GitOps à partir d'un dépôt Git. Requiert `create_google_kubernetes_engine = true`. |
@@ -624,7 +624,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 ### Groupe 9 — Sauvegarde et restauration GKE {#group-9--gke-backup--restore}
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_gke_backup` | `false` | Active Backup for GKE sur le ou les clusters provisionnés. Requiert `create_google_kubernetes_engine = true`. |
 | `gke_backup_retention_days` | `30` | Nombre de jours de conservation des instantanés de sauvegarde GKE (1–365). |
@@ -634,7 +634,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de VPC-SC — à manier avec précaution.** C'est la fonctionnalité du module dont le rayon d'impact est le plus large : un périmètre appliqué restreint *tout* accès aux API Google aux requêtes provenant de l'intérieur, si bien que des identifiants IAM valides cessent à eux seuls de fonctionner depuis l'extérieur de la liste d'autorisation. La démarche sûre n'est pas négociable : activez avec `vpc_sc_dry_run = true` (la valeur par défaut), surveillez les journaux d'audit à la recherche d'entrées `POLICY_VIOLATION` pendant 24 à 72 heures, ajoutez chaque IP/réseau légitime à `admin_ip_ranges`/`vpc_cidr_ranges`, *puis* définissez `vpc_sc_dry_run = false`. Appliquer le périmètre avec un `admin_ip_ranges` vide vous bloquerait l'accès à votre propre projet — cette combinaison précise est désormais rejetée au moment du plan, mais le risque plus large d'une liste d'autorisation incomplète reste à votre charge via le mode simulation (dry-run). N'activez cette fonctionnalité que lorsque le contrôle de l'exfiltration de données est une exigence réelle.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Crée un périmètre VPC Service Controls autour du projet. Activez-le toujours d'abord avec `vpc_sc_dry_run = true`. |
 | `vpc_cidr_ranges` | `[]` | Plages CIDR de sous-réseaux VPC autorisées à traverser le périmètre. Utilisé uniquement lorsque `enable_vpc_sc = true`. |
@@ -645,7 +645,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de Binary Authorization.** L'état final visé est `REQUIRE_ATTESTATION` — seules les images signées par votre attestateur CI/CD peuvent être déployées sur Cloud Run ou GKE dans l'ensemble du projet. Mais l'*ordre des opérations* compte : passer à `REQUIRE_ATTESTATION` avant que le pipeline de signature ne produise des attestations valides bloque **tous** les déploiements du projet — et ce module ne permet pas de revenir en arrière. La mise à jour de la règle est additive et **uniquement durcissante** (plusieurs tenants partagent une même règle de projet), si bien que redéfinir `binauthz_evaluation_mode` à `ALWAYS_ALLOW` est ignoré : l'apply réussit, journalise un WARNING, et la règle en vigueur continue de s'appliquer. La récupération se fait hors bande avec `gcloud container binauthz policy import <file>`. Activez d'abord avec `ALWAYS_ALLOW`, mettez en place le pipeline d'attestation, vérifiez que les images sont bien signées, puis durcissez vers `REQUIRE_ATTESTATION`. `ALWAYS_DENY` est un interrupteur de verrouillage d'urgence, pas un paramètre normal.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_binary_authorization` | `false` | Active la vérification des images au moment du déploiement par Binary Authorization pour le projet. S'applique à l'ensemble du projet, sans exclusion par service. |
 | `binauthz_evaluation_mode` | `"ALWAYS_ALLOW"` | `ALWAYS_ALLOW` (configuration initiale — tout autoriser), `REQUIRE_ATTESTATION` (production — imposer les signatures) ou `ALWAYS_DENY` (verrouillage d'urgence — tout bloquer). |
@@ -654,7 +654,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de CMEK — décidez dès le jour zéro.** CMEK vous donne le contrôle du cycle de vie des clés de chiffrement au repos pour Cloud SQL, Cloud Storage, Artifact Registry et GKE. Le point critique est le moment : l'activer sur un déploiement *neuf* se fait sans heurt, mais l'activer *après* que des ressources existent déjà avec des clés gérées par Google exige une migration des données. Il s'agit d'une fonctionnalité de conformité/gouvernance — ne l'activez que si la garde des clés est une exigence réelle et, dans ce cas, activez-la dès le premier déploiement. `cmek_key_rotation_period` arbitre entre hygiène cryptographique et charge opérationnelle ; la valeur par défaut de 90 jours est un équilibre judicieux.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cmek` | `false` | Provisionne des clés Cloud KMS pour le chiffrement géré par le client de Cloud SQL, Cloud Storage, Artifact Registry et GKE. Décidez-en lors du déploiement initial — une mise en place a posteriori exige une migration des données. |
 | `cmek_key_rotation_period` | `"7776000s"` | Période de rotation automatique de la clé KMS, exprimée comme une durée en secondes avec le suffixe `s` (90 jours par défaut). |
@@ -663,7 +663,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de WIF — le champ de restriction est obligatoire en pratique.** WIF permet à une CI/CD externe (GitHub Actions, GitLab CI, tout fournisseur OIDC) d'emprunter l'identité des comptes de service de la plateforme avec des jetons de courte durée au lieu de fichiers de clés de longue durée — une amélioration nette de la sécurité *à condition* d'en limiter correctement la portée. Le piège est le champ de portée : pour `github`, un `wif_github_org` vide supprime la restriction `repository_owner`, de sorte que **n'importe quel dépôt GitHub sur Internet pourrait échanger un jeton et emprunter l'identité de votre compte de service** ; pour `generic`, un `wif_oidc_issuer_uri` vide ou invalide fait simplement échouer la création du fournisseur. Les deux cas sont désormais détectés au moment du plan — `github` requiert `wif_github_org`, et `generic` requiert un émetteur `https://` — mais le principe demeure : épinglez toujours la fédération à *votre* organisation/émetteur/audience. `wif_provider_type` ne peut pas être modifié après le provisionnement sans recréer le fournisseur.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_workload_identity_federation` | `false` | Crée un pool et un fournisseur WIF pour une authentification CI/CD sans clé (aucun fichier de clé de compte de service). |
 | `wif_provider_type` | `"github"` | Type de fournisseur : `github`, `gitlab` ou `generic`. Ne peut pas être modifié après le provisionnement. |
@@ -676,7 +676,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration de sécurité et d'audit.** Il s'agit en grande partie d'options indépendantes et peu risquées, dont le principal coût relève des dépenses d'observabilité plutôt que du rayon d'impact. `enable_vulnerability_scanning` est une assurance peu coûteuse — la détection des CVE à l'envoi, qui alimente aussi l'attestation Binary Authorization. `enable_security_command_center` centralise les constats ; `enable_scc_notifications` les achemine vers Pub/Sub pour les alertes/le SIEM et **requiert que SCC soit activé** (la combinaison est vérifiée au moment du plan). Celle à activer *délibérément* est `enable_audit_logging` : les journaux d'audit Data Read/Write sont précieux pour la conformité, mais peuvent multiplier le coût d'ingestion de Cloud Logging — activez-la pour les environnements réglementés, pas par réflexe.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vulnerability_scanning` | `false` | Active l'analyse des CVE à l'envoi par Container Analysis pour les images Artifact Registry. Faible coût, forte valeur. |
 | `enable_audit_logging` | `false` | Active les journaux d'audit Cloud Data Read et Data Write pour tous les services pris en charge. **Augmente sensiblement le volume de journaux et le coût** — à activer pour la conformité, pas par défaut. |
@@ -687,7 +687,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration des alertes.** Peu d'enjeux, mais facile à rendre inopérant. Les seuils (0–100, imposés) surveillent principalement la VM NFS/Redis autogérée ; ils comptent donc surtout lorsque `create_network_filesystem = true`. L'erreur courante consiste à activer `configure_email_notification` avec un `notification_alert_emails` vide — le canal est créé sans destinataire et chaque alerte est perdue silencieusement. Si vous activez les alertes, fournissez au moins une adresse.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `configure_email_notification` | `false` | Crée un canal de notification par e-mail Cloud Monitoring pour les règles d'alerte sur les seuils de CPU, de mémoire et de disque. À associer à un `notification_alert_emails` non vide. |
 | `notification_alert_emails` | `[]` | Adresses e-mail destinataires des notifications d'alerte d'infrastructure. Utilisé uniquement lorsque `configure_email_notification = true`. |
@@ -699,7 +699,7 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 > **Choisir la configuration du budget.** Un garde-fou peu coûteux contre les dépenses incontrôlées. La seule subtilité concerne `budget_alert_thresholds` : il s'agit de **fractions** de `budget_amount`, et non de pourcentages — `0.5` signifie 50 %. Saisir `50` ne déclencherait l'alerte qu'à 5000 % du budget (c'est-à-dire jamais) ; le module restreint donc chaque valeur à l'intervalle `(0, 1]` au moment du plan. Comme pour la supervision, fournissez `budget_alert_emails`, sinon les alertes n'ont aucun destinataire.
 
-| Variable | Défaut | Description |
+| Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_billing_budget` | `false` | Crée un budget Cloud Billing avec des alertes de seuil de dépenses. Requiert un accès au compte de facturation. |
 | `budget_alert_emails` | `[]` | Adresses e-mail destinataires des notifications d'alerte du budget de facturation. |
@@ -708,11 +708,11 @@ Les variables sont organisées en groupes correspondant aux sections affichées 
 
 ---
 
-## Outputs {#outputs}
+## Sorties {#outputs}
 
 Après un déploiement réussi, les valeurs suivantes sont disponibles dans l'interface de la plateforme et sont utilisées par les modules applicatifs en aval.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `deployment_id` | ID hexadécimal aléatoire utilisé comme suffixe dans tous les noms de ressources. |
 | `primary_region` | La région GCP principale dans laquelle les ressources mono-région sont provisionnées. |

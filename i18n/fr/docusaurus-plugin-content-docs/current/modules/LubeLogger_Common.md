@@ -19,7 +19,7 @@ plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement LubeLogger, consultez
 les guides des plateformes ([LubeLogger_GKE](LubeLogger_GKE.md),
-[LubeLogger_CloudRun](LubeLogger_CloudRun.md)) et les guides des fondations
+[LubeLogger_CloudRun](LubeLogger_CloudRun.md)) et les guides des socles
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -156,10 +156,10 @@ renvoie `302` lorsque `EnableAuth=true`, puisqu'elle est protégée par
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
-Deux buckets **Cloud Storage** dédiés sont déclarés ici et provisionnés par la
-fondation, qui accorde également l'accès au compte de service de la charge de
+Deux buckets **Cloud Storage** dédiés sont déclarés ici et provisionnés par le
+socle, qui accorde également l'accès au compte de service de la charge de
 travail :
 
 - **`storage`** — le fichier de base de données LiteDB intégré de LubeLogger ainsi

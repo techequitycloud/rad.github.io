@@ -11,7 +11,7 @@ description: "Lab pratique : déployez Ghostfolio sur GKE Autopilot dans votre p
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 90 minutes
+**Durée estimée :** 45–90 minutes
 
 Ghostfolio est une application open source de gestion de patrimoine permettant de suivre la valeur nette,
 les portefeuilles d’investissement et l’allocation d’actifs sur plusieurs comptes de courtage.
@@ -34,7 +34,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 - Effectuer les opérations du jour 2 — inspecter, mettre à l’échelle, mettre à jour, et gérer les secrets et les sauvegardes.
 - Observer la charge de travail avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d’exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -109,7 +109,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ---
 
-## Tâche 3 — Exploiter et maintenir en fonctionnement (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
 
 1. **Inspectez la charge de travail et son historique de déploiement :**
 
@@ -149,7 +149,7 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l’explorateur de journaux (Logs Explorer) :
 
    ```bash
    kubectl logs -n "$NAMESPACE" -l app=ghostfolio --tail=100
@@ -202,7 +202,7 @@ premier démarrage).
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash**
 (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du
@@ -226,4 +226,4 @@ registre, l’hôte Redis NFS) sont gérées séparément et ne sont pas supprim
 | 3 — Exploiter | Manuel | Inspecter le déploiement progressif, mettre à l’échelle, mettre à jour la version, gérer secrets/sauvegardes, accès à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de Redis, de job d’initialisation, de build et de réseau |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

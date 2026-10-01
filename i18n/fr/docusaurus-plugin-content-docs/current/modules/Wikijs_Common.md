@@ -27,11 +27,11 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 
 | Domaine | Fourni par Wikijs_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Fixe `requarks/wiki:2` et construit une image personnalisée à partir de `scripts/` via Cloud Build | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Fixe `requarks/wiki:2` et construit une image personnalisée à partir de `scripts/` via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Extension PostgreSQL | Déclare `enable_postgres_extensions = true` et `postgres_extensions = ["pg_trgm"]` pour la recherche en texte intégral de Wiki.js | Étape d'installation du socle au moment du déploiement |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Output `initialization_jobs` |
-| Stockage objet | Déclare le **bucket Cloud Storage `wikijs-storage`** pour le stockage persistant des ressources | Output `storage_buckets` |
+| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Stockage objet | Déclare le **bucket Cloud Storage `wikijs-storage`** pour le stockage persistant des ressources | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Wiki.js (`DB_TYPE`, `DB_PORT`, `DB_USER`, `DB_NAME`, `DB_SSL`, `HA_STORAGE_PATH`) | Variables d'environnement de l'application |
 | Contrôles de santé | Fournit la sonde par défaut de démarrage/d'activité ciblant `/healthz` avec un délai initial de 60 secondes | §Observabilité dans les guides des plateformes |
 
@@ -46,7 +46,7 @@ l'export PDF) et intègre un `entrypoint.sh` personnalisé. L'image construite e
 poussée vers Artifact Registry.
 
 Lorsque `enable_image_mirroring = true` (valeur par défaut), l'image amont
-`requarks/wiki:2` est dupliquée depuis Docker Hub dans Artifact Registry avant le
+`requarks/wiki:2` est mise en miroir depuis Docker Hub dans Artifact Registry avant le
 build, ce qui évite les limites de débit de Docker Hub et garantit la
 reproductibilité du build.
 
@@ -105,7 +105,7 @@ démarre correctement au premier lancement :
 
 ---
 
-## 5. Stockage objet {#5-object-storage}
+## 5. Stockage d'objets {#5-object-storage}
 
 Un bucket **Cloud Storage** dédié `wikijs-storage` est déclaré ici et provisionné par
 le socle. Le bucket contient les ressources persistantes de Wiki.js. Pour rendre le

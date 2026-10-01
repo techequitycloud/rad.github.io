@@ -31,7 +31,7 @@ Saleor s'exécute dans un conteneur construit sur mesure (`ghcr.io/saleor/saleor
 encapsulé avec un point d'entrée cloud) sur GKE Autopilot. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Deux charges de travail Kubernetes : l'API Saleor principale (uvicorn, 2 workers + worker/beat Celery colocalisé) et un Dashboard précompilé distinct ; 2 vCPU / 3 GiB par défaut pour le pod principal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — fixé par `Saleor_Common` quelle que soit la valeur de `database_type` |
@@ -40,7 +40,7 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY`, `RSA_PRIVATE_KEY`, `DJANGO_SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | Valeur par défaut du module : `LoadBalancer` ; **le déploiement réel de ce projet s'exécute actuellement en `ClusterIP`** en raison d'un quota d'IP épuisé — voir les remarques ci-dessous |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `Saleor_Common` fixe le moteur de base de données ;
   choisir une autre valeur dans `database_type` n'a aucun effet.
@@ -315,7 +315,7 @@ défaut standard.
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_GKE](App_GKE.md).
 
-### Groupe 11/12 — Tâches et tâches planifiées {#group-1112--jobs--scheduled-tasks}
+### Groupe 11/12 — Jobs et tâches planifiées {#group-1112--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -354,11 +354,11 @@ provisionnement. Consultez [App_GKE](App_GKE.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health/`, délai 90s | Sonde de démarrage transmise à `Saleor_Common` — laisse à `db-migrate` le temps de se terminer. |
-| `liveness_probe` | HTTP `/health/`, délai 60s | Sonde d'activité transmise à `Saleor_Common`. |
+| `liveness_probe` | HTTP `/health/`, délai 60s | Sonde de vivacité transmise à `Saleor_Common`. |
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring facultatif — nécessite un point de terminaison accessible publiquement. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques. |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Options standard d'App_GKE pour VPC-SC et les journaux d'audit — consultez
 [App_GKE](App_GKE.md).
@@ -400,14 +400,14 @@ premier niveau.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critical | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |

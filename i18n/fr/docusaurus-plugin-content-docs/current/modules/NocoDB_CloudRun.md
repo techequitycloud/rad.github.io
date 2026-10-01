@@ -39,7 +39,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | Secret JWT généré automatiquement (`NC_AUTH_JWT_SECRET`) et mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 uniquement, sur Cloud Run.** La variable `database_type` est
   définie mais jamais transmise à `NocoDB_Common` (qui code en dur `POSTGRES_15`) ;
@@ -65,7 +65,7 @@ assemble un ensemble ciblé de services Google Cloud :
   N'effectuez pas sa rotation après le premier déploiement — toutes les sessions et
   tous les jetons d'API existants seraient immédiatement invalidés.
 - **NocoDB gère lui-même ses migrations de base de données au premier démarrage.**
-  Aucune tâche d'initialisation externe n'est requise.
+  Aucun job d'initialisation externe n'est requis.
 - **Les sondes de santé ciblent `/api/v1/health`**, le point de terminaison de
   santé dédié exposé par NocoDB.
 
@@ -100,7 +100,7 @@ concurrence, l'environnement d'exécution et la répartition du trafic.
 NocoDB stocke toutes les données applicatives (tables, vues, automatisations,
 données des lignes) dans une instance gérée Cloud SQL for PostgreSQL 15. Le service
 se connecte via une connexion TCP sur IP privée (pas d'IP publique, pas de socket
-Auth Proxy). Au premier déploiement, une tâche d'initialisation crée la base de
+Auth Proxy). Au premier déploiement, un job d'initialisation crée la base de
 données et l'utilisateur de l'application ; NocoDB exécute ensuite ses propres
 migrations de schéma au démarrage.
 
@@ -201,9 +201,9 @@ disponibilité sur `/api/v1/health` et des règles d'alerte.
 
 ## 3. Comportement de l'application NocoDB {#3-nocodb-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
+- **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation (`db-init`) crée la base de données et l'utilisateur NocoDB
-  avant le démarrage du service. Elle est idempotente.
+  avant le démarrage du service. Il est idempotent.
 - **Migrations autogérées.** NocoDB exécute ses propres migrations de schéma de
   base de données au démarrage — il est inutile de configurer des tâches de
   migration externes.
@@ -226,7 +226,7 @@ disponibilité sur `/api/v1/health` et des règles d'alerte.
   `NC_PUBLIC_URL` afin que NocoDB génère des URL absolues correctes dans les liens
   de partage, les notifications par e-mail et les rappels de webhooks. Contrôlée par
   `service_url_env_var_name` (par défaut `"NC_PUBLIC_URL"`).
-- **Chemin de santé.** Les sondes de disponibilité et d'activité ciblent
+- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent
   `/api/v1/health`, qui renvoie HTTP 200 lorsque NocoDB est prêt à accepter des
   requêtes.
 - **Sessions multi-instances.** Avec plus d'une instance et sans Redis, NocoDB ne
@@ -284,7 +284,7 @@ avec leur comportement standard.
 | `traffic_split` | `[]` | Répartition du trafic canary/blue-green entre les révisions. |
 | `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle des accès et de l'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -359,7 +359,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `db_password_env_var_name` | `NC_DB_PASSWORD` | Nom de variable d'environnement supplémentaire pour le mot de passe de la base de données. |
 | `service_url_env_var_name` | `NC_PUBLIC_URL` | Nom de la variable d'environnement sous lequel l'URL publique du service est injectée. |
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -371,7 +371,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | `/api/v1/health` | Sonde de démarrage HTTP, délai initial de 30 s. |
-| `liveness_probe` / `health_check_config` | `/api/v1/health` | Sonde d'activité HTTP. |
+| `liveness_probe` / `health_check_config` | `/api/v1/health` | Sonde de vivacité HTTP. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/api/v1/health`. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
@@ -384,7 +384,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -424,12 +424,12 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critical | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
 | `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |

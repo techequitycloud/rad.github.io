@@ -25,7 +25,7 @@ et ne nécessite **ni assistant de premier lancement ni initialisation de schém
 
 Pour l'infrastructure qui provisionne et exécute réellement Netdata, consultez les
 guides des plateformes ([Netdata_GKE](Netdata_GKE.md),
-[Netdata_CloudRun](Netdata_CloudRun.md)) et les guides des fondations
+[Netdata_CloudRun](Netdata_CloudRun.md)) et les guides des socles
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 [App_Common](App_Common.md)).
 
@@ -35,13 +35,13 @@ guides des plateformes ([Netdata_GKE](Netdata_GKE.md),
 
 | Domaine | Fourni par Netdata_Common | Où cela apparaît |
 |---|---|---|
-| Image de conteneur | Wrapper léger `FROM netdata/netdata:<version>` construit via Cloud Build (Kaniko) et mis en miroir dans **Artifact Registry** | Output `container_image` du déploiement de la plateforme |
+| Image de conteneur | Wrapper léger `FROM netdata/netdata:<version>` construit via Cloud Build (Kaniko) et mis en miroir dans **Artifact Registry** | Sortie `container_image` du déploiement de la plateforme |
 | Épinglage de la version de l'image | Argument de build propre à l'application `NETDATA_VERSION` (vaut `v2.2.6` par défaut lorsque `application_version = "latest"`) | Configuration du build |
 | Moteur de base de données | **Aucun** — `database_type = "NONE"` ; Netdata conserve ses métriques dans son propre dbengine sur disque | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | **Aucune** — aucun job `db-init` n'est injecté ; seuls les `initialization_jobs` fournis par l'utilisateur s'exécutent | Output `initialization_jobs` |
-| Stockage d'objets | Déclare un bucket de données **Cloud Storage** (suffixe `storage`) qui fait persister `/var/lib/netdata` sur Cloud Run | Output `storage_buckets` |
+| Initialisation de la base de données | **Aucune** — aucun job `db-init` n'est injecté ; seuls les `initialization_jobs` fournis par l'utilisateur s'exécutent | Sortie `initialization_jobs` |
+| Stockage d'objets | Déclare un bucket de données **Cloud Storage** (suffixe `storage`) qui fait persister `/var/lib/netdata` sur Cloud Run | Sortie `storage_buckets` |
 | Volume de persistance | Monte le bucket de stockage comme volume **GCS FUSE** sur `/var/lib/netdata` (`enable_gcs_storage_volume`), désactivé sur GKE lorsqu'un PVC en mode bloc est utilisé | §Persistance |
-| Identifiant administrateur facultatif | Lorsque `enable_admin_password = true`, génère un mot de passe de 32 caractères dans **Secret Manager** et l'injecte en tant que `NETDATA_ADMIN_PASSWORD` | Outputs `secret_ids` / `secret_values` |
+| Identifiant administrateur facultatif | Lorsque `enable_admin_password = true`, génère un mot de passe de 32 caractères dans **Secret Manager** et l'injecte en tant que `NETDATA_ADMIN_PASSWORD` | Sorties `secret_ids` / `secret_values` |
 | Paramètres de base | Définit `NETDATA_LISTENER_PORT = "19999"` (correspond à `container_port`) | Comportement de l'application |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/v1/info` | §Observabilité dans les guides des plateformes |
 
@@ -50,7 +50,7 @@ guides des plateformes ([Netdata_GKE](Netdata_GKE.md),
 ## 2. Image de conteneur et build {#2-container-image-and-build}
 
 Netdata est une **image amont préconstruite**, mais ce module la fait tout de même
-passer par le chemin Cloud Build de la fondation afin que l'image soit mise en miroir
+passer par le chemin Cloud Build du socle afin que l'image soit mise en miroir
 dans l'Artifact Registry du déploiement (ce qui évite un téléchargement depuis Docker
 Hub à l'exécution). Le `Dockerfile` est un wrapper léger :
 
@@ -61,7 +61,7 @@ FROM netdata/netdata:${NETDATA_VERSION}
 
 - **`image_source = "custom"`** avec `container_build_config.enabled = true`.
 - **`NETDATA_VERSION` est un argument de build propre à l'application**, délibérément
-  *distinct* du `APP_VERSION` générique que la fondation injecte. Lorsque
+  *distinct* du `APP_VERSION` générique que le socle injecte. Lorsque
   `application_version = "latest"`, le wrapper épingle `v2.2.6` (un vrai tag) plutôt
   qu'un build de wrapper `netdata:latest` inexistant ; toute valeur explicite de
   `application_version` est respectée telle quelle.
@@ -84,7 +84,7 @@ données gérée :
 
 - `database_type = "NONE"`, `enable_cloudsql_volume = false`, `db_name`/`db_user`
   sont vides dans la configuration Common (les variables `db_name`/`db_user` des
-  variantes n'existent que pour la compatibilité avec la fondation et ne sont pas
+  variantes n'existent que pour la compatibilité avec le socle et ne sont pas
   référencées).
 - **Aucun job `db-init` n'est injecté.** La liste `initialization_jobs` est vide,
   sauf si un opérateur fournit des jobs personnalisés (par exemple pour amorcer une
@@ -105,7 +105,7 @@ plateforme, et cette couche câble les deux :
   sur `/var/lib/netdata` (`enable_gcs_storage_volume = true`). Un bucket de données
   est déclaré dans l'output `storage_buckets` (suffixe `storage`, classe `STANDARD`,
   `force_destroy = true`, `public_access_prevention = enforced`). Son emplacement est
-  laissé vide afin que la fondation le place dans la région de déploiement découverte
+  laissé vide afin que le socle le place dans la région de déploiement découverte
   automatiquement.
 - **GKE** — un **PVC en mode bloc** par pod (StatefulSet) est monté sur le même
   `/var/lib/netdata` ; le wrapper définit alors `enable_gcs_storage_volume = false`
@@ -137,7 +137,7 @@ Le tableau de bord local de Netdata est **non authentifié par défaut**. Lorsqu
    secret plutôt qu'un identifiant géré à la main.
 
 Le chemin d'injection diffère selon la plateforme : **Cloud Run** l'injecte via les
-`module_secret_env_vars` de la fondation (Secret Manager → variable d'environnement
+`module_secret_env_vars` du socle (Secret Manager → variable d'environnement
 secrète), tandis que **GKE** l'injecte via `explicit_secret_values` (un Secret
 Kubernetes natif), de sorte que les deux variantes fournissent la même valeur brute.
 Lorsque `enable_admin_password = false`, aucun secret n'est créé et l'output
@@ -166,7 +166,7 @@ secret.
 correctement dès le premier lancement :
 
 - **Port d'écoute** — `NETDATA_LISTENER_PORT = "19999"`, correspondant au
-  `container_port` vers lequel la fondation achemine le trafic. Netdata sert à la
+  `container_port` vers lequel le socle achemine le trafic. Netdata sert à la
   fois le tableau de bord et l'API REST sur ce port unique.
 - **Chemin de santé** — les sondes de démarrage et de vivacité par défaut ciblent
   **`/api/v1/info`**, qui renvoie un corps JSON `200` une fois l'agent entièrement
@@ -174,7 +174,7 @@ correctement dès le premier lancement :
   prévoit un délai initial de 15 secondes et une fenêtre de 10 tentatives ; la sonde
   de vivacité interroge toutes les 30 secondes après un délai de 30 secondes.
 - **Mise à l'échelle** — `min_instance_count = 1` / `max_instance_count = 1` par
-  défaut. Netdata est un agent de supervision **par instance** : chaque réplique
+  défaut. Netdata est un agent de supervision **par instance** : chaque réplica
   conserve sa propre base de métriques locale ; il ne peut donc pas être étendu
   horizontalement avec un état partagé — exécuter une seule instance est la norme.
 - **Les variables d'environnement supplémentaires** fournies via

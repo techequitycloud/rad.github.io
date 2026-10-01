@@ -11,7 +11,7 @@ description: "Guide du formateur pour la démonstration Gemini Enterprise de Cym
 
 ## Vue d’ensemble {#overview}
 
-**Durée estimée :** 45 à 60 minutes de préparation avant le cours (dont environ 15 à attendre le déploiement), puis 45 à 60 minutes de démonstrations en cours
+**Durée estimée :** 45–60 minutes de préparation avant le cours (dont environ 15 à attendre le déploiement), puis 45 à 60 minutes de démonstrations en cours
 
 **Gemini Enterprise** est l’espace de travail agentique de Google Cloud : recherche d’entreprise sur Google Workspace et d’autres données, assistant conversationnel, agents prédéfinis tels que Deep Research, l’outil sans code Agent Designer, et agents personnalisés construits avec l’Agent Development Kit (ADK). Ce guide s’adresse aux **formateurs** qui préparent et animent la démonstration Gemini Enterprise **Cymbal Pools** pour une classe de partenaires. Il s’agit d’un script de démonstration, et non d’un lab pratique pour les participants.
 
@@ -330,7 +330,7 @@ Consultez la section *Configuration Pitfalls* du Guide de configuration pour les
 
 ---
 
-## Tâche 10 — Supprimer [Automatisé] {#task-10--tear-down-automated}
+## Tâche 10 — Démanteler [Automatisé] {#task-10--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l’icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l’enregistrement du déploiement est conservé pour l’historique). Elle supprime tout ce que le module a créé : l’application (y compris l’enregistrement de BigQuery Agent qu’elle contient), le data store Cymbal Pools Documents, le paramètre Google Identity, le bucket et son contenu, l’ensemble de données BigQuery, le modèle Model Armor, les liaisons IAM et le moteur Agent Runtime.
 
@@ -358,4 +358,4 @@ Les éléments suivants ont été créés à la main et ne sont **pas** supprim�
 | 7 — Valider | Manuel | Agent Designer et modèle d’image activés ; actions des connecteurs et Deep Research vérifiés |
 | 8 — Démonstrations | Manuel | Démonstrations générale, recherche, agents, agent BigQuery personnalisé et Model Armor réalisées |
 | 9 — Dépanner | Manuel | Diagnostiquer les problèmes d’activation, de quota, d’IdP, de règle d’administration, d’IAM et d’indexation |
-| 10 — Supprimer | Automatisé | Delete supprime les ressources du module ; retirer à la main les connecteurs, le client OAuth et les fichiers Drive |
+| 10 — Démanteler | Automatisé | Delete supprime les ressources du module ; retirer à la main les connecteurs, le client OAuth et les fichiers Drive |

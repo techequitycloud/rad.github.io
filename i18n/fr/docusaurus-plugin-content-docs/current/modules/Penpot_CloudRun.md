@@ -20,7 +20,7 @@ Penpot est une plateforme open source de design et de prototypage — une altern
 **Capacités clés :**
 *   **Calcul** : Cloud Run v2 (Gen2), trois services coordonnés — backend (API HTTP Clojure + serveur WebSocket), frontend (nginx servant la SPA React) et exporter (Chromium headless pour l'export PDF/PNG/SVG). Le backend dispose par défaut de 2 vCPU / 2 Gi.
 *   **Persistance des données** : Cloud SQL **PostgreSQL 15**. Bucket GCS de ressources pour les éléments de design (polices, images, miniatures), accessible nativement via Workload Identity / ADC.
-*   **Collaboration en temps réel** : Redis est **obligatoire** comme bus d'événements pub/sub WebSocket. Toutes les répliques du backend partagent l'état des événements via la base Redis 0. Sans Redis, l'édition multijoueur en temps réel ne fonctionne plus dès que plus d'une instance backend est en cours d'exécution.
+*   **Collaboration en temps réel** : Redis est **obligatoire** comme bus d'événements pub/sub WebSocket. Tous les réplicas du backend partagent l'état des événements via la base Redis 0. Sans Redis, l'édition multijoueur en temps réel ne fonctionne plus dès que plus d'une instance backend est en cours d'exécution.
 *   **Sécurité** : hérite de Cloud Armor WAF, IAP, Binary Authorization et VPC Service Controls depuis `App CloudRun`. Aucun secret applicatif n'est généré automatiquement par `Penpot Common`.
 *   **Protocole** : `container_protocol` vaut `'http1'` par défaut ; définissez `'h2c'` (HTTP/2 en clair) pour un multiplexage WebSocket de bout en bout.
 *   **CI/CD** : pipeline Cloud Build d'image personnalisée par défaut ; livraison progressive Cloud Deploy en option.
@@ -274,7 +274,7 @@ Lorsque `enable_cloud_deploy = true` (nécessite `enable_cicd_trigger = true`), 
 2. Les démarrages à froid de la JVM prennent 30 à 60 secondes, pendant lesquelles les nouvelles tentatives de connexion échouent.
 3. La collaboration en temps réel exige une connexion persistante au bus d'événements via Redis.
 
-Redis gère la diffusion WebSocket entre les répliques du backend, de sorte que la mise à l'échelle horizontale est sûre. Toutes les instances backend publient sur le même canal Redis et s'y abonnent, et les événements de modification de design sont diffusés à tous les clients connectés, quelle que soit l'instance à laquelle ils sont connectés.
+Redis gère la diffusion WebSocket entre les réplicas du backend, de sorte que la mise à l'échelle horizontale est sûre. Toutes les instances backend publient sur le même canal Redis et s'y abonnent, et les événements de modification de design sont diffusés à tous les clients connectés, quelle que soit l'instance à laquelle ils sont connectés.
 
 ### B. Répartition du trafic {#b-traffic-splitting}
 
@@ -705,11 +705,11 @@ Toutes les variables configurables par l'utilisateur, triées par groupe d'inter
 
 ---
 
-## Pièges de configuration et valeurs par défaut raisonnables {#configuration-pitfalls--sensible-defaults}
+## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
 > Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
 
-| Variable | Valeur par défaut raisonnable | Risque | Conséquence d'une valeur incorrecte |
+| Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"POSTGRES_15"` | **Critical** | Penpot ne prend en charge que PostgreSQL. Toute autre valeur fait échouer le backend au démarrage. |

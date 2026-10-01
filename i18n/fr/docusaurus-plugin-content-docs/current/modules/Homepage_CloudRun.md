@@ -15,7 +15,7 @@ application Next.js 16 / Node 22 dont toute la configuration (services, favoris,
 widgets, mise en page) tient dans une poignée de fichiers YAML, avec des widgets
 facultatifs d'état et de statistiques en direct pour les autres applications
 auto-hébergées que vous exploitez. Ce module déploie Homepage sur **Cloud Run v2**
-au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise Homepage et sur la manière
@@ -24,7 +24,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run —
 identité du service, entrée et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter
 ici.
 
 ---
@@ -36,12 +36,12 @@ Run v2. Contrairement à presque tous les autres modules de ce catalogue, il n'a
 **ni base de données ni cache** — tout son état est un répertoire de fichiers
 YAML :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Processus Node.js unique, `1000m` de CPU / `512Mi` de mémoire par défaut |
 | Base de données | aucune | Homepage n'a aucune base de données ; `database_type = "NONE"` |
 | Stockage objet | Cloud Storage | Un bucket `storage` monté sur `/app/config` via GCS FUSE — contient tous les fichiers de configuration YAML (`settings.yaml`, `services.yaml`, `bookmarks.yaml`, `widgets.yaml`, `docker.yaml`) ainsi que les journaux |
-| Cache et file d'attente | aucun | `enable_redis = false` est codé en dur dans `main.tf`, remplaçant la valeur par défaut `true` de la fondation |
+| Cache et file d'attente | aucun | `enable_redis = false` est codé en dur dans `main.tf`, remplaçant la valeur par défaut `true` du socle |
 | Secrets | aucun | Aucun secret n'est généré — Homepage n'a besoin d'aucun identifiant propre |
 | Entrée | URL Cloud Run | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
@@ -59,7 +59,7 @@ YAML :
   elle-même).
 - **Ni base de données ni Redis — architecture inhabituelle pour ce catalogue.**
   Presque tous les autres modules applicatifs raccordent une instance Cloud SQL
-  et/ou Redis via la fondation ; Homepage n'a besoin ni de l'une ni de l'autre.
+  et/ou Redis via le socle ; Homepage n'a besoin ni de l'une ni de l'autre.
   Cela signifie aussi qu'il échappe aux catégories de bugs habituelles —
   raccordement du DSN, socket ou TCP, encodage d'URL du mot de passe — documentées
   ailleurs dans ce dépôt : il n'y a tout simplement aucune connexion à une base de
@@ -268,20 +268,20 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `gcs_volumes` / stockage sur `/app/config` | Laisser en place le montage automatique `storage` | **Critique** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid — Homepage n'a aucune autre source de vérité. |
-| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Moyen | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
-| Chemin de sonde | Laisser `/api/healthcheck` | Élevé | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine alors même que l'application a démarré correctement. |
-| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Faible | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
-| UID/GID supposé du montage GCS FUSE | Ne pas compter sur le fait que `uid=1000,gid=1000` soit appliqué à la lettre sur Cloud Run | Faible | L'intégration gcsfuse propre à Cloud Run utilise silencieusement `uid=2000,gid=2000` à la place — sans conséquence en pratique, mais une fausse piste si vous déboguez un problème de permissions en lisant le Terraform au lieu de la ligne de journal du montage réel. |
+| `gcs_volumes` / stockage sur `/app/config` | Laisser en place le montage automatique `storage` | **Critical** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid — Homepage n'a aucune autre source de vérité. |
+| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Medium | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
+| Chemin de sonde | Laisser `/api/healthcheck` | High | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine alors même que l'application a démarré correctement. |
+| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Low | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
+| UID/GID supposé du montage GCS FUSE | Ne pas compter sur le fait que `uid=1000,gid=1000` soit appliqué à la lettre sur Cloud Run | Low | L'intégration gcsfuse propre à Cloud Run utilise silencieusement `uid=2000,gid=2000` à la place — sans conséquence en pratique, mais une fausse piste si vous déboguez un problème de permissions en lisant le Terraform au lieu de la ligne de journal du montage réel. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration

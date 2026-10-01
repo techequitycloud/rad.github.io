@@ -34,7 +34,7 @@ intégré pour les conversions de documents) sur Cloud Run v2. Le déploiement a
 un ensemble volontairement restreint de services Google Cloud — Stirling-PDF est sans
 état ; il n'y a donc ni base de données, ni stockage persistant, ni secrets à gérer :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Java, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro activée |
 | Image de conteneur | Artifact Registry | Image officielle `stirlingtools/stirling-pdf`, dupliquée par défaut |
@@ -42,7 +42,7 @@ un ensemble volontairement restreint de services Google Cloud — Stirling-PDF e
 | Redis (inerte) | Redis | Désactivé par défaut. `enable_redis` amène seulement le socle à injecter les variables d'environnement `REDIS_*` — Stirling-PDF ne les lit jamais, cela n'apporte donc ni limitation de débit ni détection de bots |
 | Observabilité | Cloud Logging / Cloud Monitoring | Journaux des conteneurs, métriques, test de disponibilité et alertes facultatifs |
 
-**Valeurs par défaut pertinentes à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Sans état — ni base de données, ni stockage, ni secrets.** `database_type = "NONE"`,
   aucun bucket GCS, pas de NFS et une map de secrets vide. Chaque opération PDF
@@ -50,7 +50,7 @@ un ensemble volontairement restreint de services Google Cloud — Stirling-PDF e
   fin du traitement.
 - **Image préconstruite.** `container_image_source = "prebuilt"` déploie directement
   l'image officielle `stirlingtools/stirling-pdf` ; `enable_image_mirroring = true`
-  la duplique dans Artifact Registry pour éviter les limites de débit de Docker Hub.
+  la met en miroir dans Artifact Registry pour éviter les limites de débit de Docker Hub.
 - **La connexion est désactivée par défaut.** `enable_login = false`
   (`SECURITY_ENABLELOGIN=false`) livre une instance ouverte. Activez-la et placez le
   service derrière IAP ou Cloud Armor pour un déploiement privé.
@@ -73,7 +73,7 @@ un ensemble volontairement restreint de services Google Cloud — Stirling-PDF e
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définies. Les noms des
-services et des ressources figurent dans les [Outputs](#5-outputs) du déploiement.
+services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Stirling-PDF {#a-cloud-run--the-stirling-pdf-service}
 
@@ -96,7 +96,7 @@ l'environnement d'exécution et la répartition du trafic.
 
 ### B. Artifact Registry — l'image de conteneur {#b-artifact-registry--the-container-image}
 
-L'image officielle `stirlingtools/stirling-pdf` est dupliquée dans Artifact Registry
+L'image officielle `stirlingtools/stirling-pdf` est mise en miroir dans Artifact Registry
 (`enable_image_mirroring = true`) et Cloud Run la récupère depuis cet emplacement.
 Aucune étape Cloud Build n'est exécutée — l'image est préconstruite en amont.
 
@@ -221,7 +221,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques pour chaque environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -249,7 +249,7 @@ avec leur comportement standard.
 | `execution_environment` | `gen2` | Gen2 recommandé. |
 | `timeout_seconds` | `60` | Durée maximale d'une requête ; augmentez-la pour les conversions volumineuses. |
 | `enable_cloudsql_volume` | `false` | Non utilisé — Stirling-PDF n'a pas de base de données. |
-| `enable_image_mirroring` | `true` | Duplique l'image dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
@@ -284,7 +284,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -340,12 +340,12 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 ---
 
-## 5. Outputs {#5-outputs}
+## 5. Sorties {#5-outputs}
 
 Renvoyés lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
@@ -365,14 +365,14 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut pertinentes {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`timeout_seconds` hors limites, une mémoire inférieure au plancher de gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur recommandée | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | High | La valeur par défaut `enable_login = false` associée à une entrée publique laisse une boîte à outils PDF ouverte, utilisable par quiconque possède l'URL. |
 | `enable_iap` | À activer pour les instances traitant des documents sensibles | High | Sans IAP (et avec la connexion désactivée), le service n'est pas authentifié ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
@@ -388,7 +388,7 @@ d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
 mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC et duplication d'images — consultez
+IAP, Binary Authorization, VPC-SC et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
 Stirling-PDF, partagée avec la variante GKE, est décrite dans
 **[StirlingPDF_Common](StirlingPDF_Common.md)**.

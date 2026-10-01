@@ -29,7 +29,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 Rallly s'exécute comme une seule charge de travail web Next.js. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Next.js, 1 vCPU / 2 GiB par défaut, autoscaling horizontal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Rallly ne prend pas en charge MySQL ni d'autres moteurs |
@@ -37,7 +37,7 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_PASSWORD` et `NEXTAUTH_SECRET` générés automatiquement ; `SMTP_PWD` facultatif ; mot de passe de la base de données |
 | Entrée | Cloud Load Balancing | Service LoadBalancer externe, domaine personnalisé + certificat géré facultatifs |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la couche
   applicative partagée ; choisir tout autre moteur empêche le démarrage. Tout l'état de
@@ -186,11 +186,11 @@ d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Rallly {#3-rallly-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte via
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via
   le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et le rôle de
-  l'application, accorde les privilèges, puis signale au proxy de s'arrêter. Elle est
-  configurée avec `max_retries = 3` et peut être relancée sans risque.
+  l'application, accorde les privilèges, puis signale au proxy de s'arrêter. Il est
+  configuré avec `max_retries = 3` et peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** Le script `./docker-start.sh` de Rallly exécute
   `prisma migrate deploy` à chaque démarrage ; le schéma est donc créé au premier
   démarrage après `db-init`, et la mise à niveau de la version de l'application applique
@@ -213,7 +213,7 @@ d'alerte facultatifs sont disponibles.
   kubectl get svc <service-name> -n "$NAMESPACE" \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
   ```
-- **Chemin de santé.** Les sondes de démarrage et d'activité ciblent `/api/status` — le
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/api/status` — le
   point de terminaison d'état public et non authentifié de Rallly. Prévoyez du temps au
   premier démarrage pour l'étape de migration Prisma (la sonde de démarrage par défaut
   offre un délai initial de 30 secondes plus une fenêtre de 20 tentatives à 15 secondes
@@ -285,7 +285,7 @@ défaut standard.
 |---|---|---|
 | `enable_nfs` | `false` | NFS est désactivé — Rallly n'a pas besoin de système de fichiers partagé. |
 | `startup_probe` | HTTP `/api/status`, délai initial 0s, 10 échecs | Sonde de démarrage ; prévoyez la migration Prisma du premier démarrage. |
-| `liveness_probe` | HTTP `/api/status` délai 60s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/status` délai 60s | Sonde de vivacité. |
 
 ### Groupe 20 — Cache Redis {#group-20--redis-cache}
 
@@ -331,14 +331,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, IAP sans identifiant/secret de client OAuth, `enable_redis` sans `redis_host` ni NFS, `enable_cloudsql_volume = true` avec `database_type = NONE`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SECRET_PASSWORD` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
 | `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |

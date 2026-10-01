@@ -45,7 +45,7 @@ imposé par un garde-fou au moment du plan), **Cloud Storage** (aucun bucket) et
 **Redis** (désactivé par défaut ; le frontend statique n'a ni limitation de débit côté
 serveur ni file d'attente à alimenter).
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Jamais de base de données — et c'est imposé.** `database_type = "NONE"` et
   `enable_cloudsql_volume = false`. Une précondition au moment du plan
@@ -111,7 +111,7 @@ du type de charge de travail (Deployment ou StatefulSet).
 
 Comme `container_image_source = "custom"`, l'image est construite par Cloud Build à
 partir du `Dockerfile` minimal (`FROM hoppscotch/hoppscotch-frontend:${HOPPSCOTCH_VERSION}`)
-puis poussée vers Artifact Registry (la réplication d'image est activée par défaut).
+puis poussée vers Artifact Registry (la mise en miroir des images est activée par défaut).
 Les images personnalisées ou répliquées sont tirées avec `imagePullPolicy=Always` sur
 GKE, afin qu'un tag reconstruit ne soit jamais servi périmé depuis le cache d'un nœud.
 
@@ -320,10 +320,10 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
+> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par
 > le moteur du socle [App_GKE](App_GKE.md) ainsi que par un garde-fou propre à
@@ -335,23 +335,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt
 > qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `NONE` | Élevé | Tout autre moteur fait échouer le plan (garde-fou) ; s'il passait malgré tout, il provisionnerait une instance Cloud SQL inutilisée et facturée. |
-| `container_image_source` | `custom` | Élevé | Passer à `prebuilt` déclenche le chemin de build sans image exploitable et laisse les pods tenter de tirer un tag inexistant. |
-| `application_version` | `latest` ou un tag `hoppscotch-frontend` réel | Élevé | Un tag invalide fait échouer le Cloud Build ; les pods passent alors en `ImagePullBackOff` ou servent une image obsolète. |
-| `container_port` | `3000` | Élevé | Le frontend ne sert que sur le port 3000 ; un port différent fait échouer la sonde de démarrage et les pods ne deviennent jamais Ready. |
-| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette `0`. Conserver 1 garde la SPA accessible. |
-| `enable_cloudsql_volume` | `false` | Moyen | L'activer ajoute un sidecar Auth Proxy pour une base de données inexistante — coût inutile et dépendance superflue. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `session_affinity` | `None` | Faible | La persistance de session est inutile pour un bundle statique identique ; l'activer ne fait que limiter la répartition de charge. |
-| `enable_redis` | `false` | Faible | Le frontend statique n'a pas de file d'attente côté serveur ; activer Redis ajoute un coût sans aucun bénéfice. |
+| `database_type` | `NONE` | High | Tout autre moteur fait échouer le plan (garde-fou) ; s'il passait malgré tout, il provisionnerait une instance Cloud SQL inutilisée et facturée. |
+| `container_image_source` | `custom` | High | Passer à `prebuilt` déclenche le chemin de build sans image exploitable et laisse les pods tenter de tirer un tag inexistant. |
+| `application_version` | `latest` ou un tag `hoppscotch-frontend` réel | High | Un tag invalide fait échouer le Cloud Build ; les pods passent alors en `ImagePullBackOff` ou servent une image obsolète. |
+| `container_port` | `3000` | High | Le frontend ne sert que sur le port 3000 ; un port différent fait échouer la sonde de démarrage et les pods ne deviennent jamais Ready. |
+| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette `0`. Conserver 1 garde la SPA accessible. |
+| `enable_cloudsql_volume` | `false` | Medium | L'activer ajoute un sidecar Auth Proxy pour une base de données inexistante — coût inutile et dépendance superflue. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `session_affinity` | `None` | Low | La persistance de session est inutile pour un bundle statique identique ; l'activer ne fait que limiter la répartition de charge. |
+| `enable_redis` | `false` | Low | Le frontend statique n'a pas de file d'attente côté serveur ; activer Redis ajoute un coût sans aucun bénéfice. |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et réplication d'image — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Hoppscotch, partagée
 avec la variante Cloud Run, est décrite dans
 **[Hoppscotch_Common](Hoppscotch_Common.md)**.

@@ -28,10 +28,10 @@ guides de plateforme ([Cloudreve_GKE](Cloudreve_GKE.md),
 | Domaine | Fourni par Cloudreve_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | **Aucun n'est généré.** Cloudreve crée en interne son propre mot de passe administrateur initial au premier démarrage et l'affiche dans les journaux du conteneur | Uniquement dans les journaux du conteneur — les outputs `secret_ids` / `secret_values` sont tous deux des maps vides |
-| Image de conteneur | Encapsule l'image officielle `cloudreve/cloudreve` dans un Dockerfile multi-étapes qui sort le binaire `cloudreve` du répertoire de données monté ; build via Cloud Build | Output `container_image` du déploiement de plateforme |
+| Image de conteneur | Encapsule l'image officielle `cloudreve/cloudreve` dans un Dockerfile multi-étapes qui sort le binaire `cloudreve` du répertoire de données monté ; build via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe `database_type = "NONE"` — Cloudreve utilise une base SQLite intégrée sur son volume persistant, jamais Cloud SQL | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Aucun. Aucun job `db-init`/`db-create` par défaut n'est injecté ; `initialization_jobs` n'exécute que les jobs fournis explicitement par l'opérateur | Output `initialization_jobs` (vide par défaut) |
-| Stockage objet | Déclare un unique bucket Cloud Storage `storage`, monté sous condition sur `/cloudreve` via GCS FUSE | Output `storage_buckets` |
+| Amorçage de la base de données | Aucun. Aucun job `db-init`/`db-create` par défaut n'est injecté ; `initialization_jobs` n'exécute que les jobs fournis explicitement par l'opérateur | Sortie `initialization_jobs` (vide par défaut) |
+| Stockage objet | Déclare un unique bucket Cloud Storage `storage`, monté sous condition sur `/cloudreve` via GCS FUSE | Sortie `storage_buckets` |
 | Paramètres de base | Minimaux — `environment_variables` est transmis tel quel sans valeurs par défaut injectées ; `container_port` est fixé à `5212`, `database_type`/`db_name`/`db_user`/`enable_cloudsql_volume` sont désactivés en dur | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit les sondes de démarrage/vivacité par défaut ciblant `/` — Cloudreve n'a pas de point de terminaison de santé dédié | §Observabilité dans les guides de plateforme |
 
@@ -174,7 +174,7 @@ par le déploiement de plateforme atteignent le conteneur sans aucune modificati
 
 ---
 
-## 5. Paramètres applicatifs de base {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 L'output `config` de `Cloudreve_Common` est volontairement minimal par rapport à la
 plupart des modules applicatifs Common — Cloudreve n'a besoin de presque aucun
@@ -239,7 +239,7 @@ mais sont livrées avec ces valeurs inchangées.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
 Un unique bucket **Cloud Storage** (`name_suffix = "storage"`) est déclaré dans
 l'output `storage_buckets` et provisionné par le socle :

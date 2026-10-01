@@ -49,7 +49,7 @@ Google Cloud :
 | Secrets | Secret Manager | `ADMIN_PASSWORD` facultatif (contrôlé par `enable_api_key`, désactivé par défaut) |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, publique par défaut (`ingress_settings = "all"`) |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **SQLite est la seule « base de données ».** `database_type` est fixé à `NONE`
   par `Chibisafe_Common` ; les nombreuses variables `database_*`/`db_*`/`sql_instance_*`
@@ -162,7 +162,7 @@ référence Secret Manager de Cloud Run — le backend de Chibisafe initialise s
 compte administrateur de premier démarrage avec cette valeur au lieu de la valeur
 par défaut amont bien connue.
 
-- **Console :** Sécurité → Secret Manager.
+- **Console :** Security → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~chibisafe"
@@ -183,7 +183,7 @@ téléversement et d'hébergement de fichiers. Un équilibreur de charge HTTPS
 externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté
 via `enable_cloud_armor`.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -199,7 +199,7 @@ sont envoyées à Cloud Monitoring. Les tests de disponibilité et les règles
 d'alerte facultatifs sont désactivés par défaut
 (`uptime_check_config.enabled = false`).
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -209,7 +209,7 @@ d'alerte facultatifs sont désactivés par défaut
 
 ## 3. Comportement de l'application Chibisafe {#3-chibisafe-application-behaviour}
 
-- **Aucune tâche d'initialisation ni de migration.** Chibisafe gère son propre
+- **Aucun job d'initialisation ni de migration.** Chibisafe gère son propre
   stockage SQLite ; `Chibisafe_Common` n'injecte aucune tâche `db-init` ni de
   migration (`database_type =
   NONE`). La variable `initialization_jobs` est transmise au socle, mais n'est
@@ -356,7 +356,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | `enable_cloudsql_volume` | `false` | **Inerte** — `main.tf` code en dur `false` vers le socle, quelle que soit la valeur de cette variable. Chibisafe n'a pas de base de données Cloud SQL. |
 | `container_protocol` | `http1` | La description mentionne « required for Chibisafe gRPC » — un autre artefact de copier-coller ; Chibisafe n'a aucune interface gRPC. Laissez `http1`. |
 | `service_annotations` / `service_labels` | `{}` | Annotations/libellés personnalisés du service Cloud Run. |
-| `enable_image_mirroring` | `true` | Duplique l'image construite dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
 | `traffic_split` | `[]` | Répartit le trafic entre révisions pour des déploiements progressifs. |
 | `max_revisions_to_retain` | `7` | Déclarée par souci de cohérence avec les conventions ; non transmise par le `main.tf` de ce module. |
 | `container_image_source` / `container_image` / `container_build_config` / `container_resources` | `custom` / `""` / `{enabled=true}` / `{1000m,512Mi}` | Espaces réservés inertes repris du socle — le build réel (Dockerfile, argument de build `CHIBISAFE_VERSION`) provient de la configuration fixe de `Chibisafe_Common`, et non de ces variables. |
@@ -438,25 +438,25 @@ variables du groupe 12 — `sql_instance_name`, `sql_instance_base_name`,
 déclarées que pour refléter les variables du socle et n'ont aucun effet sur ce
 module.
 
-### Groupe 13 — Tâches et tâches planifiées {#group-13--jobs--scheduled-tasks}
+### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Aucune tâche par défaut n'est injectée ; à utiliser uniquement pour des tâches de chargement de données personnalisées. |
-| `cron_jobs` | `[]` | Tâches Cloud Run planifiées récurrentes ; aucune par défaut. |
+| `cron_jobs` | `[]` | Jobs Cloud Run planifiés récurrents ; aucun par défaut. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/health`, délai initial de 15s | La sonde de démarrage réellement en vigueur (voir §3). |
-| `liveness_probe` | HTTP `/api/health`, délai initial de 30s | La sonde d'activité réellement en vigueur. |
+| `liveness_probe` | HTTP `/api/health`, délai initial de 30s | La sonde de vivacité réellement en vigueur. |
 | `startup_probe_config` | HTTP `/api/health`, activée | **Inerte pour ce module** — le socle App_CloudRun privilégie toujours la `startup_probe` propre à l'application, fournie via `application_config`, plutôt que cette variable autonome ; la modifier n'a donc aucun effet sur la sonde déployée. |
 | `health_check_config` | HTTP `/api/health`, activée | Même inertie que `startup_probe_config` — c'est `liveness_probe` (groupe 14, ci-dessus) qui est réellement déployée. |
 | `uptime_check_config` | `{ enabled=false, path="/api/health" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques. |
 
-### Groupe 23 — VPC Service Controls et journaux d'audit {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -487,7 +487,7 @@ d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles tâches d'initialisation personnalisées. |
+| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
@@ -500,35 +500,35 @@ module n'expose pas le nom du secret généré ; retrouvez-le via `gcloud secret
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `container_port`/`timeout_seconds`/`backup_retention_days` hors plage, un environnement d'exécution `gen1` combiné à `gcs_volumes`, un `traffic_split` invalide. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Modèle de persistance | GCS Fuse `/data` (seule option de ce module) | Critique | SQLite sur la sémantique de verrouillage de fichiers POSIX de GCS Fuse n'est pas entièrement sûr en cas d'écritures soutenues ou concurrentes. Les propres métadonnées du module recommandent explicitement `Chibisafe_GKE` (PVC bloc) pour un stockage de production durable ; réservez cette variante Cloud Run aux outils de téléversement légers ou à faible trafic. |
-| `max_instance_count` | `1` | Critique | Chibisafe est une application SQLite à rédacteur unique ; dépasser 1 instance expose à des rédacteurs concurrents qui corrompent la base SQLite sur le montage GCS Fuse partagé. |
-| `path` de `startup_probe` / `liveness_probe` | `/api/health` | Moyen | `/api/health` renvoie un 200 littéral via le proxy vers le backend. `/` est l'interface web, dont le code d'état relève du front-end ; une sonde à cet endroit n'est donc pas un signal de santé fiable. |
-| `container_port` | `8000` | Moyen | `18000`/`18001` entrent en collision avec les ports internes du backend et du front-end, et le conteneur refuse de démarrer. |
-| Taille de bloc de téléversement | réduire à 25–30 MB dans les paramètres du tableau de bord | Moyen | Le plafond de 32 MiB de Cloud Run sur le corps des requêtes HTTP/1 rejette les blocs par défaut d'environ 81 MB de Chibisafe ; les téléversements de fichiers de plus de 32 MiB échouent donc (déduit du code source amont, non mesuré en conditions réelles). |
-| `enable_api_key` | `true` pour tout déploiement hors d'un réseau de confiance | Élevé | Avec `ingress_settings = all` (la valeur par défaut) et `enable_api_key = false`, le garde-fou du plan rejette la configuration ; sans lui, le compte `admin` conserverait le mot de passe amont bien connu `admin` jusqu'à ce que quelqu'un le change. |
-| `ingress_settings` | `all` | Moyen | Vérifiez que votre copie de travail de ce module n'est pas revenue à `internal` — un ancien bug de copier-coller à l'échelle du parc fixait par défaut `ingress_settings` à `internal` pour plusieurs modules, ce qui rendrait cet outil public de téléversement totalement inaccessible malgré des contrôles de santé réussis. |
-| `startup_probe_config` / `health_check_config` | laisser tels quels ; comprendre qu'ils sont inertes | Faible | Le socle App_CloudRun privilégie toujours les `startup_probe`/`liveness_probe` propres à l'application, fournies via `application_config`, plutôt que ces variables autonomes lorsque les deux sont présentes ; modifier ces deux variables n'a donc aucun effet sur la sonde déployée. |
-| `enable_cloudsql_volume` | `false` (seule valeur qui compte) | Faible | `main.tf` code en dur `false` vers le socle, quelle que soit la valeur de cette variable ; Chibisafe n'a pas de base de données Cloud SQL. |
-| `enable_redis` | n'importe quelle valeur (inerte) | Faible | `main.tf` transmet toujours `enable_redis = false` — modifier cette variable n'a aucun effet ; ne comptez pas sur elle pour ajouter une connectivité Redis. |
-| Descriptions de `memory_limit` / `min_instance_count` / `container_protocol` | ignorer la formulation | Faible | Le texte de description de ces variables fait référence à des « vector indexes », des « collections », de l'« index loading » et à « gRPC » — des restes de copier-coller d'un modèle de module de base de données vectorielle. Chibisafe est un outil de téléversement de fichiers qui n'a rien de tout cela ; les valeurs par défaut numériques et textuelles elles-mêmes (`1Gi`, `1`, `http1`) sont correctes et non affectées. |
-| Variables `database_type` / `db_*` / `sql_instance_*` | `NONE` / inertes | Faible | Chibisafe n'a pas de base de données SQL ; ces variables n'existent que pour refléter celles du socle et sont ignorées sans avertissement. |
-| Repérage du secret `enable_api_key` | utiliser `gcloud secrets list --filter="name~chibisafe"` | Faible | Le fichier `outputs.tf` de ce module n'expose pas le nom du secret généré en tant que sortie (contrairement à `chibisafe_api_key_secret_id` de `Chibisafe_GKE`). |
+| Modèle de persistance | GCS Fuse `/data` (seule option de ce module) | Critical | SQLite sur la sémantique de verrouillage de fichiers POSIX de GCS Fuse n'est pas entièrement sûr en cas d'écritures soutenues ou concurrentes. Les propres métadonnées du module recommandent explicitement `Chibisafe_GKE` (PVC bloc) pour un stockage de production durable ; réservez cette variante Cloud Run aux outils de téléversement légers ou à faible trafic. |
+| `max_instance_count` | `1` | Critical | Chibisafe est une application SQLite à rédacteur unique ; dépasser 1 instance expose à des rédacteurs concurrents qui corrompent la base SQLite sur le montage GCS Fuse partagé. |
+| `path` de `startup_probe` / `liveness_probe` | `/api/health` | Medium | `/api/health` renvoie un 200 littéral via le proxy vers le backend. `/` est l'interface web, dont le code d'état relève du front-end ; une sonde à cet endroit n'est donc pas un signal de santé fiable. |
+| `container_port` | `8000` | Medium | `18000`/`18001` entrent en collision avec les ports internes du backend et du front-end, et le conteneur refuse de démarrer. |
+| Taille de bloc de téléversement | réduire à 25–30 MB dans les paramètres du tableau de bord | Medium | Le plafond de 32 MiB de Cloud Run sur le corps des requêtes HTTP/1 rejette les blocs par défaut d'environ 81 MB de Chibisafe ; les téléversements de fichiers de plus de 32 MiB échouent donc (déduit du code source amont, non mesuré en conditions réelles). |
+| `enable_api_key` | `true` pour tout déploiement hors d'un réseau de confiance | High | Avec `ingress_settings = all` (la valeur par défaut) et `enable_api_key = false`, le garde-fou du plan rejette la configuration ; sans lui, le compte `admin` conserverait le mot de passe amont bien connu `admin` jusqu'à ce que quelqu'un le change. |
+| `ingress_settings` | `all` | Medium | Vérifiez que votre copie de travail de ce module n'est pas revenue à `internal` — un ancien bug de copier-coller à l'échelle du parc fixait par défaut `ingress_settings` à `internal` pour plusieurs modules, ce qui rendrait cet outil public de téléversement totalement inaccessible malgré des contrôles de santé réussis. |
+| `startup_probe_config` / `health_check_config` | laisser tels quels ; comprendre qu'ils sont inertes | Low | Le socle App_CloudRun privilégie toujours les `startup_probe`/`liveness_probe` propres à l'application, fournies via `application_config`, plutôt que ces variables autonomes lorsque les deux sont présentes ; modifier ces deux variables n'a donc aucun effet sur la sonde déployée. |
+| `enable_cloudsql_volume` | `false` (seule valeur qui compte) | Low | `main.tf` code en dur `false` vers le socle, quelle que soit la valeur de cette variable ; Chibisafe n'a pas de base de données Cloud SQL. |
+| `enable_redis` | n'importe quelle valeur (inerte) | Low | `main.tf` transmet toujours `enable_redis = false` — modifier cette variable n'a aucun effet ; ne comptez pas sur elle pour ajouter une connectivité Redis. |
+| Descriptions de `memory_limit` / `min_instance_count` / `container_protocol` | ignorer la formulation | Low | Le texte de description de ces variables fait référence à des « vector indexes », des « collections », de l'« index loading » et à « gRPC » — des restes de copier-coller d'un modèle de module de base de données vectorielle. Chibisafe est un outil de téléversement de fichiers qui n'a rien de tout cela ; les valeurs par défaut numériques et textuelles elles-mêmes (`1Gi`, `1`, `http1`) sont correctes et non affectées. |
+| Variables `database_type` / `db_*` / `sql_instance_*` | `NONE` / inertes | Low | Chibisafe n'a pas de base de données SQL ; ces variables n'existent que pour refléter celles du socle et sont ignorées sans avertissement. |
+| Repérage du secret `enable_api_key` | utiliser `gcloud secrets list --filter="name~chibisafe"` | Low | Le fichier `outputs.tf` de ce module n'expose pas le nom du secret généré en tant que sortie (contrairement à `chibisafe_api_key_secret_id` de `Chibisafe_GKE`). |
 
 ---
 
 Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et duplication
-d'images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
+Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration
 applicative propre à Chibisafe, partagée avec la variante GKE, se trouve dans le
 module `Chibisafe_Common` (`modules/Chibisafe_Common/README.md`) ; la variante
 GKE elle-même est documentée dans **[Chibisafe_GKE](Chibisafe_GKE.md)**.

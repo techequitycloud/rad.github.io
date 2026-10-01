@@ -13,7 +13,7 @@ authentik ([goauthentik.io](https://goauthentik.io/)) est un fournisseur d'ident
 open source (MIT, open-core) : authentification unique via OIDC et SAML, LDAP et
 SCIM, authentification multifacteur et authentification par proxy — une alternative
 auto-hébergée à Okta, Auth0 et Keycloak. Ce module déploie authentik sur
-**Cloud Run v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui
+**Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui
 provisionne et gère l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud qu'utilise authentik et sur la façon de
@@ -22,7 +22,7 @@ commande. Pour les mécanismes communs à toutes les applications Cloud Run — 
 du service, ingress et équilibrage de charge, mise à l'échelle et concurrence,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
 cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
@@ -35,7 +35,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Serveur + worker colocalisé, 2 vCPU / 2 GiB par défaut, CPU toujours allouée, 1 instance minimum |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — authentik a besoin de PostgreSQL ≥ 14 ; MySQL est bloqué |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — authentik a besoin de PostgreSQL ≥ 14 ; MySQL est bloqué |
 | Cache et file d'attente | **Aucun — pas de Redis** | authentik ≥ 2025.10 a déplacé le cache, les sessions, la file de tâches et la couche de canaux WebSocket dans PostgreSQL |
 | Stockage des médias | Cloud Storage (GCS Fuse) | Bucket monté sur `/media` pour les icônes téléversées et les arrière-plans des flux |
 | Secrets | Secret Manager | `AUTHENTIK_SECRET_KEY` stable, mot de passe d'amorçage de `akadmin`, mot de passe de la base de données |
@@ -104,7 +104,7 @@ les requêtes. Chaque déploiement crée une révision immuable.
 Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 authentik stocke *tout* ici — utilisateurs, groupes, flux, fournisseurs, sessions,
 cache et file de tâches d'arrière-plan. Le service se connecte de manière privée via
@@ -160,7 +160,7 @@ Deux secrets authentik sont générés automatiquement :
 
 Consultez [Authentik_Common](Authentik_Common.md) pour le modèle de secrets complet.
 
-### E. Réseau et ingress {#e-networking--ingress}
+### E. Réseau et entrée {#e-networking--ingress}
 
 Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge
 HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
@@ -250,7 +250,7 @@ avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de supervision. |
+| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -275,7 +275,7 @@ avec leur comportement standard.
 | `enable_cloudsql_volume` | `true` | Socket Unix de l'Auth Proxy — le point d'entrée définit `SSLMODE=disable` pour l'Auth Proxy (répertoire de socket ou TCP en loopback ; le proxy ne parle pas SSL lui-même), et `require` uniquement pour une connexion TCP directe vers tout autre hôte. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. |
 
-### Groupe 5 — Contrôle de l'accès et de l'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -337,7 +337,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique job `db-init` intégré. |
 | `cron_jobs` | `[]` | Inutile — le worker colocalisé exécute les tâches planifiées d'authentik. |
 
-### Groupe 14 — Observabilité et contrôles d'état {#group-14--observability--health}
+### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -379,7 +379,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket `/media`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la supervision, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -392,30 +392,30 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
+> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTIK_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler | Critique | Le renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants et jetons stockés). |
-| `database_type` | `POSTGRES_15` | Critique | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
-| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
-| Ports d'écoute du worker (gérés par le point d'entrée) | Conserver les valeurs par défaut en loopback `AUTHENTIK_LISTEN__*` du point d'entrée | Critique | Le `ak worker` colocalisé démarre lui aussi un écouteur HTTP et hérite de la valeur par défaut du serveur, `0.0.0.0:9000` ; s'il remporte la course au bind, il répond à **toutes** les routes — points de contrôle d'état compris — par des 200 vides : une interface blanche avec des sondes faussement saines. Le point d'entrée cantonne le worker à des ports en loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur possède `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
-| `min_instance_count` | `1` (avec CPU toujours allouée) | Élevé | `0` laisse l'instance disparaître : les WebSockets des outposts se déconnectent et les tâches d'arrière-plan (jobs planifiés, synchronisation des outposts) sont retardées jusqu'à ce que la requête suivante réveille une instance. |
-| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête bride le worker colocalisé entre les requêtes — la file de tâches se bloque même avec `min=1`. |
-| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Moyen | Pointer la sonde vers une page authentifiée renvoie 401/403 au sondeur — la révision ne devient jamais prête alors qu'authentik a bien démarré. |
-| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Moyen | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
-| `application_version` | Épingler une version | Moyen | `latest` est silencieusement épinglé sur `2026.5.4` ; un épinglage explicite rend les mises à niveau délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
-| `memory_limit` | `2Gi` | Moyen | Le serveur et le worker partagent la limite ; des valeurs plus basses exposent à un OOM pendant les migrations ou les imports de flux. |
-| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Ne pas définir | Moyen | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts conduit à s'authentifier avec un rôle inexistant (les noms sont préfixés par le locataire). |
-| Outposts LDAP/RADIUS | Pas sur Cloud Run | Faible | Les écouteurs non HTTP ne peuvent pas être servis par Cloud Run — utilisez la variante GKE ou un hôte externe pour ces outposts. |
-| `enable_iap` | `false` | Moyen | IAP impose une double barrière à chaque connexion et casse les callbacks OAuth/SAML provenant de tiers externes. |
+| `AUTHENTIK_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler | Critical | Le renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants et jetons stockés). |
+| `database_type` | `POSTGRES_15` | Critical | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
+| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
+| Ports d'écoute du worker (gérés par le point d'entrée) | Conserver les valeurs par défaut en loopback `AUTHENTIK_LISTEN__*` du point d'entrée | Critical | Le `ak worker` colocalisé démarre lui aussi un écouteur HTTP et hérite de la valeur par défaut du serveur, `0.0.0.0:9000` ; s'il remporte la course au bind, il répond à **toutes** les routes — points de contrôle d'état compris — par des 200 vides : une interface blanche avec des sondes faussement saines. Le point d'entrée cantonne le worker à des ports en loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur possède `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
+| `min_instance_count` | `1` (avec CPU toujours allouée) | High | `0` laisse l'instance disparaître : les WebSockets des outposts se déconnectent et les tâches d'arrière-plan (jobs planifiés, synchronisation des outposts) sont retardées jusqu'à ce que la requête suivante réveille une instance. |
+| `cpu_always_allocated` | `true` | High | La facturation à la requête bride le worker colocalisé entre les requêtes — la file de tâches se bloque même avec `min=1`. |
+| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Medium | Pointer la sonde vers une page authentifiée renvoie 401/403 au sondeur — la révision ne devient jamais prête alors qu'authentik a bien démarré. |
+| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Medium | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
+| `application_version` | Épingler une version | Medium | `latest` est silencieusement épinglé sur `2026.5.4` ; un épinglage explicite rend les mises à niveau délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
+| `memory_limit` | `2Gi` | Medium | Le serveur et le worker partagent la limite ; des valeurs plus basses exposent à un OOM pendant les migrations ou les imports de flux. |
+| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Ne pas définir | Medium | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts conduit à s'authentifier avec un rôle inexistant (les noms sont préfixés par le locataire). |
+| Outposts LDAP/RADIUS | Pas sur Cloud Run | Low | Les écouteurs non HTTP ne peuvent pas être servis par Cloud Run — utilisez la variante GKE ou un hôte externe pour ces outposts. |
+| `enable_iap` | `false` | Medium | IAP impose une double barrière à chaque connexion et casse les callbacks OAuth/SAML provenant de tiers externes. |
 
 ---
 
-Pour le comportement de la fondation évoqué tout au long de ce guide — identité du
+Pour le comportement du socle évoqué tout au long de ce guide — identité du
 service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
 images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative

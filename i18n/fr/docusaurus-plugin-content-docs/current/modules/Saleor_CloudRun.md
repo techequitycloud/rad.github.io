@@ -32,7 +32,7 @@ Saleor s'exécute dans un conteneur construit sur mesure (`ghcr.io/saleor/saleor
 encapsulé avec un point d'entrée cloud) sur Cloud Run v2. Le déploiement assemble un
 ensemble ciblé de services Google Cloud :
 
-| Capacité | Service Google Cloud | Remarques |
+| Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Deux services Cloud Run : l'API Saleor principale (uvicorn, 2 workers + worker/beat Celery colocalisé) et un service Dashboard précompilé distinct ; 2 vCPU / 3 GiB par défaut pour le service principal |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — fixé par `Saleor_Common` quelle que soit la valeur de `database_type` |
@@ -41,7 +41,7 @@ ensemble ciblé de services Google Cloud :
 | Secrets | Secret Manager | `SECRET_KEY`, `RSA_PRIVATE_KEY`, `DJANGO_SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, entièrement publique ; équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
 
-**Valeurs par défaut raisonnables à connaître dès le départ :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `Saleor_Common` fixe le moteur de base de données ;
   choisir une autre valeur dans `database_type` n'a aucun effet.
@@ -326,7 +326,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 `custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
 provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et conservation des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
 
 Options standard d'App_CloudRun pour l'équilibreur de charge, le CDN et le nettoyage
 d'Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
@@ -349,7 +349,7 @@ d'Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
 | `application_database_user` | `saleor_user` | Utilisateur de base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 
-### Groupe 12 — Tâches et tâches planifiées {#group-12--jobs--scheduled-tasks}
+### Groupe 12 — Jobs et tâches planifiées {#group-12--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -361,7 +361,7 @@ d'Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/health/`, délai 20s | Sonde de démarrage transmise à `Saleor_Common`. |
-| `liveness_probe` | HTTP `/health/`, délai 30s | Sonde d'activité transmise à `Saleor_Common`. |
+| `liveness_probe` | HTTP `/health/`, délai 30s | Sonde de vivacité transmise à `Saleor_Common`. |
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques. |
 
@@ -374,7 +374,7 @@ d'Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journaux d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 Options standard d'App_CloudRun pour VPC-SC et les journaux d'audit — consultez
 [App_CloudRun](App_CloudRun.md).
@@ -414,14 +414,14 @@ sous la forme `SALEOR_DASHBOARD_URL`, plutôt que comme sortie Terraform de prem
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
 > **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critical | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
 | `SECRET_KEY` (généré automatiquement) | Jamais de rotation à la légère | Critical | La rotation de la clé de signature de Django invalide les cookies/sessions signés. |

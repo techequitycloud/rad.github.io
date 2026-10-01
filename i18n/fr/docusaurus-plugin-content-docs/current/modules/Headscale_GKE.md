@@ -68,7 +68,7 @@ assemble un ensemble ciblé de services Google Cloud :
   navigateur.
 - **MagicDNS est désactivé par défaut.** Il exige que `dns.base_domain` soit
   défini et réellement différent du domaine de `server_url`.
-- **Aucune tâche d'initialisation par défaut.** Le fichier SQLite de Headscale est
+- **Aucun job d'initialisation par défaut.** Le fichier SQLite de Headscale est
   créé automatiquement au premier démarrage.
 
 ---
@@ -78,7 +78,7 @@ assemble un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [Outputs](#6-outputs) du déploiement.
+autres identifiants figurent dans les [sorties](#6-outputs) du déploiement.
 
 ### A. GKE Autopilot — le StatefulSet Headscale {#a-gke-autopilot--the-headscale-statefulset}
 
@@ -278,12 +278,12 @@ VPC/IAM/Artifact Registry commune à tout déploiement `App_GKE`).
 
 ---
 
-## 6. Outputs {#6-outputs}
+## 6. Sorties {#6-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
-| Output | Description |
+| Sortie | Description |
 |---|---|
 | `service_name` | Nom du Service Kubernetes. |
 | `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
@@ -294,7 +294,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `statefulset_name` | Nom du StatefulSet (présent avec la valeur par défaut `workload_type = "StatefulSet"`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la supervision et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -333,7 +333,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et duplication d'images — consultez
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Headscale,
 partagée avec la variante Cloud Run, est décrite dans
 **[Headscale_Common](Headscale_Common.md)**.

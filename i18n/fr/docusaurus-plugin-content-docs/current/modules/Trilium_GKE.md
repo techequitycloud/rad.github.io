@@ -37,7 +37,7 @@ déploiement assemble un ensemble volontairement restreint de services Google Cl
 | Secrets | Secret Manager | Aucun secret généré — Trilium n'a aucun identifiant défini par variable d'environnement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe par défaut (Trilium est une interface web destinée au navigateur) |
 
-**Valeurs par défaut raisonnables à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucun moteur de base de données à gérer.** `database_type = "NONE"` — il n'y a
   ni instance Cloud SQL, ni chaîne de connexion, ni rien à sauvegarder séparément du
@@ -83,9 +83,9 @@ Trilium s'exécute sous forme d'un pod unique (Deployment par défaut, ou Statef
 lorsque `stateful_pvc_enabled = true`). Comme il doit rester à exactement un réplica,
 il n'y a pas de mise à l'échelle automatique horizontale significative à observer.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
   travail Trilium pour les pods, les révisions et les événements. Kubernetes Engine →
-  Services et Ingress affiche l'IP externe.
+  Services & Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -104,7 +104,7 @@ de StatefulSet (`stateful_pvc_enabled = true`, recommandé pour les grandes
 collections de notes).
 
 - **Console :** Cloud Storage → Buckets (mode GCS FUSE) ; Kubernetes Engine →
-  Stockage (mode PVC).
+  Storage (mode PVC).
 - **CLI :**
   ```bash
   gcloud storage buckets list --project "$PROJECT"          # GCS FUSE mode
@@ -119,7 +119,7 @@ Par défaut, la charge de travail est exposée via une IP externe Cloud Load Bal
 Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP
 statique peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -135,8 +135,8 @@ Les sorties stdout/stderr des pods sont envoyées vers Cloud Logging ; les métr
 de GKE sont envoyées vers Cloud Monitoring. Des tests de disponibilité et des règles
 d'alerte sont disponibles en option.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
+  Alerting.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -193,7 +193,7 @@ comportement et leurs valeurs par défaut standard.
 | `cpu_limit` | `1000m` | CPU par pod. |
 | `memory_limit` | `1Gi` | Mémoire par pod ; Trilium est léger, n'augmentez cette valeur que pour de très grandes collections de notes. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | **Gardez les deux à 1** — la base de données SQLite intégrée ne prend pas en charge plusieurs rédacteurs. |
-| `enable_image_mirroring` | `true` | Duplique l'image Trilium dans Artifact Registry avant le déploiement. |
+| `enable_image_mirroring` | `true` | Met en miroir l'image Trilium dans Artifact Registry avant le déploiement. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -223,7 +223,7 @@ comportement et leurs valeurs par défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/health-check`, délai de 15s | Sonde de démarrage. |
-| `liveness_probe` | HTTP `/api/health-check`, délai de 30s | Sonde d'activité. |
+| `liveness_probe` | HTTP `/api/health-check`, délai de 30s | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif sur `/api/health-check`. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
@@ -249,12 +249,12 @@ comportement et leurs valeurs par défaut standard.
 
 ---
 
-## 6. Pièges de configuration et valeurs par défaut raisonnables {#6-configuration-pitfalls--sensible-defaults}
+## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
 > Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
 > dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
 
-| Paramètre | Valeur raisonnable | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents. |
 | `stateful_fs_group` / mount_options GCS | `1000` | Critical | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer. |
@@ -267,7 +267,7 @@ comportement et leurs valeurs par défaut standard.
 
 Pour le comportement du socle évoqué tout au long de cette page — IAM et Workload
 Identity, mise à l'échelle automatique, entrée et certificats, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et duplication des images — consultez
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à Trilium partagée
 avec la variante Cloud Run est décrite dans **[Trilium_Common](Trilium_Common.md)**.
 

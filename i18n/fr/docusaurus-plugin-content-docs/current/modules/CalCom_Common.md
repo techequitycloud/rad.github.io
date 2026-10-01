@@ -28,9 +28,9 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Domaine | Fourni par CalCom_Common | Où cela apparaît |
 |---|---|---|
 | Secrets cryptographiques | Génère `NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` (chacun étant une chaîne aléatoire de 32 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes du conteneur ; récupérables via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Enveloppe l'image officielle `calcom/cal.com` avec un point d'entrée personnalisé léger ; build via Cloud Build | Output `container_image` du déploiement de plateforme |
-| Moteur de base de données | Fixe **Cloud SQL pour PostgreSQL 15** (`POSTGRES_15`) comme base de données | §Base de données dans les guides de plateforme |
-| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle, la base de données et les droits | Output `initialization_jobs` |
+| Image de conteneur | Enveloppe l'image officielle `calcom/cal.com` avec un point d'entrée personnalisé léger ; build via Cloud Build | Sortie `container_image` du déploiement de plateforme |
+| Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme base de données | §Base de données dans les guides de plateforme |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle, la base de données et les droits | Sortie `initialization_jobs` |
 | Migrations de schéma | Délègue la création du schéma au script de démarrage propre à l'image, qui exécute `prisma migrate deploy` à chaque démarrage | Comportement de l'application dans les guides de plateforme |
 | Paramètres essentiels | Assemble `DATABASE_URL`/`DATABASE_DIRECT_URL` à l'exécution et définit par défaut `NEXT_PUBLIC_WEBAPP_URL` / `NEXTAUTH_URL` sur l'URL publique du service | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
@@ -74,10 +74,10 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 
 ---
 
-## 3. Moteur de base de données et initialisation {#3-database-engine-and-bootstrap}
+## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Cal.com nécessite **PostgreSQL** (Prisma avec le client `pg`) ; cette couche fixe le
-moteur sur **Cloud SQL pour PostgreSQL 15**. Lors du premier déploiement, un job ponctuel
+moteur sur **Cloud SQL for PostgreSQL 15**. Lors du premier déploiement, un job ponctuel
 (`db-init`) s'exécute à l'aide de `postgres:15-alpine` et, de manière idempotente :
 
 1. Résout l'hôte de la base de données — en privilégiant `DB_IP`, ou `127.0.0.1` lorsque le sidecar Cloud SQL

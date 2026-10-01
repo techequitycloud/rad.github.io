@@ -11,7 +11,7 @@ description: "Lab pratique : déployez LubeLogger sur Cloud Run dans votre propr
 
 ## Vue d'ensemble {#overview}
 
-**Durée estimée :** 45 à 60 minutes
+**Durée estimée :** 45–60 minutes
 
 LubeLogger est un outil gratuit et open source de suivi de l'entretien des véhicules et de la consommation de carburant
 (ASP.NET Core, base de données LiteDB embarquée). Ce lab vous fait parcourir le cycle de vie
@@ -29,14 +29,14 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans la dur
 
 À la fin de ce lab, vous saurez :
 
-- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Accéder au service en cours d'exécution et le vérifier, y compris le flux d'inscription en libre-service
   au premier démarrage.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (en comprenant pourquoi le service est figé à une
   instance), mettre à jour et gérer le stockage.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
-- Supprimer proprement le déploiement.
+- Démanteler proprement le déploiement.
 
 ## Prérequis {#prerequisites}
 
@@ -142,7 +142,7 @@ export REGION="us-central1"          # the region you deploy into
 
 ## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
 
-1. **Journaux** — depuis la CLI ou le Logs Explorer :
+1. **Journaux** — depuis la CLI ou l'explorateur de journaux (Logs Explorer) :
 
    ```bash
    gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
@@ -193,7 +193,7 @@ propres à chaque paramètre (y compris la règle essentielle de conserver `max_
 
 ---
 
-## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+## Tâche 6 — Démanteler [Automatisé] {#task-6--tear-down-automated}
 
 Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run et les deux buckets Cloud Storage (**tous les enregistrements de véhicules et les documents téléversés sont perdus**). Les ressources appartenant à **Services_GCP** (le VPC, Artifact Registry) sont gérées séparément et ne sont pas supprimées ici.
 
@@ -208,4 +208,4 @@ Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Tr
 | 3 — Exploiter | Manuel | Inspecter les révisions, comprendre la contrainte d'instance unique figée, mettre à jour la version, inspecter le stockage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de stockage/persistance, de session et de build |
-| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris toutes les données |
+| 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module, y compris toutes les données |

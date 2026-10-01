@@ -19,7 +19,7 @@ lab vous fait parcourir l'intégralité du cycle de vie opérationnel du module 
 sur Google Cloud : le déployer, y accéder et le vérifier, l'exploiter au quotidien, l'observer,
 diagnostiquer les problèmes courants et le démanteler.
 
-Le lab se concentre sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
+Le lab porte sur l'exploitation du **module GKE et de la plateforme Google Cloud**, et non sur
 les fonctionnalités du produit OpenEMR. Pour la liste complète des services provisionnés et de chaque
 paramètre de configuration (organisés par groupe), consultez le
 [Guide de configuration](https://docs.radmodules.dev/docs/modules/OpenEMR_GKE) — ce lab
@@ -27,7 +27,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 
 ## Objectifs {#objectives}
 
-À la fin de ce lab, vous serez en mesure de :
+À la fin de ce lab, vous saurez :
 
 - Déployer le module depuis la plateforme RAD et repérer les ressources qu'il provisionne.
 - Vous connecter au cluster GKE et accéder à la charge de travail en cours d'exécution.
@@ -51,7 +51,7 @@ ne reprend volontairement pas ce détail afin de rester exact dans le temps.
 - **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
-Définissez ces variables shell une seule fois ; chaque tâche ci-dessous les réutilise :
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
 
 ```bash
 export PROJECT="<your-gcp-project-id>"
@@ -70,7 +70,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot, provisionne une
    base de données Cloud SQL (MySQL 8.0) avec ses secrets Secret Manager, un partage NFS Filestore
    pour le répertoire `sites/`, un Redis facultatif pour le stockage des sessions PHP, construit
-   l'image du conteneur et exécute trois tâches ponctuelles d'initialisation à la suite : `nfs-init`
+   l'image du conteneur et exécute trois jobs ponctuels d'initialisation à la suite : `nfs-init`
    (préparation des répertoires NFS), `db-init` (création de l'utilisateur et de la base MySQL) et
    `openemr-install` (installation du schéma via `auto_configure.php`). **Les premiers déploiements
    prennent environ 20–40 minutes** (la création de Cloud SQL et l'installation du schéma OpenEMR
@@ -89,7 +89,7 @@ export REGION="us-central1"           # the region you deploy into
 
 ---
 
-## Tâche 2 — Accès et vérification [Manuel] {#task-2--access--verify-manual}
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Vérifiez que la charge de travail s'exécute et trouvez son adresse externe :
 
@@ -113,7 +113,7 @@ export REGION="us-central1"           # the region you deploy into
    # expect: 200
    ```
 
-   Prévoyez jusqu'à **20 minutes** après le premier déploiement pour que la tâche `openemr-install` et
+   Prévoyez jusqu'à **20 minutes** après le premier déploiement pour que le job `openemr-install` et
    l'installateur du schéma se terminent avant que cette vérification réussisse.
 
 3. Récupérez le mot de passe administrateur dans Secret Manager et connectez-vous sur
@@ -145,7 +145,7 @@ export REGION="us-central1"           # the region you deploy into
 
 3. **Mettez à jour la version de l'application** en modifiant le paramètre de version via **Update** sur la page de détails du déploiement ; une nouvelle image est construite et une mise à jour progressive remplace les pods.
 
-4. **Gérez les secrets, le stockage et les tâches :**
+4. **Gérez les secrets, le stockage et les jobs :**
 
    ```bash
    kubectl get secrets -n "$NS"
@@ -191,7 +191,7 @@ export REGION="us-central1"           # the region you deploy into
      -c cloud-sql-proxy --tail=20
    ```
 
-   Filtre de l'explorateur de journaux :
+   Filtre du Logs Explorer :
    `resource.type="k8s_container" AND resource.labels.namespace_name="<namespace>"`.
 
 2. **Surveillance** — ouvrez les tableaux de bord GKE / Kubernetes et examinez l'utilisation du CPU et de la mémoire
@@ -207,8 +207,8 @@ Des techniques durables pour les modes de défaillance que vous rencontrerez le 
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'OpenEMR.
 
 - **Pod non Ready / CrashLoopBackOff :** inspectez les événements et les journaux. Notez que la sonde de démarrage
-  est de type **TCP** sur le port 80 ; un échec à ce stade signifie que le port n'est pas encore ouvert — la
-  tâche `openemr-install` ou l'installateur du schéma est peut-être encore en cours d'exécution.
+  est de type **TCP** sur le port 80 ; un échec à ce stade signifie que le port n'est pas encore ouvert — le
+  job `openemr-install` ou l'installateur du schéma est peut-être encore en cours d'exécution.
   ```bash
   kubectl describe pod -n "$NS" <pod>        # Events section shows scheduling/probe/mount errors
   kubectl logs -n "$NS" <pod> -c openemr --previous   # logs from the crashed container
@@ -226,7 +226,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   Si le balayage (ou une autre étape de configuration) apparaît toujours comme un processus en cours, le démarrage est
   simplement lent, et non bloqué — laissez-le se poursuivre. Si aucun processus de ce type ne s'exécute et que le pod
   ne progresse pas, traitez-le comme un véritable blocage et examinez plutôt les journaux et les événements.
-- **Échec des tâches d'initialisation :** inspectez chaque tâche et les journaux de son pod :
+- **Échec des jobs d'initialisation :** inspectez chaque job et les journaux de son pod :
   ```bash
   kubectl get jobs -n "$NS"
   kubectl logs -n "$NS" job/nfs-init
@@ -234,7 +234,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions d'
   kubectl logs -n "$NS" job/openemr-install
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base a été matérialisé dans l'espace de noms et que les trois tâches d'initialisation se sont terminées.
+  secret du mot de passe de la base a été matérialisé dans l'espace de noms et que les trois jobs d'initialisation se sont terminés.
 - **Pod en attente / pas d'IP externe :** consultez les événements de `kubectl describe pod` pour repérer des problèmes de ressources
   ou de quota, et vérifiez que le Service LoadBalancer dispose d'une IP attribuée.
 - **Erreurs de récupération d'image :** vérifiez que l'image existe dans Artifact Registry et que le compte
@@ -258,8 +258,8 @@ le cluster GKE, le Cloud SQL partagé, le registre) sont gérées séparément e
 
 | Tâche | Type | Résultat |
 |---|---|---|
-| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL MySQL, NFS, Redis, les secrets, et exécute les tâches nfs-init, db-init et openemr-install |
-| 2 — Accès et vérification | Manuel | Se connecter au cluster ; la page de connexion renvoie HTTP 200 ; connexion avec les identifiants administrateur issus de Secret Manager |
+| 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL MySQL, NFS, Redis, les secrets, et exécute les jobs nfs-init, db-init et openemr-install |
+| 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la page de connexion renvoie HTTP 200 ; connexion avec les identifiants administrateur issus de Secret Manager |
 | 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer les secrets/le stockage, accéder à la base |
 | 4 — Observer | Manuel | Interroger Cloud Logging (conteneurs de l'application et d'Auth Proxy) ; consulter les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de sonde de démarrage TCP, de base de données, de la séquence d'initialisation en trois étapes, de planification et de récupération d'image |

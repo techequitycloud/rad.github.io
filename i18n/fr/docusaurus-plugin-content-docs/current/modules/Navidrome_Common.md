@@ -18,7 +18,7 @@ valeurs par défaut que vous voyez dans la documentation des plateformes.
 
 Pour l'infrastructure qui provisionne et exécute réellement Navidrome, consultez les
 guides des plateformes ([Navidrome_GKE](Navidrome_GKE.md),
-[Navidrome_CloudRun](Navidrome_CloudRun.md)) et les guides de fondation
+[Navidrome_CloudRun](Navidrome_CloudRun.md)) et les guides du socle
 ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_Common.md)).
 
 ---
@@ -28,7 +28,7 @@ guides des plateformes ([Navidrome_GKE](Navidrome_GKE.md),
 | Domaine | Fourni par Navidrome_Common | Où cela apparaît |
 |---|---|---|
 | Amorçage de l'administrateur | Lorsque `enable_admin_password = true` (**par défaut**), génère un mot de passe aléatoire de 24 caractères, le stocke dans **Secret Manager** et l'injecte sous `ND_DEVAUTOCREATEADMINPASSWORD` afin que l'utilisateur `admin` soit créé automatiquement au premier démarrage | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
-| Image de conteneur | Encapsule l'image officielle `deluan/navidrome` dans une enveloppe légère afin que la fondation puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
+| Image de conteneur | Encapsule l'image officielle `deluan/navidrome` dans une enveloppe légère afin que le socle puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Navidrome utilise une base de données SQLite embarquée sous `/data` (`database_type = "NONE"`) | §Base de données dans les guides des plateformes |
 | Amorçage de la base de données | **Aucun** — il n'y a pas de job `db-init` ; Navidrome gère son propre stockage | n/a |
 | Stockage objet | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/data` sur Cloud Run | Sortie `storage_buckets` |
@@ -115,12 +115,12 @@ ARG NAVIDROME_VERSION=0.54.3
 FROM deluan/navidrome:${NAVIDROME_VERSION}
 ```
 
-- **`image_source = "custom"`** — ce paramètre est défini uniquement pour que la
-  fondation construise/mette en miroir l'image dans Artifact Registry ; aucun code
+- **`image_source = "custom"`** — ce paramètre est défini uniquement pour que le
+  socle construise/mette en miroir l'image dans Artifact Registry ; aucun code
   applicatif n'est ajouté par-dessus. Le build s'exécute via Cloud Build (Kaniko) et
   met le résultat en miroir dans le dépôt Artifact Registry partagé.
 - **ARG de build propre à l'application** — le Dockerfile lit `NAVIDROME_VERSION`, et
-  **non** l'`APP_VERSION` générique que la fondation injecte (et qui forcerait
+  **non** l'`APP_VERSION` générique que le socle injecte (et qui forcerait
   `latest`). Lorsque `application_version = "latest"`, la couche Common fixe le build
   sur `0.54.3` ; sinon, elle transmet directement la version demandée.
 - **Aucune traduction de point d'entrée** — comme Navidrome n'a besoin d'aucun
@@ -129,7 +129,7 @@ FROM deluan/navidrome:${NAVIDROME_VERSION}
 
 ---
 
-## 5. Paramètres de base de l'application {#5-core-application-settings}
+## 5. Paramètres principaux de l'application {#5-core-application-settings}
 
 `Navidrome_Common` établit l'environnement minimal dont Navidrome a besoin pour
 démarrer la première fois et écrire son état sur le volume persistant (les
@@ -158,7 +158,7 @@ Montage de `/data` selon la plateforme :
 
 ---
 
-## 6. Comportement des sondes d'état {#6-health-probe-behaviour}
+## 6. Comportement des sondes de santé {#6-health-probe-behaviour}
 
 Les sondes de démarrage et de vivacité émettent toutes deux une **requête HTTP GET
 `/ping`**, qui renvoie `{"status":"ok"}` avec un statut `200` et ne nécessite **aucune
@@ -172,16 +172,16 @@ opérationnel, indépendamment de toute connexion administrateur.
 
 ---
 
-## 7. Stockage objet {#7-object-storage}
+## 7. Stockage d'objets {#7-object-storage}
 
-Un unique bucket **Cloud Storage** est déclaré ici et provisionné par la fondation,
+Un unique bucket **Cloud Storage** est déclaré ici et provisionné par le socle,
 qui accorde également l'accès au compte de service de la charge de travail :
 
 - **`name_suffix = "storage"`**, classe de stockage **STANDARD**, `force_destroy = true`,
   gestion des versions désactivée, avec `public_access_prevention = "enforced"`. Son
-  `location` est laissé vide afin que la fondation le résolve vers la région de
+  `location` est laissé vide afin que le socle le résolve vers la région de
   déploiement découverte automatiquement (ce qui évite un remplacement forcé dû à un
-  emplacement immuable lors d'une réapplication dans une autre région).
+  emplacement immuable lors d'un nouvel apply dans une autre région).
 - Sur Cloud Run, il sert de support à `/data` via GCS FUSE ; il contient donc la base
   de données SQLite, le cache de métadonnées, l'index de recherche et les journaux de
   Navidrome.
