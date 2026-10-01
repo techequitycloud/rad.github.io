@@ -2,7 +2,7 @@
 title: "Préparation PDE, section 1 : amorcer une organisation Google Cloud"
 description: "Préparez la section 1 de l'examen PDE — amorcer et maintenir une organisation Google Cloud — avec des labs de déploiement RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PDE_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PDE_Section_1_Exploration_Guide.md @ cb682e8 sha256:e113c0b94432 -->
 
 # Guide de préparation à la certification PDE : Section 1 — Amorcer et maintenir une organisation Google Cloud (Bootstrapping and maintaining a Google Cloud organization) (~20 % de l'examen) {#pde-certification-preparation-guide-section-1--bootstrapping-and-maintaining-a-google-cloud-organization-20-of-the-exam}
 

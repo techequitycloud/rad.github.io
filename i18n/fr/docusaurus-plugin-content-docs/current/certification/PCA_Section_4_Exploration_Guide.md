@@ -2,7 +2,7 @@
 title: "Préparation PCA, section 4 : analyse et optimisation des processus"
 description: "Préparez la section 4 de l'examen PCA — analyse et optimisation des processus techniques et métier — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCA_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCA_Section_4_Exploration_Guide.md @ cb682e8 sha256:9739d3041f6e -->
 
 # Guide de préparation à la certification PCA : Section 4 — Analyse et optimisation des processus techniques et métier (Analyzing and optimizing technical and business processes) (~15 % de l'examen) {#pca-certification-preparation-guide-section-4--analyzing-and-optimizing-technical-and-business-processes-15-of-the-exam}
 

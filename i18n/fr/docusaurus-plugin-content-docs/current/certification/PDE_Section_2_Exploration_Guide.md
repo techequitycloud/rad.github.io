@@ -2,7 +2,7 @@
 title: "Préparation PDE, section 2 : pipelines CI/CD"
 description: "Préparez la section 2 de l'examen Professional Cloud DevOps Engineer (PDE) — concevoir et mettre en œuvre des pipelines CI/CD — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PDE_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PDE_Section_2_Exploration_Guide.md @ cb682e8 sha256:12155c5031fc -->
 
 # Guide de préparation à la certification PDE : Section 2 — Concevoir et mettre en œuvre des pipelines CI/CD, y compris les tests continus, pour les charges de travail applicatives, d'infrastructure et de machine learning (Building and implementing CI/CD pipelines, including continuous testing, for application, infrastructure, and machine learning workloads) (~25 % de l'examen) {#pde-certification-preparation-guide-section-2--building-and-implementing-cicd-pipelines-including-continuous-testing-for-application-infrastructure-and-machine-learning-workloads-25-of-the-exam}
 

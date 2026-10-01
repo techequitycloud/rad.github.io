@@ -2,7 +2,7 @@
 title: "Préparation PSE, section 5 : exigences de conformité"
 description: "Préparez la section 5 de l'examen Professional Cloud Security Engineer (PSE) — prise en charge des exigences de conformité — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PSE_Section_5_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Section_5_Exploration_Guide.md @ cb682e8 sha256:84de1f6e449a -->
 
 # Guide de préparation à la certification PSE : Section 5 — Prise en charge des exigences de conformité (Supporting compliance requirements) (~11 % de l'examen) {#pse-certification-preparation-guide-section-5--supporting-compliance-requirements-11-of-the-exam}
 

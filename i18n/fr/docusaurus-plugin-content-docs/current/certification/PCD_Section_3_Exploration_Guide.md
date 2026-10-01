@@ -2,7 +2,7 @@
 title: "Préparation PCD, section 3 : déploiement d'applications"
 description: "Préparez la section 3 de l'examen Professional Cloud Developer (PCD) — déploiement d'applications — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCD_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCD_Section_3_Exploration_Guide.md @ cb682e8 sha256:3743fbbe85c9 -->
 
 # Guide de préparation à la certification PCD : Section 3 — Configuration d'applications cloud natives pour le déploiement (Configuring cloud-native applications for deployment) (~24 % de l'examen) {#pcd-certification-preparation-guide-section-3--configuring-cloud-native-applications-for-deployment-24-of-the-exam}
 

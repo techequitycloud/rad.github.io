@@ -2,7 +2,7 @@
 title: "Préparation ACE, section 2 : planification et mise en œuvre de solutions"
 description: "Préparez la section 2 de l'examen Associate Cloud Engineer (ACE) — planification et mise en œuvre d'une solution cloud — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/ACE_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/ACE_Section_2_Exploration_Guide.md @ cb682e8 sha256:1196b7a66de6 -->
 
 # Guide de préparation à la certification ACE : Section 2 — Planification et mise en œuvre d'une solution cloud (Planning and implementing a cloud solution) (~30 % de l'examen) {#ace-certification-preparation-guide-section-2--planning-and-implementing-a-cloud-solution-30-of-the-exam}
 

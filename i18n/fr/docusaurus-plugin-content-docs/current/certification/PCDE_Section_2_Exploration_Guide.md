@@ -2,7 +2,7 @@
 title: "Préparation PCDE, section 2 : gestion de bases de données multitechnologies"
 description: "Préparez la section 2 de l'examen PCDE — gérer une solution pouvant couvrir plusieurs technologies de bases de données — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCDE_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCDE_Section_2_Exploration_Guide.md @ cb682e8 sha256:b36341c91887 -->
 
 # Guide de préparation à la certification PCDE : Section 2 — Gérer une solution pouvant couvrir plusieurs technologies de bases de données (Manage a solution that can span multiple database technologies) (~25 % de l'examen) {#pcde-certification-preparation-guide-section-2--manage-a-solution-that-can-span-multiple-database-technologies-25-of-the-exam}
 

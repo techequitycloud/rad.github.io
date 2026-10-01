@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud DevOps Engineer (PDE)"
 description: "Associez chaque domaine de l'examen Professional Cloud DevOps Engineer (PDE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PDE_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PDE_Certification_Guide.md @ cb682e8 sha256:d79faaf9fc2a -->
 
 # Carte des labs de la certification Professional Cloud DevOps Engineer (PDE) {#professional-cloud-devops-engineer-pde-certification-lab-map}
 

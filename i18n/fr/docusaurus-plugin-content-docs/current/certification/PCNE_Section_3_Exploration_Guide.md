@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 3 : services réseau gérés"
 description: "Préparez la section 3 de l'examen Professional Cloud Network Engineer (PCNE) — configuration des services réseau gérés — avec des labs pratiques RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_3_Exploration_Guide.md @ cb682e8 sha256:af1b22ea6b35 -->
 
 # Guide de préparation à la certification PCNE : Section 3 — Configuration des services réseau gérés (Configuring managed network services) (~16 % de l'examen) {#pcne-certification-preparation-guide-section-3--configuring-managed-network-services-16-of-the-exam}
 

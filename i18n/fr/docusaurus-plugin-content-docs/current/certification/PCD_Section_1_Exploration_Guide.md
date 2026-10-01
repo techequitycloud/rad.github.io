@@ -2,7 +2,7 @@
 title: "Préparation PCD, section 1 : conception d'applications cloud natives évolutives"
 description: "Préparez la section 1 de l'examen PCD (conception d'applications cloud natives évolutives) avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCD_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCD_Section_1_Exploration_Guide.md @ cb682e8 sha256:0abbbffb243d -->
 
 # Guide de préparation à la certification PCD : Section 1 — Conception d'applications cloud natives hautement évolutives, sécurisées et fiables (Designing highly scalable, secure, and reliable cloud-native applications) (~32 % de l'examen) {#pcd-certification-preparation-guide-section-1--designing-highly-scalable-secure-and-reliable-cloud-native-applications-32-of-the-exam}
 

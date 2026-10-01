@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Network Engineer (PCNE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Network Engineer (PCNE) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCNE_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Certification_Guide.md @ cb682e8 sha256:7f168005729e -->
 
 # Carte des labs de la certification Professional Cloud Network Engineer (PCNE) {#professional-cloud-network-engineer-pcne-certification-lab-map}
 

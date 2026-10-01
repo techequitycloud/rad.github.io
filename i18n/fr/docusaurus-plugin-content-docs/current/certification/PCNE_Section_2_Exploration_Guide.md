@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 2 : mise en œuvre d'un réseau VPC"
 description: "Préparez la section 2 de l'examen Professional Cloud Network Engineer (PCNE) — mise en œuvre d'un réseau VPC — avec des labs pratiques RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_2_Exploration_Guide.md @ cb682e8 sha256:48154ceafc21 -->
 
 # Guide de préparation à la certification PCNE : Section 2 — Mise en œuvre d'un réseau VPC (Implementing a VPC network) (~20 % de l'examen) {#pcne-certification-preparation-guide-section-2--implementing-a-vpc-network-20-of-the-exam}
 

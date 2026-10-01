@@ -2,7 +2,7 @@
 title: "Préparation PCA, section 1 : concevoir une architecture cloud"
 description: "Préparez la section 1 de l'examen PCA — conception et planification d'une architecture de solution cloud — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCA_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCA_Section_1_Exploration_Guide.md @ cb682e8 sha256:83a8713da221 -->
 
 # Guide de préparation à la certification PCA : Section 1 — Conception et planification d'une architecture de solution cloud (Designing and planning a cloud solution architecture) (~25 % de l'examen) {#pca-certification-preparation-guide-section-1--designing-and-planning-a-cloud-solution-architecture-25-of-the-exam}
 

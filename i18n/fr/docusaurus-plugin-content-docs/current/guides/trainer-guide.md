@@ -2,7 +2,7 @@
 title: "Guide du formateur"
 description: "Guide du formateur de la plateforme RAD — animer des sessions de lab : créer une session, choisir qui paie, intégrer les participants, provisionner et démarrer les environnements, et comment les crédits non utilisés vous reviennent."
 ---
-<!-- translated-from: docs/guides/trainer-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/trainer-guide.md @ 6b90c32 sha256:64c17ddf4ed9 -->
 
 # Guide du formateur {#trainer-guide}
 

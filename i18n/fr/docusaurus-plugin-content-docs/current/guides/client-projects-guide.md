@@ -2,7 +2,7 @@
 title: "Guide des projets clients"
 description: "Guide des projets clients de la plateforme RAD — exploiter des applications pour vos propres clients sous forme de service géré : alimenter le portefeuille de chaque projet, inviter votre client, déployer pour lui, mise en pause et suppression, et transfert."
 ---
-<!-- translated-from: docs/guides/client-projects-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/client-projects-guide.md @ 6b90c32 sha256:d498e7a8dc6e -->
 
 # Guide des projets clients {#client-projects-guide}
 

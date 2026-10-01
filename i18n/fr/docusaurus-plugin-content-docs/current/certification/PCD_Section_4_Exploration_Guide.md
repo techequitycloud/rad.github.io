@@ -2,7 +2,7 @@
 title: "Préparation PCD, section 4 : intégration des services Google Cloud"
 description: "Préparez la section 4 de l'examen PCD — intégration d'applications aux services Google Cloud — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCD_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCD_Section_4_Exploration_Guide.md @ cb682e8 sha256:298d0e88deb8 -->
 
 # Guide de préparation à la certification PCD : Section 4 — Intégration d'applications aux services Google Cloud (Integrating applications with Google Cloud services) (~21 % de l'examen) {#pcd-certification-preparation-guide-section-4--integrating-applications-with-google-cloud-services-21-of-the-exam}
 

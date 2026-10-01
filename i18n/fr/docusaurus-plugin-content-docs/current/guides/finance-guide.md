@@ -2,7 +2,7 @@
 title: "Guide Finance"
 description: "Guide Finance de la plateforme RAD — paramètres de tarification et de crédits, attributions de crédits et codes d'événement, revenus et versements, rapprochement des coûts Google Cloud, et supervision des sessions de lab."
 ---
-<!-- translated-from: docs/guides/finance-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/finance-guide.md @ 6b90c32 sha256:29fd756505ae -->
 
 # Guide Finance {#finance-guide}
 

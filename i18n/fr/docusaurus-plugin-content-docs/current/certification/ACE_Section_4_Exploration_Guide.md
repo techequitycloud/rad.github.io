@@ -2,7 +2,7 @@
 title: "Préparation ACE, section 4 : configuration des accès et de la sécurité"
 description: "Préparez la section 4 de l'examen Associate Cloud Engineer (ACE) — configuration des accès et de la sécurité — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/ACE_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/ACE_Section_4_Exploration_Guide.md @ cb682e8 sha256:159c362eb324 -->
 
 # Guide de préparation à la certification ACE : Section 4 — Configuration des accès et de la sécurité (Configuring access and security) (~20 % de l'examen) {#ace-certification-preparation-guide-section-4--configuring-access-and-security-20-of-the-exam}
 

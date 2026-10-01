@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 4 : connectivité hybride et multicloud"
 description: "Préparez la section 4 de l'examen PCNE (connectivité hybride et multicloud) avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_4_Exploration_Guide.md @ cb682e8 sha256:50bb01326a6c -->
 
 # Guide de préparation à la certification PCNE : Section 4 — Configuration et mise en œuvre de l'interconnectivité réseau hybride et multicloud (Configuring and implementing hybrid and multicloud network interconnectivity) (~16 % de l'examen) {#pcne-certification-preparation-guide-section-4--configuring-and-implementing-hybrid-and-multicloud-network-interconnectivity-16-of-the-exam}
 

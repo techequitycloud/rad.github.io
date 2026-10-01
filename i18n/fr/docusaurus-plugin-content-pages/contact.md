@@ -2,7 +2,7 @@
 title: Contact
 description: "Comment joindre Tech Equity Cloud — problèmes de documentation, support de la RAD Console, demandes de partenariat et canaux communautaires de RAD Platform."
 ---
-<!-- translated-from: src/pages/contact.md @ 6b90c32 -->
+<!-- translated-from: src/pages/contact.md @ 6b90c32 sha256:e8ca027de390 -->
 
 # Contact {#contact}
 

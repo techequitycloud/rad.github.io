@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Associate Cloud Engineer (ACE)"
 description: "Faites correspondre chaque domaine de l'examen Associate Cloud Engineer (ACE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/ACE_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/ACE_Certification_Guide.md @ cb682e8 sha256:d0dc065595d3 -->
 
 # Carte des labs de la certification Associate Cloud Engineer (ACE) {#associate-cloud-engineer-ace-certification-lab-map}
 

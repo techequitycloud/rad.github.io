@@ -2,7 +2,7 @@
 title: Politique de confidentialité
 description: "Politique de confidentialité du site de documentation RAD Platform — les données traitées par l'hébergement et l'assistant intégré, et comment nous contacter à ce sujet."
 ---
-<!-- translated-from: src/pages/privacy.md @ 6b90c32 -->
+<!-- translated-from: src/pages/privacy.md @ 6b90c32 sha256:fe4aa70c2a41 -->
 
 > Cette traduction est fournie à titre indicatif. En cas de divergence, la version anglaise fait foi.
 

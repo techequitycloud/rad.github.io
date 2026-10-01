@@ -2,7 +2,7 @@
 title: "Guide de l'administrateur"
 description: "Guide de l'administrateur de la plateforme RAD — gestion des utilisateurs et des rôles, paramètres de la plateforme, catalogue de modules, demandes de configuration et tickets de support, et supervision des revenus, des coûts et de l'audit."
 ---
-<!-- translated-from: docs/guides/admin-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/admin-guide.md @ 6b90c32 sha256:c52c4a1d0ca8 -->
 
 # Guide de l'administrateur {#administrator-guide}
 

@@ -2,7 +2,7 @@
 title: "Préparation PCA, section 2 : provisionner l'infrastructure"
 description: "Préparez la section 2 de l'examen PCA — gestion et provisionnement d'une infrastructure de solution cloud — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCA_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCA_Section_2_Exploration_Guide.md @ cb682e8 sha256:da14ff533b73 -->
 
 # Guide de préparation à la certification PCA : Section 2 — Gestion et provisionnement d'une infrastructure de solution cloud (Managing and provisioning a cloud solution infrastructure) (~17.5 % de l'examen) {#pca-certification-preparation-guide-section-2--managing-and-provisioning-a-cloud-solution-infrastructure-175-of-the-exam}
 

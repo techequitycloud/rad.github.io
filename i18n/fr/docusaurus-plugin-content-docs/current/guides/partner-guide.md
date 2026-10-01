@@ -2,7 +2,7 @@
 title: "Guide du partenaire"
 description: "Guide du partenaire de la plateforme RAD — connecter votre dépôt GitHub, publier et synchroniser vos propres modules, et percevoir une part des revenus lorsque d'autres les déploient."
 ---
-<!-- translated-from: docs/guides/partner-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/partner-guide.md @ 6b90c32 sha256:9e4219d66209 -->
 
 # Guide du partenaire {#partner-guide}
 

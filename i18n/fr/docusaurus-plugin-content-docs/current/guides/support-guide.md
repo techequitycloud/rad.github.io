@@ -2,7 +2,7 @@
 title: "Guide du support"
 description: "Guide du support de la plateforme RAD — traiter la file des tickets de support, et consulter les déploiements des clients dont les tickets ouverts vous sont attribués."
 ---
-<!-- translated-from: docs/guides/support-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/support-guide.md @ 6b90c32 sha256:86fc42c22284 -->
 
 # Guide du support {#support-guide}
 

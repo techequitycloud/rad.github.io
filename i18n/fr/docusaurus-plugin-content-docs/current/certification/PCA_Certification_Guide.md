@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Architect (PCA)"
 description: "Associez chaque domaine de l'examen Professional Cloud Architect (PCA) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCA_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCA_Certification_Guide.md @ cb682e8 sha256:54382408a098 -->
 
 # Carte des labs de la certification Professional Cloud Architect (PCA) {#professional-cloud-architect-pca-certification-lab-map}
 

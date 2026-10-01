@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 5 : opérations et dépannage réseau"
 description: "Préparez la section 5 de l'examen PCNE — gestion, surveillance et dépannage des opérations réseau — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_5_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_5_Exploration_Guide.md @ cb682e8 sha256:04da9e08a849 -->
 
 # Guide de préparation à la certification PCNE : Section 5 — Gestion, surveillance et dépannage des opérations réseau (Managing, monitoring, and troubleshooting network operations) (~14 % de l'examen) {#pcne-certification-preparation-guide-section-5--managing-monitoring-and-troubleshooting-network-operations-14-of-the-exam}
 

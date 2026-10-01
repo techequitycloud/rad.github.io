@@ -2,7 +2,7 @@
 title: "Outils d'IA sur GCP — modules et labs pour une pile LLM"
 description: "Déployez une pile LLM auto-hébergée complète sur Google Cloud : Ollama, Open WebUI, Flowise, Dify, LiteLLM, RAGFlow, bases de données vectorielles et automatisation par l'IA — avec des labs pratiques."
 ---
-<!-- translated-from: docs/guides/ai-tooling-gcp.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/ai-tooling-gcp.md @ 6b90c32 sha256:f1c912b2d26c -->
 
 # Outils d'IA {#ai-tooling}
 

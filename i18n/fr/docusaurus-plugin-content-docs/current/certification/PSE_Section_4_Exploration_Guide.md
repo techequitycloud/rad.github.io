@@ -2,7 +2,7 @@
 title: "Préparation PSE, section 4 : gestion des opérations"
 description: "Préparez la section 4 de l'examen Professional Cloud Security Engineer (PSE) — gestion des opérations — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PSE_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Section_4_Exploration_Guide.md @ cb682e8 sha256:113372bbf329 -->
 
 # Guide de préparation à la certification PSE : Section 4 — Gestion des opérations (Managing operations) (~19 % de l'examen) {#pse-certification-preparation-guide-section-4--managing-operations-19-of-the-exam}
 
