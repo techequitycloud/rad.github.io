@@ -489,30 +489,30 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, IAP sans identité autorisée, `quota_memory_*` sans suffixe d'unité binaire, une valeur `timeout_seconds`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC `/config` | Ne jamais le supprimer | Critical | Le PVC contient la médiathèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
-| `stateful_pvc_enabled` | `true` | Critical | Sans PVC persistant, `/config` est éphémère et la médiathèque est perdue à chaque redémarrage du pod. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans une même médiathèque SQLite et la corrompent. |
-| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critical | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `stateful_pvc_size` | Adaptée à la médiathèque | High | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
-| `stateful_fs_group` | `3000` | High | Un fsGroup incorrect rend le PVC non accessible en écriture pour Emby (UID 1000 / GID 2000) — le démarrage échoue. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes médiathèques) | High | Une mémoire insuffisante provoque l'arrêt du pod pour OOM pendant l'analyse ou le transcodage d'une grande médiathèque. |
-| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | High | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| Type de `startup_probe`/`liveness_probe` | `TCP` (par défaut) | High | Un chemin HTTP `/health` supposé renvoie 404 sur Emby (vérifié en conditions réelles) — une sonde HTTP ne réussirait jamais ici. |
-| `service_type` | `LoadBalancer` (par défaut), sauf si le service doit délibérément rester interne | Medium | Un remplacement injustifié par `ClusterIP` rend un serveur multimédia interactif inaccessible depuis un navigateur. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour restaurer un instantané plus ancien de la médiathèque. |
-| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des contraintes de quota | Medium | Emby est une application multimédia/SQLite — la valeur par défaut `standard-rwo` consomme le quota régional restreint `SSD_TOTAL_GB`, et la mise à l'échelle à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; basculez vers des HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture d'Emby n'a pas besoin des IOPS des SSD. |
-| `enable_api_key` | Comprendre qu'elle est réservée aux opérateurs | Low | Emby lui-même ne lit jamais `EMBY_API_KEY` au démarrage — créez des clés d'API dans l'application sous Dashboard → API Keys pour l'authentification REST réelle d'Emby. |
+| PVC `/config` | Ne jamais le supprimer | Critique | Le PVC contient la médiathèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
+| `stateful_pvc_enabled` | `true` | Critique | Sans PVC persistant, `/config` est éphémère et la médiathèque est perdue à chaque redémarrage du pod. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent dans une même médiathèque SQLite et la corrompent. |
+| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critique | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `stateful_pvc_size` | Adaptée à la médiathèque | Élevé | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
+| `stateful_fs_group` | `3000` | Élevé | Un fsGroup incorrect rend le PVC non accessible en écriture pour Emby (UID 1000 / GID 2000) — le démarrage échoue. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes médiathèques) | Élevé | Une mémoire insuffisante provoque l'arrêt du pod pour OOM pendant l'analyse ou le transcodage d'une grande médiathèque. |
+| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | Élevé | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| Type de `startup_probe`/`liveness_probe` | `TCP` (par défaut) | Élevé | Un chemin HTTP `/health` supposé renvoie 404 sur Emby (vérifié en conditions réelles) — une sonde HTTP ne réussirait jamais ici. |
+| `service_type` | `LoadBalancer` (par défaut), sauf si le service doit délibérément rester interne | Moyen | Un remplacement injustifié par `ClusterIP` rend un serveur multimédia interactif inaccessible depuis un navigateur. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour restaurer un instantané plus ancien de la médiathèque. |
+| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des contraintes de quota | Moyen | Emby est une application multimédia/SQLite — la valeur par défaut `standard-rwo` consomme le quota régional restreint `SSD_TOTAL_GB`, et la mise à l'échelle à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; basculez vers des HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture d'Emby n'a pas besoin des IOPS des SSD. |
+| `enable_api_key` | Comprendre qu'elle est réservée aux opérateurs | Faible | Emby lui-même ne lit jamais `EMBY_API_KEY` au démarrage — créez des clés d'API dans l'application sous Dashboard → API Keys pour l'authentification REST réelle d'Emby. |
 
 ---
 

@@ -707,26 +707,26 @@ Toutes les variables configurables par l'utilisateur, triées par groupe d'inter
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation importante) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"POSTGRES_15"` | **Critical** | Penpot ne prend en charge que PostgreSQL. Toute autre valeur fait échouer le backend au démarrage. |
-| `container_protocol` | `"h2c"` pour le multijoueur (valeur par défaut du module : `"http1"`) | **Critical** | Avec `"http1"`, le multiplexage WebSocket n'est pas disponible et la collaboration en temps réel se dégrade. Les designs peuvent toujours être enregistrés, mais l'édition multijoueur peut ne pas fonctionner. |
-| `min_instance_count` | `1` pour une collaboration active (valeur par défaut du module : `0`) | **High** | Avec la mise à l'échelle à zéro, les sessions WebSocket actives sont interrompues et tous les collaborateurs sont déconnectés. Les démarrages à froid de la JVM entraînent des délais de reconnexion de 30 à 60 secondes. |
-| `redis_host` | `""` (résolu automatiquement vers l'IP NFS) | **High** | Si `enable_nfs = false` et que `redis_host` est également vide, le backend ne peut pas se connecter à Redis et la collaboration multi-instances ne pourra pas démarrer. |
-| `enable_redis` | `true` | **High** | Désactiver Redis rompt la collaboration en temps réel dès qu'il y a équilibrage de charge. Les déploiements à instance unique survivent sans Redis, mais la mise à l'échelle devient impossible. |
-| `jvm_max_heap` | `"1g"` | **High** | Doit être inférieur à `memory_limit`. Définir `jvm_max_heap = "2g"` sur un conteneur `memory_limit = "2Gi"` ne laisse aucune marge pour la mémoire hors tas de la JVM, ce qui provoque un OOMKill. Un ratio sûr est 50 % de `memory_limit`. |
-| `memory_limit` | `"2Gi"` | **High** | La JVM de Penpot a besoin de marge pour la mémoire hors tas, les tampons NIO et le metaspace. Descendre sous `1Gi` provoque de fréquents OOMKill sous des charges de travail réelles. |
-| `db_name` | `"penpot"` | **Critical** | Immuable après le déploiement. Le modifier amène Terraform à recréer la base de données, ce qui détruit tous les designs, fichiers et données d'équipe Penpot. |
-| `db_user` | `"penpot"` | **Critical** | Immuable après le déploiement. Le modifier recrée l'utilisateur Cloud SQL et rompt toutes les connexions à la base de données. |
-| `penpot_flags` | `"enable-registration enable-login disable-demo-users"` | **Medium** | Laisser `enable-registration` actif sur un déploiement public permet à n'importe qui de créer un compte. Utilisez `disable-registration` pour les déploiements réservés à une équipe et invitez les utilisateurs par e-mail. |
-| `smtp_enabled` | `false` | **High** | Avec SMTP désactivé, Penpot ne peut pas envoyer d'invitations d'équipe ni d'e-mails de réinitialisation de mot de passe. Les nouveaux membres ne peuvent être ajoutés que par un administrateur via la création directe de compte. |
-| `application_domains` | `[]` | **Medium** | Sans domaine personnalisé, `PENPOT_PUBLIC_URI` est définie sur l'URL `*.run.app` prévue. Si les utilisateurs accèdent à Penpot via un domaine personnalisé sans mise à jour de `PENPOT_PUBLIC_URI`, les liens des e-mails d'invitation pointent vers la mauvaise URL. |
-| `backup_retention_days` | `7` | **Medium** | Insuffisant pour des équipes design actives. Portez-le à 30 jours ou plus. Une semaine de designs et de fichiers peut représenter un travail créatif considérable. |
-| `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, le frontend et l'API de Penpot sont directement exposés à internet. Les règles WAF protègent l'API de design contre les attaques web courantes. |
-| `timeout_seconds` | `3600` | **Low** | Descendre sous 300 secondes peut faire expirer en cours de route les grosses opérations d'export PDF/PNG, renvoyant une erreur au designer. |
+| `project_id` | _(obligatoire)_ | **Critique** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
+| `database_type` | `"POSTGRES_15"` | **Critique** | Penpot ne prend en charge que PostgreSQL. Toute autre valeur fait échouer le backend au démarrage. |
+| `container_protocol` | `"h2c"` pour le multijoueur (valeur par défaut du module : `"http1"`) | **Critique** | Avec `"http1"`, le multiplexage WebSocket n'est pas disponible et la collaboration en temps réel se dégrade. Les designs peuvent toujours être enregistrés, mais l'édition multijoueur peut ne pas fonctionner. |
+| `min_instance_count` | `1` pour une collaboration active (valeur par défaut du module : `0`) | **Élevé** | Avec la mise à l'échelle à zéro, les sessions WebSocket actives sont interrompues et tous les collaborateurs sont déconnectés. Les démarrages à froid de la JVM entraînent des délais de reconnexion de 30 à 60 secondes. |
+| `redis_host` | `""` (résolu automatiquement vers l'IP NFS) | **Élevé** | Si `enable_nfs = false` et que `redis_host` est également vide, le backend ne peut pas se connecter à Redis et la collaboration multi-instances ne pourra pas démarrer. |
+| `enable_redis` | `true` | **Élevé** | Désactiver Redis rompt la collaboration en temps réel dès qu'il y a équilibrage de charge. Les déploiements à instance unique survivent sans Redis, mais la mise à l'échelle devient impossible. |
+| `jvm_max_heap` | `"1g"` | **Élevé** | Doit être inférieur à `memory_limit`. Définir `jvm_max_heap = "2g"` sur un conteneur `memory_limit = "2Gi"` ne laisse aucune marge pour la mémoire hors tas de la JVM, ce qui provoque un OOMKill. Un ratio sûr est 50 % de `memory_limit`. |
+| `memory_limit` | `"2Gi"` | **Élevé** | La JVM de Penpot a besoin de marge pour la mémoire hors tas, les tampons NIO et le metaspace. Descendre sous `1Gi` provoque de fréquents OOMKill sous des charges de travail réelles. |
+| `db_name` | `"penpot"` | **Critique** | Immuable après le déploiement. Le modifier amène Terraform à recréer la base de données, ce qui détruit tous les designs, fichiers et données d'équipe Penpot. |
+| `db_user` | `"penpot"` | **Critique** | Immuable après le déploiement. Le modifier recrée l'utilisateur Cloud SQL et rompt toutes les connexions à la base de données. |
+| `penpot_flags` | `"enable-registration enable-login disable-demo-users"` | **Moyen** | Laisser `enable-registration` actif sur un déploiement public permet à n'importe qui de créer un compte. Utilisez `disable-registration` pour les déploiements réservés à une équipe et invitez les utilisateurs par e-mail. |
+| `smtp_enabled` | `false` | **Élevé** | Avec SMTP désactivé, Penpot ne peut pas envoyer d'invitations d'équipe ni d'e-mails de réinitialisation de mot de passe. Les nouveaux membres ne peuvent être ajoutés que par un administrateur via la création directe de compte. |
+| `application_domains` | `[]` | **Moyen** | Sans domaine personnalisé, `PENPOT_PUBLIC_URI` est définie sur l'URL `*.run.app` prévue. Si les utilisateurs accèdent à Penpot via un domaine personnalisé sans mise à jour de `PENPOT_PUBLIC_URI`, les liens des e-mails d'invitation pointent vers la mauvaise URL. |
+| `backup_retention_days` | `7` | **Moyen** | Insuffisant pour des équipes design actives. Portez-le à 30 jours ou plus. Une semaine de designs et de fichiers peut représenter un travail créatif considérable. |
+| `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, le frontend et l'API de Penpot sont directement exposés à internet. Les règles WAF protègent l'API de design contre les attaques web courantes. |
+| `timeout_seconds` | `3600` | **Faible** | Descendre sous 300 secondes peut faire expirer en cours de route les grosses opérations d'export PDF/PNG, renvoyant une erreur au designer. |
 
 ## Destruction des ressources {#destroying-resources}
 

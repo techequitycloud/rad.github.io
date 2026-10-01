@@ -30,7 +30,7 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Secrets cryptographiques | Génère `SECRET_PASSWORD` (32 caractères) et `NEXTAUTH_SECRET` (32 caractères), ainsi qu'un `SMTP_PWD` facultatif, et les stocke dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes via la sortie `secret_ids` |
 | Image de conteneur | Enveloppe l'image officielle `lukevella/rallly` d'un fin point d'entrée cloud ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits | Sortie `initialization_jobs` |
 | Valeurs d'environnement principales | Définit `NEXT_PUBLIC_BASE_URL` / `NEXTAUTH_URL` (URL de base publique) et les paramètres de messagerie `NOREPLY_EMAIL` / `SUPPORT_EMAIL` / `SMTP_*` | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/api/status` | §Observabilité dans les guides des plateformes |
 
@@ -88,7 +88,7 @@ partagé de secrets et de Workload Identity.
 
 Rallly exige **PostgreSQL 15** (`database_type = POSTGRES_15`) ; le moteur est imposé
 et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploiement,
-une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
+un job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
 idempotente :
 
 1. Passe par le Cloud SQL Auth Proxy — lorsque `DB_SSL = false` et que `DB_HOST` n'est
@@ -101,8 +101,8 @@ idempotente :
 5. Accorde tous les privilèges sur la base de données et le schéma `public` (PG15+),
 6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement (`POST /quitquitquit`).
 
-La tâche est configurée avec `max_retries = 3` et `execute_on_apply = true`, et peut
-être relancée sans risque. Notez que le **schéma applicatif** de Rallly est créé
+Le job est configuré avec `max_retries = 3` et `execute_on_apply = true`, et peut
+être relancé sans risque. Notez que le **schéma applicatif** de Rallly est créé
 séparément — le script `./docker-start.sh` du conteneur exécute
 `prisma migrate deploy` à chaque démarrage (voir le §4) ; `db-init` se contente donc
 de provisionner la base de données vide et le rôle.
@@ -149,8 +149,8 @@ Rallly et :
 
 Comme les migrations s'exécutent dans le propre script de démarrage de l'application,
 la mise à niveau de la version de l'application applique automatiquement les
-modifications de schéma au démarrage suivant — aucune tâche de migration distincte
-n'est requise.
+modifications de schéma au démarrage suivant — aucun job de migration distinct
+n'est requis.
 
 ---
 

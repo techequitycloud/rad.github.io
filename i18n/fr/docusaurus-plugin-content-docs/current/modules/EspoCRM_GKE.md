@@ -322,26 +322,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — quotas de mémoire en unités binaires, conflit avec `StatefulSet`, IAP sans identité autorisée, une valeur `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critical | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
-| `enable_nfs` | `true` | Critical | Le désactiver stocke les fichiers envoyés sur le disque éphémère du pod — les pièces jointes sont perdues lors d'un redémarrage ou d'une replanification du pod. |
-| `DB_HOST` (remplacé par `127.0.0.1`) | Laisser tel quel | High | EspoCRM se connecte au sidecar Auth Proxy sur l'adresse de bouclage ; le modifier casse la connectivité à la base de données. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE. |
-| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL du LoadBalancer externe / du domaine personnalisé | High | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
-| `max_instance_count` | `1` sauf si l'affinité et le NFS sont confirmés | High | Un scaling avec un `RollingUpdate` sur une application adossée à NFS peut provoquer un blocage ; le socle utilise `Recreate` pour les applications NFS. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions multi-réplicas rebondissent d'un pod à l'autre. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Medium | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
-| `application_version` | À figer en production | Medium | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
+| `database_type` | `MYSQL_8_0` | Critique | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critique | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
+| `enable_nfs` | `true` | Critique | Le désactiver stocke les fichiers envoyés sur le disque éphémère du pod — les pièces jointes sont perdues lors d'un redémarrage ou d'une replanification du pod. |
+| `DB_HOST` (remplacé par `127.0.0.1`) | Laisser tel quel | Élevé | EspoCRM se connecte au sidecar Auth Proxy sur l'adresse de bouclage ; le modifier casse la connectivité à la base de données. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE. |
+| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL du LoadBalancer externe / du domaine personnalisé | Élevé | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
+| `max_instance_count` | `1` sauf si l'affinité et le NFS sont confirmés | Élevé | Un scaling avec un `RollingUpdate` sur une application adossée à NFS peut provoquer un blocage ; le socle utilise `Recreate` pour les applications NFS. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions multi-réplicas rebondissent d'un pod à l'autre. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Moyen | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
+| `application_version` | À figer en production | Moyen | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
 
 ---
 

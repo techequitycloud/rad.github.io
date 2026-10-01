@@ -359,20 +359,20 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `redis_port` hors limites, un `min_instance_count` supérieur à `max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ingress_settings` / `enable_iap` | Restreindre ou protéger par IAP | Critical | phpMyAdmin offre l'administration complète des bases de données ; le laisser public sans IAP expose chaque serveur MySQL joignable au bourrage d'identifiants et aux attaques par force brute. |
-| `pma_host` + `PMA_ARBITRARY = "0"` | Épingler un serveur pour un accès circonscrit | High | Avec `PMA_ARBITRARY = "1"`, les utilisateurs peuvent cibler *n'importe quel* hôte MySQL joignable, ce qui élargit le rayon d'impact d'une session compromise. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Sans sortie VPC vers les plages privées, phpMyAdmin ne peut pas atteindre un serveur Cloud SQL à IP privée — la page de connexion ne se connecte à rien. |
-| `database_type` | `NONE` (fixe) | Medium | Définir un moteur provisionne une instance Cloud SQL inutilisée et engendre un coût superflu ; la variante GKE le bloque au moment du plan, Cloud Run gaspille simplement la ressource. |
-| `application_version` | Épingler explicitement (par ex. `5.2.2`) | Medium | `latest` se résout aujourd'hui en la version épinglée `5.2.2` ; épinglez-la en production afin qu'un changement de tag en amont ne modifie jamais l'image à votre insu. |
-| `memory_limit` | `512Mi` | Low | En dessous du plancher gen2 de 512 MiB, le plan est rejeté ; phpMyAdmin n'a guère besoin de plus. |
-| `min_instance_count` | `0` (par défaut) | Low | La mise à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité — acceptable pour un outil interactif. |
+| `ingress_settings` / `enable_iap` | Restreindre ou protéger par IAP | Critique | phpMyAdmin offre l'administration complète des bases de données ; le laisser public sans IAP expose chaque serveur MySQL joignable au bourrage d'identifiants et aux attaques par force brute. |
+| `pma_host` + `PMA_ARBITRARY = "0"` | Épingler un serveur pour un accès circonscrit | Élevé | Avec `PMA_ARBITRARY = "1"`, les utilisateurs peuvent cibler *n'importe quel* hôte MySQL joignable, ce qui élargit le rayon d'impact d'une session compromise. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Élevé | Sans sortie VPC vers les plages privées, phpMyAdmin ne peut pas atteindre un serveur Cloud SQL à IP privée — la page de connexion ne se connecte à rien. |
+| `database_type` | `NONE` (fixe) | Moyen | Définir un moteur provisionne une instance Cloud SQL inutilisée et engendre un coût superflu ; la variante GKE le bloque au moment du plan, Cloud Run gaspille simplement la ressource. |
+| `application_version` | Épingler explicitement (par ex. `5.2.2`) | Moyen | `latest` se résout aujourd'hui en la version épinglée `5.2.2` ; épinglez-la en production afin qu'un changement de tag en amont ne modifie jamais l'image à votre insu. |
+| `memory_limit` | `512Mi` | Faible | En dessous du plancher gen2 de 512 MiB, le plan est rejeté ; phpMyAdmin n'a guère besoin de plus. |
+| `min_instance_count` | `0` (par défaut) | Faible | La mise à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité — acceptable pour un outil interactif. |
 
 ---
 

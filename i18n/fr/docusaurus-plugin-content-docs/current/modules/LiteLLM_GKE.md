@@ -447,28 +447,28 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` / `POSTGRES_15` | Critical | LiteLLM nécessite PostgreSQL ; changer de moteur casse l'ORM Prisma et empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le sidecar Auth Proxy est requis pour la connectivité à la base de données ; le désactiver fait échouer Prisma au démarrage. |
-| `LITELLM_SALT_KEY` | générée automatiquement, jamais renouvelée | Critical | Renouveler la clé de salage invalide toutes les clés virtuelles émises auparavant ; tous les consommateurs de l'API perdent immédiatement l'accès. |
-| `db_name` / `db_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les clés virtuelles et données de dépenses. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification. |
-| `ingress_settings` / `service_type` | à restreindre en production | Critical | Un LoadBalancer public expose le point de terminaison de la clé maîtresse ; utilisez `ClusterIP` avec une Gateway authentifiée pour les déploiements internes. |
-| `iap_oauth_client_id` / `iap_oauth_client_secret` | à fournir lorsque IAP est activé | Critical | Des valeurs manquantes empêchent l'initialisation de la passerelle IAP et rendent le service injoignable. |
-| `LITELLM_MASTER_KEY` | générée automatiquement | High | À traiter comme un identifiant ; la renouveler casse toutes les intégrations existantes qui détiennent la clé jusqu'à leur mise à jour. |
-| `enable_redis` | `true` en multi-réplicas | High | Sans Redis, les compteurs de limites de débit sont propres à chaque pod et non partagés ; les quotas ne sont pas appliqués entre les réplicas. |
-| `redis_host` | à définir lorsque Redis est activé | High | Un hôte vide avec `enable_redis = true` provoque des erreurs de connexion à chaque requête. |
-| `min_instance_count` | `1` | High | Les démarrages à froid ajoutent 30 à 60 s de latence et mettent en file d'attente tous les services dépendants. |
-| `timeout_seconds` | `600` | High | L'inférence d'un grand modèle de langage peut prendre plusieurs minutes ; un délai trop court provoque des erreurs 504 sur les modèles lents. |
-| `application_version` | à épingler en production | Medium | LiteLLM publie fréquemment de nouvelles versions ; des versions non épinglées peuvent modifier le schéma Prisma ou casser les formats des clés virtuelles. |
-| `enable_vertical_pod_autoscaling` | `false`, sauf si vous utilisez le VPA | Medium | Activer le VPA désactive le HPA ; choisissez l'un ou l'autre. |
-| `NUM_WORKERS` | `1` (à augmenter pour le débit) | Medium | Un worker unique sérialise toutes les requêtes ; passez à 2–4 et augmentez `cpu_limit` en proportion pour les passerelles à fort trafic. |
-| `backup_schedule` | `0 2 * * *` | High | Sans sauvegardes, une suppression accidentelle détruit toutes les clés virtuelles et tout l'historique d'utilisation, sans possibilité de récupération. |
+| `database_type` | `POSTGRES` / `POSTGRES_15` | Critique | LiteLLM nécessite PostgreSQL ; changer de moteur casse l'ORM Prisma et empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy est requis pour la connectivité à la base de données ; le désactiver fait échouer Prisma au démarrage. |
+| `LITELLM_SALT_KEY` | générée automatiquement, jamais renouvelée | Critique | Renouveler la clé de salage invalide toutes les clés virtuelles émises auparavant ; tous les consommateurs de l'API perdent immédiatement l'accès. |
+| `db_name` / `db_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les clés virtuelles et données de dépenses. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification. |
+| `ingress_settings` / `service_type` | à restreindre en production | Critique | Un LoadBalancer public expose le point de terminaison de la clé maîtresse ; utilisez `ClusterIP` avec une Gateway authentifiée pour les déploiements internes. |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | à fournir lorsque IAP est activé | Critique | Des valeurs manquantes empêchent l'initialisation de la passerelle IAP et rendent le service injoignable. |
+| `LITELLM_MASTER_KEY` | générée automatiquement | Élevé | À traiter comme un identifiant ; la renouveler casse toutes les intégrations existantes qui détiennent la clé jusqu'à leur mise à jour. |
+| `enable_redis` | `true` en multi-réplicas | Élevé | Sans Redis, les compteurs de limites de débit sont propres à chaque pod et non partagés ; les quotas ne sont pas appliqués entre les réplicas. |
+| `redis_host` | à définir lorsque Redis est activé | Élevé | Un hôte vide avec `enable_redis = true` provoque des erreurs de connexion à chaque requête. |
+| `min_instance_count` | `1` | Élevé | Les démarrages à froid ajoutent 30 à 60 s de latence et mettent en file d'attente tous les services dépendants. |
+| `timeout_seconds` | `600` | Élevé | L'inférence d'un grand modèle de langage peut prendre plusieurs minutes ; un délai trop court provoque des erreurs 504 sur les modèles lents. |
+| `application_version` | à épingler en production | Moyen | LiteLLM publie fréquemment de nouvelles versions ; des versions non épinglées peuvent modifier le schéma Prisma ou casser les formats des clés virtuelles. |
+| `enable_vertical_pod_autoscaling` | `false`, sauf si vous utilisez le VPA | Moyen | Activer le VPA désactive le HPA ; choisissez l'un ou l'autre. |
+| `NUM_WORKERS` | `1` (à augmenter pour le débit) | Moyen | Un worker unique sérialise toutes les requêtes ; passez à 2–4 et augmentez `cpu_limit` en proportion pour les passerelles à fort trafic. |
+| `backup_schedule` | `0 2 * * *` | Élevé | Sans sauvegardes, une suppression accidentelle détruit toutes les clés virtuelles et tout l'historique d'utilisation, sans possibilité de récupération. |
 
 ---
 

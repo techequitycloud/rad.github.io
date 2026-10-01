@@ -351,8 +351,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
@@ -385,14 +385,14 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | Laisser la valeur par défaut (de fait figée à `1`) | Critical | Même si `Loki_Common` la ramène à `1` dans la configuration qu'il transmet au socle, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — le ring en mémoire et le compactor singleton ne sont pas conçus pour des réplicas simultanés. |
-| `container_port` | `3100` (ne pas modifier sans modifier aussi le gabarit de configuration) | Critical | Le `server.http_listen_port` de Loki est intégré au fichier de configuration et n'est pas lu depuis `container_port` à l'exécution — une incohérence entre les deux casse le routage entre le Service Kubernetes et le pod. |
-| `service_type` | `LoadBalancer` pour l'envoi externe de journaux | High | Avec `ClusterIP`, Loki n'est accessible que depuis l'intérieur du cluster, ce qui bloque les agents Promtail/Alloy exécutés ailleurs. |
-| Contrôle d'accès | Aucun par défaut (`auth_enabled: false`) | High | L'API HTTP de Loki (envoi et requête) n'a aucune authentification intégrée. Quiconque peut atteindre l'IP externe peut envoyer ou interroger des journaux. Placez devant elle Cloud Armor, IAP ou une couche d'authentification de type reverse proxy si cela compte pour votre déploiement. |
-| `application_version` | Épingler un tag explicite (par ex. `3.6.12`) en production | Medium | `"latest"` se résout silencieusement vers le tag actuellement épinglé par le Dockerfile de `Loki_Common`, qui ne change que lorsque le code source du module change. |
-| `container_resources.memory_limit` | Dépasser `512Mi` pour des labels à forte cardinalité ou une charge de requêtes élevée | Medium | Le moteur de requêtes de Loki et son cache d'index en mémoire peuvent subir un OOM sous charge avec la valeur par défaut prudente. |
-| `reserve_static_ip` | `true` | Medium | Avec `false`, l'IP externe peut changer lors d'un redéploiement et (selon le constat GKE à l'échelle du parc documenté pour d'autres modules) des valeurs autoréférentes de type `GKE_SERVICE_URL` peuvent se rabattre sur un nom DNS interne injoignable si elles sont calculées avant que l'IP éphémère du LoadBalancer soit connue. |
-| `database_type` | Laisser à `NONE` | Low | Toute autre valeur n'a aucun effet — `Loki_Common` ne câble jamais de connexion à une base de données dans la configuration de Loki, quoi qu'il arrive. |
+| `max_instance_count` | Laisser la valeur par défaut (de fait figée à `1`) | Critique | Même si `Loki_Common` la ramène à `1` dans la configuration qu'il transmet au socle, ne comptez pas sur une mise à l'échelle horizontale de Loki dans cette forme de déploiement — le ring en mémoire et le compactor singleton ne sont pas conçus pour des réplicas simultanés. |
+| `container_port` | `3100` (ne pas modifier sans modifier aussi le gabarit de configuration) | Critique | Le `server.http_listen_port` de Loki est intégré au fichier de configuration et n'est pas lu depuis `container_port` à l'exécution — une incohérence entre les deux casse le routage entre le Service Kubernetes et le pod. |
+| `service_type` | `LoadBalancer` pour l'envoi externe de journaux | Élevé | Avec `ClusterIP`, Loki n'est accessible que depuis l'intérieur du cluster, ce qui bloque les agents Promtail/Alloy exécutés ailleurs. |
+| Contrôle d'accès | Aucun par défaut (`auth_enabled: false`) | Élevé | L'API HTTP de Loki (envoi et requête) n'a aucune authentification intégrée. Quiconque peut atteindre l'IP externe peut envoyer ou interroger des journaux. Placez devant elle Cloud Armor, IAP ou une couche d'authentification de type reverse proxy si cela compte pour votre déploiement. |
+| `application_version` | Épingler un tag explicite (par ex. `3.6.12`) en production | Moyen | `"latest"` se résout silencieusement vers le tag actuellement épinglé par le Dockerfile de `Loki_Common`, qui ne change que lorsque le code source du module change. |
+| `container_resources.memory_limit` | Dépasser `512Mi` pour des labels à forte cardinalité ou une charge de requêtes élevée | Moyen | Le moteur de requêtes de Loki et son cache d'index en mémoire peuvent subir un OOM sous charge avec la valeur par défaut prudente. |
+| `reserve_static_ip` | `true` | Moyen | Avec `false`, l'IP externe peut changer lors d'un redéploiement et (selon le constat GKE à l'échelle du parc documenté pour d'autres modules) des valeurs autoréférentes de type `GKE_SERVICE_URL` peuvent se rabattre sur un nom DNS interne injoignable si elles sont calculées avant que l'IP éphémère du LoadBalancer soit connue. |
+| `database_type` | Laisser à `NONE` | Faible | Toute autre valeur n'a aucun effet — `Loki_Common` ne câble jamais de connexion à une base de données dans la configuration de Loki, quoi qu'il arrive. |
 
 ---
 

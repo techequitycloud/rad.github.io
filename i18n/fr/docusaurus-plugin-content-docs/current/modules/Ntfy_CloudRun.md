@@ -163,7 +163,7 @@ le chemin de cache résolu au démarrage.
 
 - **Aucune configuration de base de données au premier déploiement.** ntfy n'a ni base de données externe ni
   étape de migration. Le point d'entrée prépare le répertoire du cache SQLite et lance immédiatement
-  `ntfy serve` via exec. Il n'y a pas de tâche `db-init` par défaut.
+  `ntfy serve` via exec. Il n'y a pas de job `db-init` par défaut.
 - **Cache éphémère avec repli automatique.** Le point d'entrée crée le répertoire de
   `NTFY_CACHE_FILE` ; sur le rootfs en lecture seule de Cloud Run, il se rabat sur
   `/tmp/ntfy` et journalise un avertissement. Cela maintient en bonne santé un déploiement de base (sans NFS).
@@ -302,7 +302,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -314,23 +314,23 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait transiter sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, environnement d'exécution `gen1` avec montages NFS/GCS, `container_port`/`timeout_seconds` hors plage, valeur de mémoire inférieure au plancher gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` (pour un historique durable) | `true` lorsque l'historique compte | High | Avec le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage/redéploiement — acceptable pour un simple relais, surprenant si vous attendiez de la persistance. |
-| `max_instance_count` | `1` | High | Monter au-delà de 1 répartit les abonnés entre plusieurs instances sans bus partagé : un message publié sur une instance n'est pas distribué aux abonnés rattachés à une autre. |
-| `cpu_always_allocated` | `true` | High | La valeur `false` permet à Cloud Run de brider la CPU entre les requêtes, ce qui suspend la distribution WebSocket/SSE en temps réel lorsque l'instance est inactive. |
-| `ingress_settings` | `all` | High | `internal` empêche les éditeurs et abonnés externes d'atteindre le service. |
-| `enable_iap` | uniquement si un accès authentifié est voulu | High | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés — ce qui n'est généralement pas souhaitable pour un point de terminaison de notification. |
-| `NTFY_BASE_URL` | URL réelle du service | Medium | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
-| Contrôle d'accès ntfy | À configurer après le déploiement | Medium | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une URL publique et s'y abonner. |
-| `container_protocol` | `http1` (ou `h2c`) | Medium | Une incompatibilité avec des clients exigeant le streaming HTTP/2 dégrade ou rompt les flux de longue durée. |
-| `memory_limit` | `512Mi` | Low | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'application. |
-| `application_version` | Épingler `v2.x.y` en production | Low | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `enable_nfs` (pour un historique durable) | `true` lorsque l'historique compte | Élevé | Avec le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage/redéploiement — acceptable pour un simple relais, surprenant si vous attendiez de la persistance. |
+| `max_instance_count` | `1` | Élevé | Monter au-delà de 1 répartit les abonnés entre plusieurs instances sans bus partagé : un message publié sur une instance n'est pas distribué aux abonnés rattachés à une autre. |
+| `cpu_always_allocated` | `true` | Élevé | La valeur `false` permet à Cloud Run de brider la CPU entre les requêtes, ce qui suspend la distribution WebSocket/SSE en temps réel lorsque l'instance est inactive. |
+| `ingress_settings` | `all` | Élevé | `internal` empêche les éditeurs et abonnés externes d'atteindre le service. |
+| `enable_iap` | uniquement si un accès authentifié est voulu | Élevé | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés — ce qui n'est généralement pas souhaitable pour un point de terminaison de notification. |
+| `NTFY_BASE_URL` | URL réelle du service | Moyen | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
+| Contrôle d'accès ntfy | À configurer après le déploiement | Moyen | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une URL publique et s'y abonner. |
+| `container_protocol` | `http1` (ou `h2c`) | Moyen | Une incompatibilité avec des clients exigeant le streaming HTTP/2 dégrade ou rompt les flux de longue durée. |
+| `memory_limit` | `512Mi` | Faible | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'application. |
+| `application_version` | Épingler `v2.x.y` en production | Faible | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
 
 ---
 

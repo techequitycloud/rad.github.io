@@ -18,7 +18,7 @@ Soyons honnêtes d'emblée : les modules de fondation RAD ne mettent en œuvre *
 
 > ⏱ ~60 min d'étude · 💰 aucun (Interconnect ne peut pas être véritablement testé en lab sans circuit) · ⚙️ Prérequis : profil VPC Foundation, uniquement pour le VPC cible
 
-**Pourquoi c'est important pour l'examen** — Le choix entre Dedicated et Partner Interconnect (capacité, présence en colocation, modèles Partner L2 ou L3), la configuration des rattachements VLAN, les topologies SLA à 99.9 % et 99.99 %, Cross-Cloud Interconnect vers d'autres clouds, et le chiffrement d'Interconnect par HA VPN sur Interconnect ou MACsec.
+**Pourquoi c'est important pour l'examen** — Le choix entre Dedicated et Partner Interconnect (capacité, présence en colocation, modèles Partner L2 ou L3), la configuration des rattachements VLAN, les topologies SLA à 99,9 % et 99,99 %, Cross-Cloud Interconnect vers d'autres clouds, et le chiffrement d'Interconnect par HA VPN sur Interconnect ou MACsec.
 
 **Comment RAD le met en œuvre** — Non mis en œuvre par les modules de fondation.
 
@@ -47,9 +47,9 @@ R : Partner Interconnect (l'absence de présence en colocation exclut Dedicated,
 </details>
 
 <details>
-<summary>Q2 : Qu'est-ce qui permet précisément d'obtenir le SLA Interconnect à 99.99 % ?</summary>
+<summary>Q2 : Qu'est-ce qui permet précisément d'obtenir le SLA Interconnect à 99,99 % ?</summary>
 
-R : Quatre rattachements VLAN sur au moins deux connexions Dedicated/Partner dans **deux zones métropolitaines**, des rattachements répartis sur les deux domaines de disponibilité edge de chaque zone métropolitaine, des Cloud Routers dans au moins deux régions, et le mode de routage dynamique **global** — plus une redondance côté site. Deux rattachements dans une seule zone métropolitaine répartis sur les deux domaines de disponibilité n'offrent que 99.9 %.
+R : Quatre rattachements VLAN sur au moins deux connexions Dedicated/Partner dans **deux zones métropolitaines**, des rattachements répartis sur les deux domaines de disponibilité edge de chaque zone métropolitaine, des Cloud Routers dans au moins deux régions, et le mode de routage dynamique **global** — plus une redondance côté site. Deux rattachements dans une seule zone métropolitaine répartis sur les deux domaines de disponibilité n'offrent que 99,9 %.
 </details>
 
 **Au-delà des modules** — Étudiez « Cloud Interconnect overview », « Partner Interconnect provisioning », « Cross-Cloud Interconnect » (liaisons dédiées gérées par Google vers AWS/Azure, même modèle rattachement VLAN + Cloud Router), « HA VPN over Cloud Interconnect » (des passerelles VPN sur les rattachements, qui servent aussi de réponse pour le chiffrement) et MACsec pour Cloud Interconnect. À mémoriser : Dedicated = 10/100 Gbit/s physiques, dans votre colocation ; Partner = 50 Mbit/s–50 Gbit/s via un fournisseur ; les rattachements sont régionaux et se lient à un Cloud Router.
@@ -60,9 +60,9 @@ R : Quatre rattachements VLAN sur au moins deux connexions Dedicated/Partner dan
 
 ## 4.2 Configuration d'un VPN IPSec de site à site (Configuring a site-to-site IPSec VPN) {#42-configuring-a-site-to-site-ipsec-vpn}
 
-> ⏱ ~60 min de pratique possible dans un projet de test · 💰 ~$0.05/h par tunnel + trafic sortant · ⚙️ Prérequis : profil VPC Foundation comme l'un des deux côtés
+> ⏱ ~60 min de pratique possible dans un projet de test · 💰 ~0,05 $/h par tunnel + trafic sortant · ⚙️ Prérequis : profil VPC Foundation comme l'un des deux côtés
 
-**Pourquoi c'est important pour l'examen** — HA VPN (deux interfaces, 99.99 % avec la bonne topologie de tunnels, BGP uniquement) ou Classic VPN (une seule interface, 99.9 %, prend en charge les tunnels statiques basés sur des règles/des routes), le VPN entre deux VPC, et l'interaction avec le mode de routage dynamique.
+**Pourquoi c'est important pour l'examen** — HA VPN (deux interfaces, 99,99 % avec la bonne topologie de tunnels, BGP uniquement) ou Classic VPN (une seule interface, 99,9 %, prend en charge les tunnels statiques basés sur des règles/des routes), le VPN entre deux VPC, et l'interaction avec le mode de routage dynamique.
 
 **Comment RAD le met en œuvre** — Non mis en œuvre par les modules de fondation. Le Cloud Router déployé (`{net}-nat-gw-{region}`, ASN 64514) est techniquement capable d'héberger des sessions BGP VPN, et les sous-réseaux du VPC ainsi que la plage PSA (export de routes personnalisées déjà activé sur l'appairage) sont exactement ce que vous annonceriez à un site distant.
 
@@ -98,7 +98,7 @@ R : Quatre rattachements VLAN sur au moins deux connexions Dedicated/Partner dan
 <details>
 <summary>Q1 : Un équipement sur site ne prend en charge qu'un VPN basé sur des règles avec routage statique. HA VPN ou Classic ?</summary>
 
-R : Classic VPN — HA VPN exige BGP. Les tunnels statiques basés sur des règles/des routes n'existent que sur Classic VPN (SLA de 99.9 %, déconseillé pour les nouveaux déploiements dynamiques). Lorsque l'équipement *sait* faire du BGP, la meilleure réponse à l'examen est toujours HA VPN avec deux tunnels pour 99.99 %.
+R : Classic VPN — HA VPN exige BGP. Les tunnels statiques basés sur des règles/des routes n'existent que sur Classic VPN (SLA de 99,9 %, déconseillé pour les nouveaux déploiements dynamiques). Lorsque l'équipement *sait* faire du BGP, la meilleure réponse à l'examen est toujours HA VPN avec deux tunnels pour 99,99 %.
 </details>
 
 <details>
@@ -109,7 +109,7 @@ R : L'instance Cloud SQL réside dans le VPC *producteur*, derrière l'appairage
 
 **Au-delà des modules** — Étudiez « HA VPN topologies » (GCP↔GCP, GCP↔site avec 2 ou 4 tunnels, actif/actif ou actif/passif et la mise en garde sur la bande passante divisée par deux), les algorithmes de chiffrement IKE et le dépannage des tunnels (section 5.2). Connaissez l'adressage BGP link-local (un 169.254.x.x/30 par interface de tunnel, comme dans les commandes ci-dessus).
 
-**⚠️ Piège d'examen** — Créer deux tunnels depuis *une seule* interface de passerelle HA VPN vers le pair ne donne pas droit à 99.99 % — le SLA exige des tunnels depuis **les deux** interfaces de la passerelle HA VPN, associés à des points de terminaison pairs redondants.
+**⚠️ Piège d'examen** — Créer deux tunnels depuis *une seule* interface de passerelle HA VPN vers le pair ne donne pas droit à 99,99 % — le SLA exige des tunnels depuis **les deux** interfaces de la passerelle HA VPN, associés à des points de terminaison pairs redondants.
 
 ---
 

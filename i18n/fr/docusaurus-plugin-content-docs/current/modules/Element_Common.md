@@ -52,7 +52,7 @@ ou protégé :
   chiffrement, ni secret JWT, ni mot de passe de base de données à gérer ou à faire
   tourner.
 - **Aucune base de données.** `database_type = "NONE"` et
-  `enable_cloudsql_volume = false`. Aucune instance Cloud SQL, aucune tâche `db-init` et
+  `enable_cloudsql_volume = false`. Aucune instance Cloud SQL, aucun job `db-init` et
   aucune migration de schéma — `initialization_jobs`
   est vide.
 - **Aucun stockage persistant.** `storage_buckets = []` et `gcs_volumes = []`. Rien de

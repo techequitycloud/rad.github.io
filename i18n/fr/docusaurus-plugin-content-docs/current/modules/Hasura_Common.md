@@ -20,7 +20,7 @@ Pour l'infrastructure qui provisionne et exécute effectivement Hasura, consulte
 | Secret cryptographique | Génère `HASURA_GRAPHQL_ADMIN_SECRET` (32 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `hasura/graphql-engine` avec un point d'entrée personnalisé ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
 | Stockage d'objets | Aucun — Hasura est sans état (`storage_buckets = []`) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Hasura : console activée, port du serveur, les deux URL de connexion assemblées à l'exécution | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/disponibilité par défaut ciblant `/healthz` | §Observabilité dans les guides des plateformes |
@@ -49,7 +49,7 @@ Contrairement à une clé de chiffrement, le secret administrateur ne touche pas
 
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
-Hasura nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL ou d'autres moteurs ne sont pas pris en charge — le catalogue de métadonnées propre à Hasura et la source de données connectée par défaut résident tous deux dans Postgres. Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière idempotente :
+Hasura nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL ou d'autres moteurs ne sont pas pris en charge — le catalogue de métadonnées propre à Hasura et la source de données connectée par défaut résident tous deux dans Postgres. Lors du premier déploiement, un job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy et crée un lien symbolique vers celui-ci pour l'accès `psql`,
 2. Attend que PostgreSQL soit joignable (jusqu'à 60 tentatives),
@@ -58,7 +58,7 @@ Hasura nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL ou d'autres mo
 5. Accorde tous les privilèges sur la base de données à ce rôle,
 6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement (`quitquitquit`).
 
-Au premier démarrage, Hasura installe automatiquement son propre schéma de catalogue de métadonnées dans la base de données — il n'y a pas de tâche de migration distincte. La tâche `db-init` peut être réexécutée sans risque. Inspectez directement la base de données avec :
+Au premier démarrage, Hasura installe automatiquement son propre schéma de catalogue de métadonnées dans la base de données — il n'y a pas de job de migration distinct. Le job `db-init` peut être réexécuté sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

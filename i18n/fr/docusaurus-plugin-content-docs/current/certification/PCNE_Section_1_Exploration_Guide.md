@@ -129,7 +129,7 @@ R : Le VPC partagé. L'appairage ne passe pas à l'échelle sur le plan administ
 
 > ⏱ ~60 min d'étude · 💰 aucun coût de plateforme · ⚙️ Prérequis : rien de déployé — concept uniquement
 
-**Pourquoi c'est important pour l'examen** — Choisir entre Dedicated Interconnect (10/100 Gbit/s, votre propre présence en colocation), Partner Interconnect (50 Mbit/s–50 Gbit/s via un fournisseur), Cross-Cloud Interconnect (vers AWS/Azure) et HA VPN (chiffré, transporté par Internet, 99.99 % avec deux tunnels par interface) est le schéma de décision le plus récurrent de cet examen, avec les topologies SLA d'Interconnect à 99.9 % et 99.99 % et la conception du transfert DNS hybride.
+**Pourquoi c'est important pour l'examen** — Choisir entre Dedicated Interconnect (10/100 Gbit/s, votre propre présence en colocation), Partner Interconnect (50 Mbit/s–50 Gbit/s via un fournisseur), Cross-Cloud Interconnect (vers AWS/Azure) et HA VPN (chiffré, transporté par Internet, 99,99 % avec deux tunnels par interface) est le schéma de décision le plus récurrent de cet examen, avec les topologies SLA d'Interconnect à 99,9 % et 99,99 % et la conception du transfert DNS hybride.
 
 **Comment RAD le met en œuvre** — Non mis en œuvre par les modules de fondation. Les seuls éléments voisins : le Cloud Router (ASN `64514`, sans pair BGP — il existe pour servir d'ancrage à Cloud NAT), et l'export de routes personnalisées de l'appairage PSA, qui est exactement le réglage que vous activeriez pour qu'un réseau sur site puisse joindre les IP privées de Cloud SQL via un futur VPN/Interconnect.
 
@@ -148,9 +148,9 @@ R : Le VPC partagé. L'appairage ne passe pas à l'échelle sur le plan administ
 
 **Vérifiez vos acquis**
 <details>
-<summary>Q1 : Une entreprise a besoin d'une connectivité vers son site avec un SLA de 99.99 % et un chiffrement en transit. Quelle conception ?</summary>
+<summary>Q1 : Une entreprise a besoin d'une connectivité vers son site avec un SLA de 99,99 % et un chiffrement en transit. Quelle conception ?</summary>
 
-R : HA VPN sur Cloud Interconnect (ou HA VPN seul si Interconnect ne se justifie pas). Le SLA Interconnect à 99.99 % exige quatre rattachements VLAN répartis sur deux zones métropolitaines (deux domaines de disponibilité edge chacune) avec un routage dynamique global ; Interconnect seul n'est pas chiffré, si bien que la réponse attendue à l'examen pour « chiffré + 99.99 % » est HA VPN sur Interconnect, ou MACsec sur les connexions Interconnect compatibles.
+R : HA VPN sur Cloud Interconnect (ou HA VPN seul si Interconnect ne se justifie pas). Le SLA Interconnect à 99,99 % exige quatre rattachements VLAN répartis sur deux zones métropolitaines (deux domaines de disponibilité edge chacune) avec un routage dynamique global ; Interconnect seul n'est pas chiffré, si bien que la réponse attendue à l'examen pour « chiffré + 99,99 % » est HA VPN sur Interconnect, ou MACsec sur les connexions Interconnect compatibles.
 </details>
 
 <details>

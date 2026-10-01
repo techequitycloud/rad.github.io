@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Génère une `AUTHENTIK_SECRET_KEY` stable (64 caractères) et le mot de passe d'amorçage `akadmin` (24 caractères), et les stocke tous deux dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Build personnalisé léger `FROM ghcr.io/goauthentik/server` avec un point d'entrée cloud ; construit via Cloud Build. `application_version = "latest"` est épinglé sur une version éprouvée (authentik ne publie aucun tag `latest`) | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge (authentik exige PostgreSQL ≥ 14) | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit l'unique tâche de premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde `cloudsqlsuperuser` par précaution | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit l'unique job de premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde `cloudsqlsuperuser` par précaution | Sortie `initialization_jobs` |
 | Pas de Redis | authentik ≥ 2025.10 conserve le cache, les sessions, la file de tâches et la couche de canaux WebSocket dans **PostgreSQL** — aucun service de cache n'est provisionné | §Vue d'ensemble dans les guides de plateforme |
 | Stockage des médias | Déclare un **bucket GCS** monté sur `/media` via GCS Fuse pour les icônes téléversées et les arrière-plans de flux | Sortie `storage_buckets` |
 | Co-localisation du worker | Le point d'entrée lance `ak worker` en arrière-plan à côté du serveur dans le même conteneur, sur des ports d'écoute loopback dédiés afin que le serveur détienne `:9000` | Comportement de l'application dans les guides de plateforme |
@@ -132,7 +132,7 @@ prochain apply sans reconstruction.
 ## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
 authentik exige **PostgreSQL 15** (≥ 14) ; le moteur est fixe et MySQL n'est pas
-pris en charge. Lors du premier déploiement, une tâche ponctuelle unique (`db-init`) s'exécute avec
+pris en charge. Lors du premier déploiement, un job ponctuel unique (`db-init`) s'exécute avec
 `postgres:15-alpine` et, de manière idempotente :
 
 1. Attend que PostgreSQL soit joignable (répertoire de socket de l'Auth Proxy sur Cloud Run,
@@ -145,9 +145,9 @@ pris en charge. Lors du premier déploiement, une tâche ponctuelle unique (`db-
 4. Accorde `cloudsqlsuperuser` au rôle applicatif par précaution, afin que tout futur
    `CREATE EXTENSION IF NOT EXISTS` dans les migrations amont soit sans effet plutôt qu'un
    échec « must be superuser »,
-5. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter pour que la tâche se termine.
+5. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter pour que le job se termine.
 
-Il n'existe **aucune tâche distincte de schéma ou de migration** : le serveur authentik applique ses propres
+Il n'existe **aucun job distinct de schéma ou de migration** : le serveur authentik applique ses propres
 migrations Django à chaque démarrage, protégées par un verrou consultatif PostgreSQL afin que
 des instances concurrentes n'entrent pas en collision. Les montées de version ne nécessitent donc aucune étape de
 migration supplémentaire — la première instance de la nouvelle révision migre le schéma pendant que

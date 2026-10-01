@@ -34,7 +34,7 @@ de la plateforme ([LobeChat_GKE](LobeChat_GKE.md)) et les guides des socles
 | Stockage objet | **Aucun.** `storage_buckets` est vide — l'application est sans état | — |
 | Amorçage de la base de données | **Aucun.** `initialization_jobs` est vide — il n'y a aucun schéma à créer | Sortie `initialization_jobs` (vide) |
 | Paramètres principaux | Aucune variable d'environnement injectée par le module ; toutes les redéfinitions à l'exécution passent par `environment_variables` | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit les sondes de démarrage / vivacité / disponibilité par défaut, qui ciblent `/` (HTTP 200, sans authentification) | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit les sondes de démarrage / vivacité / disponibilité (readiness) par défaut, qui ciblent `/` (HTTP 200, sans authentification) | §Observabilité dans les guides des plateformes |
 
 ---
 

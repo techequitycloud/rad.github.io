@@ -74,7 +74,7 @@ export REGION="us-central1"           # the region you deploy into
 2. La plateforme déploie la charge de travail dans le cluster GKE Autopilot (port 3000,
    1–3 réplicas via HPA), provisionne une base de données Cloud SQL (PostgreSQL 15) avec ses
    secrets Secret Manager (l'`APP_SECRET` généré automatiquement et le mot de passe de la
-   base de données), Redis pour la collaboration en temps réel et les files de tâches (co-hébergé sur la
+   base de données), Redis pour la collaboration en temps réel et les files de jobs (co-hébergé sur la
    VM du serveur NFS par défaut), un volume NFS monté sur `/app/data/storage` pour les
    pièces jointes téléversées, et un bucket de données GCS. Elle construit une image de conteneur personnalisée
    (qui encapsule `docmost/docmost:latest`) via Cloud Build et exécute un Job unique

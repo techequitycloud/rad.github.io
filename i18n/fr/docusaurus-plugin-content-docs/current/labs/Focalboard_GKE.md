@@ -201,7 +201,7 @@ Des techniques durables pour les modes de défaillance que vous êtes le plus su
 des diagnostics au niveau de la plateforme, qui ne changent pas d’une version de Focalboard à l’autre.
 
 - **Pod non Ready / CrashLoopBackOff :** examinez les événements et les journaux. La sonde de démarrage
-  cible `/` et accorde jusqu’à **~8.5 minutes** au premier démarrage (délai initial de 60s, période de 15s,
+  cible `/` et accorde jusqu’à **~8,5 minutes** au premier démarrage (délai initial de 60s, période de 15s,
   30 tentatives) ; un échec de connexion à PostgreSQL via le sidecar Auth Proxy
   empêchera le pod de devenir Ready.
   ```bash

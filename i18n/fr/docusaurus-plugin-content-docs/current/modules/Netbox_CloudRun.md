@@ -469,28 +469,28 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais le remplacer par un autre chemin sans avoir confirmé le véritable `MEDIA_ROOT` de NetBox | Critical | Un mauvais chemin de montage laisse les téléversements sur le système de fichiers éphémère du conteneur — ils sont relisibles immédiatement, mais silencieusement perdus à chaque redémarrage, sans aucune erreur. Ce bug précis a été trouvé et corrigé sur l'ancien montage `/opt/netbox/netbox/media` de ce module. |
-| `SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
-| `SUPERUSER_PASSWORD` (généré automatiquement) | Le changer via l'interface de NetBox, pas en régénérant le secret | Medium | Régénérer la valeur dans Secret Manager ne modifie pas rétroactivement le mot de passe du compte administrateur déjà créé. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf pour une restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` (obligatoire) | Critical | Le système de tâches d'arrière-plan de NetBox (webhooks, rapports, scripts, jobs planifiés) et sa couche de cache ne fonctionnent pas sans Redis — il n'existe aucun mode de repli. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais NFS désactivé et qu'aucun hôte n'est défini, la connexion Redis est vide et le traitement en arrière-plan ne s'exécute jamais, sans signalement. |
-| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Les garder distincts (`0` / `1`) | High | Partager une même base Redis logique risque de faire perdre des tâches d'arrière-plan en file lors d'un vidage du cache, selon la documentation de NetBox. |
-| `memory_limit` | `2Gi` | High | Des valeurs inférieures à 1Gi risquent des arrêts pour OOM, surtout avec le worker RQ colocalisé dans le même conteneur. |
-| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si les jobs d'arrière-plan doivent s'exécuter en continu | Medium | Avec la valeur par défaut privilégiant le coût (`false` / `0`), les webhooks/rapports/jobs planifiés ne s'exécutent que tant qu'une requête maintient l'instance active — ils sont mis en file au lieu de s'exécuter immédiatement. |
-| `ALLOWED_HOSTS` / `CORS_ORIGIN_ALLOW_ALL` (injectés automatiquement à `"*"` / `"true"`) | Les restreindre pour un usage en production exposé sur Internet | Medium | Laissés ouverts, tout nom d'hôte/toute origine est accepté — acceptable pour un premier déploiement, pas pour une instance de production renforcée. |
-| `CSRF_TRUSTED_ORIGINS` (calculé automatiquement) | Vérifier après le déploiement qu'il correspond à l'URL réelle du service | High | Une valeur obsolète ou incorrecte rejette chaque POST authentifié, y compris la connexion, avec un échec CSRF. |
-| `ingress_settings` | `all` pour un accès public | Medium | `internal` bloque l'accès du navigateur au parcours de connexion/configuration, sauf via VPN/IAP. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface d'administration est accessible publiquement sans protection WAF par défaut. |
+| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais le remplacer par un autre chemin sans avoir confirmé le véritable `MEDIA_ROOT` de NetBox | Critique | Un mauvais chemin de montage laisse les téléversements sur le système de fichiers éphémère du conteneur — ils sont relisibles immédiatement, mais silencieusement perdus à chaque redémarrage, sans aucune erreur. Ce bug précis a été trouvé et corrigé sur l'ancien montage `/opt/netbox/netbox/media` de ce module. |
+| `SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
+| `SUPERUSER_PASSWORD` (généré automatiquement) | Le changer via l'interface de NetBox, pas en régénérant le secret | Moyen | Régénérer la valeur dans Secret Manager ne modifie pas rétroactivement le mot de passe du compte administrateur déjà créé. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` | `true` (obligatoire) | Critique | Le système de tâches d'arrière-plan de NetBox (webhooks, rapports, scripts, jobs planifiés) et sa couche de cache ne fonctionnent pas sans Redis — il n'existe aucun mode de repli. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais NFS désactivé et qu'aucun hôte n'est défini, la connexion Redis est vide et le traitement en arrière-plan ne s'exécute jamais, sans signalement. |
+| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Les garder distincts (`0` / `1`) | Élevé | Partager une même base Redis logique risque de faire perdre des tâches d'arrière-plan en file lors d'un vidage du cache, selon la documentation de NetBox. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1Gi risquent des arrêts pour OOM, surtout avec le worker RQ colocalisé dans le même conteneur. |
+| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si les jobs d'arrière-plan doivent s'exécuter en continu | Moyen | Avec la valeur par défaut privilégiant le coût (`false` / `0`), les webhooks/rapports/jobs planifiés ne s'exécutent que tant qu'une requête maintient l'instance active — ils sont mis en file au lieu de s'exécuter immédiatement. |
+| `ALLOWED_HOSTS` / `CORS_ORIGIN_ALLOW_ALL` (injectés automatiquement à `"*"` / `"true"`) | Les restreindre pour un usage en production exposé sur Internet | Moyen | Laissés ouverts, tout nom d'hôte/toute origine est accepté — acceptable pour un premier déploiement, pas pour une instance de production renforcée. |
+| `CSRF_TRUSTED_ORIGINS` (calculé automatiquement) | Vérifier après le déploiement qu'il correspond à l'URL réelle du service | Élevé | Une valeur obsolète ou incorrecte rejette chaque POST authentifié, y compris la connexion, avec un échec CSRF. |
+| `ingress_settings` | `all` pour un accès public | Moyen | `internal` bloque l'accès du navigateur au parcours de connexion/configuration, sauf via VPN/IAP. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface d'administration est accessible publiquement sans protection WAF par défaut. |
 
 ---
 

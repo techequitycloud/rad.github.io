@@ -39,11 +39,11 @@ jamais figé dans l'image.
 | Image de conteneur | Encapsulation légère `FROM mattermost/focalboard` avec un point d'entrée personnalisé qui génère `config.json` ; construite via Cloud Build (Kaniko) et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
 | Secret applicatif | Génère un mot de passe administrateur (`FOCALBOARD_ADMIN_PASSWORD`, 24 caractères) dans **Secret Manager** et l'injecte en tant que variable d'environnement secrète du SERVICE | Sortie `secret_ids` ; à récupérer via Secret Manager (voir ci-dessous) |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (`database_type = POSTGRES_15`) comme moteur | §Base de données dans les guides de plateforme |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données et le rôle, et accorde les droits (idempotente) | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et le rôle, et accorde les droits (idempotent) | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) pour les pièces jointes des tableaux | Sortie `storage_buckets` |
 | Persistance des pièces jointes | Définit `FOCALBOARD_FILESPATH = /data` et y monte le bucket de stockage via gcsfuse (Cloud Run / GKE sans PVC) ou un PVC en mode bloc (GKE) | §Persistance dans les guides de plateforme |
 | Paramètres de base | Génère `config.json` : `dbtype = postgres`, port `8000`, `authMode = native`, télémétrie désactivée, tableaux partagés publics activés | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit les sondes de démarrage, de vivacité et de disponibilité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Fournit les sondes de démarrage, de vivacité et de disponibilité (readiness) par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
 
 ---
 
@@ -84,7 +84,7 @@ utilisent `override_special = "_@"`, de sorte que le mot de passe commun à la f
 contient plus de `%`. `Focalboard_Common` conserve néanmoins, par défense en profondeur,
 son **second mot de passe dédié, uniquement alphanumérique** —
 `secret-<resource_prefix>-focalboard-safe-db-password` — et remplace par celui-ci le
-`DB_PASSWORD` du SERVICE principal via la sortie `secret_ids` ; la tâche `db-init` reçoit
+`DB_PASSWORD` du SERVICE principal via la sortie `secret_ids` ; le job `db-init` reçoit
 le même secret sous sa propre variable d'environnement, `FOCALBOARD_SAFE_DB_PASSWORD`,
 et l'utilise (et non `DB_PASSWORD`) pour définir le mot de passe réel du rôle Postgres.
 La sortie `database_password_secret` de la plateforme indique toujours le nom du secret
@@ -100,7 +100,7 @@ conditions réelles le 2026-07-14.)
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Focalboard utilise **PostgreSQL 15** ; le moteur est fixe (`database_type = POSTGRES_15`).
-Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
+Lors du premier déploiement, un job ponctuel (`db-init`) s'exécute avec
 `postgres:15-alpine` et, de manière idempotente :
 
 1. Résout l'hôte Cloud SQL — un répertoire de socket Unix sur Cloud Run ou `127.0.0.1`
@@ -123,8 +123,8 @@ Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
 **Aucune extension Postgres n'est installée** (`enable_postgres_extensions = false`) —
 Focalboard n'en a besoin d'aucune. Focalboard applique ses **propres migrations de
 schéma à chaque démarrage** en tant qu'utilisateur applicatif ; la mise à niveau de la
-version ne nécessite donc aucune étape de migration distincte. La tâche peut être
-relancée sans risque. Inspectez directement la base de données avec :
+version ne nécessite donc aucune étape de migration distincte. Le job peut être
+relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

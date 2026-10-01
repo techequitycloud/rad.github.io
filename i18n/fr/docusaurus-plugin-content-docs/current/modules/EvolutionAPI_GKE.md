@@ -364,26 +364,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un conflit `StatefulSet`, IAP sans identité autorisée, des unités `quota_memory_*` non binaires, un `redis_port`/`backup_retention_days` hors plage, `enable_cloudsql_volume = false` sur une application adossée à une base de données. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTICATION_API_KEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critical | La renouveler rend injoignable chaque instance WhatsApp déjà provisionnée et renvoie `401` à tous les clients qui détiennent l'ancienne clé. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tout l'historique des messages. |
-| `max_instance_count` | `1` | Critical | La mise à l'échelle horizontale fragmente les sessions de socket WhatsApp en mémoire entre les pods, ce qui rompt les connexions actives et duplique les livraisons de webhook. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver rompt la connexion à la base de données. |
-| `enable_redis` | `true` | High | Le désactiver supprime le cache des instances et des messages d'Evolution API ; l'application est configurée pour s'y attendre (`CACHE_REDIS_ENABLED = true`). |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, l'URI du cache est vide et la mise en cache est désactivée silencieusement. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes peuvent être routées hors de l'unique pod qui détient le socket WhatsApp, ce qui casse les opérations sur les instances. |
-| `service_type` | `LoadBalancer` | High | `ClusterIP` rend l'interface de gestion et les points de terminaison de webhook injoignables depuis l'extérieur du cluster. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. Conserver 1 préserve les sockets WhatsApp actifs. |
-| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | High | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhook externes. |
-| `application_version` | Épingler (p. ex. `v2.1.1`) | Medium | `latest` correspond à un tag épinglé, mais épingler explicitement évite des mises à niveau surprises qui exécutent de nouvelles migrations Prisma. |
+| `AUTHENTICATION_API_KEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critique | La renouveler rend injoignable chaque instance WhatsApp déjà provisionnée et renvoie `401` à tous les clients qui détiennent l'ancienne clé. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tout l'historique des messages. |
+| `max_instance_count` | `1` | Critique | La mise à l'échelle horizontale fragmente les sessions de socket WhatsApp en mémoire entre les pods, ce qui rompt les connexions actives et duplique les livraisons de webhook. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver rompt la connexion à la base de données. |
+| `enable_redis` | `true` | Élevé | Le désactiver supprime le cache des instances et des messages d'Evolution API ; l'application est configurée pour s'y attendre (`CACHE_REDIS_ENABLED = true`). |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, l'URI du cache est vide et la mise en cache est désactivée silencieusement. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes peuvent être routées hors de l'unique pod qui détient le socket WhatsApp, ce qui casse les opérations sur les instances. |
+| `service_type` | `LoadBalancer` | Élevé | `ClusterIP` rend l'interface de gestion et les points de terminaison de webhook injoignables depuis l'extérieur du cluster. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. Conserver 1 préserve les sockets WhatsApp actifs. |
+| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhook externes. |
+| `application_version` | Épingler (p. ex. `v2.1.1`) | Moyen | `latest` correspond à un tag épinglé, mais épingler explicitement évite des mises à niveau surprises qui exécutent de nouvelles migrations Prisma. |
 
 ---
 

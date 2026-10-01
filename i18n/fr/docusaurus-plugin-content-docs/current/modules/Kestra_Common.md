@@ -30,7 +30,7 @@ guides des plateformes ([Kestra_GKE](Kestra_GKE.md),
 | Identifiant administrateur | Génère le mot de passe administrateur de Kestra et le stocke dans **Secret Manager** | À récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Construit une image personnalisée qui encapsule `kestra/kestra` — ajoute `socat` et un point d'entrée personnalisé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme unique moteur pris en charge | Section Base de données des guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement qui crée la base de données, l'utilisateur, le schéma et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données, l'utilisateur, le schéma et les droits | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket d'artefacts **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de Kestra : file d'attente/référentiel PostgreSQL, stockage GCS, authentification basique, baseline Flyway, port du serveur Micronaut | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage et d'activité (HTTP `/health`, fenêtre de démarrage généreuse) | Section Observabilité des guides des plateformes |
@@ -65,7 +65,7 @@ Kestra nécessite **PostgreSQL 15** à la fois pour sa file d'attente interne de
 tâches (`KESTRA_QUEUE_TYPE=postgres`) et pour son référentiel de flux
 (`KESTRA_REPOSITORY_TYPE=postgres`). MySQL n'est pas pris en charge.
 
-Lors du premier déploiement, une tâche ponctuelle `db-init` s'exécute avec
+Lors du premier déploiement, un job ponctuel `db-init` s'exécute avec
 `postgres:15-alpine` et, de manière idempotente :
 
 1. Attend que PostgreSQL soit prêt, via `pg_isready`.

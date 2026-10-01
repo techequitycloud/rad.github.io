@@ -100,7 +100,7 @@ export REGION="us-central1"           # the region you deploy into
    # expect 200
    ```
 
-   > Au premier démarrage, Moodle installe le schéma de sa base de données avant que la sonde de readiness
+   > Au premier démarrage, Moodle installe le schéma de sa base de données avant que la sonde de disponibilité (readiness)
    > ne réussisse. Si le pod n'est pas encore Ready, suivez le démarrage avec
    > `kubectl logs -n "$NS" -l app=moodle -f`.
 
@@ -197,7 +197,7 @@ export REGION="us-central1"           # the region you deploy into
 Des techniques durables pour les modes de défaillance que vous rencontrerez le plus probablement. Il s'agit de
 diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de Moodle.
 
-- **Pod non Ready / CrashLoopBackOff :** la sonde de readiness cible `/health.php` ;
+- **Pod non Ready / CrashLoopBackOff :** la sonde de disponibilité cible `/health.php` ;
   Moodle accorde jusqu'à 10 minutes à la création du schéma au premier démarrage. Inspectez les événements
   et les journaux :
   ```bash

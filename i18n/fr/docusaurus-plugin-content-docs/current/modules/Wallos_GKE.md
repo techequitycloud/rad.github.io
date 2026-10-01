@@ -42,7 +42,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
 | Cache et file d'attente | Aucun | Wallos n'utilise pas Redis |
 | Secrets | Secret Manager | Aucun secret applicatif généré ; les utilisateurs résident dans la base SQLite |
 | Entrée | Cloud Load Balancing | Service `LoadBalancer` par défaut (Wallos est une interface web utilisée depuis le navigateur) ; domaine personnalisé + certificat géré disponibles |
-| Tâches en arrière-plan | Démon cron dans le conteneur | 8 tâches planifiées intégrées (actualisation des taux de change, notifications de renouvellement, une interrogation de vérification d'e-mail toutes les 2 minutes, etc.) — s'exécutent en continu dans le pod principal, et non comme un CronJob distinct |
+| Jobs en arrière-plan | Démon cron dans le conteneur | 8 tâches planifiées intégrées (actualisation des taux de change, notifications de renouvellement, une interrogation de vérification d'e-mail toutes les 2 minutes, etc.) — s'exécutent en continu dans le pod principal, et non comme un CronJob distinct |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
@@ -69,8 +69,8 @@ détermine plusieurs des valeurs par défaut ci-dessous :
   silencieusement toutes les tâches planifiées sans aucune erreur.
 - **L'identifiant par défaut est `admin` / `admin`.** Wallos le crée au premier
   démarrage ; modifiez-le dans l'interface web immédiatement après le déploiement.
-- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
-  tâche `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucun
+  job `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
 - **Port du conteneur 80.** Wallos sert du HTTP/1.1 simple sur le port 80.
 - **Exposé publiquement par défaut.** `service_type = "LoadBalancer"` — Wallos est
   une interface web utilisée depuis le navigateur, et non un service interne.
@@ -185,7 +185,7 @@ journaux propres au pod — il n'existe pas de CronJob distinct à inspecter.
 ## 3. Comportement de l'application Wallos {#3-wallos-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a ni
-  tâche `db-init` ni instance Cloud SQL. Au premier démarrage, Wallos crée sa base
+  job `db-init` ni instance Cloud SQL. Au premier démarrage, Wallos crée sa base
   SQLite dans `/var/www/html/db/wallos.db` si elle n'existe pas déjà et crée
   l'utilisateur par défaut `admin`/`admin`.
 - **Persistance de l'état.** Les abonnements, catégories, paramètres et
@@ -388,27 +388,27 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, `workload_type = Deployment` associé à `stateful_pvc_enabled = true`, des valeurs de mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `min_instance_count` | `1` | Critical | La mise à zéro arrête silencieusement le démon cron de Wallos — les notifications de renouvellement et toutes les autres tâches planifiées cessent de se déclencher, sans aucune erreur nulle part. |
-| `max_instance_count` | `1` | Critical | Une valeur >1 place des écrivains concurrents sur l'unique base SQLite, ce qui la corrompt. |
-| Volumes `db` / `uploads` (PVC/bucket) | Ne jamais supprimer | Critical | La base SQLite embarquée et les logos personnalisés résident ici ; supprimer l'un ou l'autre détruit définitivement cet état. |
-| `admin` / `admin` (identifiant initial) | À modifier à la première connexion | Critical | Conserver l'identifiant par défaut permet à quiconque peut joindre le service d'en prendre le contrôle total. |
-| `stateful_pvc_mount_path` | `/var/www/html/db` | High | Doit correspondre au répertoire fixe du fichier SQLite ; une non-concordance stocke la base sur un disque éphémère et perd l'état au redémarrage. |
-| `stateful_pvc_storage_class` | `standard` (HDD) | Medium | `standard-rwo` (SSD) puise dans le pool restreint et contraint par quota `SSD_TOTAL_GB` sans aucun bénéfice d'IOPS dont SQLite aurait réellement besoin. |
-| `stateful_pvc_enabled` + GCS FUSE pour la base de données | Laisser Common désactiver GCS FUSE | High | Les deux montés sur le même chemin de base de données provoquent un double montage ; Common définit automatiquement `enable_gcs_db_volume = false` lorsque le PVC est activé — ne forcez pas les deux. |
-| `container_port` | `80` | High | Wallos écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et le pod ne devient jamais Ready. |
-| Chemin de `startup_probe` / `liveness_probe` | `/` | Medium | Aucun point de terminaison `/health` dédié n'est documenté pour `bellamy/wallos` — si l'application venait à protéger son chemin racine par une authentification, le chemin de la sonde devrait être ajusté. |
-| `container_image_source` | `prebuilt` (transmis) | High | S'il n'est pas transmis, la valeur par défaut propre à App_GKE (`custom`) l'emporte silencieusement et déclenche un build Kaniko depuis les sources pour une image sans Dockerfile — le build échoue. |
-| `enable_cloudsql_volume` | `false` | Medium | Wallos n'a pas de Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
-| `enable_redis` | `true` | Medium | Wallos n'utilise pas Redis, mais la valeur par défaut `true` d'App_GKE est héritée telle quelle — définissez-la explicitement à `false`, sinon une dépendance inutilisée est branchée. |
-| `enable_iap` | identifiants requis | High | Activer IAP sans `iap_oauth_client_id`/`secret` expose silencieusement le service sans authentification (bloqué par une garde au moment du plan). |
-| `stateful_fs_group` | À vérifier au premier déploiement | Medium | L'UID/GID d'exécution de `bellamy/wallos` n'a pas été confirmé lors des recherches ; une erreur de permission refusée lors de l'écriture sur le PVC de la base de données signifie qu'il faut le définir explicitement. |
+| `min_instance_count` | `1` | Critique | La mise à zéro arrête silencieusement le démon cron de Wallos — les notifications de renouvellement et toutes les autres tâches planifiées cessent de se déclencher, sans aucune erreur nulle part. |
+| `max_instance_count` | `1` | Critique | Une valeur >1 place des écrivains concurrents sur l'unique base SQLite, ce qui la corrompt. |
+| Volumes `db` / `uploads` (PVC/bucket) | Ne jamais supprimer | Critique | La base SQLite embarquée et les logos personnalisés résident ici ; supprimer l'un ou l'autre détruit définitivement cet état. |
+| `admin` / `admin` (identifiant initial) | À modifier à la première connexion | Critique | Conserver l'identifiant par défaut permet à quiconque peut joindre le service d'en prendre le contrôle total. |
+| `stateful_pvc_mount_path` | `/var/www/html/db` | Élevé | Doit correspondre au répertoire fixe du fichier SQLite ; une non-concordance stocke la base sur un disque éphémère et perd l'état au redémarrage. |
+| `stateful_pvc_storage_class` | `standard` (HDD) | Moyen | `standard-rwo` (SSD) puise dans le pool restreint et contraint par quota `SSD_TOTAL_GB` sans aucun bénéfice d'IOPS dont SQLite aurait réellement besoin. |
+| `stateful_pvc_enabled` + GCS FUSE pour la base de données | Laisser Common désactiver GCS FUSE | Élevé | Les deux montés sur le même chemin de base de données provoquent un double montage ; Common définit automatiquement `enable_gcs_db_volume = false` lorsque le PVC est activé — ne forcez pas les deux. |
+| `container_port` | `80` | Élevé | Wallos écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et le pod ne devient jamais Ready. |
+| Chemin de `startup_probe` / `liveness_probe` | `/` | Moyen | Aucun point de terminaison `/health` dédié n'est documenté pour `bellamy/wallos` — si l'application venait à protéger son chemin racine par une authentification, le chemin de la sonde devrait être ajusté. |
+| `container_image_source` | `prebuilt` (transmis) | Élevé | S'il n'est pas transmis, la valeur par défaut propre à App_GKE (`custom`) l'emporte silencieusement et déclenche un build Kaniko depuis les sources pour une image sans Dockerfile — le build échoue. |
+| `enable_cloudsql_volume` | `false` | Moyen | Wallos n'a pas de Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
+| `enable_redis` | `true` | Moyen | Wallos n'utilise pas Redis, mais la valeur par défaut `true` d'App_GKE est héritée telle quelle — définissez-la explicitement à `false`, sinon une dépendance inutilisée est branchée. |
+| `enable_iap` | identifiants requis | Élevé | Activer IAP sans `iap_oauth_client_id`/`secret` expose silencieusement le service sans authentification (bloqué par une garde au moment du plan). |
+| `stateful_fs_group` | À vérifier au premier déploiement | Moyen | L'UID/GID d'exécution de `bellamy/wallos` n'a pas été confirmé lors des recherches ; une erreur de permission refusée lors de l'écriture sur le PVC de la base de données signifie qu'il faut le définir explicitement. |
 
 ---
 

@@ -4,7 +4,7 @@ description: "Préparez la section 6 de l'examen Professional Cloud Architect (P
 ---
 <!-- translated-from: docs/certification/PCA_Section_6_Exploration_Guide.md @ cb682e8 sha256:b37506cdd9d7 -->
 
-# Guide de préparation à la certification PCA : Section 6 — Garantir l'excellence des solutions et des opérations (Ensuring solution and operations excellence) (~12.5 % de l'examen) {#pca-certification-preparation-guide-section-6--ensuring-solution-and-operations-excellence-125-of-the-exam}
+# Guide de préparation à la certification PCA : Section 6 — Garantir l'excellence des solutions et des opérations (Ensuring solution and operations excellence) (~12,5 % de l'examen) {#pca-certification-preparation-guide-section-6--ensuring-solution-and-operations-excellence-125-of-the-exam}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section6.png" alt="Guide de préparation à la certification PCA : Section 6 — Garantir l'excellence des solutions et des opérations (~12.5 % de l'examen)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 

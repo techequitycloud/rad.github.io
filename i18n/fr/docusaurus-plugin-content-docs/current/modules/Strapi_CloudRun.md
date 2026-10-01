@@ -353,7 +353,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[{ name="db-init", execute_on_apply=true }]` | La tâche intégrée `db-init` s'exécute à chaque apply. Fournissez une liste non vide pour la remplacer. |
+| `initialization_jobs` | `[{ name="db-init", execute_on_apply=true }]` | Le job intégré `db-init` s'exécute à chaque apply. Fournissez une liste non vide pour le remplacer. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run déployés conjointement (par ex. workers d'arrière-plan). |
 
@@ -405,7 +405,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -417,25 +417,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEYS` / `JWT_SECRET` / `ADMIN_JWT_SECRET` / `API_TOKEN_SALT` (générés automatiquement) | générés une fois, jamais modifiés | Critical | Leur rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API actifs ; tous les utilisateurs sont déconnectés et toutes les intégrations clientes cessent de fonctionner. |
-| `database_type` | `POSTGRES_15` | Critical | Strapi requiert PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les téléversements sont perdus entre instances ou redémarrages. |
-| `application_name` | défini une fois | Critical | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne une recréation complète et une perte de données. |
-| `application_database_name` / `application_database_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer conduit Strapi à se connecter à une base de données vide. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| `execution_environment` | `gen2` | High | gen1 ne prend pas en charge les montages NFS ; NFS échouera silencieusement. |
-| `enable_redis` | `false` | High | À activer uniquement lorsque des plugins le requièrent. Un `redis_host` non défini se rabat sur l'IP du serveur NFS (ne fonctionne que lorsque `enable_nfs = true`) ; si NFS est également désactivé, la valeur de repli n'est pas résolue et provoque une erreur de connexion au démarrage. |
-| `memory_limit` | `2Gi` | High | Le runtime Node.js de Strapi et le panneau d'administration requièrent suffisamment de mémoire ; des valeurs inférieures à `512Mi` provoquent des arrêts OOM. |
-| `min_instance_count` | `0` ou `1` | Medium | `0` permet la mise à l'échelle à zéro ; la première requête après une période d'inactivité subira un démarrage à froid de 15–30 secondes. |
-| `enable_iap` | à activer pour l'administration | Medium | Sinon, le panneau d'administration de Strapi est accessible publiquement. |
-| `enable_cloud_armor` / `enable_cdn` | à envisager en production | Medium | Le CDN met le contenu en cache au plus près des utilisateurs ; Cloud Armor fournit une protection WAF et DDoS. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `secret_propagation_delay` | `30` | Low | Un délai trop court peut provoquer des échecs de démarrage au premier déploiement si les secrets ne sont pas encore propagés. |
+| `APP_KEYS` / `JWT_SECRET` / `ADMIN_JWT_SECRET` / `API_TOKEN_SALT` (générés automatiquement) | générés une fois, jamais modifiés | Critique | Leur rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API actifs ; tous les utilisateurs sont déconnectés et toutes les intégrations clientes cessent de fonctionner. |
+| `database_type` | `POSTGRES_15` | Critique | Strapi requiert PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les téléversements sont perdus entre instances ou redémarrages. |
+| `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne une recréation complète et une perte de données. |
+| `application_database_name` / `application_database_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer conduit Strapi à se connecter à une base de données vide. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `execution_environment` | `gen2` | Élevé | gen1 ne prend pas en charge les montages NFS ; NFS échouera silencieusement. |
+| `enable_redis` | `false` | Élevé | À activer uniquement lorsque des plugins le requièrent. Un `redis_host` non défini se rabat sur l'IP du serveur NFS (ne fonctionne que lorsque `enable_nfs = true`) ; si NFS est également désactivé, la valeur de repli n'est pas résolue et provoque une erreur de connexion au démarrage. |
+| `memory_limit` | `2Gi` | Élevé | Le runtime Node.js de Strapi et le panneau d'administration requièrent suffisamment de mémoire ; des valeurs inférieures à `512Mi` provoquent des arrêts OOM. |
+| `min_instance_count` | `0` ou `1` | Moyen | `0` permet la mise à l'échelle à zéro ; la première requête après une période d'inactivité subira un démarrage à froid de 15–30 secondes. |
+| `enable_iap` | à activer pour l'administration | Moyen | Sinon, le panneau d'administration de Strapi est accessible publiquement. |
+| `enable_cloud_armor` / `enable_cdn` | à envisager en production | Moyen | Le CDN met le contenu en cache au plus près des utilisateurs ; Cloud Armor fournit une protection WAF et DDoS. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `secret_propagation_delay` | `30` | Faible | Un délai trop court peut provoquer des échecs de démarrage au premier déploiement si les secrets ne sont pas encore propagés. |
 
 ---
 

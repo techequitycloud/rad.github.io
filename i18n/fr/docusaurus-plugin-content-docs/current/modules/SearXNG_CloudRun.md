@@ -201,7 +201,7 @@ facultatifs.
 - **Entièrement sans état.** SearXNG récupère les résultats auprès de moteurs de
   recherche externes au moment de la requête et ne stocke rien localement. Aucune
   migration de base de données ni job d'initialisation ne s'exécute.
-- **Aucune tâche de configuration au premier déploiement.** Comme il n'y a pas de base
+- **Aucun job de configuration au premier déploiement.** Comme il n'y a pas de base
   de données, le déploiement se termine sans étape db-init — le service est prêt dès que
   le conteneur démarre.
 - **`SEARXNG_SECRET` est stable.** La clé de session est générée une seule fois et
@@ -393,7 +393,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -406,21 +406,21 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critical | S'il est remplacé par une valeur aléatoire propre à chaque instance, chaque démarrage à froid produit une clé différente, ce qui invalide tous les cookies de session existants. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
-| `database_type` | `NONE` | Critical | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
-| `vpc_egress_setting` | `ALL_TRAFFIC` ou Cloud NAT configuré | High | `PRIVATE_RANGES_ONLY` bloque les requêtes sortantes de SearXNG vers les moteurs de recherche externes (Google, Bing, DuckDuckGo, etc.), qui renvoie alors des résultats vides. |
-| `enable_redis` | `true` pour les déploiements publics | High | Sans Redis, SearXNG n'a aucune limitation de débit ; les instances publiques sont exposées à un moissonnage qui épuise les quotas des moteurs en amont. |
-| `redis_host` | Adresse IP Memorystore ou valeur explicite | High | Lorsque `enable_redis = true` et `redis_host = ""`, le module utilise `127.0.0.1` par défaut — il n'y a pas de sidecar Redis dans Cloud Run, donc la limitation de débit est désactivée sans aucun message. |
-| `timeout_seconds` | `60`–`300` | Medium | SearXNG attend tous les moteurs de recherche activés ; des moteurs en amont lents peuvent nécessiter jusqu'à 30 secondes par requête. Une valeur trop faible provoque des erreurs 504 avant l'agrégation des résultats. |
-| `application_version` | épinglée (pas `latest`) | Medium | Utiliser `latest` rend les déploiements non reproductibles ; une nouvelle version de SearXNG peut modifier le schéma de configuration. |
-| `enable_cloud_armor` | `true` pour les déploiements publics | Medium | Sans Cloud Armor, le point de terminaison public n'a aucune protection WAF/DDoS. |
-| `enable_iap` | `true` pour un usage strictement interne | Medium | Pour les déploiements de recherche internes, IAP restreint l'accès aux comptes Google authentifiés. |
-| `ingress_settings` | `all` pour un usage public ; `internal` pour un usage privé | Medium | `all` est voulu pour un métamoteur de recherche public ; associez-le à la limitation de débit Redis et à Cloud Armor en production. |
+| `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critique | S'il est remplacé par une valeur aléatoire propre à chaque instance, chaque démarrage à froid produit une clé différente, ce qui invalide tous les cookies de session existants. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
+| `database_type` | `NONE` | Critique | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
+| `vpc_egress_setting` | `ALL_TRAFFIC` ou Cloud NAT configuré | Élevé | `PRIVATE_RANGES_ONLY` bloque les requêtes sortantes de SearXNG vers les moteurs de recherche externes (Google, Bing, DuckDuckGo, etc.), qui renvoie alors des résultats vides. |
+| `enable_redis` | `true` pour les déploiements publics | Élevé | Sans Redis, SearXNG n'a aucune limitation de débit ; les instances publiques sont exposées à un moissonnage qui épuise les quotas des moteurs en amont. |
+| `redis_host` | Adresse IP Memorystore ou valeur explicite | Élevé | Lorsque `enable_redis = true` et `redis_host = ""`, le module utilise `127.0.0.1` par défaut — il n'y a pas de sidecar Redis dans Cloud Run, donc la limitation de débit est désactivée sans aucun message. |
+| `timeout_seconds` | `60`–`300` | Moyen | SearXNG attend tous les moteurs de recherche activés ; des moteurs en amont lents peuvent nécessiter jusqu'à 30 secondes par requête. Une valeur trop faible provoque des erreurs 504 avant l'agrégation des résultats. |
+| `application_version` | épinglée (pas `latest`) | Moyen | Utiliser `latest` rend les déploiements non reproductibles ; une nouvelle version de SearXNG peut modifier le schéma de configuration. |
+| `enable_cloud_armor` | `true` pour les déploiements publics | Moyen | Sans Cloud Armor, le point de terminaison public n'a aucune protection WAF/DDoS. |
+| `enable_iap` | `true` pour un usage strictement interne | Moyen | Pour les déploiements de recherche internes, IAP restreint l'accès aux comptes Google authentifiés. |
+| `ingress_settings` | `all` pour un usage public ; `internal` pour un usage privé | Moyen | `all` est voulu pour un métamoteur de recherche public ; associez-le à la limitation de débit Redis et à Cloud Armor en production. |
 
 ---
 

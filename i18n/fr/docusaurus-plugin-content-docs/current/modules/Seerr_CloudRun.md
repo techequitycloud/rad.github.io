@@ -268,16 +268,16 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Variable d'environnement `DB_TYPE` | Laissez intacte la valeur par défaut de `Seerr_Common` (`postgres`) | **Critical** | Un `DB_TYPE` manquant ou écrasé fait basculer silencieusement Seerr sur un fichier SQLite propre à chaque conteneur, effacé à chaque redémarrage — l'application paraît saine, mais rien n'est conservé. |
-| `db_password_env_var_name` | Laissez à `DB_PASS` | **Critical** | La source de données TypeORM de Seerr ne lit que `DB_PASS` ; le `DB_PASSWORD` par défaut du socle n'est jamais lu à lui seul, et l'application ne peut pas s'authentifier auprès de Postgres. |
-| `max_instance_count` | Définissez `1` si les modifications de paramètres (configuration des serveurs multimédias, curseurs de découverte, agents de notification) ne doivent jamais entrer en concurrence | Medium | `settings.json` est un unique fichier modifiable, et non une base de données transactionnelle — des écrivains concurrents issus de plusieurs instances risquent une écriture perdue. La valeur par défaut du module est `5`, plus permissive que la valeur sûre pour un écrivain unique. |
-| `gcs_volumes` / stockage sur `/app/config` | Conservez le montage `storage` automatique | **Critical** | Supprimer ou mal configurer ce volume fait perdre tous les paramètres applicatifs (serveurs multimédias, curseurs, agents de notification) au prochain démarrage à froid, même si les données Postgres restent intactes. |
-| Chemin de sonde | Laissez à `/api/v1/status` | High | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine, alors que l'application a démarré correctement. |
+| Variable d'environnement `DB_TYPE` | Laissez intacte la valeur par défaut de `Seerr_Common` (`postgres`) | **Critique** | Un `DB_TYPE` manquant ou écrasé fait basculer silencieusement Seerr sur un fichier SQLite propre à chaque conteneur, effacé à chaque redémarrage — l'application paraît saine, mais rien n'est conservé. |
+| `db_password_env_var_name` | Laissez à `DB_PASS` | **Critique** | La source de données TypeORM de Seerr ne lit que `DB_PASS` ; le `DB_PASSWORD` par défaut du socle n'est jamais lu à lui seul, et l'application ne peut pas s'authentifier auprès de Postgres. |
+| `max_instance_count` | Définissez `1` si les modifications de paramètres (configuration des serveurs multimédias, curseurs de découverte, agents de notification) ne doivent jamais entrer en concurrence | Moyen | `settings.json` est un unique fichier modifiable, et non une base de données transactionnelle — des écrivains concurrents issus de plusieurs instances risquent une écriture perdue. La valeur par défaut du module est `5`, plus permissive que la valeur sûre pour un écrivain unique. |
+| `gcs_volumes` / stockage sur `/app/config` | Conservez le montage `storage` automatique | **Critique** | Supprimer ou mal configurer ce volume fait perdre tous les paramètres applicatifs (serveurs multimédias, curseurs, agents de notification) au prochain démarrage à froid, même si les données Postgres restent intactes. |
+| Chemin de sonde | Laissez à `/api/v1/status` | Élevé | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine, alors que l'application a démarré correctement. |
 
 ---
 

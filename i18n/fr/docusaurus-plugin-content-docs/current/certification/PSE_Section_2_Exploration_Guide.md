@@ -73,7 +73,7 @@ R : Cloud Armor filtre selon la signature ou la source de la requête (sans noti
 
 ## 2.2 Configuration de la segmentation des frontières (Configuring boundary segmentation) {#22-configuring-boundary-segmentation}
 
-> ⏱ ~2.5 h · 💰 aucun pour VPC-SC/NetworkPolicy · ⚙️ Prérequis : perimeter-lab (organisation + autorisation ACM) ; zero-trust-gke pour NetworkPolicy
+> ⏱ ~2,5 h · 💰 aucun pour VPC-SC/NetworkPolicy · ⚙️ Prérequis : perimeter-lab (organisation + autorisation ACM) ; zero-trust-gke pour NetworkPolicy
 
 **Pourquoi l'examen s'y intéresse** — IAM répond à la question *qui*, la segmentation réseau répond à *d'où*, et VPC Service Controls répond à *où les données peuvent circuler au niveau des API*. Les scénarios d'examen où des identifiants volés mais valides servent à exfiltrer des données Cloud Storage ou BigQuery sont des questions VPC-SC ; les scénarios de mouvement latéral entre pods sont des questions NetworkPolicy.
 
@@ -135,7 +135,7 @@ R : La sortie 443 (qui couvre les points de terminaison googleapis, y compris le
 
 ## 2.3 Mise en place d'une connectivité privée (Establishing private connectivity) {#23-establishing-private-connectivity}
 
-> ⏱ ~1.5 h · 💰 faible — traitement des données par Cloud NAT ; PSA/sortie VPC directe gratuits · ⚙️ Prérequis : secure-platform + n'importe quel module d'application (les valeurs par défaut suffisent)
+> ⏱ ~1,5 h · 💰 faible — traitement des données par Cloud NAT ; PSA/sortie VPC directe gratuits · ⚙️ Prérequis : secure-platform + n'importe quel module d'application (les valeurs par défaut suffisent)
 
 **Pourquoi l'examen s'y intéresse** — L'examen teste le choix entre Private Google Access, Private Services Access (PSA), Private Service Connect, la sortie VPC directe (Direct VPC egress) / l'accès VPC sans serveur, et les options hybrides (HA VPN, Interconnect) — et la connaissance de celle qui offre une accessibilité privée aux *API Google*, aux *services gérés* ou à *votre propre VPC*.
 

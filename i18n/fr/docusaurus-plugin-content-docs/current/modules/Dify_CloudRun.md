@@ -203,8 +203,8 @@ option.
   et peut être relancé sans risque.
 - **Migrations au démarrage.** Chaque instance exécute les migrations de base de données
   Flask-Migrate de Dify au démarrage (`MIGRATION_ENABLED=true`), de sorte que la mise à niveau de
-  la version de l'application applique automatiquement les changements de schéma. Aucune tâche de
-  migration distincte n'est nécessaire.
+  la version de l'application applique automatiquement les changements de schéma. Aucun job de
+  migration distinct n'est nécessaire.
 - **API + worker dans un seul conteneur.** Le conteneur personnalisé encapsule
   `langgenius/dify-api` avec supervisord. Le serveur d'API gunicorn (port 5001) et le worker
   Celery s'exécutent dans le même conteneur — ils partagent l'allocation de CPU et de mémoire.
@@ -265,7 +265,7 @@ autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comp
 | `memory_limit` | `4Gi` | Mémoire par instance ; 4 GiB recommandés pour la mise en cache des workflows LLM et le traitement des documents. |
 | `min_instance_count` | `0` | Nombre minimal d'instances (mise à l'échelle à zéro). Définissez ≥ 1 pour que le worker Celery maintienne sa connexion au broker Redis. |
 | `max_instance_count` | `3` | Nombre maximal d'instances. Sert de plafond de coût. |
-| `cpu_always_allocated` | `false` | Valeur par défaut privilégiant le coût (facturation à la requête, associée à `min_instance_count=0`) : le CPU n'est facturé que pendant le traitement d'une requête. Contrepartie — les pipelines asynchrones Celery (embedding des jeux de données, tâches planifiées/par lots) s'arrêtent lorsque le service est mis à l'échelle à zéro ; le chat interactif et les applications fonctionnent toujours à la demande. Définissez `true` avec `min_instance_count >= 1` pour rétablir un fonctionnement continu. |
+| `cpu_always_allocated` | `false` | Valeur par défaut privilégiant le coût (facturation à la requête, associée à `min_instance_count=0`) : le CPU n'est facturé que pendant le traitement d'une requête. Contrepartie — les pipelines asynchrones Celery (embedding des jeux de données, jobs planifiés/par lots) s'arrêtent lorsque le service est mis à l'échelle à zéro ; le chat interactif et les applications fonctionnent toujours à la demande. Définissez `true` avec `min_instance_count >= 1` pour rétablir un fonctionnement continu. |
 | `container_port` | `5001` | Le serveur d'API Dify écoute sur le port 5001. |
 | `execution_environment` | `gen2` | **Obligatoire** — gen2 est nécessaire pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | `300` | Durée maximale d'une requête. Augmentez à `3600` pour les workflows LLM de longue durée. |
@@ -344,8 +344,8 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. Fournissez une liste non vide pour la remplacer entièrement. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. Fournissez une liste non vide pour le remplacer entièrement. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -396,7 +396,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État du monitoring, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -408,27 +408,27 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_redis` | `true` (obligatoire) | Critical | Toutes les tâches Celery (exécution des workflows, indexation des documents, appels LLM asynchrones) échouent silencieusement sans Redis. |
-| `enable_cloudsql_volume` | `true` (obligatoire) | Critical | Le sidecar Auth Proxy est le seul chemin vers PostgreSQL ; le désactiver interrompt toute connectivité à la base de données. |
-| `SECRET_KEY` (généré automatiquement) | immuable une fois défini | Critical | Toutes les instances doivent partager la même clé ; sa rotation déconnecte tous les utilisateurs et invalide les sessions actives. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `secret_environment_variables` pour les clés LLM | toujours utiliser des références de secrets | Critical | Des variables d'environnement en clair exposent les clés API dans les métadonnées de révision Cloud Run visibles dans la console. |
-| `enable_redis` + `enable_nfs` | tous deux `true` en l'absence de Redis externe | Critical | Sans NFS, il n'existe aucun hôte Redis lorsque `redis_host` est vide — Celery ne démarre pas. |
-| `redis_host` | hôte correct | High | Un hôte incorrect produit une URL de broker Celery mal formée ; toutes les tâches asynchrones restent indéfiniment en file d'attente. |
-| `database_type` | `POSTGRES_15` | High | Dify nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors de l'ingestion de documents ou de la mise en cache des workflows LLM. |
-| `min_instance_count` + `cpu_always_allocated` | livrés à `0` / `false` (priorité au coût) ; définissez `1`+ / `true` pour un Celery continu | High | Les valeurs par défaut livrées relèvent d'un choix délibéré privilégiant le coût, et non d'un oubli : la mise à l'échelle à zéro abandonne les tâches Celery en cours (embedding des jeux de données, tâches planifiées/par lots) lorsque le service est inactif. Le chat interactif et les applications fonctionnent toujours à la demande. Modifiez les deux paramètres ensemble pour rétablir un traitement continu en arrière-plan. |
-| `timeout_seconds` | `300` (à augmenter pour les workflows) | High | Les workflows à plusieurs étapes et l'indexation RAG peuvent dépasser 300 s ; augmentez à `3600` pour les déploiements complexes. |
-| `execution_environment` | `gen2` | High | gen1 ne prend pas en charge les montages NFS ni GCS Fuse. |
-| `WEB_API_CORS_ALLOW_ORIGINS` | à restreindre en production | High | La valeur par défaut `"*"` autorise les requêtes cross-origin depuis n'importe quel domaine. |
-| `application_version` | fixer une version précise | Medium | Des versions non fixées risquent de déclencher des migrations de schéma inattendues qui cassent l'application lors d'un redéploiement. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sans ces contrôles, la console Dify est accessible publiquement. |
+| `enable_redis` | `true` (obligatoire) | Critique | Toutes les tâches Celery (exécution des workflows, indexation des documents, appels LLM asynchrones) échouent silencieusement sans Redis. |
+| `enable_cloudsql_volume` | `true` (obligatoire) | Critique | Le sidecar Auth Proxy est le seul chemin vers PostgreSQL ; le désactiver interrompt toute connectivité à la base de données. |
+| `SECRET_KEY` (généré automatiquement) | immuable une fois défini | Critique | Toutes les instances doivent partager la même clé ; sa rotation déconnecte tous les utilisateurs et invalide les sessions actives. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `secret_environment_variables` pour les clés LLM | toujours utiliser des références de secrets | Critique | Des variables d'environnement en clair exposent les clés API dans les métadonnées de révision Cloud Run visibles dans la console. |
+| `enable_redis` + `enable_nfs` | tous deux `true` en l'absence de Redis externe | Critique | Sans NFS, il n'existe aucun hôte Redis lorsque `redis_host` est vide — Celery ne démarre pas. |
+| `redis_host` | hôte correct | Élevé | Un hôte incorrect produit une URL de broker Celery mal formée ; toutes les tâches asynchrones restent indéfiniment en file d'attente. |
+| `database_type` | `POSTGRES_15` | Élevé | Dify nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors de l'ingestion de documents ou de la mise en cache des workflows LLM. |
+| `min_instance_count` + `cpu_always_allocated` | livrés à `0` / `false` (priorité au coût) ; définissez `1`+ / `true` pour un Celery continu | Élevé | Les valeurs par défaut livrées relèvent d'un choix délibéré privilégiant le coût, et non d'un oubli : la mise à l'échelle à zéro abandonne les tâches Celery en cours (embedding des jeux de données, jobs planifiés/par lots) lorsque le service est inactif. Le chat interactif et les applications fonctionnent toujours à la demande. Modifiez les deux paramètres ensemble pour rétablir un traitement continu en arrière-plan. |
+| `timeout_seconds` | `300` (à augmenter pour les workflows) | Élevé | Les workflows à plusieurs étapes et l'indexation RAG peuvent dépasser 300 s ; augmentez à `3600` pour les déploiements complexes. |
+| `execution_environment` | `gen2` | Élevé | gen1 ne prend pas en charge les montages NFS ni GCS Fuse. |
+| `WEB_API_CORS_ALLOW_ORIGINS` | à restreindre en production | Élevé | La valeur par défaut `"*"` autorise les requêtes cross-origin depuis n'importe quel domaine. |
+| `application_version` | fixer une version précise | Moyen | Des versions non fixées risquent de déclencher des migrations de schéma inattendues qui cassent l'application lors d'un redéploiement. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sans ces contrôles, la console Dify est accessible publiquement. |
 
 ---
 

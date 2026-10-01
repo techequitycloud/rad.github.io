@@ -190,11 +190,11 @@ d'alerte facultatives sont disponibles.
   `postgres:15-alpine`. Il attend PostgreSQL, puis crée de manière idempotente le
   rôle applicatif et la base de données, définit le propriétaire et accorde les
   privilèges sur la base et sur le schéma `public`, puis signale au sidecar Cloud
-  SQL Auth Proxy de s'arrêter (`POST /quitquitquit`) afin que le pod de la tâche se
+  SQL Auth Proxy de s'arrêter (`POST /quitquitquit`) afin que le pod du job se
   termine proprement. Il peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** LangFlow exécute ses **migrations Alembic à
   chaque démarrage du conteneur** ; les tables sont donc créées et mises à niveau par
-  l'application elle-même — la tâche `db-init` ne gère que le rôle, la base et les
+  l'application elle-même — le job `db-init` ne gère que le rôle, la base et les
   droits. Prévoyez un délai supplémentaire au premier démarrage.
 - **`LANGFLOW_SECRET_KEY` est immuable après le premier démarrage.** Il est généré
   une seule fois et écrit dans Secret Manager. Le modifier casse définitivement
@@ -220,7 +220,7 @@ d'alerte facultatives sont disponibles.
 - **Affinité de session.** `session_affinity = ClientIP` maintient chaque client sur
   le même pod — important, car LangFlow conserve l'état de l'éditeur de flux en
   mémoire de processus.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -352,7 +352,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (aucun n'est requis par LangFlow). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de LangFlow. |
 
@@ -494,7 +494,7 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'importation (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -508,28 +508,28 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), complété d'un garde-fou `validation.tf` qui vérifie les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, Redis activé sans source d'hôte, IAP sans identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `LANGFLOW_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation casse définitivement chaque identifiant stocké intégré dans un flux — ceux-ci ne peuvent plus être déchiffrés et doivent être ressaisis. |
-| `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit tous les flux et identifiants. |
-| `database_type` | `POSTGRES_15` | Critical | LangFlow requiert PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans source de sauvegarde valide fait échouer la tâche d'importation. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `LANGFLOW_SUPERUSER_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager | High | C'est l'identifiant de connexion de l'administrateur ; le perdre signifie qu'il est impossible de se connecter tant qu'il n'est pas réinitialisé. |
-| `max_instance_count` | `1` | High | LangFlow conserve un état de session et de flux en mémoire de processus ; dépasser 1 répartit l'état entre les pods et provoque un comportement incohérent. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes sont acheminées vers des pods différents, ce qui perturbe l'éditeur de flux en mémoire de processus. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs supérieures à `max_instance_count`. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver avec une vraie base de données casse toutes les connexions. |
-| `container_port` | `7860` | High | LangFlow écoute sur 7860 ; un port différent fait échouer toutes les sondes de santé. |
-| `enable_iap` | uniquement lorsque l'authentification de l'API n'est pas nécessaire depuis l'extérieur | High | IAP place la connexion Google devant l'ensemble du service, y compris son API programmatique. |
-| `container_resources.memory_limit` | ≥ `2Gi` | High | OOMKilled au démarrage confirmé en dessous de 2 GiB — LangFlow charge tous les composants et crée les projets de démarrage avant que le serveur n'écoute ; `1Gi` a tué le pod au moment même où il démarrait. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `LANGFLOW_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Sa rotation casse définitivement chaque identifiant stocké intégré dans un flux — ceux-ci ne peuvent plus être déchiffrés et doivent être ressaisis. |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit tous les flux et identifiants. |
+| `database_type` | `POSTGRES_15` | Critique | LangFlow requiert PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'importation. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `LANGFLOW_SUPERUSER_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager | Élevé | C'est l'identifiant de connexion de l'administrateur ; le perdre signifie qu'il est impossible de se connecter tant qu'il n'est pas réinitialisé. |
+| `max_instance_count` | `1` | Élevé | LangFlow conserve un état de session et de flux en mémoire de processus ; dépasser 1 répartit l'état entre les pods et provoque un comportement incohérent. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes sont acheminées vers des pods différents, ce qui perturbe l'éditeur de flux en mémoire de processus. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs supérieures à `max_instance_count`. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver avec une vraie base de données casse toutes les connexions. |
+| `container_port` | `7860` | Élevé | LangFlow écoute sur 7860 ; un port différent fait échouer toutes les sondes de santé. |
+| `enable_iap` | uniquement lorsque l'authentification de l'API n'est pas nécessaire depuis l'extérieur | Élevé | IAP place la connexion Google devant l'ensemble du service, y compris son API programmatique. |
+| `container_resources.memory_limit` | ≥ `2Gi` | Élevé | OOMKilled au démarrage confirmé en dessous de 2 GiB — LangFlow charge tous les composants et crée les projets de démarrage avant que le serveur n'écoute ; `1Gi` a tué le pod au moment même où il démarrait. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

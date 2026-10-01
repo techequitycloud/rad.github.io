@@ -322,29 +322,29 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_16` | Critical | Windmill nécessite PostgreSQL 16 ; une version plus ancienne fait échouer le job d'initialisation et la base de données reste non initialisée. |
-| `db_name` / `db_user` | défini une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tous les scripts, flux et l'historique des jobs. |
-| `enable_cloudsql_volume` | `true` | Critical | Windmill se connecte via le socket Unix de l'Auth Proxy ; le désactiver provoque une défaillance immédiate de la base de données et le plantage des conteneurs au démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `cpu_limit` | `2000m` | High | Le mode combiné exécute 3 workers dans le processus ; un CPU insuffisant ralentit toute l'exécution des scripts. Chaque worker nécessite environ 500m. |
-| `memory_limit` | `2Gi` | High | Les workers Windmill exécutent des scripts utilisateur arbitraires ; les arrêts pour manque de mémoire (OOM) en cours d'exécution produisent des échecs silencieux dans l'interface. |
-| `min_instance_count` | `0` (par défaut, mise à l'échelle à zéro) | Medium | Passez-la à `1` pour garder une instance active et éviter les démarrages à froid pour les webhooks et les flux planifiés ; augmente le coût de base. |
-| `cpu_always_allocated` | `false` (par défaut, démarrage à froid « coût d'abord ») | Medium | Les jobs planifiés et les exécutions en file d'attente sont différés jusqu'à ce qu'une requête réveille le worker ; externalisez-les avec Cloud Scheduler, ou définissez `true` + `min_instance_count >= 1` pour un fonctionnement continu. |
-| `service_url` / `BASE_URL` | URL Cloud Run ou domaine personnalisé | High | Une valeur vide ou incorrecte casse les callbacks OAuth, les points de terminaison de webhook et les liens profonds de l'interface Windmill. |
-| `execution_environment` | `gen2` | High | Gen1 ne prend pas en charge les montages GCS Fuse ; requis lorsque `gcs_volumes` est utilisé. |
-| `enable_vpc_sc` | `false` sauf si nécessaire | High | Nécessite un `organization_id` explicite ; sans lui, VPC-SC est ignoré silencieusement, ce qui donne une fausse impression de sécurité périmétrique. |
-| `enable_redis` | `false` pour une instance unique, `true` pour plusieurs | Medium | Sans Redis, chaque instance ne traite que sa propre file d'attente, ce qui peut entraîner des duplications ou des famines de jobs. |
-| `max_instance_count` | `3` | Medium | Au-delà d'une instance sans coordination Redis, un même job peut être pris en charge simultanément par plusieurs workers. |
-| `timeout_seconds` | `300` (à augmenter pour les jobs longs) | Medium | Les jobs Windmill qui dépassent le délai d'expiration des requêtes Cloud Run sont interrompus en cours d'exécution sans erreur explicite. |
-| `backup_schedule` | `0 2 * * *` | Medium | Une chaîne vide désactive les sauvegardes ; Windmill stocke toutes les définitions d'automatisation dans PostgreSQL. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sans ces options, l'interface et l'API Windmill sont accessibles publiquement. |
-| `WINDMILL_SMTP_*` (via les variables d'environnement) | tous les champs définis ensemble | Medium | Une configuration SMTP partielle provoque des échecs silencieux de remise des e-mails, sans erreur à l'exécution. |
-| `enable_auto_password_rotation` | `false` | Medium | Lorsqu'elle est activée, la révision Cloud Run doit être redéployée après la rotation ; sinon elle utilise un mot de passe expiré jusqu'à ce que les connexions échouent. |
+| `database_type` | `POSTGRES_16` | Critique | Windmill nécessite PostgreSQL 16 ; une version plus ancienne fait échouer le job d'initialisation et la base de données reste non initialisée. |
+| `db_name` / `db_user` | défini une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tous les scripts, flux et l'historique des jobs. |
+| `enable_cloudsql_volume` | `true` | Critique | Windmill se connecte via le socket Unix de l'Auth Proxy ; le désactiver provoque une défaillance immédiate de la base de données et le plantage des conteneurs au démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `cpu_limit` | `2000m` | Élevé | Le mode combiné exécute 3 workers dans le processus ; un CPU insuffisant ralentit toute l'exécution des scripts. Chaque worker nécessite environ 500m. |
+| `memory_limit` | `2Gi` | Élevé | Les workers Windmill exécutent des scripts utilisateur arbitraires ; les arrêts pour manque de mémoire (OOM) en cours d'exécution produisent des échecs silencieux dans l'interface. |
+| `min_instance_count` | `0` (par défaut, mise à l'échelle à zéro) | Moyen | Passez-la à `1` pour garder une instance active et éviter les démarrages à froid pour les webhooks et les flux planifiés ; augmente le coût de base. |
+| `cpu_always_allocated` | `false` (par défaut, démarrage à froid « coût d'abord ») | Moyen | Les jobs planifiés et les exécutions en file d'attente sont différés jusqu'à ce qu'une requête réveille le worker ; externalisez-les avec Cloud Scheduler, ou définissez `true` + `min_instance_count >= 1` pour un fonctionnement continu. |
+| `service_url` / `BASE_URL` | URL Cloud Run ou domaine personnalisé | Élevé | Une valeur vide ou incorrecte casse les callbacks OAuth, les points de terminaison de webhook et les liens profonds de l'interface Windmill. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne prend pas en charge les montages GCS Fuse ; requis lorsque `gcs_volumes` est utilisé. |
+| `enable_vpc_sc` | `false` sauf si nécessaire | Élevé | Nécessite un `organization_id` explicite ; sans lui, VPC-SC est ignoré silencieusement, ce qui donne une fausse impression de sécurité périmétrique. |
+| `enable_redis` | `false` pour une instance unique, `true` pour plusieurs | Moyen | Sans Redis, chaque instance ne traite que sa propre file d'attente, ce qui peut entraîner des duplications ou des famines de jobs. |
+| `max_instance_count` | `3` | Moyen | Au-delà d'une instance sans coordination Redis, un même job peut être pris en charge simultanément par plusieurs workers. |
+| `timeout_seconds` | `300` (à augmenter pour les jobs longs) | Moyen | Les jobs Windmill qui dépassent le délai d'expiration des requêtes Cloud Run sont interrompus en cours d'exécution sans erreur explicite. |
+| `backup_schedule` | `0 2 * * *` | Moyen | Une chaîne vide désactive les sauvegardes ; Windmill stocke toutes les définitions d'automatisation dans PostgreSQL. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sans ces options, l'interface et l'API Windmill sont accessibles publiquement. |
+| `WINDMILL_SMTP_*` (via les variables d'environnement) | tous les champs définis ensemble | Moyen | Une configuration SMTP partielle provoque des échecs silencieux de remise des e-mails, sans erreur à l'exécution. |
+| `enable_auto_password_rotation` | `false` | Moyen | Lorsqu'elle est activée, la révision Cloud Run doit être redéployée après la rotation ; sinon elle utilise un mot de passe expiré jusqu'à ce que les connexions échouent. |
 
 ---
 

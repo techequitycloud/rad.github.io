@@ -4,7 +4,7 @@ description: "Préparez la section 3 de l'examen Professional Cloud Architect (P
 ---
 <!-- translated-from: docs/certification/PCA_Section_3_Exploration_Guide.md @ cb682e8 sha256:1063adbc6e3d -->
 
-# Guide de préparation à la certification PCA : Section 3 — Conception pour la sécurité et la conformité (Designing for security and compliance) (~17.5 % de l'examen) {#pca-certification-preparation-guide-section-3--designing-for-security-and-compliance-175-of-the-exam}
+# Guide de préparation à la certification PCA : Section 3 — Conception pour la sécurité et la conformité (Designing for security and compliance) (~17,5 % de l'examen) {#pca-certification-preparation-guide-section-3--designing-for-security-and-compliance-175-of-the-exam}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section3.png" alt="Guide de préparation à la certification PCA : Section 3 — Conception pour la sécurité et la conformité (~17.5 % de l'examen)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 

@@ -222,7 +222,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
   seule fois et écrit dans Secret Manager. Le faire tourner invalide tous les cookies
   de session signés, obligeant chaque utilisateur à se reconnecter. Ne le faites
   tourner que pendant une fenêtre de maintenance planifiée.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness)
   ciblent `/up` — le point de terminaison de santé intégré de Rails, qui renvoie un
   `200` non authentifié dès que l'application est prête. Les sondes s'exécutent sur le
   port 3000 ; comme GKE n'injecte pas `PORT`, `container_port` et le port des sondes
@@ -386,24 +386,24 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `workload_type` `Deployment` avec `stateful_pvc_enabled = true`, des unités `quota_memory_*` non binaires, IAP sans identité autorisée, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Une rotation invalide tous les cookies de session signés — chaque utilisateur est déconnecté. |
-| `enable_nfs` / `stateful_pvc_enabled` | Exactement un des deux activé | Critical | Sans aucun des deux, les documents sont écrits sur le disque éphémère du pod et perdus au redémarrage / au réordonnancement. |
-| `nfs_mount_path` / `stateful_pvc_mount_path` | `/data/docuseal` | Critical | Doit correspondre au `WORKDIR` de DocuSeal ; un chemin différent signifie que les documents sont écrits sur un stockage non persistant. |
-| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base / l'utilisateur et détruit toutes les données. |
-| `container_port` | `3000` | High | GKE n'injecte pas `PORT` ; un port différent fait viser un port mort aux sondes et le pod ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy fournit le chemin en boucle locale qu'attend le point d'entrée ; le désactiver casse la connectivité à la base sur GKE. |
-| `workload_type` | `null` / `StatefulSet` | High | Imposer `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions de signature en plusieurs étapes peuvent être routées vers des pods différents. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| `memory_limit` | `4Gi` | Medium | Le rendu et la signature des PDF sont gourmands en mémoire ; trop réduire expose à des arrêts OOM en charge. |
-| `application_version` | À épingler en production | Medium | `latest` peut récupérer une nouvelle version majeure au redéploiement et appliquer des migrations que vous n'avez pas examinées. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Une rotation invalide tous les cookies de session signés — chaque utilisateur est déconnecté. |
+| `enable_nfs` / `stateful_pvc_enabled` | Exactement un des deux activé | Critique | Sans aucun des deux, les documents sont écrits sur le disque éphémère du pod et perdus au redémarrage / au réordonnancement. |
+| `nfs_mount_path` / `stateful_pvc_mount_path` | `/data/docuseal` | Critique | Doit correspondre au `WORKDIR` de DocuSeal ; un chemin différent signifie que les documents sont écrits sur un stockage non persistant. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base / l'utilisateur et détruit toutes les données. |
+| `container_port` | `3000` | Élevé | GKE n'injecte pas `PORT` ; un port différent fait viser un port mort aux sondes et le pod ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy fournit le chemin en boucle locale qu'attend le point d'entrée ; le désactiver casse la connectivité à la base sur GKE. |
+| `workload_type` | `null` / `StatefulSet` | Élevé | Imposer `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions de signature en plusieurs étapes peuvent être routées vers des pods différents. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| `memory_limit` | `4Gi` | Moyen | Le rendu et la signature des PDF sont gourmands en mémoire ; trop réduire expose à des arrêts OOM en charge. |
+| `application_version` | À épingler en production | Moyen | `latest` peut récupérer une nouvelle version majeure au redéploiement et appliquer des migrations que vous n'avez pas examinées. |
 
 ---
 

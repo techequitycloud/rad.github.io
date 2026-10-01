@@ -429,8 +429,8 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et
@@ -439,17 +439,17 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY` (générée automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et tous les jetons signés (p. ex. les liens de réinitialisation de mot de passe) en cours de validité. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| Chemin de `startup_probe_config` | `/accounts/login/` | Critical | Tandoor n'a pas d'autre point de terminaison de santé non authentifié ; pointer la sonde ailleurs renvoie 401/403 et le pod ne devient jamais Ready. |
-| `service_type` | `LoadBalancer` | High | `ClusterIP` (le bug de copier-coller constaté sur l'ensemble du parc dans de nombreux modules antérieurs) rend une application web interactive injoignable depuis un navigateur. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL. |
-| `DJANGO_SUPERUSER_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager avant la première connexion | Medium | Sans le récupérer, vous ne pouvez pas vous connecter — il n'existe aucun identifiant de repli comme la valeur fixe par défaut de Mealie. |
-| `db_ssl_mode` (`PGSSLMODE`, défini en interne) | `prefer` sur GKE | Low | La boucle locale du sidecar Cloud SQL Auth Proxy est déjà en clair ; la couche Common de ce module définit correctement la valeur par défaut, de sorte que cela ne devrait nécessiter aucune intervention manuelle. |
-| `enable_pod_disruption_budget` | `true` | Medium | La désactivation permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP du LoadBalancer peut changer lors d'un redéploiement, ce qui casse les URL enregistrées en favoris. |
+| `SECRET_KEY` (générée automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et tous les jetons signés (p. ex. les liens de réinitialisation de mot de passe) en cours de validité. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| Chemin de `startup_probe_config` | `/accounts/login/` | Critique | Tandoor n'a pas d'autre point de terminaison de santé non authentifié ; pointer la sonde ailleurs renvoie 401/403 et le pod ne devient jamais Ready. |
+| `service_type` | `LoadBalancer` | Élevé | `ClusterIP` (le bug de copier-coller constaté sur l'ensemble du parc dans de nombreux modules antérieurs) rend une application web interactive injoignable depuis un navigateur. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL. |
+| `DJANGO_SUPERUSER_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager avant la première connexion | Moyen | Sans le récupérer, vous ne pouvez pas vous connecter — il n'existe aucun identifiant de repli comme la valeur fixe par défaut de Mealie. |
+| `db_ssl_mode` (`PGSSLMODE`, défini en interne) | `prefer` sur GKE | Faible | La boucle locale du sidecar Cloud SQL Auth Proxy est déjà en clair ; la couche Common de ce module définit correctement la valeur par défaut, de sorte que cela ne devrait nécessiter aucune intervention manuelle. |
+| `enable_pod_disruption_budget` | `true` | Moyen | La désactivation permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP du LoadBalancer peut changer lors d'un redéploiement, ce qui casse les URL enregistrées en favoris. |
 
 ---
 

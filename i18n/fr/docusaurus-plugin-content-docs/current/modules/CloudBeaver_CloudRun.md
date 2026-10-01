@@ -314,21 +314,21 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages GCS FUSE, IAP sans identités autorisées, une valeur de mémoire hors limites inférieure au plancher de 512Mi de gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket `storage` de l'espace de travail | À conserver d'un redéploiement à l'autre | Critical | Le bucket contient tout l'état de CloudBeaver (base H2 intégrée, connexions, utilisateurs, configuration). Le supprimer ou le remplacer efface tous les paramètres. |
-| `max_instance_count` | `1` | Critical | L'espace de travail est à écrivain unique ; deux instances écrivant simultanément dans le magasin H2 intégré le corrompent. |
-| Assistant de configuration au premier lancement | À terminer immédiatement | High | Il n'y a pas d'administrateur préconfiguré — quiconque atteint l'interface en premier peut s'approprier le compte administrateur. |
-| `ingress_settings` | `internal` (ou équilibreur de charge + IAP) | High | Vaut `all` par défaut — une console d'administration de bases de données est accessible depuis l'Internet public dès l'installation, sauf si vous définissez `internal` ou la placez derrière IAP/Cloud Armor. |
-| `memory_limit` | `1Gi` (≥ 512Mi) | High | CloudBeaver repose sur la JVM ; une mémoire insuffisante provoque des arrêts pour OOM. gen2 refuse les valeurs inférieures à 512Mi au moment du plan. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid lent de la JVM à la première requête après une période d'inactivité. |
-| `application_version` | Épingler un tag en production | Medium | `latest` peut faire changer la version de CloudBeaver d'un build à l'autre ; épinglez-le pour la reproductibilité. |
-| `enable_redis` / `database_type` | Laisser tels quels (désactivé / `NONE`) | Low | CloudBeaver n'utilise ni l'un ni l'autre ; les surcharger n'apporte rien et n'est pas pris en charge ici. |
+| Bucket `storage` de l'espace de travail | À conserver d'un redéploiement à l'autre | Critique | Le bucket contient tout l'état de CloudBeaver (base H2 intégrée, connexions, utilisateurs, configuration). Le supprimer ou le remplacer efface tous les paramètres. |
+| `max_instance_count` | `1` | Critique | L'espace de travail est à écrivain unique ; deux instances écrivant simultanément dans le magasin H2 intégré le corrompent. |
+| Assistant de configuration au premier lancement | À terminer immédiatement | Élevé | Il n'y a pas d'administrateur préconfiguré — quiconque atteint l'interface en premier peut s'approprier le compte administrateur. |
+| `ingress_settings` | `internal` (ou équilibreur de charge + IAP) | Élevé | Vaut `all` par défaut — une console d'administration de bases de données est accessible depuis l'Internet public dès l'installation, sauf si vous définissez `internal` ou la placez derrière IAP/Cloud Armor. |
+| `memory_limit` | `1Gi` (≥ 512Mi) | Élevé | CloudBeaver repose sur la JVM ; une mémoire insuffisante provoque des arrêts pour OOM. gen2 refuse les valeurs inférieures à 512Mi au moment du plan. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid lent de la JVM à la première requête après une période d'inactivité. |
+| `application_version` | Épingler un tag en production | Moyen | `latest` peut faire changer la version de CloudBeaver d'un build à l'autre ; épinglez-le pour la reproductibilité. |
+| `enable_redis` / `database_type` | Laisser tels quels (désactivé / `NONE`) | Faible | CloudBeaver n'utilise ni l'un ni l'autre ; les surcharger n'apporte rien et n'est pas pris en charge ici. |
 
 ---
 

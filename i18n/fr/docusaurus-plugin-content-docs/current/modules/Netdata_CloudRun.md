@@ -308,22 +308,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. En outre, `Netdata_CloudRun` ajoute ses propres gardes : `min_instance_count ≤ max_instance_count`, et `ingress_settings = "all"` est rejeté sauf si `enable_admin_password = true`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ingress_settings` + `enable_admin_password` | `all` + `enable_admin_password = true` par défaut ; utilisez `internal` pour un déploiement réellement verrouillé | Critical | Le tableau de bord/l'API REST n'a pas de connexion intégrée, quelle que soit la valeur de `enable_admin_password` — l'entrée `all` par défaut expose publiquement l'ensemble des métriques de l'hôte, sauf si le service est placé derrière `enable_iap` ou une autre couche d'authentification. La garde du plan ne bloque `all` que *sans* identifiant de mot de passe ; elle ne sécurise pas à elle seule le tableau de bord. |
-| `enable_gcs_storage_volume` (Common) / bucket de données | Conservez le montage GCS FUSE activé | High | Sans le bucket `/var/lib/netdata`, chaque révision démarre avec une base de métriques vide — tout l'historique est perdu au redémarrage. |
-| `max_instance_count` | `1` | High | Dépasser 1 crée des agents indépendants avec des bases de métriques locales distinctes, et non un tableau de bord partagé — des données confuses et non fédérées. |
-| `application_name` | À définir une seule fois | High | Immuable après le premier déploiement ; le renommer recrée le service, le secret et le bucket. |
-| `container_port` | `19999` | High | Netdata n'écoute que sur 19999 ; changer le port sans changer `NETDATA_LISTENER_PORT` casse la sonde de démarrage. |
-| `execution_environment` | `gen2` | High | GCS FUSE pour `/var/lib/netdata` exige gen2 ; gen1 ne peut pas le monter. |
-| `enable_iap` | À activer en cas d'exposition externe | High | Un équilibreur de charge externe sans IAP (ou autre couche d'authentification) laisse le tableau de bord non authentifié accessible. |
-| `memory_limit` | `1Gi` (à augmenter pour de nombreuses collections) | Medium | Une mémoire sous-dimensionnée peut provoquer un OOM de l'agent lors de la supervision d'un grand nombre de graphiques. |
-| `application_version` | Épinglez un tag en production | Medium | `latest` suit `v2.2.6` au moment du build ; épinglez-le pour maîtriser les mises à niveau. |
+| `ingress_settings` + `enable_admin_password` | `all` + `enable_admin_password = true` par défaut ; utilisez `internal` pour un déploiement réellement verrouillé | Critique | Le tableau de bord/l'API REST n'a pas de connexion intégrée, quelle que soit la valeur de `enable_admin_password` — l'entrée `all` par défaut expose publiquement l'ensemble des métriques de l'hôte, sauf si le service est placé derrière `enable_iap` ou une autre couche d'authentification. La garde du plan ne bloque `all` que *sans* identifiant de mot de passe ; elle ne sécurise pas à elle seule le tableau de bord. |
+| `enable_gcs_storage_volume` (Common) / bucket de données | Conservez le montage GCS FUSE activé | Élevé | Sans le bucket `/var/lib/netdata`, chaque révision démarre avec une base de métriques vide — tout l'historique est perdu au redémarrage. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 crée des agents indépendants avec des bases de métriques locales distinctes, et non un tableau de bord partagé — des données confuses et non fédérées. |
+| `application_name` | À définir une seule fois | Élevé | Immuable après le premier déploiement ; le renommer recrée le service, le secret et le bucket. |
+| `container_port` | `19999` | Élevé | Netdata n'écoute que sur 19999 ; changer le port sans changer `NETDATA_LISTENER_PORT` casse la sonde de démarrage. |
+| `execution_environment` | `gen2` | Élevé | GCS FUSE pour `/var/lib/netdata` exige gen2 ; gen1 ne peut pas le monter. |
+| `enable_iap` | À activer en cas d'exposition externe | Élevé | Un équilibreur de charge externe sans IAP (ou autre couche d'authentification) laisse le tableau de bord non authentifié accessible. |
+| `memory_limit` | `1Gi` (à augmenter pour de nombreuses collections) | Moyen | Une mémoire sous-dimensionnée peut provoquer un OOM de l'agent lors de la supervision d'un grand nombre de graphiques. |
+| `application_version` | Épinglez un tag en production | Moyen | `latest` suit `v2.2.6` au moment du build ; épinglez-le pour maîtriser les mises à niveau. |
 
 ---
 

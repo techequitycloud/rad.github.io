@@ -61,7 +61,7 @@ export REGION="us-central1"          # the region you deploy into
 
 2. La plateforme provisionne le service Cloud Run (port 3000, 1 vCPU / 1 GiB,
    mise à l'échelle jusqu'à zéro), une base de données Cloud SQL (PostgreSQL 15) avec ses
-   secrets Secret Manager, Redis pour la collaboration en temps réel et les files de tâches (co-hébergé sur la VM
+   secrets Secret Manager, Redis pour la collaboration en temps réel et les files de jobs (co-hébergé sur la VM
    du serveur NFS par défaut), un volume NFS monté sur `/app/data/storage` pour les
    pièces jointes téléversées, un bucket de données GCS et un `APP_SECRET` généré automatiquement. Elle construit
    l'image de conteneur et exécute un job unique d'initialisation de la base de données. Les premiers déploiements

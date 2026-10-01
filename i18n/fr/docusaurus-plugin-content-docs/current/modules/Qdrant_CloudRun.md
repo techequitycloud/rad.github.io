@@ -414,28 +414,28 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / interruption / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_api_key` | `true` (tout déploiement externe) | Critical | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
-| `ingress_settings` | `internal` (valeur par défaut) | Critical | Définir `"all"` sans `enable_api_key = true` est bloqué au moment du plan ; le faire exposerait Qdrant à l'Internet public. |
-| `application_name` | à définir une seule fois | Critical | Immuable après le premier déploiement ; le modifier recrée le stockage et fait perdre toutes les collections. |
-| `max_instance_count` | `1` | High | Plusieurs instances écrivant sur le même chemin GCS FUSE corrompent les collections — Qdrant est un stockage à rédacteur unique. |
-| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | High | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs du conteneur à chaque chargement d'une grande collection depuis GCS. |
-| `memory_limit` | ≥ `4Gi` en production | High | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index depuis GCS. |
-| `execution_environment` | `gen2` (valeur par défaut) | High | GCS FUSE exige Gen2 ; les déploiements Gen1 avec `enable_nfs = true` échouent au moment du plan. |
-| `application_version` | épingler une version semver en production | Medium | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis GCS à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
-| `timeout_seconds` | `300` | Medium | Les grandes recherches ANN, les upserts par lots ou les opérations de snapshot peuvent dépasser la valeur par défaut — augmentez-la à `600` ou plus pour les charges lourdes. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | High | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant du réseau autorisé. |
-| `secret_propagation_delay` | `30` | Medium | Dans les grands projets, la réplication Secret Manager peut dépasser 30 s ; augmentez à `60` pour éviter de lire un secret de clé d'API vide. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | laisser les valeurs par défaut | Low | Inertes — `main.tf` désactive Redis en dur, quelles que soient ces valeurs. Les définir n'a aucun effet et ne signale pas une mauvaise configuration. |
-| `database_type` / `sql_instance_name` et les autres variables de base de données du Groupe 12 | laisser les valeurs par défaut | Low | Inertes pour Qdrant — `Qdrant_Common` ne transmet jamais d'identifiants de base de données au conteneur ; les modifier ne crée donc aucune connexion de base de données utilisable. |
-| `container_image` / `container_image_source` / `container_build_config` / `container_resources` | laisser les valeurs par défaut | Low | Inertes — `Qdrant_Common` fixe l'image réelle, la source de build et le profil de ressources. |
+| `enable_api_key` | `true` (tout déploiement externe) | Critique | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
+| `ingress_settings` | `internal` (valeur par défaut) | Critique | Définir `"all"` sans `enable_api_key = true` est bloqué au moment du plan ; le faire exposerait Qdrant à l'Internet public. |
+| `application_name` | à définir une seule fois | Critique | Immuable après le premier déploiement ; le modifier recrée le stockage et fait perdre toutes les collections. |
+| `max_instance_count` | `1` | Élevé | Plusieurs instances écrivant sur le même chemin GCS FUSE corrompent les collections — Qdrant est un stockage à rédacteur unique. |
+| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | Élevé | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs du conteneur à chaque chargement d'une grande collection depuis GCS. |
+| `memory_limit` | ≥ `4Gi` en production | Élevé | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index depuis GCS. |
+| `execution_environment` | `gen2` (valeur par défaut) | Élevé | GCS FUSE exige Gen2 ; les déploiements Gen1 avec `enable_nfs = true` échouent au moment du plan. |
+| `application_version` | épingler une version semver en production | Moyen | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis GCS à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
+| `timeout_seconds` | `300` | Moyen | Les grandes recherches ANN, les upserts par lots ou les opérations de snapshot peuvent dépasser la valeur par défaut — augmentez-la à `600` ou plus pour les charges lourdes. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | Élevé | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant du réseau autorisé. |
+| `secret_propagation_delay` | `30` | Moyen | Dans les grands projets, la réplication Secret Manager peut dépasser 30 s ; augmentez à `60` pour éviter de lire un secret de clé d'API vide. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | laisser les valeurs par défaut | Faible | Inertes — `main.tf` désactive Redis en dur, quelles que soient ces valeurs. Les définir n'a aucun effet et ne signale pas une mauvaise configuration. |
+| `database_type` / `sql_instance_name` et les autres variables de base de données du Groupe 12 | laisser les valeurs par défaut | Faible | Inertes pour Qdrant — `Qdrant_Common` ne transmet jamais d'identifiants de base de données au conteneur ; les modifier ne crée donc aucune connexion de base de données utilisable. |
+| `container_image` / `container_image_source` / `container_build_config` / `container_resources` | laisser les valeurs par défaut | Faible | Inertes — `Qdrant_Common` fixe l'image réelle, la source de build et le profil de ressources. |
 
 ---
 

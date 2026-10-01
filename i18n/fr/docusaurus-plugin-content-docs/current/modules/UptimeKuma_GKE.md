@@ -306,8 +306,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -320,16 +320,16 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | Le désactiver supprime l'unique couche de persistance — la base de données SQLite intégrée (tous les moniteurs, l'historique et le compte administrateur) devient éphémère et est perdue à chaque recréation de pod. |
-| `nfs_mount_path` | `/app/data` | Critical | Le modifier éloigne du volume persistant le chemin de données codé en dur d'Uptime Kuma ; l'application écrit SQLite dans un chemin qui n'est pas réellement le partage NFS monté. |
-| `max_instance_count` | `1` | High | SQLite est à écrivain unique ; exécuter plus d'un réplica sur le même fichier de base de données monté via NFS expose à des conflits de verrouillage ou à une corruption. |
-| `database_type` | `"NONE"` | Low | Uptime Kuma l'ignore — il ne se connecte jamais à Cloud SQL — mais le modifier provisionnera tout de même, via le socle, une instance Cloud SQL inutilisée et facturée. |
-| `container_port` | `3001` | High | Uptime Kuma écoute sur le port 3001 ; diriger le Service ou les sondes vers un autre port rend la charge de travail inaccessible et fait échouer les sondes. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, les favoris et toute intégration externe de page de statut. |
-| Configuration administrateur initiale | À effectuer immédiatement après le déploiement | Medium | L'assistant de configuration est accessible à quiconque trouve l'URL avant la création d'un compte administrateur — ne laissez pas longtemps une instance fraîchement déployée avec une IP publique sans configuration. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | S'applique aux sauvegardes gérées par le socle ; comme le véritable état d'Uptime Kuma est le fichier SQLite hébergé sur NFS, vérifiez séparément la couverture des sauvegardes NFS/Filestore plutôt que de vous fier uniquement à ce paramètre. |
-| `container_image_source` | `custom` (par défaut) | Critical | Définir `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a provoqué des corruptions de base de données `SQLITE_CORRUPT` constatées. |
+| `enable_nfs` | `true` | Critique | Le désactiver supprime l'unique couche de persistance — la base de données SQLite intégrée (tous les moniteurs, l'historique et le compte administrateur) devient éphémère et est perdue à chaque recréation de pod. |
+| `nfs_mount_path` | `/app/data` | Critique | Le modifier éloigne du volume persistant le chemin de données codé en dur d'Uptime Kuma ; l'application écrit SQLite dans un chemin qui n'est pas réellement le partage NFS monté. |
+| `max_instance_count` | `1` | Élevé | SQLite est à écrivain unique ; exécuter plus d'un réplica sur le même fichier de base de données monté via NFS expose à des conflits de verrouillage ou à une corruption. |
+| `database_type` | `"NONE"` | Faible | Uptime Kuma l'ignore — il ne se connecte jamais à Cloud SQL — mais le modifier provisionnera tout de même, via le socle, une instance Cloud SQL inutilisée et facturée. |
+| `container_port` | `3001` | Élevé | Uptime Kuma écoute sur le port 3001 ; diriger le Service ou les sondes vers un autre port rend la charge de travail inaccessible et fait échouer les sondes. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, les favoris et toute intégration externe de page de statut. |
+| Configuration administrateur initiale | À effectuer immédiatement après le déploiement | Moyen | L'assistant de configuration est accessible à quiconque trouve l'URL avant la création d'un compte administrateur — ne laissez pas longtemps une instance fraîchement déployée avec une IP publique sans configuration. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | S'applique aux sauvegardes gérées par le socle ; comme le véritable état d'Uptime Kuma est le fichier SQLite hébergé sur NFS, vérifiez séparément la couverture des sauvegardes NFS/Filestore plutôt que de vous fier uniquement à ce paramètre. |
+| `container_image_source` | `custom` (par défaut) | Critique | Définir `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a provoqué des corruptions de base de données `SQLITE_CORRUPT` constatées. |
 
 ---
 

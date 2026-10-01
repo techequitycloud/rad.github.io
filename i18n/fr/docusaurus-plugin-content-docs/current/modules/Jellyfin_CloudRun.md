@@ -445,25 +445,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, une valeur hors plage pour `container_port`/`backup_retention_days`/`timeout_seconds`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket GCS `/config` | Ne jamais le supprimer ni le faire pointer ailleurs | Critical | Le bucket `/config` contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface tout le serveur. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `execution_environment` | `gen2` | High | Gen1 ne peut pas monter GCS FUSE, si bien que `/config` n'est jamais persistant. |
-| `min_instance_count` | `1` | High | Les démarrages à froid après une mise à l'échelle à zéro interrompent les flux en cours et rechargent la bibliothèque. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | High | Une mémoire insuffisante provoque l'arrêt du serveur pour manque de mémoire (OOM) pendant l'analyse ou le transcodage d'une grande bibliothèque. |
-| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | High | Le transcodage en direct sur Cloud Run (sans GPU) sature le CPU ; privilégiez la lecture directe. |
-| Transcodage intensif / nombreux flux | Utilisez [Jellyfin_GKE](Jellyfin_GKE.md) | High | La latence de GCS FUSE et les délais de requête de Cloud Run rendent Cloud Run peu adapté à une diffusion soutenue. |
-| `enable_api_key` | Laisser `false` ; actuellement non fonctionnel | Medium | Le secret généré est injecté sous `QDRANT__SERVICE__API_KEY` (un reste de copier-coller de Qdrant_Common) — Jellyfin ne le lit jamais, il ne crée donc qu'un secret Secret Manager orphelin. Créez plutôt les clés d'API dans l'application sous Dashboard → API Keys. |
-| `ingress_settings` | `internal` sauf usage public | Medium | `all` expose le serveur multimédia à Internet — à associer à IAP ou à Cloud Armor. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour récupérer un instantané plus ancien de la bibliothèque. |
-| Assistant de premier démarrage | À terminer immédiatement | Medium | Un serveur non configuré n'a pas d'administrateur ; quiconque l'atteint peut s'approprier le compte administrateur. |
+| Bucket GCS `/config` | Ne jamais le supprimer ni le faire pointer ailleurs | Critique | Le bucket `/config` contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface tout le serveur. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas monter GCS FUSE, si bien que `/config` n'est jamais persistant. |
+| `min_instance_count` | `1` | Élevé | Les démarrages à froid après une mise à l'échelle à zéro interrompent les flux en cours et rechargent la bibliothèque. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Élevé | Une mémoire insuffisante provoque l'arrêt du serveur pour manque de mémoire (OOM) pendant l'analyse ou le transcodage d'une grande bibliothèque. |
+| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | Élevé | Le transcodage en direct sur Cloud Run (sans GPU) sature le CPU ; privilégiez la lecture directe. |
+| Transcodage intensif / nombreux flux | Utilisez [Jellyfin_GKE](Jellyfin_GKE.md) | Élevé | La latence de GCS FUSE et les délais de requête de Cloud Run rendent Cloud Run peu adapté à une diffusion soutenue. |
+| `enable_api_key` | Laisser `false` ; actuellement non fonctionnel | Moyen | Le secret généré est injecté sous `QDRANT__SERVICE__API_KEY` (un reste de copier-coller de Qdrant_Common) — Jellyfin ne le lit jamais, il ne crée donc qu'un secret Secret Manager orphelin. Créez plutôt les clés d'API dans l'application sous Dashboard → API Keys. |
+| `ingress_settings` | `internal` sauf usage public | Moyen | `all` expose le serveur multimédia à Internet — à associer à IAP ou à Cloud Armor. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour récupérer un instantané plus ancien de la bibliothèque. |
+| Assistant de premier démarrage | À terminer immédiatement | Moyen | Un serveur non configuré n'a pas d'administrateur ; quiconque l'atteint peut s'approprier le compte administrateur. |
 
 ---
 

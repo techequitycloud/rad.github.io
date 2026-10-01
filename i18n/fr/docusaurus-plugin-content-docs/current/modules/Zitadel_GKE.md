@@ -48,7 +48,7 @@ de services Google Cloud :
   cela rendrait illisibles les données chiffrées auparavant (secrets client, éléments de clé).
 - **Zitadel exécute lui-même sa configuration initiale et ses migrations.** Le conteneur démarre avec
   `zitadel start-from-init`, qui crée le schéma et applique les migrations de manière
-  idempotente au premier démarrage — il n'y a pas de tâche de migration distincte.
+  idempotente au premier démarrage — il n'y a pas de job de migration distinct.
 - **Un administrateur de première instance est créé au premier démarrage.** L'organisation `ZITADEL` et l'administrateur
   humain `zitadel-admin` sont initialisés avec un mot de passe généré provenant de Secret Manager
   (`PASSWORDCHANGEREQUIRED = false`), ce qui vous permet de vous connecter immédiatement.
@@ -191,7 +191,7 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
   `postgres:15-alpine`. Il se connecte via le sidecar Cloud SQL Auth Proxy et
   crée de manière idempotente la base de données applicative et un rôle doté de `LOGIN CREATEDB
   CREATEROLE`, accorde les privilèges sur la base de données et le schéma `public`, puis signale au
-  proxy de s'arrêter afin que le pod de la tâche se termine. La tâche peut être réexécutée sans risque et ne crée **pas**
+  proxy de s'arrêter afin que le pod du job se termine. Le job peut être réexécuté sans risque et ne crée **pas**
   le schéma de Zitadel — Zitadel s'en charge lui-même.
 - **Configuration initiale + migrations au démarrage.** Le conteneur exécute `zitadel start-from-init`, qui
   crée le schéma et applique les migrations de manière idempotente à chaque démarrage. La mise à niveau de la
@@ -217,9 +217,9 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
   kubectl set env deploy/<service-name> -n "$NAMESPACE" \
     ZITADEL_EXTERNALDOMAIN=zitadel.example.com
   ```
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/debug/healthz` — un
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent `/debug/healthz` — un
   point de terminaison non authentifié qui renvoie `200`. Prévoyez environ 7 à 8 minutes au premier démarrage pour la configuration initiale + les migrations.
-- **Inspecter la configuration en cours d'exécution / les tâches :**
+- **Inspecter la configuration en cours d'exécution / les jobs :**
   ```bash
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -c zitadel -- env | grep ZITADEL_
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -317,7 +317,7 @@ propres à Zitadel ou notables pour lui sont listés ; toutes les autres entrée
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Non utilisé — Zitadel n'a aucune tâche récurrente planifiée par la plateforme. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires (aucun n'est requis pour Zitadel). |
 
@@ -423,7 +423,7 @@ et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD (dépôt, déclencheur, registre). |
@@ -437,28 +437,28 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `database_type` autre que Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage et `quota_memory_*` sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critical | La renouveler rend définitivement illisibles toutes les données chiffrées auparavant (secrets client, éléments de clé). |
-| `database_type` | `POSTGRES_15` | Critical | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté au moment du plan, et un mauvais moteur empêche le démarrage. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et le rôle et détruit toutes les données d'identité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans source de sauvegarde valide fait échouer la tâche d'import. |
-| `ZITADEL_EXTERNALDOMAIN` | Définir sur l'hôte externe | Critical | Sur GKE, il prend par défaut l'URL interne au cluster ; pour l'accès externe, vous devez le définir sur l'hôte de l'IP du LoadBalancer ou sur le domaine personnalisé, faute de quoi l'émetteur OIDC et les redirections de la Console ne fonctionnent plus et toutes les connexions échouent. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver alors qu'une base de données est configurée est bloqué par une garde au moment du plan. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 garantit que l'IdP reste toujours joignable. |
-| `enable_iap` | uniquement pour les consoles privées | High | IAP bloque toutes les requêtes non authentifiées, y compris les clients OIDC/machine et les points de terminaison de jetons. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les sessions de l'interface Console peuvent basculer d'un pod à l'autre en cours de parcours. |
-| `container_port` | `8080` | High | Zitadel écoute sur 8080 ; un port incohérent empêche la charge de travail de passer à l'état Ready. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers sans unité sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `application_version` | Figer une version | High | `latest` correspond aujourd'hui à un tag figé, mais le figer explicitement évite des migrations inattendues lors d'un redéploiement. |
-| `enable_nfs` | `false` (inutilisé) | Low | Activé par défaut alors que Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la rétention réglementaire des données d'identité. |
+| `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critique | La renouveler rend définitivement illisibles toutes les données chiffrées auparavant (secrets client, éléments de clé). |
+| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté au moment du plan, et un mauvais moteur empêche le démarrage. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et le rôle et détruit toutes les données d'identité. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
+| `ZITADEL_EXTERNALDOMAIN` | Définir sur l'hôte externe | Critique | Sur GKE, il prend par défaut l'URL interne au cluster ; pour l'accès externe, vous devez le définir sur l'hôte de l'IP du LoadBalancer ou sur le domaine personnalisé, faute de quoi l'émetteur OIDC et les redirections de la Console ne fonctionnent plus et toutes les connexions échouent. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver alors qu'une base de données est configurée est bloqué par une garde au moment du plan. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 garantit que l'IdP reste toujours joignable. |
+| `enable_iap` | uniquement pour les consoles privées | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les clients OIDC/machine et les points de terminaison de jetons. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions de l'interface Console peuvent basculer d'un pod à l'autre en cours de parcours. |
+| `container_port` | `8080` | Élevé | Zitadel écoute sur 8080 ; un port incohérent empêche la charge de travail de passer à l'état Ready. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers sans unité sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `application_version` | Figer une version | Élevé | `latest` correspond aujourd'hui à un tag figé, mais le figer explicitement évite des migrations inattendues lors d'un redéploiement. |
+| `enable_nfs` | `false` (inutilisé) | Faible | Activé par défaut alors que Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la rétention réglementaire des données d'identité. |
 
 ---
 

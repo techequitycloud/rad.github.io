@@ -235,7 +235,7 @@ Contrairement à Ghost Common (qui ne crée aucun secret), Formbricks Common cr�
 **Secrets toujours créés :**
 - `NEXTAUTH_SECRET` — chaîne aléatoire cryptographique de 32 caractères. Utilisée par NextAuth.js pour signer et chiffrer les jetons de session JWT. Régénérer cette valeur invalide toutes les sessions utilisateur actives.
 - `ENCRYPTION_KEY` — clé de chiffrement des données Formbricks. Sert à chiffrer au repos, au sein de l'application, les données sensibles des réponses aux enquêtes.
-- `CRON_SECRET` — jeton transmis par Cloud Scheduler au point de terminaison cron de Formbricks pour authentifier les tâches planifiées. Doit rester confidentiel.
+- `CRON_SECRET` — jeton transmis par Cloud Scheduler au point de terminaison cron de Formbricks pour authentifier les jobs planifiés. Doit rester confidentiel.
 - `HUB_API_KEY` — clé API pour l'authentification auprès du service Formbricks Hub (utilisé à partir de la v5).
 - `CUBEJS_API_SECRET` — secret de signature JWT pour l'authentification à l'API d'analytique Cube.js.
 - `S3_ACCESS_KEY` — clé d'accès HMAC GCS. Générée à partir du compte de service Cloud Run / GKE et utilisée par le client S3 de Formbricks pour authentifier les requêtes de téléversement de fichiers vers GCS.

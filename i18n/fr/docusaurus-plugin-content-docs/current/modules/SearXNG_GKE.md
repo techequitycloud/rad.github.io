@@ -161,7 +161,7 @@ facultatifs sont disponibles.
 - **Entièrement sans état.** SearXNG récupère les résultats auprès de moteurs de
   recherche externes au moment de la requête et ne stocke rien localement. Aucune
   migration de base de données ni job d'initialisation ne s'exécute.
-- **Aucune tâche de configuration au premier déploiement.** Comme il n'y a pas de base
+- **Aucun job de configuration au premier déploiement.** Comme il n'y a pas de base
   de données, le déploiement se termine sans étape db-init — le pod est prêt dès que le
   conteneur démarre.
 - **`SEARXNG_SECRET` est stable.** La clé de session est générée une seule fois et
@@ -385,7 +385,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -399,23 +399,23 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critical | Si un secret personnalisé propre à chaque pod est injecté à la place, chaque pod signe les cookies avec une clé différente, ce qui invalide les sessions d'un réplica à l'autre. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
-| `database_type` | `NONE` | Critical | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification des pods. |
-| `enable_redis` | `true` pour les déploiements publics | High | Stocke les compteurs du limiteur. Nécessaire mais PAS suffisant — associez-le à `enable_limiter = true`. |
-| `enable_limiter` | `true` pour les déploiements publics | High | Sans lui, le limiteur reste désactivé quelle que soit la configuration de Redis, et une instance invocable publiquement est exposée à un moissonnage qui épuise les quotas des moteurs en amont. |
-| `redis_host` | Adresse IP Memorystore ou valeur explicite | High | Lorsque `enable_redis = true` et `redis_host = ""`, le module utilise `127.0.0.1` par défaut — il n'y a pas de sidecar Redis dans la configuration GKE par défaut, donc la limitation de débit est désactivée sans aucun message. |
-| `vpc_egress_setting` (via le socle) | garantir l'accès sortant à internet | High | SearXNG récupère les résultats auprès de moteurs externes ; l'accès sortant à internet ne doit pas être bloqué. |
-| `application_version` | épinglée (pas `latest`) | Medium | Utiliser `latest` rend les déploiements non reproductibles ; une nouvelle version de SearXNG peut modifier le schéma de configuration. |
-| `enable_cloud_armor` | `true` pour les déploiements publics | Medium | Sans Cloud Armor, le point de terminaison public n'a aucune protection WAF/DDoS. |
-| `enable_iap` | `true` pour un usage strictement interne | Medium | Pour les déploiements de recherche internes, IAP restreint l'accès aux comptes Google authentifiés. |
-| `pdb_min_available` vs `min_instance_count` | garder une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `stateful_pvc_enabled` | `null` | Low | SearXNG est sans état — provisionner un PVC engendre un coût inutile et il reste inutilisé. |
+| `SEARXNG_SECRET` (généré automatiquement) | généré automatiquement | Critique | Si un secret personnalisé propre à chaque pod est injecté à la place, chaque pod signe les cookies avec une clé différente, ce qui invalide les sessions d'un réplica à l'autre. Utilisez toujours la valeur générée automatiquement dans Secret Manager. |
+| `database_type` | `NONE` | Critique | Passer à un véritable type de base de données provisionne une instance Cloud SQL inutilisée et casse le démarrage. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification des pods. |
+| `enable_redis` | `true` pour les déploiements publics | Élevé | Stocke les compteurs du limiteur. Nécessaire mais PAS suffisant — associez-le à `enable_limiter = true`. |
+| `enable_limiter` | `true` pour les déploiements publics | Élevé | Sans lui, le limiteur reste désactivé quelle que soit la configuration de Redis, et une instance invocable publiquement est exposée à un moissonnage qui épuise les quotas des moteurs en amont. |
+| `redis_host` | Adresse IP Memorystore ou valeur explicite | Élevé | Lorsque `enable_redis = true` et `redis_host = ""`, le module utilise `127.0.0.1` par défaut — il n'y a pas de sidecar Redis dans la configuration GKE par défaut, donc la limitation de débit est désactivée sans aucun message. |
+| `vpc_egress_setting` (via le socle) | garantir l'accès sortant à internet | Élevé | SearXNG récupère les résultats auprès de moteurs externes ; l'accès sortant à internet ne doit pas être bloqué. |
+| `application_version` | épinglée (pas `latest`) | Moyen | Utiliser `latest` rend les déploiements non reproductibles ; une nouvelle version de SearXNG peut modifier le schéma de configuration. |
+| `enable_cloud_armor` | `true` pour les déploiements publics | Moyen | Sans Cloud Armor, le point de terminaison public n'a aucune protection WAF/DDoS. |
+| `enable_iap` | `true` pour un usage strictement interne | Moyen | Pour les déploiements de recherche internes, IAP restreint l'accès aux comptes Google authentifiés. |
+| `pdb_min_available` vs `min_instance_count` | garder une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `stateful_pvc_enabled` | `null` | Faible | SearXNG est sans état — provisionner un PVC engendre un coût inutile et il reste inutilisé. |
 
 ---
 

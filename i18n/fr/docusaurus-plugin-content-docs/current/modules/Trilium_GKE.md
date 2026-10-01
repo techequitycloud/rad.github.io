@@ -147,9 +147,9 @@ d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application Trilium {#3-trilium-application-behaviour}
 
-- **Aucune tâche de configuration de base de données au premier déploiement.**
+- **Aucun job de configuration de base de données au premier déploiement.**
   Trilium crée et migre son propre schéma SQLite lors de la première visite web, via
-  son propre assistant de configuration — il n'existe aucune tâche `db-init` gérée
+  son propre assistant de configuration — il n'existe aucun job `db-init` géré
   par Terraform à inspecter.
 - **Écran « Set Password » au premier lancement.** La première visite de l'URL racine
   affiche un formulaire de définition du mot de passe (aucun administrateur ni nom
@@ -251,17 +251,17 @@ comportement et leurs valeurs par défaut standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents. |
-| `stateful_fs_group` / mount_options GCS | `1000` | Critical | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer. |
-| Étape « Set Password » de la première visite | À terminer immédiatement | Critical | Une instance Trilium sans mot de passe défini, exposée sur une IP LoadBalancer publique, est accessible à tous jusqu'à ce que le mot de passe soit défini. |
-| Chemin de `startup_probe` / `liveness_probe` | `/api/health-check` | High | Faire pointer les sondes sur `/` renvoie une redirection 302, que la plupart des contrôles de santé HTTP considèrent comme un échec, ce qui empêche le pod de devenir Ready. |
-| `stateful_pvc_storage_class` | `standard` (HDD) | Medium | `standard-rwo` (SSD) puise inutilement dans le quota serré `SSD_TOTAL_GB` pour une charge de travail sans besoin d'IOPS. |
-| `service_type` | `LoadBalancer` pour un usage normal | Medium | La valeur `ClusterIP` rend l'interface de prise de notes inaccessible depuis un navigateur sans redirection de port (port-forward). |
+| `max_instance_count` | `1` | Critique | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents. |
+| `stateful_fs_group` / mount_options GCS | `1000` | Critique | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer. |
+| Étape « Set Password » de la première visite | À terminer immédiatement | Critique | Une instance Trilium sans mot de passe défini, exposée sur une IP LoadBalancer publique, est accessible à tous jusqu'à ce que le mot de passe soit défini. |
+| Chemin de `startup_probe` / `liveness_probe` | `/api/health-check` | Élevé | Faire pointer les sondes sur `/` renvoie une redirection 302, que la plupart des contrôles de santé HTTP considèrent comme un échec, ce qui empêche le pod de devenir Ready. |
+| `stateful_pvc_storage_class` | `standard` (HDD) | Moyen | `standard-rwo` (SSD) puise inutilement dans le quota serré `SSD_TOTAL_GB` pour une charge de travail sans besoin d'IOPS. |
+| `service_type` | `LoadBalancer` pour un usage normal | Moyen | La valeur `ClusterIP` rend l'interface de prise de notes inaccessible depuis un navigateur sans redirection de port (port-forward). |
 
 ---
 

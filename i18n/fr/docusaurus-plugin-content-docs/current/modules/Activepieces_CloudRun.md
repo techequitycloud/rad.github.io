@@ -44,7 +44,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par
   la couche applicative partagée ; choisir un autre moteur empêche le démarrage.
 - **Le mode de file d'attente en mémoire est la valeur par défaut.**
-  `AP_QUEUE_MODE = MEMORY` signifie que toutes les tâches de workflow s'exécutent
+  `AP_QUEUE_MODE = MEMORY` signifie que tous les jobs de workflow s'exécutent
   dans le processus d'une seule instance. Dépasser une instance nécessite Redis
   (`enable_redis = true`).
 - **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont générés automatiquement** et
@@ -62,7 +62,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   appels externes.
 - **NFS est désactivé par défaut.** Activepieces stocke tout l'état des workflows
   dans PostgreSQL. N'activez NFS que si vous hébergez Redis sur la VM du serveur NFS.
-- **L'extension `pgvector` est installée automatiquement** lors de la tâche de
+- **L'extension `pgvector` est installée automatiquement** lors du job de
   configuration de la base de données au premier déploiement, ce qui active les
   pièces de workflow alimentées par l'IA.
 - **`AP_FRONTEND_URL` et `AP_WEBHOOK_URL_PREFIX` sont définis à partir de l'URL de
@@ -216,8 +216,8 @@ disponibilité et des règles d'alerte en option.
   d'initialisation exécute `db-init.sh` à l'aide de `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de façon idempotente la base de
   données et l'utilisateur de l'application, accorde les privilèges et installe
-  l'extension `pgvector` pour les pièces de flux alimentées par l'IA. La tâche peut
-  être relancée sans risque.
+  l'extension `pgvector` pour les pièces de flux alimentées par l'IA. Le job peut
+  être relancé sans risque.
 - **Migrations de la base de données au démarrage.** Activepieces applique
   automatiquement ses propres migrations de schéma à chaque démarrage ; la mise à
   niveau de la version de l'application applique donc les changements de schéma
@@ -248,7 +248,7 @@ disponibilité et des règles d'alerte en option.
   Prévoyez au moins 7 minutes au premier démarrage (la sonde de démarrage par défaut
   prévoit un délai initial de 120 secondes plus une fenêtre de nouvelles tentatives
   de 300 secondes).
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -377,7 +377,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Non transmise — Activepieces n'a pas de tâches récurrentes planifiées par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -430,7 +430,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -442,29 +442,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AP_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les identifiants de connexion stockés — ils ne peuvent plus être déchiffrés. |
-| `AP_JWT_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions utilisateur actives et oblige tout le monde à se reconnecter immédiatement. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | URL réelle du service | Critical | Une URL incorrecte casse toutes les intégrations de webhooks et les rappels OAuth. |
-| `max_instance_count` | `1` sauf si Redis est activé | High | Dépasser 1 en mode file d'attente en mémoire répartit la file des tâches entre les instances, ce qui provoque des exécutions en double et des exécutions perdues. |
-| `enable_redis` | `true` avant de mettre à l'échelle | High | Sans Redis, chaque instance gère sa propre file d'attente en mémoire — exécution incohérente au-delà d'une instance. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, la chaîne de connexion Redis est vide et l'application ne démarre pas. |
-| `memory_limit` | `2Gi` | High | Des valeurs inférieures à 1 GiB provoquent des arrêts OOM lors d'exécutions de flux concurrentes. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque tous les rappels de webhooks externes. |
-| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | High | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhooks externes. |
-| `AP_SIGN_UP_ENABLED` (injecté automatiquement à `"true"`) | Désactiver après le premier administrateur | High | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` | `1` pour la production | Medium | La mise à l'échelle à zéro (`0`) ajoute des délais de démarrage à froid de 5–15 secondes sur les webhooks entrants après une période d'inactivité. |
-| `min_instance_count` (avec les flux planifiés/déclenchés d'Activepieces activés) | `1` (aucun remplacement par `cpu_always_allocated` n'existe) | High | Les composants planificateur/worker/cron d'Activepieces ne s'exécutent que tant qu'une instance est active ; avec `min_instance_count = 0`, les flux planifiés ne se déclenchent jamais, sans aucun message, et ce module n'expose pas `cpu_always_allocated` pour forcer à la place un CPU toujours alloué. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | Les points de terminaison de webhooks et l'interface d'administration sont accessibles publiquement sans protection WAF. |
+| `AP_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les identifiants de connexion stockés — ils ne peuvent plus être déchiffrés. |
+| `AP_JWT_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions utilisateur actives et oblige tout le monde à se reconnecter immédiatement. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | URL réelle du service | Critique | Une URL incorrecte casse toutes les intégrations de webhooks et les rappels OAuth. |
+| `max_instance_count` | `1` sauf si Redis est activé | Élevé | Dépasser 1 en mode file d'attente en mémoire répartit la file des jobs entre les instances, ce qui provoque des exécutions en double et des exécutions perdues. |
+| `enable_redis` | `true` avant de mettre à l'échelle | Élevé | Sans Redis, chaque instance gère sa propre file d'attente en mémoire — exécution incohérente au-delà d'une instance. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, la chaîne de connexion Redis est vide et l'application ne démarre pas. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1 GiB provoquent des arrêts OOM lors d'exécutions de flux concurrentes. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque tous les rappels de webhooks externes. |
+| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhooks externes. |
+| `AP_SIGN_UP_ENABLED` (injecté automatiquement à `"true"`) | Désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute des délais de démarrage à froid de 5–15 secondes sur les webhooks entrants après une période d'inactivité. |
+| `min_instance_count` (avec les flux planifiés/déclenchés d'Activepieces activés) | `1` (aucun remplacement par `cpu_always_allocated` n'existe) | Élevé | Les composants planificateur/worker/cron d'Activepieces ne s'exécutent que tant qu'une instance est active ; avec `min_instance_count = 0`, les flux planifiés ne se déclenchent jamais, sans aucun message, et ce module n'expose pas `cpu_always_allocated` pour forcer à la place un CPU toujours alloué. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | Les points de terminaison de webhooks et l'interface d'administration sont accessibles publiquement sans protection WAF. |
 
 ---
 

@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Ne génère **aucun secret par défaut**. Ce n'est que lorsque `enable_api_key = true` qu'il crée un jeton API aléatoire de 32 caractères et le stocke dans **Secret Manager** | Injecté en tant que `GOKAPI_API_KEY`, récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `f0rc3/gokapi` dans un Dockerfile de build personnalisé d'une ligne (sans script de point d'entrée personnalisé) ; build via Cloud Build/Kaniko | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose `database_type = "NONE"` — Gokapi n'a aucune base de données externe | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Aucun. Aucune tâche `db-init` n'est injectée ; seules les `initialization_jobs` fournies par l'utilisateur sont acceptées | Sortie `initialization_jobs` (vide sauf si fournie par l'utilisateur) |
+| Amorçage de la base de données | Aucun. Aucun job `db-init` n'est injecté ; seules les `initialization_jobs` fournies par l'utilisateur sont acceptées | Sortie `initialization_jobs` (vide sauf si fournie par l'utilisateur) |
 | Stockage d'objets | Déclare le bucket de données **Cloud Storage** suffixé `storage`, et le monte éventuellement en tant que volume GCS Fuse sur `/data` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Gokapi de référence : chemins des répertoires de configuration/données et port d'écoute fixe | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
@@ -84,7 +84,7 @@ de plateforme.
 
 **Aucun (SQLite sur un stockage monté).** `Gokapi_Common` code en dur
 `database_type = "NONE"` dans la sortie `config` qu'il renvoie au socle.
-Il n'y a ni instance Cloud SQL, ni tâche `db-init`, ni utilisateur/mot de passe
+Il n'y a ni instance Cloud SQL, ni job `db-init`, ni utilisateur/mot de passe
 de base de données d'aucune sorte. Gokapi gère entièrement son état lui-même :
 il écrit une base de données SQLite interne sous `GOKAPI_CONFIG_DIR` et stocke
 les fichiers téléversés sous `GOKAPI_DATA_DIR`, que ce module fait tous deux
@@ -92,9 +92,9 @@ pointer vers des sous-répertoires d'un unique volume monté (voir la
 [section 7](#7-object-storage)).
 
 La sortie `initialization_jobs` est vide par défaut — le `main.tf` de
-`Gokapi_Common` ne transmet des tâches que lorsque l'appelant fournit
-explicitement `var.initialization_jobs` ; aucune tâche d'amorçage de base de
-données par défaut n'est injectée, puisqu'il n'y a aucune base à amorcer. Les
+`Gokapi_Common` ne transmet des jobs que lorsque l'appelant fournit
+explicitement `var.initialization_jobs` ; aucun job d'amorçage de base de
+données par défaut n'est injecté, puisqu'il n'y a aucune base à amorcer. Les
 champs `db_name` et `db_user` de la sortie `config` du module sont codés en dur
 avec des chaînes vides, et `enable_cloudsql_volume = false` / `enable_postgres_extensions =
 false` sont également figés — tous présents uniquement pour satisfaire le schéma

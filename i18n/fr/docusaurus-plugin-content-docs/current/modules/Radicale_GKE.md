@@ -64,10 +64,10 @@ ensemble restreint et ciblé de services Google Cloud :
   concurrent par plusieurs instances, mais il n'a ni base de données ni index à
   préchauffer au démarrage, si bien que la mise à l'échelle à zéro est sûre et
   rapide.
-- **MKCOL fonctionne nativement ici — mais la tâche d'amorçage peut ne pas
+- **MKCOL fonctionne nativement ici — mais le job d'amorçage peut ne pas
   atteindre un PVC.** Le simple Service LoadBalancer L4 de GKE ne présente
   aucune restriction sur MKCOL (contrairement à Cloud Run), mais avec
-  `stateful_pvc_enabled = true`, les collections pré-créées par la tâche
+  `stateful_pvc_enabled = true`, les collections pré-créées par le job
   d'amorçage par défaut peuvent ne pas apparaître — voir le §3.
 
 ---
@@ -122,7 +122,7 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis.
 ## 3. Comportement de l'application Radicale {#3-radicale-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a
-  pas de tâche `db-init` — Radicale n'a aucune base de données à initialiser.
+  pas de job `db-init` — Radicale n'a aucune base de données à initialiser.
 - **`seed-default-collections` s'exécute au moment du déploiement.** Un Job
   d'initialisation ponctuel (`execute_on_apply = true`) écrit un « Default
   Calendar » et un « Default Address Book » directement sur le volume de
@@ -133,13 +133,13 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis.
   cloud écrit à la fois la configuration INI et une entrée htpasswd bcrypt **à
   chaque démarrage du pod**.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/`.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
   ```
 
-### ⚠ MKCOL fonctionne sur GKE — mais vérifiez où aboutissent les écritures de votre tâche d'amorçage {#-mkcol-works-on-gke--but-check-where-your-seed-jobs-writes-land}
+### ⚠ MKCOL fonctionne sur GKE — mais vérifiez où aboutissent les écritures de votre job d'amorçage {#-mkcol-works-on-gke--but-check-where-your-seed-jobs-writes-land}
 
 Contrairement à Cloud Run, le simple Service LoadBalancer L4 de GKE ne
 restreint **pas** la méthode WebDAV `MKCOL` — confirmé en conditions réelles
@@ -149,20 +149,20 @@ pour lesquelles `Radicale_GKE` convient mieux à un usage plus intensif ou de
 production.
 
 Cependant, le job d'initialisation par défaut `seed-default-collections` est
-une tâche du module Common partagée entre Cloud Run et GKE et ne monte que le
-bucket GCS partagé `storage` — elle **ne peut pas** s'attacher au PVC bloc d'un
+un job du module Common partagé entre Cloud Run et GKE et ne monte que le
+bucket GCS partagé `storage` — il **ne peut pas** s'attacher au PVC bloc d'un
 StatefulSet (un Job Kubernetes ne peut pas monter un PVC `ReadWriteOnce` déjà
 détenu par un Pod en cours d'exécution). Ainsi :
 
 - **Avec `stateful_pvc_enabled = true`** (le paramètre recommandé en
-  production) : les écritures de la tâche d'amorçage aboutissent dans le bucket
+  production) : les écritures du job d'amorçage aboutissent dans le bucket
   GCS par ailleurs inutilisé, et le « Default Calendar » / « Default Address
   Book » n'apparaîtront **pas** sur le système de fichiers adossé au PVC du pod
   en cours d'exécution. C'est sans conséquence — créez votre premier agenda via
   un véritable client CalDAV, ou avec `curl -X MKCOL` (dont le fonctionnement
   est confirmé), au lieu de compter sur les collections pré-amorcées.
 - **Sans PVC** (mode Deployment adossé à GCS — qui n'est pas la configuration
-  de production recommandée) : les écritures de la tâche d'amorçage aboutissent
+  de production recommandée) : les écritures du job d'amorçage aboutissent
   dans le même bucket que celui monté par le pod en cours d'exécution, si bien
   que les collections par défaut apparaissent.
 
@@ -239,16 +239,16 @@ leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` en production | Medium | Sans cela, `/var/lib/radicale` est adossé à GCS FUSE — acceptable compte tenu du plafond d'une seule instance, mais ce n'est pas un véritable système de fichiers avec verrouillage POSIX. |
-| S'attendre à des collections par défaut sur un déploiement adossé à un PVC | Créer le premier agenda via un véritable client CalDAV ou `curl -X MKCOL` | Medium | La tâche `seed-default-collections` ne peut pas monter le PVC `ReadWriteOnce` d'un StatefulSet, si bien que ses écritures aboutissent dans le bucket GCS inutilisé — les collections pré-amorcées n'apparaissent silencieusement pas sur le système de fichiers du pod en cours d'exécution. |
-| `max_instance_count` | Laisser à `1` | **Critical** | Le backend de stockage de Radicale n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
-| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Low–Medium | Passer à `standard-rwo`/`premium-rwo` (SSD) consomme le quota `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — le profil d'E/S de Radicale ne nécessite pas les IOPS d'un SSD. |
-| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critical** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
+| `stateful_pvc_enabled` | `true` en production | Moyen | Sans cela, `/var/lib/radicale` est adossé à GCS FUSE — acceptable compte tenu du plafond d'une seule instance, mais ce n'est pas un véritable système de fichiers avec verrouillage POSIX. |
+| S'attendre à des collections par défaut sur un déploiement adossé à un PVC | Créer le premier agenda via un véritable client CalDAV ou `curl -X MKCOL` | Moyen | Le job `seed-default-collections` ne peut pas monter le PVC `ReadWriteOnce` d'un StatefulSet, si bien que ses écritures aboutissent dans le bucket GCS inutilisé — les collections pré-amorcées n'apparaissent silencieusement pas sur le système de fichiers du pod en cours d'exécution. |
+| `max_instance_count` | Laisser à `1` | **Critique** | Le backend de stockage de Radicale n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
+| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Faible–Moyen | Passer à `standard-rwo`/`premium-rwo` (SSD) consomme le quota `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — le profil d'E/S de Radicale ne nécessite pas les IOPS d'un SSD. |
+| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critique** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
 
 ---
 

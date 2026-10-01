@@ -434,8 +434,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les
@@ -445,16 +445,16 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY` (générée automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et tous les jetons signés (p. ex. les liens de réinitialisation de mot de passe) en cours de validité. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| Chemin de `startup_probe` | `/accounts/login/` | Critical | Pointer la sonde vers un point de terminaison authentifié/d'administration renvoie 401/403 et la révision ne devient jamais Ready — Tandoor n'a pas d'autre point de terminaison de santé non authentifié. |
-| Formule du bucket_name de `gcs_volumes` | `gcs-tandoor<tenant_prefix>-data` | High | Un préfixe erroné monte un bucket inexistant, ce qui bloque le pod à l'étape Init. |
-| `DJANGO_SUPERUSER_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager avant la première connexion | Medium | Sans le récupérer, vous ne pouvez pas vous connecter — il n'existe aucun identifiant de repli comme la valeur fixe par défaut de Mealie. |
-| `db_ssl_mode` (`PGSSLMODE`, défini en interne) | `require` sur Cloud Run | High | L'alias `db_host_env_var_name` se résout en l'IP privée brute de Cloud SQL sur Cloud Run (et non en un socket), qui refuse le TCP non chiffré — ce module code `require` en dur dans son câblage, de sorte que cela ne devrait nécessiter aucune intervention manuelle, mais ne le surchargez pas avec `disable`. |
-| `enable_redis` | `false` sauf si nécessaire | Low | Tandoor n'a pas de worker d'arrière-plan ; Redis n'affecte que le backend de cache de Django. |
-| `ingress_settings` | `all` pour une application publique | Medium | Le définir sur `internal` bloque l'accès depuis le navigateur, sauf s'il est associé à IAP ou à un chemin réseau privé. |
-| `memory_limit` | `1Gi` | High | Confirmé en conditions réelles : Tandoor entre dans une boucle de plantages OOM à 512Mi (workers gunicorn tués par SIGKILL). Gen2 impose aussi son propre minimum de 512Mi, quel que soit le mode de facturation. |
+| `SECRET_KEY` (générée automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et tous les jetons signés (p. ex. les liens de réinitialisation de mot de passe) en cours de validité. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| Chemin de `startup_probe` | `/accounts/login/` | Critique | Pointer la sonde vers un point de terminaison authentifié/d'administration renvoie 401/403 et la révision ne devient jamais Ready — Tandoor n'a pas d'autre point de terminaison de santé non authentifié. |
+| Formule du bucket_name de `gcs_volumes` | `gcs-tandoor<tenant_prefix>-data` | Élevé | Un préfixe erroné monte un bucket inexistant, ce qui bloque le pod à l'étape Init. |
+| `DJANGO_SUPERUSER_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager avant la première connexion | Moyen | Sans le récupérer, vous ne pouvez pas vous connecter — il n'existe aucun identifiant de repli comme la valeur fixe par défaut de Mealie. |
+| `db_ssl_mode` (`PGSSLMODE`, défini en interne) | `require` sur Cloud Run | Élevé | L'alias `db_host_env_var_name` se résout en l'IP privée brute de Cloud SQL sur Cloud Run (et non en un socket), qui refuse le TCP non chiffré — ce module code `require` en dur dans son câblage, de sorte que cela ne devrait nécessiter aucune intervention manuelle, mais ne le surchargez pas avec `disable`. |
+| `enable_redis` | `false` sauf si nécessaire | Faible | Tandoor n'a pas de worker d'arrière-plan ; Redis n'affecte que le backend de cache de Django. |
+| `ingress_settings` | `all` pour une application publique | Moyen | Le définir sur `internal` bloque l'accès depuis le navigateur, sauf s'il est associé à IAP ou à un chemin réseau privé. |
+| `memory_limit` | `1Gi` | Élevé | Confirmé en conditions réelles : Tandoor entre dans une boucle de plantages OOM à 512Mi (workers gunicorn tués par SIGKILL). Gen2 impose aussi son propre minimum de 512Mi, quel que soit le mode de facturation. |
 
 ---
 

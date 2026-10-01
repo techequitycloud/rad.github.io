@@ -375,25 +375,25 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans aucune identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `CALENDSO_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critical | Sa rotation rend indéchiffrables tous les identifiants de calendrier/OAuth stockés — chaque intégration doit être réautorisée. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Le schéma Prisma de Cal.com cible uniquement PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `webapp_url` | URL publique définitive | Critical | Une URL erronée ou non définie est intégrée à chaque lien de réservation/OAuth, et la valeur par défaut de l'image (`localhost:3000`) empêche le serveur de démarrer. |
-| `enable_cloudsql_volume` | `true` | High | Le TCP direct sur IP privée échoue à la vérification du certificat par Prisma face à l'autorité de certification de Cloud SQL — chaque requête renvoie 500. Conservez le socket de l'Auth Proxy. |
-| `memory_limit` | `2Gi` | High | En dessous de 2 GiB, Next.js 16 plante en OOM au démarrage et la révision ne passe jamais à l'état Ready. |
-| `enable_iap` | uniquement pour les instances privées | High | IAP bloque toutes les requêtes non authentifiées — y compris les intégrations et les pages de réservation publiques. |
-| Inscription ouverte | à désactiver pour les instances privées | High | Cal.com auto-hébergé autorise l'inscription en libre-service ; la laisser ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` | `1` pour un usage sensible à la latence | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| Type de `startup_probe` | conserver `TCP` | Medium | Passer en HTTP sur `/` échoue tant que Cal.com ne signale pas une disponibilité complète (base de données + Redis + dépendances), bloquant le déploiement alors que l'application écoute déjà. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `CALENDSO_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critique | Sa rotation rend indéchiffrables tous les identifiants de calendrier/OAuth stockés — chaque intégration doit être réautorisée. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Le schéma Prisma de Cal.com cible uniquement PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `webapp_url` | URL publique définitive | Critique | Une URL erronée ou non définie est intégrée à chaque lien de réservation/OAuth, et la valeur par défaut de l'image (`localhost:3000`) empêche le serveur de démarrer. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le TCP direct sur IP privée échoue à la vérification du certificat par Prisma face à l'autorité de certification de Cloud SQL — chaque requête renvoie 500. Conservez le socket de l'Auth Proxy. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 2 GiB, Next.js 16 plante en OOM au démarrage et la révision ne passe jamais à l'état Ready. |
+| `enable_iap` | uniquement pour les instances privées | Élevé | IAP bloque toutes les requêtes non authentifiées — y compris les intégrations et les pages de réservation publiques. |
+| Inscription ouverte | à désactiver pour les instances privées | Élevé | Cal.com auto-hébergé autorise l'inscription en libre-service ; la laisser ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `min_instance_count` | `1` pour un usage sensible à la latence | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| Type de `startup_probe` | conserver `TCP` | Moyen | Passer en HTTP sur `/` échoue tant que Cal.com ne signale pas une disponibilité complète (base de données + Redis + dépendances), bloquant le déploiement alors que l'application écoute déjà. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

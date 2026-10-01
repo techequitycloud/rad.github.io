@@ -376,28 +376,28 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
-> (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
-> **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
+> **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, un `container_port`/`backup_retention_days` hors plage, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
-| `database_type` | `MYSQL_8_0` | Critical | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `APP_URL` / `SITE_URL` | URL réelle du service/domaine | High | Un hôte erroné casse les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe / d'e-mail. |
-| `enable_nfs` | `true` | High | Le désactiver fait perdre toutes les pièces jointes et les fichiers d'exécution lors du recyclage des conteneurs / du scale-to-zero. |
-| `enable_cloudsql_volume` | `false` (Cloud Run) | High | Forcer le socket sans véritable fichier de socket prive l'application d'hôte TCP — la connexion échoue. |
-| `memory_limit` | `2Gi` (≥512Mi) | High | Une valeur inférieure au plancher gen2 de 512 Mi est rejetée au moment du plan ; une valeur trop basse provoque des arrêts OOM sous charge. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les instances. |
-| `enable_iap` | uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris les intégrations entrantes de type webhook d'e-mail. |
-| `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Medium | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
-| `min_instance_count` | `1` en production | Medium | Le scale-to-zero (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| `application_version` | À fixer en production | Medium | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
+| `database_type` | `MYSQL_8_0` | Critique | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `APP_URL` / `SITE_URL` | URL réelle du service/domaine | Élevé | Un hôte erroné casse les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe / d'e-mail. |
+| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre toutes les pièces jointes et les fichiers d'exécution lors du recyclage des conteneurs / du scale-to-zero. |
+| `enable_cloudsql_volume` | `false` (Cloud Run) | Élevé | Forcer le socket sans véritable fichier de socket prive l'application d'hôte TCP — la connexion échoue. |
+| `memory_limit` | `2Gi` (≥512Mi) | Élevé | Une valeur inférieure au plancher gen2 de 512 Mi est rejetée au moment du plan ; une valeur trop basse provoque des arrêts OOM sous charge. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les instances. |
+| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les intégrations entrantes de type webhook d'e-mail. |
+| `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Moyen | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
+| `min_instance_count` | `1` en production | Moyen | Le scale-to-zero (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| `application_version` | À fixer en production | Moyen | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 

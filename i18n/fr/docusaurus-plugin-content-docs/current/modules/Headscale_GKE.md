@@ -152,7 +152,7 @@ vers Cloud Monitoring.
 
 ## 3. Comportement de l'application Headscale {#3-headscale-application-behaviour}
 
-- **SQLite s'initialise automatiquement au démarrage.** Aucune tâche distincte de
+- **SQLite s'initialise automatiquement au démarrage.** Aucun job distinct de
   configuration de la base de données — au premier démarrage, Headscale crée
   `db.sqlite` sous `/var/lib/headscale` et applique automatiquement ses propres
   migrations de schéma internes.
@@ -295,7 +295,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -309,8 +309,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 7. Pièges et points d'attention {#7-pitfalls--gotchas}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
@@ -320,14 +320,14 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | Conservez `true` (la valeur par défaut) | **Critical si remplacé par `false`** | C'est le paramètre qui offre à la base SQLite de Headscale un véritable verrouillage de fichiers POSIX. Le définir à `false` revient au même volume reposant sur GCS Fuse que `Headscale_CloudRun`, réintroduisant le risque d'erreurs d'écriture SQLite/gcsfuse confirmé en conditions réelles (`BufferedWriteHandler.OutOfOrderError`) que cette variante de plateforme existe précisément pour éviter. Ne le désactivez que si vous avez une raison indépendante solide. |
-| `stateful_pvc_storage_class` | `standard` (HDD, la valeur par défaut) | Medium (coût/quota) | Passer à `standard-rwo`/`premium-rwo` (SSD) puise dans le quota régional `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — les fichiers de Headscale sont petits et n'ont pas besoin d'IOPS élevées. |
-| `max_instance_count` | Laissez `1` (elle est de toute façon codée en dur) | High | La variable est déclarée mais jamais réellement lue par `Headscale_Common` — `config.max_instance_count` est un `1` littéral. La définir plus haut donne la fausse impression qu'une mise à l'échelle horizontale est possible. |
-| `server_url` | Définissez-la une fois, avant d'enregistrer des clients | Critical | Intégrée à l'enregistrement de chaque client. La modifier après l'enregistrement des clients impose de réenregistrer chaque nœud. |
-| `enable_iap` | `false` | Critical | IAP exige une identité Google pour chaque requête. La CLI `tailscale` ne peut pas en présenter, si bien qu'activer IAP bloque tout enregistrement de client et tout le trafic de synchronisation du maillage. |
-| Suppression du PVC/StatefulSet | Ne supprimez jamais tant que des nœuds sont enregistrés | Critical | La clé privée du protocole Noise et l'intégralité du registre des nœuds se trouvent sur le PVC. Sa perte oblige chaque client à se réenregistrer de zéro. Rappel de la règle valable pour tout le catalogue : la mise à zéro ne libère **pas** le PVC — seule sa suppression le fait. |
-| MagicDNS (`dns.magic_dns`) | Laissez `false` à moins de définir aussi un véritable `dns.base_domain` | Medium | Activer MagicDNS sans `base_domain` valide et distinct du domaine de `server_url` entraîne une résolution DNS défaillante pour les clients. |
-| `reserve_static_ip` / `enable_custom_domain` | Conservez `true` (les valeurs par défaut) | Medium | Sans URL stable, une adresse éphémère ou de DNS interne peut changer lors d'un redéploiement, empêchant silencieusement chaque client enregistré de joindre le serveur de coordination. |
+| `stateful_pvc_enabled` | Conservez `true` (la valeur par défaut) | **Critique si remplacé par `false`** | C'est le paramètre qui offre à la base SQLite de Headscale un véritable verrouillage de fichiers POSIX. Le définir à `false` revient au même volume reposant sur GCS Fuse que `Headscale_CloudRun`, réintroduisant le risque d'erreurs d'écriture SQLite/gcsfuse confirmé en conditions réelles (`BufferedWriteHandler.OutOfOrderError`) que cette variante de plateforme existe précisément pour éviter. Ne le désactivez que si vous avez une raison indépendante solide. |
+| `stateful_pvc_storage_class` | `standard` (HDD, la valeur par défaut) | Moyen (coût/quota) | Passer à `standard-rwo`/`premium-rwo` (SSD) puise dans le quota régional `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — les fichiers de Headscale sont petits et n'ont pas besoin d'IOPS élevées. |
+| `max_instance_count` | Laissez `1` (elle est de toute façon codée en dur) | Élevé | La variable est déclarée mais jamais réellement lue par `Headscale_Common` — `config.max_instance_count` est un `1` littéral. La définir plus haut donne la fausse impression qu'une mise à l'échelle horizontale est possible. |
+| `server_url` | Définissez-la une fois, avant d'enregistrer des clients | Critique | Intégrée à l'enregistrement de chaque client. La modifier après l'enregistrement des clients impose de réenregistrer chaque nœud. |
+| `enable_iap` | `false` | Critique | IAP exige une identité Google pour chaque requête. La CLI `tailscale` ne peut pas en présenter, si bien qu'activer IAP bloque tout enregistrement de client et tout le trafic de synchronisation du maillage. |
+| Suppression du PVC/StatefulSet | Ne supprimez jamais tant que des nœuds sont enregistrés | Critique | La clé privée du protocole Noise et l'intégralité du registre des nœuds se trouvent sur le PVC. Sa perte oblige chaque client à se réenregistrer de zéro. Rappel de la règle valable pour tout le catalogue : la mise à zéro ne libère **pas** le PVC — seule sa suppression le fait. |
+| MagicDNS (`dns.magic_dns`) | Laissez `false` à moins de définir aussi un véritable `dns.base_domain` | Moyen | Activer MagicDNS sans `base_domain` valide et distinct du domaine de `server_url` entraîne une résolution DNS défaillante pour les clients. |
+| `reserve_static_ip` / `enable_custom_domain` | Conservez `true` (les valeurs par défaut) | Moyen | Sans URL stable, une adresse éphémère ou de DNS interne peut changer lors d'un redéploiement, empêchant silencieusement chaque client enregistré de joindre le serveur de coordination. |
 
 ---
 

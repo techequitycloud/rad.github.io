@@ -217,7 +217,7 @@ défaut).
   utilisent Redis comme broker et backend de résultats. Sans Redis, les requêtes
   asynchrones et les rapports planifiés sont indisponibles. Configurez
   `enable_redis = true` et renseignez `redis_host` en production.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent `/health`,
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/health`,
   qui renvoie HTTP 200 lorsque le pool de workers Gunicorn est prêt.
 - **Connexion administrateur.** Les identifiants administrateur sont définis par les
   variables d'environnement `SUPERSET_ADMIN_USERNAME`, `SUPERSET_ADMIN_EMAIL` et
@@ -452,28 +452,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SUPERSET_SECRET_KEY` (généré automatiquement) | immuable après le premier déploiement | Critical | Modifier la clé invalide toutes les sessions actives et rend définitivement illisibles les identifiants de connexion aux bases de données stockés dans les métadonnées de Superset. |
-| `database_type` | `POSTGRES_15` | Critical | Superset nécessite PostgreSQL ; le modifier empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver supprime le sidecar Auth Proxy ; toutes les connexions PostgreSQL échouent. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les tableaux de bord et métadonnées. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont des octets et bloquent toute planification de pods. |
-| `enable_redis` | `true` en production | High | Sans Redis, les workers Celery n'ont pas de broker ; les requêtes asynchrones et les rapports planifiés sont indisponibles. |
-| `redis_host` | à définir explicitement | High | Obligatoire lorsque `enable_redis = true` ; une valeur vide fait échouer les workers Celery au démarrage. |
-| `container_resources.memory_limit` | `2Gi` minimum | High | En dessous de 1 GiB, les workers Gunicorn sont arrêtés pour manque de mémoire (OOM) pendant l'exécution des requêtes. |
-| `container_resources.cpu_limit` | `2000m` | High | En dessous de 1000m, le job de migration app-init peut dépasser sa fenêtre de 30 minutes. |
-| `min_instance_count` | `1` | High | `0` entraîne une mise à zéro ; les requêtes asynchrones soumises pendant le démarrage à froid sont perdues. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, l'état de session Flask est perdu d'une requête à l'autre sur les déploiements à plusieurs réplicas. |
-| `startup_probe_config.failure_threshold` | `12` ou plus | High | Le réduire trop fortement amène GKE à arrêter les pods avant que Superset ait terminé les migrations de la base de données. |
-| `application_version` | fixer une version précise | Medium | `latest` déclenche des mises à niveau non maîtrisées susceptibles d'introduire des changements d'API incompatibles. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sans eux, le formulaire de connexion de Superset est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds. |
+| `SUPERSET_SECRET_KEY` (généré automatiquement) | immuable après le premier déploiement | Critique | Modifier la clé invalide toutes les sessions actives et rend définitivement illisibles les identifiants de connexion aux bases de données stockés dans les métadonnées de Superset. |
+| `database_type` | `POSTGRES_15` | Critique | Superset nécessite PostgreSQL ; le modifier empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver supprime le sidecar Auth Proxy ; toutes les connexions PostgreSQL échouent. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les tableaux de bord et métadonnées. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification de pods. |
+| `enable_redis` | `true` en production | Élevé | Sans Redis, les workers Celery n'ont pas de broker ; les requêtes asynchrones et les rapports planifiés sont indisponibles. |
+| `redis_host` | à définir explicitement | Élevé | Obligatoire lorsque `enable_redis = true` ; une valeur vide fait échouer les workers Celery au démarrage. |
+| `container_resources.memory_limit` | `2Gi` minimum | Élevé | En dessous de 1 GiB, les workers Gunicorn sont arrêtés pour manque de mémoire (OOM) pendant l'exécution des requêtes. |
+| `container_resources.cpu_limit` | `2000m` | Élevé | En dessous de 1000m, le job de migration app-init peut dépasser sa fenêtre de 30 minutes. |
+| `min_instance_count` | `1` | Élevé | `0` entraîne une mise à zéro ; les requêtes asynchrones soumises pendant le démarrage à froid sont perdues. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, l'état de session Flask est perdu d'une requête à l'autre sur les déploiements à plusieurs réplicas. |
+| `startup_probe_config.failure_threshold` | `12` ou plus | Élevé | Le réduire trop fortement amène GKE à arrêter les pods avant que Superset ait terminé les migrations de la base de données. |
+| `application_version` | fixer une version précise | Moyen | `latest` déclenche des mises à niveau non maîtrisées susceptibles d'introduire des changements d'API incompatibles. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sans eux, le formulaire de connexion de Superset est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds. |
 
 ---
 

@@ -486,7 +486,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration exécutées avant la charge de travail. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration exécutés avant la charge de travail. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -502,26 +502,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Sans PVC, tous les index sont stockés dans le système de fichiers éphémère du pod et définitivement perdus à chaque redémarrage, mise à jour progressive ou éviction de nœud. |
-| `stateful_pvc_mount_path` | `/usr/share/elasticsearch/data` | Critical | Doit correspondre à `path.data`. Une incohérence écrit les index sans avertissement dans la couche éphémère — les données sont perdues à chaque redémarrage. |
-| `cluster_name` | défini une seule fois | Critical | Immuable après la première indexation. Un renommage conduit Elasticsearch à rejeter toutes les données du PVC comme étrangères ; une réindexation complète est requise. |
-| `es_java_heap` vs `memory_limit` | heap ≤ `memory_limit / 2` | Critical | Un heap dépassant la moitié de la mémoire du conteneur entre en concurrence avec le cache de pages de Lucene ; des arrêts OOM surviennent sous la charge de recherche. Une précondition au moment du plan l'impose. |
+| `stateful_pvc_enabled` | `true` | Critique | Sans PVC, tous les index sont stockés dans le système de fichiers éphémère du pod et définitivement perdus à chaque redémarrage, mise à jour progressive ou éviction de nœud. |
+| `stateful_pvc_mount_path` | `/usr/share/elasticsearch/data` | Critique | Doit correspondre à `path.data`. Une incohérence écrit les index sans avertissement dans la couche éphémère — les données sont perdues à chaque redémarrage. |
+| `cluster_name` | défini une seule fois | Critique | Immuable après la première indexation. Un renommage conduit Elasticsearch à rejeter toutes les données du PVC comme étrangères ; une réindexation complète est requise. |
+| `es_java_heap` vs `memory_limit` | heap ≤ `memory_limit / 2` | Critique | Un heap dépassant la moitié de la mémoire du conteneur entre en concurrence avec le cache de pages de Lucene ; des arrêts OOM surviennent sous la charge de recherche. Une précondition au moment du plan l'impose. |
 | `stateful_fs_group` | n/a — codé en dur | n/a | Le module transmet toujours `stateful_fs_group = 1000` (UID/GID d'Elasticsearch) à `App_GKE`, quelle que soit cette variable. Ce n'est pas une préoccupation pour l'opérateur ; elle figure ici uniquement parce que la variable existe dans l'interface. |
-| `max_instance_count` | `1` | Critical | L'augmenter sans remplacer `discovery.type` crée des clusters isolés à nœud unique. Imposé au moment du plan. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers nus sont des octets et bloquent immédiatement toute planification. |
-| `enable_xpack_security` | `true` en production | High | Avec `false`, tout appelant capable d'atteindre le port 9200 peut lire, écrire ou supprimer tous les index sans identifiants. |
-| `stateful_pvc_size` | dimensionné avec une marge de 50–100 % | High | Un PVC sous-dimensionné déclenche la protection du seuil « flood-stage » à 95 % de remplissage ; l'index passe en lecture seule. |
-| `stateful_pvc_storage_class` | `standard-rwo` (ou `premium-rwo` en production) | Medium | `standard-rwo` convient aux charges de recherche classiques ; l'indexation vectorielle kNN à haut débit tire parti de `premium-rwo`. La StorageClass ne peut pas être modifiée après la création du PVC. |
-| `memory_limit` | ≥ `2 × es_java_heap` | Critical | Une marge mémoire insuffisante déclenche des arrêts OOM pendant la recherche/l'indexation. |
+| `max_instance_count` | `1` | Critique | L'augmenter sans remplacer `discovery.type` crée des clusters isolés à nœud unique. Imposé au moment du plan. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critique | Les entiers nus sont des octets et bloquent immédiatement toute planification. |
+| `enable_xpack_security` | `true` en production | Élevé | Avec `false`, tout appelant capable d'atteindre le port 9200 peut lire, écrire ou supprimer tous les index sans identifiants. |
+| `stateful_pvc_size` | dimensionné avec une marge de 50–100 % | Élevé | Un PVC sous-dimensionné déclenche la protection du seuil « flood-stage » à 95 % de remplissage ; l'index passe en lecture seule. |
+| `stateful_pvc_storage_class` | `standard-rwo` (ou `premium-rwo` en production) | Moyen | `standard-rwo` convient aux charges de recherche classiques ; l'indexation vectorielle kNN à haut débit tire parti de `premium-rwo`. La StorageClass ne peut pas être modifiée après la création du PVC. |
+| `memory_limit` | ≥ `2 × es_java_heap` | Critique | Une marge mémoire insuffisante déclenche des arrêts OOM pendant la recherche/l'indexation. |
 | `startup_probe_config` / `health_check_config` | n/a — codé en dur en TCP | n/a | Le module déploie toujours des sondes TCP codées en dur, quelle que soit la valeur de ces variables ; une incohérence HTTP/X-Pack ne peut donc pas se produire et il n'y a rien à remplacer. Elles figurent ici uniquement parce que les variables existent dans l'interface. |
-| `enable_image_mirroring` | `true` | Low | Désactiver la mise en miroir télécharge directement depuis le registre d'Elastic ; les limites de débit peuvent provoquer des échecs de déploiement intermittents. |
-| `application_version` | `8.13.4` (ou version verrouillée) | Medium | Les mises à niveau de version majeure (7.x → 8.x) peuvent nécessiter des vérifications de compatibilité des index ; ne mettez pas à niveau sans consulter le guide de migration d'Elasticsearch. |
-| `pdb_min_available` vs `min_instance_count` | marge | Medium | `pdb_min_available = "1"` avec un cluster à un seul pod empêche toute interruption volontaire (par ex. mises à niveau de nœuds) de se dérouler. Passez à 2 pods ou plus, ou acceptez la contrainte. |
+| `enable_image_mirroring` | `true` | Faible | Désactiver la mise en miroir télécharge directement depuis le registre d'Elastic ; les limites de débit peuvent provoquer des échecs de déploiement intermittents. |
+| `application_version` | `8.13.4` (ou version verrouillée) | Moyen | Les mises à niveau de version majeure (7.x → 8.x) peuvent nécessiter des vérifications de compatibilité des index ; ne mettez pas à niveau sans consulter le guide de migration d'Elasticsearch. |
+| `pdb_min_available` vs `min_instance_count` | marge | Moyen | `pdb_min_available = "1"` avec un cluster à un seul pod empêche toute interruption volontaire (par ex. mises à niveau de nœuds) de se dérouler. Passez à 2 pods ou plus, ou acceptez la contrainte. |
 
 ---
 

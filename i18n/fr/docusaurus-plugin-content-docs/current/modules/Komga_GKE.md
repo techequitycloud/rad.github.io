@@ -421,23 +421,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (ne jamais augmenter) | Critical | Plusieurs pods écrivant simultanément dans le même fichier SQLite exposent à une corruption de la base. |
-| Chemin de la sonde de santé | `/actuator/health` | Critical | `/api/v1/actuator/health` exige une authentification (401) — l'utiliser comme chemin de sonde signifie que le pod ne devient jamais Ready alors que Komga est entièrement sain. |
-| `stateful_pvc_enabled` ou `enable_gcs_storage_volume` | Laissez `Komga_Common` basculer automatiquement | Critical | Activer les deux monte deux volumes sur le même chemin `/config` — un conflit de double montage. |
-| `stateful_pvc_storage_class` | `standard-rwo`, remplacé par `standard` en cas de pression sur le SSD | Medium | Les PVC adossés à des SSD consomment le quota serré `SSD_TOTAL_GB` ; une campagne de mise à l'échelle à zéro peut l'épuiser. |
-| Assistant de configuration initiale | À terminer rapidement après le déploiement | High | Un assistant de configuration non réclamé laisse l'instance sans compte administrateur ; la première personne qui atteint l'URL peut se l'approprier. |
-| `min_instance_count` | `1` | Medium | Le redémarrage du pod unique entraîne une latence de démarrage à froid, y compris une reconstruction de l'index Lucene. |
-| `memory_limit` | `1Gi`, à augmenter pour les grandes bibliothèques | Medium | Une mémoire sous-dimensionnée peut provoquer un arrêt OOM lors de l'analyse d'une grande bibliothèque. |
-| `container_image_source` | `prebuilt` | Medium | Passer à `custom` sans Dockerfile fait échouer le build — Komga n'a besoin d'aucun build personnalisé. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
+| `max_instance_count` | `1` (ne jamais augmenter) | Critique | Plusieurs pods écrivant simultanément dans le même fichier SQLite exposent à une corruption de la base. |
+| Chemin de la sonde de santé | `/actuator/health` | Critique | `/api/v1/actuator/health` exige une authentification (401) — l'utiliser comme chemin de sonde signifie que le pod ne devient jamais Ready alors que Komga est entièrement sain. |
+| `stateful_pvc_enabled` ou `enable_gcs_storage_volume` | Laissez `Komga_Common` basculer automatiquement | Critique | Activer les deux monte deux volumes sur le même chemin `/config` — un conflit de double montage. |
+| `stateful_pvc_storage_class` | `standard-rwo`, remplacé par `standard` en cas de pression sur le SSD | Moyen | Les PVC adossés à des SSD consomment le quota serré `SSD_TOTAL_GB` ; une campagne de mise à l'échelle à zéro peut l'épuiser. |
+| Assistant de configuration initiale | À terminer rapidement après le déploiement | Élevé | Un assistant de configuration non réclamé laisse l'instance sans compte administrateur ; la première personne qui atteint l'URL peut se l'approprier. |
+| `min_instance_count` | `1` | Moyen | Le redémarrage du pod unique entraîne une latence de démarrage à froid, y compris une reconstruction de l'index Lucene. |
+| `memory_limit` | `1Gi`, à augmenter pour les grandes bibliothèques | Moyen | Une mémoire sous-dimensionnée peut provoquer un arrêt OOM lors de l'analyse d'une grande bibliothèque. |
+| `container_image_source` | `prebuilt` | Moyen | Passer à `custom` sans Dockerfile fait échouer le build — Komga n'a besoin d'aucun build personnalisé. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
 
 ---
 

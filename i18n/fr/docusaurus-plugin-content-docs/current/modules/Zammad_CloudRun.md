@@ -35,7 +35,7 @@ v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Zammad ne prend pas en charge MySQL |
 | Stockage des pièces jointes | Filestore (NFS) | Pièces jointes des tickets dans `/opt/zammad/storage`, partagées entre toutes les instances |
 | Stockage d'objets | Cloud Storage | Un bucket `zammad-attachments` dédié, toujours provisionné |
-| Cache et file de tâches | Redis | Activé par défaut ; requis pour le pub/sub WebSocket d'ActionCable et pour Sidekiq |
+| Cache et file de jobs | Redis | Activé par défaut ; requis pour le pub/sub WebSocket d'ActionCable et pour Sidekiq |
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
@@ -43,7 +43,7 @@ v2. Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
 - **PostgreSQL 15 est obligatoire.** MySQL n'est pas pris en charge et est rejeté lors du plan.
 - **Redis est obligatoire.** Zammad utilise Redis pour les mises à jour des tickets en
-  temps réel (ActionCable) et le traitement des tâches en arrière-plan (Sidekiq). Sans
+  temps réel (ActionCable) et le traitement des jobs en arrière-plan (Sidekiq). Sans
   lui, Zammad ne démarre pas.
 - **Une image personnalisée est construite via Cloud Build.** `container_image_source = "custom"`
   est la valeur par défaut — Cloud Build enveloppe l'image officielle `zammad/zammad`
@@ -131,13 +131,13 @@ L'environnement d'exécution Gen2 est requis pour les montages NFS.
 
 Consultez [App_CloudRun](App_CloudRun.md) pour le montage NFS, GCS Fuse et CMEK.
 
-### D. Cache Redis et file de tâches {#d-redis-cache-and-job-queue}
+### D. Cache Redis et file de jobs {#d-redis-cache-and-job-queue}
 
 Redis est obligatoire pour Zammad et remplit deux rôles essentiels :
 
 1. **Pub/sub ActionCable** — transmet les mises à jour des tickets en temps réel aux
    agents répartis sur plusieurs instances Cloud Run.
-2. **Sidekiq** — traite les tâches en arrière-plan (envoi d'e-mails, notifications de
+2. **Sidekiq** — traite les jobs en arrière-plan (envoi d'e-mails, notifications de
    SLA, synchronisation LDAP, tâches du planificateur).
 
 Lorsqu'aucun `redis_host` externe n'est configuré et que NFS est activé, l'adresse IP
@@ -220,7 +220,7 @@ disponibilité et des règles d'alerte en option.
   la négociation ActionCable du navigateur n'aboutit jamais. L'interface se rabat
   alors proprement sur l'interrogation périodique (documenté dans
   `Zammad_Common/scripts/entrypoint.sh`). `enable_redis = true` reste obligatoire, car
-  Sidekiq (tâches en arrière-plan — récupération des e-mails, escalades, calculs de
+  Sidekiq (jobs en arrière-plan — récupération des e-mails, escalades, calculs de
   SLA) en dépend, que ActionCable soit joignable ou non.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/`, qui ne
   renvoie HTTP 200 que lorsque Zammad est entièrement initialisé. La sonde de
@@ -374,7 +374,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring ciblant `/` ; définissez `enabled = true` pour le provisionner. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
 
-### Groupe 21 — Cache Redis et file de tâches {#group-21--redis-cache--job-queue}
+### Groupe 21 — Cache Redis et file de jobs {#group-21--redis-cache--job-queue}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -425,31 +425,31 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
-> (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
-> **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
+> **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Zammad requiert PostgreSQL ; MySQL est rejeté lors du plan. |
-| `container_image_source` | `custom` (par défaut) | Critical | Utiliser `prebuilt` sans le point d'entrée personnalisé signifie que la correspondance `DB_*` → `POSTGRESQL_*` n'a pas lieu et que toutes les connexions à la base de données échouent au démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver supprime le socket de l'Auth Proxy ; toutes les connexions à la base de données échouent. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données / l'utilisateur et détruit toutes les données du helpdesk. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans sauvegarde valide fait échouer le job d'import ; l'activer à chaque apply écrase les données en production. |
-| `enable_redis` | `true` | Critical | Sans Redis, ActionCable et Sidekiq ne parviennent pas à s'initialiser ; Zammad ne démarre pas. |
-| `redis_host` | explicite ou adresse IP NFS | Critical | Vide avec NFS désactivé, aucun point de terminaison Redis valide n'existe — Zammad ne démarre pas. |
-| `memory_limit` | `4Gi` | High | En dessous de 2 GiB, Zammad manque de mémoire (OOM) pendant la migration du schéma ou sous charge. |
-| `nfs_mount_path` | `/opt/zammad/storage` | High | Le modifier entraîne l'écriture des pièces jointes sur le stockage éphémère de l'instance ; les pièces jointes NFS existantes deviennent inaccessibles. |
-| `enable_nfs` | `true` | High | Sans NFS, toutes les pièces jointes téléversées sont perdues au redémarrage de l'instance. |
-| `cpu_always_allocated` | `true` en production | High | La valeur par défaut `false` (privilégiant le coût au démarrage à froid) réduit le CPU à ~0 entre les requêtes, ce qui arrête le planificateur Sidekiq intégré au processus (déclencheurs, escalades) et ActionCable. Définissez `true` avec `min_instance_count >= 1` pour un helpdesk de production qui doit traiter en continu les événements temporisés. |
-| `min_instance_count` | `1` | High | `0` (la valeur par défaut) provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
-| ActionCable / port 6042 | non configurable par l'opérateur | Medium | Les mises à jour des tickets en temps réel par WebSocket ne fonctionnent jamais sur Cloud Run, quels que soient les paramètres `enable_redis`/`session` — seul le `container_port` déclaré est joignable, si bien que la négociation ActionCable du navigateur ne peut pas atteindre le port 6042. L'interface se rabat proprement sur l'interrogation périodique ; ne comptez pas sur les notifications push en direct. |
-| `vpc_egress_setting` | `ALL_TRAFFIC` avec Memorystore | High | L'adresse IP privée de Memorystore Redis peut être injoignable avec `PRIVATE_RANGES_ONLY` ; les connexions Redis sont refusées. |
-| `startup_probe.initial_delay_seconds` | `60` (ou plus) | High | Une valeur trop courte provoque des boucles de redémarrage pendant la migration du schéma au premier démarrage. |
-| `max_instance_count` > 1 sans Redis | configurez d'abord Redis | Medium | Plusieurs instances sans Redis provoquent des situations de concurrence sur l'attribution des tickets et une divergence de l'état en temps réel. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Medium | Sinon, l'interface d'administration de Zammad est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `enable_cdn` | désactivé (par défaut) | Medium | Les réponses de l'API de Zammad sont dynamiques ; la mise en cache CDN casse les listes de tickets et les vues en temps réel, sauf si des en-têtes `Cache-Control: no-cache` sont définis. |
+| `database_type` | `POSTGRES_15` | Critique | Zammad requiert PostgreSQL ; MySQL est rejeté lors du plan. |
+| `container_image_source` | `custom` (par défaut) | Critique | Utiliser `prebuilt` sans le point d'entrée personnalisé signifie que la correspondance `DB_*` → `POSTGRESQL_*` n'a pas lieu et que toutes les connexions à la base de données échouent au démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver supprime le socket de l'Auth Proxy ; toutes les connexions à la base de données échouent. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données / l'utilisateur et détruit toutes les données du helpdesk. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer le job d'import ; l'activer à chaque apply écrase les données en production. |
+| `enable_redis` | `true` | Critique | Sans Redis, ActionCable et Sidekiq ne parviennent pas à s'initialiser ; Zammad ne démarre pas. |
+| `redis_host` | explicite ou adresse IP NFS | Critique | Vide avec NFS désactivé, aucun point de terminaison Redis valide n'existe — Zammad ne démarre pas. |
+| `memory_limit` | `4Gi` | Élevé | En dessous de 2 GiB, Zammad manque de mémoire (OOM) pendant la migration du schéma ou sous charge. |
+| `nfs_mount_path` | `/opt/zammad/storage` | Élevé | Le modifier entraîne l'écriture des pièces jointes sur le stockage éphémère de l'instance ; les pièces jointes NFS existantes deviennent inaccessibles. |
+| `enable_nfs` | `true` | Élevé | Sans NFS, toutes les pièces jointes téléversées sont perdues au redémarrage de l'instance. |
+| `cpu_always_allocated` | `true` en production | Élevé | La valeur par défaut `false` (privilégiant le coût au démarrage à froid) réduit le CPU à ~0 entre les requêtes, ce qui arrête le planificateur Sidekiq intégré au processus (déclencheurs, escalades) et ActionCable. Définissez `true` avec `min_instance_count >= 1` pour un helpdesk de production qui doit traiter en continu les événements temporisés. |
+| `min_instance_count` | `1` | Élevé | `0` (la valeur par défaut) provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
+| ActionCable / port 6042 | non configurable par l'opérateur | Moyen | Les mises à jour des tickets en temps réel par WebSocket ne fonctionnent jamais sur Cloud Run, quels que soient les paramètres `enable_redis`/`session` — seul le `container_port` déclaré est joignable, si bien que la négociation ActionCable du navigateur ne peut pas atteindre le port 6042. L'interface se rabat proprement sur l'interrogation périodique ; ne comptez pas sur les notifications push en direct. |
+| `vpc_egress_setting` | `ALL_TRAFFIC` avec Memorystore | Élevé | L'adresse IP privée de Memorystore Redis peut être injoignable avec `PRIVATE_RANGES_ONLY` ; les connexions Redis sont refusées. |
+| `startup_probe.initial_delay_seconds` | `60` (ou plus) | Élevé | Une valeur trop courte provoque des boucles de redémarrage pendant la migration du schéma au premier démarrage. |
+| `max_instance_count` > 1 sans Redis | configurez d'abord Redis | Moyen | Plusieurs instances sans Redis provoquent des situations de concurrence sur l'attribution des tickets et une divergence de l'état en temps réel. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Moyen | Sinon, l'interface d'administration de Zammad est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `enable_cdn` | désactivé (par défaut) | Moyen | Les réponses de l'API de Zammad sont dynamiques ; la mise en cache CDN casse les listes de tickets et les vues en temps réel, sauf si des en-têtes `Cache-Control: no-cache` sont définis. |
 
 ---
 

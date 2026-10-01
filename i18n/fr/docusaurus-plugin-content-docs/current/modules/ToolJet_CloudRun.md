@@ -46,7 +46,7 @@ de services Google Cloud :
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par la
   couche applicative partagée ; choisir un autre moteur empêche le démarrage.
-- **Deux bases de données sont créées.** La tâche `db-init` du premier déploiement
+- **Deux bases de données sont créées.** Le job `db-init` du premier déploiement
   crée la base de métadonnées (`tooljet`) et la seconde « ToolJet Database »
   (`tooljet_db`), et accorde au rôle applicatif partagé l'attribut **`CREATEROLE`**
   (ToolJet crée un rôle par espace de travail pour l'accès PostgREST).
@@ -126,7 +126,7 @@ pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
 ### C. Redis (file d'attente et cache) {#c-redis-queue--cache}
 
 Redis est **activé par défaut** et sert de support aux files BullMQ de ToolJet
-(tâches d'arrière-plan, notifications et éditeur multijoueur). Lorsque `redis_host`
+(jobs d'arrière-plan, notifications et éditeur multijoueur). Lorsque `redis_host`
 est laissé vide et que `enable_nfs = true`, l'IP privée de la VM du serveur NFS est
 injectée comme `REDIS_HOST` ; définissez explicitement `redis_host` pour pointer vers
 une instance Memorystore à la place.
@@ -214,7 +214,7 @@ disponibilité et des règles d'alerte en option.
   via le Cloud SQL Auth Proxy et crée de manière idempotente la base de métadonnées
   et la ToolJet Database, le rôle partagé `CREATEROLE`, accorde `cloudsqlsuperuser`,
   pré-crée `pgcrypto` et réinitialise le schéma `postgrest` pour qu'il appartienne à
-  l'application. La tâche peut être réexécutée sans risque.
+  l'application. Le job peut être réexécuté sans risque.
 - **Les migrations s'exécutent avant le démarrage du serveur.** `cloud-entrypoint.sh`
   exécute d'abord `npm run db:migrate:prod` (TypeORM `migration:run`). Le
   `start:prod` de ToolJet se résume littéralement à `node dist/src/main` et
@@ -237,10 +237,10 @@ disponibilité et des règles d'alerte en option.
   dans le conteneur. Celui-ci reconfigure un schéma `postgrest` à chaque démarrage en
   tant qu'utilisateur de l'application — c'est pourquoi `db-init` réinitialise ce
   schéma pour qu'il appartienne à l'application.
-- **Chemin de santé.** Les sondes de démarrage, d'activité et de disponibilité
+- **Chemin de santé.** Les sondes de démarrage, d'activité et de disponibilité (readiness)
   ciblent `/` — un point de terminaison public et non authentifié. Prévoyez
   plusieurs minutes au premier démarrage pour l'étape de migration.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -370,7 +370,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (les deux bases de données + le rôle `CREATEROLE`). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (les deux bases de données + le rôle `CREATEROLE`). |
 | `cron_jobs` | `[]` | Cloud Scheduler + Cloud Run Jobs planifiés. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -422,7 +422,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -434,29 +434,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `LOCKBOX_MASTER_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les identifiants de sources de données stockés — ils ne peuvent plus être déchiffrés et doivent tous être ressaisis. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
-| `PGRST_JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation casse la couche de requêtes de la ToolJet Database jusqu'à ce que chaque instance redémarre et que PostgREST soit reconfiguré. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| Rôle applicatif `CREATEROLE` (défini par `db-init`) | Laisser tel que provisionné | High | Sans lui, la création d'espaces de travail ToolJet échoue avec `permission denied to create role`. |
-| Migrations de schéma (point d'entrée) | Laisser tel que provisionné | High | Ignorer `db:migrate:prod` laisse la base de métadonnées vide — l'application démarre et répond à la sonde de santé `/`, mais toute action reposant sur la base échoue. |
-| `min_instance_count` | `1` | High | La valeur `0` permet au worker d'arrière-plan intégré au processus d'être réduit à zéro entre les requêtes, ce qui bloque les tâches en file d'attente. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête limite le worker d'arrière-plan entre les requêtes. |
-| `memory_limit` | `4Gi` | High | ToolJet + PostgREST + le worker sous charge peuvent subir un arrêt OOM en dessous d'environ 2 GiB. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque l'interface de l'éditeur et tous les rappels externes des applications. |
-| `enable_redis` | `true` | Medium | Sans Redis, BullMQ passe en mode de repli et les fonctionnalités d'arrière-plan se dégradent. |
-| `redis_host` | `""` (NFS) ou explicite | Medium | Redis activé mais NFS désactivé et aucun hôte défini laisse `REDIS_HOST` vide. |
-| `DISABLE_SIGNUPS` (injecté automatiquement à `"true"`) | Laisser activé après le premier administrateur | High | Ouvrir l'inscription permet à quiconque dispose de l'URL de créer un compte. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface de l'éditeur est accessible publiquement sans protection WAF. |
+| `LOCKBOX_MASTER_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les identifiants de sources de données stockés — ils ne peuvent plus être déchiffrés et doivent tous être ressaisis. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
+| `PGRST_JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation casse la couche de requêtes de la ToolJet Database jusqu'à ce que chaque instance redémarre et que PostgREST soit reconfiguré. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| Rôle applicatif `CREATEROLE` (défini par `db-init`) | Laisser tel que provisionné | Élevé | Sans lui, la création d'espaces de travail ToolJet échoue avec `permission denied to create role`. |
+| Migrations de schéma (point d'entrée) | Laisser tel que provisionné | Élevé | Ignorer `db:migrate:prod` laisse la base de métadonnées vide — l'application démarre et répond à la sonde de santé `/`, mais toute action reposant sur la base échoue. |
+| `min_instance_count` | `1` | Élevé | La valeur `0` permet au worker d'arrière-plan intégré au processus d'être réduit à zéro entre les requêtes, ce qui bloque les jobs en file d'attente. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête limite le worker d'arrière-plan entre les requêtes. |
+| `memory_limit` | `4Gi` | Élevé | ToolJet + PostgREST + le worker sous charge peuvent subir un arrêt OOM en dessous d'environ 2 GiB. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque l'interface de l'éditeur et tous les rappels externes des applications. |
+| `enable_redis` | `true` | Moyen | Sans Redis, BullMQ passe en mode de repli et les fonctionnalités d'arrière-plan se dégradent. |
+| `redis_host` | `""` (NFS) ou explicite | Moyen | Redis activé mais NFS désactivé et aucun hôte défini laisse `REDIS_HOST` vide. |
+| `DISABLE_SIGNUPS` (injecté automatiquement à `"true"`) | Laisser activé après le premier administrateur | Élevé | Ouvrir l'inscription permet à quiconque dispose de l'URL de créer un compte. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface de l'éditeur est accessible publiquement sans protection WAF. |
 
 ---
 

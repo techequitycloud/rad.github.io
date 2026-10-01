@@ -20,12 +20,12 @@ Pour l'infrastructure qui provisionne et exécute réellement Coder, consultez l
 | Image de conteneur | Construit une fine surcouche personnalisée FROM `ghcr.io/coder/coder:<version>` via Cloud Build (image de base mise en miroir dans Artifact Registry) | Sortie `container_image` du déploiement de la plateforme |
 | Point d'entrée personnalisé | Installe `cloud-entrypoint.sh`, qui assemble `CODER_PG_CONNECTION_URL` à partir des variables d'environnement `DB_*` du socle et définit `CODER_ACCESS_URL` avant d'exécuter `coder server` | Comportement de l'application dans les guides des plateformes |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (Coder exige PostgreSQL 13+) | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche `db-init` qui crée la base de données vide et le rôle propriétaire — Coder exécute ses propres migrations de schéma au démarrage | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` qui crée la base de données vide et le rôle propriétaire — Coder exécute ses propres migrations de schéma au démarrage | Sortie `initialization_jobs` |
 | Secrets | **Aucun** — Coder génère lui-même ses clés de signature et les conserve dans PostgreSQL ; la sortie `secret_ids` est vide | Secret Manager ne contient que le mot de passe de la base de données géré par le socle |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Variables d'environnement de base | `CODER_HTTP_ADDRESS=0.0.0.0:3000`, `CODER_TELEMETRY_ENABLE=false`, `CODER_VERBOSE=false` | Environnement du conteneur en cours d'exécution |
 | Contrôles de santé | Valeurs par défaut des sondes de démarrage (`/healthz`, délai de 60s, 30 échecs) et de vivacité (`/healthz`, délai de 60s) | §Observabilité dans les guides des plateformes |
-| Sonde de disponibilité | HTTP `/healthz`, délai initial de 30s, période de 10s, 3 échecs | Appliquée au conteneur en cours d'exécution |
+| Sonde de disponibilité (readiness) | HTTP `/healthz`, délai initial de 30s, période de 10s, 3 échecs | Appliquée au conteneur en cours d'exécution |
 
 ---
 
@@ -54,14 +54,14 @@ kubectl logs -n "$NAMESPACE" deploy/<service-name> --tail=50 | grep -E "cloud-en
 
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
-Coder exige **PostgreSQL 13+** ; le moteur est fixé à `POSTGRES_15` dans `Coder_Common` et MySQL est rejeté par la validation au moment du plan de la variante de plateforme. Lors du déploiement, une tâche ponctuelle `db-init` (`postgres:15-alpine`, `execute_on_apply = true`, délai d'expiration de 600s) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente :
+Coder exige **PostgreSQL 13+** ; le moteur est fixé à `POSTGRES_15` dans `Coder_Common` et MySQL est rejeté par la validation au moment du plan de la variante de plateforme. Lors du déploiement, un job ponctuel `db-init` (`postgres:15-alpine`, `execute_on_apply = true`, délai d'expiration de 600s) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente :
 
 1. Crée le rôle de l'application avec `LOGIN CREATEDB` (ou réinitialise son mot de passe s'il existe).
 2. Crée la base de données (appartenant à `postgres` — le super-utilisateur de Cloud SQL ne peut pas faire `SET ROLE` vers les rôles applicatifs).
 3. Accorde tous les privilèges sur la base de données et sur le schéma `public` au rôle de l'application, puis lui réattribue la propriété du schéma `public` — les migrations de Coder y créent tous les objets.
 4. Envoie un signal d'arrêt `POST /quitquitquit` au side-car Cloud SQL Proxy afin que le pod du Job se termine proprement.
 
-Coder applique lui-même les migrations de schéma à chaque démarrage du serveur ; la tâche ne touche donc jamais au schéma. Pour examiner directement la base de données :
+Coder applique lui-même les migrations de schéma à chaque démarrage du serveur ; le job ne touche donc jamais au schéma. Pour examiner directement la base de données :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"

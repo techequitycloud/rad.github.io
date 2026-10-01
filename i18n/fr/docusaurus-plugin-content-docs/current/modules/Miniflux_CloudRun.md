@@ -408,25 +408,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Miniflux ne prend en charge que PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `db_name` / `db_user` | Défini une fois (`miniflux`) | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les flux et entrées. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
-| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager | High | C'est le seul identifiant de propriétaire créé au premier démarrage ; sans lui, vous ne pouvez pas vous connecter tant que vous ne l'avez pas réinitialisé dans la base de données. |
-| `cpu_always_allocated` + `min_instance_count` | `true` + `1` | High | Passer à `false`/`0` sans collecte externalisée arrête l'actualisation des flux pendant que le service est inactif. |
-| `enable_redis` | `false` | Medium | Redis n'est pas utilisé ; l'activer gaspille des ressources sans rien changer. |
-| `ingress_settings` | `all` | High | `internal` bloque l'interface publique et les clients de lecture de flux externes (API Fever / Google Reader). |
-| `enable_iap` | désactivé sauf si l'interface doit être protégée | Medium | IAP place l'interface/API derrière une connexion Google, ce qui bloque les clients API Fever/Reader qui s'authentifient avec des jetons applicatifs. |
-| `BASE_URL` (env) | URL publique réelle | Medium | Une URL de base obsolète ou erronée produit des liens absolus et des URL d'images de proxy de flux cassés. |
-| `startup_probe.path` | `/` (par défaut) | High | Diriger la sonde vers une page authentifiée renvoie 401/403 et la révision ne devient jamais Ready. |
-| `memory_limit` | `4Gi` (plancher ≥512Mi) | Medium | En dessous du plancher gen2 de 512 Mi, l'apply est rejeté ; Miniflux lui-même est léger. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | Miniflux ne prend en charge que PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `db_name` / `db_user` | Défini une fois (`miniflux`) | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les flux et entrées. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
+| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager | Élevé | C'est le seul identifiant de propriétaire créé au premier démarrage ; sans lui, vous ne pouvez pas vous connecter tant que vous ne l'avez pas réinitialisé dans la base de données. |
+| `cpu_always_allocated` + `min_instance_count` | `true` + `1` | Élevé | Passer à `false`/`0` sans collecte externalisée arrête l'actualisation des flux pendant que le service est inactif. |
+| `enable_redis` | `false` | Moyen | Redis n'est pas utilisé ; l'activer gaspille des ressources sans rien changer. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque l'interface publique et les clients de lecture de flux externes (API Fever / Google Reader). |
+| `enable_iap` | désactivé sauf si l'interface doit être protégée | Moyen | IAP place l'interface/API derrière une connexion Google, ce qui bloque les clients API Fever/Reader qui s'authentifient avec des jetons applicatifs. |
+| `BASE_URL` (env) | URL publique réelle | Moyen | Une URL de base obsolète ou erronée produit des liens absolus et des URL d'images de proxy de flux cassés. |
+| `startup_probe.path` | `/` (par défaut) | Élevé | Diriger la sonde vers une page authentifiée renvoie 401/403 et la révision ne devient jamais Ready. |
+| `memory_limit` | `4Gi` (plancher ≥512Mi) | Moyen | En dessous du plancher gen2 de 512 Mi, l'apply est rejeté ; Miniflux lui-même est léger. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

@@ -107,8 +107,8 @@ Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'éch
 
 OnlyOffice stocke les métadonnées des documents, les versions et l'état de l'application dans une instance
 Cloud SQL for PostgreSQL 15 gérée. Les pods la joignent via le sidecar **Cloud SQL Auth
-Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier déploiement, la
-tâche `db-init` crée le rôle applicatif, la base de données et les droits — le Document
+Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier déploiement, le
+job `db-init` crée le rôle applicatif, la base de données et les droits — le Document
 Server installe ensuite son propre schéma au premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les sauvegardes, les flags et les métriques.
@@ -211,16 +211,16 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 
 ## 3. Comportement de l'application OnlyOffice {#3-onlyoffice-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement, sans tâche de migration distincte.** La tâche `db-init` s'exécute
-  avec `postgres:15-alpine`. Elle résout l'hôte Cloud SQL (sidecar proxy sur
+- **Initialisation de la base de données au premier déploiement, sans job de migration distinct.** Le job `db-init` s'exécute
+  avec `postgres:15-alpine`. Il résout l'hôte Cloud SQL (sidecar proxy sur
   `127.0.0.1`, avec repli sur l'IP privée de l'instance), attend que PostgreSQL soit
   joignable, crée/met à jour le rôle applicatif (`LOGIN CREATEDB`) avec le
   mot de passe généré, crée la base de données applicative (appartenant à `postgres`, car
   le superutilisateur Cloud SQL ne peut pas faire `SET ROLE` vers les rôles applicatifs), accorde tous les
   privilèges sur la base de données et le schéma `public`, puis signale à l'Auth Proxy de
-  s'arrêter afin que le pod de la tâche se termine. Elle ne provisionne que le rôle, la base de données et les droits —
-  le Document Server installe son propre schéma au premier démarrage. La tâche peut être
-  réexécutée sans risque (`execute_on_apply = true`).
+  s'arrêter afin que le pod du job se termine. Il ne provisionne que le rôle, la base de données et les droits —
+  le Document Server installe son propre schéma au premier démarrage. Le job peut être
+  réexécuté sans risque (`execute_on_apply = true`).
 - **Utilisation du secret JWT.** `JWT_ENABLED = "true"`, `JWT_HEADER = "Authorization"`,
   `JWT_IN_BODY = "true"` sont définis par `OnlyOffice_Common` ; la valeur de `JWT_SECRET`
   elle-même est injectée depuis Secret Manager (générée une seule fois, 48 caractères). Chaque
@@ -362,7 +362,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -376,26 +376,26 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` forcé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. OnlyOffice ajoute ses propres gardes (`database_type` limité à PostgreSQL, `enable_redis` obligatoire, couplage `redis_host`/`enable_nfs`). Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par le Document Server. |
-| `enable_redis` | `true` | Critical | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état de session/d'édition ne peut pas être coordonné entre les pods. |
-| `redis_host` / `enable_nfs` | Laisser `redis_host` vide uniquement avec `enable_nfs = true` | Critical | Un `redis_host` vide avec `enable_nfs = false` échoue au moment du plan — aucun hôte Redis ne peut être résolu. |
-| `JWT_SECRET` (généré automatiquement) | Ne jamais le modifier une fois des intégrations en place | Critical | Sa rotation casse toutes les applications hôtes (Nextcloud/ownCloud/etc.) qui intègrent l'éditeur jusqu'à ce qu'elles soient toutes mises à jour avec la nouvelle valeur. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
-| `stateful_pvc_enabled` | `true` | High | Le désactiver (ou forcer `workload_type = "Deployment"` en même temps) expose à des données de cache/d'index corrompues par gcsfuse — ou échoue au moment du plan si c'est forcé. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ou `standard` (HDD) si le quota est serré | Medium | Le SSD puise dans le quota serré `SSD_TOTAL_GB` ; une large campagne d'applications avec état peut l'épuiser — voir [App_GKE](App_GKE.md). |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
-| `container_resources.memory_limit` | `4Gi` | High | La pile embarquée Postgres/client Redis/RabbitMQ/nginx/convertisseurs sous `supervisord` est lourde ; un sous-dimensionnement expose à un OOM au démarrage. |
-| `max_instance_count` | `5` (à ajuster selon la charge) | Medium | La charge de conversion de chaque pod est gourmande en CPU et en mémoire ; une mise à l'échelle trop élevée sans marge expose à une pression sur les nœuds sous Autopilot. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de rappel d'intégration enregistrée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `database_type` | `POSTGRES_15` (ou 13/14) | Critique | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par le Document Server. |
+| `enable_redis` | `true` | Critique | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état de session/d'édition ne peut pas être coordonné entre les pods. |
+| `redis_host` / `enable_nfs` | Laisser `redis_host` vide uniquement avec `enable_nfs = true` | Critique | Un `redis_host` vide avec `enable_nfs = false` échoue au moment du plan — aucun hôte Redis ne peut être résolu. |
+| `JWT_SECRET` (généré automatiquement) | Ne jamais le modifier une fois des intégrations en place | Critique | Sa rotation casse toutes les applications hôtes (Nextcloud/ownCloud/etc.) qui intègrent l'éditeur jusqu'à ce qu'elles soient toutes mises à jour avec la nouvelle valeur. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
+| `stateful_pvc_enabled` | `true` | Élevé | Le désactiver (ou forcer `workload_type = "Deployment"` en même temps) expose à des données de cache/d'index corrompues par gcsfuse — ou échoue au moment du plan si c'est forcé. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ou `standard` (HDD) si le quota est serré | Moyen | Le SSD puise dans le quota serré `SSD_TOTAL_GB` ; une large campagne d'applications avec état peut l'épuiser — voir [App_GKE](App_GKE.md). |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
+| `container_resources.memory_limit` | `4Gi` | Élevé | La pile embarquée Postgres/client Redis/RabbitMQ/nginx/convertisseurs sous `supervisord` est lourde ; un sous-dimensionnement expose à un OOM au démarrage. |
+| `max_instance_count` | `5` (à ajuster selon la charge) | Moyen | La charge de conversion de chaque pod est gourmande en CPU et en mémoire ; une mise à l'échelle trop élevée sans marge expose à une pression sur les nœuds sous Autopilot. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de rappel d'intégration enregistrée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 {/* TODO: verify whether enable_custom_domain=true with an empty application_domains list falls back to a nip.io hostname on the reserved LoadBalancer IP, or leaves the Ingress unconfigured until a domain is set. */}
 

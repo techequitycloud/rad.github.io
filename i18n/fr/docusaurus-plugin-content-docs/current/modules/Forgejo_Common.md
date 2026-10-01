@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Génère `SECRET_KEY` (64 caractères) et `INTERNAL_TOKEN` (64 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement ; récupérables via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `codeberg.org/forgejo/forgejo` avec un point d'entrée de plateforme personnalisé ; build via Cloud Build | Sortie `container_image` / `container_build_config` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme unique moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les privilèges sur le schéma | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les privilèges sur le schéma | Sortie `initialization_jobs` |
 | Stockage d'objets | Ne déclare **aucun** bucket GCS propre à l'application (la sortie `storage_buckets` vaut toujours `[]`) — Forgejo persiste tout sur NFS/Postgres | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Forgejo/Gitea de référence : type de base de données, domaine/URL/port du serveur, verrou d'installation, inscription libre, chemin des données NFS | Comportement de l'application dans les guides de plateforme |
 | Vérifications de santé | Fournit la sonde de démarrage/de vivacité par défaut ciblant `/api/healthz` | §Observabilité dans les guides de plateforme |
@@ -88,12 +88,12 @@ Forgejo exige **PostgreSQL 15** ; le moteur est fixé via `database_type =
 "POSTGRES_15"` et le script `db-init.sh` est entièrement écrit pour
 `psql` — MySQL ou `NONE` ne sont pas pris en charge, même si la liste
 déroulante `database_type` de la plateforme les propose. Lors du premier
-déploiement, une tâche ponctuelle (`db-init`, `postgres:15-alpine`,
+déploiement, un job ponctuel (`db-init`, `postgres:15-alpine`,
 `execute_on_apply = true`, `max_retries = 3`) effectue de manière idempotente
 les opérations suivantes :
 
 1. Installe `curl` s'il est absent (nécessaire sur l'image Alpine sur GKE ; déjà
-   présent dans l'image de tâche Debian d'App_CloudRun),
+   présent dans l'image de job Debian d'App_CloudRun),
 2. Force `DB_HOST=127.0.0.1` lorsque `DB_SSL=false` et que `DB_HOST` n'est pas
    déjà un chemin de socket, afin de garantir que le trafic passe par le
    sidecar Cloud SQL Auth Proxy plutôt que par une simple adresse IP privée,
@@ -115,8 +115,8 @@ les opérations suivantes :
 Ce script n'installe aucune extension Postgres — Forgejo crée et migre son
 propre schéma au premier démarrage du conteneur (voir la
 [section 4](#4-container-image-and-entrypoint)), si bien que rien d'autre qu'une
-base de données vide et attribuée n'est nécessaire. La tâche peut être
-relancée sans risque.
+base de données vide et attribuée n'est nécessaire. Le job peut être
+relancé sans risque.
 
 Inspectez directement la base de données avec :
 

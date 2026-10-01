@@ -30,7 +30,7 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | Secret Redis | Construit l'URL de connexion Redis et la stocke dans **Secret Manager** (lorsque Redis est activé) | Injecté sous forme de variable d'environnement `REDIS` |
 | Image de conteneur | Fixe la version de l'image officielle de Directus et le Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge et définit `DB_CLIENT = "pg"` | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement qui crée la base de données, l'utilisateur, les extensions et les autorisations | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données, l'utilisateur, les extensions et les autorisations | Sortie `initialization_jobs` |
 | Stockage d'objets | Définit `STORAGE_LOCATIONS = "gcs"` et `STORAGE_GCS_DRIVER = "gcs"` afin que tous les téléversements aboutissent dans le bucket GCS | Nom du bucket dans la sortie `storage_buckets` |
 | Indicateurs d'exécution | Injecte `BOOTSTRAP = "true"` et `AUTO_MIGRATE = "true"` afin que les migrations et l'initialisation au premier démarrage s'exécutent automatiquement | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage et de vivacité ciblant `/server/ping` | §Observabilité dans les guides des plateformes |
@@ -69,7 +69,7 @@ gcloud secrets versions access latest --secret=<database_password_secret> --proj
 
 Directus nécessite **PostgreSQL 15** ; le moteur est imposé et MySQL n'est pas pris en charge. `DB_CLIENT = "pg"` est injecté automatiquement — ne le définissez pas via `environment_variables`.
 
-Lors du premier déploiement, une tâche ponctuelle `db-init` s'exécute sur Cloud SQL via l'Auth Proxy et, de manière idempotente :
+Lors du premier déploiement, un job ponctuel `db-init` s'exécute sur Cloud SQL via l'Auth Proxy et, de manière idempotente :
 
 1. crée l'utilisateur de base de données `directus` avec le mot de passe généré,
 2. crée la base de données `directus`,
@@ -77,7 +77,7 @@ Lors du premier déploiement, une tâche ponctuelle `db-init` s'exécute sur Clo
 4. tente d'installer l'extension `postgis` pour la prise en charge géospatiale (sans erreur bloquante si elle n'est pas disponible),
 5. accorde tous les privilèges à l'utilisateur de l'application.
 
-La tâche s'exécute à chaque apply (`execute_on_apply = true`) et peut être relancée sans risque. Inspectez directement la base de données avec :
+Le job s'exécute à chaque apply (`execute_on_apply = true`) et peut être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=directus --project "$PROJECT"

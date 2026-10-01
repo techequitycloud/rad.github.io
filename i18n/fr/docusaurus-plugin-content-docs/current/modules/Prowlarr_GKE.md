@@ -295,18 +295,18 @@ l'exigence d'identifiants IAP et le conflit StatefulSet/`workload_type` avant
 l'apply — mais plusieurs paramètres qui passent la validation ont tout de même une
 valeur par défaut d'apparence erronée ou risquée, à connaître avant de déployer.
 
-> Risque : **Critical** (perte de données / interruption / sécurité) — **High**
-> (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `service_type` | `LoadBalancer` | High | La valeur par défaut héritée est `ClusterIP` — l'interface web de Prowlarr reste injoignable depuis l'extérieur du cluster tant que ce paramètre n'est pas défini explicitement. |
-| Déploiement sur Cloud Run | À éviter — utilisez `Prowlarr_GKE` (la seule variante prise en charge) | Critical | Le processus d'initialisation s6-overlay de l'image ne peut pas s'exécuter dans le bac à sable gVisor de Cloud Run — confirmé par 3 déploiements de diagnostic, tous en échec identique sans aucune sortie du conteneur. Il n'existe aucun correctif de configuration ; un module `Prowlarr_CloudRun` a été construit, testé et retiré précisément pour cette raison. |
-| `stateful_pvc_enabled` | `true` (valeur par défaut) | High | Le désactiver revient à un montage GCS FUSE sur `/config`, qui ne prend pas en charge de manière fiable le verrouillage de fichiers POSIX dont a besoin la base SQLite en mode WAL de Prowlarr — ce catalogue a un historique documenté de corruption par GCS FUSE d'autres applications SQLite en mode WAL. |
-| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Low–Medium | Passer à `standard-rwo`/`premium-rwo` (SSD) puise dans le quota `SSD_TOTAL_GB`, bien plus serré, sans réel bénéfice — le profil d'E/S de fichiers de configuration de Prowlarr n'a pas besoin des IOPS d'un SSD. |
-| `max_instance_count` | Laisser à `1` | Critical | La base SQLite intégrée n'accepte qu'un seul rédacteur ; augmenter cette valeur expose à une corruption de la base de données. |
-| `uptime_check_config.path` | Surcharger à `/ping` si vous activez les tests de disponibilité | Medium | Le `path` par défaut de la variable est un `/api/health` obsolète hérité de la source clonée de ce module — contrairement à `startup_probe`/`liveness_probe`, celle-ci n'est *pas* surchargée ailleurs, si bien qu'un test de disponibilité activé avec le chemin par défaut échouera sur un chemin qui n'existe pas. |
-| Authentification | L'activer depuis Settings → General → Security dans l'interface web après le premier déploiement | High | Prowlarr est livré sans compte administrateur intégré ni secret généré — une instance joignable depuis Internet et non authentifiée est exposée par défaut tant que vous ne l'avez pas configurée. |
+| `service_type` | `LoadBalancer` | Élevé | La valeur par défaut héritée est `ClusterIP` — l'interface web de Prowlarr reste injoignable depuis l'extérieur du cluster tant que ce paramètre n'est pas défini explicitement. |
+| Déploiement sur Cloud Run | À éviter — utilisez `Prowlarr_GKE` (la seule variante prise en charge) | Critique | Le processus d'initialisation s6-overlay de l'image ne peut pas s'exécuter dans le bac à sable gVisor de Cloud Run — confirmé par 3 déploiements de diagnostic, tous en échec identique sans aucune sortie du conteneur. Il n'existe aucun correctif de configuration ; un module `Prowlarr_CloudRun` a été construit, testé et retiré précisément pour cette raison. |
+| `stateful_pvc_enabled` | `true` (valeur par défaut) | Élevé | Le désactiver revient à un montage GCS FUSE sur `/config`, qui ne prend pas en charge de manière fiable le verrouillage de fichiers POSIX dont a besoin la base SQLite en mode WAL de Prowlarr — ce catalogue a un historique documenté de corruption par GCS FUSE d'autres applications SQLite en mode WAL. |
+| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Faible–Moyen | Passer à `standard-rwo`/`premium-rwo` (SSD) puise dans le quota `SSD_TOTAL_GB`, bien plus serré, sans réel bénéfice — le profil d'E/S de fichiers de configuration de Prowlarr n'a pas besoin des IOPS d'un SSD. |
+| `max_instance_count` | Laisser à `1` | Critique | La base SQLite intégrée n'accepte qu'un seul rédacteur ; augmenter cette valeur expose à une corruption de la base de données. |
+| `uptime_check_config.path` | Surcharger à `/ping` si vous activez les tests de disponibilité | Moyen | Le `path` par défaut de la variable est un `/api/health` obsolète hérité de la source clonée de ce module — contrairement à `startup_probe`/`liveness_probe`, celle-ci n'est *pas* surchargée ailleurs, si bien qu'un test de disponibilité activé avec le chemin par défaut échouera sur un chemin qui n'existe pas. |
+| Authentification | L'activer depuis Settings → General → Security dans l'interface web après le premier déploiement | Élevé | Prowlarr est livré sans compte administrateur intégré ni secret généré — une instance joignable depuis Internet et non authentifiée est exposée par défaut tant que vous ne l'avez pas configurée. |
 
 ---
 

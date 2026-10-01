@@ -16,7 +16,7 @@ Ce guide couvre la section 4 de l'examen Professional Cloud Security Engineer. L
 
 ## 4.1 Automatisation de la sécurité de l'infrastructure et des applications (Automating infrastructure and application security) {#41-automating-infrastructure-and-application-security}
 
-> ⏱ ~2.5 h · 💰 faible — minutes Cloud Build + analyses Container Analysis · ⚙️ Prérequis : secure-platform (`enable_binary_authorization`, `enable_vulnerability_scanning`) ; un module d'application avec `enable_cicd_trigger` pour le pipeline complet
+> ⏱ ~2,5 h · 💰 faible — minutes Cloud Build + analyses Container Analysis · ⚙️ Prérequis : secure-platform (`enable_binary_authorization`, `enable_vulnerability_scanning`) ; un module d'application avec `enable_cicd_trigger` pour le pipeline complet
 
 **Pourquoi l'examen s'y intéresse** — La sécurité de la chaîne d'approvisionnement logicielle est très présente à l'examen : détection des vulnérabilités à chaque push, conditionnement des déploiements aux résultats d'analyse, attestations cryptographiques (qui signe, avec quelle clé, vérifiée par qui), modes d'évaluation et d'application de Binary Authorization pour GKE et Cloud Run, durcissement et application automatisés des correctifs aux images de VM et de conteneurs, et détection des écarts de stratégie et de configuration à grande échelle.
 

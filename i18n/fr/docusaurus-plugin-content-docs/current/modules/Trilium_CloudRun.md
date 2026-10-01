@@ -138,9 +138,9 @@ règles d'alerte en option.
 
 ## 3. Comportement de l'application Trilium {#3-trilium-application-behaviour}
 
-- **Aucune tâche de configuration de base de données au premier déploiement.**
+- **Aucun job de configuration de base de données au premier déploiement.**
   Trilium crée et migre son propre schéma SQLite lors de la première visite web, via
-  son propre assistant de configuration — il n'existe aucune tâche `db-init` gérée
+  son propre assistant de configuration — il n'existe aucun job `db-init` géré
   par Terraform à inspecter.
 - **Écran « Set Password » au premier lancement.** La première visite de l'URL racine
   affiche un formulaire de définition du mot de passe (aucun administrateur ni nom
@@ -253,17 +253,17 @@ avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents — aucune protection n'existe contre cela au niveau de la couche de requêtes. |
-| mount_options du bucket de données / de `gcs_volumes` | `uid=1000,gid=1000` | Critical | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer et renvoie une erreur de permission. |
-| Étape « Set Password » de la première visite | À terminer immédiatement | Critical | Une instance Trilium sans mot de passe défini, laissée sur une URL publique, est accessible à tous jusqu'à ce que le mot de passe soit défini. |
-| Chemin de `startup_probe` / `liveness_probe` | `/api/health-check` | High | Faire pointer les sondes sur `/` renvoie une redirection 302, que la plupart des contrôles de santé HTTP considèrent comme un échec, ce qui empêche la révision de devenir Ready. |
-| `ingress_settings` | `internal` pour un usage privé | Medium | `all` (valeur par défaut) rend l'instance (initialement non authentifiée, avant l'étape Set Password) accessible depuis l'internet public. |
-| `memory_limit` | `1Gi` | Low | Trilium est léger ; n'augmentez cette valeur que pour de très grandes collections de notes ou de pièces jointes. |
+| `max_instance_count` | `1` | Critique | L'augmenter expose à une corruption de la base de données SQLite intégrée par des rédacteurs concurrents — aucune protection n'existe contre cela au niveau de la couche de requêtes. |
+| mount_options du bucket de données / de `gcs_volumes` | `uid=1000,gid=1000` | Critique | Un uid/gid incorrect monte le répertoire de données avec root comme propriétaire ; le processus Trilium non root ne parvient pas à démarrer et renvoie une erreur de permission. |
+| Étape « Set Password » de la première visite | À terminer immédiatement | Critique | Une instance Trilium sans mot de passe défini, laissée sur une URL publique, est accessible à tous jusqu'à ce que le mot de passe soit défini. |
+| Chemin de `startup_probe` / `liveness_probe` | `/api/health-check` | Élevé | Faire pointer les sondes sur `/` renvoie une redirection 302, que la plupart des contrôles de santé HTTP considèrent comme un échec, ce qui empêche la révision de devenir Ready. |
+| `ingress_settings` | `internal` pour un usage privé | Moyen | `all` (valeur par défaut) rend l'instance (initialement non authentifiée, avant l'étape Set Password) accessible depuis l'internet public. |
+| `memory_limit` | `1Gi` | Faible | Trilium est léger ; n'augmentez cette valeur que pour de très grandes collections de notes ou de pièces jointes. |
 
 ---
 

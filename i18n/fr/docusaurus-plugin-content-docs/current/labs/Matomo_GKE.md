@@ -187,7 +187,7 @@ export REGION="us-central1"           # the region you deploy into
 6. **Traitement des archives (propre à l'application).** Ce module ne provisionne pas de CronJob
    pour le traitement périodique des archives de Matomo (`console core:archive`) — par défaut, les rapports
    utilisent l'archivage déclenché par le navigateur au sein des requêtes des visiteurs. Pour les sites
-   plus fréquentés, ajoutez une tâche planifiée via le paramètre générique `cron_jobs` (groupe 11)
+   plus fréquentés, ajoutez un job planifié via le paramètre générique `cron_jobs` (groupe 11)
    pointant vers l'image déployée et la commande d'archivage.
 
 ---
@@ -302,7 +302,7 @@ séparément et ne sont pas supprimées ici.
 |---|---|---|
 | 1 — Déployer | Automatisé | Le module déploie la charge de travail GKE, Cloud SQL (MySQL 8.0), le NFS Filestore, le bucket GCS, le secret, et exécute `db-init` |
 | 2 — Accéder et vérifier | Manuel | Se connecter au cluster ; la vérification de santé réussit ; terminer l'installateur web de Matomo et vérifier le suivi |
-| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage, accéder à la base de données, remarque sur la tâche d'archivage |
+| 3 — Exploiter | Manuel | Inspecter la charge de travail, mettre à l'échelle, mettre à jour la version, gérer secrets/stockage, accéder à la base de données, remarque sur le job d'archivage |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité |
 | 5 — Dépanner | Manuel | Diagnostiquer les problèmes de pod, de base de données, de job d'initialisation, de NFS, d'image, de stratégie de déploiement et de Redis |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module |

@@ -28,7 +28,7 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Image de conteneur | Encapsule l'image officielle `binwiederhier/ntfy` avec un script de point d'entrée personnalisé ; build via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | **Aucun** — `database_type = "NONE"`. ntfy n'a pas de base de données externe ; son cache de messages est un fichier SQLite local | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | **Aucun** — aucune tâche `db-init` n'est injectée. `initialization_jobs` est transmis tel quel (vide par défaut) | Sortie `initialization_jobs` |
+| Amorçage de la base de données | **Aucun** — aucun job `db-init` n'est injecté. `initialization_jobs` est transmis tel quel (vide par défaut) | Sortie `initialization_jobs` |
 | Secrets cryptographiques | **Aucun** — `secret_ids` est vide. ntfy n'a besoin d'aucun identifiant au moment du déploiement ; le contrôle d'accès se configure après le déploiement dans le magasin d'utilisateurs/jetons propre à ntfy | — |
 | Stockage d'objets | **Aucun** — `storage_buckets` est vide | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement ntfy de base : adresse d'écoute (`:80`) et chemin du cache SQLite (`NTFY_CACHE_FILE`) | Comportement de l'application dans les guides de plateforme |

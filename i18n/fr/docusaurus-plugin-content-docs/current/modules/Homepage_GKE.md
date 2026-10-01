@@ -310,18 +310,18 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` avec `stateful_pvc_enabled = true` | Conserver `1` | High | Chaque ordinal de pod du StatefulSet reçoit son propre PVC distinct (et non un stockage partagé) — dépasser un réplica en mode PVC en bloc donne à chaque pod une configuration de tableau de bord qui diverge indépendamment, et non une configuration partagée cohérente. |
-| `stateful_pvc_mount_path` / `gcs_volumes` sur `/app/config` | Laisser en place le montage automatique, quel que soit le mode utilisé | **Critical** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid ou à la prochaine replanification du pod — Homepage n'a aucune autre source de vérité. |
-| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Medium | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
-| Chemin de sonde | Laisser `/api/healthcheck` | High | Un chemin de sonde authentifié ou inexistant laisserait le pod durablement en `Ready=False` alors même que l'application a démarré correctement. |
-| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Low | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
-| `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` | Laisser `workload_type` non défini (`null`) | Low | Une validation au moment du plan rejette purement et simplement cette combinaison — un modèle de PVC exige un StatefulSet. |
-| `service_type` | `LoadBalancer`, sauf contrainte de quota | Medium | `ClusterIP` exige `kubectl port-forward` pour l'accès — adapté à un usage interne ou aux projets limités en quota (comme lors de la vérification en conditions réelles de ce module), mais inaccessible depuis un navigateur sans cela. |
+| `max_instance_count` avec `stateful_pvc_enabled = true` | Conserver `1` | Élevé | Chaque ordinal de pod du StatefulSet reçoit son propre PVC distinct (et non un stockage partagé) — dépasser un réplica en mode PVC en bloc donne à chaque pod une configuration de tableau de bord qui diverge indépendamment, et non une configuration partagée cohérente. |
+| `stateful_pvc_mount_path` / `gcs_volumes` sur `/app/config` | Laisser en place le montage automatique, quel que soit le mode utilisé | **Critique** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid ou à la prochaine replanification du pod — Homepage n'a aucune autre source de vérité. |
+| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Moyen | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
+| Chemin de sonde | Laisser `/api/healthcheck` | Élevé | Un chemin de sonde authentifié ou inexistant laisserait le pod durablement en `Ready=False` alors même que l'application a démarré correctement. |
+| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Faible | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
+| `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` | Laisser `workload_type` non défini (`null`) | Faible | Une validation au moment du plan rejette purement et simplement cette combinaison — un modèle de PVC exige un StatefulSet. |
+| `service_type` | `LoadBalancer`, sauf contrainte de quota | Moyen | `ClusterIP` exige `kubectl port-forward` pour l'accès — adapté à un usage interne ou aux projets limités en quota (comme lors de la vérification en conditions réelles de ce module), mais inaccessible depuis un navigateur sans cela. |
 
 ---
 

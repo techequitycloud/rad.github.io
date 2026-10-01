@@ -490,23 +490,23 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `mount_options` GCS FUSE de `/data` | Conserver le correctif `uid=999`/`gid=999` de `PeerTube_Common` | **Critical** | Sans lui, le pod entre dans une boucle de plantages avec `Error: EACCES: permission denied, mkdir '/data/logs'` à chaque redémarrage — un mode de défaillance propre à GKE, absent sur Cloud Run (voir le §3). |
-| `host` (`PEERTUBE_WEBSERVER_HOSTNAME`) | Définir votre domaine réel avant la première utilisation réelle | Critical | Intégré à chaque URI d'acteur/d'objet ActivityPub au moment de sa création ; le modifier une fois que de vrais comptes/vidéos existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
-| `enable_redis` | `true` (ne jamais désactiver) | Critical | PeerTube n'a aucun repli en mémoire pour BullMQ — le transcodage, la livraison de la fédération et les notifications cessent tous de fonctionner sans Redis. |
-| `public_access_prevention` du bucket `videos` | `"inherited"` (défini par `PeerTube_Common`, ne pas remplacer par `"enforced"`) | Critical | L'architecture de PeerTube exige que les navigateurs récupèrent les fichiers vidéo directement depuis le stockage d'objets ; `"enforced"` bloque l'autorisation requise `allUsers:objectViewer` avec une erreur `412` au moment de l'apply. |
-| `database_type` | `POSTGRES_15` | Critical | PeerTube requiert PostgreSQL ; les extensions `pg_trgm`/`unaccent` et le schéma Sequelize sont propres à Postgres. |
-| `startup_probe` | Conserver `type = "TCP"` | High | Les migrations DB/Redis de PeerTube et l'initialisation de l'administrateur prennent plus de temps que ce qu'autorise une fenêtre de disponibilité HTTP classique ; une sonde HTTP visant une API pas encore prête peut empêcher le pod de devenir Ready. |
-| `cpu_limit` / `memory_limit` | Augmenter nettement pour une charge de transcodage réelle | High | Les valeurs par défaut `2000m`/`2Gi` sont volontairement prudentes pour une démonstration ou un usage VOD ; la FAQ de PeerTube recommande jusqu'à 8 vCPU/8Gi pour un transcodage réel en production — des ressources sous-dimensionnées bloquent ou font échouer les jobs de transcodage. |
-| `stateful_pvc_enabled` | Laisser à `false`, sauf si vous avez besoin de garanties de verrouillage en écriture d'un stockage en mode bloc pour `/data` | Medium | L'activer bascule `/data` sur un véritable PVC et désactive automatiquement le volume GCS FUSE — combiner les deux entraînerait un double montage du chemin. |
-| `service_type` | `LoadBalancer` pour la fédération publique ; `ClusterIP` uniquement en cas de réelle contrainte de quota d'IP | Medium | `ClusterIP` rend l'instance inaccessible depuis l'extérieur du cluster — acceptable pour une vérification via `kubectl port-forward`, inadapté à une instance fédérée de production. |
-| `enable_open_registration` | `false` pour la plupart des déploiements | Medium | Laisser l'inscription ouverte sur une instance publique permet à quiconque dispose de l'URL de créer un compte et de téléverser du contenu vidéo. |
-| `enable_iap` | `false` pour une instance publique | Medium | IAP bloque le trafic de fédération ActivityPub non authentifié et la consultation publique des vidéos — ne convient qu'à une instance entièrement privée ou de test. |
-| Secret `PT_INITIAL_ROOT_PASSWORD` | Récupérer et conserver en lieu sûr après le premier déploiement | Medium | C'est le seul identifiant du compte administrateur `root` ; il n'est ni régénéré ni réappliqué une fois le compte existant. |
+| `mount_options` GCS FUSE de `/data` | Conserver le correctif `uid=999`/`gid=999` de `PeerTube_Common` | **Critique** | Sans lui, le pod entre dans une boucle de plantages avec `Error: EACCES: permission denied, mkdir '/data/logs'` à chaque redémarrage — un mode de défaillance propre à GKE, absent sur Cloud Run (voir le §3). |
+| `host` (`PEERTUBE_WEBSERVER_HOSTNAME`) | Définir votre domaine réel avant la première utilisation réelle | Critique | Intégré à chaque URI d'acteur/d'objet ActivityPub au moment de sa création ; le modifier une fois que de vrais comptes/vidéos existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
+| `enable_redis` | `true` (ne jamais désactiver) | Critique | PeerTube n'a aucun repli en mémoire pour BullMQ — le transcodage, la livraison de la fédération et les notifications cessent tous de fonctionner sans Redis. |
+| `public_access_prevention` du bucket `videos` | `"inherited"` (défini par `PeerTube_Common`, ne pas remplacer par `"enforced"`) | Critique | L'architecture de PeerTube exige que les navigateurs récupèrent les fichiers vidéo directement depuis le stockage d'objets ; `"enforced"` bloque l'autorisation requise `allUsers:objectViewer` avec une erreur `412` au moment de l'apply. |
+| `database_type` | `POSTGRES_15` | Critique | PeerTube requiert PostgreSQL ; les extensions `pg_trgm`/`unaccent` et le schéma Sequelize sont propres à Postgres. |
+| `startup_probe` | Conserver `type = "TCP"` | Élevé | Les migrations DB/Redis de PeerTube et l'initialisation de l'administrateur prennent plus de temps que ce qu'autorise une fenêtre de disponibilité HTTP classique ; une sonde HTTP visant une API pas encore prête peut empêcher le pod de devenir Ready. |
+| `cpu_limit` / `memory_limit` | Augmenter nettement pour une charge de transcodage réelle | Élevé | Les valeurs par défaut `2000m`/`2Gi` sont volontairement prudentes pour une démonstration ou un usage VOD ; la FAQ de PeerTube recommande jusqu'à 8 vCPU/8Gi pour un transcodage réel en production — des ressources sous-dimensionnées bloquent ou font échouer les jobs de transcodage. |
+| `stateful_pvc_enabled` | Laisser à `false`, sauf si vous avez besoin de garanties de verrouillage en écriture d'un stockage en mode bloc pour `/data` | Moyen | L'activer bascule `/data` sur un véritable PVC et désactive automatiquement le volume GCS FUSE — combiner les deux entraînerait un double montage du chemin. |
+| `service_type` | `LoadBalancer` pour la fédération publique ; `ClusterIP` uniquement en cas de réelle contrainte de quota d'IP | Moyen | `ClusterIP` rend l'instance inaccessible depuis l'extérieur du cluster — acceptable pour une vérification via `kubectl port-forward`, inadapté à une instance fédérée de production. |
+| `enable_open_registration` | `false` pour la plupart des déploiements | Moyen | Laisser l'inscription ouverte sur une instance publique permet à quiconque dispose de l'URL de créer un compte et de téléverser du contenu vidéo. |
+| `enable_iap` | `false` pour une instance publique | Moyen | IAP bloque le trafic de fédération ActivityPub non authentifié et la consultation publique des vidéos — ne convient qu'à une instance entièrement privée ou de test. |
+| Secret `PT_INITIAL_ROOT_PASSWORD` | Récupérer et conserver en lieu sûr après le premier déploiement | Moyen | C'est le seul identifiant du compte administrateur `root` ; il n'est ni régénéré ni réappliqué une fois le compte existant. |
 
 ---
 

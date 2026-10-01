@@ -64,9 +64,9 @@ assemble un ensemble ciblé de services Google Cloud :
   adossé au PVC en mode bloc que le point d'entrée configure réellement.
 - **L'affinité de session est `ClientIP`**, afin que les requêtes d'un client
   atteignent le même pod.
-- **Aucune tâche de migration distincte.** Focalboard exécute ses propres migrations de
+- **Aucun job de migration distinct.** Focalboard exécute ses propres migrations de
   schéma au démarrage en tant qu'utilisateur de base de données applicatif (voir
-  `Focalboard_Common/main.tf`) ; la tâche `db-init` se contente de créer la base de
+  `Focalboard_Common/main.tf`) ; le job `db-init` se contente de créer la base de
   données et le rôle, et d'accorder les droits.
 - **`FOCALBOARD_ADMIN_PASSWORD` est généré automatiquement** et stocké dans Secret
   Manager, puis injecté comme variable d'environnement secrète du conteneur — voir la
@@ -113,7 +113,7 @@ mise à l'échelle Autopilot.
 Focalboard stocke toutes les données de l'application (tableaux, cartes, blocs,
 utilisateurs) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent
 via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est
-exposée. Lors du premier déploiement, la tâche `db-init` (`postgres:15-alpine`) crée de
+exposée. Lors du premier déploiement, le job `db-init` (`postgres:15-alpine`) crée de
 manière idempotente la base de données, le rôle et les droits de l'application — le
 binaire de Focalboard exécute ensuite lui-même les migrations de schéma au démarrage.
 
@@ -205,15 +205,15 @@ règles d'alerte facultatifs sont disponibles (`uptime_check_config.enabled` vau
 
 ## 3. Comportement de l'application Focalboard {#3-focalboard-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init`
-  exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que Cloud SQL accepte les
+- **Configuration de la base de données au premier déploiement.** Le job `db-init`
+  exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que Cloud SQL accepte les
   connexions, crée de manière idempotente le rôle applicatif (privilège `CREATEDB`) et
   la base de données, accorde tous les privilèges sur la base de données,
   accorde/transfère le schéma `public` à l'utilisateur applicatif (le transfert de
   propriété du schéma n'est pas bloquant en cas d'échec), puis signale au sidecar Cloud
-  SQL Auth Proxy de s'arrêter (`quitquitquit`) afin que le pod du Job se termine. La
-  tâche peut être relancée sans risque (`execute_on_apply = true`).
-- **Aucune tâche de migration distincte — Focalboard se migre lui-même au démarrage.**
+  SQL Auth Proxy de s'arrêter (`quitquitquit`) afin que le pod du Job se termine. Le
+  job peut être relancé sans risque (`execute_on_apply = true`).
+- **Aucun job de migration distinct — Focalboard se migre lui-même au démarrage.**
   Le commentaire du module `Focalboard_Common` l'indique explicitement : « Focalboard
   runs its own schema migrations on boot; no Postgres extensions are required. »
   L'utilisateur applicatif doit être pleinement propriétaire du schéma `public` pour
@@ -259,9 +259,9 @@ règles d'alerte facultatifs sont disponibles (`uptime_check_config.enabled` vau
   non root.
 - **Sondes de santé.** Sonde de démarrage : **HTTP** `GET /`,
   `initial_delay_seconds=60`, `timeout_seconds=10`, `period_seconds=15`,
-  `failure_threshold=30` (jusqu'à ~8.5 minutes de marge au démarrage). Sonde de
+  `failure_threshold=30` (jusqu'à ~8,5 minutes de marge au démarrage). Sonde de
   vivacité : **HTTP** `GET /`, `initial_delay_seconds=60`, `timeout_seconds=5`,
-  `period_seconds=30`, `failure_threshold=3`. Une sonde de disponibilité (**HTTP**
+  `period_seconds=30`, `failure_threshold=3`. Une sonde de disponibilité (readiness) (**HTTP**
   `GET /`, `initial_delay=30s`, `period=10s`, `failure_threshold=3`) est également codée
   en dur dans `Focalboard_Common` et n'est pas exposée en tant que variable.
 - **L'URL du service se résout automatiquement.** Le `serverRoot` de `config.json` se
@@ -372,7 +372,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -386,27 +386,27 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Une précondition de `validation.tf` rejette MySQL et les autres moteurs non Postgres au moment du plan. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables dans les faits après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins tous les tableaux et toutes les cartes. |
-| `max_instance_count` | `1`, sauf si vous revoyez l'architecture du stockage | Critical | Avec la valeur par défaut `stateful_pvc_enabled = true`, chaque réplica reçoit son **propre** PVC **isolé** — les pièces jointes téléversées sur un pod sont invisibles depuis un autre. Passer à plus de 1 répartit silencieusement les données, sans aucune erreur. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base de données sur GKE. |
-| `stateful_pvc_enabled` | `true` | High | Le désactiver (et s'appuyer sur gcsfuse à la place) expose à la corruption des fichiers d'index et de médias de Focalboard en cas d'écritures concurrentes — c'est précisément pour cette raison que le module Common ignore le montage gcsfuse lorsque le PVC en mode bloc est activé. |
-| `stateful_pvc_mount_path` | `/data` (doit être égal au `filespath` de Focalboard) | High | Le modifier sans mettre à jour également le raccordement de `FOCALBOARD_FILESPATH` monte le PVC à un emplacement où Focalboard n'écrit jamais, ce qui le rend éphémère dans les faits. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les requêtes passent d'un pod à l'autre, ce qui importe davantage dès qu'il existe plusieurs réplicas. |
-| `enable_nfs` | `true` (mais envisagez `false`) | Medium | Provisionne une instance Filestore que le chemin des pièces jointes propre à Focalboard n'utilise pas — un coût évitable, sauf si un autre élément de votre déploiement en a besoin. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Consomme le quota restreint `SSD_TOTAL_GB` (Qwiklabs ≈ 500 GB) ; une série de modules avec état peut l'épuiser. Remplacez-la par `standard` (HDD `pd-standard`) si les IOPS ne sont pas nécessaires. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `FOCALBOARD_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Il n'est pas confirmé qu'il permette à lui seul d'amorcer une connexion (voir la [section 3](#3-focalboard-application-behaviour)) — en pratique, la première étape peut plutôt consister à enregistrer le premier utilisateur via l'interface. |
-| Sortie `database_password_secret` | Ne pas l'utiliser pour se connecter | High | Indique le secret `DB_PASSWORD` commun à la flotte, qui ne permet pas de s'authentifier auprès du rôle Postgres de Focalboard. Récupérez `secret-<resource_prefix>-focalboard-safe-db-password` pour obtenir un identifiant fonctionnel. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL enregistrée en favori. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les obligations de conservation liées à la conformité. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Une précondition de `validation.tf` rejette MySQL et les autres moteurs non Postgres au moment du plan. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables dans les faits après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins tous les tableaux et toutes les cartes. |
+| `max_instance_count` | `1`, sauf si vous revoyez l'architecture du stockage | Critique | Avec la valeur par défaut `stateful_pvc_enabled = true`, chaque réplica reçoit son **propre** PVC **isolé** — les pièces jointes téléversées sur un pod sont invisibles depuis un autre. Passer à plus de 1 répartit silencieusement les données, sans aucune erreur. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base de données sur GKE. |
+| `stateful_pvc_enabled` | `true` | Élevé | Le désactiver (et s'appuyer sur gcsfuse à la place) expose à la corruption des fichiers d'index et de médias de Focalboard en cas d'écritures concurrentes — c'est précisément pour cette raison que le module Common ignore le montage gcsfuse lorsque le PVC en mode bloc est activé. |
+| `stateful_pvc_mount_path` | `/data` (doit être égal au `filespath` de Focalboard) | Élevé | Le modifier sans mettre à jour également le raccordement de `FOCALBOARD_FILESPATH` monte le PVC à un emplacement où Focalboard n'écrit jamais, ce qui le rend éphémère dans les faits. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les requêtes passent d'un pod à l'autre, ce qui importe davantage dès qu'il existe plusieurs réplicas. |
+| `enable_nfs` | `true` (mais envisagez `false`) | Moyen | Provisionne une instance Filestore que le chemin des pièces jointes propre à Focalboard n'utilise pas — un coût évitable, sauf si un autre élément de votre déploiement en a besoin. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Moyen | Consomme le quota restreint `SSD_TOTAL_GB` (Qwiklabs ≈ 500 GB) ; une série de modules avec état peut l'épuiser. Remplacez-la par `standard` (HDD `pd-standard`) si les IOPS ne sont pas nécessaires. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `FOCALBOARD_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Il n'est pas confirmé qu'il permette à lui seul d'amorcer une connexion (voir la [section 3](#3-focalboard-application-behaviour)) — en pratique, la première étape peut plutôt consister à enregistrer le premier utilisateur via l'interface. |
+| Sortie `database_password_secret` | Ne pas l'utiliser pour se connecter | Élevé | Indique le secret `DB_PASSWORD` commun à la flotte, qui ne permet pas de s'authentifier auprès du rôle Postgres de Focalboard. Récupérez `secret-<resource_prefix>-focalboard-safe-db-password` pour obtenir un identifiant fonctionnel. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL enregistrée en favori. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les obligations de conservation liées à la conformité. |
 
 ---
 

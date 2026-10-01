@@ -43,7 +43,7 @@ les guides des plateformes ([Excalidraw_GKE](Excalidraw_GKE.md),
 | Cache / file d'attente | **Aucun** — pas de Redis, pas de file de messages | — |
 | Amorçage de la base de données | **Aucun** — il n'y a pas de jobs d'initialisation (`initialization_jobs = []`) | La sortie `initialization_jobs` est vide |
 | Épinglage de version | Définit un ARG de build propre à l'application, `EXCALIDRAW_VERSION`, afin que le `APP_VERSION` injecté par le socle ne puisse pas écraser le tag — mais `application_version = "latest"` se résout toujours en `"latest"` (pas d'épinglage ; `pinned_excalidraw_version` vaut lui-même `"latest"`) | `container_build_config.build_args` |
-| Vérifications de santé | Fournit les sondes de démarrage, de vivacité et de disponibilité par défaut, qui ciblent le chemin racine `/` | §Observabilité dans les guides des plateformes |
+| Vérifications de santé | Fournit les sondes de démarrage, de vivacité et de disponibilité (readiness) par défaut, qui ciblent le chemin racine `/` | §Observabilité dans les guides des plateformes |
 
 ---
 

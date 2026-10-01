@@ -40,7 +40,7 @@ Umami est une plateforme d'analyse web open source, légère et respectueuse de 
 | `application_description` | 3 | `string` | `'Umami Analytics on Cloud Run'` | Description du service Cloud Run. |
 | `application_version` | 3 | `string` | `'postgresql-latest'` | Tag de version de l'image Umami. Utilisez un tag préfixé par `postgresql-` (p. ex. `postgresql-latest`, `postgresql-v2.11.3`). |
 
-**Architecture du wrapper :** `Umami CloudRun` appelle `Umami Common` pour construire un objet `application_config` contenant les variables d'environnement propres à Umami, la configuration des sondes et la définition de la tâche `db-init`. `module_secret_env_vars` transporte `APP_SECRET` depuis `Umami Common`. Le `DATABASE_URL` est construit à l'exécution à partir des variables de plateforme DB_* injectées par `App CloudRun`. `scripts_dir` est résolu en `abspath("${module.umami_app.path}/scripts")` au moment de l'apply.
+**Architecture du wrapper :** `Umami CloudRun` appelle `Umami Common` pour construire un objet `application_config` contenant les variables d'environnement propres à Umami, la configuration des sondes et la définition du job `db-init`. `module_secret_env_vars` transporte `APP_SECRET` depuis `Umami Common`. Le `DATABASE_URL` est construit à l'exécution à partir des variables de plateforme DB_* injectées par `App CloudRun`. `scripts_dir` est résolu en `abspath("${module.umami_app.path}/scripts")` au moment de l'apply.
 
 **Remarque sur PostgreSQL :** Umami exige **PostgreSQL 15**. `database_type = "POSTGRES_15"` est la valeur par défaut et ne doit pas être modifiée.
 
@@ -150,12 +150,12 @@ Un Job Cloud Run `db-init` est provisionné automatiquement par `Umami Common` l
 3. Crée la base de données `umami` si elle n'existe pas.
 4. Accorde à l'utilisateur `umami` tous les privilèges sur la base de données.
 
-Umami exécute lui-même ses propres migrations de base de données basées sur Prisma au premier démarrage — la tâche `db-init` ne fait que pré-créer la base de données et l'utilisateur afin que les migrations d'Umami puissent s'exécuter correctement.
+Umami exécute lui-même ses propres migrations de base de données basées sur Prisma au premier démarrage — le job `db-init` ne fait que pré-créer la base de données et l'utilisateur afin que les migrations d'Umami puissent s'exécuter correctement.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse la tâche `db-init` par défaut. Une liste non vide la remplace entièrement. |
-| `cron_jobs` | 13 | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse le job `db-init` par défaut. Une liste non vide le remplace entièrement. |
+| `cron_jobs` | 13 | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | 13 | `[]` | Services Cloud Run supplémentaires déployés aux côtés de l'application principale. |
 
 ---
@@ -291,7 +291,7 @@ Umami expose `/api/heartbeat` comme point de terminaison de santé dédié. Les 
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité au démarrage. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
+| `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité (readiness) au démarrage. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
 | `liveness_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. Le conteneur est redémarré après `failure_threshold` échecs consécutifs. |
 | `startup_probe_config` | 14 | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30 }` | Sonde de démarrage Cloud Run (transmise directement à `App CloudRun`). |
 | `health_check_config` | 14 | `{ enabled=true, path="/api/heartbeat" }` | Sonde de vivacité Cloud Run (transmise directement à `App CloudRun`). |
@@ -304,8 +304,8 @@ Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation des mots
 
 1. Secret Manager émet une notification de rotation à chaque intervalle `secret_rotation_period`.
 2. Eventarc déclenche un Job Cloud Run de rotation.
-3. La tâche génère un nouveau mot de passe, met à jour l'utilisateur Cloud SQL PostgreSQL et écrit une nouvelle version du secret.
-4. Après `rotation_propagation_delay_sec` secondes, la tâche redémarre le service Umami.
+3. Le job génère un nouveau mot de passe, met à jour l'utilisateur Cloud SQL PostgreSQL et écrit une nouvelle version du secret.
+4. Après `rotation_propagation_delay_sec` secondes, le job redémarre le service Umami.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -470,8 +470,8 @@ Les comportements suivants sont appliqués automatiquement par `Umami CloudRun`,
 | **APP_SECRET généré automatiquement** | `random_password` dans `Umami Common` | Secret alphanumérique de 32 caractères, stocké dans Secret Manager, injecté en tant que `APP_SECRET`. |
 | **Aucun bucket de stockage par défaut** | Valeur par défaut `storage_buckets = []` | Umami est sans état — aucun bucket GCS n'est provisionné sauf configuration explicite. |
 | **Copie miroir des images activée par défaut** | `enable_image_mirroring = true` | Copie les images depuis GitHub Container Registry (`ghcr.io`) vers Artifact Registry pour éviter les limitations de débit. |
-| **Tâche db-init par défaut** | Fournie par `Umami Common` lorsque `initialization_jobs = []` | La base de données PostgreSQL et l'utilisateur sont créés automatiquement avant qu'Umami n'exécute ses propres migrations. |
-| **Migrations Prisma au démarrage** | Comportement du conteneur Umami | Umami exécute ses propres migrations de base de données Prisma à chaque démarrage. La tâche `db-init` ne fait que pré-créer la base de données et l'utilisateur. |
+| **Job db-init par défaut** | Fourni par `Umami Common` lorsque `initialization_jobs = []` | La base de données PostgreSQL et l'utilisateur sont créés automatiquement avant qu'Umami n'exécute ses propres migrations. |
+| **Migrations Prisma au démarrage** | Comportement du conteneur Umami | Umami exécute ses propres migrations de base de données Prisma à chaque démarrage. Le job `db-init` ne fait que pré-créer la base de données et l'utilisateur. |
 | **Redis non requis** | Valeur par défaut `enable_redis = false` | Umami n'utilise que PostgreSQL pour le stockage de toutes ses données. Redis n'est pas nécessaire. |
 | **Répertoire des scripts** | `scripts_dir = abspath("${module.umami_app.path}/scripts")` | Les scripts d'initialisation proviennent d'`Umami Common`, et non du répertoire de déploiement. |
 
@@ -565,7 +565,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 | `rotation_propagation_delay_sec` | 12 | `90` | Secondes d'attente après la rotation avant le redémarrage du service. |
 | `enable_postgres_extensions` | 12 | `false` | Active l'installation d'extensions PostgreSQL. |
 | `postgres_extensions` | 12 | `[]` | Extensions PostgreSQL à installer. |
-| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse la tâche `db-init` par défaut. |
+| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse le job `db-init` par défaut. |
 | `cron_jobs` | 13 | `[]` | Jobs Cloud Run planifiés récurrents. |
 | `additional_services` | 13 | `[]` | Services Cloud Run supplémentaires déployés aux côtés d'Umami. |
 | `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=30 }` | Sonde de démarrage. |
@@ -607,27 +607,27 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critical** (perte de données, panne totale, faille de sécurité) — **High** (service indisponible ou fortement dégradé) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou fortement dégradé) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critical** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"POSTGRES_15"` | **Critical** | Umami ne prend en charge que PostgreSQL. Choisir MySQL ou un autre moteur casse la construction de `DATABASE_URL` et fait échouer le démarrage d'Umami avec une erreur de connexion à la base de données. |
-| `application_database_name` | `"umami"` | **Critical** | Immuable après le premier déploiement — le modifier amène Terraform à recréer la base de données, ce qui détruit toutes les données d'analyse collectées par Umami. |
-| `application_database_user` | `"umami"` | **Critical** | Immuable après le premier déploiement — le modifier recrée l'utilisateur Cloud SQL, invalide tous les identifiants stockés et coupe la connexion d'Umami à la base de données. |
-| `container_port` | `3000` | **Critical** | Umami écoute sur le port 3000. Modifier cette valeur sans l'aligner sur le port lié par le conteneur fait échouer les sondes de santé de Cloud Run et marque le service comme défaillant. |
-| `container_image_source` | `"custom"` | **High** | Le mode `custom` construit une image wrapper qui assemble `DATABASE_URL` à partir des variables DB_*. Utiliser `"prebuilt"` avec l'image officielle d'Umami nécessite de fournir manuellement `DATABASE_URL` comme variable d'environnement — sans elle, Umami ne peut pas se connecter à PostgreSQL et plante au démarrage. |
-| `application_version` | `"postgresql-latest"` | **Medium** | Utilisez toujours un tag préfixé par `postgresql-` (p. ex. `postgresql-latest`, `postgresql-v2.11.3`). Les tags de version simples (p. ex. `latest`) ne sont pas publiés pour la variante PostgreSQL d'Umami et provoquent une erreur de récupération de l'image de conteneur. |
-| `admin_password` | _(à modifier à la première connexion)_ | **Critical** | Les identifiants administrateur par défaut d'Umami sont `admin` / `umami` — largement connus. Ne pas les modifier à la première connexion expose votre tableau de bord d'analyse et toutes les données suivies à quiconque connaît l'URL. |
-| `enable_iap` | `false` | **Medium** | Sans IAP, quiconque connaît l'URL Cloud Run peut accéder à la page de connexion du tableau de bord d'Umami. L'authentification propre à Umami est alors la seule barrière. Activez IAP ou assurez-vous que `ingress_settings = "internal"` pour les déploiements privés. |
-| `ingress_settings` | `"all"` | **Medium** | `"all"` expose Umami publiquement. Le point de terminaison du script de suivi doit être accessible publiquement pour que les sites suivis transmettent leurs données, mais le tableau de bord d'administration doit être restreint pour les déploiements sensibles. Envisagez d'utiliser IAP ou un domaine personnalisé à accès restreint pour les chemins d'administration. |
-| `min_instance_count` | `0` | **Low** | La mise à l'échelle à zéro est sans risque pour Umami — les démarrages à froid sont rapides (quelques secondes). La première requête après un démarrage à froid subit toutefois une légère latence. Définissez `1` pour les tableaux de bord d'analyse sensibles au temps de réponse. |
-| `memory_limit` | `"512Mi"` | **Medium** | 512Mi est la valeur par défaut et suffit pour un trafic modéré. Les sites à fort trafic, avec de nombreux utilisateurs simultanés du tableau de bord ou des requêtes complexes, peuvent subir des OOM. Passez à `1Gi` si vous observez une pression mémoire dans Cloud Monitoring. |
-| `enable_backup_import` | `false` | **Critical** | Nécessite qu'un fichier de sauvegarde valide soit accessible à `backup_file`. L'activer avec un chemin invalide fait échouer le job Cloud Run de restauration pendant l'apply. |
-| `backup_retention_days` | `7` | **Medium** | Sept jours est un minimum pour des analyses en production. La perte de l'historique d'analyse a un impact direct sur l'activité. Passez à 30 jours ou plus pour tout déploiement d'analyse à long terme. |
-| `secret_propagation_delay` | `30` | **Low** | Parfois insuffisant dans les configurations multirégionales. Passez à 60–90 s si des erreurs de lecture de secrets sont observées pendant l'apply. |
-| `enable_cloudsql_volume` | `true` | **Critical** | Sur Cloud Run, cela monte l'intégration *native* du socket Cloud SQL — il n'y a ni sidecar Auth Proxy ni écouteur TCP `127.0.0.1:5432` (cela n'existe que sur GKE). Le point d'entrée partagé `Umami_Common` (`umami-entrypoint.sh`) résout sans condition un `DB_HOST` de type chemin de socket en `127.0.0.1` avant de construire `DATABASE_URL`, ce qui n'est valable que sur GKE — sur Cloud Run, cela produit `ECONNREFUSED 127.0.0.1:5432` dans les journaux de la révision et la sonde de démarrage échoue. Si Umami ne démarre pas, vérifiez les `DB_HOST`/`DB_IP` injectés dans la révision déployée (`gcloud run revisions describe … --format=json`) plutôt que de supposer que la substitution par l'adresse de bouclage fonctionne. |
-| `vpc_sc_dry_run` | `true` | **Medium** | Le mode simulation (dry-run) de VPC-SC journalise les violations mais ne les bloque pas. Après avoir vérifié l'absence de faux positifs dans Cloud Logging, passez à `false` pour une application effective. Le laisser à `true` en permanence n'apporte aucun bénéfice de sécurité. |
+| `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
+| `database_type` | `"POSTGRES_15"` | **Critique** | Umami ne prend en charge que PostgreSQL. Choisir MySQL ou un autre moteur casse la construction de `DATABASE_URL` et fait échouer le démarrage d'Umami avec une erreur de connexion à la base de données. |
+| `application_database_name` | `"umami"` | **Critique** | Immuable après le premier déploiement — le modifier amène Terraform à recréer la base de données, ce qui détruit toutes les données d'analyse collectées par Umami. |
+| `application_database_user` | `"umami"` | **Critique** | Immuable après le premier déploiement — le modifier recrée l'utilisateur Cloud SQL, invalide tous les identifiants stockés et coupe la connexion d'Umami à la base de données. |
+| `container_port` | `3000` | **Critique** | Umami écoute sur le port 3000. Modifier cette valeur sans l'aligner sur le port lié par le conteneur fait échouer les sondes de santé de Cloud Run et marque le service comme défaillant. |
+| `container_image_source` | `"custom"` | **Élevé** | Le mode `custom` construit une image wrapper qui assemble `DATABASE_URL` à partir des variables DB_*. Utiliser `"prebuilt"` avec l'image officielle d'Umami nécessite de fournir manuellement `DATABASE_URL` comme variable d'environnement — sans elle, Umami ne peut pas se connecter à PostgreSQL et plante au démarrage. |
+| `application_version` | `"postgresql-latest"` | **Moyen** | Utilisez toujours un tag préfixé par `postgresql-` (p. ex. `postgresql-latest`, `postgresql-v2.11.3`). Les tags de version simples (p. ex. `latest`) ne sont pas publiés pour la variante PostgreSQL d'Umami et provoquent une erreur de récupération de l'image de conteneur. |
+| `admin_password` | _(à modifier à la première connexion)_ | **Critique** | Les identifiants administrateur par défaut d'Umami sont `admin` / `umami` — largement connus. Ne pas les modifier à la première connexion expose votre tableau de bord d'analyse et toutes les données suivies à quiconque connaît l'URL. |
+| `enable_iap` | `false` | **Moyen** | Sans IAP, quiconque connaît l'URL Cloud Run peut accéder à la page de connexion du tableau de bord d'Umami. L'authentification propre à Umami est alors la seule barrière. Activez IAP ou assurez-vous que `ingress_settings = "internal"` pour les déploiements privés. |
+| `ingress_settings` | `"all"` | **Moyen** | `"all"` expose Umami publiquement. Le point de terminaison du script de suivi doit être accessible publiquement pour que les sites suivis transmettent leurs données, mais le tableau de bord d'administration doit être restreint pour les déploiements sensibles. Envisagez d'utiliser IAP ou un domaine personnalisé à accès restreint pour les chemins d'administration. |
+| `min_instance_count` | `0` | **Faible** | La mise à l'échelle à zéro est sans risque pour Umami — les démarrages à froid sont rapides (quelques secondes). La première requête après un démarrage à froid subit toutefois une légère latence. Définissez `1` pour les tableaux de bord d'analyse sensibles au temps de réponse. |
+| `memory_limit` | `"512Mi"` | **Moyen** | 512Mi est la valeur par défaut et suffit pour un trafic modéré. Les sites à fort trafic, avec de nombreux utilisateurs simultanés du tableau de bord ou des requêtes complexes, peuvent subir des OOM. Passez à `1Gi` si vous observez une pression mémoire dans Cloud Monitoring. |
+| `enable_backup_import` | `false` | **Critique** | Nécessite qu'un fichier de sauvegarde valide soit accessible à `backup_file`. L'activer avec un chemin invalide fait échouer le job Cloud Run de restauration pendant l'apply. |
+| `backup_retention_days` | `7` | **Moyen** | Sept jours est un minimum pour des analyses en production. La perte de l'historique d'analyse a un impact direct sur l'activité. Passez à 30 jours ou plus pour tout déploiement d'analyse à long terme. |
+| `secret_propagation_delay` | `30` | **Faible** | Parfois insuffisant dans les configurations multirégionales. Passez à 60–90 s si des erreurs de lecture de secrets sont observées pendant l'apply. |
+| `enable_cloudsql_volume` | `true` | **Critique** | Sur Cloud Run, cela monte l'intégration *native* du socket Cloud SQL — il n'y a ni sidecar Auth Proxy ni écouteur TCP `127.0.0.1:5432` (cela n'existe que sur GKE). Le point d'entrée partagé `Umami_Common` (`umami-entrypoint.sh`) résout sans condition un `DB_HOST` de type chemin de socket en `127.0.0.1` avant de construire `DATABASE_URL`, ce qui n'est valable que sur GKE — sur Cloud Run, cela produit `ECONNREFUSED 127.0.0.1:5432` dans les journaux de la révision et la sonde de démarrage échoue. Si Umami ne démarre pas, vérifiez les `DB_HOST`/`DB_IP` injectés dans la révision déployée (`gcloud run revisions describe … --format=json`) plutôt que de supposer que la substitution par l'adresse de bouclage fonctionne. |
+| `vpc_sc_dry_run` | `true` | **Moyen** | Le mode simulation (dry-run) de VPC-SC journalise les violations mais ne les bloque pas. Après avoir vérifié l'absence de faux positifs dans Cloud Logging, passez à `false` pour une application effective. Le laisser à `true` en permanence n'apporte aucun bénéfice de sécurité. |
 
 ---
 

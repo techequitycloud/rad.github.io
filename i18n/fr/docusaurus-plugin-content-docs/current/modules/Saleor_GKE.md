@@ -217,7 +217,7 @@ terminaison accessible publiquement).
   (`postgres:15-alpine`) crée de manière idempotente la base de données et le rôle de
   l'application. `db-migrate` (l'image de l'application,
   `depends_on_jobs = ["db-init"]`) exécute ensuite
-  `python3 manage.py migrate --noinput`. Les deux tâches peuvent être relancées sans
+  `python3 manage.py migrate --noinput`. Les deux jobs peuvent être relancés sans
   risque.
 - **Extensions toujours installées.** `pg_trgm`, `unaccent`, `hstore` et `citext` sont
   installées sans condition par la configuration assemblée de `Saleor_Common` — les
@@ -385,7 +385,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image de l'API déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -402,22 +402,22 @@ premier niveau.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critical | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `container_resources` | `{ cpu_limit="2000m", memory_limit="3Gi" }` | High | Des tailles inférieures provoquent des OOMKill avec l'arrondi mémoire d'Autopilot, ce qui a été confirmé en conditions réelles pour la charge de travail combinée uvicorn + Celery. |
-| `service_type` | `LoadBalancer` dès que le quota d'IP le permet | Medium | `ClusterIP` (l'état actuel de ce projet) rend Saleor inaccessible, sauf via `kubectl port-forward` ou depuis l'intérieur du cluster. |
-| `enable_redis` / `redis_host` | Cohérents — définissez les deux ensemble, ou aucun | High | Activer Redis sans hôte accessible (et sans `enable_nfs` pour le repli) casse la composition de `CACHE_URL`/`CELERY_BROKER_URL`. |
-| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer rapidement depuis Secret Manager | High | Le compte administrateur d'amorçage est le seul moyen d'accès au premier déploiement. |
-| `termination_grace_period_seconds` | ≥ 30s | Medium | Une valeur trop courte interrompt le worker Celery en pleine tâche lors d'une mise à jour progressive ou d'une réduction d'échelle. |
-| `enable_iap` | uniquement lorsque le Dashboard/l'API n'ont pas besoin d'un accès public | High | IAP bloque les requêtes non authentifiées vers les services API et Dashboard. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences. |
+| `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critique | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `container_resources` | `{ cpu_limit="2000m", memory_limit="3Gi" }` | Élevé | Des tailles inférieures provoquent des OOMKill avec l'arrondi mémoire d'Autopilot, ce qui a été confirmé en conditions réelles pour la charge de travail combinée uvicorn + Celery. |
+| `service_type` | `LoadBalancer` dès que le quota d'IP le permet | Moyen | `ClusterIP` (l'état actuel de ce projet) rend Saleor inaccessible, sauf via `kubectl port-forward` ou depuis l'intérieur du cluster. |
+| `enable_redis` / `redis_host` | Cohérents — définissez les deux ensemble, ou aucun | Élevé | Activer Redis sans hôte accessible (et sans `enable_nfs` pour le repli) casse la composition de `CACHE_URL`/`CELERY_BROKER_URL`. |
+| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer rapidement depuis Secret Manager | Élevé | Le compte administrateur d'amorçage est le seul moyen d'accès au premier déploiement. |
+| `termination_grace_period_seconds` | ≥ 30s | Moyen | Une valeur trop courte interrompt le worker Celery en pleine tâche lors d'une mise à jour progressive ou d'une réduction d'échelle. |
+| `enable_iap` | uniquement lorsque le Dashboard/l'API n'ont pas besoin d'un accès public | Élevé | IAP bloque les requêtes non authentifiées vers les services API et Dashboard. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences. |
 
 ---
 

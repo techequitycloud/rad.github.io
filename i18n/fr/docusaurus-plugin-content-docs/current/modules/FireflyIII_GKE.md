@@ -425,26 +425,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `PGSQL_SSL_MODE` (`prefer` automatique) | Laisser tel quel | High | Forcer `require` sur la boucle locale en clair de l'Auth Proxy échoue (« SSL is not enabled on the server »). |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité en boucle locale vers Cloud SQL. |
-| `APP_URL` | URL externe du LoadBalancer / du domaine | High | Une URL absente ou erronée casse les liens absolus, les redirections et les callbacks OAuth. |
-| `STATIC_CRON_TOKEN` / job cron | Planifier un appel quotidien | High | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
-| `enable_nfs` | `true` | High | Le désactiver place les pièces jointes sur le stockage éphémère du pod — les fichiers disparaissent au redémarrage du pod. |
-| `session_affinity` | `ClientIP` | High | Sans persistance de session, l'état de session peut être routé vers différents pods et perturber l'interface. |
-| `enable_iap` | à activer pour des données privées | High | Firefly III contient des données financières ; le laisser accessible publiquement les expose. |
-| Inscription au premier lancement | La désactiver après le premier administrateur | High | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `PGSQL_SSL_MODE` (`prefer` automatique) | Laisser tel quel | Élevé | Forcer `require` sur la boucle locale en clair de l'Auth Proxy échoue (« SSL is not enabled on the server »). |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité en boucle locale vers Cloud SQL. |
+| `APP_URL` | URL externe du LoadBalancer / du domaine | Élevé | Une URL absente ou erronée casse les liens absolus, les redirections et les callbacks OAuth. |
+| `STATIC_CRON_TOKEN` / job cron | Planifier un appel quotidien | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
+| `enable_nfs` | `true` | Élevé | Le désactiver place les pièces jointes sur le stockage éphémère du pod — les fichiers disparaissent au redémarrage du pod. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance de session, l'état de session peut être routé vers différents pods et perturber l'interface. |
+| `enable_iap` | à activer pour des données privées | Élevé | Firefly III contient des données financières ; le laisser accessible publiquement les expose. |
+| Inscription au premier lancement | La désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
 
 ---
 

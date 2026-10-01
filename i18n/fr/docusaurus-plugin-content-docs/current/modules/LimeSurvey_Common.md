@@ -30,7 +30,7 @@ guides des plateformes ([LimeSurvey_GKE](LimeSurvey_GKE.md),
 | Identifiant administrateur | Génère le mot de passe du super-administrateur (20 caractères) et le stocke dans **Secret Manager** ; l'injecte en tant que variable d'environnement secrète `ADMIN_PASSWORD` | À récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image upstream `martialblog/limesurvey` (Apache) avec un point d'entrée cloud léger ; build via Cloud Build et mise en miroir de l'image de base dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for MySQL 8.0** comme moteur et force le moteur de stockage **InnoDB** | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `limesurvey-uploads` | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement LimeSurvey de référence : `DB_TYPE`, `DB_PORT`, moteur de stockage, `URL_FORMAT`, identité de l'administrateur, `PUBLIC_URL` | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage TCP et la sonde de vivacité HTTP par défaut ciblant le point de terminaison racine `/` | §Observabilité dans les guides des plateformes |
@@ -79,8 +79,8 @@ Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 LimeSurvey nécessite **MySQL 8.0** ; le moteur est imposé à `MYSQL_8_0` et les autres
-moteurs ne sont pas pris en charge par ce module. Lors du premier déploiement, une
-tâche ponctuelle (`db-init`) s'exécute avec `mysql:8.0-debian` et, de manière
+moteurs ne sont pas pris en charge par ce module. Lors du premier déploiement, un
+job ponctuel (`db-init`) s'exécute avec `mysql:8.0-debian` et, de manière
 idempotente :
 
 1. Localise la connexion Cloud SQL — le socket Unix du Cloud SQL Auth Proxy sous
@@ -93,18 +93,18 @@ idempotente :
 5. Accorde tous les privilèges sur cette base de données à l'utilisateur de
    l'application,
 6. Vérifie que l'utilisateur de l'application peut effectivement se connecter — en
-   faisant échouer la tâche au plus tôt en cas de mot de passe ou de privilèges
+   faisant échouer le job au plus tôt en cas de mot de passe ou de privilèges
    incorrects, et en préchauffant le cache d'authentification côté serveur
    `caching_sha2_password`,
 7. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement (via
-   `quitquitquit`) afin que le conteneur de la tâche se termine correctement.
+   `quitquitquit`) afin que le conteneur du job se termine correctement.
 
-La tâche peut être réexécutée sans risque. Notez que MySQL 8.0 utilise
+Le job peut être réexécuté sans risque. Notez que MySQL 8.0 utilise
 `caching_sha2_password` par défaut ; en TCP simple, le script ajoute
 `--get-server-public-key` pour l'échange de clés RSA lorsque le client le prend en
 charge.
 
-**Il n'existe pas de tâche de migration distincte.** Le schéma LimeSurvey proprement
+**Il n'existe pas de job de migration distinct.** Le schéma LimeSurvey proprement
 dit (les tables `settings_global`, `surveys`, `users`, …) est créé au démarrage du
 conteneur par le point d'entrée upstream `martialblog/limesurvey`, qui exécute
 l'installateur en console / `updatedb` de LimeSurvey une fois que `db-init` a

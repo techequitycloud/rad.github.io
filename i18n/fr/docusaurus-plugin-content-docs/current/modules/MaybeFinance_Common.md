@@ -33,7 +33,7 @@ guides des plateformes ([MaybeFinance_GKE](MaybeFinance_GKE.md),
 | Secrets cryptographiques | Génère `SECRET_KEY_BASE` (chaîne aléatoire de 64 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement ; récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Enveloppe l'image officielle `ghcr.io/maybe-finance/maybe` avec un script de point d'entrée personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme moteur configuré | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les octrois, et crée au préalable `pgcrypto` ; une seconde tâche (`maybefinance-migrate`) exécute `rails db:prepare` | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les octrois, et crée au préalable `pgcrypto` ; un second job (`maybefinance-migrate`) exécute `rails db:prepare` | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket de données **Cloud Storage** `storage` | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit l'environnement Rails/Maybe de base : mode production, interface auto-hébergée, journalisation, pool de threads, gestion de TLS | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/d'activité par défaut ciblant `/up`, ainsi qu'un bloc `readiness_probe` inerte que le socle n'utilise pas | §Observabilité dans les guides des plateformes |
@@ -88,7 +88,7 @@ délibérément, car `db-init.sh` crée déjà au préalable la seule extension 
 schéma de Maybe a besoin (`pgcrypto`) grâce à un octroi superutilisateur, si bien
 que le mécanisme d'extensions propre au socle serait redondant.
 
-Au premier déploiement, deux tâches enchaînées s'exécutent :
+Au premier déploiement, deux jobs enchaînés s'exécutent :
 
 1. **`db-init`** (`postgres:15-alpine`, `execute_on_apply = true`,
    `max_retries = 1`, `timeout_seconds = 600`) — de manière idempotente :
@@ -115,7 +115,7 @@ Au premier déploiement, deux tâches enchaînées s'exécutent :
      `CREATE EXTENSION IF NOT EXISTS` ultérieur lors du chargement du schéma de l'application soit une
      opération sans effet ne nécessitant aucun privilège.
    - Signale au sidecar Cloud SQL Auth Proxy de s'arrêter (`/quitquitquit`) afin
-     que le pod de la tâche puisse se terminer.
+     que le pod du job puisse se terminer.
 2. **`maybefinance-migrate`** (`image = null`, réutilise l'image applicative
    Maybe construite ; `depends_on_jobs = ["db-init"]` ; `memory_limit = 2Gi`,
    `max_retries = 3`, `timeout_seconds = 1200`) — applique la même logique de
@@ -124,7 +124,7 @@ Au premier déploiement, deux tâches enchaînées s'exécutent :
    de création ou de migration de Rails) depuis `/rails` (ou `/app` en solution
    de repli), et signale ensuite à l'Auth Proxy de s'arrêter.
 
-Les deux tâches peuvent être réexécutées sans risque. Inspectez directement la
+Les deux jobs peuvent être réexécutés sans risque. Inspectez directement la
 base de données avec :
 
 ```bash
@@ -221,7 +221,7 @@ loopback) ; la variante `MaybeFinance_GKE` la remplace par `true` dans son propr
 point d'entrée décrite au §4.
 
 `environment_variables` a aussi une conséquence notable pour
-`db-init`/`maybefinance-migrate` : aucune des deux tâches ne définit
+`db-init`/`maybefinance-migrate` : aucun des deux jobs ne définit
 explicitement `RAILS_ENV`/`SELF_HOSTED`, à l'exception de
 `maybefinance-migrate.sh`, qui leur attribue des valeurs par défaut
 (`RAILS_ENV=production`, `SELF_HOSTED=true`) et fait pointer `REDIS_URL` vers une

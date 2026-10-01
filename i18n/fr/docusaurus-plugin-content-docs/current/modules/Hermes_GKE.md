@@ -366,8 +366,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan.** Le fichier `validation.tf` de ce module et le
 > moteur du socle [App_GKE](App_GKE.md) valident les valeurs *et leurs
@@ -378,16 +378,16 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (validé) | Critical | Un second réplica simultané écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt tout l'état de l'agent. |
-| `enable_nfs` | `true` (validé) | Critical | Sans le montage NFS, `/opt/data` est un disque de pod éphémère — chaque redémarrage / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
-| `gcs_volumes` sur `/opt/data` | jamais | Critical | GCSFuse ne fournit ni verrouillage POSIX ni renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | High | Sans aucune clé de fournisseur, l'agent ne peut pas exécuter un seul tour. |
-| VM NFS pas à l'état `RUNNING` | attendre avant de déployer | High | La découverte ne trouve aucun serveur → le module crée un NFS inline ou le montage échoue ; le pod reste bloqué en `ContainerCreating`. |
-| `startup_probe` / `liveness_probe` | TCP (par défaut) | Medium | Une sonde HTTP contre le serveur d'API authentifié renvoie 401/403 indéfiniment — le pod ne devient jamais Ready et le déploiement reste bloqué. |
-| `min_instance_count` | `1` | Medium | GKE n'a pas de mise à l'échelle à zéro, mais une réduction manuelle met les connecteurs hors ligne. |
-| `application_version` | épingler un tag de version | Medium | `latest` est résolu à nouveau à chaque mise en miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
-| `enable_telegram` sans jeton | bloqué | Low | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
+| `max_instance_count` | `1` (validé) | Critique | Un second réplica simultané écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt tout l'état de l'agent. |
+| `enable_nfs` | `true` (validé) | Critique | Sans le montage NFS, `/opt/data` est un disque de pod éphémère — chaque redémarrage / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
+| `gcs_volumes` sur `/opt/data` | jamais | Critique | GCSFuse ne fournit ni verrouillage POSIX ni renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | Élevé | Sans aucune clé de fournisseur, l'agent ne peut pas exécuter un seul tour. |
+| VM NFS pas à l'état `RUNNING` | attendre avant de déployer | Élevé | La découverte ne trouve aucun serveur → le module crée un NFS inline ou le montage échoue ; le pod reste bloqué en `ContainerCreating`. |
+| `startup_probe` / `liveness_probe` | TCP (par défaut) | Moyen | Une sonde HTTP contre le serveur d'API authentifié renvoie 401/403 indéfiniment — le pod ne devient jamais Ready et le déploiement reste bloqué. |
+| `min_instance_count` | `1` | Moyen | GKE n'a pas de mise à l'échelle à zéro, mais une réduction manuelle met les connecteurs hors ligne. |
+| `application_version` | épingler un tag de version | Moyen | `latest` est résolu à nouveau à chaque mise en miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
+| `enable_telegram` sans jeton | bloqué | Faible | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
 
 ---
 

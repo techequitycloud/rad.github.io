@@ -72,7 +72,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   les valeurs chiffrées de la base de données indéchiffrables.
 - **L'image exécute automatiquement `php artisan migrate --force` au démarrage** ; le
   schéma est donc créé au premier démarrage, une fois que `db-init` a provisionné la
-  base de données et l'utilisateur — il n'y a pas de tâche de migration distincte.
+  base de données et l'utilisateur — il n'y a pas de job de migration distinct.
 - **Pas de stockage par défaut.** Speedtest Tracker stocke tous les résultats et la
   configuration dans Cloud SQL, sans flux de téléversement de fichiers par les
   utilisateurs — `create_cloud_storage` et `enable_nfs` sont désactivés par défaut.
@@ -197,12 +197,12 @@ disponibilité et des règles d'alerte facultatifs.
   Cloud SQL ou le point de terminaison TCP, attend que MySQL soit joignable, crée la
   base de données et l'utilisateur de l'application, accorde les privilèges, vérifie
   que l'utilisateur de l'application peut se connecter et arrête proprement le sidecar
-  Cloud SQL Auth Proxy. La tâche est idempotente et peut être relancée sans risque
+  Cloud SQL Auth Proxy. Le job est idempotent et peut être relancé sans risque
   (`max_retries = 3`).
 - **Migration automatique du schéma au démarrage.** L'image LinuxServer de Speedtest
   Tracker exécute automatiquement `php artisan migrate --force` à chaque démarrage du
   conteneur ; le schéma est donc créé au premier démarrage et mis à niveau lors des
-  démarrages suivants — il n'y a **pas de tâche de migration distincte**.
+  démarrages suivants — il n'y a **pas de job de migration distinct**.
 - **`APP_KEY` est immuable après le premier démarrage.** La clé d'application Laravel
   est générée une seule fois et écrite dans Secret Manager. Sa rotation rend toutes les
   valeurs chiffrées de la base de données définitivement indéchiffrables. N'effectuez
@@ -226,7 +226,7 @@ disponibilité et des règles d'alerte facultatifs.
 - **Configuration au premier lancement.** L'interface web de Speedtest Tracker guide la
   création du compte lors de la première visite — il n'existe aucun compte
   administrateur par défaut préchargé à modifier.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -361,7 +361,7 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Pour des tâches de maintenance sans rapport — la planification des tests de débit de Speedtest Tracker s'exécute dans le processus via `SPEEDTEST_SCHEDULE`. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -412,7 +412,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -424,25 +424,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par Speedtest Tracker, un `redis_port`/`backup_retention_days` hors plage. Ce module vérifie en outre que `cpu_always_allocated=true` implique `min_instance_count >= 1`, et que `max_instance_count <= 1` dès que `speedtest_schedule` est défini. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend toutes les valeurs chiffrées de la base de données définitivement indéchiffrables. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `database_type` | `MYSQL_8_0` | Critical | Speedtest Tracker requiert MySQL dans ce module ; tout autre moteur empêche le démarrage. |
-| `cpu_always_allocated` / `min_instance_count` | `true` / `1` | Critical | Modifier l'une ou l'autre de ces valeurs empêche `SPEEDTEST_SCHEDULE` de se déclencher, sans aucun message — le service paraîtra déployé et en bonne santé, mais n'exécutera jamais de test de débit planifié. |
-| `max_instance_count` | `1` | High | Dépasser 1 avec un `speedtest_schedule` actif risque de déclencher des tests de débit en double au même déclenchement de la planification (aucun verrouillage entre instances). |
-| `memory_limit` | `1Gi` | High | Des valeurs inférieures exposent à des arrêts OOM pendant les migrations ou en cas d'utilisation simultanée du tableau de bord. |
-| `enable_cloudsql_volume` | `false` (TCP sur adresse IP privée) | High | Sur Cloud Run, Speedtest Tracker se connecte en TCP sur adresse IP privée ; forcer le chemin du socket est inutile et peut rompre la connectivité à la base de données. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque tout accès externe au tableau de bord. |
-| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | High | IAP bloque tout accès anonyme. |
-| `container_image_source` | `prebuilt` | Medium | Un Cloud Build personnalisé sans Dockerfile fait échouer le build. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend toutes les valeurs chiffrées de la base de données définitivement indéchiffrables. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `database_type` | `MYSQL_8_0` | Critique | Speedtest Tracker requiert MySQL dans ce module ; tout autre moteur empêche le démarrage. |
+| `cpu_always_allocated` / `min_instance_count` | `true` / `1` | Critique | Modifier l'une ou l'autre de ces valeurs empêche `SPEEDTEST_SCHEDULE` de se déclencher, sans aucun message — le service paraîtra déployé et en bonne santé, mais n'exécutera jamais de test de débit planifié. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 avec un `speedtest_schedule` actif risque de déclencher des tests de débit en double au même déclenchement de la planification (aucun verrouillage entre instances). |
+| `memory_limit` | `1Gi` | Élevé | Des valeurs inférieures exposent à des arrêts OOM pendant les migrations ou en cas d'utilisation simultanée du tableau de bord. |
+| `enable_cloudsql_volume` | `false` (TCP sur adresse IP privée) | Élevé | Sur Cloud Run, Speedtest Tracker se connecte en TCP sur adresse IP privée ; forcer le chemin du socket est inutile et peut rompre la connectivité à la base de données. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque tout accès externe au tableau de bord. |
+| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | Élevé | IAP bloque tout accès anonyme. |
+| `container_image_source` | `prebuilt` | Moyen | Un Cloud Build personnalisé sans Dockerfile fait échouer le build. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

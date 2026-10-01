@@ -372,8 +372,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les
@@ -387,16 +387,16 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver sans fournir de montage de stockage bloc équivalent place SQLite sur gcsfuse (ou sur un disque éphémère), ce qui expose à une corruption de la base de données ou à une perte totale des données lors de la recréation du pod. |
-| `stateful_pvc_mount_path` | `/cloudreve` | Critical | L'éloigner du répertoire de travail de Cloudreve déconnecte le volume persistant de l'endroit où l'application lit et écrit réellement sa base et ses téléversements. |
-| Déplacement du binaire dans le Dockerfile (`/usr/local/bin/cloudreve`) | Conservez-le tel que livré | Critical | Revenir à `ENTRYPOINT ["./cloudreve"]` dans `/cloudreve` réintroduit le masquage par volume : le montage du PVC bloc cache le binaire et le pod passe en CrashLoopBackOff avec `exec ./cloudreve: no such file or directory`. |
-| `max_instance_count` | `1` | High | Cloudreve n'a pas de mode multi-nœud/clustering vérifié dans ce module ; dépasser 1 expose à des écrivains concurrents sur le même fichier SQLite (un seul pod possède réellement le PVC en mode StatefulSet `OrderedReady`, mais ne supposez pas que des valeurs plus élevées sont sûres). |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ; `standard` (HDD) en cas de pression sur les quotas | Medium | Le SSD consomme le quota serré `SSD_TOTAL_GB`. La mise à zéro ne libère pas le PVC — seule sa suppression le fait. |
-| Récupération du mot de passe administrateur | Capturez-le depuis `kubectl logs` immédiatement après le premier démarrage | Medium | Le mot de passe administrateur généré n'est affiché qu'une seule fois dans les journaux du conteneur ; le manquer vous empêche d'accéder au compte super-administrateur initial jusqu'à sa réinitialisation via le conteneur. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'adresse IP externe / de la Gateway peut changer d'un redéploiement à l'autre, ce qui rompt le DNS et les liens enregistrés. |
-| `gcs_volumes` sur `/cloudreve` alors que `stateful_pvc_enabled = true` | À éviter | High | Un montage GCS FUSE et le PVC bloc ciblant tous deux `/cloudreve` entrent en conflit ; le module Common n'active le montage GCS que lorsque le PVC bloc est désactivé. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver sans fournir de montage de stockage bloc équivalent place SQLite sur gcsfuse (ou sur un disque éphémère), ce qui expose à une corruption de la base de données ou à une perte totale des données lors de la recréation du pod. |
+| `stateful_pvc_mount_path` | `/cloudreve` | Critique | L'éloigner du répertoire de travail de Cloudreve déconnecte le volume persistant de l'endroit où l'application lit et écrit réellement sa base et ses téléversements. |
+| Déplacement du binaire dans le Dockerfile (`/usr/local/bin/cloudreve`) | Conservez-le tel que livré | Critique | Revenir à `ENTRYPOINT ["./cloudreve"]` dans `/cloudreve` réintroduit le masquage par volume : le montage du PVC bloc cache le binaire et le pod passe en CrashLoopBackOff avec `exec ./cloudreve: no such file or directory`. |
+| `max_instance_count` | `1` | Élevé | Cloudreve n'a pas de mode multi-nœud/clustering vérifié dans ce module ; dépasser 1 expose à des écrivains concurrents sur le même fichier SQLite (un seul pod possède réellement le PVC en mode StatefulSet `OrderedReady`, mais ne supposez pas que des valeurs plus élevées sont sûres). |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ; `standard` (HDD) en cas de pression sur les quotas | Moyen | Le SSD consomme le quota serré `SSD_TOTAL_GB`. La mise à zéro ne libère pas le PVC — seule sa suppression le fait. |
+| Récupération du mot de passe administrateur | Capturez-le depuis `kubectl logs` immédiatement après le premier démarrage | Moyen | Le mot de passe administrateur généré n'est affiché qu'une seule fois dans les journaux du conteneur ; le manquer vous empêche d'accéder au compte super-administrateur initial jusqu'à sa réinitialisation via le conteneur. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'adresse IP externe / de la Gateway peut changer d'un redéploiement à l'autre, ce qui rompt le DNS et les liens enregistrés. |
+| `gcs_volumes` sur `/cloudreve` alors que `stateful_pvc_enabled = true` | À éviter | Élevé | Un montage GCS FUSE et le PVC bloc ciblant tous deux `/cloudreve` entrent en conflit ; le module Common n'active le montage GCS que lorsque le PVC bloc est désactivé. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

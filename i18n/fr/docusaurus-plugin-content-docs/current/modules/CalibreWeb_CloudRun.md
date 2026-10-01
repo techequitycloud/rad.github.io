@@ -423,23 +423,23 @@ Remarque : `outputs.tf` n'expose pas au premier niveau l'ID du secret Secret Man
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Modèle de persistance de `/config` | Utilisez `CalibreWeb_GKE` pour les bibliothèques de production | Critical | Ce module n'offre aucune option de PVC en mode bloc ; `/config` repose par défaut sur **NFS** (`enable_nfs = true`, `nfs_mount_path = "/config"`), ce qui évite la corruption de SQLite par gcsfuse. Ne définissez pas `enable_gcs_storage_volume = true` sur ce chemin — le modèle de cohérence relâché de gcsfuse corrompt `app.db`/`metadata.db` en usage réel, et cela provoquerait aussi un double montage de `/config`. La propre description du module signale cette variante comme réservée au développement et à un usage léger. |
-| `max_instance_count` | `1` | Critical | Au-delà de 1, plusieurs instances Cloud Run écrivent simultanément dans les **mêmes** fichiers SQLite montés via gcsfuse — un risque réel de corruption de la base de données, distinct de la scission des PVC par réplica de la variante GKE (et à certains égards plus dangereux). |
-| `CALIBRE_ADMIN_PASSWORD` (généré automatiquement) | Modifiez l'identifiant dans l'interface lors de la première connexion | High | Le secret généré n'est pas appliqué automatiquement ; l'identifiant de première connexion effectif est la valeur amont par défaut `admin`/`admin123` jusqu'à sa modification manuelle. |
-| `enable_redis` | À ignorer — inerte | Low | `main.tf` code en dur `enable_redis = false` quelle que soit cette variable ; Calibre-Web ne dépend pas de Redis. |
-| `enable_cloudsql_volume` | À ignorer — inerte | Low | `main.tf` code en dur `enable_cloudsql_volume = false` ; Calibre-Web ne dépend pas de Cloud SQL. |
-| `min_instance_count` | `1` (par défaut) | Medium | Maintient une instance toujours active pour éviter un démarrage à froid pendant que Calibre-Web charge l'index de sa bibliothèque ; ce module n'expose pas `cpu_always_allocated`, le CPU reste donc facturé à la requête (valeur par défaut du socle) plutôt qu'en continu. |
-| `startup_probe_config` / `health_check_config` | À ignorer — inertes une fois `application_config` défini | Low | Ces entrées brutes sont remplacées par les `startup_probe`/`liveness_probe` de `CalibreWeb_Common`, qui sont celles réellement appliquées. |
-| `container_port` | `8083` (à conserver) | Medium | Contrairement à `CalibreWeb_GKE` (où cette variable est inerte), sur Cloud Run elle remplace réellement le port du conteneur via un `merge()` dans `calibreweb.tf` — la modifier sans changer aussi le port d'écoute de l'image amont casse le routage. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface de Calibre-Web et les points de terminaison OPDS/synchronisation Kobo sont joignables publiquement sans protection WAF par défaut. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme de la sauvegarde de `/config`. |
+| Modèle de persistance de `/config` | Utilisez `CalibreWeb_GKE` pour les bibliothèques de production | Critique | Ce module n'offre aucune option de PVC en mode bloc ; `/config` repose par défaut sur **NFS** (`enable_nfs = true`, `nfs_mount_path = "/config"`), ce qui évite la corruption de SQLite par gcsfuse. Ne définissez pas `enable_gcs_storage_volume = true` sur ce chemin — le modèle de cohérence relâché de gcsfuse corrompt `app.db`/`metadata.db` en usage réel, et cela provoquerait aussi un double montage de `/config`. La propre description du module signale cette variante comme réservée au développement et à un usage léger. |
+| `max_instance_count` | `1` | Critique | Au-delà de 1, plusieurs instances Cloud Run écrivent simultanément dans les **mêmes** fichiers SQLite montés via gcsfuse — un risque réel de corruption de la base de données, distinct de la scission des PVC par réplica de la variante GKE (et à certains égards plus dangereux). |
+| `CALIBRE_ADMIN_PASSWORD` (généré automatiquement) | Modifiez l'identifiant dans l'interface lors de la première connexion | Élevé | Le secret généré n'est pas appliqué automatiquement ; l'identifiant de première connexion effectif est la valeur amont par défaut `admin`/`admin123` jusqu'à sa modification manuelle. |
+| `enable_redis` | À ignorer — inerte | Faible | `main.tf` code en dur `enable_redis = false` quelle que soit cette variable ; Calibre-Web ne dépend pas de Redis. |
+| `enable_cloudsql_volume` | À ignorer — inerte | Faible | `main.tf` code en dur `enable_cloudsql_volume = false` ; Calibre-Web ne dépend pas de Cloud SQL. |
+| `min_instance_count` | `1` (par défaut) | Moyen | Maintient une instance toujours active pour éviter un démarrage à froid pendant que Calibre-Web charge l'index de sa bibliothèque ; ce module n'expose pas `cpu_always_allocated`, le CPU reste donc facturé à la requête (valeur par défaut du socle) plutôt qu'en continu. |
+| `startup_probe_config` / `health_check_config` | À ignorer — inertes une fois `application_config` défini | Faible | Ces entrées brutes sont remplacées par les `startup_probe`/`liveness_probe` de `CalibreWeb_Common`, qui sont celles réellement appliquées. |
+| `container_port` | `8083` (à conserver) | Moyen | Contrairement à `CalibreWeb_GKE` (où cette variable est inerte), sur Cloud Run elle remplace réellement le port du conteneur via un `merge()` dans `calibreweb.tf` — la modifier sans changer aussi le port d'écoute de l'image amont casse le routage. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface de Calibre-Web et les points de terminaison OPDS/synchronisation Kobo sont joignables publiquement sans protection WAF par défaut. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme de la sauvegarde de `/config`. |
 
 ---
 

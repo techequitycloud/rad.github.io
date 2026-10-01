@@ -313,24 +313,24 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `redis_port`/`backup_retention_days` hors plage, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, une mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `TOLGEE_AUTHENTICATION_JWT_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions utilisateur actives et oblige tout le monde à se reconnecter immédiatement. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `enable_cloudsql_volume` | `true` | Critical | Le sidecar Auth Proxy est nécessaire à la connexion JDBC TCP de Tolgee ; le désactiver supprime le point de terminaison `127.0.0.1` et casse la connexion à la base de données. |
-| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | High | En dessous d'environ 2 GiB, la JVM Spring Boot tombe en OOM pendant les migrations Liquibase du premier démarrage. |
-| `max_instance_count` | `1` sauf validation | High | Tolgee n'a pas de couche de coordination ; plusieurs écrivains concurrents sur une même base de données ou un même volume NFS peuvent entrer en conflit. |
-| `session_affinity` | `ClientIP` | High | Sans affinité, les sessions d'interface passent d'un pod à l'autre et les utilisateurs sont déconnectés de façon inattendue. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette `0`. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `application_version` | Épinglée en production | High | `latest` peut récupérer une nouvelle version majeure avec des migrations incompatibles lors d'un redéploiement. |
-| `startup_probe` (`/actuator/health`) | Conserver la large fenêtre du premier démarrage | Medium | Une fenêtre trop étroite fait échouer le pod alors que les migrations Liquibase sont encore en cours sur une base neuve. |
-| `enable_redis` | `false` | Medium | Redis n'est pas utilisé ; l'activer ajoute un coût sans bénéfice. |
+| `TOLGEE_AUTHENTICATION_JWT_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions utilisateur actives et oblige tout le monde à se reconnecter immédiatement. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy est nécessaire à la connexion JDBC TCP de Tolgee ; le désactiver supprime le point de terminaison `127.0.0.1` et casse la connexion à la base de données. |
+| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | Élevé | En dessous d'environ 2 GiB, la JVM Spring Boot tombe en OOM pendant les migrations Liquibase du premier démarrage. |
+| `max_instance_count` | `1` sauf validation | Élevé | Tolgee n'a pas de couche de coordination ; plusieurs écrivains concurrents sur une même base de données ou un même volume NFS peuvent entrer en conflit. |
+| `session_affinity` | `ClientIP` | Élevé | Sans affinité, les sessions d'interface passent d'un pod à l'autre et les utilisateurs sont déconnectés de façon inattendue. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette `0`. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `application_version` | Épinglée en production | Élevé | `latest` peut récupérer une nouvelle version majeure avec des migrations incompatibles lors d'un redéploiement. |
+| `startup_probe` (`/actuator/health`) | Conserver la large fenêtre du premier démarrage | Moyen | Une fenêtre trop étroite fait échouer le pod alors que les migrations Liquibase sont encore en cours sur une base neuve. |
+| `enable_redis` | `false` | Moyen | Redis n'est pas utilisé ; l'activer ajoute un coût sans bénéfice. |
 
 ---
 

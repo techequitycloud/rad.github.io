@@ -423,8 +423,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -437,18 +437,18 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Présence de RabbitMQ | Ne jamais supprimer le service additionnel `mq` | Critical | Le `start.sh` de Plane refuse de démarrer avec un `AMQP_URL` vide ; toute l'application entre dans une boucle de plantages. |
-| `enable_redis` | `true` | Critical | Le backend de cache/file Celery de Plane n'a aucune connexion sans URL Redis — le worker/beat et le cache échouent. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Les renommer après le premier déploiement fait pointer Plane vers une base inexistante (ou différente) et rend toutes les données orphelines. |
-| `SECRET_KEY` / `LIVE_SERVER_SECRET_KEY` (générés automatiquement) | Ne jamais les modifier | Critical | Les modifier après le premier démarrage invalide les sessions signées et les jetons d'authentification du serveur live. |
-| Téléversements de fichiers / `AWS_S3_*` | Fournir de vrais identifiants HMAC compatibles S3 | High | Sans vrais identifiants, les téléversements (pièces jointes, avatars, images de couverture) échouent silencieusement — le câblage par valeurs fictives n'est pas prêt pour la production. |
-| Stockage de RabbitMQ | Attacher un PVC/NFS si la durabilité compte | High | Le service `mq` par défaut utilise un stockage de pod éphémère ; un redémarrage du pod ou une préemption du nœud fait perdre les jobs Celery en file. |
-| `max_instance_count` | `3` (vérifiez le comportement du beat Celery avant d'aller plus loin) | Medium | Comme le beat s'exécute dans chaque pod, monter en charge horizontalement peut dupliquer les déclenchements des tâches planifiées. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité à la base de données sur GKE ; le désactiver casse la composition de `DATABASE_URL`. |
-| `network_tags` | Conserver `nfsserver` | High | Le supprimer coupe la connectivité avec la VM NFS/Redis, faisant silencieusement pointer Redis vers un hôte injoignable. |
-| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `WEB_URL`/`DOMAIN_NAME`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| Présence de RabbitMQ | Ne jamais supprimer le service additionnel `mq` | Critique | Le `start.sh` de Plane refuse de démarrer avec un `AMQP_URL` vide ; toute l'application entre dans une boucle de plantages. |
+| `enable_redis` | `true` | Critique | Le backend de cache/file Celery de Plane n'a aucune connexion sans URL Redis — le worker/beat et le cache échouent. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Les renommer après le premier déploiement fait pointer Plane vers une base inexistante (ou différente) et rend toutes les données orphelines. |
+| `SECRET_KEY` / `LIVE_SERVER_SECRET_KEY` (générés automatiquement) | Ne jamais les modifier | Critique | Les modifier après le premier démarrage invalide les sessions signées et les jetons d'authentification du serveur live. |
+| Téléversements de fichiers / `AWS_S3_*` | Fournir de vrais identifiants HMAC compatibles S3 | Élevé | Sans vrais identifiants, les téléversements (pièces jointes, avatars, images de couverture) échouent silencieusement — le câblage par valeurs fictives n'est pas prêt pour la production. |
+| Stockage de RabbitMQ | Attacher un PVC/NFS si la durabilité compte | Élevé | Le service `mq` par défaut utilise un stockage de pod éphémère ; un redémarrage du pod ou une préemption du nœud fait perdre les jobs Celery en file. |
+| `max_instance_count` | `3` (vérifiez le comportement du beat Celery avant d'aller plus loin) | Moyen | Comme le beat s'exécute dans chaque pod, monter en charge horizontalement peut dupliquer les déclenchements des tâches planifiées. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire à la connectivité à la base de données sur GKE ; le désactiver casse la composition de `DATABASE_URL`. |
+| `network_tags` | Conserver `nfsserver` | Élevé | Le supprimer coupe la connectivité avec la VM NFS/Redis, faisant silencieusement pointer Redis vers un hôte injoignable. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `WEB_URL`/`DOMAIN_NAME`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

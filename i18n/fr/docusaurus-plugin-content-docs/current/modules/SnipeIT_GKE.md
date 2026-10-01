@@ -113,8 +113,8 @@ Snipe-IT stocke toutes les données de l'application (actifs, licences,
 accessoires, consommables, utilisateurs, piste d'audit) dans une instance gérée
 Cloud SQL for MySQL 8.0. Les pods la joignent via le sidecar **Cloud SQL Auth
 Proxy** sur `127.0.0.1:3306` ; aucune IP publique n'est exposée. Lors du premier
-déploiement, la tâche `db-init` crée la base de données, l'utilisateur et les
-autorisations de l'application ; la tâche `migrate` exécute ensuite
+déploiement, le job `db-init` crée la base de données, l'utilisateur et les
+autorisations de l'application ; le job `migrate` exécute ensuite
 `artisan migrate --force` de Laravel pour créer le schéma.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions,
@@ -203,11 +203,11 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application Snipe-IT {#3-snipe-it-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
+- **Configuration de la base de données au premier déploiement.** Le job
   `db-init` s'exécute sur `mysql:8.0-debian` et crée de manière idempotente la
-  base de données, l'utilisateur et les autorisations de l'application (elle
-  peut être relancée sans risque — `execute_on_apply = true`, `max_retries = 3`).
-- **Tâche de migration explicite, et non une migration automatique au démarrage.**
+  base de données, l'utilisateur et les autorisations de l'application (il
+  peut être relancé sans risque — `execute_on_apply = true`, `max_retries = 3`).
+- **Job de migration explicite, et non une migration automatique au démarrage.**
   Contrairement à certaines applications Laravel qui effectuent leurs
   migrations au démarrage du conteneur, Snipe-IT exécute ici un job
   d'initialisation `migrate` explicite (`php /var/www/html/artisan migrate --force`,
@@ -225,7 +225,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
   "3306"` est défini par `SnipeIT_Common`.
 - **Persistance des sessions, du cache et de la file d'attente.** `SnipeIT_Common` définit
   `SESSION_DRIVER = "database"`, `CACHE_DRIVER = "file"` et `QUEUE_DRIVER =
-  "database"` afin que les sessions et les tâches en file d'attente survivent
+  "database"` afin que les sessions et les jobs en file d'attente survivent
   aux redémarrages de pods.
 - **`APP_URL` est dérivé automatiquement.** `SnipeIT_Common` définit `APP_URL` à
   partir de l'URL prévue du service GKE lorsqu'elle est connue ; remplacez-la
@@ -338,7 +338,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`, `migrate`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `migrate`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -352,8 +352,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -370,19 +370,19 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Snipe-IT nécessite MySQL ; les autres moteurs ne sont pas pris en charge par `SnipeIT_Common`. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `APP_KEY` (généré automatiquement) | Ne jamais le modifier | Critical | Régénérer la clé Laravel après le premier démarrage invalide les sessions et toutes les données chiffrées avec l'ancienne clé (p. ex. des identifiants LDAP stockés). |
-| `enable_nfs` | `true` | High | Le désactiver rend éphémères les images d'actifs, signatures et codes-barres téléversés — isolés par pod et perdus au redémarrage. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est indispensable à la connectivité à la base de données sur GKE. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans comportement vérifié du stockage partagé et des verrous expose à des sessions fragmentées et à des contentions de verrous NFS/base de données. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
-| `network_tags` | `["nfsserver"]` | High | Supprimer ce tag alors que NFS est activé casse la connectivité entre les pods et Filestore. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, le pod PHP/Apache subit des OOM sous charge. |
-| `upload_max_filesize` / `post_max_size` | `upload_max_filesize ≤ post_max_size` | Medium | Un ordre incorrect tronque silencieusement les téléversements au niveau de PHP ; le contrôle au moment du plan le bloque, mais uniquement pour ces deux variables. |
-| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL mise en favori ou intégrée à une API. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Snipe-IT nécessite MySQL ; les autres moteurs ne sont pas pris en charge par `SnipeIT_Common`. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le modifier | Critique | Régénérer la clé Laravel après le premier démarrage invalide les sessions et toutes les données chiffrées avec l'ancienne clé (p. ex. des identifiants LDAP stockés). |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend éphémères les images d'actifs, signatures et codes-barres téléversés — isolés par pod et perdus au redémarrage. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est indispensable à la connectivité à la base de données sur GKE. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans comportement vérifié du stockage partagé et des verrous expose à des sessions fragmentées et à des contentions de verrous NFS/base de données. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
+| `network_tags` | `["nfsserver"]` | Élevé | Supprimer ce tag alors que NFS est activé casse la connectivité entre les pods et Filestore. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, le pod PHP/Apache subit des OOM sous charge. |
+| `upload_max_filesize` / `post_max_size` | `upload_max_filesize ≤ post_max_size` | Moyen | Un ordre incorrect tronque silencieusement les téléversements au niveau de PHP ; le contrôle au moment du plan le bloque, mais uniquement pour ces deux variables. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL mise en favori ou intégrée à une API. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

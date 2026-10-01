@@ -498,25 +498,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` (fixe) | Critical | Ne peut pas être remplacé par un autre moteur ; `Mixpost_Common` code MySQL en dur quelle que soit la valeur apparente de cette variable. |
-| `application_database_name` / `application_database_user` | Définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
-| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Faire tourner la clé Laravel invalide les données chiffrées de session/cookies et tous les champs chiffrés de la base de données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si vous utilisez la publication planifiée | High | Conserver la valeur par défaut de démarrage à froid (`false` / `0`) signifie que le planificateur et le worker de file d'attente Laravel ne s'exécutent que lorsqu'une instance se trouve active — les publications sociales planifiées cessent silencieusement d'être publiées à l'heure prévue, sauf si elles sont externalisées via Cloud Scheduler. |
-| `enable_redis` + `redis_host` / `enable_nfs` | `true` + NFS activé, ou un `redis_host` explicite | High | Activer Redis sans source d'hôte (pas de `redis_host`, pas de NFS) laisse la connexion Redis vide, et l'application ne gère plus correctement la file d'attente, le cache et les sessions. |
-| `enable_cloudsql_volume` | Conforme aux attentes de connexion de l'application à la base de données | High | Ce module le définit à `false` par défaut (TCP/IP privée) ; si `db-init` ou l'application ne parvient pas à joindre la base de données, vérifiez si c'est un socket (`true`) ou un chemin TCP qui est réellement utilisé dans la révision déployée. |
-| `memory_limit` | `2Gi` | High | Mixpost requiert au moins 2Gi pour le traitement des médias et les workers de file d'attente ; des valeurs inférieures exposent à des arrêts pour manque de mémoire (OOM) sous charge concurrente. |
-| `mixpost_admin_email` | Récupérer les identifiants réels après le déploiement | Medium | La variable n'est pas injectée dans la configuration en cours d'exécution ; l'image crée de toute façon son propre compte administrateur par défaut — changez le mot de passe immédiatement après la première connexion. |
-| `min_instance_count` | `0` pour le coût, `1` ou plus pour la latence/la planification | Medium | La mise à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité, en plus du compromis de planification ci-dessus. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface d'administration et la page de connexion sont joignables publiquement sans protection WAF. |
+| `database_type` | `MYSQL_8_0` (fixe) | Critique | Ne peut pas être remplacé par un autre moteur ; `Mixpost_Common` code MySQL en dur quelle que soit la valeur apparente de cette variable. |
+| `application_database_name` / `application_database_user` | Définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Faire tourner la clé Laravel invalide les données chiffrées de session/cookies et tous les champs chiffrés de la base de données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si vous utilisez la publication planifiée | Élevé | Conserver la valeur par défaut de démarrage à froid (`false` / `0`) signifie que le planificateur et le worker de file d'attente Laravel ne s'exécutent que lorsqu'une instance se trouve active — les publications sociales planifiées cessent silencieusement d'être publiées à l'heure prévue, sauf si elles sont externalisées via Cloud Scheduler. |
+| `enable_redis` + `redis_host` / `enable_nfs` | `true` + NFS activé, ou un `redis_host` explicite | Élevé | Activer Redis sans source d'hôte (pas de `redis_host`, pas de NFS) laisse la connexion Redis vide, et l'application ne gère plus correctement la file d'attente, le cache et les sessions. |
+| `enable_cloudsql_volume` | Conforme aux attentes de connexion de l'application à la base de données | Élevé | Ce module le définit à `false` par défaut (TCP/IP privée) ; si `db-init` ou l'application ne parvient pas à joindre la base de données, vérifiez si c'est un socket (`true`) ou un chemin TCP qui est réellement utilisé dans la révision déployée. |
+| `memory_limit` | `2Gi` | Élevé | Mixpost requiert au moins 2Gi pour le traitement des médias et les workers de file d'attente ; des valeurs inférieures exposent à des arrêts pour manque de mémoire (OOM) sous charge concurrente. |
+| `mixpost_admin_email` | Récupérer les identifiants réels après le déploiement | Moyen | La variable n'est pas injectée dans la configuration en cours d'exécution ; l'image crée de toute façon son propre compte administrateur par défaut — changez le mot de passe immédiatement après la première connexion. |
+| `min_instance_count` | `0` pour le coût, `1` ou plus pour la latence/la planification | Moyen | La mise à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité, en plus du compromis de planification ci-dessus. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface d'administration et la page de connexion sont joignables publiquement sans protection WAF. |
 
 ---
 

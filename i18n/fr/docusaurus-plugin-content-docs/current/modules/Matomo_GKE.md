@@ -245,11 +245,11 @@ de disponibilité et des règles d'alerte facultatifs sont disponibles.
   de données.
 - **Sondes de santé.** La sonde de démarrage est une sonde **TCP** sur `/` avec
   un délai initial généreux de 30 s, une période de 15 s et un seuil de 40 échecs
-  (~10.5 min au total) — ce qui laisse au point d'entrée de l'image le temps de
+  (~10,5 min au total) — ce qui laisse au point d'entrée de l'image le temps de
   remplir la racine documentaire montée sur NFS à partir de `/usr/src/matomo` et
   de joindre la base de données au premier démarrage. Le seuil a été relevé de
-  20 (~5.5 min) après un mode de défaillance confirmé : l'extraction n'est pas
-  toujours terminée en 5.5 minutes sur la racine documentaire montée sur NFS, et
+  20 (~5,5 min) après un mode de défaillance confirmé : l'extraction n'est pas
+  toujours terminée en 5,5 minutes sur la racine documentaire montée sur NFS, et
   un SIGKILL de la sonde de démarrage en pleine extraction laisse une
   arborescence partiellement copiée, appartenant à root, qui ne se répare pas
   d'elle-même au redémarrage (voir Pièges de configuration). La sonde de vivacité
@@ -315,7 +315,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | TCP `/`, délai de 30 s, période de 15 s, 40 échecs (~10.5 min) | Surcharge propre à Matomo avec un seuil généreux pour le remplissage NFS et la connexion à la base de données au premier démarrage. |
+| `startup_probe` | TCP `/`, délai de 30 s, période de 15 s, 40 échecs (~10,5 min) | Surcharge propre à Matomo avec un seuil généreux pour le remplissage NFS et la connexion à la base de données au premier démarrage. |
 | `liveness_probe` | HTTP `/`, délai de 300 s, période de 60 s, 3 échecs | Confirme qu'Apache/PHP répond (un 200/302 vers l'installateur compte comme sain). |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
@@ -387,8 +387,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -402,19 +402,19 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Matomo exige MySQL/MariaDB ; le moteur ne peut pas être remplacé par Postgres. |
-| `application_database_name` / `application_database_user` | Défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données d'analyse. |
-| `enable_nfs` | `true` | High | Le désactiver rend `config.ini.php`, les plugins installés et les ressources générées éphémères — perdus lors de la recréation du pod, ce qui casse le site après le premier redémarrage. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans avoir vérifié le comportement du stockage partagé et des sessions expose à des sessions fragmentées et à une contention des verrous NFS/base de données pendant le traitement des archives. |
-| `session_affinity` | `ClientIP` | High | Sans affinité, les requêtes passent d'un pod à l'autre et perturbent la session de l'interface d'administration. |
-| `container_port` | `80` | Critical | Matomo/Apache sert sur le port 80 ; une incohérence fait échouer toutes les sondes de vivacité et de démarrage, et le Deployment ne devient jamais Ready. |
-| `memory_limit` | `2Gi` | High | En dessous d'environ 512Mi, le pod PHP/Apache subit des OOM sous charge, en particulier pendant la génération des archives et des rapports. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_redis` | `true`, avec un vrai backend de cache configuré après le déploiement | Medium | Les variables d'environnement seules ne configurent pas le backend `[Cache]` de Matomo — laisser Redis « activé » sans service joignable (par ex. `redis_host` vide et aucun Redis co-hébergé) peut provoquer des erreurs de connexion sans réel bénéfice de mise en cache. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'adresse IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URL de suivi enregistrées ou intégrées. |
-| `backup_retention_days` | `7` (à augmenter pour la prod) | Medium | Trop court pour une conservation conforme des sauvegardes historiques des données d'analyse. |
-| `startup_probe.failure_threshold` | `40` (~10.5 min) | Critical | Le point d'entrée de l'image remplit par `tar` la racine documentaire montée sur NFS à partir de `/usr/src/matomo` en tant que root, et n'exécute `chown -R` qu'une fois l'extraction terminée ; un seuil trop serré envoie un SIGKILL au conteneur en pleine copie, laissant une racine documentaire corrompue de manière permanente et appartenant partiellement à root (erreurs composer/vendor « not installed ») qui ne se répare **pas** d'elle-même au redémarrage — la récupération exige de vider manuellement `/var/www/html` sur le volume NFS et de laisser le point d'entrée le remplir à nouveau. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Matomo exige MySQL/MariaDB ; le moteur ne peut pas être remplacé par Postgres. |
+| `application_database_name` / `application_database_user` | Défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données d'analyse. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend `config.ini.php`, les plugins installés et les ressources générées éphémères — perdus lors de la recréation du pod, ce qui casse le site après le premier redémarrage. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans avoir vérifié le comportement du stockage partagé et des sessions expose à des sessions fragmentées et à une contention des verrous NFS/base de données pendant le traitement des archives. |
+| `session_affinity` | `ClientIP` | Élevé | Sans affinité, les requêtes passent d'un pod à l'autre et perturbent la session de l'interface d'administration. |
+| `container_port` | `80` | Critique | Matomo/Apache sert sur le port 80 ; une incohérence fait échouer toutes les sondes de vivacité et de démarrage, et le Deployment ne devient jamais Ready. |
+| `memory_limit` | `2Gi` | Élevé | En dessous d'environ 512Mi, le pod PHP/Apache subit des OOM sous charge, en particulier pendant la génération des archives et des rapports. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_redis` | `true`, avec un vrai backend de cache configuré après le déploiement | Moyen | Les variables d'environnement seules ne configurent pas le backend `[Cache]` de Matomo — laisser Redis « activé » sans service joignable (par ex. `redis_host` vide et aucun Redis co-hébergé) peut provoquer des erreurs de connexion sans réel bénéfice de mise en cache. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'adresse IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URL de suivi enregistrées ou intégrées. |
+| `backup_retention_days` | `7` (à augmenter pour la prod) | Moyen | Trop court pour une conservation conforme des sauvegardes historiques des données d'analyse. |
+| `startup_probe.failure_threshold` | `40` (~10,5 min) | Critique | Le point d'entrée de l'image remplit par `tar` la racine documentaire montée sur NFS à partir de `/usr/src/matomo` en tant que root, et n'exécute `chown -R` qu'une fois l'extraction terminée ; un seuil trop serré envoie un SIGKILL au conteneur en pleine copie, laissant une racine documentaire corrompue de manière permanente et appartenant partiellement à root (erreurs composer/vendor « not installed ») qui ne se répare **pas** d'elle-même au redémarrage — la récupération exige de vider manuellement `/var/www/html` sur le volume NFS et de laisser le point d'entrée le remplir à nouveau. |
 
 ---
 

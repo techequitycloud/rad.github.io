@@ -341,7 +341,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (aucune pour Element). |
+| `initialization_jobs` | Noms des jobs de configuration (aucun pour Element). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -353,21 +353,21 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `timeout_seconds` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | High | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
-| `application_version` | Épinglez un véritable tag `element-web` | High | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un `latest` défini à la main dans un ARG de build brut échouerait avec `MANIFEST_UNKNOWN`. |
-| `ingress_settings` | `all` pour une interface publique | High | `internal` rend l'interface du client inaccessible depuis les navigateurs situés hors du VPC. |
-| `container_image_source` | `custom` | High | Passer à `prebuilt` avec une image dépourvue du point d'entrée `config.json` livre un Element pointant vers le mauvais serveur d'accueil (ou vers aucun). |
-| `memory_limit` | `512Mi` | Medium | L'environnement d'exécution gen2 rejette toute valeur inférieure à 512 MiB au moment du plan, quel que soit le mode de facturation. |
-| `enable_iap` | À activer pour protéger l'interface | Medium | Sans IAP, toute personne disposant de l'URL peut charger le client (il lui faut toutefois des identifiants du serveur d'accueil pour se connecter). |
-| `enable_cdn` | À activer pour les déploiements publics | Low | Servir les assets statiques directement depuis Cloud Run fait passer à côté d'un gain facile en latence et en trafic sortant. |
-| Entrées Base de données / Redis / Sauvegarde | Laisser la valeur par défaut | Low | Sans effet pour Element ; les définir n'a aucune incidence. |
+| `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | Élevé | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
+| `application_version` | Épinglez un véritable tag `element-web` | Élevé | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un `latest` défini à la main dans un ARG de build brut échouerait avec `MANIFEST_UNKNOWN`. |
+| `ingress_settings` | `all` pour une interface publique | Élevé | `internal` rend l'interface du client inaccessible depuis les navigateurs situés hors du VPC. |
+| `container_image_source` | `custom` | Élevé | Passer à `prebuilt` avec une image dépourvue du point d'entrée `config.json` livre un Element pointant vers le mauvais serveur d'accueil (ou vers aucun). |
+| `memory_limit` | `512Mi` | Moyen | L'environnement d'exécution gen2 rejette toute valeur inférieure à 512 MiB au moment du plan, quel que soit le mode de facturation. |
+| `enable_iap` | À activer pour protéger l'interface | Moyen | Sans IAP, toute personne disposant de l'URL peut charger le client (il lui faut toutefois des identifiants du serveur d'accueil pour se connecter). |
+| `enable_cdn` | À activer pour les déploiements publics | Faible | Servir les assets statiques directement depuis Cloud Run fait passer à côté d'un gain facile en latence et en trafic sortant. |
+| Entrées Base de données / Redis / Sauvegarde | Laisser la valeur par défaut | Faible | Sans effet pour Element ; les définir n'a aucune incidence. |
 
 ---
 

@@ -268,25 +268,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Plusieurs pods écrivent dans la même base SQLite via le PVC partagé — corruption de la base de données. |
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver revient à un montage de type GCS-FUSE pour `/data` ; gcsfuse corrompt la base de données SQLite et l'index des fichiers multimédias d'Audiobookshelf. |
-| `CONFIG_PATH` / `METADATA_PATH` (via `environment_variables`) | laisser les valeurs par défaut | Critical | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
-| `stateful_pvc_mount_path` | `/data` | Critical | Doit rester cohérent avec `CONFIG_PATH`/`METADATA_PATH` ; une incohérence signifie que la base SQLite n'est jamais réellement conservée sur le PVC. |
-| `stateful_pvc_storage_class` | `standard` (HDD) recommandé plutôt que la valeur par défaut `standard-rwo` (SSD) | High | Ce module utilise actuellement `standard-rwo` par défaut, qui puise dans le quota régional `SSD_TOTAL_GB`, restreint (p. ex. seulement 500 GB sur Qwiklabs) ; la charge de travail SQLite/multimédia d'Audiobookshelf n'a pas besoin des IOPS d'un SSD. Une série de plusieurs applications avec état adossées à des SSD peut épuiser le quota — passez `-var stateful_pvc_storage_class=standard` pour utiliser du HDD (`pd-standard`) à la place. Ramener la charge de travail à zéro ne libère **pas** le PVC ; seule sa suppression le fait. |
-| `container_port` | `80` | Critical | Audiobookshelf écoute sur 80 (`PORT=80` injecté par `Audiobookshelf_Common`) ; une incohérence fait échouer toutes les sondes de santé. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (uniquement pertinent si `enable_resource_quota = true`). |
-| `enable_redis` | forcé à `false` quelle que soit l'entrée | Low | Audiobookshelf n'a aucun usage de Redis ; la variante ignore cette variable et transmet toujours `false` au socle. |
-| `application_version` | tag épinglé | Medium | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
-| `enable_custom_domain` / `application_domains` | `true` / définir un nom d'hôte | Medium | Laissé à `true` sans `application_domains`, le module se rabat sur l'URL interne du cluster ou sur l'IP du LoadBalancer plutôt que sur un nom d'hôte stable. |
-| `enable_cloudsql_volume` | `false` | Low | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
+| `max_instance_count` | `1` | Critique | Plusieurs pods écrivent dans la même base SQLite via le PVC partagé — corruption de la base de données. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver revient à un montage de type GCS-FUSE pour `/data` ; gcsfuse corrompt la base de données SQLite et l'index des fichiers multimédias d'Audiobookshelf. |
+| `CONFIG_PATH` / `METADATA_PATH` (via `environment_variables`) | laisser les valeurs par défaut | Critique | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
+| `stateful_pvc_mount_path` | `/data` | Critique | Doit rester cohérent avec `CONFIG_PATH`/`METADATA_PATH` ; une incohérence signifie que la base SQLite n'est jamais réellement conservée sur le PVC. |
+| `stateful_pvc_storage_class` | `standard` (HDD) recommandé plutôt que la valeur par défaut `standard-rwo` (SSD) | Élevé | Ce module utilise actuellement `standard-rwo` par défaut, qui puise dans le quota régional `SSD_TOTAL_GB`, restreint (p. ex. seulement 500 GB sur Qwiklabs) ; la charge de travail SQLite/multimédia d'Audiobookshelf n'a pas besoin des IOPS d'un SSD. Une série de plusieurs applications avec état adossées à des SSD peut épuiser le quota — passez `-var stateful_pvc_storage_class=standard` pour utiliser du HDD (`pd-standard`) à la place. Ramener la charge de travail à zéro ne libère **pas** le PVC ; seule sa suppression le fait. |
+| `container_port` | `80` | Critique | Audiobookshelf écoute sur 80 (`PORT=80` injecté par `Audiobookshelf_Common`) ; une incohérence fait échouer toutes les sondes de santé. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (uniquement pertinent si `enable_resource_quota = true`). |
+| `enable_redis` | forcé à `false` quelle que soit l'entrée | Faible | Audiobookshelf n'a aucun usage de Redis ; la variante ignore cette variable et transmet toujours `false` au socle. |
+| `application_version` | tag épinglé | Moyen | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `enable_custom_domain` / `application_domains` | `true` / définir un nom d'hôte | Moyen | Laissé à `true` sans `application_domains`, le module se rabat sur l'URL interne du cluster ou sur l'IP du LoadBalancer plutôt que sur un nom d'hôte stable. |
+| `enable_cloudsql_volume` | `false` | Faible | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
 
 ---
 

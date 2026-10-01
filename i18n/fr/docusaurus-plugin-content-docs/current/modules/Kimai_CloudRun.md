@@ -64,9 +64,9 @@ un ensemble ciblé de services Google Cloud :
   Cloud Filestore NFS sur `/var/lib/kimai`, mais le véritable chemin de stockage persistant
   est le bucket `storage` monté via GCS-FUSE sur `/opt/kimai/var/data`.
   Rien n'écrit sur le montage NFS. Il peut être désactivé sans risque.
-- **Pas de tâche de migration distincte.** `kimai:install` (création du schéma et
+- **Pas de job de migration distinct.** `kimai:install` (création du schéma et
   migrations) s'exécute à chaque démarrage du conteneur, de manière idempotente, dans le cadre de la
-  chaîne de points d'entrée propre à l'éditeur — seule une tâche `db-init` est nécessaire pour
+  chaîne de points d'entrée propre à l'éditeur — seul un job `db-init` est nécessaire pour
   créer au préalable la base de données et l'utilisateur.
 
 ---
@@ -99,8 +99,8 @@ d'exécution et la répartition du trafic.
 Kimai stocke toutes les données applicatives (projets, activités, feuilles de temps, utilisateurs,
 factures) dans une instance gérée Cloud SQL for MySQL 8.0. Le service se connecte
 via l'**IP privée de l'instance en TCP** (et non via le socket de l'Auth Proxy —
-`enable_cloudsql_volume` vaut `false` par défaut pour ce module). Lors du premier déploiement, une
-tâche `db-init` crée la base de données et l'utilisateur de l'application ; `kimai:install`
+`enable_cloudsql_volume` vaut `false` par défaut pour ce module). Lors du premier déploiement, un
+job `db-init` crée la base de données et l'utilisateur de l'application ; `kimai:install`
 crée ensuite le schéma au premier démarrage du conteneur.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les
@@ -212,7 +212,7 @@ Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte optio
   "$ADMINPASS"` à chaque démarrage du conteneur dès que `ADMINPASS` est défini — sans
   effet une fois le compte existant. **Le nom d'utilisateur est toujours `admin`**,
   codé en dur par l'image de l'éditeur quelle que soit la valeur de `admin_email`.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -340,7 +340,7 @@ bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` unique intégrée. Il n'y a pas de tâche de migration distincte — `kimai:install` s'exécute à chaque démarrage du conteneur, de manière idempotente. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` unique intégré. Il n'y a pas de job de migration distinct — `kimai:install` s'exécute à chaque démarrage du conteneur, de manière idempotente. |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme par défaut. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -388,7 +388,7 @@ les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Nom de la tâche de configuration (`db-init`). |
+| `initialization_jobs` | Nom du job de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `cicd_configuration` | État et détails du CI/CD. |
@@ -400,8 +400,8 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_CloudRun](App_CloudRun.md), qui
@@ -412,16 +412,16 @@ les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `container_image_source` | `custom` | **Critical** | Passer à `prebuilt` déploie l'image `kimai/kimai2` d'origine sans point d'entrée d'encapsulation — `DATABASE_URL` n'est jamais composée, si bien que l'application ne peut pas du tout atteindre MySQL (Kimai n'a aucun autre moyen de recevoir une chaîne de connexion valide sur Cloud Run). |
-| `db_host_env_var_name` | `DB_IP` | Critical | L'encapsulation compose `DATABASE_URL` à partir de cet alias précis. L'effacer, ou le renommer autrement que ce qu'attend `entrypoint.sh`, fait lire un hôte vide à l'encapsulation et l'application ne peut pas se connecter. |
-| `container_port` | `8001` | Critical | La variante d'image `:apache` écoute sur 8001, et non 80 — diriger la plateforme vers le mauvais port rend le service inaccessible alors que le conteneur est sain. |
-| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les feuilles de temps, tous les projets et toutes les factures. |
-| `APP_SECRET` (généré automatiquement) | Ne jamais le modifier à la main dans Secret Manager après le premier démarrage | High | Kimai l'utilise comme clé de signature de sécurité Symfony ; le modifier invalide les jetons CSRF et les sessions actives. |
-| Compte administrateur par défaut (nom d'utilisateur toujours `admin`, mot de passe dans le secret `ADMINPASS`) | Récupérez le mot de passe généré dans Secret Manager et connectez-vous rapidement | High | Contrairement à certaines applications du catalogue, le mot de passe administrateur est ici un véritable secret généré par déploiement — et non une valeur par défaut publique bien connue — mais il reste utile de vérifier qui dispose d'un accès en lecture au secret. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `min_instance_count` | `1` en production | Medium | La mise à l'échelle jusqu'à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `enable_nfs` | `false` sauf besoin pour un autre usage | Low / coût | Vaut `true` par défaut et provisionne un partage Filestore que Kimai n'utilise jamais — un coût récurrent inutile ; la véritable persistance est le bucket `storage` monté via GCS-FUSE. |
-| `enable_cloud_armor` | à activer en production | Medium | Par défaut, le service est accessible publiquement sans protection WAF. |
+| `container_image_source` | `custom` | **Critique** | Passer à `prebuilt` déploie l'image `kimai/kimai2` d'origine sans point d'entrée d'encapsulation — `DATABASE_URL` n'est jamais composée, si bien que l'application ne peut pas du tout atteindre MySQL (Kimai n'a aucun autre moyen de recevoir une chaîne de connexion valide sur Cloud Run). |
+| `db_host_env_var_name` | `DB_IP` | Critique | L'encapsulation compose `DATABASE_URL` à partir de cet alias précis. L'effacer, ou le renommer autrement que ce qu'attend `entrypoint.sh`, fait lire un hôte vide à l'encapsulation et l'application ne peut pas se connecter. |
+| `container_port` | `8001` | Critique | La variante d'image `:apache` écoute sur 8001, et non 80 — diriger la plateforme vers le mauvais port rend le service inaccessible alors que le conteneur est sain. |
+| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les feuilles de temps, tous les projets et toutes les factures. |
+| `APP_SECRET` (généré automatiquement) | Ne jamais le modifier à la main dans Secret Manager après le premier démarrage | Élevé | Kimai l'utilise comme clé de signature de sécurité Symfony ; le modifier invalide les jetons CSRF et les sessions actives. |
+| Compte administrateur par défaut (nom d'utilisateur toujours `admin`, mot de passe dans le secret `ADMINPASS`) | Récupérez le mot de passe généré dans Secret Manager et connectez-vous rapidement | Élevé | Contrairement à certaines applications du catalogue, le mot de passe administrateur est ici un véritable secret généré par déploiement — et non une valeur par défaut publique bien connue — mais il reste utile de vérifier qui dispose d'un accès en lecture au secret. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `min_instance_count` | `1` en production | Moyen | La mise à l'échelle jusqu'à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `enable_nfs` | `false` sauf besoin pour un autre usage | Faible / coût | Vaut `true` par défaut et provisionne un partage Filestore que Kimai n'utilise jamais — un coût récurrent inutile ; la véritable persistance est le bucket `storage` monté via GCS-FUSE. |
+| `enable_cloud_armor` | à activer en production | Moyen | Par défaut, le service est accessible publiquement sans protection WAF. |
 
 ---
 

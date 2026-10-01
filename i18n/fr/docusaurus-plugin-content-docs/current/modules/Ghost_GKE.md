@@ -154,7 +154,7 @@ La sortie stdout/stderr des pods est envoyée vers Cloud Logging ; les métrique
 - **Connexion à la base de données.** Le point d'entrée associe automatiquement les variables `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD` et `DB_PORT` du socle aux paramètres `database__connection__*` de Ghost. Lorsque `DB_HOST` commence par `/`, il est traité comme un chemin de socket Unix.
 - **SMTP pour les e-mails.** Ghost nécessite SMTP pour les inscriptions des membres, les réinitialisations de mot de passe et l'envoi des newsletters. Les `environment_variables` sont pré-remplies (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM`) — configurez-les avant d'inviter des membres.
 - **Connexion administrateur.** Le panneau d'administration de Ghost se trouve à `<url>/ghost`. Au premier démarrage, Ghost crée un utilisateur administrateur de manière interactive.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent `/`, qui renvoie HTTP 200 lorsque Ghost est entièrement initialisé.
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/`, qui renvoie HTTP 200 lorsque Ghost est entièrement initialisé.
 
 ---
 
@@ -376,28 +376,28 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Ghost nécessite MySQL 8.0 ; tout autre moteur empêche le démarrage. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, le contenu téléversé est perdu au redémarrage d'un pod et n'est pas partagé entre les réplicas. |
-| `container_port` | `2368` | Critical | Port natif de Ghost ; une incohérence fait échouer toutes les sondes de santé. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont des octets et bloquent toute planification. |
-| `startup_probe` initial_delay_seconds | `90` | High | Une valeur inférieure à 60 conduit Kubernetes à arrêter Ghost avant la fin de l'exécution des migrations. |
-| `enable_redis` | `true` | High | Sans Redis, Ghost sert toutes les pages sans cache, ce qui augmente la charge sur la base de données. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque un OOM de Node.js lors de l'envoi des newsletters ou de la compilation des thèmes. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les sessions d'administration de Ghost en multi-réplicas échouent par intermittence. |
-| Paramètres SMTP de `environment_variables` | un vrai serveur SMTP | High | Sans envoi d'e-mails, pas d'inscriptions de membres, pas de réinitialisations de mot de passe, pas de newsletters. |
-| `container_image_source` | `custom` | High | L'image Ghost amont ne dispose pas du point d'entrée personnalisé qui mappe les identifiants de la base de données et détecte l'URL du service. |
-| `min_instance_count` | `1` | Medium | `0` provoque des démarrages à froid pendant lesquels Ghost exécute les migrations, ce qui fait expirer les premières requêtes. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Medium | Sinon, le panneau d'administration de Ghost (`/ghost`) est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` par rapport à `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `database_type` | `MYSQL_8_0` | Critique | Ghost nécessite MySQL 8.0 ; tout autre moteur empêche le démarrage. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, le contenu téléversé est perdu au redémarrage d'un pod et n'est pas partagé entre les réplicas. |
+| `container_port` | `2368` | Critique | Port natif de Ghost ; une incohérence fait échouer toutes les sondes de santé. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
+| `startup_probe` initial_delay_seconds | `90` | Élevé | Une valeur inférieure à 60 conduit Kubernetes à arrêter Ghost avant la fin de l'exécution des migrations. |
+| `enable_redis` | `true` | Élevé | Sans Redis, Ghost sert toutes les pages sans cache, ce qui augmente la charge sur la base de données. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque un OOM de Node.js lors de l'envoi des newsletters ou de la compilation des thèmes. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions d'administration de Ghost en multi-réplicas échouent par intermittence. |
+| Paramètres SMTP de `environment_variables` | un vrai serveur SMTP | Élevé | Sans envoi d'e-mails, pas d'inscriptions de membres, pas de réinitialisations de mot de passe, pas de newsletters. |
+| `container_image_source` | `custom` | Élevé | L'image Ghost amont ne dispose pas du point d'entrée personnalisé qui mappe les identifiants de la base de données et détecte l'URL du service. |
+| `min_instance_count` | `1` | Moyen | `0` provoque des démarrages à froid pendant lesquels Ghost exécute les migrations, ce qui fait expirer les premières requêtes. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Moyen | Sinon, le panneau d'administration de Ghost (`/ghost`) est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` par rapport à `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
 
 ---
 

@@ -519,24 +519,24 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identité autorisée, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors limites. Le propre `validation.tf` de ce module bloque en outre `min_instance_count > max_instance_count`, `enable_redis = true` sans `redis_host` ni `enable_nfs`, `enable_iap = true` sans les deux identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource — mais remplacer `database_type` par autre chose que Postgres ne fait *pas* partie des contrôles, si bien que cette erreur n'est détectée qu'à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Non validé au plan — passer à MySQL/SQL Server casse Prisma et toutes les requêtes à l'exécution, et non au moment du plan. |
-| Certificat de signature (`NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS`) | Fournir un véritable `.p12` après le déploiement | Critical | Sans lui, le point d'entrée auto-signe un certificat jetable — les documents sont « signés », mais la signature n'est pas reconnue par les lecteurs PDF ; inadapté à la production. |
-| `NEXT_PRIVATE_ENCRYPTION_KEY` / `_SECONDARY_KEY` (générées automatiquement) | Ne jamais les modifier directement | Critical | Elles chiffrent les données de Documenso ; faites-les tourner uniquement via l'emplacement de la clé secondaire, jamais en régénérant la clé principale sur place. |
-| `webapp_url` | À définir dès que l'URL / le domaine est connu | High | Non définie, `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL` suivent la valeur que prend `GKE_SERVICE_URL` à chaque démarrage ; une valeur explicite maintient les callbacks d'authentification et les liens des e-mails stables d'un redéploiement à l'autre. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour le chemin de connectivité à la base par défaut du point d'entrée sur GKE. |
-| `db_name` / `db_user` | À définir une fois | High | Les renommer après le premier déploiement fait pointer l'application vers un rôle / une base différents (vides) — `application_database_name`/`application_database_user` sont des leurres inertes ; les modifier n'a aucun effet. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| `enable_nfs` | `true` (par défaut) ou `false` si Redis reste désactivé | Medium | Filestore est facturé que l'application y écrive ou non ; avec `enable_redis = false` (par défaut), le montage NFS est un surcoût inutilisé. |
-| `smtp_host` | À définir pour la production | Medium | Laissé vide, aucune variable `NEXT_PRIVATE_SMTP_*` n'est injectée — aucun e-mail d'invitation ni de notification de signature n'est envoyé. |
-| `enable_custom_domain` / `reserve_static_ip` | `true` (par défaut) | Medium | Sans IP ou domaine stable, le nom d'hôte de repli `nip.io` peut changer, ce qui casse `webapp_url` et les callbacks OAuth d'un redéploiement à l'autre. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` | Critique | Non validé au plan — passer à MySQL/SQL Server casse Prisma et toutes les requêtes à l'exécution, et non au moment du plan. |
+| Certificat de signature (`NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS`) | Fournir un véritable `.p12` après le déploiement | Critique | Sans lui, le point d'entrée auto-signe un certificat jetable — les documents sont « signés », mais la signature n'est pas reconnue par les lecteurs PDF ; inadapté à la production. |
+| `NEXT_PRIVATE_ENCRYPTION_KEY` / `_SECONDARY_KEY` (générées automatiquement) | Ne jamais les modifier directement | Critique | Elles chiffrent les données de Documenso ; faites-les tourner uniquement via l'emplacement de la clé secondaire, jamais en régénérant la clé principale sur place. |
+| `webapp_url` | À définir dès que l'URL / le domaine est connu | Élevé | Non définie, `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL` suivent la valeur que prend `GKE_SERVICE_URL` à chaque démarrage ; une valeur explicite maintient les callbacks d'authentification et les liens des e-mails stables d'un redéploiement à l'autre. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour le chemin de connectivité à la base par défaut du point d'entrée sur GKE. |
+| `db_name` / `db_user` | À définir une fois | Élevé | Les renommer après le premier déploiement fait pointer l'application vers un rôle / une base différents (vides) — `application_database_name`/`application_database_user` sont des leurres inertes ; les modifier n'a aucun effet. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| `enable_nfs` | `true` (par défaut) ou `false` si Redis reste désactivé | Moyen | Filestore est facturé que l'application y écrive ou non ; avec `enable_redis = false` (par défaut), le montage NFS est un surcoût inutilisé. |
+| `smtp_host` | À définir pour la production | Moyen | Laissé vide, aucune variable `NEXT_PRIVATE_SMTP_*` n'est injectée — aucun e-mail d'invitation ni de notification de signature n'est envoyé. |
+| `enable_custom_domain` / `reserve_static_ip` | `true` (par défaut) | Moyen | Sans IP ou domaine stable, le nom d'hôte de repli `nip.io` peut changer, ce qui casse `webapp_url` et les callbacks OAuth d'un redéploiement à l'autre. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

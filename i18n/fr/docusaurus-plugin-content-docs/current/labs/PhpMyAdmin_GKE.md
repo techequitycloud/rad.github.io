@@ -247,7 +247,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
 
 Consultez la section *Configuration Pitfalls & Sensible Defaults* du Guide de configuration pour
 les pièges propres à chaque paramètre (notamment pourquoi un `LoadBalancer` externe non authentifié
-sans IAP constitue une erreur de configuration à risque **Critical** pour un outil d'administration de base de données, pourquoi
+sans IAP constitue une erreur de configuration à risque **Critique** pour un outil d'administration de base de données, pourquoi
 un `database_type` autre que `NONE` est bloqué par une garde de validation au moment du plan, et pourquoi
 `PMA_ARBITRARY = "1"` élargit le rayon d'impact d'une session compromise).
 

@@ -77,7 +77,7 @@ Meilisearch ne nécessite **aucune base de données** ; le moteur est fixé à `
 et MySQL, PostgreSQL et les autres moteurs ne s'appliquent pas. Meilisearch est un
 binaire Rust autonome qui persiste ses index, documents, paramètres et sa file de
 tâches dans un unique répertoire sur disque. Aucune instance Cloud SQL, aucun utilisateur
-applicatif ni aucune tâche `db-init` n'est créé.
+applicatif ni aucun job `db-init` n'est créé.
 
 La durabilité repose entièrement sur le volume de stockage monté sur `/meili_data`
 (`MEILI_DB_PATH = /meili_data`) :
@@ -167,7 +167,7 @@ peuvent le sonder directement même lorsque la clé maître est définie sur l'A
 ## 7. Jobs d'initialisation et stockage d'objets {#7-initialization-jobs-and-object-storage}
 
 Meilisearch gère son propre stockage et ne nécessite **aucune initialisation de base de données** ;
-`Meilisearch_Common` n'injecte donc aucune tâche `db-init` par défaut. L'entrée `initialization_jobs`
+`Meilisearch_Common` n'injecte donc aucun job `db-init` par défaut. L'entrée `initialization_jobs`
 est transmise telle quelle pour les opérateurs qui souhaitent exécuter des tâches ponctuelles personnalisées
 — par exemple alimenter un index depuis un système source ou restaurer un dump avant le
 démarrage du service.

@@ -48,7 +48,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   refuse de démarrer sans les deux — `NEXTAUTH_SECRET` signe les JWT de session, `SALT` hache les clés d'API.
 - **Les migrations Prisma s'exécutent à chaque démarrage.** Le point d'entrée cloud compose `DATABASE_URL` à partir
   des variables `DB_*` injectées, puis passe la main au démarrage propre de Langfuse, qui exécute
-  `prisma migrate deploy`. La tâche `db-init` crée uniquement le rôle et la base de données.
+  `prisma migrate deploy`. Le job `db-init` crée uniquement le rôle et la base de données.
 - **Le premier utilisateur qui s'inscrit devient le propriétaire.** `AUTH_DISABLE_SIGNUP = "false"` est injecté ;
   il n'existe aucun identifiant administrateur prédéfini.
 - **L'affinité de session est `ClientIP` par défaut** afin que les requêtes d'un client atteignent le même pod.
@@ -169,8 +169,8 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 
 - **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` avec
   `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente
-  le rôle et la base de données de l'application, puis accorde les droits. Il ne crée **pas** les tables — la
-  tâche peut être relancée sans risque.
+  le rôle et la base de données de l'application, puis accorde les droits. Il ne crée **pas** les tables — le
+  job peut être relancé sans risque.
 - **Migrations Prisma au démarrage.** Le point d'entrée cloud compose `DATABASE_URL` et délègue au
   démarrage propre de Langfuse, qui exécute `prisma migrate deploy` avant de lancer le serveur.
   La montée de version de l'application applique les changements de schéma sans étape de migration distincte.
@@ -305,7 +305,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiées. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Langfuse. |
 
@@ -425,7 +425,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD (dépôt, déclencheur, registre). |
@@ -439,27 +439,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
-| `SALT` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'émission de nouvelles clés. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de traces. |
-| `application_version` | `2` (branche v2) | Critical | Un tag v3 oriente le build vers une image qui nécessite ClickHouse + Redis + S3, que ce module ne provisionne pas — le pod ne démarre pas. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans sauvegarde valide fait échouer la tâche d'import. |
-| `container_resources.memory_limit` | `4Gi` (≥ 2Gi) | High | En dessous de 2 GiB, Langfuse est arrêté pour dépassement de mémoire (OOM) pendant les migrations du premier démarrage ou sous charge d'ingestion. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les sessions de l'interface peuvent passer d'un pod à l'autre. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 garantit que l'ingestion est toujours disponible. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `AUTH_DISABLE_SIGNUP` (injecté automatiquement à `"false"`) | Désactiver après le premier propriétaire | High | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `enable_iap` | uniquement lorsque l'ingestion par SDK n'est pas nécessaire | High | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion de traces par les SDK. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
+| `SALT` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'émission de nouvelles clés. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de traces. |
+| `application_version` | `2` (branche v2) | Critique | Un tag v3 oriente le build vers une image qui nécessite ClickHouse + Redis + S3, que ce module ne provisionne pas — le pod ne démarre pas. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer le job d'import. |
+| `container_resources.memory_limit` | `4Gi` (≥ 2Gi) | Élevé | En dessous de 2 GiB, Langfuse est arrêté pour dépassement de mémoire (OOM) pendant les migrations du premier démarrage ou sous charge d'ingestion. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions de l'interface peuvent passer d'un pod à l'autre. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 garantit que l'ingestion est toujours disponible. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `AUTH_DISABLE_SIGNUP` (injecté automatiquement à `"false"`) | Désactiver après le premier propriétaire | Élevé | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `enable_iap` | uniquement lorsque l'ingestion par SDK n'est pas nécessaire | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion de traces par les SDK. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
 
 ---
 

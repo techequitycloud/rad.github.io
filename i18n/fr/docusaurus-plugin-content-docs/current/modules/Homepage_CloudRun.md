@@ -268,16 +268,16 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `gcs_volumes` / stockage sur `/app/config` | Laisser en place le montage automatique `storage` | **Critical** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid — Homepage n'a aucune autre source de vérité. |
-| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Medium | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
-| Chemin de sonde | Laisser `/api/healthcheck` | High | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine alors même que l'application a démarré correctement. |
-| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Low | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
-| UID/GID supposé du montage GCS FUSE | Ne pas compter sur le fait que `uid=1000,gid=1000` soit appliqué à la lettre sur Cloud Run | Low | L'intégration gcsfuse propre à Cloud Run utilise silencieusement `uid=2000,gid=2000` à la place — sans conséquence en pratique, mais une fausse piste si vous déboguez un problème de permissions en lisant le Terraform au lieu de la ligne de journal du montage réel. |
+| `gcs_volumes` / stockage sur `/app/config` | Laisser en place le montage automatique `storage` | **Critique** | Supprimer ou mal configurer ce volume fait perdre tous les fichiers de configuration YAML au prochain démarrage à froid — Homepage n'a aucune autre source de vérité. |
+| `HOMEPAGE_ALLOWED_HOSTS` | Laisser `*` sauf si vous connaissez le nom d'hôte final, puis le restreindre | Moyen | Une valeur trop restrictive renvoie un 400 pour chaque widget adossé à l'API (le squelette de la page se charge quand même) si le nom d'hôte réel de la requête ne correspond pas ; le traiter comme une véritable frontière d'authentification procure de toute façon un faux sentiment de sécurité. |
+| Chemin de sonde | Laisser `/api/healthcheck` | Élevé | Un chemin de sonde authentifié ou inexistant laisserait la révision durablement non saine alors même que l'application a démarré correctement. |
+| `enable_redis` | Ne pas toucher au `false` codé en dur (ne tentez pas de le forcer via `environment_variables`) | Faible | Homepage n'a rien à mettre en cache ; activer Redis ajoute une dépendance Memorystore/NFS-Redis inutile. |
+| UID/GID supposé du montage GCS FUSE | Ne pas compter sur le fait que `uid=1000,gid=1000` soit appliqué à la lettre sur Cloud Run | Faible | L'intégration gcsfuse propre à Cloud Run utilise silencieusement `uid=2000,gid=2000` à la place — sans conséquence en pratique, mais une fausse piste si vous déboguez un problème de permissions en lisant le Terraform au lieu de la ligne de journal du montage réel. |
 
 ---
 

@@ -141,9 +141,9 @@ La fiabilité est définie, mesurée et conçue — et non simplement espérée.
 
 | Niveau | Disponibilité | Latence (p99) | Budget d'erreur (30 j) |
 |---|---|---|---|
-| Production (critique) | 99.9% | < 2 s | 43 min |
-| Production (standard) | 99.5% | < 5 s | 3.6 hr |
-| Hors production | 99.0% | < 10 s | 7.2 hr |
+| Production (critique) | 99,9% | < 2 s | 43 min |
+| Production (standard) | 99,5% | < 5 s | 3.6 hr |
+| Hors production | 99,0% | < 10 s | 7.2 hr |
 
 - **Politique de budget d'erreur.** Lorsqu'un budget est consommé de manière significative, la livraison de
   fonctionnalités non critiques est suspendue au profit du travail de fiabilité — ce qui rend l'arbitrage entre fiabilité

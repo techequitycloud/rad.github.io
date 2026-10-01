@@ -335,26 +335,26 @@ en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une valeur `redis_port`/`backup_retention_days` hors plage, un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critical | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans URI de sauvegarde valide fait échouer le job d'import. |
-| `enable_nfs` | `true` | High | Le désactiver relègue le stockage des pièces jointes d'EspoCRM au disque éphémère du conteneur — les fichiers envoyés sont perdus lorsqu'une instance est réduite ou recyclée. |
-| `max_instance_count` | `1` sauf si la sécurité a été vérifiée | Medium | Les fichiers envoyés sont stockés sur NFS par défaut, mais Cloud Run n'a pas d'affinité de session intégrée — vérifiez le comportement d'EspoCRM avec des sessions PHP concurrentes avant de dépasser 1 instance. |
-| `enable_cloudsql_volume` | `false` (TCP sur IP privée) | High | Forcer le socket sans chemin correspondant dans le point d'entrée peut casser la connexion MySQL ; EspoCRM se connecte à l'IP privée par conception. |
-| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL réelle du service / du domaine personnalisé | High | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
-| `cpu_limit` | `1000m` | Medium | En dessous de 1 vCPU, l'installation au premier démarrage et le traitement des plugins lourds sont ralentis. |
-| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Medium | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
-| `min_instance_count` | `1` en production | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid et, sans volume partagé, perd les fichiers envoyés locaux lors de la réduction. |
-| `application_version` | À figer en production | Medium | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
+| `database_type` | `MYSQL_8_0` | Critique | EspoCRM ne prend en charge que MySQL ; sélectionner PostgreSQL fait échouer le démarrage. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `ESPOCRM_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager ; le modifier dans l'interface | Critique | Ne définit le mot de passe administrateur que lors de la **première** installation ; le perdre vous bloque l'accès jusqu'à une réinitialisation via la base de données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans URI de sauvegarde valide fait échouer le job d'import. |
+| `enable_nfs` | `true` | Élevé | Le désactiver relègue le stockage des pièces jointes d'EspoCRM au disque éphémère du conteneur — les fichiers envoyés sont perdus lorsqu'une instance est réduite ou recyclée. |
+| `max_instance_count` | `1` sauf si la sécurité a été vérifiée | Moyen | Les fichiers envoyés sont stockés sur NFS par défaut, mais Cloud Run n'a pas d'affinité de session intégrée — vérifiez le comportement d'EspoCRM avec des sessions PHP concurrentes avant de dépasser 1 instance. |
+| `enable_cloudsql_volume` | `false` (TCP sur IP privée) | Élevé | Forcer le socket sans chemin correspondant dans le point d'entrée peut casser la connexion MySQL ; EspoCRM se connecte à l'IP privée par conception. |
+| `ESPOCRM_SITE_URL` (dérivé automatiquement) | URL réelle du service / du domaine personnalisé | Élevé | Une URL de site incorrecte casse les liens absolus, la vérification de l'installateur et les redirections OAuth. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, PHP 8.x est arrêté pour OOM pendant l'installation/la migration et sous charge. |
+| `cpu_limit` | `1000m` | Moyen | En dessous de 1 vCPU, l'installation au premier démarrage et le traitement des plugins lourds sont ralentis. |
+| `enable_iap` | uniquement lorsque l'interface publique n'est pas nécessaire | Moyen | IAP exige une connexion Google pour chaque requête, y compris les intégrations d'API. |
+| `min_instance_count` | `1` en production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid et, sans volume partagé, perd les fichiers envoyés locaux lors de la réduction. |
+| `application_version` | À figer en production | Moyen | `latest` correspond en interne à un tag figé, mais figer explicitement la version évite les mises à niveau inattendues lors d'un redéploiement. |
 
 ---
 

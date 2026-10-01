@@ -45,7 +45,7 @@ docker-compose de l'éditeur :
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | GKE Autopilot (2 Deployments) | Backend (principal, 2 vCPU/2Gi par défaut) + frontend (`additional_services`, 0.5 vCPU/512Mi) |
+| Calcul | GKE Autopilot (2 Deployments) | Backend (principal, 2 vCPU/2Gi par défaut) + frontend (`additional_services`, 0,5 vCPU/512Mi) |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — aucun autre moteur n'est pris en charge |
 | Secrets | Secret Manager → Secret K8s | `SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `SPARKY_FITNESS_APP_DB_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | Adresse IP externe réservée de LoadBalancer (frontend) | Déterministe d'un redéploiement à l'autre — connue au moment du plan |
@@ -54,10 +54,10 @@ docker-compose de l'éditeur :
 
 - **PostgreSQL 15 est obligatoire.** Aucun autre moteur n'est pris en charge.
 - **Deux rôles de base de données, dont un seul géré par Terraform.** `db_user` (par
-  défaut `sparky`) est le rôle d'administration/de migration créé par la tâche
+  défaut `sparky`) est le rôle d'administration/de migration créé par le job
   `db-init` ; `app_db_user` (par défaut `sparky_app`) est un rôle à privilèges limités
   que le **backend crée et entretient lui-même** à chaque démarrage.
-- **Pas de tâche de migration distincte.** Le backend exécute ses propres migrations
+- **Pas de job de migration distinct.** Le backend exécute ses propres migrations
   de base de données à chaque démarrage du conteneur.
 - **Le Service du backend est toujours exposé sur le port 80**, quelle que soit la
   valeur de `container_port` (3010) — il s'agit d'une convention générale d'App_GKE
@@ -165,7 +165,7 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
 - **Adresse IP réservée du LB frontend.** `public_uri` remplace l'URL
   `http://<reserved-ip>` dérivée automatiquement par un domaine personnalisé —
   définissez cette variable ainsi que l'enregistrement DNS du domaine, puis redéployez.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/db-init
@@ -211,11 +211,11 @@ leur comportement standard.
 |---|---|---|
 | `smtp_enabled` | `false` | Active les e-mails de réinitialisation de mot de passe et de notification ; définissez tous les champs `smtp_*` ensemble. |
 
-### Groupe 11 — Tâches et services {#group-11--jobs--services}
+### Groupe 11 — Jobs et services {#group-11--jobs--services}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `additional_services` | `[]` | Le frontend est déjà inclus automatiquement ; utilisez ce paramètre pour tout service SUPPLÉMENTAIRE. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -257,19 +257,19 @@ leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critical | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
-| `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critical | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les modifier recrée la base de données et détruit toutes les données. |
-| Port cible du proxy frontend | `80` (fixé par App_GKE), et non `container_port` | High | Pointer le `SPARKY_FITNESS_SERVER_PORT` du frontend vers `3010` vise un écouteur de Service inexistant — chaque appel `/api` reste bloqué. |
-| `application_version` | Utiliser l'étiquette exacte de l'amont (`v0.17.3`) | High | Un `0.17.3` sans préfixe (pas de `v`) n'existe pas en amont — le pull échoue. |
-| `admin_email` | À définir uniquement une fois le compte créé | Medium | Le définir avant l'inscription n'a aucun effet. |
-| `disable_signup` | `true` après le premier administrateur | Medium | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `public_uri` | À définir en même temps qu'un DNS réel lors de l'utilisation d'un domaine personnalisé | Medium | Un `public_uri` injoignable ou incohérent casse les contrôles CORS et d'origine de session. |
+| `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critique | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
+| `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critique | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les modifier recrée la base de données et détruit toutes les données. |
+| Port cible du proxy frontend | `80` (fixé par App_GKE), et non `container_port` | Élevé | Pointer le `SPARKY_FITNESS_SERVER_PORT` du frontend vers `3010` vise un écouteur de Service inexistant — chaque appel `/api` reste bloqué. |
+| `application_version` | Utiliser l'étiquette exacte de l'amont (`v0.17.3`) | Élevé | Un `0.17.3` sans préfixe (pas de `v`) n'existe pas en amont — le pull échoue. |
+| `admin_email` | À définir uniquement une fois le compte créé | Moyen | Le définir avant l'inscription n'a aucun effet. |
+| `disable_signup` | `true` après le premier administrateur | Moyen | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `public_uri` | À définir en même temps qu'un DNS réel lors de l'utilisation d'un domaine personnalisé | Moyen | Un `public_uri` injoignable ou incohérent casse les contrôles CORS et d'origine de session. |
 
 ---
 

@@ -70,7 +70,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Les migrations s'exécutent au démarrage.** Le script `./docker-start.sh` du
   conteneur exécute `prisma migrate deploy` à chaque démarrage, si bien que les mises
   à niveau de version appliquent les modifications de schéma sans étape de migration
-  distincte. La tâche `db-init` se contente de provisionner la base de données vide et
+  distincte. Le job `db-init` se contente de provisionner la base de données vide et
   le rôle.
 
 ---
@@ -228,7 +228,7 @@ d'alerte facultatifs.
   vivacité de Cloud Run ne peut pas utiliser de socket TCP, et une vérification HTTP
   sur `/api/status` ferait redémarrer en boucle un conteneur sain mais pas encore
   entièrement prêt ; la sonde de démarrage TCP conditionne déjà l'acheminement.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -329,7 +329,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -341,25 +341,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, `enable_cloudsql_volume = true` avec `database_type = NONE`, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_PASSWORD` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critical | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | N'en faire la rotation que pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou le rôle et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Rallly ne prend en charge que PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `smtp_user` / `smtp_password` | À définir lorsque `smtp_host` est défini | High | Avec `smtp_host` défini (par défaut `smtp.gmail.com`) mais des identifiants vides, les e-mails de connexion ne sont jamais envoyés et les utilisateurs ne peuvent pas se connecter. |
-| `base_url` | Votre domaine personnalisé | High | S'il est laissé vide derrière un domaine personnalisé, les liens d'invitation et de connexion pointent vers l'URL `run.app` brute au lieu de l'adresse visitée par les utilisateurs. |
-| `enable_iap` | Uniquement pour les déploiements internes | High | IAP place une barrière d'authentification Google devant Rallly ; les participants anonymes aux sondages ne peuvent pas y accéder. |
-| `enable_cloudsql_volume` | `true` | High | Le socket de l'Auth Proxy est requis pour la connectivité PostgreSQL ; une garde au moment du plan le bloque avec `database_type = NONE`. |
-| `min_instance_count` | `1` pour les usages sensibles à la latence | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| Délais de `startup_probe` | Conserver la valeur par défaut généreuse | Medium | Une fenêtre trop serrée peut faire échouer la sonde pendant la migration Prisma du premier démarrage. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
+| `SECRET_PASSWORD` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critique | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | N'en faire la rotation que pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou le rôle et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Rallly ne prend en charge que PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `smtp_user` / `smtp_password` | À définir lorsque `smtp_host` est défini | Élevé | Avec `smtp_host` défini (par défaut `smtp.gmail.com`) mais des identifiants vides, les e-mails de connexion ne sont jamais envoyés et les utilisateurs ne peuvent pas se connecter. |
+| `base_url` | Votre domaine personnalisé | Élevé | S'il est laissé vide derrière un domaine personnalisé, les liens d'invitation et de connexion pointent vers l'URL `run.app` brute au lieu de l'adresse visitée par les utilisateurs. |
+| `enable_iap` | Uniquement pour les déploiements internes | Élevé | IAP place une barrière d'authentification Google devant Rallly ; les participants anonymes aux sondages ne peuvent pas y accéder. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket de l'Auth Proxy est requis pour la connectivité PostgreSQL ; une garde au moment du plan le bloque avec `database_type = NONE`. |
+| `min_instance_count` | `1` pour les usages sensibles à la latence | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| Délais de `startup_probe` | Conserver la valeur par défaut généreuse | Moyen | Une fenêtre trop serrée peut faire échouer la sonde pendant la migration Prisma du premier démarrage. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
 
 ---
 

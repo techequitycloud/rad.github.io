@@ -203,13 +203,13 @@ des règles d'alerte en option.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via l'IP privée de Cloud SQL et crée de manière idempotente la base de données
-  applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
-  réexécutée sans risque.
+  applicative et l'utilisateur, puis accorde les privilèges. Le job peut être
+  réexécuté sans risque.
 - **Les migrations du schéma s'exécutent à chaque démarrage.** Le `CMD` de l'image
   de base de Linkwarden exécute `prisma migrate deploy` avant de démarrer les
   processus web et worker ; la mise à niveau de la version de l'application applique
-  donc automatiquement les modifications du schéma — il n'existe pas de tâche de
-  migration distincte.
+  donc automatiquement les modifications du schéma — il n'existe pas de job de
+  migration distinct.
 - **`NEXTAUTH_SECRET` est immuable après le premier démarrage.** Il est généré une
   seule fois et écrit dans Secret Manager. Sa rotation invalide toutes les sessions
   actives et oblige tous les utilisateurs à se reconnecter.
@@ -227,7 +227,7 @@ des règles d'alerte en option.
   sonde de démarrage accorde une fenêtre généreuse (délai initial de 60 s, seuil de
   30 échecs) pour absorber le démarrage à froid de Next.js ainsi que
   l'initialisation de Chrome headless/Playwright.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -306,7 +306,7 @@ avec leur comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. Linkwarden exécute ses propres migrations Prisma au démarrage — aucune tâche de migration distincte n'est nécessaire. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Linkwarden exécute ses propres migrations Prisma au démarrage — aucun job de migration distinct n'est nécessaire. |
 | `cron_jobs` | `[]` | Non utilisé par défaut. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -341,7 +341,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 
@@ -349,22 +349,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` (imposé) | Critical | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro arrête le worker d'archivage en arrière-plan entre les requêtes — les liens en file d'attente ne sont jamais archivés. |
-| `memory_limit` | `2Gi` minimum | High | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
-| `enable_nfs` + `gcs_volumes` | Laisser `enable_nfs=false`, utiliser le volume GCS par défaut | Medium | Activer NFS sans désactiver également la configuration du volume GCS par défaut peut répartir le contenu archivé entre deux backends de stockage. |
-| `disable_browser` | `false` sauf si Chrome échoue dans le bac à sable de Cloud Run | Medium | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths — Linkwarden devient une simple liste de liens. |
-| `archive_take_count` | `5` (valeur par défaut) | Low | Des valeurs élevées provoquent de forts pics de CPU et de mémoire à chaque lot (instances simultanées de Chrome headless). |
-| `ingress_settings` | `all` pour un usage normal | Medium | Le restreindre à `internal` bloque le flux public de connexion et d'inscription nécessaire au compte propriétaire du premier lancement. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` (imposé) | Critique | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro arrête le worker d'archivage en arrière-plan entre les requêtes — les liens en file d'attente ne sont jamais archivés. |
+| `memory_limit` | `2Gi` minimum | Élevé | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
+| `enable_nfs` + `gcs_volumes` | Laisser `enable_nfs=false`, utiliser le volume GCS par défaut | Moyen | Activer NFS sans désactiver également la configuration du volume GCS par défaut peut répartir le contenu archivé entre deux backends de stockage. |
+| `disable_browser` | `false` sauf si Chrome échoue dans le bac à sable de Cloud Run | Moyen | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths — Linkwarden devient une simple liste de liens. |
+| `archive_take_count` | `5` (valeur par défaut) | Faible | Des valeurs élevées provoquent de forts pics de CPU et de mémoire à chaque lot (instances simultanées de Chrome headless). |
+| `ingress_settings` | `all` pour un usage normal | Moyen | Le restreindre à `internal` bloque le flux public de connexion et d'inscription nécessaire au compte propriétaire du premier lancement. |
 
 ---
 

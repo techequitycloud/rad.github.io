@@ -105,7 +105,7 @@ Fider stocke toutes les données de l'application (publications, votes,
 commentaires, utilisateurs, paramètres) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Le service s'y connecte de manière privée via le
 **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Lors
-du premier déploiement, la tâche `db-init` crée le rôle et la base de données de
+du premier déploiement, le job `db-init` crée le rôle et la base de données de
 l'application et accorde les privilèges ; Fider exécute ensuite ses propres
 migrations au démarrage.
 
@@ -220,11 +220,11 @@ liens d'inscription et d'invitation apparaissent dans les journaux.
 
 ## 3. Comportement de l'application Fider {#3-fider-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte via le
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via le
   Cloud SQL Auth Proxy et crée de manière idempotente le rôle et la base de données
   `fider`, accorde les privilèges et transfère la propriété du schéma `public` au
-  rôle de l'application. La tâche peut être réexécutée sans risque.
+  rôle de l'application. Le job peut être réexécuté sans risque.
 - **Migrations de schéma au démarrage.** Le point d'entrée personnalisé exécute
   `./fider migrate` avant de lancer le serveur (le `CMD` de l'image est remplacé par
   `./fider` uniquement). Les migrations sont idempotentes ; la mise à niveau de la
@@ -256,7 +256,7 @@ liens d'inscription et d'invitation apparaissent dans les journaux.
   7 minutes au premier démarrage (la sonde de démarrage par défaut offre un délai
   initial de 30 secondes plus une fenêtre de 30 échecs avec une période de
   15 secondes).
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -367,7 +367,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -379,25 +379,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et les liens de connexion envoyés par e-mail encore en attente. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Tout moteur autre que PostgreSQL empêche le démarrage — Fider ne fonctionne qu'avec Postgres. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans source de sauvegarde valide fait échouer la tâche d'import. |
-| `container_port` | `3000` | High | Un port incorrect fait que les sondes visent un port inactif et la révision ne devient jamais Ready. |
-| `application_version` | épingler un tag SHA ; `latest` → `stable` | High | `getfider/fider` n'a pas de tag `:latest` ; le module épingle `latest` sur `stable`, mais épinglez explicitement une version pour des mises à niveau reproductibles. |
-| `memory_limit` | `4Gi` (par défaut) | Medium | Une taille insuffisante risque des arrêts OOM sous charge ; Fider lui-même est léger. |
-| `enable_nfs` | `true` (par défaut) | Medium | Ne le désactivez que si vous n'avez pas besoin du stockage des pièces jointes ; la VM NFS partagée doit être à l'état `RUNNING` avant le déploiement. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` (par défaut) | Low | Fider n'a pas de worker en arrière-plan — `0` / `false` est sans risque pour les données et moins coûteux, au prix de démarrages à froid. |
-| SMTP (`EMAIL_SMTP_*`) | Configurer pour un envoi réel | Medium | Avec les valeurs fictives, les liens d'inscription et d'invitation n'apparaissent que dans les journaux — aucun e-mail n'est envoyé. |
-| `enable_iap` | uniquement lorsque l'accès public n'est pas nécessaire | High | IAP bloque toutes les requêtes non authentifiées, y compris la consultation anonyme du tableau. |
-| URL Cloud Run à consulter | forme à numéro de projet, pas `status.url` | High | La CSP de Fider est limitée au nom d'hôte à numéro de projet ; consulter la forme `status.url` à suffixe aléatoire fait bloquer toutes les ressources par le navigateur, ce qui affiche une page blanche. |
+| `JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et les liens de connexion envoyés par e-mail encore en attente. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Tout moteur autre que PostgreSQL empêche le démarrage — Fider ne fonctionne qu'avec Postgres. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
+| `container_port` | `3000` | Élevé | Un port incorrect fait que les sondes visent un port inactif et la révision ne devient jamais Ready. |
+| `application_version` | épingler un tag SHA ; `latest` → `stable` | Élevé | `getfider/fider` n'a pas de tag `:latest` ; le module épingle `latest` sur `stable`, mais épinglez explicitement une version pour des mises à niveau reproductibles. |
+| `memory_limit` | `4Gi` (par défaut) | Moyen | Une taille insuffisante risque des arrêts OOM sous charge ; Fider lui-même est léger. |
+| `enable_nfs` | `true` (par défaut) | Moyen | Ne le désactivez que si vous n'avez pas besoin du stockage des pièces jointes ; la VM NFS partagée doit être à l'état `RUNNING` avant le déploiement. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` (par défaut) | Faible | Fider n'a pas de worker en arrière-plan — `0` / `false` est sans risque pour les données et moins coûteux, au prix de démarrages à froid. |
+| SMTP (`EMAIL_SMTP_*`) | Configurer pour un envoi réel | Moyen | Avec les valeurs fictives, les liens d'inscription et d'invitation n'apparaissent que dans les journaux — aucun e-mail n'est envoyé. |
+| `enable_iap` | uniquement lorsque l'accès public n'est pas nécessaire | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris la consultation anonyme du tableau. |
+| URL Cloud Run à consulter | forme à numéro de projet, pas `status.url` | Élevé | La CSP de Fider est limitée au nom d'hôte à numéro de projet ; consulter la forme `status.url` à suffixe aléatoire fait bloquer toutes les ressources par le navigateur, ce qui affiche une page blanche. |
 
 ---
 

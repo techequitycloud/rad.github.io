@@ -410,29 +410,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver rompt toutes les connexions à la base de données avec Cloud SQL. Ne le désactivez que pour vous connecter à un PostgreSQL externe en TCP. |
-| `WEBUI_SECRET_KEY` (généré automatiquement) | immuable après la première utilisation | Critical | La rotation de la clé déconnecte immédiatement tous les utilisateurs actifs et invalide tous les jetons « se souvenir de moi ». |
-| `webui_auth` | `true` | Critical | Le désactiver supprime le formulaire de connexion — toute personne pouvant atteindre l'URL dispose d'un accès administrateur complet sans identifiants. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les modifier recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `database_type` (fixe) | `POSTGRES_15` | Critical | Open WebUI nécessite PostgreSQL ; tout autre moteur fait échouer les migrations et le démarrage. |
-| `ollama_base_url` / `openai_api_base_url` | au moins l'un des deux défini | High | Sans URL de backend, Open WebUI démarre mais toutes les requêtes d'inférence de modèle échouent immédiatement. |
-| `default_user_role` | `pending` | High | `user` approuve automatiquement toutes les auto-inscriptions ; sur un service exposé publiquement, cela permet une inscription sans restriction. |
-| `enable_signup` | `true` (définir `false` en prod après l'intégration des utilisateurs) | High | Combiné à `default_user_role = "user"`, tout visiteur peut s'inscrire et accéder à tous les modèles. |
-| `memory_limit` | `4Gi` | High | Les pipelines RAG peuvent consommer 3–6 GiB sous charge ; une mémoire insuffisante provoque des arrêts OOM en pleine ingestion. |
-| `backup_schedule` | `0 2 * * *` | High | Sans sauvegardes automatiques, la base de données PostgreSQL (utilisateurs, conversations, données RAG) n'est pas protégée. |
-| `ingress_settings` | restreindre en prod | High | `all` expose l'interface sur l'internet public — combinez-le avec `webui_auth = true` et `default_user_role = "pending"`. |
-| `execution_environment` | `gen2` | High | Les montages NFS et Direct VPC Egress ne sont pas pris en charge en gen1. |
-| `application_version` | version épinglée en prod | Medium | `latest` risque une mise à niveau involontaire avec une modification de schéma qui fait échouer le démarrage. |
-| `min_instance_count` | `1` en usage interactif | Medium | `0` ajoute 20–40 s de latence de démarrage à froid à l'arrivée de la première requête. |
-| `enable_nfs` | `true` lorsque `max_instance_count > 1` | Medium | Sans stockage partagé, les fichiers téléversés restent locaux à l'instance et invisibles des autres réplicas. |
-| `timeout_seconds` | `300` (augmenter pour RAG/LLM) | Medium | L'ingestion de documents et les longues réponses de modèle sont interrompues au timeout de Cloud Run. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sans eux, l'interface est accessible publiquement avec pour seule barrière l'authentification intégrée d'Open WebUI. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver rompt toutes les connexions à la base de données avec Cloud SQL. Ne le désactivez que pour vous connecter à un PostgreSQL externe en TCP. |
+| `WEBUI_SECRET_KEY` (généré automatiquement) | immuable après la première utilisation | Critique | La rotation de la clé déconnecte immédiatement tous les utilisateurs actifs et invalide tous les jetons « se souvenir de moi ». |
+| `webui_auth` | `true` | Critique | Le désactiver supprime le formulaire de connexion — toute personne pouvant atteindre l'URL dispose d'un accès administrateur complet sans identifiants. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les modifier recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `database_type` (fixe) | `POSTGRES_15` | Critique | Open WebUI nécessite PostgreSQL ; tout autre moteur fait échouer les migrations et le démarrage. |
+| `ollama_base_url` / `openai_api_base_url` | au moins l'un des deux défini | Élevé | Sans URL de backend, Open WebUI démarre mais toutes les requêtes d'inférence de modèle échouent immédiatement. |
+| `default_user_role` | `pending` | Élevé | `user` approuve automatiquement toutes les auto-inscriptions ; sur un service exposé publiquement, cela permet une inscription sans restriction. |
+| `enable_signup` | `true` (définir `false` en prod après l'intégration des utilisateurs) | Élevé | Combiné à `default_user_role = "user"`, tout visiteur peut s'inscrire et accéder à tous les modèles. |
+| `memory_limit` | `4Gi` | Élevé | Les pipelines RAG peuvent consommer 3–6 GiB sous charge ; une mémoire insuffisante provoque des arrêts OOM en pleine ingestion. |
+| `backup_schedule` | `0 2 * * *` | Élevé | Sans sauvegardes automatiques, la base de données PostgreSQL (utilisateurs, conversations, données RAG) n'est pas protégée. |
+| `ingress_settings` | restreindre en prod | Élevé | `all` expose l'interface sur l'internet public — combinez-le avec `webui_auth = true` et `default_user_role = "pending"`. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS et Direct VPC Egress ne sont pas pris en charge en gen1. |
+| `application_version` | version épinglée en prod | Moyen | `latest` risque une mise à niveau involontaire avec une modification de schéma qui fait échouer le démarrage. |
+| `min_instance_count` | `1` en usage interactif | Moyen | `0` ajoute 20–40 s de latence de démarrage à froid à l'arrivée de la première requête. |
+| `enable_nfs` | `true` lorsque `max_instance_count > 1` | Moyen | Sans stockage partagé, les fichiers téléversés restent locaux à l'instance et invisibles des autres réplicas. |
+| `timeout_seconds` | `300` (augmenter pour RAG/LLM) | Moyen | L'ingestion de documents et les longues réponses de modèle sont interrompues au timeout de Cloud Run. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sans eux, l'interface est accessible publiquement avec pour seule barrière l'authentification intégrée d'Open WebUI. |
 
 ---
 

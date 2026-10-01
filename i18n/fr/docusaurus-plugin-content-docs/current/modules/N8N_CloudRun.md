@@ -337,7 +337,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job de configuration de base de données `db-init` intégré. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -399,22 +399,22 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `N8N_ENCRYPTION_KEY` | _(générée automatiquement, ne jamais effectuer de rotation)_ | Critical | La rotation ou la suppression de cette clé détruit définitivement tous les identifiants de workflows enregistrés. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des workflows. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les fichiers binaires ne sont pas partagés entre les instances et le mode binaire `filesystem` échoue. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` | High | Sans le mode file d'attente Redis, exécuter plus d'une instance provoque des conflits d'exécution des workflows. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison valide si Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini. |
-| `min_instance_count` | `1` (par défaut) pour les charges de travail de webhooks | High | La valeur `0` provoque des expirations au démarrage à froid lors des appels de webhooks provenant de services ayant un délai d'expiration court. |
-| `execution_environment` | `gen2` (par défaut) | High | Les montages NFS requièrent Gen2 ; les instances Gen1 ne peuvent pas monter de volumes NFS. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors de l'exécution de gros lots de workflows. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, l'éditeur n8n est accessible publiquement et expose tous les identifiants enregistrés. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `N8N_ENCRYPTION_KEY` | _(générée automatiquement, ne jamais effectuer de rotation)_ | Critique | La rotation ou la suppression de cette clé détruit définitivement tous les identifiants de workflows enregistrés. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des workflows. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les fichiers binaires ne sont pas partagés entre les instances et le mode binaire `filesystem` échoue. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` | `true` | Élevé | Sans le mode file d'attente Redis, exécuter plus d'une instance provoque des conflits d'exécution des workflows. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison valide si Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini. |
+| `min_instance_count` | `1` (par défaut) pour les charges de travail de webhooks | Élevé | La valeur `0` provoque des expirations au démarrage à froid lors des appels de webhooks provenant de services ayant un délai d'expiration court. |
+| `execution_environment` | `gen2` (par défaut) | Élevé | Les montages NFS requièrent Gen2 ; les instances Gen1 ne peuvent pas monter de volumes NFS. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors de l'exécution de gros lots de workflows. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'éditeur n8n est accessible publiquement et expose tous les identifiants enregistrés. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

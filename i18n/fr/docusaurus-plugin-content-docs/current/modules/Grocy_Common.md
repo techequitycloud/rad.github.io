@@ -21,7 +21,7 @@ Pour l'infrastructure qui provisionne et exécute effectivement Grocy, consultez
 | Secrets du service | **Aucun.** `secret_ids` et `secret_values` sont tous deux des maps volontairement vides. | n/a |
 | Image de conteneur | Encapsule légèrement l'image officielle `lscr.io/linuxserver/grocy` afin que le socle puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Grocy utilise une base de données SQLite interne sous `/config` (`database_type = "NONE"`), confirmée comme réellement exclusivement SQLite d'après le code source amont | §3 |
-| Initialisation de la base de données | **Aucune** — il n'y a pas de tâche `db-init` ; Grocy gère son propre schéma SQLite au premier démarrage | n/a |
+| Initialisation de la base de données | **Aucune** — il n'y a pas de job `db-init` ; Grocy gère son propre schéma SQLite au premier démarrage | n/a |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` | Sortie `storage_buckets` |
 | Paramètres principaux | Définit `PUID = 1000`, `PGID = 1000`, `TZ = Etc/UTC` et le port de conteneur `80` | Comportement de l'application dans le guide de la plateforme |
 | Contrôles de santé | Fournit les sondes de démarrage et de disponibilité par défaut ciblant `/` (la page de connexion, `200`) | §5 |
@@ -41,7 +41,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 Grocy n'utilise **pas** de base de données externe. Tout son état — la base de données SQLite embarquée (`grocy.db`), `config.php`, les images et pièces jointes téléversées et les sauvegardes — réside sous `/config`. Confirmé par la lecture du code source amont de Grocy (`services/DatabaseService.php`) : il est réellement exclusivement SQLite, sans aucune prise en charge de MySQL/Postgres, et n'active jamais le mode WAL — il n'existe aucun PRAGMA `journal_mode` nulle part dans le code (Grocy utilise le mode de journal par défaut de SQLite, DELETE/rollback-journal). En conséquence :
 
 - `database_type = "NONE"` — aucune instance Cloud SQL, base de données ni utilisateur n'est créé.
-- Il n'y a **pas de tâche `db-init`** — Grocy initialise sa propre base de données SQLite au premier démarrage ; rien ne doit être préparé à l'avance.
+- Il n'y a **pas de job `db-init`** — Grocy initialise sa propre base de données SQLite au premier démarrage ; rien ne doit être préparé à l'avance.
 - Aucune extension PostgreSQL, aucun `pgvector` et aucun Redis n'entrent en jeu.
 
 Comme la base de données est un fichier sur le volume persistant `/config`, sa durabilité dépend du backend de stockage, et non d'un service de base de données géré (voir §5).
@@ -86,7 +86,7 @@ Grocy écrit dans `data/grocy.db-journal` toutes les 1 à 2 secondes. La couche 
 Les sondes de démarrage et de disponibilité envoient toutes deux une requête **HTTP GET `/`**, qui renvoie la page de connexion de Grocy (`200`) et ne requiert **aucune authentification** — les sondes réussissent donc dès que le serveur répond, indépendamment de toute connexion administrateur.
 
 - **Sonde de démarrage** — `initial_delay = 15s`, `timeout = 5s`, `period = 10s`, `failure_threshold = 10`.
-- **Sonde de disponibilité (liveness)** — `initial_delay = 30s`, `timeout = 5s`, `period = 30s`, `failure_threshold = 3`.
+- **Sonde de vivacité (liveness)** — `initial_delay = 30s`, `timeout = 5s`, `period = 30s`, `failure_threshold = 3`.
 
 ---
 

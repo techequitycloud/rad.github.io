@@ -43,7 +43,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
   couche applicative partagée ; choisir un autre moteur empêche le démarrage.
 - **Redis est obligatoire et activé par défaut.** Docmost utilise Redis pour l'édition
-  collaborative en temps réel et les files d'attente de tâches en arrière-plan.
+  collaborative en temps réel et les files d'attente de jobs en arrière-plan.
   `enable_redis = true` est la valeur par défaut ; laisser `redis_host` vide place Redis
   sur la VM du serveur NFS.
 - **NFS est activé par défaut** (`enable_nfs = true`, `nfs_mount_path = /app/data/storage`).
@@ -124,7 +124,7 @@ rotation du mot de passe, consultez [App_GKE](App_GKE.md).
 ### C. Redis (collaboration en temps réel et files d'attente) {#c-redis-real-time-collaboration--queues}
 
 Redis est **activé par défaut** et est indispensable à l'éditeur collaboratif en temps
-réel de Docmost et au traitement des tâches en arrière-plan. Lorsque `redis_host` est
+réel de Docmost et au traitement des jobs en arrière-plan. Lorsque `redis_host` est
 laissé vide et que `enable_nfs` vaut true, l'IP de la VM du serveur NFS sert de point de
 terminaison Redis ; définissez `redis_host` (et éventuellement `redis_auth`) pour
 pointer plutôt vers une instance Redis gérée/externe.
@@ -211,7 +211,7 @@ d'alerte facultatifs sont disponibles.
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via le
   Cloud SQL Auth Proxy et, de façon idempotente, crée la base de données et l'utilisateur
   de l'application et accorde les privilèges, puis signale au sidecar du proxy de
-  s'arrêter afin que le Job puisse se terminer. La tâche peut être relancée sans risque.
+  s'arrêter afin que le Job puisse se terminer. Le job peut être relancé sans risque.
 - **Les migrations s'exécutent automatiquement au démarrage.** Docmost exécute ses
   propres migrations de schéma à chaque démarrage via sa commande par défaut `pnpm start`,
   si bien qu'une mise à niveau de la version de l'application applique les changements de
@@ -393,7 +393,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -407,24 +407,24 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, un quota de mémoire exprimé par un entier nu. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, si bien que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner invalide toutes les sessions et rend irrécupérables les données chiffrées avec l'ancienne valeur. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Docmost exige PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_redis` | `true` | Critical | L'éditeur en temps réel et les files d'attente de Docmost ont besoin de Redis ; le désactiver empêche l'application de fonctionner correctement. |
-| `enable_nfs` | `true` | High | Sans NFS, les pièces jointes téléversées atterrissent sur le disque éphémère du pod et sont perdues au redémarrage / non partagées entre les réplicas. |
-| `APP_URL` | URL externe du LoadBalancer / du domaine | High | Une URL erronée casse les liens absolus et le point de terminaison WebSocket de collaboration. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, le WebSocket de collaboration d'un client peut se reconnecter à un autre pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire pour la connexion PostgreSQL en boucle locale. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; conserver 1 garantit que le wiki reste toujours joignable. |
-| `stateful_pvc_enabled` | laisser désactivé | Medium | Les PVC par pod sont inutiles — Docmost conserve son état dans Postgres/NFS ; les activer ajoute du coût et de la complexité. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `APP_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide toutes les sessions et rend irrécupérables les données chiffrées avec l'ancienne valeur. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Docmost exige PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
+| `enable_redis` | `true` | Critique | L'éditeur en temps réel et les files d'attente de Docmost ont besoin de Redis ; le désactiver empêche l'application de fonctionner correctement. |
+| `enable_nfs` | `true` | Élevé | Sans NFS, les pièces jointes téléversées atterrissent sur le disque éphémère du pod et sont perdues au redémarrage / non partagées entre les réplicas. |
+| `APP_URL` | URL externe du LoadBalancer / du domaine | Élevé | Une URL erronée casse les liens absolus et le point de terminaison WebSocket de collaboration. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, le WebSocket de collaboration d'un client peut se reconnecter à un autre pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire pour la connexion PostgreSQL en boucle locale. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; conserver 1 garantit que le wiki reste toujours joignable. |
+| `stateful_pvc_enabled` | laisser désactivé | Moyen | Les PVC par pod sont inutiles — Docmost conserve son état dans Postgres/NFS ; les activer ajoute du coût et de la complexité. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
 
 ---
 

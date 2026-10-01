@@ -246,24 +246,24 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, un `database_type` en dehors de l'ensemble pris en charge, IAP sans identités autorisées. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, si bien que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les champs chiffrés de la base de données et invalide toutes les sessions. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `MYSQL_8_0` | Critical | Monica est une application MySQL ; un moteur autre que MySQL casse le pilote et les migrations. |
-| `enable_nfs` | `true` | High | Le désactiver fait perdre les photos et documents des contacts téléversés au prochain démarrage à froid ou à la prochaine révision. |
-| `container_image_source` | `prebuilt` | High | Définir `custom` fait pointer le service vers une image Artifact Registry jamais construite (`Image not found`). |
-| `container_port` | `80` | High | L'image Apache écoute sur 80 ; un port différent fait échouer la sonde de démarrage. |
-| `APP_URL` (défini automatiquement) | URL réelle du service | High | Une URL erronée casse les liens absolus et la redirection `/` → configuration/inscription (404 sur le mauvais hôte). |
-| `enable_cloudsql_volume` | `false` (Cloud Run) | Medium | Monica se connecte en TCP via l'adresse IP privée ; imposer le socket est inutile et peut laisser `DB_HOST` sous la forme d'un chemin de socket que le client gère mal. |
-| `min_instance_count` | `0` (ou `1` pour une instance active) | Medium | La mise à l'échelle jusqu'à zéro ajoute la latence du démarrage à froid, d'Apache et des migrations à la première requête après une période d'inactivité. |
-| `memory_limit` | `2Gi` | Medium | Réduire trop fortement la mémoire expose à des OOM PHP pendant les migrations du premier démarrage et sur les pages lourdes. |
-| `enable_redis` | désactivé sauf besoin | Low | Cache et sessions Redis facultatifs ; s'il est activé sans hôte et avec NFS désactivé, le point de terminaison Redis est vide. |
+| `APP_KEY` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les champs chiffrés de la base de données et invalide toutes les sessions. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `MYSQL_8_0` | Critique | Monica est une application MySQL ; un moteur autre que MySQL casse le pilote et les migrations. |
+| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre les photos et documents des contacts téléversés au prochain démarrage à froid ou à la prochaine révision. |
+| `container_image_source` | `prebuilt` | Élevé | Définir `custom` fait pointer le service vers une image Artifact Registry jamais construite (`Image not found`). |
+| `container_port` | `80` | Élevé | L'image Apache écoute sur 80 ; un port différent fait échouer la sonde de démarrage. |
+| `APP_URL` (défini automatiquement) | URL réelle du service | Élevé | Une URL erronée casse les liens absolus et la redirection `/` → configuration/inscription (404 sur le mauvais hôte). |
+| `enable_cloudsql_volume` | `false` (Cloud Run) | Moyen | Monica se connecte en TCP via l'adresse IP privée ; imposer le socket est inutile et peut laisser `DB_HOST` sous la forme d'un chemin de socket que le client gère mal. |
+| `min_instance_count` | `0` (ou `1` pour une instance active) | Moyen | La mise à l'échelle jusqu'à zéro ajoute la latence du démarrage à froid, d'Apache et des migrations à la première requête après une période d'inactivité. |
+| `memory_limit` | `2Gi` | Moyen | Réduire trop fortement la mémoire expose à des OOM PHP pendant les migrations du premier démarrage et sur les pages lourdes. |
+| `enable_redis` | désactivé sauf besoin | Faible | Cache et sessions Redis facultatifs ; s'il est activé sans hôte et avec NFS désactivé, le point de terminaison Redis est vide. |
 
 ---
 

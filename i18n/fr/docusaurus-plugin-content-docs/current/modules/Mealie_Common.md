@@ -29,7 +29,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 |---|---|---|
 | Image de conteneur | Référence directement l'image officielle `ghcr.io/mealie-recipes/mealie` — aucun build personnalisé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** ; définit explicitement `DB_ENGINE=postgres` | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les octrois | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les octrois | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket GCS `data` (images des recettes) et le monte sur `/app/data` via `gcs_volumes` | Sortie `storage_buckets` |
 | Contrôles de santé | Fournit la sonde de démarrage/d'activité par défaut ciblant `/api/app/about` | §Observabilité dans les guides des plateformes |
 
@@ -69,7 +69,7 @@ Workload Identity utilisé ailleurs dans le catalogue.
 
 Mealie requiert **PostgreSQL** ; le moteur est fixé et `DB_ENGINE=postgres` est
 défini explicitement (sinon, Mealie utilise par défaut SQLite embarqué). Au premier
-déploiement, une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine`
+déploiement, un job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine`
 et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy et le mappe pour l'accès `psql`,
@@ -80,7 +80,7 @@ et, de manière idempotente :
 6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement.
 
 Mealie applique ensuite automatiquement ses propres migrations internes à chaque
-démarrage — aucune tâche de migration distincte ne s'exécute au niveau de la
+démarrage — aucun job de migration distinct ne s'exécute au niveau de la
 plateforme.
 
 ```bash

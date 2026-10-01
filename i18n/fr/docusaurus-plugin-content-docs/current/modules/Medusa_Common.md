@@ -121,7 +121,7 @@ gcloud secrets list --project "$PROJECT" --filter="name~jwt-secret OR name~cooki
 Medusa nécessite **PostgreSQL 15** ; le moteur est imposé et les autres moteurs ne sont pas
 pris en charge. Contrairement aux modules dont l'application migre son propre schéma au démarrage,
 les migrations de Medusa sont volontairement tenues à l'écart du chemin de démarrage du conteneur
-principal — quatre tâches séquentielles s'exécutent à la place, chacune dépendant de la précédente :
+principal — quatre jobs séquentiels s'exécutent à la place, chacun dépendant du précédent :
 
 1. **`db-init`** (`postgres:15-alpine`) — attend la base de données, crée le
    rôle applicatif (`LOGIN`, `CREATEDB`) et une base de données appartenant à ce rôle, accorde
@@ -131,14 +131,14 @@ principal — quatre tâches séquentielles s'exécutent à la place, chacune d�
    terminé.
 2. **`medusa-migrate`** — exécute `npx medusa db:migrate` directement via la CLI, sur
    l'image Medusa déjà construite (2 vCPU / 2Gi, délai d'expiration de 30 minutes, 3 nouvelles tentatives).
-   **Cette tâche exécutait à l'origine `npm run predeploy`**, conformément à la convention
+   **Ce job exécutait à l'origine `npm run predeploy`**, conformément à la convention
    mentionnée dans la documentation de déploiement de Medusa — mais le `package.json` construit du
    modèle `dtc-starter` ne définit que les scripts `build`, `start`, `dev`, `lint` et `test:*` ;
    il n'existe aucun script `predeploy`. `npm run predeploy` échouait avec `Missing
    script: predeploy`, ce qui n'a pu être découvert que lors d'une véritable exécution Cloud Build + Job
    Cloud Run/GKE (les tests locaux avec de faux identifiants de base de données n'allaient jamais aussi loin).
    Corrigé en invoquant directement la CLI `medusa`.
-3. **`medusa-verify`** (`postgres:15-alpine`) — une tâche de garde. Un échec de job
+3. **`medusa-verify`** (`postgres:15-alpine`) — un job de garde. Un échec de job
    d'initialisation ne fait **pas** échouer à lui seul l'apply du module dans ce socle, si bien
    qu'une `medusa-migrate` en concurrence ou en échec pourrait sinon laisser un service apparemment
    sain pointer vers une base de données **vide**. `medusa-verify` se connecte après `medusa-migrate`,
@@ -185,7 +185,7 @@ aux `args` d'un job d'initialisation) :
 ## 6. Paramètres principaux de l'application {#6-core-application-settings}
 
 - **`MEDUSA_WORKER_MODE = "shared"`** (fixe) — une seule instance traite à la fois les
-  requêtes API et les tâches/abonnés/workflows en arrière-plan de Medusa. La topologie
+  requêtes API et les jobs/abonnés/workflows en arrière-plan de Medusa. La topologie
   serveur/worker séparée officiellement recommandée par Medusa ne se transpose pas proprement
   sur un service Cloud Run/GKE unique, de sorte que ce module exécute toujours les deux dans un seul processus.
 - **`STORAGE_PROVIDER`** — `"s3"` lorsque `enable_gcs_storage = true`, sinon

@@ -112,7 +112,7 @@ Le budget relie les canaux de notification par e-mail et laisse activés les des
    gcloud billing budgets list --billing-account=${BILLING_ACCOUNT##*/}
    ```
 3. Explorez l'attribution des coûts par libellé : **Billing > Reports**, ouvrez le filtre **Labels** à droite et sélectionnez une clé définie dans `resource_labels` (les données apparaissent avec un délai pouvant aller jusqu'à une journée).
-4. Vous savez que cela a fonctionné lorsque `gcloud billing budgets list` affiche votre budget avec des `thresholdRules` à 0.5, 0.9 et 1.0.
+4. Vous savez que cela a fonctionné lorsque `gcloud billing budgets list` affiche votre budget avec des `thresholdRules` à 0,5 ; 0,9 et 1,0.
 
 **Testez-vous**
 <details>

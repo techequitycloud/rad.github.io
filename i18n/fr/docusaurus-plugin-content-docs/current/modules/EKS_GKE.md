@@ -235,23 +235,23 @@ Les sorties Terraform du module sont `deployment_id` (l'ID de déploiement réso
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `aws_access_key` / `aws_secret_key` | clés valides avec des droits EKS + VPC + IAM | Critical | Des identifiants manquants ou aux privilèges insuffisants font échouer l'apply en cours de route, ce qui peut laisser des ressources AWS partielles à nettoyer à la main. |
-| `k8s_version` + `platform_version` | versions mineures concordantes (`1.35` / `1.35.0-gke.1`) | Critical | Une discordance est rejetée lors de l'enregistrement ; le cluster EKS est créé sur AWS mais n'est jamais rattaché à la Fleet. |
-| `cluster_name_prefix` (unicité) | unique par projet | Critical | L'appartenance à la Fleet utilise le préfixe tel quel — deux déploiements partageant un préfixe dans le même projet entrent en collision côté Google Cloud. |
-| `deployment_id` / `cluster_name_prefix` | définis une seule fois | Critical | Les modifier après le premier déploiement force la recréation des ressources nommées — le cluster est détruit puis reconstruit. |
-| `trusted_users` | adresses e-mail Google réelles | High | Une liste erronée ou vide signifie que seule la personne qui déploie peut accéder au cluster via la passerelle ; les autres sont bloqués jusqu'à l'ajout manuel d'un RBAC. |
-| `subnet_availability_zones` par rapport aux listes de CIDR | longueurs égales, zones dans `aws_region` | High | Des nombres discordants ou des zones hors région font échouer la création des sous-réseaux et bloquent le cluster EKS. |
-| `enable_public_subnets` | `true` (seule valeur prise en charge aujourd'hui) | High | Les sous-réseaux publics donnent des IP publiques aux nœuds de calcul — une surface d'attaque plus large. `false` est la topologie la plus sûre, mais elle est actuellement cassée : la NAT Gateway est placée dans un sous-réseau public qui n'est pas créé dans ce mode, si bien que l'apply échoue. |
-| `vpc_cidr_block` | `/16` sans chevauchement | High | Un chevauchement avec un VPC appairé casse le routage si un appairage est ajouté ultérieurement. |
-| Chemin réseau lors de la suppression | même chemin que pour le déploiement | High | La destruction doit atteindre le serveur d'API EKS pour désinstaller le Connect Agent ; si le cluster est injoignable, la suppression reste bloquée. |
-| `node_group_min_size` | `2`+ | Medium | Un seul nœud supprime la haute disponibilité ; une maintenance de nœud peut mettre hors ligne toute la capacité du cluster. |
-| `node_group_max_size` | dimensionné pour les pics | Medium | Le plafond n'a aucun effet sans autoscaler de cluster installé ; l'augmenter seul ne change rien. |
-| NAT Gateway (mode privé) | à budgéter | Medium | Le mode sous-réseaux privés ajoute sur AWS des frais horaires de NAT Gateway et des frais de transfert de données. |
+| `aws_access_key` / `aws_secret_key` | clés valides avec des droits EKS + VPC + IAM | Critique | Des identifiants manquants ou aux privilèges insuffisants font échouer l'apply en cours de route, ce qui peut laisser des ressources AWS partielles à nettoyer à la main. |
+| `k8s_version` + `platform_version` | versions mineures concordantes (`1.35` / `1.35.0-gke.1`) | Critique | Une discordance est rejetée lors de l'enregistrement ; le cluster EKS est créé sur AWS mais n'est jamais rattaché à la Fleet. |
+| `cluster_name_prefix` (unicité) | unique par projet | Critique | L'appartenance à la Fleet utilise le préfixe tel quel — deux déploiements partageant un préfixe dans le même projet entrent en collision côté Google Cloud. |
+| `deployment_id` / `cluster_name_prefix` | définis une seule fois | Critique | Les modifier après le premier déploiement force la recréation des ressources nommées — le cluster est détruit puis reconstruit. |
+| `trusted_users` | adresses e-mail Google réelles | Élevé | Une liste erronée ou vide signifie que seule la personne qui déploie peut accéder au cluster via la passerelle ; les autres sont bloqués jusqu'à l'ajout manuel d'un RBAC. |
+| `subnet_availability_zones` par rapport aux listes de CIDR | longueurs égales, zones dans `aws_region` | Élevé | Des nombres discordants ou des zones hors région font échouer la création des sous-réseaux et bloquent le cluster EKS. |
+| `enable_public_subnets` | `true` (seule valeur prise en charge aujourd'hui) | Élevé | Les sous-réseaux publics donnent des IP publiques aux nœuds de calcul — une surface d'attaque plus large. `false` est la topologie la plus sûre, mais elle est actuellement cassée : la NAT Gateway est placée dans un sous-réseau public qui n'est pas créé dans ce mode, si bien que l'apply échoue. |
+| `vpc_cidr_block` | `/16` sans chevauchement | Élevé | Un chevauchement avec un VPC appairé casse le routage si un appairage est ajouté ultérieurement. |
+| Chemin réseau lors de la suppression | même chemin que pour le déploiement | Élevé | La destruction doit atteindre le serveur d'API EKS pour désinstaller le Connect Agent ; si le cluster est injoignable, la suppression reste bloquée. |
+| `node_group_min_size` | `2`+ | Moyen | Un seul nœud supprime la haute disponibilité ; une maintenance de nœud peut mettre hors ligne toute la capacité du cluster. |
+| `node_group_max_size` | dimensionné pour les pics | Moyen | Le plafond n'a aucun effet sans autoscaler de cluster installé ; l'augmenter seul ne change rien. |
+| NAT Gateway (mode privé) | à budgéter | Moyen | Le mode sous-réseaux privés ajoute sur AWS des frais horaires de NAT Gateway et des frais de transfert de données. |
 
 ---
 

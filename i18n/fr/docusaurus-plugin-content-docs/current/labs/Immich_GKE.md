@@ -201,7 +201,7 @@ La recherche intelligente et la reconnaissance faciale s'exécutent dans un **co
      CLIP** avant de répondre ; la première recherche prend donc nettement plus de temps
      (les recherches suivantes sont rapides). Les fichiers du modèle sont mis en cache sur le disque éphémère
      du pod ML et sont retéléchargés après une replanification ; c'est attendu.
-   - La recherche renvoie votre photo (les tâches d'embedding s'exécutent peu après le téléversement ; si
+   - La recherche renvoie votre photo (les jobs d'embedding s'exécutent peu après le téléversement ; si
      le résultat est vide, attendez une minute et consultez Administration → Jobs
      dans l'interface pour la file Smart Search).
 

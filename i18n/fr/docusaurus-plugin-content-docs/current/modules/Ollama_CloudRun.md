@@ -328,27 +328,27 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ingress_settings` | `internal` | Critical | `"all"` expose publiquement l'API Ollama non authentifiée — n'importe quel appelant sur internet peut interroger ou charger des modèles. |
-| `enable_iap` | `true` si `ingress_settings = "all"` | Critical | Sans IAP, l'API est non authentifiée et accessible publiquement. Ollama n'a aucune authentification intégrée. |
-| `memory_limit` | `8Gi` (3B) / `16Gi` (7B) | Critical | Une mémoire insuffisante provoque un arrêt OOM en pleine inférence ; le conteneur redémarre en boucle. Allouez au moins 2× la taille des poids quantifiés du modèle. |
-| `execution_environment` | `gen2` (par défaut) | High | Gen1 ne prend pas en charge les montages GCS Fuse. La rétrogradation empêche silencieusement la persistance des modèles. |
-| `cpu_limit` | `4000m` (3B) / `8000m` (7B) | High | Trop peu de CPU rend la génération de tokens extrêmement lente (plusieurs minutes par token sur les modèles 7B). |
-| `min_instance_count` | `1` | High | `0` active la mise à l'échelle à zéro mais provoque des démarrages à froid de 60–120 s pendant le rechargement du modèle depuis GCS. |
-| `model_pull_timeout_seconds` | `3600` | High | Un délai trop court fait échouer le job model-pull avant la fin du téléchargement pour les modèles de plus de 2 GB. |
-| `startup_probe.failure_threshold` | `20` (par défaut) | High | Un seuil trop bas conduit Cloud Run à arrêter et redémarrer le conteneur avant qu'Ollama soit prêt après le montage GCS Fuse. |
-| `timeout_seconds` | `3600` | High | L'inférence de LLM sur de longs prompts peut dépasser 5 minutes. Si la valeur est trop courte, les requêtes de génération longues sont interrompues avec une erreur 504. |
-| `max_instance_count` | `1`–`3` | High | Chaque instance charge le modèle indépendamment. Plusieurs instances sont sans danger mais augmentent nettement le coût et le trafic de lecture GCS. |
-| `default_model` | le modèle souhaité | Medium | Laisser vide est sans danger pour le déploiement initial, mais l'API renvoie une erreur sur toutes les requêtes d'inférence tant qu'aucun modèle n'a été téléchargé manuellement. |
-| `environment_variables.OLLAMA_NUM_PARALLEL` | `2`–`4` pour un usage partagé | Medium | La valeur par défaut `1` sérialise toutes les requêtes. Augmentez-la pour les points de terminaison VPC partagés avec des appelants simultanés. |
-| `environment_variables.OLLAMA_KEEP_ALIVE` | `24h` (injectée automatiquement) | Medium | La valeur par défaut propre à Ollama (`5m`) évince les modèles de la mémoire, ce qui entraîne des délais de rechargement de 30–60 s. Le module injecte automatiquement `24h`. |
-| `environment_variables.OLLAMA_ORIGINS` | à restreindre pour un usage navigateur | Medium | La politique CORS par défaut d'Ollama accepte n'importe quelle origine. Restreignez-la à des origines d'interface précises lorsque l'API est exposée via un équilibreur de charge. |
-| options de montage de `gcs_volumes` | inclure `implicit-dirs` | Medium | Sans `implicit-dirs`, les listages de répertoires GCS Fuse échouent et Ollama ne peut pas découvrir les modèles en cache. |
-| `enable_image_mirroring` | `true` | Medium | La désactivation entraîne des téléchargements depuis Docker Hub, soumis à des limites de débit. Conservez `true` en production. |
+| `ingress_settings` | `internal` | Critique | `"all"` expose publiquement l'API Ollama non authentifiée — n'importe quel appelant sur internet peut interroger ou charger des modèles. |
+| `enable_iap` | `true` si `ingress_settings = "all"` | Critique | Sans IAP, l'API est non authentifiée et accessible publiquement. Ollama n'a aucune authentification intégrée. |
+| `memory_limit` | `8Gi` (3B) / `16Gi` (7B) | Critique | Une mémoire insuffisante provoque un arrêt OOM en pleine inférence ; le conteneur redémarre en boucle. Allouez au moins 2× la taille des poids quantifiés du modèle. |
+| `execution_environment` | `gen2` (par défaut) | Élevé | Gen1 ne prend pas en charge les montages GCS Fuse. La rétrogradation empêche silencieusement la persistance des modèles. |
+| `cpu_limit` | `4000m` (3B) / `8000m` (7B) | Élevé | Trop peu de CPU rend la génération de tokens extrêmement lente (plusieurs minutes par token sur les modèles 7B). |
+| `min_instance_count` | `1` | Élevé | `0` active la mise à l'échelle à zéro mais provoque des démarrages à froid de 60–120 s pendant le rechargement du modèle depuis GCS. |
+| `model_pull_timeout_seconds` | `3600` | Élevé | Un délai trop court fait échouer le job model-pull avant la fin du téléchargement pour les modèles de plus de 2 GB. |
+| `startup_probe.failure_threshold` | `20` (par défaut) | Élevé | Un seuil trop bas conduit Cloud Run à arrêter et redémarrer le conteneur avant qu'Ollama soit prêt après le montage GCS Fuse. |
+| `timeout_seconds` | `3600` | Élevé | L'inférence de LLM sur de longs prompts peut dépasser 5 minutes. Si la valeur est trop courte, les requêtes de génération longues sont interrompues avec une erreur 504. |
+| `max_instance_count` | `1`–`3` | Élevé | Chaque instance charge le modèle indépendamment. Plusieurs instances sont sans danger mais augmentent nettement le coût et le trafic de lecture GCS. |
+| `default_model` | le modèle souhaité | Moyen | Laisser vide est sans danger pour le déploiement initial, mais l'API renvoie une erreur sur toutes les requêtes d'inférence tant qu'aucun modèle n'a été téléchargé manuellement. |
+| `environment_variables.OLLAMA_NUM_PARALLEL` | `2`–`4` pour un usage partagé | Moyen | La valeur par défaut `1` sérialise toutes les requêtes. Augmentez-la pour les points de terminaison VPC partagés avec des appelants simultanés. |
+| `environment_variables.OLLAMA_KEEP_ALIVE` | `24h` (injectée automatiquement) | Moyen | La valeur par défaut propre à Ollama (`5m`) évince les modèles de la mémoire, ce qui entraîne des délais de rechargement de 30–60 s. Le module injecte automatiquement `24h`. |
+| `environment_variables.OLLAMA_ORIGINS` | à restreindre pour un usage navigateur | Moyen | La politique CORS par défaut d'Ollama accepte n'importe quelle origine. Restreignez-la à des origines d'interface précises lorsque l'API est exposée via un équilibreur de charge. |
+| options de montage de `gcs_volumes` | inclure `implicit-dirs` | Moyen | Sans `implicit-dirs`, les listages de répertoires GCS Fuse échouent et Ollama ne peut pas découvrir les modèles en cache. |
+| `enable_image_mirroring` | `true` | Moyen | La désactivation entraîne des téléchargements depuis Docker Hub, soumis à des limites de débit. Conservez `true` en production. |
 
 ---
 

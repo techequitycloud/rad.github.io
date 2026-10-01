@@ -322,19 +322,19 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) — **Medium**
-> (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) — **Moyen**
+> (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `PAYLOAD_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| Délais de `startup_probe` / `payload-migrate` | Laissez la fenêtre complète d'environ 12 minutes | High | Si la fenêtre de la sonde est raccourcie en dessous du temps nécessaire à `payload-migrate`, la révision peut être déclarée non saine avant la fin de la migration du schéma, car les deux s'exécutent en parallèle au lieu que la sonde attende le job. |
-| Persistance des médias/téléversements | Ajoutez un véritable adaptateur de stockage avant toute utilisation en production | High | Sans bucket de stockage raccordé, tous les médias téléversés résident sur le disque local du conteneur et sont perdus à chaque redémarrage de pod, redéploiement ou démarrage à froid. |
-| `enable_gcs_storage` | Ne comptez pas sur cette option | Medium | Déclarée mais non transmise à `Payload_Common` — l'activer ne provisionne ni ne raccorde aucun stockage. |
-| `enable_redis` / `redis_*` | Ne comptez pas sur ces options | Medium | Déclarées mais non transmises à `Payload_Common`, qui n'a aucun raccordement Redis — les définir n'a aucun effet. |
-| Création du premier administrateur | À effectuer rapidement après le déploiement | Medium | Tant que le premier administrateur n'a pas été créé via le formulaire d'inscription de `/admin`, l'instance n'a aucun utilisateur authentifié. |
-| `container_image_source` | Laissez `custom` | Low | Il n'existe aucune image Payload préconstruite ; définir `prebuilt` sans `container_image` valide fait échouer le déploiement. |
+| `PAYLOAD_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| Délais de `startup_probe` / `payload-migrate` | Laissez la fenêtre complète d'environ 12 minutes | Élevé | Si la fenêtre de la sonde est raccourcie en dessous du temps nécessaire à `payload-migrate`, la révision peut être déclarée non saine avant la fin de la migration du schéma, car les deux s'exécutent en parallèle au lieu que la sonde attende le job. |
+| Persistance des médias/téléversements | Ajoutez un véritable adaptateur de stockage avant toute utilisation en production | Élevé | Sans bucket de stockage raccordé, tous les médias téléversés résident sur le disque local du conteneur et sont perdus à chaque redémarrage de pod, redéploiement ou démarrage à froid. |
+| `enable_gcs_storage` | Ne comptez pas sur cette option | Moyen | Déclarée mais non transmise à `Payload_Common` — l'activer ne provisionne ni ne raccorde aucun stockage. |
+| `enable_redis` / `redis_*` | Ne comptez pas sur ces options | Moyen | Déclarées mais non transmises à `Payload_Common`, qui n'a aucun raccordement Redis — les définir n'a aucun effet. |
+| Création du premier administrateur | À effectuer rapidement après le déploiement | Moyen | Tant que le premier administrateur n'a pas été créé via le formulaire d'inscription de `/admin`, l'instance n'a aucun utilisateur authentifié. |
+| `container_image_source` | Laissez `custom` | Faible | Il n'existe aucune image Payload préconstruite ; définir `prebuilt` sans `container_image` valide fait échouer le déploiement. |
 
 ---
 

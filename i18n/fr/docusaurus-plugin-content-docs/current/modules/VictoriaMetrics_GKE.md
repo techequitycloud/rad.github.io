@@ -350,7 +350,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `false` | VictoriaMetrics utilise un PVC de type bloc pour le stockage — activez NFS uniquement pour des tâches personnalisées nécessitant un système de fichiers partagé. |
+| `enable_nfs` | `false` | VictoriaMetrics utilise un PVC de type bloc pour le stockage — activez NFS uniquement pour des jobs personnalisés nécessitant un système de fichiers partagé. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 | `network_tags` | `["nfsserver"]` | Tags réseau des nœuds/pods GKE ; `nfsserver` est requis lorsque NFS est activé. |
 
@@ -439,7 +439,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -453,25 +453,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` (par défaut, requis) | Critical | Sans PVC, il n'existe aucun mode de stockage pris en charge pour ce module — les fichiers de données de VictoriaMetrics, mappés en mémoire, ne sont pas compatibles avec GCS FUSE, même comme repli. Ne le désactivez pas. |
-| `stateful_pvc_mount_path` | `/victoria-metrics-data` (par défaut) | Critical | Doit correspondre au flag `-storageDataPath` intégré à l'image personnalisée. En cas de discordance, le PVC est monté à un endroit où le binaire n'écrit jamais, et toutes les données résident dans la couche éphémère du pod — perdues à chaque redémarrage. |
-| `service_type` | `ClusterIP` (par défaut) — **ne le « corrigez » pas en `LoadBalancer`** | Critical (en cas de modification imprudente) | C'est la valeur par défaut confirmée comme correcte pour cette application, et non le bug de copier-coller ClusterIP touchant l'ensemble du parc documenté ailleurs dans ce catalogue. VictoriaMetrics n'a aucune authentification intégrée — l'exposer via `LoadBalancer` sans IAP ni Cloud Armor rend toutes les métriques ingérées lisibles, modifiables et supprimables par quiconque peut atteindre l'IP. |
-| `application_name` | défini une seule fois | Critical | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le PVC, ce qui fait perdre tout l'historique des métriques ingérées. |
-| `max_instance_count` | `1` (fixe) | Critical | VictoriaMetrics en mode nœud unique n'a ni clustering ni réplication — un second réplica écrivant sur le même PVC corrompt les fichiers de données. Il n'existe aucun moyen pris en charge de mettre ce module à l'échelle horizontalement ; utilisez l'édition cluster distincte de VictoriaMetrics (que ce module ne déploie pas) si vous en avez besoin. |
-| `-retentionPeriod` (intégré à l'image) | `12` mois (par défaut) | High | Ce n'est pas une variable Terraform — modifier la rétention nécessite d'éditer `VictoriaMetrics_Common/scripts/Dockerfile` et de forcer un nouveau build de l'image. Les données plus anciennes que la fenêtre de rétention sont supprimées par VictoriaMetrics lui-même selon son propre calendrier ; il n'y a ni suppression réversible ni corbeille. |
-| `environment_variables` | sans effet sur la configuration de VictoriaMetrics | Medium | VictoriaMetrics ne lit aucune variable d'environnement pour sa propre configuration — uniquement des flags CLI intégrés à l'image. Ne vous attendez pas à ce qu'une variable d'environnement de type `VICTORIA_METRICS_*` modifie le comportement ; ce ne sera pas le cas, sauf si le binaire amont lit justement ce nom exact (ce qui n'est pas le cas par défaut). |
-| `stateful_pvc_size` | généreuse (20 Gi+, à dimensionner selon rétention × débit d'ingestion) | High | Un PVC sous-dimensionné se remplit à mesure que les données de la fenêtre de rétention s'accumulent ; un disque plein interrompt l'ingestion et les fusions. La capacité d'un PVC ne peut pas être réduite après sa création, et l'augmenter nécessite un redimensionnement tenant compte du StatefulSet. |
-| `stateful_pvc_storage_class` | `standard` (HDD, par défaut) | Medium | Ne peut pas être modifiée après la création du PVC sans migration des données. Le HDD est la valeur par défaut raisonnable (VictoriaMetrics tolère les faibles IOPS) — passer à `standard-rwo`/SSD n'a d'intérêt que pour une très forte concurrence de requêtes et puise dans le quota serré `SSD_TOTAL_GB`. |
-| `application_version` | épingler un tag précis en production | Medium | `latest` est associé à une version épinglée fixe (`v1.148.0`) au moment du build dans ce module — contrairement à d'autres applications, « latest » ne dérive donc pas silencieusement ici lors d'un nouveau build. Épinglez tout de même explicitement si vous avez besoin d'une reproductibilité stricte entre environnements. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro ne laisse rien pour servir les requêtes ni accepter l'ingestion ; aucun comportement de rechargement au démarrage à froid n'est fiable pour un backend de métriques dont d'autres systèmes dépendent en permanence. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont des octets et bloquent toute planification. |
-| `enable_iap` / `enable_cloud_armor` | à activer si `service_type` est un jour modifié par rapport à `ClusterIP` | High | VictoriaMetrics n'applique aucun contrôle d'accès propre — tout ce qui peut atteindre le port peut lire et écrire toutes les données de métriques. |
-| `pdb_min_available` vs `min_instance_count` | tenir compte de l'interaction | Medium | `1`/`1` (les valeurs par défaut) signifie que le pod unique ne peut pas être évincé volontairement tout en respectant le PDB — cela peut bloquer les mises à niveau des nœuds jusqu'à ce que Kubernetes se rabatte sur d'autres stratégies d'éviction. |
+| `stateful_pvc_enabled` | `true` (par défaut, requis) | Critique | Sans PVC, il n'existe aucun mode de stockage pris en charge pour ce module — les fichiers de données de VictoriaMetrics, mappés en mémoire, ne sont pas compatibles avec GCS FUSE, même comme repli. Ne le désactivez pas. |
+| `stateful_pvc_mount_path` | `/victoria-metrics-data` (par défaut) | Critique | Doit correspondre au flag `-storageDataPath` intégré à l'image personnalisée. En cas de discordance, le PVC est monté à un endroit où le binaire n'écrit jamais, et toutes les données résident dans la couche éphémère du pod — perdues à chaque redémarrage. |
+| `service_type` | `ClusterIP` (par défaut) — **ne le « corrigez » pas en `LoadBalancer`** | Critique (en cas de modification imprudente) | C'est la valeur par défaut confirmée comme correcte pour cette application, et non le bug de copier-coller ClusterIP touchant l'ensemble du parc documenté ailleurs dans ce catalogue. VictoriaMetrics n'a aucune authentification intégrée — l'exposer via `LoadBalancer` sans IAP ni Cloud Armor rend toutes les métriques ingérées lisibles, modifiables et supprimables par quiconque peut atteindre l'IP. |
+| `application_name` | défini une seule fois | Critique | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le PVC, ce qui fait perdre tout l'historique des métriques ingérées. |
+| `max_instance_count` | `1` (fixe) | Critique | VictoriaMetrics en mode nœud unique n'a ni clustering ni réplication — un second réplica écrivant sur le même PVC corrompt les fichiers de données. Il n'existe aucun moyen pris en charge de mettre ce module à l'échelle horizontalement ; utilisez l'édition cluster distincte de VictoriaMetrics (que ce module ne déploie pas) si vous en avez besoin. |
+| `-retentionPeriod` (intégré à l'image) | `12` mois (par défaut) | Élevé | Ce n'est pas une variable Terraform — modifier la rétention nécessite d'éditer `VictoriaMetrics_Common/scripts/Dockerfile` et de forcer un nouveau build de l'image. Les données plus anciennes que la fenêtre de rétention sont supprimées par VictoriaMetrics lui-même selon son propre calendrier ; il n'y a ni suppression réversible ni corbeille. |
+| `environment_variables` | sans effet sur la configuration de VictoriaMetrics | Moyen | VictoriaMetrics ne lit aucune variable d'environnement pour sa propre configuration — uniquement des flags CLI intégrés à l'image. Ne vous attendez pas à ce qu'une variable d'environnement de type `VICTORIA_METRICS_*` modifie le comportement ; ce ne sera pas le cas, sauf si le binaire amont lit justement ce nom exact (ce qui n'est pas le cas par défaut). |
+| `stateful_pvc_size` | généreuse (20 Gi+, à dimensionner selon rétention × débit d'ingestion) | Élevé | Un PVC sous-dimensionné se remplit à mesure que les données de la fenêtre de rétention s'accumulent ; un disque plein interrompt l'ingestion et les fusions. La capacité d'un PVC ne peut pas être réduite après sa création, et l'augmenter nécessite un redimensionnement tenant compte du StatefulSet. |
+| `stateful_pvc_storage_class` | `standard` (HDD, par défaut) | Moyen | Ne peut pas être modifiée après la création du PVC sans migration des données. Le HDD est la valeur par défaut raisonnable (VictoriaMetrics tolère les faibles IOPS) — passer à `standard-rwo`/SSD n'a d'intérêt que pour une très forte concurrence de requêtes et puise dans le quota serré `SSD_TOTAL_GB`. |
+| `application_version` | épingler un tag précis en production | Moyen | `latest` est associé à une version épinglée fixe (`v1.148.0`) au moment du build dans ce module — contrairement à d'autres applications, « latest » ne dérive donc pas silencieusement ici lors d'un nouveau build. Épinglez tout de même explicitement si vous avez besoin d'une reproductibilité stricte entre environnements. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro ne laisse rien pour servir les requêtes ni accepter l'ingestion ; aucun comportement de rechargement au démarrage à froid n'est fiable pour un backend de métriques dont d'autres systèmes dépendent en permanence. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
+| `enable_iap` / `enable_cloud_armor` | à activer si `service_type` est un jour modifié par rapport à `ClusterIP` | Élevé | VictoriaMetrics n'applique aucun contrôle d'accès propre — tout ce qui peut atteindre le port peut lire et écrire toutes les données de métriques. |
+| `pdb_min_available` vs `min_instance_count` | tenir compte de l'interaction | Moyen | `1`/`1` (les valeurs par défaut) signifie que le pod unique ne peut pas être évincé volontairement tout en respectant le PDB — cela peut bloquer les mises à niveau des nœuds jusqu'à ce que Kubernetes se rabatte sur d'autres stratégies d'éviction. |
 
 ---
 

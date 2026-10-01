@@ -199,7 +199,7 @@ tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application LibreChat {#3-librechat-application-behaviour}
 
-- **Aucune tâche de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
+- **Aucun job de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
   aucun job d'initialisation distinct n'est nécessaire.
 - **Sidecar MongoDB dans le pod par défaut.** `mongodb_uri` vaut par défaut
   `mongodb://127.0.0.1:27017/LibreChat` et pointe vers un conteneur officiel `mongo:7` ajouté comme
@@ -362,7 +362,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide — LibreChat migre automatiquement MongoDB au démarrage. Ajoutez des tâches de configuration personnalisées si nécessaire. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler (nettoyage des données, préchauffage du cache, etc.). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler (nettoyage des données, préchauffage du cache, etc.). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -408,7 +408,7 @@ en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration exécutées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration exécutés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -420,27 +420,27 @@ en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critical | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
-| `mongodb_uri` | conserver la valeur par défaut (sidecar) ou la définir explicitement | Critical | LibreChat nécessite MongoDB. Le sidecar `mongo:7` dans le pod par défaut a besoin de NFS pour son répertoire de données ; vider `mongodb_uri` (`""`) avec une configuration Firestore/Atlas défaillante fait planter le conteneur au démarrage, qui ne sert alors aucun trafic. |
-| `enable_cloudsql_volume` | `false` | Critical | Doit rester à `false`. L'activer injecte un sidecar Cloud SQL Auth Proxy inutile. |
-| `database_type` | `NONE` | Critical | Le définir sur un moteur SQL provisionne une instance Cloud SQL inutilisée, à un coût supplémentaire. |
-| `secret_environment_variables` (clés d'IA) | utiliser des secrets | Critical | Les clés des fournisseurs d'IA transmises en simples `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run et dans les journaux d'audit GCP. Utilisez toujours des références Secret Manager. |
-| `allow_registration` | `false` après la configuration | High | Une inscription ouverte sur un déploiement public permet à n'importe qui de créer un compte. Désactivez-la après la création de l'administrateur ou restreignez l'accès avec IAP. |
-| `enable_redis` | `true` en multi-instances | High | Sans Redis, chaque instance dispose d'un état de session en mémoire isolé ; les utilisateurs perdent leur session lors des changements d'échelle. |
-| `redis_host` | point de terminaison explicite | High | Requis lorsque `enable_redis = true`. S'il est vide, LibreChat ne peut pas se connecter à Redis. |
-| `max_instance_count` | `1` avec MongoDB intégré | High | Plusieurs instances écrivant dans le même répertoire de données MongoDB adossé à NFS peuvent corrompre la base de données. N'augmentez cette valeur que si vous utilisez une base MongoDB externe. |
-| `enable_nfs` | `true` avec MongoDB intégré | High | Le sidecar MongoDB intégré stocke son répertoire de données (`/data/db`) sur NFS. Désactiver NFS supprime le stockage durable et les données MongoDB sont perdues au redémarrage. |
-| `timeout_seconds` | `600` | High | Le streaming SSE de longues réponses d'IA peut dépasser plusieurs minutes. Un délai insuffisant tronque les réponses en cours de diffusion. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro interrompt tous les flux SSE en cours et provoque une latence de démarrage à froid au réveil. |
-| `JWT_SECRET` (généré automatiquement) | défini une seule fois | High | Sa rotation invalide simultanément toutes les sessions actives. Planifiez la rotation pendant une fenêtre de maintenance. |
-| `application_version` | version figée | Medium | `latest` peut introduire des changements incompatibles du schéma MongoDB ou des incompatibilités d'API lors de montées de version non planifiées. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, LibreChat est directement joignable depuis l'internet public, protégé uniquement par la connexion au niveau de l'application. |
-| `execution_environment` | `gen2` | High | Les montages NFS ne sont pas pris en charge en gen1. Utilisez toujours gen2 pour les déploiements avec NFS. |
+| `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critique | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
+| `mongodb_uri` | conserver la valeur par défaut (sidecar) ou la définir explicitement | Critique | LibreChat nécessite MongoDB. Le sidecar `mongo:7` dans le pod par défaut a besoin de NFS pour son répertoire de données ; vider `mongodb_uri` (`""`) avec une configuration Firestore/Atlas défaillante fait planter le conteneur au démarrage, qui ne sert alors aucun trafic. |
+| `enable_cloudsql_volume` | `false` | Critique | Doit rester à `false`. L'activer injecte un sidecar Cloud SQL Auth Proxy inutile. |
+| `database_type` | `NONE` | Critique | Le définir sur un moteur SQL provisionne une instance Cloud SQL inutilisée, à un coût supplémentaire. |
+| `secret_environment_variables` (clés d'IA) | utiliser des secrets | Critique | Les clés des fournisseurs d'IA transmises en simples `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run et dans les journaux d'audit GCP. Utilisez toujours des références Secret Manager. |
+| `allow_registration` | `false` après la configuration | Élevé | Une inscription ouverte sur un déploiement public permet à n'importe qui de créer un compte. Désactivez-la après la création de l'administrateur ou restreignez l'accès avec IAP. |
+| `enable_redis` | `true` en multi-instances | Élevé | Sans Redis, chaque instance dispose d'un état de session en mémoire isolé ; les utilisateurs perdent leur session lors des changements d'échelle. |
+| `redis_host` | point de terminaison explicite | Élevé | Requis lorsque `enable_redis = true`. S'il est vide, LibreChat ne peut pas se connecter à Redis. |
+| `max_instance_count` | `1` avec MongoDB intégré | Élevé | Plusieurs instances écrivant dans le même répertoire de données MongoDB adossé à NFS peuvent corrompre la base de données. N'augmentez cette valeur que si vous utilisez une base MongoDB externe. |
+| `enable_nfs` | `true` avec MongoDB intégré | Élevé | Le sidecar MongoDB intégré stocke son répertoire de données (`/data/db`) sur NFS. Désactiver NFS supprime le stockage durable et les données MongoDB sont perdues au redémarrage. |
+| `timeout_seconds` | `600` | Élevé | Le streaming SSE de longues réponses d'IA peut dépasser plusieurs minutes. Un délai insuffisant tronque les réponses en cours de diffusion. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro interrompt tous les flux SSE en cours et provoque une latence de démarrage à froid au réveil. |
+| `JWT_SECRET` (généré automatiquement) | défini une seule fois | Élevé | Sa rotation invalide simultanément toutes les sessions actives. Planifiez la rotation pendant une fenêtre de maintenance. |
+| `application_version` | version figée | Moyen | `latest` peut introduire des changements incompatibles du schéma MongoDB ou des incompatibilités d'API lors de montées de version non planifiées. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, LibreChat est directement joignable depuis l'internet public, protégé uniquement par la connexion au niveau de l'application. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS ne sont pas pris en charge en gen1. Utilisez toujours gen2 pour les déploiements avec NFS. |
 
 ---
 

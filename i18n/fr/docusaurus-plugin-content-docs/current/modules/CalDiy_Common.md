@@ -111,7 +111,7 @@ identifiants d'exécution courants plutôt qu'intégrée à l'image.
 Ajustements propres à chaque plateforme :
 
 - **Cloud Run** exécute en outre `replace-placeholder.sh` dans `start.sh`, qui réécrit
-  `NEXT_PUBLIC_WEBAPP_URL` dans tous les blocs statiques Next.js (~2.5 minutes au
+  `NEXT_PUBLIC_WEBAPP_URL` dans tous les blocs statiques Next.js (~2,5 minutes au
   premier démarrage). C'est la principale raison de la fenêtre généreuse de la sonde
   de démarrage sur Cloud Run.
 - **GKE** voit `NEXT_PUBLIC_WEBAPP_URL` et `NEXTAUTH_URL` résolues vers l'IP réelle du
@@ -131,10 +131,10 @@ variantes d'image, de base et wrapper.
   le délai initial) pour laisser `db-migrate` et `seed-app-store` se terminer avant que
   le pod ne soit déclaré prêt.
 - **Cloud Run** définit un `initial_delay_seconds = 180` plus long pour couvrir
-  `replace-placeholder.sh` (~2.5 min) en plus des étapes de migration et d'alimentation
+  `replace-placeholder.sh` (~2,5 min) en plus des étapes de migration et d'alimentation
   initiale. La fenêtre de démarrage totale est d'environ 6 minutes.
 
-Une sonde de disponibilité (`/api/auth/session`, `initial_delay=30s`) est également
+Une sonde de disponibilité (readiness) (`/api/auth/session`, `initial_delay=30s`) est également
 codée en dur et n'est pas configurable par l'utilisateur.
 
 ---

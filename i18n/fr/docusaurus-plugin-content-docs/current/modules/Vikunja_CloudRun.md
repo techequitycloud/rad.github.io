@@ -377,24 +377,24 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `VIKUNJA_SERVICE_JWTSECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide toutes les sessions utilisateur actives et force chacun à se reconnecter immédiatement. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_nfs` (pour les pièces jointes) | `true` si les pièces jointes comptent | High | Sans NFS, les pièces jointes résident sur un disque éphémère et sont perdues à chaque révision/redémarrage. |
-| `memory_limit` | `512Mi` (minimum gen2) | High | Les valeurs inférieures à 512Mi sont rejetées au moment du plan sur gen2. |
-| `cpu_always_allocated` | `true` | Medium | Le passer à `false` met en pause le planificateur de rappels intégré lorsque l'instance est inactive — les rappels ne se déclenchent pas avant la requête suivante. |
-| `container_image_source` | `custom` | High | `prebuilt` déploie l'image `scratch` brute sans shell ni mappage du point d'entrée — le conteneur ne peut pas mapper `DB_*` et ne parvient pas à se connecter. |
-| `ingress_settings` | `all` | Medium | `internal` rend l'interface/l'API inaccessibles depuis l'extérieur du VPC. |
-| `enable_iap` | à activer pour les instances privées | Medium | Sans IAP, l'interface est publique ; toute personne disposant de l'URL peut atteindre la page de connexion/d'inscription. |
-| `VIKUNJA_SERVICE_ENABLEREGISTRATION` (variable d'environnement) | `"false"` après le premier administrateur | High | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `VIKUNJA_SERVICE_JWTSECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide toutes les sessions utilisateur actives et force chacun à se reconnecter immédiatement. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_nfs` (pour les pièces jointes) | `true` si les pièces jointes comptent | Élevé | Sans NFS, les pièces jointes résident sur un disque éphémère et sont perdues à chaque révision/redémarrage. |
+| `memory_limit` | `512Mi` (minimum gen2) | Élevé | Les valeurs inférieures à 512Mi sont rejetées au moment du plan sur gen2. |
+| `cpu_always_allocated` | `true` | Moyen | Le passer à `false` met en pause le planificateur de rappels intégré lorsque l'instance est inactive — les rappels ne se déclenchent pas avant la requête suivante. |
+| `container_image_source` | `custom` | Élevé | `prebuilt` déploie l'image `scratch` brute sans shell ni mappage du point d'entrée — le conteneur ne peut pas mapper `DB_*` et ne parvient pas à se connecter. |
+| `ingress_settings` | `all` | Moyen | `internal` rend l'interface/l'API inaccessibles depuis l'extérieur du VPC. |
+| `enable_iap` | à activer pour les instances privées | Moyen | Sans IAP, l'interface est publique ; toute personne disposant de l'URL peut atteindre la page de connexion/d'inscription. |
+| `VIKUNJA_SERVICE_ENABLEREGISTRATION` (variable d'environnement) | `"false"` après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

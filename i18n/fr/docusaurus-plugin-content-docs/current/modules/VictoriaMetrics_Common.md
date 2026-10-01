@@ -65,7 +65,7 @@ VictoriaMetrics accepte et traite toute requête qui lui parvient.
 
 VictoriaMetrics gère son propre moteur de stockage de séries temporelles
 intégré. Il n'y a **aucune base de données Cloud SQL**, **aucun mode de stockage
-GCS FUSE** et **aucune tâche d'amorçage de base de données**. Au premier
+GCS FUSE** et **aucun job d'amorçage de base de données**. Au premier
 démarrage, VictoriaMetrics initialise automatiquement son répertoire de données
 `/victoria-metrics-data`.
 
@@ -175,8 +175,8 @@ VictoriaMetrics gère son propre moteur de stockage intégré et ne nécessite n
 schéma, ni migration, ni données d'amorçage — c'est un binaire autonome. Aucun
 job d'initialisation n'est injecté par défaut. Si `var.initialization_jobs`
 n'est pas vide dans l'encapsuleur (pour une tâche d'amorçage personnalisée que
-vous ajoutez vous-même), ces tâches sont transmises au socle après normalisation
-des types de champs ; sinon, aucune n'est créée.
+vous ajoutez vous-même), ces jobs sont transmis au socle après normalisation
+des types de champs ; sinon, aucun n'est créé.
 
 ---
 

@@ -167,7 +167,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 ## 3. Comportement de l'application Meilisearch {#3-meilisearch-application-behaviour}
 
 - **Aucun job d'initialisation.** Meilisearch gère son propre stockage et ne nécessite aucun
-  amorçage de base de données ; aucune tâche `db-init` ne s'exécute donc. La première requête qui crée un
+  amorçage de base de données ; aucun job `db-init` ne s'exécute donc. La première requête qui crée un
   index initialise à la demande le répertoire `/meili_data`.
 - **Le mode production exige la clé maître.** Avec `MEILI_ENV = production`,
   Meilisearch ne démarre pas tant que `MEILI_MASTER_KEY` ne fait pas au moins 16 octets.
@@ -308,7 +308,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucun job d'initialisation par défaut ; ne fournissez des tâches que pour un chargement de données personnalisé. |
+| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucun job d'initialisation par défaut ; ne fournissez des jobs que pour un chargement de données personnalisé. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (par exemple, snapshots de dumps). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Meilisearch. |
 
@@ -402,7 +402,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -416,25 +416,25 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` avec un PVC activé, IAP sans identités autorisées ni client OAuth, des quotas de mémoire sans suffixes binaires, un `backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_api_key` | `true` | Critical | Le désactiver supprime la clé maître ; en mode production, Meilisearch refuse de démarrer, et s'il s'exécutait, quiconque atteint le Service pourrait lire ou supprimer tous les index. |
-| `max_instance_count` | `1` | Critical | Plus d'un pod partageant le PVC RWO ou le bucket GCS corrompt l'index. |
-| `stateful_pvc_mount_path` | défini à `/meili_data` | Critical | Vaut par défaut `/meilisearch/storage`, qui ne correspond pas au `MEILI_DB_PATH` fixe ; laissé à sa valeur par défaut, le PVC ne reçoit jamais les données d'index, qui semblent vides. |
-| `stateful_pvc_size` | dimensionné selon le jeu de données | Critical | Ne peut pas être réduit après la création ; trop petit, le PVC se remplit et bloque les écritures. |
-| `workload_type` vs `stateful_pvc_enabled` | laisser `stateful_pvc_enabled` le déterminer | Critical | `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` est rejeté au moment du plan ; le PVC nécessite un StatefulSet. |
-| `MEILI_MASTER_KEY` (générée automatiquement) | Rotation uniquement avec la mise à jour des clients | High | Effectuer la rotation de la clé sans mettre à jour les clients casse tous les appels de recherche et d'administration authentifiés. |
-| `stateful_pvc_enabled` | `true` en production | High | GCS FUSE a une latence plus élevée qu'un PVC PD ; un index très sollicité est nettement plus performant sur un PVC. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `memory_limit` | `1Gi`+ | High | Une mémoire insuffisante pour un index volumineux provoque des arrêts OOM sous charge de requêtes. |
-| `enable_iap` | pour un point de terminaison privé destiné à des humains | Medium | IAP exige une identité Google pour chaque requête ; il bloque aussi les appels non authentifiés d'applications ou de services — utilisez des clés d'API à portée limitée pour ceux-ci. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, provoquant une interruption de la recherche. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour récupérer d'une suppression accidentelle d'index découverte tardivement. |
+| `enable_api_key` | `true` | Critique | Le désactiver supprime la clé maître ; en mode production, Meilisearch refuse de démarrer, et s'il s'exécutait, quiconque atteint le Service pourrait lire ou supprimer tous les index. |
+| `max_instance_count` | `1` | Critique | Plus d'un pod partageant le PVC RWO ou le bucket GCS corrompt l'index. |
+| `stateful_pvc_mount_path` | défini à `/meili_data` | Critique | Vaut par défaut `/meilisearch/storage`, qui ne correspond pas au `MEILI_DB_PATH` fixe ; laissé à sa valeur par défaut, le PVC ne reçoit jamais les données d'index, qui semblent vides. |
+| `stateful_pvc_size` | dimensionné selon le jeu de données | Critique | Ne peut pas être réduit après la création ; trop petit, le PVC se remplit et bloque les écritures. |
+| `workload_type` vs `stateful_pvc_enabled` | laisser `stateful_pvc_enabled` le déterminer | Critique | `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` est rejeté au moment du plan ; le PVC nécessite un StatefulSet. |
+| `MEILI_MASTER_KEY` (générée automatiquement) | Rotation uniquement avec la mise à jour des clients | Élevé | Effectuer la rotation de la clé sans mettre à jour les clients casse tous les appels de recherche et d'administration authentifiés. |
+| `stateful_pvc_enabled` | `true` en production | Élevé | GCS FUSE a une latence plus élevée qu'un PVC PD ; un index très sollicité est nettement plus performant sur un PVC. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `memory_limit` | `1Gi`+ | Élevé | Une mémoire insuffisante pour un index volumineux provoque des arrêts OOM sous charge de requêtes. |
+| `enable_iap` | pour un point de terminaison privé destiné à des humains | Moyen | IAP exige une identité Google pour chaque requête ; il bloque aussi les appels non authentifiés d'applications ou de services — utilisez des clés d'API à portée limitée pour ceux-ci. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, provoquant une interruption de la recherche. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour récupérer d'une suppression accidentelle d'index découverte tardivement. |
 
 ---
 

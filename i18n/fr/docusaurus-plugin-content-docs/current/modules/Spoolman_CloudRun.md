@@ -270,19 +270,19 @@ Spoolman n'en utilise aucune par défaut.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critical | Quiconque possède l'URL peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
-| `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critical | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (ne pas remplacer par `custom`) | Critical | Définir `"custom"` déclenche une tentative Kaniko/Cloud Build sur un module dépourvu de Dockerfile — le build échoue purement et simplement. |
-| `enable_cloudsql_volume` | `true` | High | Le désactiver supprime le socket Unix dont dépend `SPOOLMAN_DB_HOST` de Spoolman pour le chemin de connexion documenté sans TLS. |
-| `SPOOLMAN_DB_QUERY` | Laisser vide, sauf pour un dépannage | Medium | Il s'agit d'une échappatoire pour un repli TCP + `sslmode` — nécessaire uniquement si le chemin de connexion par socket s'avérait un jour peu fiable sur un déploiement en production ; inutile en fonctionnement normal. |
-| `ingress_settings` | `all` (valeur par défaut) | Medium | Le restreindre à `internal` rend le service inaccessible depuis un navigateur, sauf s'il est placé derrière un équilibreur de charge. |
-| `min_instance_count` | `0` (valeur par défaut) | Low | Spoolman n'effectue aucun travail en arrière-plan, la mise à l'échelle jusqu'à zéro est donc sûre ; augmentez-le uniquement pour éviter la latence de démarrage à froid en usage interactif. |
+| Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critique | Quiconque possède l'URL peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
+| `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critique | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (ne pas remplacer par `custom`) | Critique | Définir `"custom"` déclenche une tentative Kaniko/Cloud Build sur un module dépourvu de Dockerfile — le build échoue purement et simplement. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le désactiver supprime le socket Unix dont dépend `SPOOLMAN_DB_HOST` de Spoolman pour le chemin de connexion documenté sans TLS. |
+| `SPOOLMAN_DB_QUERY` | Laisser vide, sauf pour un dépannage | Moyen | Il s'agit d'une échappatoire pour un repli TCP + `sslmode` — nécessaire uniquement si le chemin de connexion par socket s'avérait un jour peu fiable sur un déploiement en production ; inutile en fonctionnement normal. |
+| `ingress_settings` | `all` (valeur par défaut) | Moyen | Le restreindre à `internal` rend le service inaccessible depuis un navigateur, sauf s'il est placé derrière un équilibreur de charge. |
+| `min_instance_count` | `0` (valeur par défaut) | Faible | Spoolman n'effectue aucun travail en arrière-plan, la mise à l'échelle jusqu'à zéro est donc sûre ; augmentez-le uniquement pour éviter la latence de démarrage à froid en usage interactif. |
 
 ---
 

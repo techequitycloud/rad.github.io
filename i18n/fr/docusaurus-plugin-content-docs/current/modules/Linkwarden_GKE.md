@@ -193,8 +193,8 @@ règles d'alerte en option.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via le sidecar cloud-sql-proxy et crée de manière idempotente la base de données
-  applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
-  réexécutée sans risque.
+  applicative et l'utilisateur, puis accorde les privilèges. Le job peut être
+  réexécuté sans risque.
 - **Les migrations du schéma s'exécutent à chaque démarrage.** Le `CMD` de l'image
   de base de Linkwarden exécute `prisma migrate deploy` avant de démarrer les
   processus web et worker ; la mise à niveau de la version de l'application applique
@@ -213,7 +213,7 @@ règles d'alerte en option.
   — Linkwarden ne dispose d'aucun point de terminaison de santé dédié confirmé. La
   sonde de démarrage accorde une fenêtre généreuse pour le démarrage à froid de
   Next.js ainsi que l'initialisation de Chrome headless/Playwright.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -325,7 +325,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via l'Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `kubernetes_ready` | Indique si le cluster et la charge de travail sont prêts. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
@@ -334,23 +334,23 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` (imposé) | Critical | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
-| `enable_cloudsql_volume` | `true` (requis) | Critical | Le désactiver supprime le sidecar cloud-sql-proxy dont dépend le point d'entrée — `DATABASE_URL` ne se connecte à rien. |
-| `min_instance_count` | `1` | High | Une mise à l'échelle à 0 (non prise en charge par défaut sur GKE) arrêterait le worker d'archivage en arrière-plan. |
-| `container_resources.memory_limit` | `2Gi` minimum | High | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
-| `service_type` | `LoadBalancer` | High | Définir `ClusterIP` pour une interface publique de favoris la rend inaccessible depuis un navigateur (un schéma de bogue de copier-coller connu ailleurs dans ce catalogue). |
-| `reserve_static_ip` | `true` | Medium | `false` risque de faire résoudre le `NEXTAUTH_URL` figé de Linkwarden vers un DNS interne inaccessible si l'IP éphémère n'est pas connue au moment de l'apply. |
-| `disable_browser` | `false` sauf si Chrome se comporte mal | Medium | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths. |
-| `gcs_volumes` | Utiliser la valeur par défaut intégrée | Medium | Fournir une liste personnalisée sans respecter le chemin de montage `/data/data` rend le contenu archivé non inscriptible ou le répartit entre plusieurs backends de stockage. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` (imposé) | Critique | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
+| `enable_cloudsql_volume` | `true` (requis) | Critique | Le désactiver supprime le sidecar cloud-sql-proxy dont dépend le point d'entrée — `DATABASE_URL` ne se connecte à rien. |
+| `min_instance_count` | `1` | Élevé | Une mise à l'échelle à 0 (non prise en charge par défaut sur GKE) arrêterait le worker d'archivage en arrière-plan. |
+| `container_resources.memory_limit` | `2Gi` minimum | Élevé | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
+| `service_type` | `LoadBalancer` | Élevé | Définir `ClusterIP` pour une interface publique de favoris la rend inaccessible depuis un navigateur (un schéma de bogue de copier-coller connu ailleurs dans ce catalogue). |
+| `reserve_static_ip` | `true` | Moyen | `false` risque de faire résoudre le `NEXTAUTH_URL` figé de Linkwarden vers un DNS interne inaccessible si l'IP éphémère n'est pas connue au moment de l'apply. |
+| `disable_browser` | `false` sauf si Chrome se comporte mal | Moyen | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths. |
+| `gcs_volumes` | Utiliser la valeur par défaut intégrée | Moyen | Fournir une liste personnalisée sans respecter le chemin de montage `/data/data` rend le contenu archivé non inscriptible ou le répartit entre plusieurs backends de stockage. |
 
 ---
 

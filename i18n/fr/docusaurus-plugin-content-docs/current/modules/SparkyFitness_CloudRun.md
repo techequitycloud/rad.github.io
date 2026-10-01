@@ -46,7 +46,7 @@ qui ne peut pas atteindre l'URL publique, exclusivement HTTPS, d'un service Clou
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
-| Calcul | Cloud Run v2 (révision multiconteneur) | Frontend (entrée, ~0.5 vCPU/512Mi) + backend (sidecar dans le pod, 1 vCPU/1Gi par défaut) |
+| Calcul | Cloud Run v2 (révision multiconteneur) | Frontend (entrée, ~0,5 vCPU/512Mi) + backend (sidecar dans le pod, 1 vCPU/1Gi par défaut) |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — aucun autre moteur n'est pris en charge |
 | Secrets | Secret Manager | `SPARKY_FITNESS_API_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `SPARKY_FITNESS_APP_DB_PASSWORD` générés automatiquement ; mot de passe de la base de données |
 | Entrée | URL Cloud Run | URL `run.app` par défaut sur le conteneur frontend ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
@@ -55,11 +55,11 @@ qui ne peut pas atteindre l'URL publique, exclusivement HTTPS, d'un service Clou
 
 - **PostgreSQL 15 est obligatoire.** Aucun autre moteur n'est pris en charge.
 - **Deux rôles de base de données, dont un seul géré par Terraform.** `db_user` (par
-  défaut `sparky`) est le rôle d'administration/de migration créé par la tâche
+  défaut `sparky`) est le rôle d'administration/de migration créé par le job
   `db-init` ; `app_db_user` (par défaut `sparky_app`) est un rôle à privilèges limités
   que le **backend crée et entretient lui-même** à chaque démarrage, à l'aide des
   identifiants de `db_user` — il n'existe aucune ressource Terraform pour ce rôle.
-- **Pas de tâche de migration distincte.** Contrairement à de nombreuses applications
+- **Pas de job de migration distinct.** Contrairement à de nombreuses applications
   de ce catalogue, le backend de SparkyFitness exécute ses propres migrations de base
   de données à chaque démarrage du conteneur.
 - **L'image frontend est préconstruite** — `container_image_source = "prebuilt"`, donc le
@@ -167,7 +167,7 @@ pour les isoler.
   `app_db_user` — le backend s'en charge lui-même.
 - **Les migrations s'exécutent à chaque démarrage.** Le backend applique ses propres
   migrations de schéma au démarrage à l'aide des identifiants d'administration de
-  `db_user` — il n'y a aucune tâche de migration distincte à surveiller.
+  `db_user` — il n'y a aucun job de migration distinct à surveiller.
 - **`app_db_user` est autoréparateur.** Le backend crée ou met à jour ce rôle à
   privilèges limités à chaque démarrage ; il survit donc à une recréation complète du
   conteneur sans intervention manuelle.
@@ -194,7 +194,7 @@ pour les isoler.
   backend est donc un build personnalisé minimal qui modifie les trois constructeurs
   `pg.Pool` pour activer SSL vers tout hôte autre que la boucle locale (voir
   [SparkyFitness_Common](SparkyFitness_Common.md) §4).
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job db-init --project "$PROJECT" --region "$REGION"
@@ -257,7 +257,7 @@ avec leur comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (rôle d'administration + base de données uniquement). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (rôle d'administration + base de données uniquement). |
 
 ### Groupe 16 — Observabilité et santé {#group-16--observability--health}
 
@@ -290,19 +290,19 @@ avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critical | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
-| `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critical | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les modifier recrée la base de données et détruit toutes les données. |
-| `application_version` | Utiliser l'étiquette exacte de l'amont (`v0.17.3`) | High | Un `0.17.3` sans préfixe (pas de `v`) n'existe pas en amont — le pull échoue. |
-| `admin_email` | À définir uniquement une fois le compte créé | Medium | Le définir avant l'inscription n'a aucun effet — il élève un compte existant, il n'en crée jamais. |
-| `enable_cloudsql_volume` | laisser à `true` | High | Le sidecar backend Cloud Run reçoit toujours l'adresse IP privée brute de Cloud SQL (et non le socket), quelle que soit la valeur de ce flag ; c'est l'image backend modifiée pour SSL qui fait fonctionner cette connexion. |
-| `disable_signup` | `true` après le premier administrateur | Medium | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `smtp_enabled` | Définir TOUS les champs smtp_* ensemble | Medium | Un bloc SMTP partiellement configuré peut rendre les e-mails de réinitialisation de mot de passe inopérants. |
+| `BETTER_AUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation une fois que des utilisateurs ont activé la 2FA | Critique | Sa rotation bloque tous les utilisateurs ayant activé la 2FA. |
+| `SPARKY_FITNESS_API_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après la première connexion | Critique | Sa rotation invalide tous les identifiants stockés des sources de données externes. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les modifier recrée la base de données et détruit toutes les données. |
+| `application_version` | Utiliser l'étiquette exacte de l'amont (`v0.17.3`) | Élevé | Un `0.17.3` sans préfixe (pas de `v`) n'existe pas en amont — le pull échoue. |
+| `admin_email` | À définir uniquement une fois le compte créé | Moyen | Le définir avant l'inscription n'a aucun effet — il élève un compte existant, il n'en crée jamais. |
+| `enable_cloudsql_volume` | laisser à `true` | Élevé | Le sidecar backend Cloud Run reçoit toujours l'adresse IP privée brute de Cloud SQL (et non le socket), quelle que soit la valeur de ce flag ; c'est l'image backend modifiée pour SSL qui fait fonctionner cette connexion. |
+| `disable_signup` | `true` après le premier administrateur | Moyen | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `smtp_enabled` | Définir TOUS les champs smtp_* ensemble | Moyen | Un bloc SMTP partiellement configuré peut rendre les e-mails de réinitialisation de mot de passe inopérants. |
 
 ---
 

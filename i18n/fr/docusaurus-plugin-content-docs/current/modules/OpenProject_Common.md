@@ -203,7 +203,7 @@ fonctionne correctement. Les sondes sont donc configurées comme suit :
   en charge que des sondes de vivacité HTTP/gRPC, et une sonde HTTP ferait redémarrer en
   boucle un conteneur sain). Comme pour la sonde de démarrage, ce remplacement a lieu dans
   la variante de plateforme, et non dans `Common`.
-- **Sonde de disponibilité : non évaluée en pratique.** Le `main.tf` d'`OpenProject_Common`
+- **Sonde de disponibilité (readiness) : non évaluée en pratique.** Le `main.tf` d'`OpenProject_Common`
   construit un objet `readiness_probe` pointant vers `GET /health_checks/default`, mais
   `readiness_probe` n'est pas un champ d'entrée reconnu par `App_CloudRun` ni par
   `App_GKE` (seuls `startup_probe`, `liveness_probe`, `health_check_config` et

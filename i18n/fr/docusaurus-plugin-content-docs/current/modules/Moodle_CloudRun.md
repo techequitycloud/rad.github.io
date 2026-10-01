@@ -39,7 +39,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 | Stockage d'objets | Cloud Storage | Un bucket de données et tout bucket supplémentaire défini par l'utilisateur |
 | Cache et sessions | Redis | Activé par défaut ; requis pour la cohérence des sessions PHP entre plusieurs instances |
 | Secrets | Secret Manager | Mot de passe cron généré automatiquement, mot de passe SMTP et mot de passe de la base de données |
-| Planificateur | Cloud Scheduler | Tâche cron provisionnée automatiquement (toutes les minutes) sur `/admin/cron.php` |
+| Planificateur | Cloud Scheduler | Job cron provisionné automatiquement (toutes les minutes) sur `/admin/cron.php` |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
@@ -55,7 +55,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
   `/health.php` renvoie donc directement 200.
 - **Redis est activé par défaut.** Sans magasin de sessions partagé, les utilisateurs
   sont déconnectés lorsqu'une requête atteint une autre instance Cloud Run.
-- **Une tâche Cloud Scheduler est provisionnée automatiquement.** Elle appelle
+- **Un job Cloud Scheduler est provisionné automatiquement.** Il appelle
   `/admin/cron.php` toutes les minutes à l'aide d'un mot de passe cron sécurisé, généré
   automatiquement et stocké dans Secret Manager.
 - Le **mot de passe cron** et le **mot de passe SMTP** sont générés automatiquement et
@@ -179,8 +179,8 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les détails de la rotation.
 
 ### F. Cloud Scheduler {#f-cloud-scheduler}
 
-Une tâche Cloud Scheduler est provisionnée automatiquement à chaque déploiement pour
-piloter la file de tâches interne de Moodle. Elle s'exécute toutes les minutes et
+Un job Cloud Scheduler est provisionné automatiquement à chaque déploiement pour
+piloter la file de tâches interne de Moodle. Il s'exécute toutes les minutes et
 s'authentifie à l'aide du `MOODLE_CRON_PASSWORD` généré automatiquement.
 
 - **Console :** Cloud Scheduler → Jobs.
@@ -231,16 +231,16 @@ tests de disponibilité et des règles d'alerte facultatifs sont disponibles.
 ## 3. Comportement de l'application Moodle {#3-moodle-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Deux jobs
-  d'initialisation s'exécutent avant que le service Cloud Run soit en ligne. La tâche
+  d'initialisation s'exécutent avant que le service Cloud Run soit en ligne. Le job
   `db-init` crée la base de données et l'utilisateur Moodle, active l'extension
-  `pg_trgm` et accorde les privilèges (idempotente, peut être relancée sans risque). La
-  tâche `nfs-init` crée les sous-répertoires Moodle requis (`filedir`, `temp`, `cache`,
+  `pg_trgm` et accorde les privilèges (idempotent, peut être relancé sans risque). Le
+  job `nfs-init` crée les sous-répertoires Moodle requis (`filedir`, `temp`, `cache`,
   `localcache`) sur le partage NFS et en attribue la propriété à `www-data`.
-- **Planification cron automatique.** Une tâche Cloud Scheduler s'exécute toutes les
-  minutes en ciblant `/admin/cron.php?password=<MOODLE_CRON_PASSWORD>`. Elle pilote
+- **Planification cron automatique.** Un job Cloud Scheduler s'exécute toutes les
+  minutes en ciblant `/admin/cron.php?password=<MOODLE_CRON_PASSWORD>`. Il pilote
   toutes les tâches planifiées de Moodle : sauvegardes de cours, notifications par
-  e-mail, traitement des badges et achèvements d'activités. La tâche est toujours créée
-  et ne peut pas être désactivée.
+  e-mail, traitement des badges et achèvements d'activités. Le job est toujours créé
+  et ne peut pas être désactivé.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité utilisent HTTP
   `/health.php`, qui renvoie HTTP 200 lorsque PHP est opérationnel. La sonde de
   démarrage accorde jusqu'à 10 minutes (`failure_threshold = 20`,
@@ -381,8 +381,8 @@ ou injecter des données initiales. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init` et `nfs-init`. |
-| `cron_jobs` | `[]` | Jobs Cloud Run complémentaires déclenchés par Cloud Scheduler (la tâche de planification cron de Moodle est toujours créée séparément). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init` et `nfs-init`. |
+| `cron_jobs` | `[]` | Jobs Cloud Run complémentaires déclenchés par Cloud Scheduler (le job de planification cron de Moodle est toujours créé séparément). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -439,7 +439,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `uptime_check_names` | Noms des tests de disponibilité Cloud Monitoring. |
-| `initialization_jobs` / `nfs_setup_job` | Noms des tâches de configuration et d'initialisation NFS. |
+| `initialization_jobs` / `nfs_setup_job` | Noms des jobs de configuration et d'initialisation NFS. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
@@ -450,25 +450,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Moodle requiert PostgreSQL ; `MOODLE_DB_TYPE = "pgsql"` est codé en dur — tout autre moteur empêche le démarrage. |
-| `enable_nfs` | `true` | Critical | Sans stockage NFS partagé, `moodledata` n'est pas partagé entre les instances et les fichiers téléversés sont perdus au redémarrage. |
-| `execution_environment` | `gen2` (par défaut) | Critical | Les montages de volumes NFS ne sont pas pris en charge en gen1 ; le service ne démarre pas avec NFS activé. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `enable_redis` | `true` | High | Sans magasin de sessions partagé, les utilisateurs d'un déploiement multi-instances sont déconnectés à chaque nouvelle instance. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
-| `memory_limit` | `2Gi` | High | Une mémoire insuffisante provoque des erreurs OOM de PHP lors des importations de cours ou des téléversements de fichiers volumineux. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour la production | High | Les deux valent par défaut `0` / `false` (priorité au coût, démarrage à froid) : le service est réduit à zéro et le CPU n'est facturé qu'à la requête. `0` provoque des délais de démarrage à froid sur la première requête après une période d'inactivité, y compris l'appel minute par minute de Cloud Scheduler à `admin/cli/cron.php` — Moodle prend officiellement en charge ce modèle de cron externe, donc les tâches planifiées s'exécutent toujours correctement (aucune perte de fonctionnalité), avec simplement une latence supplémentaire occasionnelle. Définissez les deux sur `1` / `true` pour éliminer les démarrages à froid et rétablir un fonctionnement continu. |
-| `nfs_mount_path` | `/mnt/nfs` | High | Doit correspondre à `MOODLE_DATA_DIR` ; le modifier après le premier déploiement déplace la racine des données et casse l'installation. |
-| `application_domains` + `MOODLE_REVERSE_PROXY` | définis ensemble | High | Sans les flags de reverse proxy, Moodle génère des URL HTTP derrière un équilibreur de charge HTTPS, ce qui casse les liens et les connexions. |
-| `enable_cloud_armor` / `enable_iap` | à activer pour l'accès administrateur | Medium | Sinon, l'interface d'administration est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `max_revisions_to_retain` | `7` | Low | Un nombre illimité de révisions conservées peut s'accumuler au fil du temps. |
+| `database_type` | `POSTGRES_15` | Critique | Moodle requiert PostgreSQL ; `MOODLE_DB_TYPE = "pgsql"` est codé en dur — tout autre moteur empêche le démarrage. |
+| `enable_nfs` | `true` | Critique | Sans stockage NFS partagé, `moodledata` n'est pas partagé entre les instances et les fichiers téléversés sont perdus au redémarrage. |
+| `execution_environment` | `gen2` (par défaut) | Critique | Les montages de volumes NFS ne sont pas pris en charge en gen1 ; le service ne démarre pas avec NFS activé. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `enable_redis` | `true` | Élevé | Sans magasin de sessions partagé, les utilisateurs d'un déploiement multi-instances sont déconnectés à chaque nouvelle instance. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
+| `memory_limit` | `2Gi` | Élevé | Une mémoire insuffisante provoque des erreurs OOM de PHP lors des importations de cours ou des téléversements de fichiers volumineux. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour la production | Élevé | Les deux valent par défaut `0` / `false` (priorité au coût, démarrage à froid) : le service est réduit à zéro et le CPU n'est facturé qu'à la requête. `0` provoque des délais de démarrage à froid sur la première requête après une période d'inactivité, y compris l'appel minute par minute de Cloud Scheduler à `admin/cli/cron.php` — Moodle prend officiellement en charge ce modèle de cron externe, donc les tâches planifiées s'exécutent toujours correctement (aucune perte de fonctionnalité), avec simplement une latence supplémentaire occasionnelle. Définissez les deux sur `1` / `true` pour éliminer les démarrages à froid et rétablir un fonctionnement continu. |
+| `nfs_mount_path` | `/mnt/nfs` | Élevé | Doit correspondre à `MOODLE_DATA_DIR` ; le modifier après le premier déploiement déplace la racine des données et casse l'installation. |
+| `application_domains` + `MOODLE_REVERSE_PROXY` | définis ensemble | Élevé | Sans les flags de reverse proxy, Moodle génère des URL HTTP derrière un équilibreur de charge HTTPS, ce qui casse les liens et les connexions. |
+| `enable_cloud_armor` / `enable_iap` | à activer pour l'accès administrateur | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `max_revisions_to_retain` | `7` | Faible | Un nombre illimité de révisions conservées peut s'accumuler au fil du temps. |
 
 ---
 

@@ -238,7 +238,7 @@ de diagnostics au niveau de la plateforme, qui ne changent pas avec les versions
 
 Consultez la section *Configuration Pitfalls & Sensible Defaults* du Guide de configuration pour les
 pièges propres à chaque paramètre (notamment pourquoi laisser `ingress_settings = "all"` sans IAP
-constitue une erreur de configuration à risque **Critical** pour un outil d'administration de bases de données, et pourquoi
+constitue une erreur de configuration à risque **Critique** pour un outil d'administration de bases de données, et pourquoi
 `PMA_ARBITRARY = "1"` élargit le rayon d'impact d'une session compromise).
 
 ---

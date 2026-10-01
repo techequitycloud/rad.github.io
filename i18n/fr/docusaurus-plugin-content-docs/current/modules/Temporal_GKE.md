@@ -458,27 +458,27 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `num_history_shards` | `4` (dev/démo), `512`+ (prod) | Critical | Définitivement immuable après le premier déploiement. Le modifier exige d'effacer toutes les données de workflow et de tout réinitialiser depuis zéro. |
-| `container_protocol` | `h2c` | Critical | Temporal utilise gRPC ; passer à `http1` casse toutes les connexions des workers SDK ainsi que la Web UI. |
-| `temporal_database_name` / `temporal_visibility_database_name` | définis une seule fois | Critical | Immuables après le premier déploiement. Les modifier après le déploiement rend le schéma orphelin, et Temporal démarre alors avec une base de données non initialisée. |
-| `enable_elasticsearch` avec `elasticsearch_url` | définis ensemble | Critical | Un point de terminaison Elasticsearch injoignable lorsque `enable_elasticsearch = true` fait planter Temporal au démarrage — il ne se rabat pas sur la visibilité PostgreSQL. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification. |
-| `min_instance_count` | `1` | High | La mise à zéro (`0`) entraîne des minuteurs manqués, des nouvelles tentatives d'activités bloquées et une progression des workflows perdue. |
-| `cpu_limit` | `2000m` | High | Les quatre services Temporal partagent cette allocation. En dessous de 1000m, la latence de planification augmente fortement et le déclenchement des minuteurs est retardé, ce qui affecte directement les SLA des workflows. |
-| `memory_limit` | `4Gi` | High | Temporal conserve l'état des shards en mémoire ; une mémoire insuffisante provoque des arrêts OOM pendant le traitement des workflows. |
-| `temporal_db_user` | généré automatiquement | High | Le modifier après le déploiement sans mettre à jour les droits Cloud SQL et Secret Manager fait échouer toutes les connexions du serveur. |
-| `elasticsearch_version` | correspondre au cluster réel | High | Une incohérence provoque des mappings d'index incompatibles, des entrées de workflow manquantes et des échecs d'écriture de visibilité. |
-| `elasticsearch_url` | `host:port` ou `http://host:port` | High | Obligatoire lorsque `enable_elasticsearch = true` ; une valeur vide provoque un plantage immédiat au démarrage. |
-| `service_type` | `ClusterIP` (interne) | Medium | Exposer le Frontend de Temporal en `LoadBalancer` sans règle réseau permet à n'importe quel hôte externe de soumettre des workflows. |
-| `enable_pod_disruption_budget` | `true` | Medium | Sans PDB, les mises à niveau des nœuds GKE peuvent expulser tous les pods Temporal simultanément, interrompant toutes les exécutions de workflows en cours. |
-| `backup_schedule` | `0 2 * * *` | Medium | Un calendrier vide ou désactivé ne laisse aucun moyen de récupération en cas de défaillance de Cloud SQL. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être expulsé). |
-| `stateful_pvc_enabled` | `false` | Medium | Temporal stocke tout son état dans Cloud SQL ; les PVC n'apportent aucun bénéfice et peuvent provoquer des échecs de planification Autopilot. |
+| `num_history_shards` | `4` (dev/démo), `512`+ (prod) | Critique | Définitivement immuable après le premier déploiement. Le modifier exige d'effacer toutes les données de workflow et de tout réinitialiser depuis zéro. |
+| `container_protocol` | `h2c` | Critique | Temporal utilise gRPC ; passer à `http1` casse toutes les connexions des workers SDK ainsi que la Web UI. |
+| `temporal_database_name` / `temporal_visibility_database_name` | définis une seule fois | Critique | Immuables après le premier déploiement. Les modifier après le déploiement rend le schéma orphelin, et Temporal démarre alors avec une base de données non initialisée. |
+| `enable_elasticsearch` avec `elasticsearch_url` | définis ensemble | Critique | Un point de terminaison Elasticsearch injoignable lorsque `enable_elasticsearch = true` fait planter Temporal au démarrage — il ne se rabat pas sur la visibilité PostgreSQL. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification. |
+| `min_instance_count` | `1` | Élevé | La mise à zéro (`0`) entraîne des minuteurs manqués, des nouvelles tentatives d'activités bloquées et une progression des workflows perdue. |
+| `cpu_limit` | `2000m` | Élevé | Les quatre services Temporal partagent cette allocation. En dessous de 1000m, la latence de planification augmente fortement et le déclenchement des minuteurs est retardé, ce qui affecte directement les SLA des workflows. |
+| `memory_limit` | `4Gi` | Élevé | Temporal conserve l'état des shards en mémoire ; une mémoire insuffisante provoque des arrêts OOM pendant le traitement des workflows. |
+| `temporal_db_user` | généré automatiquement | Élevé | Le modifier après le déploiement sans mettre à jour les droits Cloud SQL et Secret Manager fait échouer toutes les connexions du serveur. |
+| `elasticsearch_version` | correspondre au cluster réel | Élevé | Une incohérence provoque des mappings d'index incompatibles, des entrées de workflow manquantes et des échecs d'écriture de visibilité. |
+| `elasticsearch_url` | `host:port` ou `http://host:port` | Élevé | Obligatoire lorsque `enable_elasticsearch = true` ; une valeur vide provoque un plantage immédiat au démarrage. |
+| `service_type` | `ClusterIP` (interne) | Moyen | Exposer le Frontend de Temporal en `LoadBalancer` sans règle réseau permet à n'importe quel hôte externe de soumettre des workflows. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Sans PDB, les mises à niveau des nœuds GKE peuvent expulser tous les pods Temporal simultanément, interrompant toutes les exécutions de workflows en cours. |
+| `backup_schedule` | `0 2 * * *` | Moyen | Un calendrier vide ou désactivé ne laisse aucun moyen de récupération en cas de défaillance de Cloud SQL. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être expulsé). |
+| `stateful_pvc_enabled` | `false` | Moyen | Temporal stocke tout son état dans Cloud SQL ; les PVC n'apportent aucun bénéfice et peuvent provoquer des échecs de planification Autopilot. |
 
 ---
 

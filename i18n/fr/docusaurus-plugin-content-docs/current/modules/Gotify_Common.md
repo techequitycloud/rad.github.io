@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secret d'initialisation de l'administrateur | Génère un mot de passe administrateur de 24 caractères et le stocke dans **Secret Manager** | Injecté sous la forme `GOTIFY_DEFAULTUSER_PASS` ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image du conteneur | Encapsule l'image officielle `ghcr.io/gotify/server` avec un point d'entrée personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme moteur (le mode SQLite de Gotify n'est pas utilisé) | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits | Sortie `initialization_jobs` |
 | Stockage objet | Ne déclare **aucun** bucket — Gotify conserve tous les messages dans PostgreSQL | Sortie `storage_buckets` (vide) |
 | Paramètres principaux | Définit l'environnement Gotify de base : dialecte/connexion de la base de données, port du serveur, utilisateur administrateur par défaut | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/health` | §Observabilité dans les guides des plateformes |
@@ -79,7 +79,7 @@ partagé de secrets et de Workload Identity.
 Gotify prend en charge soit un fichier SQLite intégré, soit un serveur PostgreSQL
 externe. Ce module utilise toujours **PostgreSQL 15** sur Cloud SQL géré — le mode
 SQLite intégré n'est jamais utilisé, aucun disque persistant n'est donc nécessaire
-pour la base de données. Lors du premier déploiement, une tâche ponctuelle (`db-init`)
+pour la base de données. Lors du premier déploiement, un job ponctuel (`db-init`)
 s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy et crée un lien symbolique pour
@@ -91,8 +91,8 @@ s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement.
 
 Gotify applique ensuite son **propre schéma** par auto-migration GORM au premier
-démarrage de l'application — il n'existe pas de tâche de migration distincte. La
-tâche `db-init` peut être relancée sans risque. Inspectez directement la base de
+démarrage de l'application — il n'existe pas de job de migration distinct. Le
+job `db-init` peut être relancé sans risque. Inspectez directement la base de
 données avec :
 
 ```bash

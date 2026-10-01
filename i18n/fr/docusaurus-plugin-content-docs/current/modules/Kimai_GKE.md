@@ -356,8 +356,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -366,15 +366,15 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `container_image_source` | `custom` | **Critical** | Passer à `prebuilt` déploie l'image `kimai/kimai2` standard sans point d'entrée wrapper — `DATABASE_URL` n'est jamais composée, si bien que le pod ne peut pas du tout joindre MySQL. |
-| `enable_cloudsql_volume` | `true` sur GKE | **Critical** | La définir à `false` supprime le sidecar Auth Proxy dont dépend l'alias `DB_IP` du point d'entrée wrapper pour joindre Cloud SQL — le pod ne peut pas se connecter. |
-| `container_port` | `8001` | Critical | La variante d'image `:apache` écoute sur 8001, et non 80 — pointer la plateforme vers le mauvais port rend le service injoignable alors même que le conteneur est sain. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les feuilles de temps, tous les projets et toutes les factures. |
-| `APP_SECRET` (généré automatiquement) | Ne jamais le modifier à la main dans Secret Manager après le premier démarrage | High | Kimai l'utilise comme clé de signature de sécurité Symfony ; le modifier invalide les jetons CSRF et les sessions actives. |
-| Compte administrateur par défaut (nom d'utilisateur toujours `admin`, mot de passe dans le secret `ADMINPASS`) | Récupérez rapidement le mot de passe généré dans Secret Manager et connectez-vous | High | Le mot de passe administrateur est un véritable secret généré par déploiement, et non une valeur par défaut publique bien connue — mais il reste utile de vérifier qui a un accès en lecture au secret. |
-| `max_instance_count` | `1` sauf vérification contraire | High | Passer à plus d'un pod sans vérifier le comportement des sessions de Kimai sur plusieurs pods expose à des sessions utilisateur incohérentes d'un pod à l'autre. |
-| `enable_nfs` | `false` sauf besoin pour un autre usage | Low / coût | Vaut `true` par défaut et provisionne un partage Filestore que Kimai n'utilise jamais — un coût récurrent inutile ; la véritable persistance est le bucket `storage` monté via GCS FUSE. |
-| `enable_cloud_armor` | à activer en production | Medium | Le service est publiquement accessible sans protection WAF par défaut. |
+| `container_image_source` | `custom` | **Critique** | Passer à `prebuilt` déploie l'image `kimai/kimai2` standard sans point d'entrée wrapper — `DATABASE_URL` n'est jamais composée, si bien que le pod ne peut pas du tout joindre MySQL. |
+| `enable_cloudsql_volume` | `true` sur GKE | **Critique** | La définir à `false` supprime le sidecar Auth Proxy dont dépend l'alias `DB_IP` du point d'entrée wrapper pour joindre Cloud SQL — le pod ne peut pas se connecter. |
+| `container_port` | `8001` | Critique | La variante d'image `:apache` écoute sur 8001, et non 80 — pointer la plateforme vers le mauvais port rend le service injoignable alors même que le conteneur est sain. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les feuilles de temps, tous les projets et toutes les factures. |
+| `APP_SECRET` (généré automatiquement) | Ne jamais le modifier à la main dans Secret Manager après le premier démarrage | Élevé | Kimai l'utilise comme clé de signature de sécurité Symfony ; le modifier invalide les jetons CSRF et les sessions actives. |
+| Compte administrateur par défaut (nom d'utilisateur toujours `admin`, mot de passe dans le secret `ADMINPASS`) | Récupérez rapidement le mot de passe généré dans Secret Manager et connectez-vous | Élevé | Le mot de passe administrateur est un véritable secret généré par déploiement, et non une valeur par défaut publique bien connue — mais il reste utile de vérifier qui a un accès en lecture au secret. |
+| `max_instance_count` | `1` sauf vérification contraire | Élevé | Passer à plus d'un pod sans vérifier le comportement des sessions de Kimai sur plusieurs pods expose à des sessions utilisateur incohérentes d'un pod à l'autre. |
+| `enable_nfs` | `false` sauf besoin pour un autre usage | Faible / coût | Vaut `true` par défaut et provisionne un partage Filestore que Kimai n'utilise jamais — un coût récurrent inutile ; la véritable persistance est le bucket `storage` monté via GCS FUSE. |
+| `enable_cloud_armor` | à activer en production | Moyen | Le service est publiquement accessible sans protection WAF par défaut. |
 
 ---
 

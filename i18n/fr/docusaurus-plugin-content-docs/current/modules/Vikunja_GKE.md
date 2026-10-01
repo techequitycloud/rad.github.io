@@ -471,25 +471,25 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, une incohérence `StatefulSet`/`Deployment`, des valeurs de quota mémoire sans suffixes binaires, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `VIKUNJA_SERVICE_JWTSECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide toutes les sessions utilisateur actives et force chacun à se reconnecter immédiatement. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans source/fichier de sauvegarde valide fait échouer le job d'import. |
-| `enable_nfs` (pour les pièces jointes) | `true` si les pièces jointes comptent | High | Sans NFS, les pièces jointes résident sur le disque éphémère du pod et sont perdues à chaque redémarrage du pod. |
-| `container_image_source` | `custom` | High | `prebuilt` déploie l'image `scratch` brute sans shell ni mappage du point d'entrée — le conteneur ne peut pas mapper `DB_*` et échoue. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `min_instance_count` | `1` | Medium | La validation propre à la variable autorise `0`–`1000` et aucune garde au moment du plan ne rejette `0` — la logique de Deployment d'App_GKE convertit silencieusement `min_instance_count=0` en `min_replicas` de `1` lors de l'application (`local.min_instance_count > 0 ? local.min_instance_count : 1`) ; le nombre de réplicas déployé s'écarte donc silencieusement de la configuration au lieu d'échouer avec une erreur. |
-| `VIKUNJA_SERVICE_ENABLEREGISTRATION` (variable d'environnement) | `"false"` après le premier administrateur | High | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune garantie de disponibilité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `db_*_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`/`sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`, `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode` | Laisser la valeur par défaut | Low | Déclarées par souci de cohérence avec la convention du socle, mais ni transmises ni référencées par ce module — les définir n'a aucun effet sur le déploiement. |
+| `VIKUNJA_SERVICE_JWTSECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide toutes les sessions utilisateur actives et force chacun à se reconnecter immédiatement. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source/fichier de sauvegarde valide fait échouer le job d'import. |
+| `enable_nfs` (pour les pièces jointes) | `true` si les pièces jointes comptent | Élevé | Sans NFS, les pièces jointes résident sur le disque éphémère du pod et sont perdues à chaque redémarrage du pod. |
+| `container_image_source` | `custom` | Élevé | `prebuilt` déploie l'image `scratch` brute sans shell ni mappage du point d'entrée — le conteneur ne peut pas mapper `DB_*` et échoue. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `min_instance_count` | `1` | Moyen | La validation propre à la variable autorise `0`–`1000` et aucune garde au moment du plan ne rejette `0` — la logique de Deployment d'App_GKE convertit silencieusement `min_instance_count=0` en `min_replicas` de `1` lors de l'application (`local.min_instance_count > 0 ? local.min_instance_count : 1`) ; le nombre de réplicas déployé s'écarte donc silencieusement de la configuration au lieu d'échouer avec une erreur. |
+| `VIKUNJA_SERVICE_ENABLEREGISTRATION` (variable d'environnement) | `"false"` après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à toute personne disposant de l'URL de créer un compte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune garantie de disponibilité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `db_*_env_var_name`, `redis_auth`, `extra_service_ports`, `sql_instance_name`/`sql_instance_base_name`, `network_name`, `gke_cluster_selection_mode`, `prereq_gke_subnet_cidr`, `binauthz_evaluation_mode` | Laisser la valeur par défaut | Faible | Déclarées par souci de cohérence avec la convention du socle, mais ni transmises ni référencées par ce module — les définir n'a aucun effet sur le déploiement. |
 
 ---
 

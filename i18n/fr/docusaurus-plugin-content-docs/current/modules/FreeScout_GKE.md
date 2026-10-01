@@ -377,30 +377,30 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
-> (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
-> **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
+> **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, des `quota_memory_*` fournis sous forme d'entiers nus, `stateful_pvc_enabled` avec `workload_type = "Deployment"`, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
-| `database_type` | `MYSQL_8_0` | Critical | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `APP_URL` / `SITE_URL` | URL du LoadBalancer externe / du domaine | High | Un hôte erroné casse les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe / d'e-mail. |
-| `enable_nfs` | `true` | High | Le désactiver fait perdre les pièces jointes et fichiers d'exécution partagés et rompt la cohérence des fichiers entre plusieurs pods. |
-| `enable_cloudsql_volume` | `true` (GKE) | High | Le sidecar Auth Proxy fournit l'endpoint MySQL `127.0.0.1:3306` ; sa désactivation est bloquée par un garde-fou de validation au moment du plan. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, la session PHP/l'interface peut aboutir sur un pod différent d'une requête à l'autre. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. |
-| `memory_limit` | `2Gi` | High | Une valeur trop basse provoque l'arrêt OOM du worker PHP sous la charge des pièces jointes. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les pods. |
-| `enable_iap` | uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris les rappels d'intégration entrants. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Medium | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
-| `application_version` | À fixer en production | Medium | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
+| `database_type` | `MYSQL_8_0` | Critique | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `APP_URL` / `SITE_URL` | URL du LoadBalancer externe / du domaine | Élevé | Un hôte erroné casse les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe / d'e-mail. |
+| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre les pièces jointes et fichiers d'exécution partagés et rompt la cohérence des fichiers entre plusieurs pods. |
+| `enable_cloudsql_volume` | `true` (GKE) | Élevé | Le sidecar Auth Proxy fournit l'endpoint MySQL `127.0.0.1:3306` ; sa désactivation est bloquée par un garde-fou de validation au moment du plan. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, la session PHP/l'interface peut aboutir sur un pod différent d'une requête à l'autre. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. |
+| `memory_limit` | `2Gi` | Élevé | Une valeur trop basse provoque l'arrêt OOM du worker PHP sous la charge des pièces jointes. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les pods. |
+| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les rappels d'intégration entrants. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Moyen | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
+| `application_version` | À fixer en production | Moyen | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 

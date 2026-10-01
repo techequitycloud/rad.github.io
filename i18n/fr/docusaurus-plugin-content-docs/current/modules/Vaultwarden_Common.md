@@ -28,8 +28,8 @@ les guides des plateformes ([Vaultwarden_GKE](Vaultwarden_GKE.md),
 | Domaine | Fourni par Vaultwarden_Common | Où cela apparaît |
 |---|---|---|
 | Image de conteneur | Épingle `vaultwarden/server` et le Dockerfile qui l'encapsule ; effectue le build d'une image personnalisée via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
-| Moteur de base de données | Détecte si le moteur sélectionné est PostgreSQL ou MySQL et choisit en conséquence l'image de tâche `db-init` appropriée | Sortie `initialization_jobs` |
-| Amorçage de la base de données | Définit la tâche du premier déploiement qui crée la base de données, l'utilisateur et les droits — idempotente, prend en charge PostgreSQL 15 et MySQL 8.0 | Sortie `initialization_jobs` |
+| Moteur de base de données | Détecte si le moteur sélectionné est PostgreSQL ou MySQL et choisit en conséquence l'image de job `db-init` appropriée | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données, l'utilisateur et les droits — idempotent, prend en charge PostgreSQL 15 et MySQL 8.0 | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `vaultwarden-attachments` | Sortie `storage_buckets` |
 | Paramètres principaux | Transmet au socle le port du conteneur, les limites de ressources, le nombre d'instances et les variables d'environnement | Comportement de l'application dans les guides des plateformes |
 | Vérifications de santé | Fournit la sonde de démarrage/d'activité par défaut ciblant `/alive` | Observabilité dans les guides des plateformes |
@@ -39,7 +39,7 @@ les guides des plateformes ([Vaultwarden_GKE](Vaultwarden_GKE.md),
 
 ## 2. Détection du moteur de base de données et amorçage {#2-database-engine-detection-and-bootstrap}
 
-La **tâche d'amorçage `db-init`** de `Vaultwarden_Common` prend en charge
+Le **job d'amorçage `db-init`** de `Vaultwarden_Common` prend en charge
 PostgreSQL 15 (par défaut) et MySQL 8.0 — le moteur est détecté à partir de la
 variable `database_type` transmise par le module de plateforme :
 
@@ -48,7 +48,7 @@ variable `database_type` transmise par le module de plateforme :
 | `POSTGRES_15` (ou toute valeur non MySQL) | `postgres:15-alpine` | `postgres` |
 | `MYSQL_8_0` (ou toute valeur commençant par `MYSQL`) | `mysql:8.0-debian` | `mysql` |
 
-**Cette détection ne couvre que la tâche d'amorçage.** Le script `entrypoint.sh`
+**Cette détection ne couvre que le job d'amorçage.** Le script `entrypoint.sh`
 d'exécution, qui assemble la `DATABASE_URL` de Vaultwarden à partir des valeurs
 injectées `DB_HOST`/`DB_USER`/
 `DB_PASSWORD`/`DB_NAME`, n'a pas de branche `DB_ENGINE`/MySQL — il construit
@@ -59,14 +59,14 @@ conteneur Vaultwarden en cours d'exécution tente ensuite une connexion au sché
 Postgres sur cet hôte MySQL et ne parvient pas à se connecter. `POSTGRES_15` est
 aujourd'hui le seul moteur qui fonctionne de bout en bout.
 
-Lors du premier déploiement, la tâche `db-init` s'exécute automatiquement et de
+Lors du premier déploiement, le job `db-init` s'exécute automatiquement et de
 manière idempotente :
 
 1. Crée la base de données Vaultwarden (si elle n'existe pas).
 2. Crée l'utilisateur de l'application avec le mot de passe généré.
 3. Accorde à l'utilisateur tous les privilèges sur cette base de données.
 
-Une fois terminée, la tâche envoie une requête POST à `localhost:9091/quitquitquit`
+Une fois terminé, le job envoie une requête POST à `localhost:9091/quitquitquit`
 pour arrêter proprement le sidecar Cloud SQL Auth Proxy. Inspectez directement la
 base de données avec :
 

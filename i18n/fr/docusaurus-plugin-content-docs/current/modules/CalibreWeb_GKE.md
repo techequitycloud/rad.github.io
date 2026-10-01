@@ -387,23 +387,23 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Chaque réplica du StatefulSet obtient son propre PVC (`volumeClaimTemplates`) — augmenter le nombre de réplicas scinde `/config` en copies indépendantes et non synchronisées par pod, et non en une bibliothèque partagée. |
-| `stateful_pvc_enabled` | `true` (à conserver) | Critical | Passer à `false`/mode `Deployment` déplace `/config` sur GCS FUSE, ce qui peut corrompre les fichiers SQLite de Calibre-Web (`app.db`, `metadata.db`) avec ses schémas d'accès. |
-| `service_type` + `application_domains` | Définir `application_domains`, ou utiliser `LoadBalancer` | High | Avec les valeurs par défaut (`ClusterIP` + `application_domains` vide), le déploiement n'a **aucun accès externe configuré** malgré `enable_custom_domain = true`. |
-| `stateful_pvc_storage_class` | `standard` (HDD) pour les projets limités en quota | Medium | La valeur par défaut `standard-rwo` (SSD) consomme le quota serré `SSD_TOTAL_GB` ; une campagne d'applications GKE avec état peut l'épuiser vers la 8e application. La mise à zéro ne libère **pas** le PVC — seule sa suppression le fait. |
-| `CALIBRE_ADMIN_PASSWORD` (généré automatiquement) | Changer l'identifiant dans l'interface lors de la première connexion | High | Le secret généré n'est pas appliqué automatiquement ; l'identifiant fonctionnel de première connexion est la valeur amont par défaut `admin`/`admin123` jusqu'à ce qu'il soit modifié manuellement. |
-| `enable_resource_quota` | Bien comprendre avant d'activer | Medium | Les variables `quota_cpu_*`/`quota_memory_*`/`quota_max_*` de ce module sont déclarées mais **pas transmises** à App_GKE — activer le quota utilise les valeurs par défaut propres au socle (4 CPU / 4Gi–8Gi de mémoire / 20 pods), et non une valeur définie sur ce module. |
-| `enable_redis` | À ignorer — inerte | Low | `main.tf` impose en dur `enable_redis = false` quelle que soit cette variable ; Calibre-Web ne dépend pas de Redis. |
-| `create_cloud_storage` | `false` si vous n'avez pas besoin du bucket de repli | Low | Avec le chemin StatefulSet par défaut, le bucket `storage` est provisionné mais jamais monté — un coût faible et évitable si vous ne prévoyez pas de passer en mode Deployment. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Medium | Calibre-Web charge en mémoire les index de la bibliothèque et des collections ; une sous-dimension expose à un OOM avec une grande bibliothèque Calibre. |
-| `quota_memory_requests` / `_limits` (au niveau du socle, si vous activez les quotas directement sur App_GKE) | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `max_instance_count` | `1` | Critique | Chaque réplica du StatefulSet obtient son propre PVC (`volumeClaimTemplates`) — augmenter le nombre de réplicas scinde `/config` en copies indépendantes et non synchronisées par pod, et non en une bibliothèque partagée. |
+| `stateful_pvc_enabled` | `true` (à conserver) | Critique | Passer à `false`/mode `Deployment` déplace `/config` sur GCS FUSE, ce qui peut corrompre les fichiers SQLite de Calibre-Web (`app.db`, `metadata.db`) avec ses schémas d'accès. |
+| `service_type` + `application_domains` | Définir `application_domains`, ou utiliser `LoadBalancer` | Élevé | Avec les valeurs par défaut (`ClusterIP` + `application_domains` vide), le déploiement n'a **aucun accès externe configuré** malgré `enable_custom_domain = true`. |
+| `stateful_pvc_storage_class` | `standard` (HDD) pour les projets limités en quota | Moyen | La valeur par défaut `standard-rwo` (SSD) consomme le quota serré `SSD_TOTAL_GB` ; une campagne d'applications GKE avec état peut l'épuiser vers la 8e application. La mise à zéro ne libère **pas** le PVC — seule sa suppression le fait. |
+| `CALIBRE_ADMIN_PASSWORD` (généré automatiquement) | Changer l'identifiant dans l'interface lors de la première connexion | Élevé | Le secret généré n'est pas appliqué automatiquement ; l'identifiant fonctionnel de première connexion est la valeur amont par défaut `admin`/`admin123` jusqu'à ce qu'il soit modifié manuellement. |
+| `enable_resource_quota` | Bien comprendre avant d'activer | Moyen | Les variables `quota_cpu_*`/`quota_memory_*`/`quota_max_*` de ce module sont déclarées mais **pas transmises** à App_GKE — activer le quota utilise les valeurs par défaut propres au socle (4 CPU / 4Gi–8Gi de mémoire / 20 pods), et non une valeur définie sur ce module. |
+| `enable_redis` | À ignorer — inerte | Faible | `main.tf` impose en dur `enable_redis = false` quelle que soit cette variable ; Calibre-Web ne dépend pas de Redis. |
+| `create_cloud_storage` | `false` si vous n'avez pas besoin du bucket de repli | Faible | Avec le chemin StatefulSet par défaut, le bucket `storage` est provisionné mais jamais monté — un coût faible et évitable si vous ne prévoyez pas de passer en mode Deployment. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Moyen | Calibre-Web charge en mémoire les index de la bibliothèque et des collections ; une sous-dimension expose à un OOM avec une grande bibliothèque Calibre. |
+| `quota_memory_requests` / `_limits` (au niveau du socle, si vous activez les quotas directement sur App_GKE) | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 
 ---
 

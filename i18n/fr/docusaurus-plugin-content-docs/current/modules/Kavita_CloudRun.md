@@ -186,13 +186,13 @@ d'alerte facultatifs.
 ## 3. Comportement de l'application Kavita {#3-kavita-application-behaviour}
 
 - **Aucune initialisation de base de données au premier déploiement.** Kavita n'a
-  pas de tâche `db-init` — il n'y a aucune base de données externe à amorcer.
-  `initialization_jobs` est par défaut une liste vide ; seules les tâches
-  personnalisées que vous fournissez sont exécutées.
+  pas de job `db-init` — il n'y a aucune base de données externe à amorcer.
+  `initialization_jobs` est par défaut une liste vide ; seuls les jobs
+  personnalisés que vous fournissez sont exécutés.
 - **Aucune étape de migration.** Kavita crée et migre lui-même son schéma SQLite
   interne au premier démarrage ; la mise à niveau d'`application_version` (suivie
   d'une reconstruction) applique automatiquement les modifications de schéma sans
-  tâche de migration distincte.
+  job de migration distinct.
 - **Aucun secret immuable généré automatiquement.** Contrairement à la plupart
   des modules d'application, aucune clé de chiffrement, aucun jeton
   administrateur ni secret JWT n'est créé dans Secret Manager. Le `TokenKey` JWT
@@ -369,7 +369,7 @@ déploiement Kavita.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide — Kavita n'a pas de tâche `db-init` ni de migration ; il gère lui-même son schéma SQLite au premier démarrage. |
+| `initialization_jobs` | `[]` | Laissez vide — Kavita n'a pas de job `db-init` ni de migration ; il gère lui-même son schéma SQLite au premier démarrage. |
 | `cron_jobs` | `[]` | Inutilisé par défaut ; ajoutez au besoin des tâches planifiées personnalisées (par exemple des instantanés de collections). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -414,7 +414,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés que vous avez fournies (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés que vous avez fournis (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -429,24 +429,24 @@ instance Cloud SQL.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec un montage GCS Fuse, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `/kavita/config` sur GCS Fuse | À n'accepter que pour les bibliothèques de petite ou moyenne taille | Critical | GCS Fuse est la seule option de persistance de Cloud Run ; les écritures concurrentes ou les analyses intensives de métadonnées sur un fichier SQLite adossé à gcsfuse risquent de corrompre l'index de la bibliothèque. Pour les grandes bibliothèques, utilisez plutôt le PVC bloc de [Kavita_GKE](Kavita_GKE.md). |
-| `max_instance_count` | `1` | Critical | Kavita n'offre pas de clustering ; une seconde instance écrivant dans le même fichier SQLite monté via gcsfuse corrompt l'index de la bibliothèque ainsi que les données des administrateurs et des utilisateurs. |
-| Stockage du contenu de la bibliothèque | Ajoutez des `gcs_volumes` (ou NFS) distincts de `/kavita/config` | High | `Kavita_Common` ne persiste que le répertoire d'état de configuration/SQLite — sans montage distinct pour les fichiers réels de bandes dessinées, mangas et livres numériques, il n'existe aucun emplacement durable pour stocker le contenu de la bibliothèque lui-même. |
-| `enable_iap` | `false`, sauf si tous les clients le prennent en charge | High | Le flux OPDS de Kavita et les applications de lecture mobiles ne peuvent généralement pas mener à bien le flux d'authentification de Google IAP ; activer IAP casse donc l'accès depuis les liseuses, même si l'interface du navigateur continue de fonctionner grâce à une vérification dans le navigateur. |
-| `ingress_settings` | `all` | High | `internal` empêche l'interface de lecture et les clients OPDS d'atteindre directement le service. |
-| Compte administrateur du premier lancement | Terminez l'assistant de configuration immédiatement après le déploiement | Medium | Tant que l'assistant n'a pas été exécuté, le service est accessible mais non revendiqué — la première personne qui atteint l'URL peut créer le compte administrateur initial. |
-| `application_version` / `KAVITA_VERSION` | Épinglez explicitement la version en production | Medium | `"latest"` se résout en la valeur épinglée `KAVITA_VERSION = 0.8.7` de `Kavita_Common` ; changer de version impose de modifier cette valeur épinglée et de reconstruire l'image, pas seulement de redéployer. |
-| `min_instance_count` | `1` (valeur par défaut) | Medium | La valeur `0` active la mise à l'échelle à zéro mais ajoute une latence de démarrage à froid pendant que gcsfuse remonte le volume et que Kavita recharge l'index de sa bibliothèque. |
-| `enable_redis` (inerte) | laissez tel quel | Low | Définir cette variable n'a aucun effet — `main.tf` code en dur `enable_redis = false` quelle que soit la valeur transmise. |
-| `enable_cloudsql_volume` | `false` | Low | Kavita n'utilise jamais Cloud SQL ; la valeur est codée en dur à `false` dans `main.tf` quel que soit ce paramètre. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire ; tout l'état de Kavita réside dans le répertoire `/kavita/config`, si bien que c'est l'unique voie de sauvegarde. |
+| `/kavita/config` sur GCS Fuse | À n'accepter que pour les bibliothèques de petite ou moyenne taille | Critique | GCS Fuse est la seule option de persistance de Cloud Run ; les écritures concurrentes ou les analyses intensives de métadonnées sur un fichier SQLite adossé à gcsfuse risquent de corrompre l'index de la bibliothèque. Pour les grandes bibliothèques, utilisez plutôt le PVC bloc de [Kavita_GKE](Kavita_GKE.md). |
+| `max_instance_count` | `1` | Critique | Kavita n'offre pas de clustering ; une seconde instance écrivant dans le même fichier SQLite monté via gcsfuse corrompt l'index de la bibliothèque ainsi que les données des administrateurs et des utilisateurs. |
+| Stockage du contenu de la bibliothèque | Ajoutez des `gcs_volumes` (ou NFS) distincts de `/kavita/config` | Élevé | `Kavita_Common` ne persiste que le répertoire d'état de configuration/SQLite — sans montage distinct pour les fichiers réels de bandes dessinées, mangas et livres numériques, il n'existe aucun emplacement durable pour stocker le contenu de la bibliothèque lui-même. |
+| `enable_iap` | `false`, sauf si tous les clients le prennent en charge | Élevé | Le flux OPDS de Kavita et les applications de lecture mobiles ne peuvent généralement pas mener à bien le flux d'authentification de Google IAP ; activer IAP casse donc l'accès depuis les liseuses, même si l'interface du navigateur continue de fonctionner grâce à une vérification dans le navigateur. |
+| `ingress_settings` | `all` | Élevé | `internal` empêche l'interface de lecture et les clients OPDS d'atteindre directement le service. |
+| Compte administrateur du premier lancement | Terminez l'assistant de configuration immédiatement après le déploiement | Moyen | Tant que l'assistant n'a pas été exécuté, le service est accessible mais non revendiqué — la première personne qui atteint l'URL peut créer le compte administrateur initial. |
+| `application_version` / `KAVITA_VERSION` | Épinglez explicitement la version en production | Moyen | `"latest"` se résout en la valeur épinglée `KAVITA_VERSION = 0.8.7` de `Kavita_Common` ; changer de version impose de modifier cette valeur épinglée et de reconstruire l'image, pas seulement de redéployer. |
+| `min_instance_count` | `1` (valeur par défaut) | Moyen | La valeur `0` active la mise à l'échelle à zéro mais ajoute une latence de démarrage à froid pendant que gcsfuse remonte le volume et que Kavita recharge l'index de sa bibliothèque. |
+| `enable_redis` (inerte) | laissez tel quel | Faible | Définir cette variable n'a aucun effet — `main.tf` code en dur `enable_redis = false` quelle que soit la valeur transmise. |
+| `enable_cloudsql_volume` | `false` | Faible | Kavita n'utilise jamais Cloud SQL ; la valeur est codée en dur à `false` dans `main.tf` quel que soit ce paramètre. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire ; tout l'état de Kavita réside dans le répertoire `/kavita/config`, si bien que c'est l'unique voie de sauvegarde. |
 
 ---
 

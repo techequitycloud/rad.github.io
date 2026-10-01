@@ -34,7 +34,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Bucket de données GCS | Déclare le bucket Cloud Storage `<prefix>-data` monté sur `/data` via GCS FUSE | Sortie `storage_buckets` |
 | Prévention des conflits PVC/GCS | Se transmet `enable_gcs_storage_volume = false` lorsque Chroma_GKE utilise un PVC de StatefulSet, ce qui évite un double montage sur `/data` | Section StatefulSet du guide Chroma_GKE |
 | Contrôles de santé | Fournit les chemins par défaut des sondes de démarrage et d'activité, tous deux fixés sur `/api/v2/heartbeat` | Section Observabilité des guides des plateformes |
-| Jobs d'initialisation | Accepte des jobs d'initialisation facultatifs fournies par l'utilisateur ; n'injecte aucune tâche par défaut — Chroma n'a besoin d'aucun amorçage de base de données | Sortie `initialization_jobs` |
+| Jobs d'initialisation | Accepte des jobs d'initialisation facultatifs fournis par l'utilisateur ; n'injecte aucun job par défaut — Chroma n'a besoin d'aucun amorçage de base de données | Sortie `initialization_jobs` |
 
 ---
 
@@ -66,7 +66,7 @@ Chroma gère son propre moteur de stockage intégré : une base de métadonnées
 SQLite, les fichiers d'index HNSW et les données des collections sont tous écrits
 dans le répertoire `/data` du conteneur. Il n'existe aucune dépendance SQL
 externe. `database_type = "NONE"` est fixé et ne peut pas être remplacé — aucune
-instance Cloud SQL n'est créée et aucune tâche `db-init` n'est injectée.
+instance Cloud SQL n'est créée et aucun job `db-init` n'est injecté.
 
 Inspectez l'organisation sur disque dans Cloud Storage (Cloud Run) ou sur le PVC
 (GKE) :

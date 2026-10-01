@@ -20,7 +20,7 @@ Pour l'infrastructure qui provisionne et exécute réellement Shlink, consultez 
 | Clé d'API initiale | Génère une clé d'API aléatoire de 32 caractères, la stocke dans Secret Manager et l'injecte sous le nom `INITIAL_API_KEY` afin que Shlink amorce sa première clé d'API REST au premier démarrage | Sorties `secret_ids` / `secret_values` ; §Accès au premier lancement dans le guide de la plateforme |
 | Image de conteneur | Fine surcouche Cloud Build `FROM shlinkio/shlink:stable` — le point d'entrée officiel est conservé tel quel | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`DB_DRIVER = postgres`, `DB_PORT = 5432`) | §Base de données dans le guide de la plateforme |
-| Amorçage de la base de données | Définit la tâche `db-init` (`postgres:15-alpine`) qui crée de manière idempotente l'utilisateur et la base de données via le socket de l'Auth Proxy | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` (`postgres:15-alpine`) qui crée de manière idempotente l'utilisateur et la base de données via le socket de l'Auth Proxy | Sortie `initialization_jobs` |
 | Environnement de base | `IS_HTTPS_ENABLED=true` ; laisse volontairement `DB_USER` / `DB_NAME` non définis pour que les valeurs propres au tenant du socle l'emportent | Comportement de l'application dans le guide de la plateforme |
 | Stockage d'objets | Aucun — Shlink stocke tout son état dans PostgreSQL (`storage_buckets = []`) | Sortie `storage_buckets` (vide) |
 | Tests de santé | Sondes de démarrage et de vivacité sur `/rest/health` (HTTP 200 non authentifié) | §Observabilité dans le guide de la plateforme |
@@ -59,13 +59,13 @@ gcloud run services describe <service-name> --project "$PROJECT" --region "$REGI
 
 ## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
-Shlink s'exécute sur **PostgreSQL 15** (`database_type = "POSTGRES_15"`). À chaque apply, une tâche ponctuelle `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL — en associant le socket Unix de l'Auth Proxy à un chemin de socket PostgreSQL standard lorsqu'il est présent — et, de manière idempotente :
+Shlink s'exécute sur **PostgreSQL 15** (`database_type = "POSTGRES_15"`). À chaque apply, un job ponctuel `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL — en associant le socket Unix de l'Auth Proxy à un chemin de socket PostgreSQL standard lorsqu'il est présent — et, de manière idempotente :
 
 1. Crée l'utilisateur de l'application (ou réinitialise son mot de passe s'il existe).
 2. Accorde le rôle de l'utilisateur à `postgres` afin que la propriété de la base de données puisse être attribuée.
 3. Crée la base de données de l'application, dont cet utilisateur est propriétaire (ou corrige la propriété).
 4. Accorde tous les privilèges sur la base de données et sur le schéma `public`.
-5. Envoie un signal d'arrêt `POST /quitquitquit` au sidecar Cloud SQL Proxy pour que la tâche se termine proprement.
+5. Envoie un signal d'arrêt `POST /quitquitquit` au sidecar Cloud SQL Proxy pour que le job se termine proprement.
 
 **Nommage propre au tenant :** le socle crée le véritable utilisateur et la véritable base de données sous des noms propres au tenant et les injecte sous les noms `DB_USER` / `DB_NAME` ; comme Shlink lit directement ces variables, `Shlink_Common` ne les définit volontairement **pas** — les prédéfinir avec les noms de base courts `shlink` ferait s'authentifier l'application avec un rôle qui n'est jamais créé (`password authentication failed for user "shlink"`).
 
@@ -82,7 +82,7 @@ gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
 - **`DB_DRIVER = postgres`, `DB_PORT = 5432`** — la configuration native de Shlink par variables d'environnement ; le socket/l'hôte provient de `DB_HOST`, injecté par le socle.
 - **`IS_HTTPS_ENABLED = true`** — la plateforme place toujours le service derrière HTTPS (URL `run.app`, équilibreur de charge ou Ingress) ; Shlink génère donc des URL courtes en `https://`.
 - **`DEFAULT_DOMAIN` volontairement non défini** — l'URL publique du service n'est connue qu'après le déploiement ; définissez-la après le déploiement (ou via `environment_variables`) pour que les URL courtes générées portent le bon hôte.
-- **Migrations au démarrage** — l'installation et les mises à niveau du schéma ont lieu automatiquement à chaque démarrage du conteneur ; il n'existe pas de tâche de migration distincte.
+- **Migrations au démarrage** — l'installation et les mises à niveau du schéma ont lieu automatiquement à chaque démarrage du conteneur ; il n'existe pas de job de migration distinct.
 
 ---
 

@@ -377,24 +377,24 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Castopod ne fonctionne qu'avec MySQL ; tout autre moteur empêche le démarrage et les migrations. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données des podcasts. |
-| `enable_nfs` | `true` | Critical | Sans NFS, l'audio et les illustrations des épisodes téléversés résident sur un disque éphémère et sont perdus à chaque redémarrage ou redéploiement. |
-| `CP_ANALYTICS_SALT` (généré automatiquement) | Ne pas modifier après le premier démarrage | High | Le modifier rompt la continuité de la déduplication des auditeurs pour les statistiques déjà enregistrées. |
-| `max_instance_count` | `1` sauf si l'état partagé est confirmé | High | Dépasser 1 sans système de fichiers de médias et cache partagés entraîne des médias et un cache incohérents entre les instances. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, Castopod (PHP 8) ne démarre pas ; les grandes médiathèques nécessitent davantage de marge. |
-| `ingress_settings` | `all` | High | `internal` bloque l'accès public au flux du podcast et aux médias. |
-| `enable_iap` | uniquement pour les instances privées | High | IAP bloque tout accès non authentifié, y compris les flux RSS publics et les téléchargements de médias. |
-| `CP_BASEURL` (dérivé automatiquement) | URL réelle du service | High | Une URL de base erronée produit des liens de flux et de médias cassés ; le point d'entrée la dérive de `CLOUDRUN_SERVICE_URL`. |
-| `min_instance_count` | `1` en production | Medium | La mise à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface publique et l'administration sont accessibles sans protection WAF. |
+| `database_type` | `MYSQL_8_0` | Critique | Castopod ne fonctionne qu'avec MySQL ; tout autre moteur empêche le démarrage et les migrations. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données des podcasts. |
+| `enable_nfs` | `true` | Critique | Sans NFS, l'audio et les illustrations des épisodes téléversés résident sur un disque éphémère et sont perdus à chaque redémarrage ou redéploiement. |
+| `CP_ANALYTICS_SALT` (généré automatiquement) | Ne pas modifier après le premier démarrage | Élevé | Le modifier rompt la continuité de la déduplication des auditeurs pour les statistiques déjà enregistrées. |
+| `max_instance_count` | `1` sauf si l'état partagé est confirmé | Élevé | Dépasser 1 sans système de fichiers de médias et cache partagés entraîne des médias et un cache incohérents entre les instances. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, Castopod (PHP 8) ne démarre pas ; les grandes médiathèques nécessitent davantage de marge. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque l'accès public au flux du podcast et aux médias. |
+| `enable_iap` | uniquement pour les instances privées | Élevé | IAP bloque tout accès non authentifié, y compris les flux RSS publics et les téléchargements de médias. |
+| `CP_BASEURL` (dérivé automatiquement) | URL réelle du service | Élevé | Une URL de base erronée produit des liens de flux et de médias cassés ; le point d'entrée la dérive de `CLOUDRUN_SERVICE_URL`. |
+| `min_instance_count` | `1` en production | Moyen | La mise à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface publique et l'administration sont accessibles sans protection WAF. |
 
 ---
 

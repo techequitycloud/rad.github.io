@@ -29,14 +29,14 @@ ici.
 ## 1. Vue d'ensemble {#1-overview}
 
 Maybe s'exécute sous forme d'une unique charge de travail web Rails/Puma, avec un
-processus de tâches d'arrière-plan Sidekiq co-localisé dans le même conteneur. Le
+processus de jobs d'arrière-plan Sidekiq co-localisé dans le même conteneur. Le
 déploiement assemble un ensemble ciblé de services Google Cloud :
 
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Rails/Puma sur le port 3000, 2 vCPU / 4 GiB par défaut ; Sidekiq s'exécute comme processus d'arrière-plan dans le même conteneur |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — une garde au moment du plan n'accepte que `POSTGRES_13`/`14`/`15` (ou `NONE`) ; MySQL est rejeté |
-| Tâches d'arrière-plan et interface temps réel | Redis (via la VM NFS partagée, ou un hôte explicite) | Obligatoire — une garde au moment du plan échoue s'il est désactivé ; alimente Sidekiq (synchronisation des comptes, traitement des imports, notifications) et ActionCable |
+| Jobs d'arrière-plan et interface temps réel | Redis (via la VM NFS partagée, ou un hôte explicite) | Obligatoire — une garde au moment du plan échoue s'il est désactivé ; alimente Sidekiq (synchronisation des comptes, traitement des imports, notifications) et ActionCable |
 | Persistance des fichiers | Cloud Filestore (NFS) | Les pièces jointes persistent sous `/opt/maybefinance/storage`, partagées entre les pods ; c'est aussi la source par défaut de l'adresse IP de l'hôte Redis |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` est provisionné automatiquement par `MaybeFinance_Common` ; il n'est monté dans les pods que si `gcs_volumes` est défini |
 | Secrets | Secret Manager | `SECRET_KEY_BASE` généré automatiquement (clé de session/chiffrement Rails) ; mot de passe de la base de données |
@@ -63,7 +63,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   une véritable IP privée).
 - **`min_instance_count = 1` / `max_instance_count = 5`.** Au moins un pod reste
   actif afin que le worker Sidekiq dans le processus continue de vider la file de
-  tâches ; la mise à l'échelle à zéro arrête entièrement les tâches
+  jobs ; la mise à l'échelle à zéro arrête entièrement les jobs
   d'arrière-plan.
 - **Conteneur web + worker combiné, et non un sidecar.** Le point d'entrée cloud
   lance `bundle exec sidekiq` en arrière-plan puis fait un `exec` du serveur web
@@ -73,8 +73,8 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   stocké dans Secret Manager, partagé à l'identique par les processus web et
   Sidekiq. Rails l'utilise pour signer les sessions/cookies et pour dériver la clé
   qui chiffre les colonnes chiffrées par ActiveRecord.
-- **Le schéma est créé par un job d'initialisation, pas au démarrage.** La
-  tâche `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
+- **Le schéma est créé par un job d'initialisation, pas au démarrage.** Le
+  job `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
   point d'entrée d'exécution n'exécute jamais les migrations.
 - **L'affinité de session est `ClientIP`**, afin que les requêtes d'un client
   atteignent le même pod.
@@ -119,7 +119,7 @@ le type de charge de travail (Deployment ou StatefulSet) sont gérés.
 Maybe stocke toutes les données applicatives (comptes, transactions, budgets,
 utilisateurs) dans une instance Cloud SQL for PostgreSQL 15 gérée. Les pods la
 joignent via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune IP
-publique n'est exposée. Au premier déploiement, la tâche `db-init` crée la base de
+publique n'est exposée. Au premier déploiement, le job `db-init` crée la base de
 données et l'utilisateur de l'application, accorde au rôle applicatif
 `cloudsqlsuperuser` (afin que les migrations de Maybe puissent créer des
 extensions Postgres sans accès superutilisateur) et crée au préalable l'extension
@@ -232,19 +232,19 @@ disponibles en option.
 
 ## 3. Comportement de l'application Maybe Finance {#3-maybe-finance-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte à
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte à
   Cloud SQL, crée de manière idempotente la base de données et l'utilisateur de
   l'application, accorde les privilèges, accorde au rôle applicatif
   `cloudsqlsuperuser` (les utilisateurs applicatifs de Cloud SQL ne sont pas de
   vrais superutilisateurs, ce qui permet donc à la propre migration de Maybe de
   créer des extensions Postgres) et crée au préalable `pgcrypto` par mesure de
-  précaution supplémentaire. La tâche peut être réexécutée sans risque
+  précaution supplémentaire. Le job peut être réexécuté sans risque
   (`execute_on_apply = true`, `max_retries = 1`).
 - **La migration du schéma est un job d'initialisation distinct.**
   `maybefinance-migrate` exécute `bundle exec rails db:prepare` sur l'image
-  construite pour l'application (`image = null` dans la spécification de la
-  tâche, elle réutilise donc l'image Maybe construite et sa chaîne d'outils),
+  construite pour l'application (`image = null` dans la spécification du
+  job, il réutilise donc l'image Maybe construite et sa chaîne d'outils),
   dépend de l'achèvement préalable de `db-init` et effectue jusqu'à 3 nouvelles
   tentatives (`max_retries = 3`, `timeout_seconds = 1200`, `memory_limit = 2Gi`).
 - **Inscription de l'administrateur au premier lancement, et non un secret créé
@@ -267,7 +267,7 @@ disponibles en option.
 - **Raccordement de Redis.** `REDIS_URL` est construit à partir des variables
   injectées `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` s'il n'est pas déjà défini. Si
   `REDIS_URL` finit vide (Redis injoignable), le point d'entrée renonce
-  entièrement à démarrer Sidekiq — les tâches d'arrière-plan cessent
+  entièrement à démarrer Sidekiq — les jobs d'arrière-plan cessent
   silencieusement de s'exécuter au lieu de faire planter le pod.
 - **Chemin de santé.** La sonde de démarrage est une sonde **HTTP** `GET /up` avec
   une marge généreuse pour un premier démarrage lent (`initial_delay_seconds = 60`,
@@ -385,7 +385,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`, `maybefinance-migrate`) et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `maybefinance-migrate`) et (facultatif) d'import. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub du CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
@@ -397,8 +397,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -412,19 +412,19 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critical | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de tâches d'arrière-plan fonctionnelle ni interface en temps réel. |
-| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critical | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `min_instance_count` | `1` | High | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
-| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | High | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
-| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | High | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les tâches ne sont jamais traitées ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
-| `container_resources.memory_limit` | `4Gi` (par défaut) | High | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
-| `backup_retention_days` | `7` (à augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
+| `enable_redis` | `true` | Critique | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de jobs d'arrière-plan fonctionnelle ni interface en temps réel. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critique | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `min_instance_count` | `1` | Élevé | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
+| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | Élevé | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
+| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | Élevé | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les jobs ne sont jamais traités ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
+| `container_resources.memory_limit` | `4Gi` (par défaut) | Élevé | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
+| `backup_retention_days` | `7` (à augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

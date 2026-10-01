@@ -331,7 +331,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
+| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des jobs personnalisés pour les imports de flux ou les installations de palette. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour les opérations de maintenance périodiques. |
 | `additional_services` | `[]` | Deployments Kubernetes complémentaires déployés aux côtés de Node-RED. |
 
@@ -440,7 +440,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -453,28 +453,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage ou replanification de pod. |
-| `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critical | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |
-| `enable_auto_password_rotation` | `false` | Critical | La rotation automatique modifie la clé de chiffrement ; tous les identifiants de flux stockés deviennent inaccessibles. Ne l'activez qu'avec une procédure de rechiffrement en place. |
-| `application_name` | défini une seule fois | Critical | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes et déconnecte le partage NFS. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche de restauration. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
-| `max_instance_count` | `1` | High | Node-RED n'est pas conçu pour une mise à l'échelle active-active. Plusieurs instances sans contexte partagé produisent des états contradictoires. |
-| `session_affinity` | `ClientIP` | High | Sans affinité, la connexion WebSocket de l'éditeur est coupée et les opérations de déploiement échouent. |
-| `nfs_mount_path` | `/data` | High | Doit correspondre au répertoire de données natif de Node-RED. Le modifier sans mettre à jour le fichier de paramètres redirige les écritures vers un stockage éphémère. |
-| `execution_environment` (Cloud Run uniquement) | `gen2` | High | Les montages NFS nécessitent gen2. |
-| `database_type` | `NONE` | High | La définir sur `MYSQL` ou `POSTGRES` provisionne une instance Cloud SQL et un sidecar proxy que Node-RED n'utilise pas. |
-| `enable_redis` sans `redis_host` | définir `redis_host` explicitement | High | Avec NFS désactivé et sans hôte Redis, la chaîne de connexion Redis est vide et le stockage du contexte échoue. |
-| `enable_iap` | `true` en production | High | L'éditeur Node-RED donne accès à l'édition complète des flux et à la gestion des identifiants ; il ne doit pas rester accessible publiquement. |
-| `min_instance_count` | `1` | Medium | GKE ne prend pas en charge une véritable mise à l'échelle à zéro sans KEDA. Le HPA rejette `min > max`. |
-| `enable_pod_disruption_budget` | `true` | Medium | Désactiver le PDB permet à GKE d'évincer le pod pendant la maintenance des nœuds, ce qui provoque une panne complète et une perte de données potentielle si une écriture NFS était en cours. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds. |
+| `enable_nfs` | `true` | Critique | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage ou replanification de pod. |
+| `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critique | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |
+| `enable_auto_password_rotation` | `false` | Critique | La rotation automatique modifie la clé de chiffrement ; tous les identifiants de flux stockés deviennent inaccessibles. Ne l'activez qu'avec une procédure de rechiffrement en place. |
+| `application_name` | défini une seule fois | Critique | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes et déconnecte le partage NFS. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job de restauration. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
+| `max_instance_count` | `1` | Élevé | Node-RED n'est pas conçu pour une mise à l'échelle active-active. Plusieurs instances sans contexte partagé produisent des états contradictoires. |
+| `session_affinity` | `ClientIP` | Élevé | Sans affinité, la connexion WebSocket de l'éditeur est coupée et les opérations de déploiement échouent. |
+| `nfs_mount_path` | `/data` | Élevé | Doit correspondre au répertoire de données natif de Node-RED. Le modifier sans mettre à jour le fichier de paramètres redirige les écritures vers un stockage éphémère. |
+| `execution_environment` (Cloud Run uniquement) | `gen2` | Élevé | Les montages NFS nécessitent gen2. |
+| `database_type` | `NONE` | Élevé | La définir sur `MYSQL` ou `POSTGRES` provisionne une instance Cloud SQL et un sidecar proxy que Node-RED n'utilise pas. |
+| `enable_redis` sans `redis_host` | définir `redis_host` explicitement | Élevé | Avec NFS désactivé et sans hôte Redis, la chaîne de connexion Redis est vide et le stockage du contexte échoue. |
+| `enable_iap` | `true` en production | Élevé | L'éditeur Node-RED donne accès à l'édition complète des flux et à la gestion des identifiants ; il ne doit pas rester accessible publiquement. |
+| `min_instance_count` | `1` | Moyen | GKE ne prend pas en charge une véritable mise à l'échelle à zéro sans KEDA. Le HPA rejette `min > max`. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Désactiver le PDB permet à GKE d'évincer le pod pendant la maintenance des nœuds, ce qui provoque une panne complète et une perte de données potentielle si une écriture NFS était en cours. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds. |
 
 ---
 

@@ -361,26 +361,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS, IAP sans identité autorisée, un `redis_port`/`backup_retention_days` hors limites, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | Le désactiver place le répertoire de données de FreshRSS sur un disque éphémère — `config.php`, l'état par utilisateur et le cache sont effacés à chaque démarrage à froid ou redéploiement, ce qui impose une réinstallation. |
-| `nfs_mount_path` | `/var/www/FreshRSS/data` | Critical | Un montage ailleurs laisse le répertoire de données éphémère (même effet qu'une absence de NFS). |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur, et rend orphelines toutes les données des flux. |
-| `database_type` | `POSTGRES_15` | Critical | FreshRSS s'installe avec `--db-type pgsql` ; un moteur autre que Postgres casse l'installateur et `db-init`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `container_port` | `80` | High | FreshRSS/Apache écoute sur le port 80 ; un port erroné fait échouer la sonde de démarrage et le service ne devient jamais prêt. |
-| `enable_cloudsql_volume` | `true` | High | Le socket de l'Auth Proxy évite l'exigence SSL d'une connexion TCP directe par IP privée vers Cloud SQL Postgres ; le désactiver peut rompre la connectivité. |
-| `min_instance_count` | `1` pour une actualisation fiable | High | Avec `0` (mise à l'échelle à zéro), le cron d'actualisation des flux du conteneur est suspendu pendant l'inactivité ; les flux ne sont mis à jour que lorsqu'une requête réveille le service. |
-| `max_instance_count` | `1` | High | Exécuter plusieurs instances duplique le cron d'actualisation du conteneur et fragmente l'état de session/cache stocké sur fichiers. |
-| `enable_iap` | uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris celles des clients mobiles utilisant les API Google Reader / Fever. |
-| `FRESHRSS_ADMIN_PASSWORD` (généré automatiquement) | À modifier dans l'interface après la première connexion | Medium | La seule rotation du secret ne réinitialise pas un compte déjà installé ; le premier mot de passe reste valide jusqu'à sa modification dans l'application. |
-| `memory_limit` | `2Gi` | Medium | Les valeurs inférieures à 512Mi exposent à un OOM lors d'actualisations de flux intensives. |
-| `application_version` | À épingler en production | Medium | `latest` est résolu en un tag épinglé au moment du build, mais un épinglage explicite rend les mises à niveau délibérées. |
+| `enable_nfs` | `true` | Critique | Le désactiver place le répertoire de données de FreshRSS sur un disque éphémère — `config.php`, l'état par utilisateur et le cache sont effacés à chaque démarrage à froid ou redéploiement, ce qui impose une réinstallation. |
+| `nfs_mount_path` | `/var/www/FreshRSS/data` | Critique | Un montage ailleurs laisse le répertoire de données éphémère (même effet qu'une absence de NFS). |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur, et rend orphelines toutes les données des flux. |
+| `database_type` | `POSTGRES_15` | Critique | FreshRSS s'installe avec `--db-type pgsql` ; un moteur autre que Postgres casse l'installateur et `db-init`. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `container_port` | `80` | Élevé | FreshRSS/Apache écoute sur le port 80 ; un port erroné fait échouer la sonde de démarrage et le service ne devient jamais prêt. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket de l'Auth Proxy évite l'exigence SSL d'une connexion TCP directe par IP privée vers Cloud SQL Postgres ; le désactiver peut rompre la connectivité. |
+| `min_instance_count` | `1` pour une actualisation fiable | Élevé | Avec `0` (mise à l'échelle à zéro), le cron d'actualisation des flux du conteneur est suspendu pendant l'inactivité ; les flux ne sont mis à jour que lorsqu'une requête réveille le service. |
+| `max_instance_count` | `1` | Élevé | Exécuter plusieurs instances duplique le cron d'actualisation du conteneur et fragmente l'état de session/cache stocké sur fichiers. |
+| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris celles des clients mobiles utilisant les API Google Reader / Fever. |
+| `FRESHRSS_ADMIN_PASSWORD` (généré automatiquement) | À modifier dans l'interface après la première connexion | Moyen | La seule rotation du secret ne réinitialise pas un compte déjà installé ; le premier mot de passe reste valide jusqu'à sa modification dans l'application. |
+| `memory_limit` | `2Gi` | Moyen | Les valeurs inférieures à 512Mi exposent à un OOM lors d'actualisations de flux intensives. |
+| `application_version` | À épingler en production | Moyen | `latest` est résolu en un tag épinglé au moment du build, mais un épinglage explicite rend les mises à niveau délibérées. |
 
 ---
 

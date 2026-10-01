@@ -52,14 +52,14 @@ partir d'une image personnalisée légère reposant sur l'image officielle
   construit une image légère `FROM docker.io/documenso/documenso:${DOCUMENSO_VERSION}` qui
   ajoute `bash`, `curl`, `postgresql-client` et `openssl`, ainsi qu'un point d'entrée
   personnalisé. Le `sh start.sh` propre à l'image officielle exécute les migrations Prisma
-  et démarre le serveur Next.js — il n'y a pas de tâche de migration distincte.
+  et démarre le serveur Next.js — il n'y a pas de job de migration distinct.
 - **Cloud SQL est joint via un socket Unix, pas via un proxy TCP.** `enable_cloudsql_volume
   = true` monte le Cloud SQL Auth Proxy sous forme de socket de domaine Unix à
   `/cloudsql` ; le point d'entrée assemble `NEXT_PRIVATE_DATABASE_URL` à partir des valeurs
   `DB_*` injectées, en bifurquant entre chemin de socket, proxy `127.0.0.1` (GKE
   uniquement) ou IP directe + SSL selon ce qui est injecté.
 - **Redis n'est pas nécessaire, et la variable `enable_redis` propre au module est en
-  pratique décorative.** Documenso utilise un fournisseur de tâches local reposant sur
+  pratique décorative.** Documenso utilise un fournisseur de jobs local reposant sur
   PostgreSQL ; il ne lit donc jamais `REDIS_HOST`/`REDIS_PORT`. Plus important encore,
   les variables `enable_redis`/`redis_host`/`redis_port`/`redis_auth` de
   `Documenso_CloudRun` ne sont transmises qu'à `Documenso_Common` (qui ne les utilise pas
@@ -121,7 +121,7 @@ l'environnement d'exécution et la répartition du trafic.
 Documenso stocke toutes les données de l'application (utilisateurs, documents,
 destinataires, événements d'audit) dans une instance gérée Cloud SQL for PostgreSQL 15.
 Le service s'y connecte de façon privée via le **Cloud SQL Auth Proxy** sur un socket
-Unix ; aucune IP publique n'est exposée. Lors du premier déploiement, la tâche `db-init`
+Unix ; aucune IP publique n'est exposée. Lors du premier déploiement, le job `db-init`
 crée le rôle et la base de données de l'application ; l'image officielle de Documenso
 exécute ensuite ses propres migrations Prisma au démarrage du conteneur.
 
@@ -209,14 +209,14 @@ d'alerte facultatifs.
 
 ## 3. Comportement de l'application Documenso {#3-documenso-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init`
-  exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que Cloud SQL accepte les
+- **Configuration de la base de données au premier déploiement.** Le job `db-init`
+  exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que Cloud SQL accepte les
   connexions, puis crée de façon idempotente le rôle et la base de données de
   l'application (privilège `CREATEDB`, propriété définie sur la base cible), accorde les
   privilèges sur le schéma et signale enfin au sidecar Cloud SQL Auth Proxy (`POST
-  /quitquitquit`) de s'arrêter afin que la tâche puisse se terminer. La tâche peut être
-  relancée sans risque (`execute_on_apply = true`, `max_retries = 3`).
-- **Les migrations s'exécutent automatiquement, sans tâche distincte.** Le `start.sh`
+  /quitquitquit`) de s'arrêter afin que le job puisse se terminer. Le job peut être
+  relancé sans risque (`execute_on_apply = true`, `max_retries = 3`).
+- **Les migrations s'exécutent automatiquement, sans job distinct.** Le `start.sh`
   propre à l'image officielle de Documenso exécute les migrations Prisma sur
   `NEXT_PRIVATE_DATABASE_URL` à chaque démarrage du conteneur, puis lance le serveur
   Next.js autonome.
@@ -432,7 +432,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée fournie par `Documenso_Common`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré fourni par `Documenso_Common`. |
 | `cron_jobs` | `[]` | Aucune tâche récurrente planifiée par la plateforme n'est définie pour Documenso. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -446,11 +446,11 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
 | `alert_policies` | `[]` | Règles d'alerte sur métriques. |
 
-### Groupe 21 — Redis / file d'attente de tâches {#group-21--redis--job-queue}
+### Groupe 21 — Redis / file d'attente de jobs {#group-21--redis--job-queue}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | **Non transmise à `App_CloudRun`.** Uniquement passée à `Documenso_Common`, qui ne la référence pas non plus — cette variable n'a aucun effet sur le service déployé. Documenso utilise un fournisseur de tâches local reposant sur PostgreSQL et ne lit jamais `REDIS_HOST`. La propre variable `enable_redis` du socle (par défaut `true`, non exposée ici) injecte malgré tout `REDIS_HOST`/`REDIS_PORT` — voir la [vue d'ensemble](#1-overview). |
+| `enable_redis` | `false` | **Non transmise à `App_CloudRun`.** Uniquement passée à `Documenso_Common`, qui ne la référence pas non plus — cette variable n'a aucun effet sur le service déployé. Documenso utilise un fournisseur de jobs local reposant sur PostgreSQL et ne lit jamais `REDIS_HOST`. La propre variable `enable_redis` du socle (par défaut `true`, non exposée ici) injecte malgré tout `REDIS_HOST`/`REDIS_PORT` — voir la [vue d'ensemble](#1-overview). |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Même réserve — inertes au niveau de ce module. |
 | `cubejs_api_url` | `http://localhost:4000` | Reliquat inerte du modèle de variables partagé à partir duquel ce module a été cloné (URL de l'API Cube.js — un concept étranger à Documenso) ; lue par aucun Dockerfile, point d'entrée ni mappage d'environnement de ce module. |
 | `hub_api_url` | `http://localhost:8080` | Idem — reliquat inerte, lu nulle part dans ce module. |
@@ -485,7 +485,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -497,29 +497,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, IAP activé sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource. `Documenso_CloudRun` n'ajoute lui-même aucun `validation.tf` au-delà des contrôles par variable de `variables.tf` — si bien qu'un `database_type` autre que Postgres n'est détecté à **aucun** niveau, seulement à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Non validé au moment du plan, ni par ce module ni par le socle — passer à MySQL/SQL Server casse Prisma et toutes les requêtes à l'exécution. |
-| Certificat de signature (`NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS`) | Fournir un véritable `.p12` après le déploiement | Critical | Sans lui, le point d'entrée autosigne un certificat jetable — les documents sont « signés », mais la signature n'est pas reconnue comme fiable par les lecteurs PDF ; inadapté à la production. |
-| `NEXT_PRIVATE_ENCRYPTION_KEY` / `_SECONDARY_KEY` (générées automatiquement) | Ne jamais les modifier directement | Critical | Elles chiffrent les données de Documenso ; ne les faites tourner que via l'emplacement de la clé secondaire, jamais en régénérant la clé principale sur place. |
-| `enable_cloudsql_volume` | `true` | Critical | Vaut `false` par défaut dans ce module, mais la branche de connexion à la base de données utilisée par défaut par le point d'entrée attend le socket Unix du Cloud SQL Auth Proxy à `/cloudsql`. Laisser `false` tout en s'appuyant sur le chemin de connexion par défaut peut empêcher l'application de joindre la base de données via un socket. |
-| `db_name` / `db_user` | À définir une seule fois | High | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `webapp_url` | À définir dès que l'URL/le domaine est connu | High | Si elle n'est pas définie, `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL` suivent la valeur à laquelle se résout `CLOUDRUN_SERVICE_URL` à chaque démarrage ; une valeur explicite garde les callbacks d'authentification et les liens des e-mails stables d'un redéploiement à l'autre. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | Laisser non définies | Low | Déclarées mais jamais transmises à aucun module — les définir n'a strictement aucun effet. |
-| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | Laisser tel quel | Low | Non transmises à `App_CloudRun` ; la propre variable `enable_redis` du socle (par défaut `true`, non exposée par ce module) injecte malgré tout `REDIS_HOST`/`REDIS_PORT` — Documenso les ignore dans tous les cas ; il s'agit donc d'un piège de documentation, pas d'un risque fonctionnel. |
-| `cubejs_api_url` / `hub_api_url` | Laisser la valeur par défaut | Low | Reliquats inertes du modèle de variables partagé ; Documenso ne les lit jamais. |
-| Valeur par défaut d'`environment_variables` (clés `EMAIL_SMTP_*`) | Utiliser plutôt `smtp_host`/`smtp_user`/etc. | Medium | Les clés `EMAIL_SMTP_*` de la correspondance par défaut ne sont pas lues par Documenso — configurez l'e-mail via les variables `smtp_*` du groupe 5, que `Documenso_Common` traduit en `NEXT_PRIVATE_SMTP_*`. |
-| `min_instance_count` | `1` pour la production | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| `enable_nfs` | `true` (par défaut) ou `false` s'il n'est pas nécessaire | Medium | Filestore est facturé que l'application y écrive ou non ; Documenso n'utilise pas le montage NFS dans sa configuration par défaut. |
-| `smtp_host` | À définir pour la production | Medium | S'il est laissé vide, aucune variable `NEXT_PRIVATE_SMTP_*` n'est injectée — aucun e-mail d'invitation ni de notification de signature n'est envoyé. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
-| `container_image_source` | `custom` (par défaut) | High | Passer à `prebuilt` déploie directement l'image officielle, en contournant le point d'entrée personnalisé qui assemble `NEXT_PRIVATE_DATABASE_URL`, résout l'URL de l'application web et génère lui-même un certificat de signature de repli. |
+| `database_type` | `POSTGRES_15` | Critique | Non validé au moment du plan, ni par ce module ni par le socle — passer à MySQL/SQL Server casse Prisma et toutes les requêtes à l'exécution. |
+| Certificat de signature (`NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS`) | Fournir un véritable `.p12` après le déploiement | Critique | Sans lui, le point d'entrée autosigne un certificat jetable — les documents sont « signés », mais la signature n'est pas reconnue comme fiable par les lecteurs PDF ; inadapté à la production. |
+| `NEXT_PRIVATE_ENCRYPTION_KEY` / `_SECONDARY_KEY` (générées automatiquement) | Ne jamais les modifier directement | Critique | Elles chiffrent les données de Documenso ; ne les faites tourner que via l'emplacement de la clé secondaire, jamais en régénérant la clé principale sur place. |
+| `enable_cloudsql_volume` | `true` | Critique | Vaut `false` par défaut dans ce module, mais la branche de connexion à la base de données utilisée par défaut par le point d'entrée attend le socket Unix du Cloud SQL Auth Proxy à `/cloudsql`. Laisser `false` tout en s'appuyant sur le chemin de connexion par défaut peut empêcher l'application de joindre la base de données via un socket. |
+| `db_name` / `db_user` | À définir une seule fois | Élevé | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `webapp_url` | À définir dès que l'URL/le domaine est connu | Élevé | Si elle n'est pas définie, `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL` suivent la valeur à laquelle se résout `CLOUDRUN_SERVICE_URL` à chaque démarrage ; une valeur explicite garde les callbacks d'authentification et les liens des e-mails stables d'un redéploiement à l'autre. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `db_host_env_var_name` / `db_user_env_var_name` / `db_name_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | Laisser non définies | Faible | Déclarées mais jamais transmises à aucun module — les définir n'a strictement aucun effet. |
+| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | Laisser tel quel | Faible | Non transmises à `App_CloudRun` ; la propre variable `enable_redis` du socle (par défaut `true`, non exposée par ce module) injecte malgré tout `REDIS_HOST`/`REDIS_PORT` — Documenso les ignore dans tous les cas ; il s'agit donc d'un piège de documentation, pas d'un risque fonctionnel. |
+| `cubejs_api_url` / `hub_api_url` | Laisser la valeur par défaut | Faible | Reliquats inertes du modèle de variables partagé ; Documenso ne les lit jamais. |
+| Valeur par défaut d'`environment_variables` (clés `EMAIL_SMTP_*`) | Utiliser plutôt `smtp_host`/`smtp_user`/etc. | Moyen | Les clés `EMAIL_SMTP_*` de la correspondance par défaut ne sont pas lues par Documenso — configurez l'e-mail via les variables `smtp_*` du groupe 5, que `Documenso_Common` traduit en `NEXT_PRIVATE_SMTP_*`. |
+| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| `enable_nfs` | `true` (par défaut) ou `false` s'il n'est pas nécessaire | Moyen | Filestore est facturé que l'application y écrive ou non ; Documenso n'utilise pas le montage NFS dans sa configuration par défaut. |
+| `smtp_host` | À définir pour la production | Moyen | S'il est laissé vide, aucune variable `NEXT_PRIVATE_SMTP_*` n'est injectée — aucun e-mail d'invitation ni de notification de signature n'est envoyé. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `container_image_source` | `custom` (par défaut) | Élevé | Passer à `prebuilt` déploie directement l'image officielle, en contournant le point d'entrée personnalisé qui assemble `NEXT_PRIVATE_DATABASE_URL`, résout l'URL de l'application web et génère lui-même un certificat de signature de repli. |
 
 ---
 
@@ -527,7 +527,7 @@ Pour le comportement du socle évoqué tout au long de ce guide — identité du
 mise à l'échelle et simultanéité, ingress et équilibrage de charge, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Documenso,
-partagée avec la variante GKE (secrets, tâche `db-init` et point d'entrée personnalisé),
+partagée avec la variante GKE (secrets, job `db-init` et point d'entrée personnalisé),
 est définie dans `Documenso_Common` (source du module : `modules/Documenso_Common`).
 
 <!-- related-guides -->

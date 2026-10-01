@@ -357,21 +357,21 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (ne jamais augmenter) | Critical | Plusieurs instances écrivant simultanément dans le même fichier SQLite exposent à une corruption de la base. |
-| Chemin de la sonde de santé | `/actuator/health` | Critical | `/api/v1/actuator/health` exige une authentification (401) — l'utiliser comme chemin de sonde signifie que la révision/le pod ne devient jamais Ready alors que Komga est entièrement sain. |
-| `enable_gcs_storage_volume` (niveau Common) | `true` sur Cloud Run | Critical | Le désactiver sans montage de remplacement signifie que `/config` n'est pas persisté — tout l'état de la bibliothèque est perdu à chaque démarrage à froid. |
-| Assistant de configuration initiale | À terminer rapidement après le déploiement | High | Un assistant de configuration non réclamé laisse l'instance sans compte administrateur ; la première personne qui atteint l'URL peut se l'approprier. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro ajoute une latence de démarrage à froid, y compris une reconstruction de l'index Lucene à chaque démarrage à froid. |
-| `memory_limit` | `1Gi`, à augmenter pour les grandes bibliothèques | Medium | Une mémoire sous-dimensionnée peut provoquer un arrêt OOM lors de l'analyse d'une grande bibliothèque (index Lucene + cache des vignettes conservés dans le heap JVM). |
-| `container_image_source` | `prebuilt` | Medium | Passer à `custom` sans Dockerfile dans `Komga_Common/scripts` fait échouer le build — Komga n'a besoin d'aucun build personnalisé. |
-| GCS FUSE pour `/config` | Convient à un usage léger ; préférez un PVC GKE en production | Low | Les fichiers WAL SQLite sous gcsfuse ont une latence plus élevée et une cohérence plus faible qu'un stockage en mode bloc. |
+| `max_instance_count` | `1` (ne jamais augmenter) | Critique | Plusieurs instances écrivant simultanément dans le même fichier SQLite exposent à une corruption de la base. |
+| Chemin de la sonde de santé | `/actuator/health` | Critique | `/api/v1/actuator/health` exige une authentification (401) — l'utiliser comme chemin de sonde signifie que la révision/le pod ne devient jamais Ready alors que Komga est entièrement sain. |
+| `enable_gcs_storage_volume` (niveau Common) | `true` sur Cloud Run | Critique | Le désactiver sans montage de remplacement signifie que `/config` n'est pas persisté — tout l'état de la bibliothèque est perdu à chaque démarrage à froid. |
+| Assistant de configuration initiale | À terminer rapidement après le déploiement | Élevé | Un assistant de configuration non réclamé laisse l'instance sans compte administrateur ; la première personne qui atteint l'URL peut se l'approprier. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro ajoute une latence de démarrage à froid, y compris une reconstruction de l'index Lucene à chaque démarrage à froid. |
+| `memory_limit` | `1Gi`, à augmenter pour les grandes bibliothèques | Moyen | Une mémoire sous-dimensionnée peut provoquer un arrêt OOM lors de l'analyse d'une grande bibliothèque (index Lucene + cache des vignettes conservés dans le heap JVM). |
+| `container_image_source` | `prebuilt` | Moyen | Passer à `custom` sans Dockerfile dans `Komga_Common/scripts` fait échouer le build — Komga n'a besoin d'aucun build personnalisé. |
+| GCS FUSE pour `/config` | Convient à un usage léger ; préférez un PVC GKE en production | Faible | Les fichiers WAL SQLite sous gcsfuse ont une latence plus élevée et une cohérence plus faible qu'un stockage en mode bloc. |
 
 ---
 

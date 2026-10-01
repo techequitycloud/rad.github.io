@@ -47,8 +47,8 @@ Azimutt s'exécute comme un unique conteneur Elixir/Phoenix sur Cloud Run v2, à
 - **Azimutt se connecte à Postgres en TCP sur IP privée avec SSL, et non via le socket.**
   Ecto/postgrex ne sait pas analyser le DSN de socket Unix de Cloud SQL ; le point d'entrée cloud
   construit donc `DATABASE_URL` sur `DB_IP` et définit `DATABASE_ENABLE_SSL=true`. Le
-  socket Cloud SQL reste monté (`enable_cloudsql_volume = true`) uniquement pour que la
-  tâche `db-init` puisse créer le rôle et la base de données sans SSL.
+  socket Cloud SQL reste monté (`enable_cloudsql_volume = true`) uniquement pour que le
+  job `db-init` puisse créer le rôle et la base de données sans SSL.
 - **`SECRET_KEY_BASE` est généré automatiquement** et stocké dans Secret Manager.
   Le renouveler après le premier démarrage déconnecte toutes les sessions actives ; ne le renouvelez que pendant une
   fenêtre de maintenance.
@@ -98,7 +98,7 @@ et la répartition du trafic.
 Azimutt stocke toutes les données applicatives (schémas, diagrammes, dispositions, utilisateurs, sources) dans une
 instance gérée Cloud SQL for PostgreSQL 15. Sur Cloud Run, le service se connecte via
 l'**IP privée** de l'instance avec SSL (`DATABASE_ENABLE_SSL=true`) — Ecto ne sait pas analyser
-le DSN de socket. Lors du premier déploiement, une tâche (Job) d'initialisation crée la base de données applicative
+le DSN de socket. Lors du premier déploiement, un job d'initialisation crée la base de données applicative
 et le rôle ; Azimutt exécute ensuite ses propres migrations Ecto au démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, sauvegardes, flags et métriques.
@@ -194,7 +194,7 @@ indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT`.
   `postgres:15-alpine`. Il crée de manière idempotente le rôle applicatif
   (`LOGIN CREATEDB`) et la base de données, accorde `ALL` sur la base de données et le schéma `public`,
   et modifie (`ALTER`) le propriétaire du schéma — Azimutt a besoin de droits DDL complets car il
-  exécute ses propres migrations. La tâche peut être réexécutée sans risque.
+  exécute ses propres migrations. Le job peut être réexécuté sans risque.
 - **Les migrations s'exécutent au démarrage.** La commande du conteneur est
   `/app/bin/migrate && /app/bin/server` ; Ecto applique donc les migrations en attente à chaque
   démarrage avant que le point de terminaison Phoenix ne se lie au port. Mettre à niveau `application_version` applique
@@ -206,7 +206,7 @@ indiquent le chemin `DATABASE_URL` résolu, `PHX_HOST` et `PORT`.
 - **`SECRET_KEY_BASE` est stable et, en pratique, immuable.** Il est généré une seule fois et
   écrit dans Secret Manager. Le renouveler invalide tous les cookies de session actifs —
   tous les utilisateurs sont déconnectés. Ne le renouvelez que pendant une fenêtre de maintenance.
-- **Chemin de santé.** Les sondes de démarrage et de disponibilité ciblent la racine Phoenix `/` — le
+- **Chemin de santé.** Les sondes de démarrage et de disponibilité (readiness) ciblent la racine Phoenix `/` — le
   premier point de terminaison qui renvoie 200 une fois que le serveur a démarré et s'est connecté à
   Postgres. Prévoyez environ 1–2 minutes au premier démarrage pour les migrations (la sonde de démarrage
   fournit un délai initial de 60 secondes plus une fenêtre de nouvelles tentatives).
@@ -262,11 +262,11 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par instance. |
 | `memory_limit` | `4Gi` | Mémoire par instance. |
-| `min_instance_count` | `0` | `0` active la mise à l'échelle jusqu'à zéro ; définissez `1` pour les tâches Oban d'arrière-plan ou pour éviter les démarrages à froid. |
+| `min_instance_count` | `0` | `0` active la mise à l'échelle jusqu'à zéro ; définissez `1` pour les jobs Oban d'arrière-plan ou pour éviter les démarrages à froid. |
 | `max_instance_count` | `5` | Nombre maximal d'instances. |
 | `container_port` | `4000` | Phoenix écoute sur 4000 ; les sondes doivent correspondre. |
-| `cpu_always_allocated` | `false` | Facturation à la requête (CPU facturé uniquement pendant le traitement). Définissez `true` (avec `min ≥ 1`) uniquement pour les tâches Oban d'arrière-plan. |
-| `enable_cloudsql_volume` | `true` | Monte le socket Cloud SQL pour la tâche `db-init` ; l'application se connecte toujours en TCP. |
+| `cpu_always_allocated` | `false` | Facturation à la requête (CPU facturé uniquement pendant le traitement). Définissez `true` (avec `min ≥ 1`) uniquement pour les jobs Oban d'arrière-plan. |
+| `enable_cloudsql_volume` | `true` | Monte le socket Cloud SQL pour le job `db-init` ; l'application se connecte toujours en TCP. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -310,7 +310,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -327,7 +327,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les tâches d'arrière-plan, et non Redis. |
+| `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les jobs d'arrière-plan, et non Redis. |
 | `redis_host` | `""` | Point de terminaison Redis (uniquement si une fonctionnalité en aval l'exige). |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -359,7 +359,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -371,23 +371,23 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critical | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
-| `container_port` | `4000` | Critical | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | High | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
-| `application_version` | Épingler une version | High | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `memory_limit` | `4Gi` | High | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
-| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | High | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
-| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Medium | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
-| `min_instance_count` | `0` (ou `1` pour les tâches d'arrière-plan) | Medium | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les tâches Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
-| `enable_redis` | `false` | Low | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critique | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
+| `container_port` | `4000` | Critique | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
+| `application_version` | Épingler une version | Élevé | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `memory_limit` | `4Gi` | Élevé | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
+| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
+| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Moyen | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
+| `min_instance_count` | `0` (ou `1` pour les jobs d'arrière-plan) | Moyen | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les jobs Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
+| `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 

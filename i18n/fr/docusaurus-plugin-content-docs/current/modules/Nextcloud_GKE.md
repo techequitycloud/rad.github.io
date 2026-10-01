@@ -510,30 +510,30 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Nextcloud exige MySQL ; les autres moteurs font échouer le job d'initialisation et le démarrage. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, tous les fichiers utilisateur et `config.php` sont perdus au redémarrage des pods. |
-| `enable_cloudsql_volume` | `true` | Critical | Nextcloud se connecte via un socket Unix ; supprimer le sidecar casse toutes les connexions à la base de données au démarrage. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `application_domains` | inclure tous les noms d'hôte d'accès | Critical | Nextcloud bloque les requêtes provenant de domaines non listés avec « Access through untrusted domain ». |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
-| `enable_redis` | `true` | High | Avec plus d'un réplica, les verrous de fichiers deviennent obsolètes et les écritures concurrentes renvoient HTTP 503. |
-| `redis_host` | `""` ou IP explicite | High | Aucun point de terminaison Redis valide lorsque NFS est désactivé et qu'aucun hôte n'est défini. |
-| `upload_max_filesize` / `post_max_size` | à augmenter pour les gros fichiers | High | Intégrées à l'image ; les fichiers dépassant la limite échouent silencieusement. `post_max_size` doit être ≥ `upload_max_filesize`. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des OOM PHP lors de gros téléversements ou de la génération de miniatures. |
-| `NEXTCLOUD_UPDATE` | `1` (par défaut) ou `0` | High | Laisser `1` lors d'une mise à niveau de version majeure peut corrompre la base de données. Définissez `0` et exécutez `occ upgrade` manuellement d'une version majeure à l'autre. |
-| `min_instance_count` | `1` | High | `0` provoque des déconnexions liées aux démarrages à froid pour les clients de synchronisation WebDAV. |
-| `max_instance_count > 1` | exige Redis + NFS | High | Plusieurs réplicas sans Redis provoquent des erreurs de verrouillage de fichiers et une possible corruption des données. |
-| `pdb_min_available` vs `min_instance_count` | laisser une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `nextcloud_admin_user` | à changer par rapport à `admin` | Medium | La valeur par défaut `admin` est une cible courante d'attaques par force brute sur les déploiements publics. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sans ces options, le panneau d'administration de Nextcloud est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `php_memory_limit` | `512M` (à augmenter pour un usage intensif) | Medium | Intégrée à l'image ; sa modification exige un nouveau build. |
+| `database_type` | `MYSQL_8_0` | Critique | Nextcloud exige MySQL ; les autres moteurs font échouer le job d'initialisation et le démarrage. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, tous les fichiers utilisateur et `config.php` sont perdus au redémarrage des pods. |
+| `enable_cloudsql_volume` | `true` | Critique | Nextcloud se connecte via un socket Unix ; supprimer le sidecar casse toutes les connexions à la base de données au démarrage. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `application_domains` | inclure tous les noms d'hôte d'accès | Critique | Nextcloud bloque les requêtes provenant de domaines non listés avec « Access through untrusted domain ». |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
+| `enable_redis` | `true` | Élevé | Avec plus d'un réplica, les verrous de fichiers deviennent obsolètes et les écritures concurrentes renvoient HTTP 503. |
+| `redis_host` | `""` ou IP explicite | Élevé | Aucun point de terminaison Redis valide lorsque NFS est désactivé et qu'aucun hôte n'est défini. |
+| `upload_max_filesize` / `post_max_size` | à augmenter pour les gros fichiers | Élevé | Intégrées à l'image ; les fichiers dépassant la limite échouent silencieusement. `post_max_size` doit être ≥ `upload_max_filesize`. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque des OOM PHP lors de gros téléversements ou de la génération de miniatures. |
+| `NEXTCLOUD_UPDATE` | `1` (par défaut) ou `0` | Élevé | Laisser `1` lors d'une mise à niveau de version majeure peut corrompre la base de données. Définissez `0` et exécutez `occ upgrade` manuellement d'une version majeure à l'autre. |
+| `min_instance_count` | `1` | Élevé | `0` provoque des déconnexions liées aux démarrages à froid pour les clients de synchronisation WebDAV. |
+| `max_instance_count > 1` | exige Redis + NFS | Élevé | Plusieurs réplicas sans Redis provoquent des erreurs de verrouillage de fichiers et une possible corruption des données. |
+| `pdb_min_available` vs `min_instance_count` | laisser une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `nextcloud_admin_user` | à changer par rapport à `admin` | Moyen | La valeur par défaut `admin` est une cible courante d'attaques par force brute sur les déploiements publics. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sans ces options, le panneau d'administration de Nextcloud est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `php_memory_limit` | `512M` (à augmenter pour un usage intensif) | Moyen | Intégrée à l'image ; sa modification exige un nouveau build. |
 
 ---
 

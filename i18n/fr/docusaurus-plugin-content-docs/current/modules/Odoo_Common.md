@@ -29,7 +29,7 @@ de déploiement :
    défaut) et toutes les variables d'environnement propres à Odoo.
 3. **Définitions de stockage** — définit le bucket GCS `odoo-addons` pour les addons personnalisés et
    communautaires.
-4. **Jobs d'initialisation** — définit la séquence ordonnée de deux tâches (`nfs-init` → `db-init`)
+4. **Jobs d'initialisation** — définit la séquence ordonnée de deux jobs (`nfs-init` → `db-init`)
    qui s'exécute avant le conteneur Odoo principal à chaque déploiement.
 
 ---
@@ -66,7 +66,7 @@ situé dans `Odoo_Common/scripts/`. Le build :
   pour le canal de version sélectionné (par défaut `18.0`).
 - Installe `wkhtmltopdf` pour la génération des rapports PDF (factures, bons de commande clients, bons de commande fournisseurs,
   rapports financiers).
-- Installe `postgresql-client` pour la tâche `db-init` et les scripts de contrôle de santé.
+- Installe `postgresql-client` pour le job `db-init` et les scripts de contrôle de santé.
 - Configure l'utilisateur du processus Odoo (UID 101) et le fichier de configuration qui lit les informations
   de connexion à la base de données à partir des variables d'environnement injectées à l'exécution.
 
@@ -115,9 +115,9 @@ Secret Manager supplémentaires via `secret_environment_variables` dans le modul
 ## 5. Séquence des jobs d'initialisation {#5-initialization-job-sequence}
 
 À chaque déploiement, deux Cloud Run Jobs (ou Jobs Kubernetes) s'exécutent dans l'ordre avant le démarrage du service
-ou de la charge de travail Odoo. Les deux tâches sont idempotentes et peuvent être relancées sans risque.
+ou de la charge de travail Odoo. Les deux jobs sont idempotents et peuvent être relancés sans risque.
 
-**Tâche 1 — `nfs-init`** (s'exécute en premier)
+**Job 1 — `nfs-init`** (s'exécute en premier)
 
 - Image : `alpine:3.19`
 - Crée les répertoires `/mnt/filestore`, `/mnt/sessions` et `/mnt/extra-addons` sur le
@@ -125,7 +125,7 @@ ou de la charge de travail Odoo. Les deux tâches sont idempotentes et peuvent �
 - Attribue la propriété à `101:101` (l'UID/GID du processus Odoo) et les permissions `777`.
 - Odoo ne démarrera pas si ces répertoires sont absents ou si leur propriétaire est incorrect.
 
-**Tâche 2 — `db-init`** (s'exécute après `nfs-init`)
+**Job 2 — `db-init`** (s'exécute après `nfs-init`)
 
 - Image : `postgres:15-alpine`
 - Exécute `db-init.sh`, qui crée l'utilisateur et la base de données de l'application dans Cloud SQL
@@ -133,7 +133,7 @@ ou de la charge de travail Odoo. Les deux tâches sont idempotentes et peuvent �
 - Lit `DB_PASSWORD` et `ROOT_PASSWORD` depuis Secret Manager au moment de l'exécution.
 - Aucune modification du schéma — la création du schéma est assurée par Odoo au premier démarrage du service.
 
-Pour inspecter les journaux des tâches :
+Pour inspecter les journaux des jobs :
 
 ```bash
 # Cloud Run:

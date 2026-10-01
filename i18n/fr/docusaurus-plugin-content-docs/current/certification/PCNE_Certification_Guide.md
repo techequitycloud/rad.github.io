@@ -123,7 +123,7 @@ Entièrement conceptuelle dans RAD. Le Cloud Router créé par les modules ne po
 
 ## Section 5 : Gestion, surveillance et dépannage des opérations réseau (Managing, monitoring, and troubleshooting network operations) (~14 % de l'examen) {#section-5-managing-monitoring-and-troubleshooting-network-operations-14-of-the-exam}
 
-Les modules activent la journalisation des requêtes du LB (taux d'échantillonnage 1.0) et des modèles riches de vérification d'état et d'autoréparation, mais les journaux de flux VPC, la journalisation NAT et la journalisation du pare-feu ne sont *pas* activés — les activer manuellement sur le VPC déployé constitue en soi un excellent exercice.
+Les modules activent la journalisation des requêtes du LB (taux d'échantillonnage 1,0) et des modèles riches de vérification d'état et d'autoréparation, mais les journaux de flux VPC, la journalisation NAT et la journalisation du pare-feu ne sont *pas* activés — les activer manuellement sur le VPC déployé constitue en soi un excellent exercice.
 
 | Sujet de l'examen | Couverture | Où dans RAD | Guide |
 |---|---|---|---|

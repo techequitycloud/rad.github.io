@@ -362,8 +362,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et
@@ -379,16 +379,16 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `service_type` (par défaut `LoadBalancer`) + `enable_admin_password` | Définissez `service_type = ClusterIP` pour rester uniquement interne, ou ajoutez une couche reverse proxy/authentification avant toute exposition externe | Critical | Le tableau de bord de Netdata n'a pas de connexion intégrée ; le Service `LoadBalancer` par défaut (ou un domaine personnalisé configuré) expose à l'extérieur toutes les métriques collectées des hôtes et des conteneurs, sans couche d'authentification ajoutée par l'opérateur. |
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver fait revenir à GCS FUSE, qui corrompt les fichiers de métriques dbengine de Netdata — perte de données / redémarrages en boucle. |
-| `max_instance_count` | `1` | High | Le dbengine de Netdata est écrit par un seul processus sur un PVC ; dépasser 1 expose à une corruption des fichiers / une contention sur les verrous. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Consomme le quota régional `SSD_TOTAL_GB`, très limité ; passez à `standard` (HDD) sur les projets dont le quota est contraint — le profil d'écriture de Netdata n'a pas besoin des IOPS d'un SSD. |
-| `enable_nfs` | `false` (à laisser désactivé) | Medium | NFS n'est pas la voie prise en charge pour les fichiers de données propres à Netdata (`/var/lib/netdata`) ; activez-le uniquement pour un montage partagé sans rapport, sur un autre chemin. |
-| `application_version` | `latest` (→ `v2.2.6` épinglé) | Medium | Épingler un tag arbitraire qui n'existe pas en amont fait échouer l'étape de mise en miroir/de build de l'image Cloud Build. |
-| `memory_limit` | `1Gi` (à augmenter pour un grand nombre de collections) | Medium | Netdata conserve les métriques récentes en mémoire ; un sous-dimensionnement provoque des redémarrages pour OOM sous une forte charge de collecte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_custom_domain` (par défaut `true`) avec `application_domains` vide | Renseignez `application_domains` ou ne modifiez ni l'un ni l'autre | Low | `enable_custom_domain=true` seul n'a aucun effet tant qu'aucun domaine n'est listé — ce n'est pas un risque fonctionnel, mais cela peut prêter à confusion lors d'un audit de l'exposition. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `service_type` (par défaut `LoadBalancer`) + `enable_admin_password` | Définissez `service_type = ClusterIP` pour rester uniquement interne, ou ajoutez une couche reverse proxy/authentification avant toute exposition externe | Critique | Le tableau de bord de Netdata n'a pas de connexion intégrée ; le Service `LoadBalancer` par défaut (ou un domaine personnalisé configuré) expose à l'extérieur toutes les métriques collectées des hôtes et des conteneurs, sans couche d'authentification ajoutée par l'opérateur. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver fait revenir à GCS FUSE, qui corrompt les fichiers de métriques dbengine de Netdata — perte de données / redémarrages en boucle. |
+| `max_instance_count` | `1` | Élevé | Le dbengine de Netdata est écrit par un seul processus sur un PVC ; dépasser 1 expose à une corruption des fichiers / une contention sur les verrous. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Moyen | Consomme le quota régional `SSD_TOTAL_GB`, très limité ; passez à `standard` (HDD) sur les projets dont le quota est contraint — le profil d'écriture de Netdata n'a pas besoin des IOPS d'un SSD. |
+| `enable_nfs` | `false` (à laisser désactivé) | Moyen | NFS n'est pas la voie prise en charge pour les fichiers de données propres à Netdata (`/var/lib/netdata`) ; activez-le uniquement pour un montage partagé sans rapport, sur un autre chemin. |
+| `application_version` | `latest` (→ `v2.2.6` épinglé) | Moyen | Épingler un tag arbitraire qui n'existe pas en amont fait échouer l'étape de mise en miroir/de build de l'image Cloud Build. |
+| `memory_limit` | `1Gi` (à augmenter pour un grand nombre de collections) | Moyen | Netdata conserve les métriques récentes en mémoire ; un sous-dimensionnement provoque des redémarrages pour OOM sous une forte charge de collecte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_custom_domain` (par défaut `true`) avec `application_domains` vide | Renseignez `application_domains` ou ne modifiez ni l'un ni l'autre | Faible | `enable_custom_domain=true` seul n'a aucun effet tant qu'aucun domaine n'est listé — ce n'est pas un risque fonctionnel, mais cela peut prêter à confusion lors d'un audit de l'exposition. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

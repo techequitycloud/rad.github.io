@@ -55,7 +55,7 @@ R : Workforce Identity Federation fédère des utilisateurs *humains* issus d'un
 
 ## 1.2 Gestion des comptes de service (Managing service accounts) {#12-managing-service-accounts}
 
-> ⏱ ~1.5 h · 💰 aucun coût supplémentaire · ⚙️ Prérequis : secure-platform ; zero-trust-gke pour Workload Identity
+> ⏱ ~1,5 h · 💰 aucun coût supplémentaire · ⚙️ Prérequis : secure-platform ; zero-trust-gke pour Workload Identity
 
 **Pourquoi l'examen s'y intéresse** — L'examen teste la hiérarchie des risques liés aux identifiants : clés de compte de service exportées (le pire) → rotation des clés → emprunt d'identité/jetons de courte durée → Workload Identity / fédération (le mieux, sans clé). Vous devez savoir quand créer des comptes de service dédiés plutôt que d'utiliser ceux par défaut, et comment Workload Identity sur GKE lie un ServiceAccount Kubernetes (KSA) à un compte de service Google (GSA).
 

@@ -400,25 +400,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` (→ PostgreSQL 15) | Critical | Tout autre moteur empêche le démarrage d'Unleash — il ne prend en charge que PostgreSQL. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données des flags. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| Chemin de `startup_probe_config` / `health_check_config` | `/health` | High | Diriger une sonde vers `/api/admin/*` renvoie 401/403 et le pod ne devient jamais Ready. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'API joignable. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `session_affinity` | `None` | Low | Unleash est sans état ; l'affinité est inutile et n'apporte rien. |
-| `enable_iap` | uniquement en l'absence de trafic SDK | High | IAP bloque toutes les requêtes non authentifiées, y compris les appels SDK/CI authentifiés par jeton vers l'API Unleash. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| Identifiants par défaut de l'interface `admin` / `unleash4all` | À modifier à la première connexion | High | Conserver le mot de passe par défaut expose le contrôle administrateur complet de tous les flags. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `POSTGRES` (→ PostgreSQL 15) | Critique | Tout autre moteur empêche le démarrage d'Unleash — il ne prend en charge que PostgreSQL. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données des flags. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| Chemin de `startup_probe_config` / `health_check_config` | `/health` | Élevé | Diriger une sonde vers `/api/admin/*` renvoie 401/403 et le pod ne devient jamais Ready. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'API joignable. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `session_affinity` | `None` | Faible | Unleash est sans état ; l'affinité est inutile et n'apporte rien. |
+| `enable_iap` | uniquement en l'absence de trafic SDK | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les appels SDK/CI authentifiés par jeton vers l'API Unleash. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| Identifiants par défaut de l'interface `admin` / `unleash4all` | À modifier à la première connexion | Élevé | Conserver le mot de passe par défaut expose le contrôle administrateur complet de tous les flags. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

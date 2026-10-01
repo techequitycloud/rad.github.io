@@ -470,25 +470,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, `min_instance_count > max_instance_count`, une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, des valeurs de quota de ressources en unités binaires, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC de données / bucket GCS | Ne jamais supprimer/recréer | Critical | Le volume contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent simultanément dans le même magasin de données et corrompent `url-watches.json` ; l'application ne dispose d'aucun verrouillage distribué. |
-| `stateful_pvc_enabled` ou `workload_type` | `true` (StatefulSet sélectionné automatiquement ; tous deux par défaut) | High | Définir `workload_type = "Deployment"` conjointement à `stateful_pvc_enabled = true` échoue au moment du plan ; la persistance par PVC en mode bloc exige un StatefulSet. |
-| Mot de passe de l'interface web | À définir immédiatement | High | Le tableau de bord est livré **sans authentification** ; exposer le point de terminaison de l'Ingress sans mot de passe (ni IAP) révèle toutes les surveillances et la configuration des notifications. |
-| `application_name` | À définir une seule fois | High | Immuable après le premier déploiement ; le renommer recrée le bucket/PVC de données et rend les données existantes orphelines. |
-| `stateful_pvc_mount_path` / `DATASTORE_PATH` | `/datastore` | High | Une incohérence signifie que les données sont écrites sur le disque éphémère du pod et perdues au redémarrage ou à la replanification. |
-| `BASE_URL` | URL externe du LoadBalancer / du domaine | Medium | Non injecté sur GKE — le laisser non défini produit des liens absolus cassés dans les notifications de modification. |
-| `enable_iap` | Activer (ou définir un mot de passe dans l'interface) | High | Sans IAP ni mot de passe dans l'interface, le point de terminaison public de l'Ingress expose un tableau de bord non authentifié. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'ordonnanceur de récupération en marche. |
-| `enable_redis` / `enable_cloudsql_volume` | `false` / `false` | Low | changedetection.io n'a besoin ni de l'un ni de l'autre ; les activer provisionne une infrastructure inutilisée. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire de la sauvegarde des données. |
+| PVC de données / bucket GCS | Ne jamais supprimer/recréer | Critique | Le volume contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent simultanément dans le même magasin de données et corrompent `url-watches.json` ; l'application ne dispose d'aucun verrouillage distribué. |
+| `stateful_pvc_enabled` ou `workload_type` | `true` (StatefulSet sélectionné automatiquement ; tous deux par défaut) | Élevé | Définir `workload_type = "Deployment"` conjointement à `stateful_pvc_enabled = true` échoue au moment du plan ; la persistance par PVC en mode bloc exige un StatefulSet. |
+| Mot de passe de l'interface web | À définir immédiatement | Élevé | Le tableau de bord est livré **sans authentification** ; exposer le point de terminaison de l'Ingress sans mot de passe (ni IAP) révèle toutes les surveillances et la configuration des notifications. |
+| `application_name` | À définir une seule fois | Élevé | Immuable après le premier déploiement ; le renommer recrée le bucket/PVC de données et rend les données existantes orphelines. |
+| `stateful_pvc_mount_path` / `DATASTORE_PATH` | `/datastore` | Élevé | Une incohérence signifie que les données sont écrites sur le disque éphémère du pod et perdues au redémarrage ou à la replanification. |
+| `BASE_URL` | URL externe du LoadBalancer / du domaine | Moyen | Non injecté sur GKE — le laisser non défini produit des liens absolus cassés dans les notifications de modification. |
+| `enable_iap` | Activer (ou définir un mot de passe dans l'interface) | Élevé | Sans IAP ni mot de passe dans l'interface, le point de terminaison public de l'Ingress expose un tableau de bord non authentifié. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient l'ordonnanceur de récupération en marche. |
+| `enable_redis` / `enable_cloudsql_volume` | `false` / `false` | Faible | changedetection.io n'a besoin ni de l'un ni de l'autre ; les activer provisionne une infrastructure inutilisée. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire de la sauvegarde des données. |
 
 ---
 

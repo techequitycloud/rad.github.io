@@ -425,27 +425,27 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Django exige PostgreSQL ; MySQL ou `NONE` fera échouer le job `db-init`. |
-| `application_name` / `tenant_id` | définis une seule fois | Critical | Intégrés aux noms des ressources ; les modifier recrée toutes les ressources nommées et détruit les données. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| Chemin de `startup_probe` | `/healthz` (sans redirection) | Critical | Le trafic des sondes Cloud Run est en HTTP simple ; une redirection renvoie 301, Cloud Run ne voit jamais de 200 et le service ne démarre jamais. |
-| `SECURE_SSL_REDIRECT` dans `settings.py` | `False` ou exemption de `/healthz` | Critical | `True` redirige chaque requête HTTP, y compris la sonde de démarrage ; le service reste bloqué à l'état `STARTING`. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
-| `enable_nfs` | `true` (par défaut) | High | Le désactiver avec `max_instance_count > 1` signifie que chaque instance dispose d'un stockage éphémère isolé ; les téléversements sont perdus à l'arrêt de l'instance. |
-| `execution_environment` | `gen2` (par défaut lorsque NFS est activé) | High | `gen1` ne prend pas en charge les montages de volumes NFS ; le service ne démarre pas. |
-| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | High | Une incohérence amène Django à écrire les médias sur un stockage éphémère ; les fichiers sont perdus à l'arrêt de l'instance. |
-| Mémoire de `container_resources` | ≥ `512Mi` ; à augmenter pour les charges de travail intensives en ORM | High | Mémoire insuffisante : l'instance s'arrête en OOM (exit 137) sur les querysets volumineux ou le traitement de fichiers. |
-| `min_instance_count` | `1` en production | Medium | `0` provoque des démarrages à froid (> 60 s) sur la première requête après une période d'inactivité ; les cron jobs peuvent ne trouver aucune instance active. |
-| `application_version` | tag épinglé, pas `latest` | Medium | `latest` rend le retour arrière ambigu ; Cloud Run ne peut pas distinguer deux tirages de `latest`. |
-| `enable_redis` | `true` en cas de sessions stockées dans Redis | Medium | Laissé à `false` avec un `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache ou aux sessions. |
-| `ingress_settings` | `internal-and-cloud-load-balancing` pour les services privés derrière un équilibreur de charge | Medium | `all` permet l'appel direct de l'URL du point de terminaison Cloud Run en contournant Cloud Armor/IAP. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration Django est accessible publiquement à l'URL du service. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` | Critique | Django exige PostgreSQL ; MySQL ou `NONE` fera échouer le job `db-init`. |
+| `application_name` / `tenant_id` | définis une seule fois | Critique | Intégrés aux noms des ressources ; les modifier recrée toutes les ressources nommées et détruit les données. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| Chemin de `startup_probe` | `/healthz` (sans redirection) | Critique | Le trafic des sondes Cloud Run est en HTTP simple ; une redirection renvoie 301, Cloud Run ne voit jamais de 200 et le service ne démarre jamais. |
+| `SECURE_SSL_REDIRECT` dans `settings.py` | `False` ou exemption de `/healthz` | Critique | `True` redirige chaque requête HTTP, y compris la sonde de démarrage ; le service reste bloqué à l'état `STARTING`. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
+| `enable_nfs` | `true` (par défaut) | Élevé | Le désactiver avec `max_instance_count > 1` signifie que chaque instance dispose d'un stockage éphémère isolé ; les téléversements sont perdus à l'arrêt de l'instance. |
+| `execution_environment` | `gen2` (par défaut lorsque NFS est activé) | Élevé | `gen1` ne prend pas en charge les montages de volumes NFS ; le service ne démarre pas. |
+| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | Élevé | Une incohérence amène Django à écrire les médias sur un stockage éphémère ; les fichiers sont perdus à l'arrêt de l'instance. |
+| Mémoire de `container_resources` | ≥ `512Mi` ; à augmenter pour les charges de travail intensives en ORM | Élevé | Mémoire insuffisante : l'instance s'arrête en OOM (exit 137) sur les querysets volumineux ou le traitement de fichiers. |
+| `min_instance_count` | `1` en production | Moyen | `0` provoque des démarrages à froid (> 60 s) sur la première requête après une période d'inactivité ; les cron jobs peuvent ne trouver aucune instance active. |
+| `application_version` | tag épinglé, pas `latest` | Moyen | `latest` rend le retour arrière ambigu ; Cloud Run ne peut pas distinguer deux tirages de `latest`. |
+| `enable_redis` | `true` en cas de sessions stockées dans Redis | Moyen | Laissé à `false` avec un `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache ou aux sessions. |
+| `ingress_settings` | `internal-and-cloud-load-balancing` pour les services privés derrière un équilibreur de charge | Moyen | `all` permet l'appel direct de l'URL du point de terminaison Cloud Run en contournant Cloud Armor/IAP. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface d'administration Django est accessible publiquement à l'URL du service. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

@@ -57,7 +57,7 @@ ensemble ciblé de services Google Cloud :
   N'effectuez pas sa rotation après le premier déploiement — toutes les sessions et
   tous les jetons d'API existants seraient immédiatement invalidés.
 - **NocoDB gère lui-même ses migrations de base de données au premier démarrage.**
-  Aucun job d'initialisation externe n'est requis, bien qu'une tâche `db-init`
+  Aucun job d'initialisation externe n'est requis, bien qu'un job `db-init`
   soit tout de même fournie pour créer la base de données et l'utilisateur.
 - **Les sondes de santé ciblent `/api/v1/health`**, le point de terminaison de
   santé dédié exposé par NocoDB.
@@ -207,7 +207,7 @@ facultatifs sur `/api/v1/health` et des règles d'alerte sont disponibles.
   avant le démarrage de l'application. Il est idempotent et peut être réexécuté
   sans risque.
 - **Migrations autogérées.** NocoDB exécute ses propres migrations de schéma de
-  base de données au premier démarrage — il est inutile de configurer des tâches de
+  base de données au premier démarrage — il est inutile de configurer des jobs de
   migration externes.
 - **Secret JWT.** `NC_AUTH_JWT_SECRET` est généré automatiquement et stocké dans
   Secret Manager. N'effectuez pas sa rotation après le premier déploiement ; toutes
@@ -223,7 +223,7 @@ facultatifs sur `/api/v1/health` et des règles d'alerte sont disponibles.
   le socle) aux noms `NC_DB_*` attendus par NocoDB. Lorsque
   `container_image_source = "prebuilt"`, cette correspondance n'est pas appliquée —
   configurez manuellement les variables `NC_DB_*` via `environment_variables`.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent
   `/api/v1/health`, qui renvoie HTTP 200 lorsque NocoDB est prêt à accepter des
   requêtes.
 - **Sessions multi-réplicas.** Avec plus d'un pod et sans Redis, NocoDB ne peut pas
@@ -327,7 +327,7 @@ inutiles pour NocoDB, qui stocke son état dans PostgreSQL et GCS.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrents (par exemple, tâches personnalisées de synchronisation de données). |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
@@ -443,7 +443,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -456,24 +456,24 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critical | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers sans unité sont des octets et bloquent toute planification. |
-| `container_resources.memory_limit` | `1Gi` | High | Le processus Node.js de NocoDB est tué pour OOM en dessous de 512 Mi ; les charges de travail de production comportant de nombreuses automatisations nécessitent 2 Gi. |
-| `enable_redis` | `true` lorsque >1 réplica | High | Plusieurs pods sans Redis provoquent l'invalidation des sessions lorsque les requêtes sont acheminées vers des pods différents. |
-| `redis_host` | explicite lorsque Redis est activé | High | Un hôte manquant fait échouer toutes les connexions Redis au démarrage du pod. |
-| `min_instance_count` | `1` | High | `0` permet des démarrages à froid pendant lesquels les rappels de webhooks expirent et sont perdus. |
-| `max_instance_count` | maintenir bas sans Redis | Medium | Dépasser `1` sans Redis provoque l'invalidation des sessions. |
-| `enable_iap` / `enable_cloud_armor` | activer pour un usage interne | Medium | Sinon, NocoDB est publiquement accessible depuis l'IP de l'équilibreur de charge. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
-| `application_version` | épingler un tag précis | Medium | `latest` déclenche des mises à niveau non maîtrisées à chaque reconstruction du conteneur. |
+| `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critique | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers sans unité sont des octets et bloquent toute planification. |
+| `container_resources.memory_limit` | `1Gi` | Élevé | Le processus Node.js de NocoDB est tué pour OOM en dessous de 512 Mi ; les charges de travail de production comportant de nombreuses automatisations nécessitent 2 Gi. |
+| `enable_redis` | `true` lorsque >1 réplica | Élevé | Plusieurs pods sans Redis provoquent l'invalidation des sessions lorsque les requêtes sont acheminées vers des pods différents. |
+| `redis_host` | explicite lorsque Redis est activé | Élevé | Un hôte manquant fait échouer toutes les connexions Redis au démarrage du pod. |
+| `min_instance_count` | `1` | Élevé | `0` permet des démarrages à froid pendant lesquels les rappels de webhooks expirent et sont perdus. |
+| `max_instance_count` | maintenir bas sans Redis | Moyen | Dépasser `1` sans Redis provoque l'invalidation des sessions. |
+| `enable_iap` / `enable_cloud_armor` | activer pour un usage interne | Moyen | Sinon, NocoDB est publiquement accessible depuis l'IP de l'équilibreur de charge. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `application_version` | épingler un tag précis | Moyen | `latest` déclenche des mises à niveau non maîtrisées à chaque reconstruction du conteneur. |
 
 ---
 

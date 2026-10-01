@@ -413,8 +413,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
@@ -423,13 +423,13 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | se résout en `MYSQL_8_0` | Critical | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
-| `enable_gcs_storage_volume` | `true` | Critical | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du pod. |
-| Options de montage GCS Fuse `uid=33`/`gid=33` | Déjà définies dans `Passbolt_Common` — ne pas les retirer si vous personnalisez `gcs_volumes` | Critical | Sans elles, `www-data` (l'uid sous lequel s'exécute réellement l'étape de génération des clés de l'entrypoint de l'éditeur) obtient `EACCES: permission denied` en écrivant les fichiers de clés GPG/JWT au premier démarrage, et le pod ne devient jamais réellement utilisable, même s'il se déclare Ready. |
-| Ordre de `initialization_jobs` (`db-init` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la dépendance | Critical | La reproduction, par le job `admin-bootstrap`, de la séquence de génération des clés GPG et d'installation du schéma de l'éditeur est indispensable — un job de remplacement naïf qui exécute directement `cake passbolt register_user` échoue avec une erreur interne, car la paire de clés GPG du serveur et le schéma n'existent pas encore. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification du pod — seulement l'attente de Terraform — si bien que la garantie d'ordre provient entièrement de `depends_on_jobs`. |
-| `enable_cloudsql_volume` | `true` (valeur par défaut de cette variante) | High | Le sidecar Auth Proxy est le chemin de connectivité MySQL prévu sur GKE. |
-| `reserve_static_ip` | `true` | Medium | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute URL enregistrée en favori ou tout enregistrement DNS qui pointe vers elle. |
-| `admin_email` / `admin_first_name` / `admin_last_name` | À définir délibérément avant le premier déploiement | Medium | Ces valeurs initialisent l'unique compte administrateur créé par le job `admin-bootstrap` ; il n'existe ensuite aucun moyen de les modifier dans l'application, sauf via l'interface d'administration de Passbolt une fois connecté. |
+| `database_type` | se résout en `MYSQL_8_0` | Critique | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
+| `enable_gcs_storage_volume` | `true` | Critique | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du pod. |
+| Options de montage GCS Fuse `uid=33`/`gid=33` | Déjà définies dans `Passbolt_Common` — ne pas les retirer si vous personnalisez `gcs_volumes` | Critique | Sans elles, `www-data` (l'uid sous lequel s'exécute réellement l'étape de génération des clés de l'entrypoint de l'éditeur) obtient `EACCES: permission denied` en écrivant les fichiers de clés GPG/JWT au premier démarrage, et le pod ne devient jamais réellement utilisable, même s'il se déclare Ready. |
+| Ordre de `initialization_jobs` (`db-init` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la dépendance | Critique | La reproduction, par le job `admin-bootstrap`, de la séquence de génération des clés GPG et d'installation du schéma de l'éditeur est indispensable — un job de remplacement naïf qui exécute directement `cake passbolt register_user` échoue avec une erreur interne, car la paire de clés GPG du serveur et le schéma n'existent pas encore. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification du pod — seulement l'attente de Terraform — si bien que la garantie d'ordre provient entièrement de `depends_on_jobs`. |
+| `enable_cloudsql_volume` | `true` (valeur par défaut de cette variante) | Élevé | Le sidecar Auth Proxy est le chemin de connectivité MySQL prévu sur GKE. |
+| `reserve_static_ip` | `true` | Moyen | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute URL enregistrée en favori ou tout enregistrement DNS qui pointe vers elle. |
+| `admin_email` / `admin_first_name` / `admin_last_name` | À définir délibérément avant le premier déploiement | Moyen | Ces valeurs initialisent l'unique compte administrateur créé par le job `admin-bootstrap` ; il n'existe ensuite aucun moyen de les modifier dans l'application, sauf via l'interface d'administration de Passbolt une fois connecté. |
 | Aucun mot de passe administrateur à perdre | — | — | Contrairement à la plupart des applications de ce catalogue, il n'existe aucun identifiant administrateur conservé dans Secret Manager à récupérer. Si l'URL de configuration à usage unique est manquée et expire, la solution consiste à relancer le job `admin-bootstrap` (idempotent pour les étapes GPG/JWT/schéma ; consultez la documentation de la CLI de Passbolt pour réémettre un lien de configuration pour `register_user`). |
 
 ---

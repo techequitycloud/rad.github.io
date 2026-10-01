@@ -396,7 +396,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des tâches de configuration (aucune pour Element). |
+| `initialization_jobs` | Noms des jobs de configuration (aucun pour Element). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -410,21 +410,21 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, des valeurs `quota_memory_*` exprimées en entiers nus. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | High | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
-| `application_version` | Épinglez un véritable tag `element-web` | High | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un ARG de build brut `latest` défini à la main échouerait avec `MANIFEST_UNKNOWN`. |
-| `container_image_source` | `custom` | High | `prebuilt` avec une image dépourvue du point d'entrée `config.json` livre un Element pointant vers le mauvais serveur d'accueil. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. Conserver 1 garantit que l'interface est toujours accessible. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_iap` | À activer pour protéger l'interface | Medium | Sans IAP, toute personne disposant de l'URL peut charger le client (il lui faut toutefois des identifiants du serveur d'accueil pour se connecter). |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| Entrées Base de données / Redis / Sauvegarde / NFS | Laisser la valeur par défaut | Low | Sans effet pour Element ; les définir n'a aucune incidence. |
+| `homeserver_url` / `homeserver_name` | Votre véritable serveur d'accueil, ou vide pour matrix.org | Élevé | Un serveur d'accueil erroné ou injoignable empêche les utilisateurs de se connecter — l'interface se charge mais l'authentification échoue. |
+| `application_version` | Épinglez un véritable tag `element-web` | Élevé | `latest` n'est pas un tag `element-web` valide ; le module épingle `v1.11.86`, mais un ARG de build brut `latest` défini à la main échouerait avec `MANIFEST_UNKNOWN`. |
+| `container_image_source` | `custom` | Élevé | `prebuilt` avec une image dépourvue du point d'entrée `config.json` livre un Element pointant vers le mauvais serveur d'accueil. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; le garde-fou de validation rejette les valeurs invalides. Conserver 1 garantit que l'interface est toujours accessible. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_iap` | À activer pour protéger l'interface | Moyen | Sans IAP, toute personne disposant de l'URL peut charger le client (il lui faut toutefois des identifiants du serveur d'accueil pour se connecter). |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| Entrées Base de données / Redis / Sauvegarde / NFS | Laisser la valeur par défaut | Faible | Sans effet pour Element ; les définir n'a aucune incidence. |
 
 ---
 

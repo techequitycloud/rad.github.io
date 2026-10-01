@@ -209,7 +209,7 @@ sont disponibles.
 - **Fonctionnement en mode file d'attente.** Avec `enable_redis = true` (valeur par défaut),
   n8n démarre en mode file d'attente. Le pod principal gère l'enregistrement des webhooks,
   l'interface de l'éditeur et la coordination des exécutions ; les réplicas supplémentaires
-  servent de workers qui prennent les tâches dans la file Bull.
+  servent de workers qui prennent les jobs dans la file Bull.
 - **Stabilité de l'URL des webhooks.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont définis sur
   l'URL prévue du service avant le déploiement. Si l'IP externe ou le domaine personnalisé
   change, ces valeurs doivent être mises à jour et la charge de travail redéployée.
@@ -217,7 +217,7 @@ sont disponibles.
   d'écrire les fichiers binaires (pièces jointes, téléchargements) sur le système de fichiers
   monté en NFS plutôt que dans la base de données, ce qui est requis pour les déploiements
   multi-réplicas.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent la racine de n8n
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent la racine de n8n
   (`/`), qui ne renvoie HTTP 200 qu'une fois l'application et la connexion à la base de données
   entièrement initialisées. La sonde de démarrage accorde 120 secondes à la configuration du
   premier démarrage.
@@ -326,7 +326,7 @@ défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job de configuration de base de données `db-init` intégré. |
-| `cron_jobs` | `[]` | CronJobs planifiés. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes (scripts de maintenance, tâches de données personnalisées). |
+| `cron_jobs` | `[]` | CronJobs planifiés. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes (scripts de maintenance, jobs de données personnalisés). |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de n8n. |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
@@ -456,23 +456,23 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `N8N_ENCRYPTION_KEY` | _(générée automatiquement, ne jamais effectuer de rotation)_ | Critical | La rotation ou la suppression de cette clé détruit définitivement tous les identifiants de workflows enregistrés. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des workflows. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les fichiers binaires ne sont pas partagés entre les réplicas et le mode binaire `filesystem` échoue. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` | High | Sans le mode file d'attente Redis, exécuter plus d'un réplica provoque des conflits d'exécution des workflows. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison valide si Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les sessions WebSocket de l'éditeur sont interrompues lorsqu'elles sont routées vers un autre pod. |
-| `min_instance_count` | `1` | High | `0` laisse les workflows en file d'attente sans worker pour les prendre en charge. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors de l'exécution de gros lots de workflows. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, l'éditeur n8n est accessible publiquement et expose tous les identifiants enregistrés. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `N8N_ENCRYPTION_KEY` | _(générée automatiquement, ne jamais effectuer de rotation)_ | Critique | La rotation ou la suppression de cette clé détruit définitivement tous les identifiants de workflows enregistrés. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des workflows. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les fichiers binaires ne sont pas partagés entre les réplicas et le mode binaire `filesystem` échoue. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` | `true` | Élevé | Sans le mode file d'attente Redis, exécuter plus d'un réplica provoque des conflits d'exécution des workflows. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison valide si Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions WebSocket de l'éditeur sont interrompues lorsqu'elles sont routées vers un autre pod. |
+| `min_instance_count` | `1` | Élevé | `0` laisse les workflows en file d'attente sans worker pour les prendre en charge. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors de l'exécution de gros lots de workflows. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'éditeur n8n est accessible publiquement et expose tous les identifiants enregistrés. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
 
 > **Remarque :** `enable_resource_quota` et les variables `quota_*` (Groupe 8) sont
 > déclarées dans `N8N_GKE/variables.tf` pour respecter la convention de duplication du dépôt,

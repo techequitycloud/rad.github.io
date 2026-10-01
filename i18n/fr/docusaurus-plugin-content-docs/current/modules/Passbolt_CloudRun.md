@@ -382,8 +382,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs et
@@ -393,11 +393,11 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
-| `enable_gcs_storage_volume` | `true` | Critical | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du conteneur. |
-| Ordre de `initialization_jobs` (`db-init` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la dépendance | Critical | La reproduction, par le job `admin-bootstrap`, de la séquence de génération des clés GPG et d'installation du schéma de l'éditeur est indispensable — un job de remplacement naïf qui exécute directement `cake passbolt register_user` échoue avec une erreur interne, car la paire de clés GPG du serveur et le schéma n'existent pas encore. |
-| `enable_cloudsql_volume` | `true` (attention : vaut `false` par défaut sur cette variante) | Medium | Le `DATASOURCES_DEFAULT_HOST` de Passbolt fonctionne directement sur le socket Unix du Cloud SQL Auth Proxy ; laisser la valeur par défaut `false` côté Cloud Run utilise à la place une connexion TCP directe, qui fonctionne toujours mais renonce à la terminaison TLS du socket et ne correspond ni à la valeur par défaut de `Passbolt_Common` ni à la variante GKE. |
-| `admin_email` / `admin_first_name` / `admin_last_name` | À définir délibérément avant le premier déploiement | Medium | Ces valeurs initialisent l'unique compte administrateur créé par le job `admin-bootstrap` ; il n'existe ensuite aucun moyen de les modifier dans l'application, sauf via l'interface d'administration de Passbolt une fois connecté. |
+| `database_type` | `MYSQL_8_0` | Critique | Le schéma CakePHP de Passbolt est exclusivement MySQL — tout autre moteur empêche complètement le démarrage. |
+| `enable_gcs_storage_volume` | `true` | Critique | Le désactiver supprime les volumes persistants de la paire de clés GPG du serveur et de la paire de clés JWT générées par l'application — tous les identifiants que Passbolt a chiffrés côté serveur, et toutes les sessions JWT émises, deviennent irrécupérables au prochain redémarrage du conteneur. |
+| Ordre de `initialization_jobs` (`db-init` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la dépendance | Critique | La reproduction, par le job `admin-bootstrap`, de la séquence de génération des clés GPG et d'installation du schéma de l'éditeur est indispensable — un job de remplacement naïf qui exécute directement `cake passbolt register_user` échoue avec une erreur interne, car la paire de clés GPG du serveur et le schéma n'existent pas encore. |
+| `enable_cloudsql_volume` | `true` (attention : vaut `false` par défaut sur cette variante) | Moyen | Le `DATASOURCES_DEFAULT_HOST` de Passbolt fonctionne directement sur le socket Unix du Cloud SQL Auth Proxy ; laisser la valeur par défaut `false` côté Cloud Run utilise à la place une connexion TCP directe, qui fonctionne toujours mais renonce à la terminaison TLS du socket et ne correspond ni à la valeur par défaut de `Passbolt_Common` ni à la variante GKE. |
+| `admin_email` / `admin_first_name` / `admin_last_name` | À définir délibérément avant le premier déploiement | Moyen | Ces valeurs initialisent l'unique compte administrateur créé par le job `admin-bootstrap` ; il n'existe ensuite aucun moyen de les modifier dans l'application, sauf via l'interface d'administration de Passbolt une fois connecté. |
 | Aucun mot de passe administrateur à perdre | — | — | Contrairement à la plupart des applications de ce catalogue, il n'existe aucun identifiant administrateur conservé dans Secret Manager à récupérer. Si l'URL de configuration à usage unique est manquée et expire, la solution consiste à supprimer puis relancer le job `admin-bootstrap` (il est idempotent pour les étapes GPG/JWT/schéma, mais `register_user` lui-même peut nécessiter une nouvelle invocation pour obtenir une nouvelle URL — consultez la documentation de la CLI de Passbolt pour réémettre un lien de configuration). |
 
 ---

@@ -502,27 +502,27 @@ Définir `stateful_pvc_enabled = true` sélectionne automatiquement `workload_ty
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critical** (perte de données, panne complète, faille de sécurité) — **High** (service indisponible ou dégradation importante) — **Medium** (fonctionnement dégradé ou coût accru) — **Low** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation importante) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | *(obligatoire)* | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `enable_redis` | `true` | **Critical** | Redis est le broker Celery. Le désactiver arrête tout traitement en arrière-plan. Les documents déposés dans le répertoire d'ingestion sont mis en file d'attente sans avertissement mais jamais traités. L'interface web de Paperless-ngx reste accessible mais n'affiche aucun nouveau document ingéré. |
-| `redis_host` | `""` | **High** | Se résout automatiquement en IP NFS. Si NFS est désactivé et qu'aucun hôte explicite n'est fourni, Celery ne peut pas se connecter à son broker et le pipeline d'ingestion échoue au démarrage. |
-| `enable_nfs` | `true` | **High** | Obligatoire lorsque `redis_host` est vide. Désactiver NFS sans fournir d'hôte Redis explicite fait échouer le démarrage de Celery. |
-| `container_port` | `8000` | **Critical** | Le gunicorn de Paperless-ngx écoute sur 8000. Modifier cette valeur sans changer le port lié par le conteneur fait échouer immédiatement toutes les sondes de santé. |
-| `memory_limit` | `"2Gi"` | **High** | L'OCR Tesseract charge en mémoire les modèles de langue et les miniatures des documents. Un sous-dimensionnement (en dessous de `1Gi`) provoque des arrêts OOM pendant le traitement, en particulier pour les PDF de plusieurs pages ou l'OCR multilingue. |
-| `cpu_limit` | `"2000m"` | **Medium** | L'OCR est gourmand en CPU. Descendre sous 1 vCPU ralentit fortement l'OCR ; à `500m`, les gros documents peuvent expirer avant la fin de l'OCR. |
-| `timeout_seconds` | `300` | **Medium** | L'OCR de gros PDF peut prendre plusieurs minutes. Descendre sous 120 secondes amène gunicorn à interrompre les requêtes OCR lentes. |
-| `ocr_language` | `"eng"` | **Medium** | Un mauvais pack de langue produit un résultat OCR inexploitable. La recherche plein texte et l'étiquetage automatique fondés sur le contenu ne fonctionneront pas correctement pour les documents non anglais si le bon pack de langue n'est pas indiqué. |
-| `time_zone` | `"UTC"` | **Low** | Un fuseau horaire incorrect décale de plusieurs heures les dates extraites des noms de fichiers et des métadonnées. Les règles de classement basées sur la date et les tâches planifiées s'exécutent à des moments inattendus. |
-| `admin_email` | `"admin@example.com"` | **Medium** | Le compte administrateur initial est créé avec cette adresse. Indiquez une adresse réelle pour permettre la récupération du mot de passe. |
-| `db_name` | `"paperless"` | **Critical** | Immuable après le déploiement — modifier cette valeur recrée la base de données et détruit toutes les métadonnées des documents, les étiquettes, les correspondants et les règles de classement. |
-| `db_user` | `"paperless"` | **Critical** | Immuable après le déploiement — modifier cette valeur recrée l'utilisateur, invalide les identifiants et rompt la connexion de Paperless-ngx à la base de données. |
-| `stateful_pvc_size` | `"10Gi"` | **Medium** | Si vous utilisez un StatefulSet avec PVC pour le stockage local, 10 Gi peut se remplir rapidement de fichiers de travail OCR temporaires. Surveillez l'utilisation du disque et agrandissez-le au besoin. |
-| `backup_retention_days` | `7` | **Medium** | Insuffisant pour des archives documentaires soumises à des exigences de conformité. Passez à 30–90 jours pour les déploiements de gestion de documents juridiques ou réglementaires. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Des entiers nus sont interprétés comme des octets et empêchent la planification de tous les pods. |
-| `enable_pod_disruption_budget` | `false` | **Medium** | Le PDB est désactivé par défaut. Sans PDB, la maintenance des nœuds peut arrêter tous les pods simultanément, interrompant le traitement OCR en cours et provoquant la remise en file ou la perte de documents dans le pipeline. |
+| `project_id` | *(obligatoire)* | **Critique** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
+| `enable_redis` | `true` | **Critique** | Redis est le broker Celery. Le désactiver arrête tout traitement en arrière-plan. Les documents déposés dans le répertoire d'ingestion sont mis en file d'attente sans avertissement mais jamais traités. L'interface web de Paperless-ngx reste accessible mais n'affiche aucun nouveau document ingéré. |
+| `redis_host` | `""` | **Élevé** | Se résout automatiquement en IP NFS. Si NFS est désactivé et qu'aucun hôte explicite n'est fourni, Celery ne peut pas se connecter à son broker et le pipeline d'ingestion échoue au démarrage. |
+| `enable_nfs` | `true` | **Élevé** | Obligatoire lorsque `redis_host` est vide. Désactiver NFS sans fournir d'hôte Redis explicite fait échouer le démarrage de Celery. |
+| `container_port` | `8000` | **Critique** | Le gunicorn de Paperless-ngx écoute sur 8000. Modifier cette valeur sans changer le port lié par le conteneur fait échouer immédiatement toutes les sondes de santé. |
+| `memory_limit` | `"2Gi"` | **Élevé** | L'OCR Tesseract charge en mémoire les modèles de langue et les miniatures des documents. Un sous-dimensionnement (en dessous de `1Gi`) provoque des arrêts OOM pendant le traitement, en particulier pour les PDF de plusieurs pages ou l'OCR multilingue. |
+| `cpu_limit` | `"2000m"` | **Moyen** | L'OCR est gourmand en CPU. Descendre sous 1 vCPU ralentit fortement l'OCR ; à `500m`, les gros documents peuvent expirer avant la fin de l'OCR. |
+| `timeout_seconds` | `300` | **Moyen** | L'OCR de gros PDF peut prendre plusieurs minutes. Descendre sous 120 secondes amène gunicorn à interrompre les requêtes OCR lentes. |
+| `ocr_language` | `"eng"` | **Moyen** | Un mauvais pack de langue produit un résultat OCR inexploitable. La recherche plein texte et l'étiquetage automatique fondés sur le contenu ne fonctionneront pas correctement pour les documents non anglais si le bon pack de langue n'est pas indiqué. |
+| `time_zone` | `"UTC"` | **Faible** | Un fuseau horaire incorrect décale de plusieurs heures les dates extraites des noms de fichiers et des métadonnées. Les règles de classement basées sur la date et les tâches planifiées s'exécutent à des moments inattendus. |
+| `admin_email` | `"admin@example.com"` | **Moyen** | Le compte administrateur initial est créé avec cette adresse. Indiquez une adresse réelle pour permettre la récupération du mot de passe. |
+| `db_name` | `"paperless"` | **Critique** | Immuable après le déploiement — modifier cette valeur recrée la base de données et détruit toutes les métadonnées des documents, les étiquettes, les correspondants et les règles de classement. |
+| `db_user` | `"paperless"` | **Critique** | Immuable après le déploiement — modifier cette valeur recrée l'utilisateur, invalide les identifiants et rompt la connexion de Paperless-ngx à la base de données. |
+| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Si vous utilisez un StatefulSet avec PVC pour le stockage local, 10 Gi peut se remplir rapidement de fichiers de travail OCR temporaires. Surveillez l'utilisation du disque et agrandissez-le au besoin. |
+| `backup_retention_days` | `7` | **Moyen** | Insuffisant pour des archives documentaires soumises à des exigences de conformité. Passez à 30–90 jours pour les déploiements de gestion de documents juridiques ou réglementaires. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'elles sont définies. Des entiers nus sont interprétés comme des octets et empêchent la planification de tous les pods. |
+| `enable_pod_disruption_budget` | `false` | **Moyen** | Le PDB est désactivé par défaut. Sans PDB, la maintenance des nœuds peut arrêter tous les pods simultanément, interrompant le traitement OCR en cours et provoquant la remise en file ou la perte de documents dans le pipeline. |
 
 <!-- related-guides -->
 

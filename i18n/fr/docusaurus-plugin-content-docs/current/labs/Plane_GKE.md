@@ -175,7 +175,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
 5. **Vérifiez RabbitMQ** — il est obligatoire et son stockage est éphémère (aucun
-   PVC/NFS attaché) ; un redémarrage du pod ou une préemption de nœud fait donc perdre les tâches
+   PVC/NFS attaché) ; un redémarrage du pod ou une préemption de nœud fait donc perdre les jobs
    Celery en file d'attente :
 
    ```bash
@@ -271,7 +271,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   kubectl get deploy,svc -n "$NS" | grep -- '-mq'
   kubectl exec -n "$NS" "$POD" -- env | grep -E 'RABBITMQ_HOST|AMQP_URL'
   ```
-  Comme le stockage de RabbitMQ est éphémère, un redémarrage du pod fait perdre toutes les tâches en file d'attente —
+  Comme le stockage de RabbitMQ est éphémère, un redémarrage du pod fait perdre tous les jobs en file d'attente —
   il s'agit d'une valeur par défaut acceptée, et non d'un bug à corriger localement.
 
 - **Les envois de fichiers échouent (application par ailleurs en bonne santé) :** comportement attendu tant que le stockage

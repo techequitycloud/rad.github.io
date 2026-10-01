@@ -35,7 +35,7 @@ assemble un ensemble ciblé de services Google Cloud :
 | Calcul | Cloud Run v2 | Service Node.js, 2 vCPU / 2 GiB par défaut, mise à l'échelle automatique selon les requêtes |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Twenty ne prend pas en charge MySQL |
 | Stockage d'objets | Cloud Storage | Facultatif ; un bucket dédié lorsque `enable_gcs_storage = true` |
-| Tâches d'arrière-plan | Redis (facultatif) | bull-mq lorsqu'il est activé ; pg-boss (adossé à PostgreSQL) par défaut, sans infrastructure supplémentaire |
+| Jobs d'arrière-plan | Redis (facultatif) | bull-mq lorsqu'il est activé ; pg-boss (adossé à PostgreSQL) par défaut, sans infrastructure supplémentaire |
 | Secrets | Secret Manager | Secret applicatif généré automatiquement (`APP_SECRET` / `ENCRYPTION_KEY`) et mot de passe de la base de données |
 | Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
 
@@ -46,13 +46,13 @@ assemble un ensemble ciblé de services Google Cloud :
   sessions et du cache — sans connexion Redis valide, Twenty ne démarre pas. Lorsque
   `redis_host` est laissé vide, l'IP de la VM NFS de la plateforme est utilisée
   (nécessite `enable_nfs = true` ou un `redis_host` explicite).
-- **pg-boss est la file de tâches lorsque Redis est désactivé.** Il ne nécessite
+- **pg-boss est la file de jobs lorsque Redis est désactivé.** Il ne nécessite
   aucune infrastructure supplémentaire et utilise directement la base PostgreSQL.
 - **Les pièces jointes sont stockées par défaut sur un stockage local éphémère.**
   Activez `enable_gcs_storage` pour un stockage d'objets persistant sur GCS.
 - **Trois jobs d'initialisation s'exécutent avant le démarrage du serveur.**
   `db-init` crée la base de données et l'utilisateur ; `twenty-migrate` exécute les
-  migrations de schéma TypeORM ; `twenty-verify` est une tâche de garde qui fait
+  migrations de schéma TypeORM ; `twenty-verify` est un job de garde qui fait
   échouer l'apply si le schéma `core` ne contient aucune table, signalant
   bruyamment une migration concurrente ou échouée au lieu de livrer un service en
   bonne santé pointant vers une base vide. Les migrations de base de données sont
@@ -134,11 +134,11 @@ GCS via `secret_environment_variables` (`STORAGE_S3_ACCESS_KEY_ID` et
 `STORAGE_S3_SECRET_ACCESS_KEY`). Générez-les dans la console sous Cloud Storage →
 Settings → Interoperability.
 
-### D. Redis (tâches d'arrière-plan) {#d-redis-background-jobs}
+### D. Redis (jobs d'arrière-plan) {#d-redis-background-jobs}
 
 Redis assure le stockage des sessions et du cache de Twenty à partir de la v0.4 et,
 lorsqu'il est activé, fait passer le traitement d'arrière-plan à **bull-mq**. Sans
-Redis, Twenty utilise **pg-boss** (une file de tâches adossée à PostgreSQL) sans
+Redis, Twenty utilise **pg-boss** (une file de jobs adossée à PostgreSQL) sans
 infrastructure supplémentaire. Lorsque `redis_host` est vide et que
 `enable_nfs = true`, l'IP de la VM NFS est utilisée comme hôte Redis.
 
@@ -207,12 +207,12 @@ disponibilité et des règles d'alerte facultatifs.
      sans risque.
   2. `twenty-migrate` — exécute le point d'entrée propre à Twenty
      (`twenty-entrypoint.sh`) avec `DISABLE_DB_MIGRATIONS=false`, ce qui lance les
-     migrations de schéma TypeORM et enregistre les tâches cron d'arrière-plan.
+     migrations de schéma TypeORM et enregistre les jobs cron d'arrière-plan.
      `max_retries = 3`, car l'instance Cloud SQL d'un nouveau tenant peut être encore
-     en cours de stabilisation lorsque cette tâche démarre.
-  3. `twenty-verify` — une tâche de garde (`depends_on_jobs = ["twenty-migrate"]`)
+     en cours de stabilisation lorsque ce job démarre.
+  3. `twenty-verify` — un job de garde (`depends_on_jobs = ["twenty-migrate"]`)
      qui vérifie que le schéma `core` contient bien des tables et **fait échouer
-     l'apply** si ce n'est pas le cas. Elle existe parce qu'un échec de job
+     l'apply** si ce n'est pas le cas. Il existe parce qu'un échec de job
      d'initialisation NE fait PAS échouer à lui seul l'apply du module — sans cette
      garde, un `twenty-migrate` concurrent ou échoué pourrait livrer en silence un
      service apparemment sain pointant vers une base de données VIDE (chaque requête
@@ -225,14 +225,14 @@ disponibilité et des règles d'alerte facultatifs.
   ```
 - **Migrations désactivées au démarrage normal.** Le conteneur principal s'exécute
   avec `DISABLE_DB_MIGRATIONS=true`, de sorte que les migrations ne s'exécutent que
-  via la tâche `twenty-migrate`. Cela réduit le temps de démarrage à froid de
+  via le job `twenty-migrate`. Cela réduit le temps de démarrage à froid de
   plusieurs minutes à quelques secondes lors des démarrages suivants.
-- **Tâches d'arrière-plan.** Lorsque Redis est désactivé (mode pg-boss), les tâches
+- **Jobs d'arrière-plan.** Lorsque Redis est désactivé (mode pg-boss), les jobs
   d'arrière-plan — envoi d'e-mails, livraison de webhooks, synchronisation des
-  données — sont traitées par le service principal. Lorsque Redis est activé (mode
+  données — sont traités par le service principal. Lorsque Redis est activé (mode
   bull-mq), un service worker distinct doit être déployé via `additional_services`,
   pointant vers la même image avec la commande worker.
-  Inspectez les tâches :
+  Inspectez les jobs :
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -291,9 +291,9 @@ avec leur comportement standard.
 | `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance. 2 vCPU recommandés en production. |
 | `memory_limit` | `2Gi` | Mémoire par instance. Passez à `4Gi` pour les jeux de données volumineux. |
-| `min_instance_count` | `0` | Nombre minimal d'instances. Gardez ≥ 1 pour éviter les démarrages à froid sur les charges de travail de webhooks/tâches. |
+| `min_instance_count` | `0` | Nombre minimal d'instances. Gardez ≥ 1 pour éviter les démarrages à froid sur les charges de travail de webhooks/jobs. |
 | `max_instance_count` | `3` | Nombre maximal d'instances. |
-| `cpu_always_allocated` | `false` | Facturation à la requête par défaut : ce service n'exécute que le serveur de Twenty (`node dist/main`) — aucun processus worker n'est déployé et l'enregistrement des cron est désactivé, il n'y a donc aucun travail d'arrière-plan en processus à brider. Définissez `true` uniquement si un worker Twenty ou une autre tâche d'arrière-plan est déployé dans ce conteneur. |
+| `cpu_always_allocated` | `false` | Facturation à la requête par défaut : ce service n'exécute que le serveur de Twenty (`node dist/main`) — aucun processus worker n'est déployé et l'enregistrement des cron est désactivé, il n'y a donc aucun travail d'arrière-plan en processus à brider. Définissez `true` uniquement si un worker Twenty ou un autre job d'arrière-plan est déployé dans ce conteneur. |
 | `container_port` | `3000` | Twenty écoute sur le port 3000. Ne le modifiez pas, sauf si vous utilisez une image personnalisée. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket Unix. |
 | `execution_environment` | `gen2` | Gen2 requis pour le réseau VPC. |
@@ -373,7 +373,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init`, `twenty-migrate` et `twenty-verify`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init`, `twenty-migrate` et `twenty-verify`. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents supplémentaires déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run supplémentaires. Requis pour un worker bull-mq dédié lorsque `enable_redis = true`. |
 
@@ -425,7 +425,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -438,31 +438,31 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SERVER_URL` / `FRONT_BASE_URL` (dans `environment_variables`) | URL publique du déploiement | Critical | Les liens d'API sont incorrects, des erreurs CORS bloquent toutes les requêtes, les invitations par e-mail échouent. À définir avant la première utilisation. |
-| `database_type` | `POSTGRES_15` | Critical | Twenty exige PostgreSQL ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
-| `db_name` / `db_user` | défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_cloudsql_volume` | `true` | Critical | Twenty se connecte via le socket Unix de l'Auth Proxy ; le désactiver supprime le socket et coupe toutes les connexions à la base. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import ; le réactiver sur un déploiement en service écrase les données. |
-| `APP_SECRET` / `ENCRYPTION_KEY` (générés automatiquement) | ne pas faire de rotation manuelle | Critical | La rotation du secret invalide toutes les sessions JWT actives et déconnecte immédiatement tous les utilisateurs. |
-| `enable_redis` | `true` (requis en v0.4+) | High | Sans Redis, Twenty v0.4+ ne démarre pas ; le stockage des sessions et du cache est imposé sur Redis. |
-| `redis_host` | hôte explicite ou `enable_nfs = true` | High | Lorsque `enable_redis = true` et que `redis_host` est vide sans VM NFS, l'URL Redis est vide et Twenty ne parvient pas à se connecter. |
-| `additional_services` (worker) | configuré lors de l'utilisation de Redis | High | Lorsque `enable_redis = true`, bull-mq est actif mais aucun worker ne traite la file ; les tâches d'arrière-plan (e-mail, webhooks) ne s'exécutent jamais. |
-| `enable_gcs_storage` | `true` en production | High | Sans stockage GCS, les pièces jointes sont stockées dans le stockage éphémère du conteneur et perdues lors du déploiement d'une nouvelle révision. |
-| `STORAGE_S3_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | via `secret_environment_variables` | High | Lorsque le stockage GCS est activé, les clés HMAC ne sont pas générées automatiquement ; toutes les opérations sur les fichiers échouent sans elles. |
-| `memory_limit` | `2Gi` | High | En dessous de 1 GiB, le processus Node.js est tué pour OOM sous charge. |
-| `application_version` | version épinglée (p. ex. `0.50.0`) | High | `latest` se résout en une image différente à chaque exécution de Cloud Build, ce qui rend les retours arrière imprévisibles. |
-| `container_port` | `3000` | High | Le serveur de Twenty écoute sur le port 3000 ; toute autre valeur fait échouer définitivement les contrôles de santé. |
-| `startup_probe` | HTTP `/healthz`, délai généreux | High | Une fenêtre trop courte entraîne l'arrêt du service pendant les migrations du premier démarrage (qui prennent 8–10 minutes sur un schéma neuf). |
-| `min_instance_count` | `1` | Medium | `0` ajoute une latence de démarrage à froid et risque de manquer des webhooks entrants pendant la montée en charge de l'instance. |
-| `cpu_always_allocated` | `false` sauf si un worker est déployé | Medium | Définir `true` sans worker/cron s'exécutant dans ce conteneur revient à payer du CPU inactif sans rien à brider ; nécessaire uniquement si un travail d'arrière-plan est ajouté à ce service. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements non publics | Medium | Sinon, l'interface du CRM est accessible publiquement. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | Lorsque Memorystore Redis est utilisé, son IP privée peut nécessiter `ALL_TRAFFIC` pour le routage. |
-| `organization_id` | défini explicitement pour VPC-SC | Medium | Sans lui, le périmètre VPC-SC n'est pas activé — `enable_vpc_sc = true` n'a aucun effet. |
+| `SERVER_URL` / `FRONT_BASE_URL` (dans `environment_variables`) | URL publique du déploiement | Critique | Les liens d'API sont incorrects, des erreurs CORS bloquent toutes les requêtes, les invitations par e-mail échouent. À définir avant la première utilisation. |
+| `database_type` | `POSTGRES_15` | Critique | Twenty exige PostgreSQL ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
+| `db_name` / `db_user` | défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_cloudsql_volume` | `true` | Critique | Twenty se connecte via le socket Unix de l'Auth Proxy ; le désactiver supprime le socket et coupe toutes les connexions à la base. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import ; le réactiver sur un déploiement en service écrase les données. |
+| `APP_SECRET` / `ENCRYPTION_KEY` (générés automatiquement) | ne pas faire de rotation manuelle | Critique | La rotation du secret invalide toutes les sessions JWT actives et déconnecte immédiatement tous les utilisateurs. |
+| `enable_redis` | `true` (requis en v0.4+) | Élevé | Sans Redis, Twenty v0.4+ ne démarre pas ; le stockage des sessions et du cache est imposé sur Redis. |
+| `redis_host` | hôte explicite ou `enable_nfs = true` | Élevé | Lorsque `enable_redis = true` et que `redis_host` est vide sans VM NFS, l'URL Redis est vide et Twenty ne parvient pas à se connecter. |
+| `additional_services` (worker) | configuré lors de l'utilisation de Redis | Élevé | Lorsque `enable_redis = true`, bull-mq est actif mais aucun worker ne traite la file ; les jobs d'arrière-plan (e-mail, webhooks) ne s'exécutent jamais. |
+| `enable_gcs_storage` | `true` en production | Élevé | Sans stockage GCS, les pièces jointes sont stockées dans le stockage éphémère du conteneur et perdues lors du déploiement d'une nouvelle révision. |
+| `STORAGE_S3_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | via `secret_environment_variables` | Élevé | Lorsque le stockage GCS est activé, les clés HMAC ne sont pas générées automatiquement ; toutes les opérations sur les fichiers échouent sans elles. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 1 GiB, le processus Node.js est tué pour OOM sous charge. |
+| `application_version` | version épinglée (p. ex. `0.50.0`) | Élevé | `latest` se résout en une image différente à chaque exécution de Cloud Build, ce qui rend les retours arrière imprévisibles. |
+| `container_port` | `3000` | Élevé | Le serveur de Twenty écoute sur le port 3000 ; toute autre valeur fait échouer définitivement les contrôles de santé. |
+| `startup_probe` | HTTP `/healthz`, délai généreux | Élevé | Une fenêtre trop courte entraîne l'arrêt du service pendant les migrations du premier démarrage (qui prennent 8–10 minutes sur un schéma neuf). |
+| `min_instance_count` | `1` | Moyen | `0` ajoute une latence de démarrage à froid et risque de manquer des webhooks entrants pendant la montée en charge de l'instance. |
+| `cpu_always_allocated` | `false` sauf si un worker est déployé | Moyen | Définir `true` sans worker/cron s'exécutant dans ce conteneur revient à payer du CPU inactif sans rien à brider ; nécessaire uniquement si un travail d'arrière-plan est ajouté à ce service. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements non publics | Moyen | Sinon, l'interface du CRM est accessible publiquement. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Moyen | Lorsque Memorystore Redis est utilisé, son IP privée peut nécessiter `ALL_TRAFFIC` pour le routage. |
+| `organization_id` | défini explicitement pour VPC-SC | Moyen | Sans lui, le périmètre VPC-SC n'est pas activé — `enable_vpc_sc = true` n'a aucun effet. |
 
 ---
 

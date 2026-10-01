@@ -506,28 +506,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un `redis_port`/`backup_retention_days` hors plage, des valeurs `quota_memory_*` données sous forme d'entiers nus. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais le remplacer par un autre chemin sans avoir confirmé le véritable `MEDIA_ROOT` de NetBox | Critical | Un mauvais chemin de montage laisse les téléversements sur le système de fichiers éphémère du pod — relisibles immédiatement, mais silencieusement perdus à chaque redémarrage. Confirmé et corrigé sur ce module précis. |
-| `uid`/`gid` du montage GCS Fuse (définis automatiquement à `0`/`0`) | Faire correspondre à l'UID d'exécution réel du conteneur | Critical | Sur GKE (contrairement à Cloud Run), un montage non fixé appartient par défaut à root ; un processus non root obtiendrait `EACCES` à chaque écriture. Le conteneur de NetBox s'exécute déjà en root ; cette fixation est donc appliquée par précaution. |
-| `SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf pour une restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` (obligatoire) | Critical | Le système de tâches d'arrière-plan et la couche de cache de NetBox ne fonctionnent pas sans Redis. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais NFS désactivé et qu'aucun hôte n'est défini, le traitement en arrière-plan ne s'exécute jamais, sans signalement. |
-| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Les garder distincts (`0` / `1`) | High | Partager une même base Redis logique risque de faire perdre des tâches d'arrière-plan en file lors d'un vidage du cache. |
-| `memory_limit` | `2Gi` | High | Des valeurs inférieures à 1Gi risquent des arrêts pour OOM, surtout avec le worker RQ colocalisé dans le même pod. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le maintenir à 1 garantit que NetBox et le worker RQ sont toujours disponibles. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire pour la connectivité PostgreSQL. |
-| `service_type` / `reserve_static_ip` | Public par défaut ; `ClusterIP`/`false` pour un accès interne uniquement | Medium | Passer en interne uniquement échange l'accessibilité publique contre une moindre consommation du quota d'IP statiques — vérifiez ce qui est réellement nécessaire avant le déploiement. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions d'interface en cours peuvent être routées vers un autre pod en pleine requête. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme. |
-| `enable_pod_disruption_budget` | `true` en production | Medium | Désactivé par défaut ; sans lui, GKE peut évincer tous les pods simultanément pendant la maintenance des nœuds. |
+| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais le remplacer par un autre chemin sans avoir confirmé le véritable `MEDIA_ROOT` de NetBox | Critique | Un mauvais chemin de montage laisse les téléversements sur le système de fichiers éphémère du pod — relisibles immédiatement, mais silencieusement perdus à chaque redémarrage. Confirmé et corrigé sur ce module précis. |
+| `uid`/`gid` du montage GCS Fuse (définis automatiquement à `0`/`0`) | Faire correspondre à l'UID d'exécution réel du conteneur | Critique | Sur GKE (contrairement à Cloud Run), un montage non fixé appartient par défaut à root ; un processus non root obtiendrait `EACCES` à chaque écriture. Le conteneur de NetBox s'exécute déjà en root ; cette fixation est donc appliquée par précaution. |
+| `SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` | `true` (obligatoire) | Critique | Le système de tâches d'arrière-plan et la couche de cache de NetBox ne fonctionnent pas sans Redis. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais NFS désactivé et qu'aucun hôte n'est défini, le traitement en arrière-plan ne s'exécute jamais, sans signalement. |
+| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Les garder distincts (`0` / `1`) | Élevé | Partager une même base Redis logique risque de faire perdre des tâches d'arrière-plan en file lors d'un vidage du cache. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1Gi risquent des arrêts pour OOM, surtout avec le worker RQ colocalisé dans le même pod. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le maintenir à 1 garantit que NetBox et le worker RQ sont toujours disponibles. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire pour la connectivité PostgreSQL. |
+| `service_type` / `reserve_static_ip` | Public par défaut ; `ClusterIP`/`false` pour un accès interne uniquement | Moyen | Passer en interne uniquement échange l'accessibilité publique contre une moindre consommation du quota d'IP statiques — vérifiez ce qui est réellement nécessaire avant le déploiement. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions d'interface en cours peuvent être routées vers un autre pod en pleine requête. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme. |
+| `enable_pod_disruption_budget` | `true` en production | Moyen | Désactivé par défaut ; sans lui, GKE peut évincer tous les pods simultanément pendant la maintenance des nœuds. |
 
 ---
 

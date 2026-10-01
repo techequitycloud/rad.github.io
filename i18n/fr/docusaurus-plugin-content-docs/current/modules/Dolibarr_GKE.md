@@ -328,26 +328,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en parallèle d'un paramètre sans état, IAP sans identité autorisée, des `quota_memory_*` fournis en entiers nus, un `container_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `DOLI_INSTANCE_UNIQUE_ID` (généré automatiquement) | Ne jamais le modifier | Critical | Modifier le sel après le premier démarrage invalide les jetons signés et les URL cron. |
-| `enable_nfs` | `true` | High | Le désactiver rend les documents/PDF téléversés éphémères — perdus lors de la recréation du pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base sur GKE. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans avoir vérifié le comportement du stockage partagé et des verrous expose à des sessions scindées et à de la contention de verrous NFS/base. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes rebondissent entre les pods et perturbent les sessions authentifiées. |
-| `DOLI_URL_ROOT` (défini une fois l'IP connue) | URL du LoadBalancer externe/du domaine | High | Une URL racine erronée ou absente casse les liens absolus et la redirection de connexion. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `DOLI_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer avant la première connexion | Medium | Sans lui, vous ne pouvez pas accéder au premier compte super-administrateur tant qu'il n'est pas réinitialisé via la base. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `DOLI_URL_ROOT`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `DOLI_INSTANCE_UNIQUE_ID` (généré automatiquement) | Ne jamais le modifier | Critique | Modifier le sel après le premier démarrage invalide les jetons signés et les URL cron. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend les documents/PDF téléversés éphémères — perdus lors de la recréation du pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base sur GKE. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans avoir vérifié le comportement du stockage partagé et des verrous expose à des sessions scindées et à de la contention de verrous NFS/base. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes rebondissent entre les pods et perturbent les sessions authentifiées. |
+| `DOLI_URL_ROOT` (défini une fois l'IP connue) | URL du LoadBalancer externe/du domaine | Élevé | Une URL racine erronée ou absente casse les liens absolus et la redirection de connexion. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `DOLI_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer avant la première connexion | Moyen | Sans lui, vous ne pouvez pas accéder au premier compte super-administrateur tant qu'il n'est pas réinitialisé via la base. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `DOLI_URL_ROOT`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

@@ -29,7 +29,7 @@ guide de la plateforme ([Supabase_GKE](Supabase_GKE.md)) et les guides du socle
 | Identifiants JWT | Génère et stocke dans **Secret Manager** le secret de signature JWT, l'anon key, la service role key, la publishable key, la secret key et le secret_key_base | À récupérer via Secret Manager ; les valeurs provisoires doivent être remplacées après le déploiement |
 | Image de conteneur | Fige l'image de la **passerelle d'API Kong** et la configuration Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **PostgreSQL 15** comme seul moteur pris en charge (`Supabase_GKE` l'exécute dans l'espace de noms, pas sur Cloud SQL) | §Base de données dans le guide de la plateforme |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui définit les mots de passe des rôles de service Supabase et crée les schémas et droits Supabase | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement qui définit les mots de passe des rôles de service Supabase et crée les schémas et droits Supabase | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` (`name_suffix = "storage"`) | Sortie `storage_buckets` |
 | Configuration de Kong | Définit l'environnement Kong de référence (mode DB-less, chemin de la configuration déclarative, ports de routage, paramètres des tampons du proxy) | Comportement de l'application dans le guide de la plateforme |
 | Contrôles de santé | Déclare les valeurs par défaut des variables `startup_probe`/`liveness_probe` (HTTP `/health`) — qui ne correspondent pas à ce qui est réellement déployé ; `Supabase_GKE` remplace les deux par des sondes TCP | §5 ci-dessous et §Observabilité dans le guide de la plateforme |
@@ -88,7 +88,7 @@ données n'est prise en charge. La configuration Common déclare
 socle et exécute à la place l'image `supabase/postgres` comme service dans l'espace de
 noms — il n'y a donc ni instance Cloud SQL ni Auth Proxy dans un Supabase déployé.
 
-Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à ce Postgres
+Lors du premier déploiement, un job ponctuel `db-init` se connecte à ce Postgres
 de l'espace de noms en tant que `supabase_admin` et, de manière idempotente :
 
 1. définit des mots de passe LOGIN sur les rôles de service que l'image
@@ -100,8 +100,8 @@ de l'espace de noms en tant que `supabase_admin` et, de manière idempotente :
 3. définit au niveau de la base de données les GUC `app.settings.jwt_secret` /
    `jwt_exp` utilisés par RLS.
 
-La tâche utilise l'image `mirror.gcr.io/library/postgres:15-alpine` (pour `psql`) et
-exécute `scripts/db-init.sh`. Elle peut être relancée sans risque. Inspectez
+Le job utilise l'image `mirror.gcr.io/library/postgres:15-alpine` (pour `psql`) et
+exécute `scripts/db-init.sh`. Il peut être relancé sans risque. Inspectez
 directement la base de données :
 
 ```bash

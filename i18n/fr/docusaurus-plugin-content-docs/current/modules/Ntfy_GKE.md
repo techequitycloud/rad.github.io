@@ -168,7 +168,7 @@ d'écoute et le chemin de cache résolu au démarrage.
 
 - **Aucune configuration de base de données au premier déploiement.** ntfy n'a ni base de données externe ni
   étape de migration. Le point d'entrée prépare le répertoire du cache SQLite et lance immédiatement
-  `ntfy serve` via exec. Il n'y a pas de tâche `db-init` par défaut.
+  `ntfy serve` via exec. Il n'y a pas de job `db-init` par défaut.
 - **La persistance dépend du type de charge de travail.** Un `Deployment` sans état utilise un
   cache éphémère ; un `StatefulSet` avec un PVC en mode bloc (ou un montage NFS) rend l'historique
   des messages durable entre les redémarrages de pods.
@@ -330,7 +330,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des éventuelles tâches de configuration et d'import (aucune par défaut). |
+| `initialization_jobs` / `db_import_job` | Noms des éventuels jobs de configuration et d'import (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -344,25 +344,25 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait transiter sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identifiants OAuth, `enable_cloudsql_volume = true` avec `database_type = "NONE"`, `min_instance_count > max_instance_count`, `quota_memory_*` sans unités binaires. Le `validation.tf` propre à la variante GKE applique ces garde-fous. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` / `enable_nfs` (pour un historique durable) | Activer l'un des deux lorsque l'historique compte | High | Avec le Deployment sans état et le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage de pod. |
-| `stateful_pvc_mount_path` | `/var/cache/ntfy` | High | Monter le PVC ailleurs que dans le répertoire de `NTFY_CACHE_FILE` rend persistant le mauvais chemin, et le cache reste éphémère. |
-| `max_instance_count` | `1` | High | Monter au-delà de 1 répartit les abonnés entre plusieurs pods sans bus partagé : un message publié sur un pod n'est pas distribué aux abonnés d'un autre. |
-| `enable_cloudsql_volume` | `false` | High | La valeur `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à atteindre — rejeté par le garde-fou au moment du plan. |
-| `session_affinity` | `ClientIP` si vous augmentez le nombre de réplicas | High | Sans affinité, un abonné qui se reconnecte atterrit sur un autre pod et manque les messages en cache détenus par le pod d'origine. |
-| `enable_iap` | uniquement si un accès authentifié est voulu | High | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour détenir les flux. |
-| `NTFY_BASE_URL` | URL externe réelle | Medium | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
-| Contrôle d'accès ntfy | À configurer après le déploiement | Medium | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une IP publique et s'y abonner. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `application_version` | Épingler `v2.x.y` en production | Low | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `stateful_pvc_enabled` / `enable_nfs` (pour un historique durable) | Activer l'un des deux lorsque l'historique compte | Élevé | Avec le Deployment sans état et le cache éphémère par défaut, tout l'historique des messages est perdu à chaque redémarrage de pod. |
+| `stateful_pvc_mount_path` | `/var/cache/ntfy` | Élevé | Monter le PVC ailleurs que dans le répertoire de `NTFY_CACHE_FILE` rend persistant le mauvais chemin, et le cache reste éphémère. |
+| `max_instance_count` | `1` | Élevé | Monter au-delà de 1 répartit les abonnés entre plusieurs pods sans bus partagé : un message publié sur un pod n'est pas distribué aux abonnés d'un autre. |
+| `enable_cloudsql_volume` | `false` | Élevé | La valeur `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à atteindre — rejeté par le garde-fou au moment du plan. |
+| `session_affinity` | `ClientIP` si vous augmentez le nombre de réplicas | Élevé | Sans affinité, un abonné qui se reconnecte atterrit sur un autre pod et manque les messages en cache détenus par le pod d'origine. |
+| `enable_iap` | uniquement si un accès authentifié est voulu | Élevé | IAP impose une connexion Google pour chaque requête, bloquant les publications/abonnements non authentifiés. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; le garde-fou de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour détenir les flux. |
+| `NTFY_BASE_URL` | URL externe réelle | Moyen | Si elle n'est pas définie, les liens des pièces jointes et du web push pointent vers le mauvais hôte. |
+| Contrôle d'accès ntfy | À configurer après le déploiement | Moyen | Laissé par défaut, n'importe quel client peut publier sur n'importe quel sujet d'une IP publique et s'y abonner. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `application_version` | Épingler `v2.x.y` en production | Faible | `latest` correspond à une base épinglée (`v2.11.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
 
 ---
 

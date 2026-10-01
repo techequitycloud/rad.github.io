@@ -193,8 +193,8 @@ permanence.
   `kopia repository connect gcs --bucket=... --prefix=repository/`, avec repli sur
   `kopia repository create gcs ...` si le dépôt n'existe pas encore. Cette logique
   idempotente remplace entièrement ce que ferait sinon le job d'initialisation
-  d'une application à base de données — il n'existe pas de tâche de
-  migration/initialisation distincte pour Kopia.
+  d'une application à base de données — il n'existe pas de job de
+  migration/initialisation distinct pour Kopia.
 - **Utilisateur stocké dans le dépôt + ACL, provisionnés à chaque démarrage.**
   `kopia server users
   add/set "${ADMIN_USERNAME}@kopia" --user-password="${REPO_PASSWORD}"` suivi de
@@ -271,7 +271,7 @@ groupe.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `cpu_limit` | `1000m` | Les envois et restaurations de snapshots sont limités par le CPU (compression, chiffrement, hachage) — augmentez pour des tâches de sauvegarde volumineuses ou fréquentes. |
+| `cpu_limit` | `1000m` | Les envois et restaurations de snapshots sont limités par le CPU (compression, chiffrement, hachage) — augmentez pour des jobs de sauvegarde volumineux ou fréquents. |
 | `memory_limit` | `1Gi` | L'empreinte propre de Kopia est modeste ; une marge supplémentaire profite au cache de contenu sur les dépôts comportant de nombreux snapshots ou des snapshots volumineux. |
 | `min_instance_count` | `0` | La mise à zéro est sans risque — le dépôt réside dans Cloud Storage. |
 | `max_instance_count` | `1` | Gardez `1` — la maintenance du dépôt de Kopia suppose qu'un seul serveur en est propriétaire. |
@@ -384,8 +384,8 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -396,15 +396,15 @@ moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécu
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `REPO_PASSWORD` (Secret Manager) | Ne jamais le renouveler manuellement après le premier déploiement | **Critical** | Il n'existe aucun moyen pris en charge de rechiffrer un dépôt actif — renouveler ce secret indépendamment du contenu réel du dépôt GCS rend définitivement orphelins tous les snapshots existants. |
-| Mot de passe de l'utilisateur du dépôt | Connecter les clients avec `--password=<REPO_PASSWORD>`, jamais `<ADMIN_PASSWORD>` | **Critical** | `kopia repository connect server` n'a pas d'option distincte pour le mot de passe de l'utilisateur serveur — son unique saisie de mot de passe EST l'identifiant de la session gRPC, vérifié par rapport au mot de passe de l'utilisateur stocké dans le dépôt. Utiliser `ADMIN_PASSWORD` fait échouer chaque session avec `PermissionDenied`. |
-| `max_instance_count` | `1` | **Critical** | La maintenance du dépôt propre à Kopia (GC/compactage) suppose qu'un seul serveur en est propriétaire ; un second serveur concurrent fait s'affronter des exécutions de maintenance sur le même dépôt. |
-| Sondes de santé | Les laisser en TCP (valeur par défaut du module) | **High** | Chaque point de terminaison de Kopia exige une authentification — une sonde sur un chemin HTTP renvoie toujours 401, et le pod ne devient jamais Ready alors que le serveur a bien démarré. |
-| URL/port de connexion du client | Port explicite, confirmé via `kubectl get svc` | **High** | `service_port` n'est pas exposé par ce module et vaut `80` par défaut, et non le port réel de Kopia, `51515`. Un simple `https://<ip>` implique le port 443 (non ouvert) et échoue silencieusement à se connecter. |
-| `uptime_check_config` | Laisser `enabled = false` (valeur par défaut du module) | **Medium** | S'il est activé, il effectue une vérification HTTP sur un point de terminaison protégé par authentification et échoue en permanence, générant de fausses alertes. |
-| `stateful_pvc_enabled` | Laisser `false`/non défini (valeur par défaut du module) | **Low** | Disponible, mais la seule chose qui y résiderait est le minuscule certificat TLS persisté — aucun avantage en IOPS ou en verrouillage par rapport au montage GCS FUSE par défaut. |
-| `enable_iap` | Uniquement pour l'interface Web et l'API de contrôle, pas pour le point de terminaison de connexion des clients | **Medium** | IAP est orienté authentification navigateur/HTTP ; il ne protège pas (et ne peut pas protéger utilement) la session de snapshot gRPC brute. |
-| Certificat TLS | Ne jamais supprimer `/var/lib/kopia/tls/*` en dehors du module | **High** | Chaque client distant déjà connecté a épinglé l'ancienne empreinte via `--server-cert-fingerprint=` ; un certificat régénéré casse tous les clients existants jusqu'à ce qu'ils réépinglent la nouvelle. |
+| `REPO_PASSWORD` (Secret Manager) | Ne jamais le renouveler manuellement après le premier déploiement | **Critique** | Il n'existe aucun moyen pris en charge de rechiffrer un dépôt actif — renouveler ce secret indépendamment du contenu réel du dépôt GCS rend définitivement orphelins tous les snapshots existants. |
+| Mot de passe de l'utilisateur du dépôt | Connecter les clients avec `--password=<REPO_PASSWORD>`, jamais `<ADMIN_PASSWORD>` | **Critique** | `kopia repository connect server` n'a pas d'option distincte pour le mot de passe de l'utilisateur serveur — son unique saisie de mot de passe EST l'identifiant de la session gRPC, vérifié par rapport au mot de passe de l'utilisateur stocké dans le dépôt. Utiliser `ADMIN_PASSWORD` fait échouer chaque session avec `PermissionDenied`. |
+| `max_instance_count` | `1` | **Critique** | La maintenance du dépôt propre à Kopia (GC/compactage) suppose qu'un seul serveur en est propriétaire ; un second serveur concurrent fait s'affronter des exécutions de maintenance sur le même dépôt. |
+| Sondes de santé | Les laisser en TCP (valeur par défaut du module) | **Élevé** | Chaque point de terminaison de Kopia exige une authentification — une sonde sur un chemin HTTP renvoie toujours 401, et le pod ne devient jamais Ready alors que le serveur a bien démarré. |
+| URL/port de connexion du client | Port explicite, confirmé via `kubectl get svc` | **Élevé** | `service_port` n'est pas exposé par ce module et vaut `80` par défaut, et non le port réel de Kopia, `51515`. Un simple `https://<ip>` implique le port 443 (non ouvert) et échoue silencieusement à se connecter. |
+| `uptime_check_config` | Laisser `enabled = false` (valeur par défaut du module) | **Moyen** | S'il est activé, il effectue une vérification HTTP sur un point de terminaison protégé par authentification et échoue en permanence, générant de fausses alertes. |
+| `stateful_pvc_enabled` | Laisser `false`/non défini (valeur par défaut du module) | **Faible** | Disponible, mais la seule chose qui y résiderait est le minuscule certificat TLS persisté — aucun avantage en IOPS ou en verrouillage par rapport au montage GCS FUSE par défaut. |
+| `enable_iap` | Uniquement pour l'interface Web et l'API de contrôle, pas pour le point de terminaison de connexion des clients | **Moyen** | IAP est orienté authentification navigateur/HTTP ; il ne protège pas (et ne peut pas protéger utilement) la session de snapshot gRPC brute. |
+| Certificat TLS | Ne jamais supprimer `/var/lib/kopia/tls/*` en dehors du module | **Élevé** | Chaque client distant déjà connecté a épinglé l'ancienne empreinte via `--server-cert-fingerprint=` ; un certificat régénéré casse tous les clients existants jusqu'à ce qu'ils réépinglent la nouvelle. |
 
 ---
 

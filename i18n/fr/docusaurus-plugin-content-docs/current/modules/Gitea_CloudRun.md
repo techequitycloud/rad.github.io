@@ -313,25 +313,25 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Le module câble `GITEA__database__DB_TYPE=postgres` ; un autre moteur casse le démarrage. |
-| `db_name` / `db_user` | définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend orphelines toutes les données de la forge. |
-| `enable_nfs` | `true` | Critical | Sans le partage NFS, les dépôts/LFS/pièces jointes résident sur un disque éphémère et disparaissent au redémarrage ou lors d'une mise à l'échelle jusqu'à zéro. |
-| `container_image_source` | `custom` | Critical | L'image standard n'a pas de point d'entrée de plateforme ; Gitea tente de joindre un hôte littéralement nommé `$(DB_HOST)` et ne démarre jamais. |
-| `container_port` | `3000` | Critical | Un port différent du port HTTP de Gitea fait échouer toutes les sondes. |
-| Paramètres de base de données via l'environnement | ne jamais coder `gitea` en dur | Critical | Les vrais `DB_USER`/`DB_NAME` sont préfixés par le tenant ; les coder en dur échoue avec `password authentication failed`. |
-| `GITEA__service__DISABLE_REGISTRATION` | `true` après le premier administrateur | High | Laissée ouverte, n'importe qui trouvant l'URL peut s'inscrire sur votre forge (le tout premier inscrit est administrateur — revendiquez ce compte immédiatement). |
-| `public_domain` / `public_url` | hôte réel | High | Les valeurs par défaut (`localhost`) produisent des URL de clonage et des redirections cassées dans l'interface. |
-| `execution_environment` | `gen2` | High | Les montages NFS exigent gen2. |
-| `enable_cloudsql_volume` | `false` (TCP) | High | En mode socket, le point d'entrée s'adapte — mais des surcharges manuelles incohérentes de `GITEA__database__HOST` cassent la sélection du mode SSL. |
-| `cpu_always_allocated` | `false`, ou `true` pour les miroirs/le cron | Medium | La facturation à la requête bride le travail en arrière-plan ; la synchronisation planifiée des miroirs et les webhooks temporisés sont bloqués pendant l'inactivité. |
-| `min_instance_count` | `0` (ou `1` pour les équipes) | Medium | La mise à l'échelle jusqu'à zéro ajoute un démarrage à froid à la première opération `git` après une période d'inactivité. |
-| `uptime_check_config` | à activer en production | Medium | Désactivé par défaut ; aucun signal de disponibilité externe. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
+| `database_type` | `POSTGRES_15` | Critique | Le module câble `GITEA__database__DB_TYPE=postgres` ; un autre moteur casse le démarrage. |
+| `db_name` / `db_user` | définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend orphelines toutes les données de la forge. |
+| `enable_nfs` | `true` | Critique | Sans le partage NFS, les dépôts/LFS/pièces jointes résident sur un disque éphémère et disparaissent au redémarrage ou lors d'une mise à l'échelle jusqu'à zéro. |
+| `container_image_source` | `custom` | Critique | L'image standard n'a pas de point d'entrée de plateforme ; Gitea tente de joindre un hôte littéralement nommé `$(DB_HOST)` et ne démarre jamais. |
+| `container_port` | `3000` | Critique | Un port différent du port HTTP de Gitea fait échouer toutes les sondes. |
+| Paramètres de base de données via l'environnement | ne jamais coder `gitea` en dur | Critique | Les vrais `DB_USER`/`DB_NAME` sont préfixés par le tenant ; les coder en dur échoue avec `password authentication failed`. |
+| `GITEA__service__DISABLE_REGISTRATION` | `true` après le premier administrateur | Élevé | Laissée ouverte, n'importe qui trouvant l'URL peut s'inscrire sur votre forge (le tout premier inscrit est administrateur — revendiquez ce compte immédiatement). |
+| `public_domain` / `public_url` | hôte réel | Élevé | Les valeurs par défaut (`localhost`) produisent des URL de clonage et des redirections cassées dans l'interface. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS exigent gen2. |
+| `enable_cloudsql_volume` | `false` (TCP) | Élevé | En mode socket, le point d'entrée s'adapte — mais des surcharges manuelles incohérentes de `GITEA__database__HOST` cassent la sélection du mode SSL. |
+| `cpu_always_allocated` | `false`, ou `true` pour les miroirs/le cron | Moyen | La facturation à la requête bride le travail en arrière-plan ; la synchronisation planifiée des miroirs et les webhooks temporisés sont bloqués pendant l'inactivité. |
+| `min_instance_count` | `0` (ou `1` pour les équipes) | Moyen | La mise à l'échelle jusqu'à zéro ajoute un démarrage à froid à la première opération `git` après une période d'inactivité. |
+| `uptime_check_config` | à activer en production | Moyen | Désactivé par défaut ; aucun signal de disponibilité externe. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
 
 ---
 

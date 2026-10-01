@@ -396,26 +396,26 @@ défaut (contrairement aux modules de type Activepieces/BookStack).
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` / `min_instance_count` | `1` / `1` | Critical | Dépasser 1 donne à deux instances une unique base de données SQLite accessible en écriture et montée via gcsfuse — risque de corruption et de contention de verrous, pire qu'avec un PVC bloc, car le modèle de cohérence de gcsfuse est plus faible. |
-| `execution_environment` | `gen2` | Critical | `gen1` ne peut pas monter de volumes GCS FUSE — tout le répertoire de données `/photoprism` (base, médias) ne parvient pas à s'attacher et l'application ne peut pas démarrer. |
-| `database_type` | `NONE` | Medium | Contrairement à `PhotoPrism_GKE` (qui code `NONE` en dur), ce module transmet toujours la variable au socle. La définir sur `MYSQL`/`POSTGRES` provisionne une véritable instance Cloud SQL facturée que `PhotoPrism_Common` ne raccorde jamais à l'application (aucune variable `DB_HOST`/`DB_USER` n'est consommée) — un coût inutile sans aucun bénéfice fonctionnel. |
-| `enable_redis` | Forcé à `false` dans `main.tf` | Low | Aucune action requise — le forçage est intentionnel et ne peut pas être contourné en définissant la variable sur `true`. |
-| `enable_cloudsql_volume` | `false` (par défaut et codé en dur) | Low | Ne peut pas être activé, même en définissant la variable — à titre informatif uniquement. |
-| `memory_limit` | `2Gi` par défaut — à augmenter pour de vraies bibliothèques | High | La valeur de base de `PhotoPrism_Common` est `4Gi` pour les charges d'indexation et de reconnaissance faciale ; 2Gi est le plancher qui maintient ces fonctionnalités actives, mais peut tout de même entraîner des arrêts OOM dès qu'une bibliothèque contient un volume significatif de photos/vidéos. |
-| `PHOTOPRISM_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous bloque hors du premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
-| `site_url` | À définir sur l'URL Cloud Run déployée dès qu'elle est connue | Medium | Laissée vide, PhotoPrism se rabat sur l'hôte de la requête ; les liens absolus et les URL des miniatures peuvent être erronés derrière un équilibreur de charge ou un domaine personnalisé. |
-| `ingress_settings` | `all` pour un accès direct à l'interface web | Medium | La valeur `internal` bloque l'accès à l'interface depuis le navigateur, sauf via un client connecté au VPC ou un équilibreur de charge interne. |
-| `backup_format` | Un format d'archive de fichiers (`tar`, `zip`, …), pas `sql` | Medium | PhotoPrism n'a pas de base de données SQL — un `backup_uri` pointant vers un dump de base de données n'a aucun sens pour cette application ; les sauvegardes doivent cibler le contenu du bucket de médias/bibliothèque. |
-| `enable_nfs` | `false` | Low | Valeur par défaut correcte — PhotoPrism n'a pas besoin de NFS, puisque le volume GCS FUSE est son stockage principal ; l'activer ajoute un coût sans bénéfice, sauf si des jobs personnalisés ont besoin d'un accès à un système de fichiers partagé. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface web publique et la connexion administrateur sont accessibles sans protection WAF par défaut. |
+| `max_instance_count` / `min_instance_count` | `1` / `1` | Critique | Dépasser 1 donne à deux instances une unique base de données SQLite accessible en écriture et montée via gcsfuse — risque de corruption et de contention de verrous, pire qu'avec un PVC bloc, car le modèle de cohérence de gcsfuse est plus faible. |
+| `execution_environment` | `gen2` | Critique | `gen1` ne peut pas monter de volumes GCS FUSE — tout le répertoire de données `/photoprism` (base, médias) ne parvient pas à s'attacher et l'application ne peut pas démarrer. |
+| `database_type` | `NONE` | Moyen | Contrairement à `PhotoPrism_GKE` (qui code `NONE` en dur), ce module transmet toujours la variable au socle. La définir sur `MYSQL`/`POSTGRES` provisionne une véritable instance Cloud SQL facturée que `PhotoPrism_Common` ne raccorde jamais à l'application (aucune variable `DB_HOST`/`DB_USER` n'est consommée) — un coût inutile sans aucun bénéfice fonctionnel. |
+| `enable_redis` | Forcé à `false` dans `main.tf` | Faible | Aucune action requise — le forçage est intentionnel et ne peut pas être contourné en définissant la variable sur `true`. |
+| `enable_cloudsql_volume` | `false` (par défaut et codé en dur) | Faible | Ne peut pas être activé, même en définissant la variable — à titre informatif uniquement. |
+| `memory_limit` | `2Gi` par défaut — à augmenter pour de vraies bibliothèques | Élevé | La valeur de base de `PhotoPrism_Common` est `4Gi` pour les charges d'indexation et de reconnaissance faciale ; 2Gi est le plancher qui maintient ces fonctionnalités actives, mais peut tout de même entraîner des arrêts OOM dès qu'une bibliothèque contient un volume significatif de photos/vidéos. |
+| `PHOTOPRISM_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Ne pas le connaître vous bloque hors du premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
+| `site_url` | À définir sur l'URL Cloud Run déployée dès qu'elle est connue | Moyen | Laissée vide, PhotoPrism se rabat sur l'hôte de la requête ; les liens absolus et les URL des miniatures peuvent être erronés derrière un équilibreur de charge ou un domaine personnalisé. |
+| `ingress_settings` | `all` pour un accès direct à l'interface web | Moyen | La valeur `internal` bloque l'accès à l'interface depuis le navigateur, sauf via un client connecté au VPC ou un équilibreur de charge interne. |
+| `backup_format` | Un format d'archive de fichiers (`tar`, `zip`, …), pas `sql` | Moyen | PhotoPrism n'a pas de base de données SQL — un `backup_uri` pointant vers un dump de base de données n'a aucun sens pour cette application ; les sauvegardes doivent cibler le contenu du bucket de médias/bibliothèque. |
+| `enable_nfs` | `false` | Faible | Valeur par défaut correcte — PhotoPrism n'a pas besoin de NFS, puisque le volume GCS FUSE est son stockage principal ; l'activer ajoute un coût sans bénéfice, sauf si des jobs personnalisés ont besoin d'un accès à un système de fichiers partagé. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface web publique et la connexion administrateur sont accessibles sans protection WAF par défaut. |
 
 ---
 

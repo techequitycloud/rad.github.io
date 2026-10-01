@@ -343,8 +343,8 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par
 > le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs et
@@ -353,13 +353,13 @@ les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_17` | Critical | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
-| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critical | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` | High | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro instance, ou avec une facturation à la requête qui bride le CPU, les escalades d'alertes réelles peuvent être retardées, voire totalement manquées, sans aucun signal. |
-| `public_url` | Laissez `""` (calculée automatiquement) ou définissez l'URL externe réelle | High | Une `GOALERT_PUBLIC_URL` incorrecte casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants (retour à la valeur propre à GoAlert, `http://localhost:8081`, si elle n'est réellement pas définie en aval). |
-| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Medium | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
-| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Medium | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only` ; dépasser 1 sans ce câblage supplémentaire revient donc simplement à exécuter plusieurs instances complètes du moteur. |
-| `db_password_env_var_name` | Laissez tel quel ou videz-la (`""`) | Low | La valeur par défaut `LISTMONK_db__password` est un résidu inerte du modèle d'un autre module — sans danger, mais déroutant si vous la cherchez dans la configuration réelle de GoAlert. |
+| `database_type` | `POSTGRES_17` | Critique | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
+| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critique | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` | Élevé | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro instance, ou avec une facturation à la requête qui bride le CPU, les escalades d'alertes réelles peuvent être retardées, voire totalement manquées, sans aucun signal. |
+| `public_url` | Laissez `""` (calculée automatiquement) ou définissez l'URL externe réelle | Élevé | Une `GOALERT_PUBLIC_URL` incorrecte casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants (retour à la valeur propre à GoAlert, `http://localhost:8081`, si elle n'est réellement pas définie en aval). |
+| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Moyen | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
+| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Moyen | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only` ; dépasser 1 sans ce câblage supplémentaire revient donc simplement à exécuter plusieurs instances complètes du moteur. |
+| `db_password_env_var_name` | Laissez tel quel ou videz-la (`""`) | Faible | La valeur par défaut `LISTMONK_db__password` est un résidu inerte du modèle d'un autre module — sans danger, mais déroutant si vous la cherchez dans la configuration réelle de GoAlert. |
 
 ---
 

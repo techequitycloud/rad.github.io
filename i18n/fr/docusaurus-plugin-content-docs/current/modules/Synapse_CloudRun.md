@@ -416,27 +416,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `server_name` (fixé à `matrix.local`) | Non exposé comme entrée de `Synapse_CloudRun` | Critical | Une véritable fédération et des identifiants utilisateur durables nécessitent un domaine personnalisé ; ce module n'a pas de variable `server_name`, si bien qu'un usage en production impose actuellement de surcharger directement `Synapse_Common`. Modifier la valeur sous-jacente après le premier démarrage invalide chaque identifiant utilisateur, chaque session d'appareil et chaque relation de fédération. |
-| Persistance de la clé de signature (`enable_nfs`) | `true` | Critical | Si le répertoire de données n'est pas persistant, un redémarrage régénère la clé de signature, ce qui casse la fédération et invalide toutes les sessions des appareils. |
-| Collation de la base de données (`db-init`) | `C` (automatique) | Critical | Synapse refuse de démarrer avec toute collation autre que `C` ; ne contournez pas le job `db-init`. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `min_instance_count` | `1` | High | La mise à zéro laisse froid un homeserver fédéré — il manque le trafic de fédération entrant et les tâches en arrière-plan sont bloquées. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête réduit le CPU à ~0 entre les requêtes, ce qui bloque la rétention en arrière-plan et les nouvelles tentatives de fédération. |
-| `memory_limit` | `4Gi` (≥ 2 GiB) | High | En dessous de 2 GiB, Synapse manque de mémoire (OOM) sous une charge réelle de salons et de fédération. |
-| `ingress_settings` | `all` | High | `internal` bloque les clients Matrix et toute la fédération. |
-| `enable_iap` | uniquement pour les serveurs privés | High | IAP bloque la fédération et les clients externes ; à réserver aux déploiements d'administration. |
-| `container_port` | `8008` | High | Synapse écoute sur 8008 ; un port incohérent fait viser à la sonde un port mort, et la révision ne devient jamais Ready. |
-| Chemin de sonde | `/` (par défaut) ou `/health` | High | Pointer `startup_probe`/`liveness_probe` vers un chemin d'API Matrix authentifié renvoie 401/403, et la révision ne devient jamais Ready. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `enable_cdn` | à activer pour les serveurs riches en médias | Medium | Les téléchargements de médias sont servis directement par l'instance, sans délestage vers un CDN. |
+| `server_name` (fixé à `matrix.local`) | Non exposé comme entrée de `Synapse_CloudRun` | Critique | Une véritable fédération et des identifiants utilisateur durables nécessitent un domaine personnalisé ; ce module n'a pas de variable `server_name`, si bien qu'un usage en production impose actuellement de surcharger directement `Synapse_Common`. Modifier la valeur sous-jacente après le premier démarrage invalide chaque identifiant utilisateur, chaque session d'appareil et chaque relation de fédération. |
+| Persistance de la clé de signature (`enable_nfs`) | `true` | Critique | Si le répertoire de données n'est pas persistant, un redémarrage régénère la clé de signature, ce qui casse la fédération et invalide toutes les sessions des appareils. |
+| Collation de la base de données (`db-init`) | `C` (automatique) | Critique | Synapse refuse de démarrer avec toute collation autre que `C` ; ne contournez pas le job `db-init`. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `min_instance_count` | `1` | Élevé | La mise à zéro laisse froid un homeserver fédéré — il manque le trafic de fédération entrant et les tâches en arrière-plan sont bloquées. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête réduit le CPU à ~0 entre les requêtes, ce qui bloque la rétention en arrière-plan et les nouvelles tentatives de fédération. |
+| `memory_limit` | `4Gi` (≥ 2 GiB) | Élevé | En dessous de 2 GiB, Synapse manque de mémoire (OOM) sous une charge réelle de salons et de fédération. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque les clients Matrix et toute la fédération. |
+| `enable_iap` | uniquement pour les serveurs privés | Élevé | IAP bloque la fédération et les clients externes ; à réserver aux déploiements d'administration. |
+| `container_port` | `8008` | Élevé | Synapse écoute sur 8008 ; un port incohérent fait viser à la sonde un port mort, et la révision ne devient jamais Ready. |
+| Chemin de sonde | `/` (par défaut) ou `/health` | Élevé | Pointer `startup_probe`/`liveness_probe` vers un chemin d'API Matrix authentifié renvoie 401/403, et la révision ne devient jamais Ready. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `enable_cdn` | à activer pour les serveurs riches en médias | Moyen | Les téléchargements de médias sont servis directement par l'instance, sans délestage vers un CDN. |
 
 ---
 

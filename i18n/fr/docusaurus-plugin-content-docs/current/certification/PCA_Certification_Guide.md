@@ -102,7 +102,7 @@ Le cœur de l'examen PCA : choisir des architectures qui satisfont les exigences
 | 1.4 Élaboration d'un plan de migration | 📘 | le plus proche : les jobs d'import de données `enable_backup_import` | [Guide de la section 1](PCA_Section_1_Exploration_Guide.md#14-creating-a-migration-plan) |
 | 1.5 Anticipation des améliorations futures de la solution | 📘 | le plus proche : architecture de modules en couches, modèle découverte ou création en ligne | [Guide de la section 1](PCA_Section_1_Exploration_Guide.md#15-envisioning-future-solution-improvements) |
 
-## Section 2 : Gestion et provisionnement d'une infrastructure de solution cloud (Managing and provisioning a cloud solution infrastructure) (~17.5 % de l'examen) {#section-2-managing-and-provisioning-a-cloud-solution-infrastructure-175-of-the-exam}
+## Section 2 : Gestion et provisionnement d'une infrastructure de solution cloud (Managing and provisioning a cloud solution infrastructure) (~17,5 % de l'examen) {#section-2-managing-and-provisioning-a-cloud-solution-infrastructure-175-of-the-exam}
 
 Le provisionnement est le métier même des modules : un VPC en mode personnalisé avec Cloud NAT et accès aux services privés, quatre moteurs de base de données, trois types de stockage de fichiers/objets et deux plateformes de conteneurs — le tout de manière déclarative. Les topologies hybrides et les deux sous-sections Gemini Enterprise Agent Platform relèvent uniquement de l'étude.
 
@@ -114,7 +114,7 @@ Le provisionnement est le métier même des modules : un VPC en mode personnalis
 | 2.4 Exploitation de Gemini Enterprise Agent Platform pour des workflows de ML de bout en bout | 📘 | non mis en œuvre | [Guide de la section 2](PCA_Section_2_Exploration_Guide.md#24-leveraging-gemini-enterprise-agent-platform-for-end-to-end-ml-workflows) |
 | 2.5 Configuration de solutions ou d'API prédéfinies avec Agent Platform | 📘 | le plus proche : `secret_environment_variables` pour les clés d'API ; appels Gemini sans clé dans `DataAnalyst_CloudRun` | [Guide de la section 2](PCA_Section_2_Exploration_Guide.md#25-configuring-prebuilt-solutions-or-apis-with-agent-platform) |
 
-## Section 3 : Conception pour la sécurité et la conformité (Designing for security and compliance) (~17.5 % de l'examen) {#section-3-designing-for-security-and-compliance-175-of-the-exam}
+## Section 3 : Conception pour la sécurité et la conformité (Designing for security and compliance) (~17,5 % de l'examen) {#section-3-designing-for-security-and-compliance-175-of-the-exam}
 
 Le profil Sécurité et livraison active l'essentiel de ce que cette section évalue : comptes de service dédiés au moindre privilège, CMEK avec rotation automatique, attestation Binary Authorization, VPC Service Controls en mode simulation (dry-run), accès zero-trust via IAP et journalisation d'audit complète. La hiérarchie de l'organisation et les cadres réglementaires restent des sujets d'étude.
 
@@ -135,7 +135,7 @@ La CI/CD et la gouvernance des mises en production sont entièrement démontrabl
 | 4.1 Processus techniques — SDLC, CI/CD, tests, catalogue de services, reprise après sinistre | 🟡 | `enable_cicd_trigger`, `cloud_deploy_stages`, `traffic_split` | [Guide de la section 4](PCA_Section_4_Exploration_Guide.md#41-analyzing-and-defining-technical-processes) |
 | 4.2 Processus métier — gestion du changement, prise de décision, continuité des activités | 🟡 | portes `require_approval` dans `cloud_deploy_stages` ; garde-fous de coût via `create_billing_budget` | [Guide de la section 4](PCA_Section_4_Exploration_Guide.md#42-analyzing-and-defining-business-processes) |
 
-## Section 5 : Gestion de la mise en œuvre (Managing implementation) (~12.5 % de l'examen) {#section-5-managing-implementation-125-of-the-exam}
+## Section 5 : Gestion de la mise en œuvre (Managing implementation) (~12,5 % de l'examen) {#section-5-managing-implementation-125-of-the-exam}
 
 La plateforme *est* elle-même une démonstration de gestion de la mise en œuvre : une architecture IaC à quatre niveaux que les équipes de développement consomment via un portail, avec des règles d'hygiène Artifact Registry et des validations de garde-fous intégrées. La maîtrise directe des SDK (`gcloud`, bibliothèques clientes, émulateurs) exige une pratique au-delà du portail.
 
@@ -145,7 +145,7 @@ La plateforme *est* elle-même une démonstration de gestion de la mise en œuvr
 | 5.1 Gestion des API (Apigee), Gemini Cloud Assist | 📘 | non mis en œuvre | [Guide de la section 5](PCA_Section_5_Exploration_Guide.md#51-advising-development-and-operation-teams) |
 | 5.2 Interaction programmatique avec Google Cloud | 🟡 | workflow OpenTofu, provisionneurs et scripts de découverte basés sur `gcloud` | [Guide de la section 5](PCA_Section_5_Exploration_Guide.md#52-interacting-with-google-cloud-programmatically) |
 
-## Section 6 : Garantir l'excellence des solutions et des opérations (Ensuring solution and operations excellence) (~12.5 % de l'examen) {#section-6-ensuring-solution-and-operations-excellence-125-of-the-exam}
+## Section 6 : Garantir l'excellence des solutions et des opérations (Ensuring solution and operations excellence) (~12,5 % de l'examen) {#section-6-ensuring-solution-and-operations-excellence-125-of-the-exam}
 
 Les opérations du « jour 2 » : chaque déploiement est livré avec un tableau de bord de surveillance et des canaux d'alerte par e-mail ; Cloud SQL et la VM NFS reçoivent des alertes sur le CPU, la mémoire et le disque ; les mises en production peuvent être déployées en canary avec `traffic_split` et promues via Cloud Deploy. Les déploiements accessibles publiquement reçoivent également un test de disponibilité synthétique et une règle d'alerte via `uptime_check_config` (provisionnés par la couche de surveillance de la plateforme) ; les processus d'assistance et le chaos engineering relèvent uniquement du concept.
 

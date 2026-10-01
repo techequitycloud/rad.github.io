@@ -31,7 +31,7 @@ consultez les guides des plateformes ([SpeedtestTracker_GKE](SpeedtestTracker_GK
 | Secrets cryptographiques | Génère l'`APP_KEY` Laravel (`base64:<44-char base64>`) et la stocke dans **Secret Manager** | Injectée automatiquement en tant que variable d'environnement secrète `APP_KEY` |
 | Image de conteneur | Impose l'image préconstruite **`linuxserver/speedtest-tracker`** (aucun build personnalisé) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for MySQL 8.0** comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`), qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`), qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Planification des tests de débit | Définit `SPEEDTEST_SCHEDULE` et `PRUNE_RESULTS_OLDER_THAN` — le planificateur Laravel intégré au processus qui déclenche les tests de débit automatisés | Comportement de l'application dans les guides des plateformes |
 | Paramètres principaux | Définit `DB_CONNECTION = mysql`, `DB_PORT = 3306`, `APP_URL` et les noms de variables d'environnement de base de données natifs de Laravel | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes par défaut de démarrage (TCP) / de vivacité (HTTP `/api/healthcheck`) | §Observabilité dans les guides des plateformes |
@@ -74,7 +74,7 @@ nom de son secret figure dans les sorties du déploiement de la plateforme
 Speedtest Tracker requiert **MySQL 8.0** (`database_type = "MYSQL_8_0"`) dans ce
 module ; le moteur est fixe et PostgreSQL n'est pas pris en charge (la valeur par
 défaut SQLite de l'image amont n'est jamais atteinte, car ce module câble toujours
-MySQL). Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
+MySQL). Lors du premier déploiement, un job ponctuel (`db-init`) s'exécute avec
 `mysql:8.0-debian` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy ou le point de terminaison TCP et
@@ -87,7 +87,7 @@ MySQL). Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécu
 7. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement
    (`POST /quitquitquit`).
 
-La tâche peut être relancée sans risque (`max_retries = 3`). Inspectez directement la
+Le job peut être relancé sans risque (`max_retries = 3`). Inspectez directement la
 base de données avec :
 
 ```bash
@@ -101,7 +101,7 @@ sorties du déploiement de la plateforme.
 droits — le schéma lui-même est créé par l'exécution automatique de
 `php artisan migrate --force` par l'image au **premier démarrage du conteneur** (et
 réappliqué lors des démarrages suivants pour les mises à niveau). Il n'y a pas de
-tâche de migration distincte.
+job de migration distinct.
 
 ---
 

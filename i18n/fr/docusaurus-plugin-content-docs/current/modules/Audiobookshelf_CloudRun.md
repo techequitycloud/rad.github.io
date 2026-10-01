@@ -294,22 +294,22 @@ Renvoyées lorsque le déploiement réussit — le moyen le plus rapide de local
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Plusieurs instances écrivent dans la même base SQLite via le montage FUSE partagé — corruption de la base de données. |
-| `create_cloud_storage` / le bucket `storage` | à conserver provisionné | Critical | `/data` contient *tout* l'état (base SQLite, configuration, métadonnées). Supprimer le bucket fait perdre toute la configuration de la bibliothèque. |
-| Surcharges de `CONFIG_PATH` / `METADATA_PATH` | laisser les valeurs par défaut | Critical | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
-| `container_port` | `80` | Critical | Audiobookshelf écoute sur le `$PORT` injecté automatiquement par Cloud Run, dérivé de `container_port=80` (aucune variable d'environnement `PORT` explicite n'est définie — c'est un nom réservé que Cloud Run refuse) ; un `container_port` incohérent fait échouer toutes les sondes de santé. |
-| `execution_environment` | `gen2` | High | Les montages GCS FUSE exigent gen2 ; gen1 ne peut pas monter le bucket `/data`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | High | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `ingress_settings` | `all` (par défaut) / `internal` si nécessaire | Medium | La valeur par défaut `all` est accessible publiquement ; définissez `internal` (ou ajoutez l'équilibreur de charge) uniquement si vous voulez spécifiquement restreindre le service à un accès depuis le VPC. |
-| `application_version` | tag épinglé | Medium | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
-| `min_instance_count` | `1` | Medium | `0` réduit les coûts (l'état étant sur GCS, les données ne sont pas en danger) mais ajoute un démarrage à froid à la première diffusion après une période d'inactivité. |
-| Taille de la bibliothèque sur GCS FUSE | bibliothèques petites/moyennes | Medium | Les grandes bibliothèques et les analyses fréquentes pâtissent de la latence FUSE — utilisez `Audiobookshelf_GKE` (PVC bloc) pour des bibliothèques à l'échelle de la production. |
-| `enable_cloudsql_volume` | `false` | Low | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
+| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent dans la même base SQLite via le montage FUSE partagé — corruption de la base de données. |
+| `create_cloud_storage` / le bucket `storage` | à conserver provisionné | Critique | `/data` contient *tout* l'état (base SQLite, configuration, métadonnées). Supprimer le bucket fait perdre toute la configuration de la bibliothèque. |
+| Surcharges de `CONFIG_PATH` / `METADATA_PATH` | laisser les valeurs par défaut | Critique | Les modifier après le premier démarrage rend orphelines la base SQLite existante et les métadonnées en cache. |
+| `container_port` | `80` | Critique | Audiobookshelf écoute sur le `$PORT` injecté automatiquement par Cloud Run, dérivé de `container_port=80` (aucune variable d'environnement `PORT` explicite n'est définie — c'est un nom réservé que Cloud Run refuse) ; un `container_port` incohérent fait échouer toutes les sondes de santé. |
+| `execution_environment` | `gen2` | Élevé | Les montages GCS FUSE exigent gen2 ; gen1 ne peut pas monter le bucket `/data`. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Élevé | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `ingress_settings` | `all` (par défaut) / `internal` si nécessaire | Moyen | La valeur par défaut `all` est accessible publiquement ; définissez `internal` (ou ajoutez l'équilibreur de charge) uniquement si vous voulez spécifiquement restreindre le service à un accès depuis le VPC. |
+| `application_version` | tag épinglé | Moyen | `latest` correspond silencieusement à la version épinglée `2.17.0` ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `min_instance_count` | `1` | Moyen | `0` réduit les coûts (l'état étant sur GCS, les données ne sont pas en danger) mais ajoute un démarrage à froid à la première diffusion après une période d'inactivité. |
+| Taille de la bibliothèque sur GCS FUSE | bibliothèques petites/moyennes | Moyen | Les grandes bibliothèques et les analyses fréquentes pâtissent de la latence FUSE — utilisez `Audiobookshelf_GKE` (PVC bloc) pour des bibliothèques à l'échelle de la production. |
+| `enable_cloudsql_volume` | `false` | Faible | Il n'existe pas de Cloud SQL ; l'activer gaspille un sidecar. |
 
 ---
 

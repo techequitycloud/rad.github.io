@@ -381,25 +381,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `redis_port`/`backup_retention_days` hors plage, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, une mémoire inférieure au plancher gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTICATION_API_KEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critical | La renouveler rend injoignable chaque instance WhatsApp déjà provisionnée et renvoie `401` à tous les clients qui détiennent l'ancienne clé. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tout l'historique des messages. |
-| `max_instance_count` | `1` | Critical | La mise à l'échelle horizontale fragmente les sessions de socket WhatsApp en mémoire entre les instances, ce qui rompt les connexions actives et duplique les livraisons de webhook. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `enable_redis` | `true` | High | Le désactiver supprime le cache des instances et des messages d'Evolution API ; l'application est configurée pour s'y attendre (`CACHE_REDIS_ENABLED = true`). |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, l'URI du cache est vide et la mise en cache est désactivée silencieusement. |
-| `memory_limit` | `4Gi` (min `2Gi`) | High | En dessous de 2 GiB, Evolution API est sujette à des arrêts pour manque de mémoire (OOM) sous la charge des messages. |
-| `ingress_settings` | `all` | High | Le définir sur `internal` bloque tous les rappels de webhook WhatsApp externes. |
-| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | High | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhook externes. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro abandonne les sessions de socket WhatsApp actives ; un démarrage à froid doit rétablir chaque connexion. |
-| `application_version` | Épingler (p. ex. `v2.1.1`) | Medium | `latest` correspond à un tag épinglé, mais épingler explicitement évite des mises à niveau surprises qui exécutent de nouvelles migrations Prisma. |
-| Délais de `startup_probe` | Par défaut (60s + 30 tentatives) | Medium | Une fenêtre trop serrée fait échouer la sonde avant la fin des migrations Prisma du premier démarrage. |
+| `AUTHENTICATION_API_KEY` (généré automatiquement) | Ne jamais la renouveler après le premier démarrage | Critique | La renouveler rend injoignable chaque instance WhatsApp déjà provisionnée et renvoie `401` à tous les clients qui détiennent l'ancienne clé. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit tout l'historique des messages. |
+| `max_instance_count` | `1` | Critique | La mise à l'échelle horizontale fragmente les sessions de socket WhatsApp en mémoire entre les instances, ce qui rompt les connexions actives et duplique les livraisons de webhook. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `enable_redis` | `true` | Élevé | Le désactiver supprime le cache des instances et des messages d'Evolution API ; l'application est configurée pour s'y attendre (`CACHE_REDIS_ENABLED = true`). |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, l'URI du cache est vide et la mise en cache est désactivée silencieusement. |
+| `memory_limit` | `4Gi` (min `2Gi`) | Élevé | En dessous de 2 GiB, Evolution API est sujette à des arrêts pour manque de mémoire (OOM) sous la charge des messages. |
+| `ingress_settings` | `all` | Élevé | Le définir sur `internal` bloque tous les rappels de webhook WhatsApp externes. |
+| `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhook externes. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro abandonne les sessions de socket WhatsApp actives ; un démarrage à froid doit rétablir chaque connexion. |
+| `application_version` | Épingler (p. ex. `v2.1.1`) | Moyen | `latest` correspond à un tag épinglé, mais épingler explicitement évite des mises à niveau surprises qui exécutent de nouvelles migrations Prisma. |
+| Délais de `startup_probe` | Par défaut (60s + 30 tentatives) | Moyen | Une fenêtre trop serrée fait échouer la sonde avant la fin des migrations Prisma du premier démarrage. |
 
 ---
 

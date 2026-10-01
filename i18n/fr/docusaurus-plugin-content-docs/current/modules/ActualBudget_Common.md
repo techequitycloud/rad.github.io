@@ -20,7 +20,7 @@ Pour l'infrastructure qui provisionne et exécute réellement ActualBudget, cons
 | Image de conteneur | Encapsule légèrement l'image officielle `actualbudget/actual-server` afin que le socle la construise/la mette en miroir dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
 | Épinglage de version | ARG de build propre à l'application `ACTUALBUDGET_VERSION` ; `latest` fige la version sur `25.7.1` | Tag de l'image dans Artifact Registry |
 | Moteur de base de données | **Aucun** — les données de budget résident dans des fichiers SQLite sous `/data` (`database_type = "NONE"`) | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | **Aucun** — pas de tâche `db-init` ; le serveur initialise ses propres fichiers au premier démarrage | sans objet |
+| Amorçage de la base de données | **Aucun** — pas de job `db-init` ; le serveur initialise ses propres fichiers au premier démarrage | sans objet |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/data` sur Cloud Run | Sortie `storage_buckets` |
 | Paramètres principaux | Définit `ACTUAL_PORT = 5006`, `ACTUAL_SERVER_FILES = /data/server-files`, `ACTUAL_USER_FILES = /data/user-files` | Comportement de l'application dans les guides de plateforme |
 | Clé d'API facultative | Lorsque `enable_api_key = true`, génère un jeton de 32 caractères dans **Secret Manager**, injecté en tant que `ACTUAL_TOKEN` | Sortie `secret_ids` / Secret Manager |
@@ -58,7 +58,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 ActualBudget n'utilise **pas** de base de données externe. Chaque budget est un **fichier SQLite**, et l'état propre du serveur (comptes/métadonnées) repose également sur des fichiers — tout réside sous `/data`. Par conséquent :
 
 - `database_type = "NONE"` — aucune instance Cloud SQL, aucune base de données ni aucun utilisateur n'est créé.
-- Il n'y a **pas de tâche `db-init`** — le serveur crée ses fichiers au premier démarrage ; rien ne doit être amorcé à l'avance.
+- Il n'y a **pas de job `db-init`** — le serveur crée ses fichiers au premier démarrage ; rien ne doit être amorcé à l'avance.
 - Aucune extension PostgreSQL ni aucun Redis n'interviennent (`enable_redis = false` dans la variante Cloud Run).
 
 Comme les bases de données sont des fichiers sur le volume persistant `/data`, leur durabilité dépend du backend de stockage et non d'un service de base de données géré (voir §6). Des `initialization_jobs` personnalisées sont acceptées pour des tâches de chargement ou de migration de données ; aucune n'est fournie par défaut.

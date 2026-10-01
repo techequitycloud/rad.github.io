@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Identifiant JWT | Génère `NC_AUTH_JWT_SECRET` et le stocke dans **Secret Manager** | Injecté à l'exécution ; récupérable via Secret Manager |
 | Image de conteneur | Épingle l'image officielle `nocodb/nocodb` et le Dockerfile personnalisé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Par défaut **Cloud SQL for PostgreSQL 15** ; `NocoDB_Common` code lui-même en dur `POSTGRES_15` | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement, qui crée la base de données et l'utilisateur | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données et l'utilisateur | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (non relié au stockage des pièces jointes de NocoDB) | Sortie `storage_buckets` |
 | Paramètres principaux | Correspondance des variables d'environnement NC_DB_*, port de conteneur 8080, injection de `GCS_BUCKET_NAME` (non utilisée par le point d'entrée) | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Sonde de démarrage/d'activité par défaut pointant vers `/api/v1/health` | §Observabilité dans les guides des plateformes |
@@ -71,14 +71,14 @@ n'est surchargeable que sur `NocoDB_GKE`**, dont le fichier `nocodb.tf` réinjec
 comporte pas la surcharge équivalente : sur Cloud Run, la variable `database_type`
 du module de plateforme est donc ignorée sans aucun message, et Postgres 15 est
 toujours provisionné, quelle que soit la valeur définie par l'opérateur. Au premier
-déploiement, une tâche ponctuelle `db-init` se connecte à Cloud SQL et, de manière
+déploiement, un job ponctuel `db-init` se connecte à Cloud SQL et, de manière
 idempotente :
 
 1. crée la base de données NocoDB (si elle n'existe pas),
 2. crée l'utilisateur de l'application avec le mot de passe généré,
 3. accorde à cet utilisateur tous les privilèges sur cette base de données.
 
-La tâche peut être réexécutée sans risque. NocoDB exécute ensuite ses propres
+Le job peut être réexécuté sans risque. NocoDB exécute ensuite ses propres
 migrations de schéma au démarrage — aucune étape de migration externe n'est
 nécessaire. Inspectez directement la base de données avec :
 

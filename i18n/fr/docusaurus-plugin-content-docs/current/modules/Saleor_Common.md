@@ -29,7 +29,7 @@ les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Génère `SECRET_KEY` (clé de signature Django), `RSA_PRIVATE_KEY` (paire de clés de signature JWT) et `DJANGO_SUPERUSER_PASSWORD`, tous dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `ghcr.io/saleor/saleor` avec un point d'entrée personnalisé ; build via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge, quelle que soit la variable `database_type` propre au module appelant | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la paire de tâches du premier déploiement `db-init` → `db-migrate` (création du rôle/de la base de données, puis migrations Django) | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit la paire de jobs du premier déploiement `db-init` → `db-migrate` (création du rôle/de la base de données, puis migrations Django) | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `media` | Sortie `storage_buckets` |
 | Traitement en arrière-plan | Démarre un worker Celery + planificateur beat colocalisés comme processus d'arrière-plan dans le conteneur principal | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/d'activité par défaut ciblant `/health/` | §Observabilité dans les guides de plateforme |
@@ -79,7 +79,7 @@ secrets partagé.
 Saleor exige **PostgreSQL 15** ; le moteur est fixé par `Saleor_Common` et MySQL ou les
 autres moteurs ne sont pas pris en charge, quelle que soit la valeur de la variable
 `database_type` propre au module appelant `Saleor_CloudRun`/`Saleor_GKE`. Au premier
-déploiement, deux tâches séquentielles s'exécutent :
+déploiement, deux jobs séquentiels s'exécutent :
 
 1. **`db-init`** (`postgres:15-alpine`, `db-init.sh`) — se connecte via le Cloud SQL
    Auth Proxy et crée de manière idempotente la base de données et le rôle de
@@ -88,7 +88,7 @@ déploiement, deux tâches séquentielles s'exécutent :
    `migrate.sh`) — exécute `python3 manage.py migrate --noinput` sur le schéma
    nouvellement créé.
 
-Les deux tâches sont idempotentes et peuvent être relancées sans risque. Inspectez
+Les deux jobs sont idempotents et peuvent être relancés sans risque. Inspectez
 directement la base de données avec :
 
 ```bash

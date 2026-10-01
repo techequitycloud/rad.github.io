@@ -31,7 +31,7 @@ Shlink s'exécute sous forme de conteneur PHP (RoadRunner) sur Cloud Run v2. Le 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le moteur pris en charge** (`database_type = "POSTGRES_15"`, `DB_DRIVER = "postgres"`). Shlink se connecte via le socket Unix du Cloud SQL Auth Proxy — libpq accepte le répertoire du socket comme hôte, aucune configuration TCP/SSL n'est donc nécessaire.
-- **`DB_USER` / `DB_NAME` sont injectés par le socle** avec des noms propres au tenant et ne sont volontairement *pas* définis par le module — la tâche `db-init` crée ce même utilisateur et cette même base de données, si bien que tout concorde automatiquement.
+- **`DB_USER` / `DB_NAME` sont injectés par le socle** avec des noms propres au tenant et ne sont volontairement *pas* définis par le module — le job `db-init` crée ce même utilisateur et cette même base de données, si bien que tout concorde automatiquement.
 - **`INITIAL_API_KEY` est généré automatiquement** (32 caractères), stocké dans Secret Manager et injecté comme variable d'environnement secrète. Shlink le lit au premier démarrage pour amorcer sa première clé d'API REST — vous ne créez jamais de clé à la main.
 - **Les migrations s'exécutent automatiquement au démarrage du conteneur.** L'image officielle gère l'installation et les mises à niveau du schéma ; il n'existe pas d'étape de migration distincte.
 - **Mise à l'échelle à zéro par défaut.** Shlink est une application requête/réponse sans état (redirections + API REST) ; elle ne coûte rien lorsqu'elle est inactive. La contrepartie est un démarrage à froid d'environ 5–15 s sur la première requête après une période d'inactivité.
@@ -61,7 +61,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurr
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Shlink stocke tout — URL courtes, enregistrements de visites, tags, domaines et clés d'API — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP publique). Lors du premier déploiement, une tâche `db-init` crée la base de données et l'utilisateur de l'application.
+Shlink stocke tout — URL courtes, enregistrements de visites, tags, domaines et clés d'API — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP publique). Lors du premier déploiement, un job `db-init` crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -126,7 +126,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de C
 
 ## 3. Comportement de l'application Shlink {#3-shlink-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL via le socket de l'Auth Proxy et crée de manière idempotente l'utilisateur et la base de données de l'application, accorde les privilèges (y compris `GRANT <user> TO postgres` afin que la propriété puisse être définie), puis signale au sidecar du proxy de s'arrêter pour que la tâche se termine. La tâche s'exécute à chaque apply et peut être relancée sans risque.
+- **Configuration de la base de données au premier déploiement.** Un job `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL via le socket de l'Auth Proxy et crée de manière idempotente l'utilisateur et la base de données de l'application, accorde les privilèges (y compris `GRANT <user> TO postgres` afin que la propriété puisse être définie), puis signale au sidecar du proxy de s'arrêter pour que le job se termine. Le job s'exécute à chaque apply et peut être relancé sans risque.
 - **Migrations au démarrage.** L'image officielle de Shlink exécute automatiquement ses migrations de base de données à chaque démarrage du conteneur — le premier démarrage installe le schéma, les mises à niveau appliquent les changements de schéma sans étape manuelle. La sonde de démarrage accorde jusqu'à ~300 s (`failure_threshold = 30` × 10 s) aux migrations du premier démarrage.
 - **API d'abord — pas de page d'accueil.** Shlink est un serveur headless : `/` renvoie **404 par conception**. Tout se pilote via l'API REST (`/rest/v3/...`) avec l'en-tête `X-Api-Key`, ou via une interface [shlink-web-client](https://app.shlink.io/) hébergée séparément et pointée vers ce serveur.
 - **Accès au premier lancement.** Récupérez la clé d'API d'amorçage dans Secret Manager (voir §2C) et utilisez-la immédiatement :
@@ -233,8 +233,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (`postgres:15-alpine`). |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (`postgres:15-alpine`). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -279,7 +279,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -291,24 +291,24 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Shlink est configuré ici pour PostgreSQL (`DB_DRIVER=postgres`) ; un autre moteur empêche le démarrage. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les URL courtes et les données de visites. |
-| `environment_variables` `DB_USER` / `DB_NAME` | Jamais définis manuellement | Critical | Remplace les noms propres au tenant du socle → `password authentication failed for user "shlink"`. Laissez-les non définis. |
-| `container_port` | `8080` | Critical | Port natif de Shlink ; une valeur différente fait échouer toutes les sondes de santé. |
-| `enable_cloudsql_volume` | `true` | Critical | Shlink attend le socket Unix de l'Auth Proxy ; le désactiver casse le chemin de connexion à la base de données. |
-| `path` de sonde / test de disponibilité | `/rest/health` | High | `/` renvoie **404 par conception** — le sonder tue des révisions saines. |
-| `startup_probe` failure_threshold | `30` | High | Le réduire peut tuer le conteneur avant la fin des migrations du premier démarrage. |
-| `DEFAULT_DOMAIN` | Défini après le déploiement | High | S'il reste vide, les URL courtes générées peuvent porter le mauvais hôte ; définissez-le sur le domaine `run.app` ou personnalisé. |
-| `enable_iap` | `false` pour des liens publics | High | IAP placé devant Shlink soumet chaque redirection de lien court à une connexion Google. |
-| `max_instance_count` sans Redis | `3` | Medium | De nombreuses instances sans Redis perdent le cache et le verrouillage partagés ; activez `enable_redis` avant une large montée en charge. |
-| `min_instance_count` | `0` (par défaut) ou `1` | Medium | `0` est quasi gratuit mais ajoute un démarrage à froid d'environ 5–15 s à la première redirection après une inactivité. |
-| `GEOLITE_LICENSE_KEY` | À définir si les analyses comptent | Low | Sans elle, les visites sont enregistrées mais pas géolocalisées. |
-| `enable_nfs` / `create_cloud_storage` | `false` / désactivé | Low | Coût inutile — Shlink conserve tout son état dans PostgreSQL. |
+| `database_type` | `POSTGRES_15` | Critique | Shlink est configuré ici pour PostgreSQL (`DB_DRIVER=postgres`) ; un autre moteur empêche le démarrage. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les URL courtes et les données de visites. |
+| `environment_variables` `DB_USER` / `DB_NAME` | Jamais définis manuellement | Critique | Remplace les noms propres au tenant du socle → `password authentication failed for user "shlink"`. Laissez-les non définis. |
+| `container_port` | `8080` | Critique | Port natif de Shlink ; une valeur différente fait échouer toutes les sondes de santé. |
+| `enable_cloudsql_volume` | `true` | Critique | Shlink attend le socket Unix de l'Auth Proxy ; le désactiver casse le chemin de connexion à la base de données. |
+| `path` de sonde / test de disponibilité | `/rest/health` | Élevé | `/` renvoie **404 par conception** — le sonder tue des révisions saines. |
+| `startup_probe` failure_threshold | `30` | Élevé | Le réduire peut tuer le conteneur avant la fin des migrations du premier démarrage. |
+| `DEFAULT_DOMAIN` | Défini après le déploiement | Élevé | S'il reste vide, les URL courtes générées peuvent porter le mauvais hôte ; définissez-le sur le domaine `run.app` ou personnalisé. |
+| `enable_iap` | `false` pour des liens publics | Élevé | IAP placé devant Shlink soumet chaque redirection de lien court à une connexion Google. |
+| `max_instance_count` sans Redis | `3` | Moyen | De nombreuses instances sans Redis perdent le cache et le verrouillage partagés ; activez `enable_redis` avant une large montée en charge. |
+| `min_instance_count` | `0` (par défaut) ou `1` | Moyen | `0` est quasi gratuit mais ajoute un démarrage à froid d'environ 5–15 s à la première redirection après une inactivité. |
+| `GEOLITE_LICENSE_KEY` | À définir si les analyses comptent | Faible | Sans elle, les visites sont enregistrées mais pas géolocalisées. |
+| `enable_nfs` / `create_cloud_storage` | `false` / désactivé | Faible | Coût inutile — Shlink conserve tout son état dans PostgreSQL. |
 
 ---
 

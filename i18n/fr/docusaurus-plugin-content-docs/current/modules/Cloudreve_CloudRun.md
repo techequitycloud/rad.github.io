@@ -423,24 +423,24 @@ output `database_*`** — Cloudreve n'a pas d'instance Cloud SQL à décrire.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec le montage GCS Fuse requis, un `container_port`/`backup_retention_days`/`secret_propagation_delay` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Mécanisme de persistance (GCS FUSE sur `/cloudreve`) | Acceptez-le comme le compromis de Cloud Run ; utilisez `Cloudreve_GKE` pour la production | Critical | Le modèle de cohérence de gcsfuse est plus faible que celui d'un périphérique bloc ; la base SQLite intégrée risque d'être corrompue en cas d'accès concurrent. C'est une limitation architecturale documentée de la variante CloudRun, et non un bug à corriger ici. |
-| Déplacement du binaire dans le Dockerfile (`/usr/local/bin/cloudreve`) | Conservez-le tel que livré | Critical | Revenir à `ENTRYPOINT ["./cloudreve"]` dans `/cloudreve` réintroduit le masquage par volume : le montage GCS FUSE cache le binaire et le conteneur plante en boucle avec `exec ./cloudreve: no such file or directory`. |
-| `max_instance_count` | `1` | Critical | Cloudreve n'a pas de mode multi-nœud/clustering vérifié dans ce module ; dépasser 1 expose à des écrivains concurrents sur le même fichier SQLite monté via GCS FUSE, sans aucune garantie de verrouillage. |
-| Récupération du mot de passe administrateur | Capturez-le depuis `gcloud run services logs read` immédiatement après le premier démarrage | High | Le mot de passe administrateur généré n'est affiché qu'une seule fois dans les journaux du conteneur ; le manquer vous empêche d'accéder au compte super-administrateur initial tant que vous n'avez pas trouvé une autre voie de récupération. |
-| `container_port` | `5212` | High | Le binaire de Cloudreve écoute sur un port par défaut fixe, sans câblage par variable d'environnement ou CLI permettant de le changer dans ce module ; modifier la variable ne change que la cible de routage de Cloud Run, ce qui rompt la connectivité. |
-| `min_instance_count` | `1` | Medium | La mise à zéro (`0`) ajoute une latence de démarrage à froid pendant que Cloudreve recharge son index depuis le volume GCS FUSE, et augmente le risque que des instances froides et chaudes accèdent brièvement en même temps au même fichier SQLite lors d'une mise en production. |
-| `ingress_settings` | `all` | Medium | La valeur `internal` bloque l'accès direct à l'interface web, sauf derrière un équilibreur de charge ou depuis le VPC. |
-| `enable_iap` | Facultatif | Low–Medium | IAP ajoute un contrôle d'identité Google en amont de la page de connexion de Cloudreve ; sans lui, l'authentification propre à Cloudreve est la seule barrière face à l'internet public. |
-| `database_type` / autres variables `db_*` / `sql_*` | Laissez les valeurs par défaut | Low | Cloudreve n'a pas de base SQL — toute valeur ici est sans effet, puisque `database_type` est fixé à `NONE` par `Cloudreve_Common`. |
-| `enable_redis` | Laissez la valeur par défaut | Low | Forcé à `false` dans `main.tf` quelle que soit la valeur de la variable — Cloudreve n'utilise pas Redis. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| Mécanisme de persistance (GCS FUSE sur `/cloudreve`) | Acceptez-le comme le compromis de Cloud Run ; utilisez `Cloudreve_GKE` pour la production | Critique | Le modèle de cohérence de gcsfuse est plus faible que celui d'un périphérique bloc ; la base SQLite intégrée risque d'être corrompue en cas d'accès concurrent. C'est une limitation architecturale documentée de la variante CloudRun, et non un bug à corriger ici. |
+| Déplacement du binaire dans le Dockerfile (`/usr/local/bin/cloudreve`) | Conservez-le tel que livré | Critique | Revenir à `ENTRYPOINT ["./cloudreve"]` dans `/cloudreve` réintroduit le masquage par volume : le montage GCS FUSE cache le binaire et le conteneur plante en boucle avec `exec ./cloudreve: no such file or directory`. |
+| `max_instance_count` | `1` | Critique | Cloudreve n'a pas de mode multi-nœud/clustering vérifié dans ce module ; dépasser 1 expose à des écrivains concurrents sur le même fichier SQLite monté via GCS FUSE, sans aucune garantie de verrouillage. |
+| Récupération du mot de passe administrateur | Capturez-le depuis `gcloud run services logs read` immédiatement après le premier démarrage | Élevé | Le mot de passe administrateur généré n'est affiché qu'une seule fois dans les journaux du conteneur ; le manquer vous empêche d'accéder au compte super-administrateur initial tant que vous n'avez pas trouvé une autre voie de récupération. |
+| `container_port` | `5212` | Élevé | Le binaire de Cloudreve écoute sur un port par défaut fixe, sans câblage par variable d'environnement ou CLI permettant de le changer dans ce module ; modifier la variable ne change que la cible de routage de Cloud Run, ce qui rompt la connectivité. |
+| `min_instance_count` | `1` | Moyen | La mise à zéro (`0`) ajoute une latence de démarrage à froid pendant que Cloudreve recharge son index depuis le volume GCS FUSE, et augmente le risque que des instances froides et chaudes accèdent brièvement en même temps au même fichier SQLite lors d'une mise en production. |
+| `ingress_settings` | `all` | Moyen | La valeur `internal` bloque l'accès direct à l'interface web, sauf derrière un équilibreur de charge ou depuis le VPC. |
+| `enable_iap` | Facultatif | Faible–Moyen | IAP ajoute un contrôle d'identité Google en amont de la page de connexion de Cloudreve ; sans lui, l'authentification propre à Cloudreve est la seule barrière face à l'internet public. |
+| `database_type` / autres variables `db_*` / `sql_*` | Laissez les valeurs par défaut | Faible | Cloudreve n'a pas de base SQL — toute valeur ici est sans effet, puisque `database_type` est fixé à `NONE` par `Cloudreve_Common`. |
+| `enable_redis` | Laissez la valeur par défaut | Faible | Forcé à `false` dans `main.tf` quelle que soit la valeur de la variable — Cloudreve n'utilise pas Redis. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

@@ -144,7 +144,7 @@ Vous disposez d'une visibilité financière sur l'ensemble de la plateforme :
 
 ## Journal d'audit {#audit-log}
 
-Ouvrez **Audit Log** depuis la barre de navigation pour examiner ce qui a été fait sur la plateforme. Il liste chaque action enregistrée, de la plus récente à la plus ancienne : modifications de rôles et de comptes, modifications de paramètres, attributions et ajustements de crédits, suppressions forcées, révélations d'identifiants, versements et activité des sessions de lab. Chaque ligne indique quand l'action a eu lieu, l'action elle-même et qui l'a effectuée (**System** pour les tâches planifiées).
+Ouvrez **Audit Log** depuis la barre de navigation pour examiner ce qui a été fait sur la plateforme. Il liste chaque action enregistrée, de la plus récente à la plus ancienne : modifications de rôles et de comptes, modifications de paramètres, attributions et ajustements de crédits, suppressions forcées, révélations d'identifiants, versements et activité des sessions de lab. Chaque ligne indique quand l'action a eu lieu, l'action elle-même et qui l'a effectuée (**System** pour les jobs planifiés).
 
 - La page s'ouvre sur les 7 derniers jours. Modifiez les dates, choisissez une **Action** ou saisissez une partie d'adresse e-mail dans **Performed by**, puis sélectionnez **Load**. La plage peut aller jusqu'à un an.
 - Sélectionnez **Show all** sur une ligne pour voir tout ce qui a été enregistré avec elle. Les valeurs secrètes ne sont jamais enregistrées ; un secret modifié apparaît masqué.

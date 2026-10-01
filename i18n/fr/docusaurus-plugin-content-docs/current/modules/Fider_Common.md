@@ -38,11 +38,11 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secret cryptographique | Génère un `JWT_SECRET` stable de 64 caractères et le stocke dans **Secret Manager** | Injecté automatiquement en tant que `JWT_SECRET` ; récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Construit une fine surcouche `FROM getfider/fider` avec un point d'entrée cloud personnalisé via Cloud Build (Kaniko) ; la met en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données, accorde les droits et transfère la propriété du schéma `public` | Sortie `initialization_jobs` |
-| Migrations de schéma | Exécutées par le point d'entrée (`./fider migrate`) à chaque démarrage du conteneur — aucune tâche de migration séparée | Comportement de l'application dans les guides des plateformes |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle et la base de données, accorde les droits et transfère la propriété du schéma `public` | Sortie `initialization_jobs` |
+| Migrations de schéma | Exécutées par le point d'entrée (`./fider migrate`) à chaque démarrage du conteneur — aucun job de migration séparé | Comportement de l'application dans les guides des plateformes |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres principaux | Compose `DATABASE_URL` à l'exécution, dérive `BASE_URL`, définit `PORT = 3000` et fournit des valeurs fictives pour l'e-mail | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit les sondes de démarrage / d'activité / de disponibilité par défaut ciblant `/_health` | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit les sondes de démarrage / d'activité / de disponibilité (readiness) par défaut ciblant `/_health` | §Observabilité dans les guides des plateformes |
 
 ---
 
@@ -80,8 +80,8 @@ partagé des secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Fider nécessite **PostgreSQL 15** ; le moteur est imposé (`POSTGRES_15`) et MySQL
-ou les autres moteurs ne sont pas pris en charge. Lors du premier déploiement, une
-tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
+ou les autres moteurs ne sont pas pris en charge. Lors du premier déploiement, un
+job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
 idempotente :
 
 1. Résout l'hôte de la base de données — un répertoire de socket Unix du Cloud SQL
@@ -97,10 +97,10 @@ idempotente :
    transfère la propriété de `public` au rôle `fider` — nécessaire car
    PostgreSQL 15 n'accorde plus `CREATE` sur `public` par défaut et Fider exécute
    ses propres migrations en tant que rôle applicatif,
-6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod de la
-   tâche GKE puisse se terminer.
+6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod du
+   job GKE puisse se terminer.
 
-La tâche peut être réexécutée sans risque. Il n'existe **aucune tâche séparée de
+Le job peut être réexécuté sans risque. Il n'existe **aucun job séparé de
 migration ou de superutilisateur** — Fider applique ses propres migrations de schéma
 au démarrage (voir §5). Inspectez directement la base de données avec :
 
@@ -150,7 +150,7 @@ le binaire `./fider` d'origine :
 
 Comme le point d'entrée et le Dockerfile sont intégrés à l'image, toute
 modification les concernant nécessite une reconstruction de l'image ; le script de
-tâche `db-init.sh` est monté au moment de l'apply et prend effet sans
+job `db-init.sh` est monté au moment de l'apply et prend effet sans
 reconstruction.
 
 ---
@@ -190,7 +190,7 @@ Fider sert les requêtes. Une fenêtre de démarrage généreuse absorbe les mig
 exécutées au premier démarrage.
 
 - **Sonde de démarrage** — HTTP `/_health`, délai initial de 30 secondes, période
-  de 15 secondes, 30 échecs tolérés (environ 7.5 minutes de marge pour les
+  de 15 secondes, 30 échecs tolérés (environ 7,5 minutes de marge pour les
   migrations du premier démarrage).
 - **Sonde de vivacité** — HTTP `/_health`, période de 30 secondes.
 - **Sonde de disponibilité** — HTTP `/_health`, période de 10 secondes.

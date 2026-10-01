@@ -64,7 +64,7 @@ déploiement assemble un ensemble restreint et ciblé de services Google Cloud :
 - **MKCOL est bloqué en périphérie sur Cloud Run — lisez le §3 avant de
   déployer.** La création d'un *nouvel* agenda ou carnet d'adresses nécessite
   normalement la méthode WebDAV `MKCOL`, que le frontal Cloud Run de Google
-  rejette avant même qu'elle n'atteigne le conteneur. Une tâche d'amorçage par
+  rejette avant même qu'elle n'atteigne le conteneur. Un job d'amorçage par
   défaut contourne ce problème — voir ci-dessous.
 
 ---
@@ -128,7 +128,7 @@ l'état de Radicale.
 ## 3. Comportement de l'application Radicale {#3-radicale-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a
-  pas de tâche `db-init` — Radicale n'a aucune base de données à initialiser.
+  pas de job `db-init` — Radicale n'a aucune base de données à initialiser.
 - **`seed-default-collections` s'exécute au moment du déploiement.** Un Job
   d'initialisation ponctuel (`execute_on_apply = true`) écrit un « Default
   Calendar » et un « Default Address Book » directement sur le volume de
@@ -144,7 +144,7 @@ l'état de Radicale.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` — la
   redirection `302` non authentifiée de Radicale vers son interface web,
   considérée comme saine par les deux types de sondes.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
   ```
@@ -251,15 +251,15 @@ avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Création de nouvelles collections via un client CalDAV/CardDAV | S'appuyer sur les collections amorcées par défaut, ou utiliser `Radicale_GKE` pour créer librement de nouvelles collections | **High** | `MKCOL` est rejeté en périphérie de Cloud Run (GFE) avant d'atteindre le conteneur — aucun client standard, ni même l'interface web de Radicale, ne peut créer une NOUVELLE collection sur cette plateforme. Seules les deux collections amorcées au déploiement existent, sauf si vous fournissez un job d'initialisation personnalisé. |
-| `max_instance_count` | Laisser à `1` | **Critical** | Le backend de stockage de Radicale utilise le verrouillage de fichiers au niveau du système d'exploitation et n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
-| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critical** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
-| `stateful_pvc_enabled` (sans objet sur Cloud Run) | Utiliser `Radicale_GKE` en production | Medium | Le montage GCS FUSE de Cloud Run offre une sémantique de verrouillage de fichiers plus faible que celle attendue par le backend de stockage de Radicale ; acceptable uniquement parce que la concurrence est limitée à 1 instance. |
+| Création de nouvelles collections via un client CalDAV/CardDAV | S'appuyer sur les collections amorcées par défaut, ou utiliser `Radicale_GKE` pour créer librement de nouvelles collections | **Élevé** | `MKCOL` est rejeté en périphérie de Cloud Run (GFE) avant d'atteindre le conteneur — aucun client standard, ni même l'interface web de Radicale, ne peut créer une NOUVELLE collection sur cette plateforme. Seules les deux collections amorcées au déploiement existent, sauf si vous fournissez un job d'initialisation personnalisé. |
+| `max_instance_count` | Laisser à `1` | **Critique** | Le backend de stockage de Radicale utilise le verrouillage de fichiers au niveau du système d'exploitation et n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
+| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critique** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
+| `stateful_pvc_enabled` (sans objet sur Cloud Run) | Utiliser `Radicale_GKE` en production | Moyen | Le montage GCS FUSE de Cloud Run offre une sémantique de verrouillage de fichiers plus faible que celle attendue par le backend de stockage de Radicale ; acceptable uniquement parce que la concurrence est limitée à 1 instance. |
 
 ---
 

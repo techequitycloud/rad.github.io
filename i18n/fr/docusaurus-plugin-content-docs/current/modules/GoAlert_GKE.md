@@ -348,8 +348,8 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par
 > le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
@@ -358,15 +358,15 @@ les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_17` | Critical | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
-| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critical | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification des pods, seulement l'attente de Terraform — la garantie d'ordre provient entièrement de `depends_on_jobs`. |
-| `public_url` | À définir explicitement dès que l'IP du LoadBalancer ou le domaine est connu | High | Ce module ne calcule **pas** automatiquement d'URL de service (contrairement à la variante Cloud Run) — une `public_url` non définie se rabat sur la valeur propre à GoAlert, `http://localhost:8081`, ce qui casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants. |
-| `min_instance_count` | `1` | High | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro réplica, les escalades d'alertes réelles sont totalement manquées, sans aucun signal. |
-| `application_database_name` / `application_database_user` | Vérifiez les valeurs réelles (`admin`/`admin` par défaut, et non `goalert`) | Medium | Chercher dans Cloud SQL une base de données littéralement nommée `goalert` ne donnera rien avec les valeurs par défaut de cette variante. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
-| `reserve_static_ip` | `true` | Medium | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute `public_url` que vous avez configurée. |
-| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Medium | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
-| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Medium | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only`. |
+| `database_type` | `POSTGRES_17` | Critique | Tout autre moteur casse entièrement le schéma et le démarrage de GoAlert — `pgcrypto` et l'ensemble du flux `goalert migrate` sont propres à Postgres. |
+| Ordre de `initialization_jobs` (`db-init` → `db-migrate` → `admin-bootstrap`) | Laissez `[]` sauf si vous maîtrisez parfaitement la chaîne de dépendances | Critique | Exécuter `admin-bootstrap` avant `db-migrate` échoue avec `relation "auth_basic_users" does not exist` sur une base de données vierge — `goalert add-user` ne comporte aucune logique de migration. Sur GKE, `execute_on_apply=false` ne retarde PAS la planification des pods, seulement l'attente de Terraform — la garantie d'ordre provient entièrement de `depends_on_jobs`. |
+| `public_url` | À définir explicitement dès que l'IP du LoadBalancer ou le domaine est connu | Élevé | Ce module ne calcule **pas** automatiquement d'URL de service (contrairement à la variante Cloud Run) — une `public_url` non définie se rabat sur la valeur propre à GoAlert, `http://localhost:8081`, ce qui casse les rappels d'authentification OIDC et tous les liens des e-mails de notification sortants. |
+| `min_instance_count` | `1` | Élevé | Le moteur de minutage des escalades de GoAlert est une boucle continue intégrée au processus — à zéro réplica, les escalades d'alertes réelles sont totalement manquées, sans aucun signal. |
+| `application_database_name` / `application_database_user` | Vérifiez les valeurs réelles (`admin`/`admin` par défaut, et non `goalert`) | Moyen | Chercher dans Cloud SQL une base de données littéralement nommée `goalert` ne donnera rien avec les valeurs par défaut de cette variante. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
+| `reserve_static_ip` | `true` | Moyen | Sans IP statique réservée, l'adresse du LoadBalancer externe peut changer d'un redéploiement à l'autre, ce qui casse toute `public_url` que vous avez configurée. |
+| `admin_username` / `admin_email` | À définir une seule fois ; récupérez le mot de passe dans Secret Manager | Moyen | GoAlert n'offre aucun parcours de réinitialisation du mot de passe en libre-service visible depuis Terraform ; perdre la trace de l'identifiant administrateur amorcé oblige à utiliser directement la CLI `goalert` sur la base de données pour en créer un nouveau. |
+| `max_instance_count` | `1`, sauf si vous mettez en place une topologie `--api-only` | Moyen | GoAlert prend en charge plusieurs instances de moteur sans risque (il ne s'agit pas d'un bug de double déclenchement selon la documentation amont), mais ce module ne dispose d'aucun mécanisme intégré pour désigner des réplicas `--api-only`. |
 
 ---
 

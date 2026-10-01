@@ -343,7 +343,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
+| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des jobs personnalisés pour les imports de flux ou les installations de palette. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -390,7 +390,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -402,26 +402,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage d'instance ou nouveau déploiement. |
-| `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critical | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |
-| `enable_auto_password_rotation` | `false` | Critical | La rotation automatique modifie la clé de chiffrement ; tous les identifiants de flux stockés deviennent inaccessibles. Ne l'activez qu'avec une procédure de rechiffrement en place. |
-| `application_name` | défini une seule fois | Critical | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et déconnecte le partage NFS. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche de restauration. |
-| `execution_environment` | `gen2` | High | Les montages NFS nécessitent gen2 ; utiliser gen1 provoque des échecs de montage et des erreurs au démarrage du conteneur. |
-| `max_instance_count` | `1` | High | Node-RED n'est pas conçu pour une mise à l'échelle active-active. Plusieurs instances sans contexte partagé produisent des états contradictoires. |
-| `min_instance_count` | `1` pour les webhooks | High | La mise à l'échelle à zéro provoque des démarrages à froid de 10–20 secondes ; les webhooks déclenchés pendant le remontage NFS sont perdus. |
-| `nfs_mount_path` | `/data` | High | Doit correspondre au répertoire de données natif de Node-RED. Le modifier redirige les écritures vers un stockage éphémère. |
-| `database_type` | `NONE` | High | La définir sur `MYSQL` ou `POSTGRES` provisionne un sidecar Cloud SQL inutile. |
-| `enable_redis` sans `redis_host` | définir `redis_host` explicitement | High | Sans repli sur NFS, un hôte Redis vide provoque des échecs du stockage du contexte. |
-| `enable_iap` | `true` en production | High | L'éditeur donne accès à l'édition complète des flux et à la gestion des identifiants ; il ne doit pas être accessible publiquement. |
-| `ingress_settings` | `internal-and-cloud-load-balancing` en production | Medium | `"internal"` bloque tous les webhooks externes ; `"all"` expose directement le service sans WAF. |
-| `memory_limit` | `1Gi` | Medium | Les flux qui traitent des charges utiles volumineuses ou utilisent des nœuds de traitement d'images peuvent nécessiter `2Gi`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `enable_nfs` | `true` | Critique | Sans NFS, tous les flux, identifiants et nœuds installés sont perdus à chaque redémarrage d'instance ou nouveau déploiement. |
+| `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critique | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |
+| `enable_auto_password_rotation` | `false` | Critique | La rotation automatique modifie la clé de chiffrement ; tous les identifiants de flux stockés deviennent inaccessibles. Ne l'activez qu'avec une procédure de rechiffrement en place. |
+| `application_name` | défini une seule fois | Critique | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et déconnecte le partage NFS. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job de restauration. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS nécessitent gen2 ; utiliser gen1 provoque des échecs de montage et des erreurs au démarrage du conteneur. |
+| `max_instance_count` | `1` | Élevé | Node-RED n'est pas conçu pour une mise à l'échelle active-active. Plusieurs instances sans contexte partagé produisent des états contradictoires. |
+| `min_instance_count` | `1` pour les webhooks | Élevé | La mise à l'échelle à zéro provoque des démarrages à froid de 10–20 secondes ; les webhooks déclenchés pendant le remontage NFS sont perdus. |
+| `nfs_mount_path` | `/data` | Élevé | Doit correspondre au répertoire de données natif de Node-RED. Le modifier redirige les écritures vers un stockage éphémère. |
+| `database_type` | `NONE` | Élevé | La définir sur `MYSQL` ou `POSTGRES` provisionne un sidecar Cloud SQL inutile. |
+| `enable_redis` sans `redis_host` | définir `redis_host` explicitement | Élevé | Sans repli sur NFS, un hôte Redis vide provoque des échecs du stockage du contexte. |
+| `enable_iap` | `true` en production | Élevé | L'éditeur donne accès à l'édition complète des flux et à la gestion des identifiants ; il ne doit pas être accessible publiquement. |
+| `ingress_settings` | `internal-and-cloud-load-balancing` en production | Moyen | `"internal"` bloque tous les webhooks externes ; `"all"` expose directement le service sans WAF. |
+| `memory_limit` | `1Gi` | Moyen | Les flux qui traitent des charges utiles volumineuses ou utilisent des nœuds de traitement d'images peuvent nécessiter `2Gi`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

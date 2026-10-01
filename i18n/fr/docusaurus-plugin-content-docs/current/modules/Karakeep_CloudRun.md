@@ -267,18 +267,18 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (valeur par défaut fixée) | Critical | L'augmenter expose à une corruption de SQLite par des écrivains NFS concurrents — Karakeep n'a aucun autre backend de base de données sur lequel se replier. |
-| Premier compte créé via l'inscription | Le créer immédiatement après le déploiement | Critical | Le premier compte inscrit devient administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'attribue ce rôle. |
-| `enable_nfs` | `true` (par défaut) | Critical | Le désactiver supprime tout stockage durable — la base SQLite et les ressources résideraient sur le système de fichiers éphémère de Cloud Run et disparaîtraient à chaque redémarrage de révision. |
-| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile sans Dockerfile configuré dans ce module — le build échouera. |
-| Accessibilité du sidecar Meilisearch | Vérifier que `MEILI_ADDR` est résolu après le déploiement | Medium | Si le sidecar ne démarre pas, la recherche cesse silencieusement de fonctionner tandis que le reste de l'application fonctionne normalement — un état dégradé facile à manquer. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Sa rotation invalide toutes les sessions utilisateur actives. |
-| Variable d'environnement `DATA_DIR` | La définir explicitement (ce module la définit toujours sur `nfs_mount_path`) | Critical | La valeur par défaut propre à Karakeep est une **chaîne vide**, et non `/data` (cette valeur par défaut n'existe que dans le modèle docker-compose amont). Si elle n'est pas définie, les migrations et le fichier SQLite se résolvent silencieusement vers un stockage éphémère au lieu du montage NFS — confirmé en conditions réelles : l'inscription renvoie des erreurs 500 avec `SqliteError: no such table: user` jusqu'à correction. |
+| `max_instance_count` | `1` (valeur par défaut fixée) | Critique | L'augmenter expose à une corruption de SQLite par des écrivains NFS concurrents — Karakeep n'a aucun autre backend de base de données sur lequel se replier. |
+| Premier compte créé via l'inscription | Le créer immédiatement après le déploiement | Critique | Le premier compte inscrit devient administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'attribue ce rôle. |
+| `enable_nfs` | `true` (par défaut) | Critique | Le désactiver supprime tout stockage durable — la base SQLite et les ressources résideraient sur le système de fichiers éphémère de Cloud Run et disparaîtraient à chaque redémarrage de révision. |
+| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile sans Dockerfile configuré dans ce module — le build échouera. |
+| Accessibilité du sidecar Meilisearch | Vérifier que `MEILI_ADDR` est résolu après le déploiement | Moyen | Si le sidecar ne démarre pas, la recherche cesse silencieusement de fonctionner tandis que le reste de l'application fonctionne normalement — un état dégradé facile à manquer. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Sa rotation invalide toutes les sessions utilisateur actives. |
+| Variable d'environnement `DATA_DIR` | La définir explicitement (ce module la définit toujours sur `nfs_mount_path`) | Critique | La valeur par défaut propre à Karakeep est une **chaîne vide**, et non `/data` (cette valeur par défaut n'existe que dans le modèle docker-compose amont). Si elle n'est pas définie, les migrations et le fichier SQLite se résolvent silencieusement vers un stockage éphémère au lieu du montage NFS — confirmé en conditions réelles : l'inscription renvoie des erreurs 500 avec `SqliteError: no such table: user` jusqu'à correction. |
 
 ---
 

@@ -64,9 +64,9 @@ services Google Cloud suivants :
   l'utilisateur et reste interne (ClusterIP, jamais exposé).
 - **pgvector est fourni avec l'image de la base de données.** `pgcrypto`,
   `uuid-ossp` et `pgvector` sont inclus dans `supabase/postgres`, si bien que les
-  fonctionnalités d'IA/embeddings de Supabase fonctionnent d'emblée ; les tâches
-  d'extensions propres au socle sont désactivées (`enable_postgres_extensions` est
-  remplacé par `false` dans `main.tf`) car elles ciblent Cloud SQL.
+  fonctionnalités d'IA/embeddings de Supabase fonctionnent d'emblée ; les jobs
+  d'extensions propres au socle sont désactivés (`enable_postgres_extensions` est
+  remplacé par `false` dans `main.tf`) car ils ciblent Cloud SQL.
 - **La mise en miroir des images est toujours active.** Les images de Kong et des
   sidecars sont mises en miroir dans Artifact Registry à chaque apply pour éviter les
   limites de débit de Docker Hub.
@@ -117,7 +117,7 @@ et du type de charge de travail (Deployment ou StatefulSet).
 Supabase stocke toutes les données applicatives dans un Deployment
 `supabase/postgres` exécuté dans le même espace de noms (un service ClusterIP, jamais
 exposé à l'extérieur) — **pas** dans Cloud SQL, et sans Auth Proxy. Lors du premier
-déploiement, la tâche `db-init` s'y connecte en tant que `supabase_admin`, définit les
+déploiement, le job `db-init` s'y connecte en tant que `supabase_admin`, définit les
 mots de passe des rôles de service, crée les schémas Supabase et applique les droits
 du schéma `public`.
 
@@ -218,16 +218,16 @@ des règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application Supabase {#3-supabase-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init`
+- **Configuration de la base de données au premier déploiement.** Le job `db-init`
   se connecte au service `supabase/postgres` de l'espace de noms en tant que
   `supabase_admin` et, de manière idempotente, définit des mots de passe LOGIN sur les
   rôles de service que l'image laisse sans mot de passe (`authenticator`,
   `supabase_auth_admin`, `supabase_storage_admin`), crée les schémas `auth`,
   `storage`, `_realtime` et `realtime` avec leurs droits, et définit les GUC de base
-  de données `app.settings.jwt_secret`/`jwt_exp`. Elle s'exécute de manière non
+  de données `app.settings.jwt_secret`/`jwt_exp`. Il s'exécute de manière non
   bloquante (`execute_on_apply = false`) avec sa propre boucle d'attente
   `pg_isready`, car le socle crée les jobs d'initialisation avant les services
-  supplémentaires. Elle peut être relancée sans risque.
+  supplémentaires. Il peut être relancé sans risque.
 - **Remplacement des JWT provisoires.** Après le premier déploiement, les secrets de
   l'anon key et de la service role key contiennent des chaînes provisoires. Ils
   **doivent être remplacés** par des JWT valides signés avec le `jwt_secret` généré
@@ -372,7 +372,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | Tâches planifiées du cluster (par ex. routines de nettoyage de la base de données). |
 | `additional_services` | `[]` | **Microservices Supabase** (GoTrue, PostgREST, Realtime, API Storage, Studio) déployés comme Deployments Kubernetes supplémentaires dans le même espace de noms. Chaque entrée précise `name`, `image`, `port`, les limites de ressources, les variables d'environnement et la configuration des sondes. |
 
@@ -483,7 +483,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image Kong déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -497,27 +497,27 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `jwt_secret` | généré automatiquement ou fixé au premier déploiement | Critical | Le modifier après le déploiement invalide tous les JWT émis ; toutes les connexions clientes cessent de fonctionner. `anon_key` et `service_role_key` doivent être régénérées ensemble. |
-| `anon_key` / `service_role_key` | JWT signés (remplacer les valeurs provisoires) | Critical | Les valeurs provisoires font renvoyer une 401 à chaque appel d'API Supabase. Les trois identifiants JWT doivent être régénérés comme un ensemble atomique. |
-| `enable_cloudsql_volume` | `true` | Low | Inerte pour Supabase — GoTrue, PostgREST, Realtime et Storage se connectent tous au `supabase/postgres` de l'espace de noms via leurs propres URL `postgres://`, et non via l'Auth Proxy. |
-| `database_type` | `POSTGRES_15` | Low | Inerte — `main.tf` transmet quoi qu'il arrive `"NONE"` au socle, car PostgreSQL 15 s'exécute comme service `supabase/postgres` dans l'espace de noms. |
-| `application_database_name` / `_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods. |
-| `enable_postgres_extensions` | `true` | Low | Remplacé par `false` dans `main.tf` (les tâches d'extensions du socle ciblent Cloud SQL, que ce module n'utilise pas) ; les extensions sont fournies dans l'image `supabase/postgres`. |
-| `min_instance_count` | `1` | High | Une valeur de `0` autorise la mise à l'échelle à zéro ; les démarrages à froid de Kong prennent 15–30 s et perturbent les flux de redirection OAuth. |
-| `container_resources` CPU | `2000m` en production | High | Un CPU insuffisant provoque une latence élevée et des délais d'attente 504 sous charge. |
-| `container_resources` mémoire | `2Gi` minimum | High | Une mémoire insuffisante provoque des arrêts OOM sous charge concurrente. |
-| `startup_probe_config` / `startup_probe` | inertes — `main.tf` code en dur la sonde déployée en TCP (`failure_threshold=30`, `period_seconds=10`, ~5 min) | High | Définir ces variables n'a aucun effet sur le conteneur Kong déployé ; ne comptez pas sur elles pour allonger la tolérance au premier démarrage — voir §3. |
-| `site_url` / `api_external_url` / `supabase_public_url` | vraies URL publiques | High | Les valeurs par défaut localhost empêchent les flux OAuth et la construction des redirections de fonctionner en dehors du cluster. |
-| `application_version` | figée (pas `latest`) | Medium | Récupérer `latest` expose à des versions de Kong incompatibles avec la configuration déclarative fournie. |
-| `enable_nfs` | `false` | Low | NFS est inutile pour Supabase ; l'activer ajoute un coût Filestore et une dépendance susceptible de retarder le provisionnement. |
-| `enable_redis` | `false` | Medium | Redis est facultatif. S'il vaut `true`, `redis_host` doit pointer vers un point de terminaison joignable ; un hôte injoignable provoque des délais d'attente au démarrage de Kong. |
+| `jwt_secret` | généré automatiquement ou fixé au premier déploiement | Critique | Le modifier après le déploiement invalide tous les JWT émis ; toutes les connexions clientes cessent de fonctionner. `anon_key` et `service_role_key` doivent être régénérées ensemble. |
+| `anon_key` / `service_role_key` | JWT signés (remplacer les valeurs provisoires) | Critique | Les valeurs provisoires font renvoyer une 401 à chaque appel d'API Supabase. Les trois identifiants JWT doivent être régénérés comme un ensemble atomique. |
+| `enable_cloudsql_volume` | `true` | Faible | Inerte pour Supabase — GoTrue, PostgREST, Realtime et Storage se connectent tous au `supabase/postgres` de l'espace de noms via leurs propres URL `postgres://`, et non via l'Auth Proxy. |
+| `database_type` | `POSTGRES_15` | Faible | Inerte — `main.tf` transmet quoi qu'il arrive `"NONE"` au socle, car PostgreSQL 15 s'exécute comme service `supabase/postgres` dans l'espace de noms. |
+| `application_database_name` / `_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods. |
+| `enable_postgres_extensions` | `true` | Faible | Remplacé par `false` dans `main.tf` (les jobs d'extensions du socle ciblent Cloud SQL, que ce module n'utilise pas) ; les extensions sont fournies dans l'image `supabase/postgres`. |
+| `min_instance_count` | `1` | Élevé | Une valeur de `0` autorise la mise à l'échelle à zéro ; les démarrages à froid de Kong prennent 15–30 s et perturbent les flux de redirection OAuth. |
+| `container_resources` CPU | `2000m` en production | Élevé | Un CPU insuffisant provoque une latence élevée et des délais d'attente 504 sous charge. |
+| `container_resources` mémoire | `2Gi` minimum | Élevé | Une mémoire insuffisante provoque des arrêts OOM sous charge concurrente. |
+| `startup_probe_config` / `startup_probe` | inertes — `main.tf` code en dur la sonde déployée en TCP (`failure_threshold=30`, `period_seconds=10`, ~5 min) | Élevé | Définir ces variables n'a aucun effet sur le conteneur Kong déployé ; ne comptez pas sur elles pour allonger la tolérance au premier démarrage — voir §3. |
+| `site_url` / `api_external_url` / `supabase_public_url` | vraies URL publiques | Élevé | Les valeurs par défaut localhost empêchent les flux OAuth et la construction des redirections de fonctionner en dehors du cluster. |
+| `application_version` | figée (pas `latest`) | Moyen | Récupérer `latest` expose à des versions de Kong incompatibles avec la configuration déclarative fournie. |
+| `enable_nfs` | `false` | Faible | NFS est inutile pour Supabase ; l'activer ajoute un coût Filestore et une dépendance susceptible de retarder le provisionnement. |
+| `enable_redis` | `false` | Moyen | Redis est facultatif. S'il vaut `true`, `redis_host` doit pointer vers un point de terminaison joignable ; un hôte injoignable provoque des délais d'attente au démarrage de Kong. |
 
 ---
 

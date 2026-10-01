@@ -217,7 +217,7 @@ avec des tests de disponibilité et des règles d'alerte facultatifs.
   seule fois et écrit dans Secret Manager. Le faire tourner invalide tous les cookies
   de session signés, obligeant chaque utilisateur à se reconnecter. Ne le faites
   tourner que pendant une fenêtre de maintenance planifiée.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness)
   ciblent `/up` — le point de terminaison de santé intégré de Rails, qui renvoie un
   `200` non authentifié dès que l'application est prête. La sonde de démarrage par
   défaut prévoit un délai initial de 60 secondes et une large fenêtre de nouvelles
@@ -369,25 +369,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Une rotation invalide tous les cookies de session signés — chaque utilisateur est déconnecté. |
-| `enable_nfs` | `true` | Critical | Le désactiver stocke les documents sur le disque éphémère du conteneur ; chaque document téléversé est perdu à la révision ou au démarrage à froid suivant. |
-| `nfs_mount_path` | `/data/docuseal` | Critical | Doit correspondre au `WORKDIR` de DocuSeal ; un chemin différent signifie que les documents sont écrits sur un stockage non persistant. |
-| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base / l'utilisateur et détruit toutes les données. |
-| `enable_cloudsql_volume` | `false` | High | Ruby ne sait pas analyser le DSN de socket Cloud SQL ; activer le sidecar de socket casse la `DATABASE_URL` et le démarrage échoue. |
-| `container_port` | `3000` | High | Puma écoute sur 3000 ; un port différent fait viser un port mort aux sondes et la révision ne devient jamais Ready. |
-| `execution_environment` | `gen2` | High | Gen1 ne peut pas monter NFS ; l'application perd le stockage persistant des documents. |
-| `enable_iap` | uniquement pour un usage interne | High | IAP place chaque requête derrière une connexion Google, ce qui bloque les liens publics des signataires. |
-| `memory_limit` | `4Gi` | Medium | Le rendu et la signature des PDF sont gourmands en mémoire ; trop réduire expose à des arrêts OOM en charge. |
-| `min_instance_count` | `1` (ou `0` pour réduire les coûts) | Medium | La mise à zéro ajoute un délai de démarrage à froid à la première requête après une période d'inactivité ; les documents sur NFS sont en sécurité dans les deux cas. |
-| `application_version` | À épingler en production | Medium | `latest` peut récupérer une nouvelle version majeure au redéploiement et appliquer des migrations que vous n'avez pas examinées. |
-| `cpu_always_allocated` | `false` (à la requête) | Medium | La valeur par défaut codée est `true` (facturation à l'instance), ce que la propre description de la variable juge inutile pour la charge de travail requête/réponse de DocuSeal — la laisser par défaut revient à payer du CPU inactif sans aucun bénéfice fonctionnel. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Une rotation invalide tous les cookies de session signés — chaque utilisateur est déconnecté. |
+| `enable_nfs` | `true` | Critique | Le désactiver stocke les documents sur le disque éphémère du conteneur ; chaque document téléversé est perdu à la révision ou au démarrage à froid suivant. |
+| `nfs_mount_path` | `/data/docuseal` | Critique | Doit correspondre au `WORKDIR` de DocuSeal ; un chemin différent signifie que les documents sont écrits sur un stockage non persistant. |
+| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base / l'utilisateur et détruit toutes les données. |
+| `enable_cloudsql_volume` | `false` | Élevé | Ruby ne sait pas analyser le DSN de socket Cloud SQL ; activer le sidecar de socket casse la `DATABASE_URL` et le démarrage échoue. |
+| `container_port` | `3000` | Élevé | Puma écoute sur 3000 ; un port différent fait viser un port mort aux sondes et la révision ne devient jamais Ready. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas monter NFS ; l'application perd le stockage persistant des documents. |
+| `enable_iap` | uniquement pour un usage interne | Élevé | IAP place chaque requête derrière une connexion Google, ce qui bloque les liens publics des signataires. |
+| `memory_limit` | `4Gi` | Moyen | Le rendu et la signature des PDF sont gourmands en mémoire ; trop réduire expose à des arrêts OOM en charge. |
+| `min_instance_count` | `1` (ou `0` pour réduire les coûts) | Moyen | La mise à zéro ajoute un délai de démarrage à froid à la première requête après une période d'inactivité ; les documents sur NFS sont en sécurité dans les deux cas. |
+| `application_version` | À épingler en production | Moyen | `latest` peut récupérer une nouvelle version majeure au redéploiement et appliquer des migrations que vous n'avez pas examinées. |
+| `cpu_always_allocated` | `false` (à la requête) | Moyen | La valeur par défaut codée est `true` (facturation à l'instance), ce que la propre description de la variable juge inutile pour la charge de travail requête/réponse de DocuSeal — la laisser par défaut revient à payer du CPU inactif sans aucun bénéfice fonctionnel. |
 
 ---
 

@@ -38,7 +38,7 @@ au moyen de simples variables de configuration — aucune infrastructure à conc
   en variante GKE à partir d'un socle commun (quelques-unes ne sont proposées que sur un seul environnement), de sorte que
   l'environnement d'exécution est généralement une décision prise au moment du déploiement — les applications sans état utilisent par défaut Cloud
   Run, les applications avec état Autopilot.
-- **Tâches ponctuelles.** L'initialisation de la base de données, les migrations, l'installation de plugins et
+- **Jobs ponctuels.** L'initialisation de la base de données, les migrations, l'installation de plugins et
   d'extensions, le SQL personnalisé (`enable_custom_sql_scripts`) et la sauvegarde/restauration s'exécutent sous forme de jobs
   facturés uniquement pendant leur exécution, déclenchés automatiquement à chaque déploiement.
 - **Provenance d'image flexible.** Déployez une image préconstruite, construisez à partir des sources ou répliquez

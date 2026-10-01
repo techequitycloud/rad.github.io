@@ -31,7 +31,7 @@ guides des plateformes ([Kavita_GKE](Kavita_GKE.md),
 | Clé de signature JWT | **Non injectable** — Kavita génère automatiquement le `TokenKey` de `appsettings.json` au premier démarrage et le persiste sur le volume `/kavita/config` | Gérée en interne par Kavita ; rien à injecter |
 | Image de conteneur | Fine surcouche de l'image officielle `jvmilazz0/kavita`, afin que le socle puisse la mettre en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | **Aucun** — Kavita utilise une base de données SQLite interne (`kavita.db`) sous `/kavita/config` (`database_type = "NONE"`) | Section Base de données des guides des plateformes |
-| Amorçage de la base de données | **Aucun** — il n'existe pas de tâche `db-init` ; Kavita gère son propre stockage | s.o. |
+| Amorçage de la base de données | **Aucun** — il n'existe pas de job `db-init` ; Kavita gère son propre stockage | s.o. |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` qui sert de support à `/kavita/config` sur Cloud Run | Sortie `storage_buckets` |
 | Paramètres principaux | Définit `DOTNET_gcServer = "0"` et le port de conteneur `5000` | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de démarrage et d'activité par défaut, qui ciblent `/api/health` | Section Observabilité des guides des plateformes |
@@ -86,7 +86,7 @@ conséquent :
 
 - `database_type = "NONE"` — aucune instance, base de données ni aucun
   utilisateur Cloud SQL n'est créé pour Kavita.
-- Il n'existe **pas de tâche `db-init`** — Kavita crée et migre lui-même son
+- Il n'existe **pas de job `db-init`** — Kavita crée et migre lui-même son
   schéma SQLite au premier démarrage ; rien n'a besoin d'être amorcé à l'avance.
 - Aucune extension PostgreSQL, aucun `pgvector` et **aucun Redis** n'entrent en
   jeu (`enable_redis = false` est imposé par les deux surcouches de plateforme).

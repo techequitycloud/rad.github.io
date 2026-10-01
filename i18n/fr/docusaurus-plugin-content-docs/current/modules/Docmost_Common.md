@@ -33,7 +33,7 @@ stockage de données Postgres et une couche de collaboration/files d'attente rep
 | Secret cryptographique | Génère `APP_SECRET` (64 caractères hexadécimaux, 32 octets aléatoires) et le stocke dans **Secret Manager** | Injecté automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `docmost/docmost` avec un point d'entrée personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données et l'utilisateur, et accorde les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et l'utilisateur, et accorde les droits | Sortie `initialization_jobs` |
 | Cache et collaboration | Exige **Redis** pour l'édition en temps réel et les files d'attente en arrière-plan (activé par défaut) | §Redis dans les guides de plateforme |
 | Stockage de fichiers | Pilote de stockage local (`STORAGE_DRIVER = local`) écrivant sur un volume **adossé à NFS** à `/app/data/storage` | §Stockage dans les guides de plateforme |
 | Stockage d'objets | Déclare un bucket de données **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
@@ -80,7 +80,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 
 Docmost exige **PostgreSQL 15** ; le moteur est fixé (`database_type = "POSTGRES_15"`)
 et MySQL ou les autres moteurs ne sont pas pris en charge. Lors du premier déploiement,
-une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de façon idempotente :
+un job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine` et, de façon idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy sous `/cloudsql` et l'associe au
    nom de socket `psql` standard (en vidant `DB_IP` pour que le socket l'emporte),
@@ -94,9 +94,9 @@ une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de fa
 8. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement
    (`POST /quitquitquit`) afin que le Job puisse se terminer.
 
-La tâche peut être relancée sans risque. Docmost n'a **pas** besoin d'une étape de
+Le job peut être relancé sans risque. Docmost n'a **pas** besoin d'une étape de
 migration distincte — l'application exécute automatiquement ses propres migrations de
-schéma à chaque démarrage (`pnpm start`), si bien que la tâche `db-init` n'a qu'à
+schéma à chaque démarrage (`pnpm start`), si bien que le job `db-init` n'a qu'à
 provisionner la base de données vide et le rôle.
 
 Inspectez directement la base de données avec :
@@ -177,7 +177,7 @@ tout ce dont elles ont besoin).
 
 Contrairement aux wikis centrés sur les fichiers qui conservent tout dans Postgres,
 Docmost utilise **Redis** pour la coordination de l'édition collaborative en temps réel
-et pour les files d'attente de tâches en arrière-plan. Redis est donc **activé par
+et pour les files d'attente de jobs en arrière-plan. Redis est donc **activé par
 défaut** dans les deux variantes de plateforme (`enable_redis = true`). Lorsque
 `redis_host` est laissé vide, la plateforme co-héberge Redis sur la VM du serveur NFS et
 injecte son IP ; le point d'entrée assemble `REDIS_URL` à partir des valeurs injectées.

@@ -468,30 +468,30 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Cal.diy nécessite PostgreSQL avec l'ORM Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
-| `container_port` | `3000` | Critical | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé et le routage du trafic. |
-| `enable_cloudsql_volume` | `true` | Critical | Cal.diy se connecte à Cloud SQL via un socket Unix ; le désactiver supprime le socket et toutes les connexions à la base de données échouent. |
-| `application_database_name` / `_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et rend orphelines les données existantes. |
-| `application_version` | version publiée épinglée | Critical | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide fait échouer l'extraction de l'image. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation et peut écraser des données en production lors des applications suivantes. |
-| `NEXT_PUBLIC_WEBAPP_URL` | identique à l'URL publique | Critical | Cal.diy intègre cette valeur dans les blocs Next.js ; une discordance casse les callbacks OAuth et les liens de réservation. |
-| `NEXTAUTH_URL` | identique à l'URL publique | Critical | NextAuth valide les URI de redirection OAuth par rapport à cette valeur ; une discordance bloque toutes les connexions. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont des octets — cela bloque toute planification de pods. |
-| `container_resources.memory_limit` | `2Gi` minimum | High | Le démarrage de Cal.diy (migration de la base de données + alimentation initiale) nécessite ≥ 2 GiB ; des arrêts OOM surviennent avant que l'application ne soit prête. |
-| `startup_probe.failure_threshold` | `12` (période de 10s ≈ 2 min) | High | Une réduction trop agressive tue les pods avant la fin de `db-migrate` et `seed-app-store`. |
-| `enable_redis` | `true` en multi-réplica | High | Sans Redis, les sessions sont propres à chaque pod ; les utilisateurs sont déconnectés lorsque leurs requêtes arrivent sur des pods différents. |
-| `redis_host` | obligatoire lorsque `enable_redis=true` | High | Un `redis_host` vide avec Redis activé injecte une URL malformée ; les opérations de session échouent à l'exécution. |
-| `enable_pod_disruption_budget` | `true` lorsque `max > 1` | Medium | Sans PDB, la maintenance du cluster peut évincer tous les pods simultanément. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_topology_spread` | à activer en production | Medium | Sans répartition, tous les réplicas peuvent s'exécuter dans une seule zone ; une panne de zone met le service hors ligne. |
-| `min_instance_count` | `1` | Medium | Le premier démarrage de Cal.diy prend 3 à 5 minutes ; `0` avec mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid importante. |
-| `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Medium | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais envoyés. |
-| `organization_id` | défini explicitement pour VPC-SC | Medium | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
+| `database_type` | `POSTGRES_15` | Critique | Cal.diy nécessite PostgreSQL avec l'ORM Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
+| `container_port` | `3000` | Critique | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé et le routage du trafic. |
+| `enable_cloudsql_volume` | `true` | Critique | Cal.diy se connecte à Cloud SQL via un socket Unix ; le désactiver supprime le socket et toutes les connexions à la base de données échouent. |
+| `application_database_name` / `_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et rend orphelines les données existantes. |
+| `application_version` | version publiée épinglée | Critique | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide fait échouer l'extraction de l'image. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation et peut écraser des données en production lors des applications suivantes. |
+| `NEXT_PUBLIC_WEBAPP_URL` | identique à l'URL publique | Critique | Cal.diy intègre cette valeur dans les blocs Next.js ; une discordance casse les callbacks OAuth et les liens de réservation. |
+| `NEXTAUTH_URL` | identique à l'URL publique | Critique | NextAuth valide les URI de redirection OAuth par rapport à cette valeur ; une discordance bloque toutes les connexions. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets — cela bloque toute planification de pods. |
+| `container_resources.memory_limit` | `2Gi` minimum | Élevé | Le démarrage de Cal.diy (migration de la base de données + alimentation initiale) nécessite ≥ 2 GiB ; des arrêts OOM surviennent avant que l'application ne soit prête. |
+| `startup_probe.failure_threshold` | `12` (période de 10s ≈ 2 min) | Élevé | Une réduction trop agressive tue les pods avant la fin de `db-migrate` et `seed-app-store`. |
+| `enable_redis` | `true` en multi-réplica | Élevé | Sans Redis, les sessions sont propres à chaque pod ; les utilisateurs sont déconnectés lorsque leurs requêtes arrivent sur des pods différents. |
+| `redis_host` | obligatoire lorsque `enable_redis=true` | Élevé | Un `redis_host` vide avec Redis activé injecte une URL malformée ; les opérations de session échouent à l'exécution. |
+| `enable_pod_disruption_budget` | `true` lorsque `max > 1` | Moyen | Sans PDB, la maintenance du cluster peut évincer tous les pods simultanément. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_topology_spread` | à activer en production | Moyen | Sans répartition, tous les réplicas peuvent s'exécuter dans une seule zone ; une panne de zone met le service hors ligne. |
+| `min_instance_count` | `1` | Moyen | Le premier démarrage de Cal.diy prend 3 à 5 minutes ; `0` avec mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid importante. |
+| `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Moyen | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais envoyés. |
+| `organization_id` | défini explicitement pour VPC-SC | Moyen | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
 
 ---
 

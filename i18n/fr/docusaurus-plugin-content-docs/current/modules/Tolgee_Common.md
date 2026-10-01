@@ -31,7 +31,7 @@ guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Initialisation de la base de données | S'appuie sur le `create-db-and-user.sh` du socle (pas de job d'initialisation distinct) ; Tolgee migre automatiquement son schéma avec Liquibase au premier démarrage | §Base de données dans les guides des plateformes |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** pour le stockage de fichiers facultatif (captures d'écran/imports) | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit `SERVER_PORT`, le nom d'utilisateur administrateur initial, l'authentification native, et désactive le PostgreSQL intégré de Tolgee | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit les sondes de disponibilité, de démarrage et de vivacité par défaut ciblant `/actuator/health` | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit les sondes de disponibilité (readiness), de démarrage et de vivacité par défaut ciblant `/actuator/health` | §Observabilité dans les guides des plateformes |
 
 ---
 

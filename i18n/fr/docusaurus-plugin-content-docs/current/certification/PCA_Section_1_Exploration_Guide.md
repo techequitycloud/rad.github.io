@@ -71,7 +71,7 @@ R : Un budget de facturation avec plusieurs seuils d'alerte — ici, `budget_ale
 
 > ⏱ ~90 min · 💰 élevé — Cloud SQL REGIONAL double à peu près le coût de l'instance ; Redis HA et une instance dupliquée avec accès en lecture ajoutent davantage · ⚙️ Prérequis : profil Niveau de données résilient (+ profil Architecture GKE pour les étapes HPA/PDB)
 
-**Pourquoi l'examen s'y intéresse** — Les exigences de haute disponibilité, d'évolutivité et de fiabilité (« disponibilité de 99.95 % », « survivre à la panne d'une zone », « absorber 10× le trafic du Black Friday ») correspondent chacune à un mécanisme précis, au coût précis. L'examen attend de vous que vous sachiez que passer Cloud SQL de zonal à régional apporte un basculement automatique entre zones, que les instances dupliquées avec accès en lecture apportent du débit en lecture mais *pas* la haute disponibilité, et que Redis au niveau BASIC n'offre aucune réplication.
+**Pourquoi l'examen s'y intéresse** — Les exigences de haute disponibilité, d'évolutivité et de fiabilité (« disponibilité de 99,95 % », « survivre à la panne d'une zone », « absorber 10× le trafic du Black Friday ») correspondent chacune à un mécanisme précis, au coût précis. L'examen attend de vous que vous sachiez que passer Cloud SQL de zonal à régional apporte un basculement automatique entre zones, que les instances dupliquées avec accès en lecture apportent du débit en lecture mais *pas* la haute disponibilité, et que Redis au niveau BASIC n'offre aucune réplication.
 
 **Comment RAD le met en œuvre**
 

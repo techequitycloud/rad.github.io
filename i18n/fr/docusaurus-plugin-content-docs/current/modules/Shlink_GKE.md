@@ -58,7 +58,7 @@ fichiers à gérer.
   dehors de la base de données.
 - **Les migrations de base de données s'exécutent automatiquement au démarrage du conteneur.**
   L'image officielle `shlinkio/shlink` exécute ses propres migrations de schéma
-  au démarrage ; il n'existe pas de tâche de migration distincte (seulement
+  au démarrage ; il n'existe pas de job de migration distinct (seulement
   `db-init`, qui crée le rôle/la base de données).
 - **`INITIAL_API_KEY` est généré automatiquement** et stocké dans Secret
   Manager, puis injecté comme variable d'environnement secrète du conteneur
@@ -115,7 +115,7 @@ Shlink stocke toutes les données de l'application (URL courtes, enregistrements
 de visites, tags et clés d'API) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods la joignent via le sidecar **Cloud SQL Auth Proxy** sur
 `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier
-déploiement, la tâche `db-init` (avec `postgres:15-alpine`) crée de manière
+déploiement, le job `db-init` (avec `postgres:15-alpine`) crée de manière
 idempotente le rôle et la base de données de l'application, accorde la
 propriété et les privilèges, puis arrête son propre sidecar de proxy via le
 point de terminaison `quitquitquit`.
@@ -188,16 +188,16 @@ disponibilité et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Shlink {#3-shlink-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que
   PostgreSQL soit joignable, puis, de manière idempotente, crée (`CREATE`) ou
   modifie (`ALTER`) le rôle et la base de données de l'application, accorde la
-  propriété et `ALL PRIVILEGES`, et accorde `ALL ON SCHEMA public`. La tâche
-  peut être relancée sans risque (`execute_on_apply = true`). Elle
+  propriété et `ALL PRIVILEGES`, et accorde `ALL ON SCHEMA public`. Le job
+  peut être relancé sans risque (`execute_on_apply = true`). Il
   s'authentifie en tant que `postgres` avec le même secret que le propre
   `DB_PASSWORD` de l'application (`ROOT_PASSWORD` et `DB_PASSWORD` référencent
   tous deux `database_password_secret`). {/* TODO: verify ROOT_PASSWORD vs DB_PASSWORD sharing the same secret is intentional */}
-- **Les migrations de base de données s'exécutent au démarrage, sans tâche de migration distincte.**
+- **Les migrations de base de données s'exécutent au démarrage, sans job de migration distinct.**
   L'image officielle `shlinkio/shlink` exécute ses propres migrations de schéma
   au démarrage du conteneur sur la base de données vide créée par `db-init` ;
   il n'y a aucune étape de migration `execute_on_apply` à attendre au-delà de
@@ -334,7 +334,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -348,8 +348,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -362,18 +362,18 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (fixe) | Critical | Non modifiable — Shlink ne prend en charge que PostgreSQL. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins toutes les URL courtes et l'historique des visites. |
-| `environment_variables` (`DB_NAME`/`DB_USER`) | Ne pas définir manuellement | Critical | Les remplacer par les noms courts `shlink`/`shlink` contourne le rôle propre au tenant du socle et provoque `password authentication failed`. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité à la base de données sur GKE. |
-| `INITIAL_API_KEY` (généré automatiquement) | À récupérer après le déploiement | High | Shlink n'a pas de connexion administrateur — perdre la trace de ce secret sans en effectuer la rotation vous bloque l'accès à l'API REST et au client web. |
-| Chemin de `startup_probe_config` / `health_check_config` | `/rest/health` | High | Pointer les sondes vers `/` (404) ou vers un point de terminaison authentifié empêche le pod de devenir Ready. |
-| `max_instance_count` | `3` (ou plus) | Low | Shlink est sans état ; dépasser 3 est sûr si le trafic le justifie — aucun risque lié au stockage partagé ou aux verrous. |
-| `DEFAULT_DOMAIN` (défini après le déploiement) | URL du LoadBalancer externe/du domaine | Medium | Un domaine erroné ou absent fait pointer les URL courtes générées vers le mauvais hôte. |
-| `memory_limit` | `512Mi` | Medium | Le plancher de mémoire gen2/Autopilot et les besoins du runtime Swoole ; augmentez-le si les pods subissent des OOM sous une charge soutenue. |
-| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout `DEFAULT_DOMAIN` codé en dur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire des données d'URL courtes et de l'historique des visites. |
+| `database_type` | `POSTGRES_15` (fixe) | Critique | Non modifiable — Shlink ne prend en charge que PostgreSQL. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins toutes les URL courtes et l'historique des visites. |
+| `environment_variables` (`DB_NAME`/`DB_USER`) | Ne pas définir manuellement | Critique | Les remplacer par les noms courts `shlink`/`shlink` contourne le rôle propre au tenant du socle et provoque `password authentication failed`. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité à la base de données sur GKE. |
+| `INITIAL_API_KEY` (généré automatiquement) | À récupérer après le déploiement | Élevé | Shlink n'a pas de connexion administrateur — perdre la trace de ce secret sans en effectuer la rotation vous bloque l'accès à l'API REST et au client web. |
+| Chemin de `startup_probe_config` / `health_check_config` | `/rest/health` | Élevé | Pointer les sondes vers `/` (404) ou vers un point de terminaison authentifié empêche le pod de devenir Ready. |
+| `max_instance_count` | `3` (ou plus) | Faible | Shlink est sans état ; dépasser 3 est sûr si le trafic le justifie — aucun risque lié au stockage partagé ou aux verrous. |
+| `DEFAULT_DOMAIN` (défini après le déploiement) | URL du LoadBalancer externe/du domaine | Moyen | Un domaine erroné ou absent fait pointer les URL courtes générées vers le mauvais hôte. |
+| `memory_limit` | `512Mi` | Moyen | Le plancher de mémoire gen2/Autopilot et les besoins du runtime Swoole ; augmentez-le si les pods subissent des OOM sous une charge soutenue. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout `DEFAULT_DOMAIN` codé en dur. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire des données d'URL courtes et de l'historique des visites. |
 
 ---
 

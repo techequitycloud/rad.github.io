@@ -229,16 +229,16 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile — le build échoue. |
-| Première inscription | À effectuer rapidement après le déploiement | **Medium** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
-| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **High** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Les métadonnées des objets ne sont pas concernées. |
-| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critical | Les modifier ou les vider rompt entièrement la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile alors que ce module ne contient pas de Dockerfile — le build échoue. |
+| Première inscription | À effectuer rapidement après le déploiement | **Moyen** | La première personne à s'inscrire sur une instance neuve accessible publiquement devient l'administrateur — tant que vous ne vous êtes pas inscrit et n'avez pas défini `HBOX_OPTIONS_ALLOW_REGISTRATION=false`, quiconque découvre l'URL peut s'approprier le compte administrateur. |
+| `gcs_volumes` pour les photos des objets | Laisser vide (utiliser le montage `/data` propre au module) | **Élevé** | `Homebox_Common` monte déjà le bucket `data` sur `/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/data`, les photos et pièces jointes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Les métadonnées des objets ne sont pas concernées. |
+| Variables `db_*_env_var_name` | Conserver leurs valeurs par défaut propres à Homebox | Critique | Les modifier ou les vider rompt entièrement la connexion Postgres de Homebox — il lit `HBOX_DATABASE_*`, et non `DB_*`. |
 
 ---
 

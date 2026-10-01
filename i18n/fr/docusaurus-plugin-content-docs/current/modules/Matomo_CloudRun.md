@@ -316,28 +316,28 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Matomo ne prend en charge que MySQL/MariaDB ; tout autre moteur fait échouer l'installateur. |
-| `db_name` / `db_user` | défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données d'analyse. |
-| `enable_nfs` | `true` | Critical | Sans racine documentaire persistante, `config.ini.php` et les plugins sont perdus à chaque redémarrage — Matomo revient à l'installateur. |
-| `nfs_mount_path` | `/var/www/html` | Critical | Un montage à tout autre emplacement laisse la racine documentaire sur un disque éphémère. |
-| `container_port` | `80` | Critical | Apache écoute sur le port 80 ; une incohérence fait échouer toutes les sondes de santé. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `execution_environment` | `gen2` | High | Les montages NFS exigent gen2 ; gen1 ne peut pas monter Filestore. |
-| `enable_cloudsql_volume` | `false` | High | Matomo est câblé pour TCP via `MATOMO_DATABASE_HOST` (adresse IP privée) ; passer au socket sans recâbler la variable d'environnement de l'hôte laisse l'installateur pointer vers un hôte injoignable. |
-| `application_version` | Tag de variante Apache (par ex. `5-apache`) | High | Les variantes fpm/alpine n'ont pas d'Apache et ne servent pas HTTP sur le port 80. |
-| `max_instance_count` | `1` | High | Plusieurs instances partageant la même racine documentaire NFS ne sont pas validées pour la sûreté des sessions et de la configuration de Matomo. |
-| `memory_limit` | `2Gi` | High | Une mémoire insuffisante fait échouer la génération des rapports PHP et le traitement des archives. |
-| `enable_redis` | `true` | Medium | Sans cache d'objets, toutes les lectures de cache sollicitent MySQL, ce qui augmente la charge. |
-| `min_instance_count` | `0` (dev) / `1` (prod) | Medium | `0` ajoute un démarrage à froid de 10 à 30 s pour la première page vue suivie après une période d'inactivité. |
-| `cron_jobs` (core:archive) | défini pour un fort trafic | Medium | L'archivage déclenché par le navigateur ralentit les requêtes des visiteurs sur les sites très fréquentés. |
-| `enable_iap` | `false` pour les traceurs publics | Medium | IAP placé devant le service bloque le point de terminaison de suivi appelé par vos sites web. |
-| `uptime_check_config.enabled` | `true` pour la prod | Low | Aucun signal de disponibilité externe ; les pannes ne remontent que par les signalements des utilisateurs. |
-| `php_memory_limit` etc. | valeurs par défaut | Low | Simples arguments de build — silencieusement inertes avec l'image précompilée par défaut. |
+| `database_type` | `MYSQL_8_0` | Critique | Matomo ne prend en charge que MySQL/MariaDB ; tout autre moteur fait échouer l'installateur. |
+| `db_name` / `db_user` | défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données d'analyse. |
+| `enable_nfs` | `true` | Critique | Sans racine documentaire persistante, `config.ini.php` et les plugins sont perdus à chaque redémarrage — Matomo revient à l'installateur. |
+| `nfs_mount_path` | `/var/www/html` | Critique | Un montage à tout autre emplacement laisse la racine documentaire sur un disque éphémère. |
+| `container_port` | `80` | Critique | Apache écoute sur le port 80 ; une incohérence fait échouer toutes les sondes de santé. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS exigent gen2 ; gen1 ne peut pas monter Filestore. |
+| `enable_cloudsql_volume` | `false` | Élevé | Matomo est câblé pour TCP via `MATOMO_DATABASE_HOST` (adresse IP privée) ; passer au socket sans recâbler la variable d'environnement de l'hôte laisse l'installateur pointer vers un hôte injoignable. |
+| `application_version` | Tag de variante Apache (par ex. `5-apache`) | Élevé | Les variantes fpm/alpine n'ont pas d'Apache et ne servent pas HTTP sur le port 80. |
+| `max_instance_count` | `1` | Élevé | Plusieurs instances partageant la même racine documentaire NFS ne sont pas validées pour la sûreté des sessions et de la configuration de Matomo. |
+| `memory_limit` | `2Gi` | Élevé | Une mémoire insuffisante fait échouer la génération des rapports PHP et le traitement des archives. |
+| `enable_redis` | `true` | Moyen | Sans cache d'objets, toutes les lectures de cache sollicitent MySQL, ce qui augmente la charge. |
+| `min_instance_count` | `0` (dev) / `1` (prod) | Moyen | `0` ajoute un démarrage à froid de 10 à 30 s pour la première page vue suivie après une période d'inactivité. |
+| `cron_jobs` (core:archive) | défini pour un fort trafic | Moyen | L'archivage déclenché par le navigateur ralentit les requêtes des visiteurs sur les sites très fréquentés. |
+| `enable_iap` | `false` pour les traceurs publics | Moyen | IAP placé devant le service bloque le point de terminaison de suivi appelé par vos sites web. |
+| `uptime_check_config.enabled` | `true` pour la prod | Faible | Aucun signal de disponibilité externe ; les pannes ne remontent que par les signalements des utilisateurs. |
+| `php_memory_limit` etc. | valeurs par défaut | Faible | Simples arguments de build — silencieusement inertes avec l'image précompilée par défaut. |
 
 ---
 

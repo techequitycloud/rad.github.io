@@ -311,24 +311,24 @@ Renvoyés à l'issue d'un déploiement réussi — le moyen le plus rapide de lo
 
 Les validations au moment du plan détectent plusieurs de ces erreurs ; les autres n'apparaissent qu'à l'exécution.
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Plane est une application Django/PostgreSQL ; MySQL ou `NONE` cassent le migrator et le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| Sidecar RabbitMQ | Le laisser câblé | Critical | Le `start.sh` de Plane se termine si `AMQP_URL` est vide — le courtier est obligatoire et doit se trouver dans le pod (Cloud Run ne peut pas acheminer AMQP entre services). |
-| `container_port` | `80` | Critical | Le conteneur AIO n'expose que le proxy Caddy interne sur :80 ; tout autre port fait échouer toutes les sondes. |
-| `application_version` | `stable` ou un tag réel | High | L'image amont n'a pas de tag `latest` ; le module convertit `latest`→`stable`, mais un tag explicite invalide fait échouer le build en 404 (MANIFEST_UNKNOWN). |
-| `enable_redis` | `true` | High | Sans Redis, Celery et le cache n'ont pas de backend ; les workers ne démarrent pas. |
-| `enable_nfs` | `true` (lorsque `redis_host` est vide) | High | Le Redis par défaut réside sur la VM NFS ; désactiver NFS sans `redis_host` externe laisse Plane sans point de terminaison Redis. |
-| Fenêtre d'échec de `startup_probe` | ≥ 30 × 10 s | High | Le migrator du premier démarrage peut prendre plusieurs minutes ; une sonde trop stricte tue l'instance en pleine migration. |
-| `cpu_always_allocated` / `min_instance_count` | `true` / `1` pour les équipes dépendantes des notifications | Medium | Avec le démarrage à froid par défaut, les notifications/webhooks/exports Celery ne s'exécutent que lorsqu'une instance est active. |
-| Stockage objet (`AWS_*`) | De vrais identifiants S3 avant de compter sur les téléversements | Medium | Les téléversements de fichiers (pièces jointes, avatars) échouent tant que des clés HMAC ou un point de terminaison S3 externe ne sont pas fournis — le reste de Plane fonctionne. |
-| `application_domains` + variables d'environnement d'URL | Les garder synchronisés | Medium | Un domaine personnalisé qui ne correspond pas à `WEB_URL`/`CORS_ALLOWED_ORIGINS`/`DOMAIN_NAME` casse les redirections de connexion et les liens des e-mails. |
-| `memory_limit` | `4Gi` | Medium | L'image AIO exécute de nombreux processus ; un sous-dimensionnement provoque un manque de mémoire (OOM) du migrator ou du worker Celery. |
-| Durabilité de RabbitMQ | Accepter l'éphémère ou externaliser | Low | L'état du courtier du sidecar est éphémère ; les tâches en file sont perdues lors du recyclage d'une instance. |
+| `database_type` | `POSTGRES_15` | Critique | Plane est une application Django/PostgreSQL ; MySQL ou `NONE` cassent le migrator et le démarrage. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| Sidecar RabbitMQ | Le laisser câblé | Critique | Le `start.sh` de Plane se termine si `AMQP_URL` est vide — le courtier est obligatoire et doit se trouver dans le pod (Cloud Run ne peut pas acheminer AMQP entre services). |
+| `container_port` | `80` | Critique | Le conteneur AIO n'expose que le proxy Caddy interne sur :80 ; tout autre port fait échouer toutes les sondes. |
+| `application_version` | `stable` ou un tag réel | Élevé | L'image amont n'a pas de tag `latest` ; le module convertit `latest`→`stable`, mais un tag explicite invalide fait échouer le build en 404 (MANIFEST_UNKNOWN). |
+| `enable_redis` | `true` | Élevé | Sans Redis, Celery et le cache n'ont pas de backend ; les workers ne démarrent pas. |
+| `enable_nfs` | `true` (lorsque `redis_host` est vide) | Élevé | Le Redis par défaut réside sur la VM NFS ; désactiver NFS sans `redis_host` externe laisse Plane sans point de terminaison Redis. |
+| Fenêtre d'échec de `startup_probe` | ≥ 30 × 10 s | Élevé | Le migrator du premier démarrage peut prendre plusieurs minutes ; une sonde trop stricte tue l'instance en pleine migration. |
+| `cpu_always_allocated` / `min_instance_count` | `true` / `1` pour les équipes dépendantes des notifications | Moyen | Avec le démarrage à froid par défaut, les notifications/webhooks/exports Celery ne s'exécutent que lorsqu'une instance est active. |
+| Stockage objet (`AWS_*`) | De vrais identifiants S3 avant de compter sur les téléversements | Moyen | Les téléversements de fichiers (pièces jointes, avatars) échouent tant que des clés HMAC ou un point de terminaison S3 externe ne sont pas fournis — le reste de Plane fonctionne. |
+| `application_domains` + variables d'environnement d'URL | Les garder synchronisés | Moyen | Un domaine personnalisé qui ne correspond pas à `WEB_URL`/`CORS_ALLOWED_ORIGINS`/`DOMAIN_NAME` casse les redirections de connexion et les liens des e-mails. |
+| `memory_limit` | `4Gi` | Moyen | L'image AIO exécute de nombreux processus ; un sous-dimensionnement provoque un manque de mémoire (OOM) du migrator ou du worker Celery. |
+| Durabilité de RabbitMQ | Accepter l'éphémère ou externaliser | Faible | L'état du courtier du sidecar est éphémère ; les tâches en file sont perdues lors du recyclage d'une instance. |
 
 ---
 

@@ -29,7 +29,7 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 |---|---|---|
 | Image de conteneur | Épingle l'image officielle `metabase/metabase` et construit une couche Cloud Build personnalisée avec le point d'entrée de la plateforme | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui crée la base de données et l'utilisateur | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement qui crée la base de données et l'utilisateur | Sortie `initialization_jobs` |
 | Variables d'environnement fixes | Définit `MB_JETTY_PORT = "3000"` et `JAVA_TIMEZONE = "UTC"` — elles ne doivent pas être remplacées | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit le comportement par défaut des sondes de démarrage/de vivacité ciblant `/api/health`, avec des délais généreux adaptés à la JVM | §Observabilité dans les guides de plateforme |
 | Stockage d'objets | Renvoie une liste de buckets de stockage vide — Metabase stocke tout son état dans PostgreSQL | Sortie `storage_buckets` (vide) |
@@ -39,17 +39,17 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 ## 2. Moteur de base de données et amorçage {#2-database-engine-and-bootstrap}
 
 Metabase requiert **PostgreSQL 15** ; le moteur est fixé et MySQL n'est pas pris en
-charge. Lors du premier déploiement, une tâche ponctuelle `db-init` s'exécute avant le
-démarrage de la charge de travail Metabase. Elle utilise `postgres:15-alpine` et se
+charge. Lors du premier déploiement, un job ponctuel `db-init` s'exécute avant le
+démarrage de la charge de travail Metabase. Il utilise `postgres:15-alpine` et se
 connecte à Cloud SQL via le socket Unix de l'Auth Proxy pour, de manière idempotente :
 
 1. créer la base de données Metabase (si elle est absente),
 2. créer l'utilisateur de l'application avec le mot de passe généré automatiquement,
 3. accorder à cet utilisateur tous les privilèges sur cette base de données.
 
-La tâche s'exécute avec `execute_on_apply = true` (elle s'exécute pendant `tofu apply`),
-avec jusqu'à 3 nouvelles tentatives et un délai d'expiration de 600 secondes. Elle peut
-être relancée sans risque. Inspectez directement la base de données avec :
+Le job s'exécute avec `execute_on_apply = true` (il s'exécute pendant `tofu apply`),
+avec jusqu'à 3 nouvelles tentatives et un délai d'expiration de 600 secondes. Il peut
+être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
@@ -92,7 +92,7 @@ Metabase met 60 à 120 secondes à démarrer :
 |---|---|---|---|---|---|---|
 | Démarrage | HTTP | `/api/health` | 120s | 10s | 15 | ~270s |
 | Vivacité | HTTP | `/api/health` | 120s | 30s | 3 | — |
-| Disponibilité | HTTP | `/api/health` | 60s | 15s | 3 | — |
+| Disponibilité (readiness) | HTTP | `/api/health` | 60s | 15s | 3 | — |
 
 Les variantes GKE et Cloud Run utilisent toutes deux des sondes HTTP — les contrôles de
 santé de Cloud Run atteignent directement le conteneur Metabase en HTTP/2 et ne

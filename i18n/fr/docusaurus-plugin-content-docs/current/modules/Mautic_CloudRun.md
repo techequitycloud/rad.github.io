@@ -406,22 +406,22 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé : service dégradé) —
-> **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `cron_jobs` | configurés (§3) | Critical | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les fichiers téléversés sont perdus entre les instances ou lors des redémarrages. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `startup_probe` | TCP, pas HTTP (valeur par défaut du module) | High | Une sonde HTTP ciblant `/index.php/s/login` échoue : Apache redirige en 301 les contrôles de santé en HTTP simple de Cloud Run dès que `HTTPS=on` est défini, si bien que la sonde ne reçoit jamais de 200. Le module remplace `startup_probe` par TCP et `liveness_probe` par HTTP `/healthz` pour l'éviter. |
-| `enable_redis` | `true` | High | Plusieurs instances avec des caches isolés provoquent des incohérences. |
-| `memory_limit` | ≥ `2Gi` | High | Une mémoire insuffisante provoque des OOM PHP pendant les imports et les envois. |
-| `mautic_admin_email` / `mailer_from_email` | adresses réelles | High | Les valeurs d'exemple n'aboutissent nulle part et sont rejetées ou classées en spam. |
-| `min_instance_count` | `0` (par défaut) ou `1` pour un service toujours actif | Medium | `0` ajoute une latence de démarrage à froid sur la première requête après une période d'inactivité ; les commandes planifiées s'exécutent en tant que Cloud Run Jobs distincts et ne sont pas affectées. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Medium | Sinon, l'interface d'administration est accessible publiquement. |
+| `database_type` | `MYSQL_8_0` | Critique | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `cron_jobs` | configurés (§3) | Critique | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les fichiers téléversés sont perdus entre les instances ou lors des redémarrages. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `startup_probe` | TCP, pas HTTP (valeur par défaut du module) | Élevé | Une sonde HTTP ciblant `/index.php/s/login` échoue : Apache redirige en 301 les contrôles de santé en HTTP simple de Cloud Run dès que `HTTPS=on` est défini, si bien que la sonde ne reçoit jamais de 200. Le module remplace `startup_probe` par TCP et `liveness_probe` par HTTP `/healthz` pour l'éviter. |
+| `enable_redis` | `true` | Élevé | Plusieurs instances avec des caches isolés provoquent des incohérences. |
+| `memory_limit` | ≥ `2Gi` | Élevé | Une mémoire insuffisante provoque des OOM PHP pendant les imports et les envois. |
+| `mautic_admin_email` / `mailer_from_email` | adresses réelles | Élevé | Les valeurs d'exemple n'aboutissent nulle part et sont rejetées ou classées en spam. |
+| `min_instance_count` | `0` (par défaut) ou `1` pour un service toujours actif | Moyen | `0` ajoute une latence de démarrage à froid sur la première requête après une période d'inactivité ; les commandes planifiées s'exécutent en tant que Cloud Run Jobs distincts et ne sont pas affectées. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
 
 ---
 

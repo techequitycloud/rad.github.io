@@ -9,7 +9,7 @@ description: "Référence de configuration pour déployer Healthchecks sur Googl
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Healthchecks_CloudRun.png" alt="Healthchecks sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Healthchecks est un service open source et auto-hébergé de supervision des tâches
+Healthchecks est un service open source et auto-hébergé de supervision des jobs
 cron et des signaux de vie (heartbeat) : les tâches planifiées lui envoient un
 « ping » en cas de succès (ou une tâche le pingue périodiquement et Healthchecks
 surveille l'absence de ping), et il vous alerte par e-mail, Slack, SMS ou via
@@ -65,7 +65,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   auto-réparation. Un job d'initialisation `admin-bootstrap` exécute les
   migrations et crée le superutilisateur (`admin_email` / un mot de passe Secret
   Manager généré) via la commande Django standard `createsuperuser --noinput`.
-  Relancer la tâche est une opération sans effet et sans risque si le compte
+  Relancer le job est une opération sans effet et sans risque si le compte
   existe déjà.
 - **L'e-mail sortant est un espace réservé par défaut.** `DEFAULT_FROM_EMAIL` vaut
   `healthchecks@example.org` par défaut. Configurez de vrais `EMAIL_HOST`/`EMAIL_HOST_USER`/
@@ -302,17 +302,17 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `DB` (défini automatiquement) | `"postgres"` | Critical | S'il n'était pas défini pour une raison quelconque, l'application utiliserait silencieusement une base SQLite locale jetable — les vérifications et l'historique des alertes disparaîtraient à chaque redémarrage, sans aucune erreur. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` | High | La mise à zéro ou le passage à la facturation à la requête bride la boucle `sendalerts` colocalisée entre les requêtes, si bien que des signalements manqués peuvent passer silencieusement inaperçus. |
-| `ADMIN_PASSWORD` (généré automatiquement) | Récupérez-le une fois, puis changez-le via l'interface | Medium | Le mot de passe initial n'est défini que lors de la PREMIÈRE exécution réussie d'`admin-bootstrap` ; relancer le job ne le met pas à jour. |
-| `DEFAULT_FROM_EMAIL` / variables SMTP | Configurez un vrai SMTP après le déploiement | High | Si la valeur provisoire par défaut est conservée, `sendalerts` journalise des erreurs de remise au lieu de réellement avertir qui que ce soit d'un signalement manqué. |
-| `ALLOWED_HOSTS` (défini automatiquement à `"*"`) | Laissez tel quel, sauf raison particulière | Low | Désactiver entièrement la validation de l'en-tête Host de Django est ici un compromis accepté pour que les sondes de santé de la plateforme continuent de fonctionner ; Healthchecks n'a pas d'autre modèle de sécurité fondé sur le Host. |
-| `application_database_name` / `application_database_user` | Définissez-les une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` | Critical | Passer à `custom` sans Dockerfile dans `Healthchecks_Common/scripts` fait échouer le build — Healthchecks n'a, par conception, aucun script de build personnalisé. |
+| `DB` (défini automatiquement) | `"postgres"` | Critique | S'il n'était pas défini pour une raison quelconque, l'application utiliserait silencieusement une base SQLite locale jetable — les vérifications et l'historique des alertes disparaîtraient à chaque redémarrage, sans aucune erreur. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` | Élevé | La mise à zéro ou le passage à la facturation à la requête bride la boucle `sendalerts` colocalisée entre les requêtes, si bien que des signalements manqués peuvent passer silencieusement inaperçus. |
+| `ADMIN_PASSWORD` (généré automatiquement) | Récupérez-le une fois, puis changez-le via l'interface | Moyen | Le mot de passe initial n'est défini que lors de la PREMIÈRE exécution réussie d'`admin-bootstrap` ; relancer le job ne le met pas à jour. |
+| `DEFAULT_FROM_EMAIL` / variables SMTP | Configurez un vrai SMTP après le déploiement | Élevé | Si la valeur provisoire par défaut est conservée, `sendalerts` journalise des erreurs de remise au lieu de réellement avertir qui que ce soit d'un signalement manqué. |
+| `ALLOWED_HOSTS` (défini automatiquement à `"*"`) | Laissez tel quel, sauf raison particulière | Faible | Désactiver entièrement la validation de l'en-tête Host de Django est ici un compromis accepté pour que les sondes de santé de la plateforme continuent de fonctionner ; Healthchecks n'a pas d'autre modèle de sécurité fondé sur le Host. |
+| `application_database_name` / `application_database_user` | Définissez-les une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` | Critique | Passer à `custom` sans Dockerfile dans `Healthchecks_Common/scripts` fait échouer le build — Healthchecks n'a, par conception, aucun script de build personnalisé. |
 
 ---
 

@@ -63,7 +63,7 @@ un ensemble ciblé de services Google Cloud :
   sur GHCR ; le build épingle `latest` sur une version éprouvée (`2026.5.4`) via
   l'ARG de build propre à l'application `AUTHENTIK_VERSION`.
 - **Les migrations s'exécutent automatiquement au démarrage**, protégées par un verrou consultatif
-  PostgreSQL afin que des pods concurrents n'entrent pas en collision — pas de tâche de migration distincte.
+  PostgreSQL afin que des pods concurrents n'entrent pas en collision — pas de job de migration distinct.
 - **Les points de terminaison de santé ne sont pas authentifiés** : démarrage `GET /-/health/ready/`,
   vivacité `GET /-/health/live/`.
 
@@ -105,7 +105,7 @@ le mode SSL selon le type de connexion — `disable` pour le TCP loopback du sid
 (`127.0.0.1` / `localhost` ; le proxy termine le TLS mais ne parle pas SSL
 lui-même, si bien qu'exiger SSL à cet endroit échoue avec « server does not support SSL, but SSL
 was required »), `require` uniquement pour une connexion TCP directe vers tout autre hôte. Lors du premier déploiement,
-une unique tâche (Job) `db-init` crée la base de données et le rôle propres au locataire.
+un unique job `db-init` crée la base de données et le rôle propres au locataire.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, sauvegardes, flags et métriques.
 - **CLI :**
@@ -185,11 +185,11 @@ stdout/stderr du conteneur). Les métriques de GKE et de Cloud SQL arrivent dans
 - **Configuration de la base de données au premier déploiement.** Un unique job d'initialisation exécute `db-init.sh`
   avec `postgres:15-alpine` : il attend PostgreSQL, crée le rôle et la base de données
   propres au locataire, accorde les privilèges, accorde `cloudsqlsuperuser` par précaution,
-  et signale au sidecar proxy de s'arrêter pour que la tâche se termine. Idempotent et
+  et signale au sidecar proxy de s'arrêter pour que le job se termine. Idempotent et
   réexécutable sans risque.
 - **Démarrage avec auto-migration.** Le serveur authentik exécute ses propres migrations Django à
   chaque démarrage, protégées par un verrou consultatif PostgreSQL afin que des pods concurrents n'entrent pas
-  en collision. Il n'existe pas de tâche de migration distincte. Le premier démarrage exécute la suite complète —
+  en collision. Il n'existe pas de job de migration distinct. Le premier démarrage exécute la suite complète —
   comptez plusieurs minutes avant que `/-/health/ready/` ne renvoie 200 ; la sonde de démarrage
   accorde environ 11 minutes.
 - **Première connexion.** Connectez-vous en tant que **`akadmin`** avec la valeur de `bootstrap_email` et
@@ -209,7 +209,7 @@ stdout/stderr du conteneur). Les métriques de GKE et de Cloud SQL arrivent dans
   curl -s "$SERVICE_URL/-/health/ready/" -o /dev/null -w '%{http_code}\n'   # 200 = migrated + DB reachable
   curl -s "$SERVICE_URL/-/health/live/"  -o /dev/null -w '%{http_code}\n'   # 200 = process alive
   ```
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -302,7 +302,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique job intégré `db-init`. |
 | `cron_jobs` | `[]` | Inutile — le worker co-localisé exécute les tâches planifiées d'authentik. |
 | `additional_services` | `[]` | À utiliser pour des outposts supplémentaires (p. ex. LDAP/RADIUS) si nécessaire. |
 
@@ -401,7 +401,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` / `github_repository_*` | État et détails du CI/CD. |
@@ -414,26 +414,26 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTIK_SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler | Critical | La renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants stockés, jetons). |
-| `database_type` | `POSTGRES_15` | Critical | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
-| Ports d'écoute du worker (gérés par le point d'entrée) | Conservez les valeurs loopback par défaut `AUTHENTIK_LISTEN__*` du point d'entrée | Critical | Le `ak worker` co-localisé démarre lui aussi un écouteur HTTP et hérite du `0.0.0.0:9000` par défaut du serveur ; s'il remporte la course au bind, il répond à **toutes** les routes — y compris les points de terminaison de santé — par des 200 vides : une interface vide alors que les sondes du kubelet semblent vertes. Le point d'entrée épingle le worker sur des ports loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur détienne `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
-| `min_instance_count` | `≥ 1` | High | `0` n'a pas de sens pour le worker co-localisé — les tâches d'arrière-plan et la synchronisation des outposts s'arrêtent ; les WebSockets des outposts se déconnectent. |
-| Clés de `secret_environment_variables` | Noms simples, sans `__` | High | La CRD SecretSync rejette à l'apply les clés contenant `__` (p. ex. `AUTHENTIK_POSTGRESQL__PASSWORD`) — ce mappage relève du point d'entrée, pas d'un secret synchronisé. |
-| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Medium | Pointer la sonde vers une page authentifiée renvoie 401/403 au kubelet — le pod ne devient jamais prêt alors qu'authentik a bien démarré. |
-| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Medium | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
-| `application_version` | Épingler une version | Medium | `latest` est épinglé silencieusement sur `2026.5.4` ; un épinglage explicite rend les montées de version délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
-| `quota_memory_requests` / `_limits` | Unités binaires (`8Gi`), ≥ 2× un pod | Critical | Des entiers nus sont des octets et bloquent toute planification de pods ; un quota dimensionné pour un seul pod bloque les mises à jour progressives. |
-| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Laisser non défini | Medium | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts entraîne une authentification avec un rôle inexistant (les noms sont préfixés par le locataire). |
-| `enable_iap` | `false` | Medium | IAP impose un double contrôle à chaque connexion et casse les rappels OAuth/SAML provenant de parties externes. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — une panne totale des connexions. |
+| `AUTHENTIK_SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler | Critique | La renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants stockés, jetons). |
+| `database_type` | `POSTGRES_15` | Critique | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
+| Ports d'écoute du worker (gérés par le point d'entrée) | Conservez les valeurs loopback par défaut `AUTHENTIK_LISTEN__*` du point d'entrée | Critique | Le `ak worker` co-localisé démarre lui aussi un écouteur HTTP et hérite du `0.0.0.0:9000` par défaut du serveur ; s'il remporte la course au bind, il répond à **toutes** les routes — y compris les points de terminaison de santé — par des 200 vides : une interface vide alors que les sondes du kubelet semblent vertes. Le point d'entrée épingle le worker sur des ports loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur détienne `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
+| `min_instance_count` | `≥ 1` | Élevé | `0` n'a pas de sens pour le worker co-localisé — les tâches d'arrière-plan et la synchronisation des outposts s'arrêtent ; les WebSockets des outposts se déconnectent. |
+| Clés de `secret_environment_variables` | Noms simples, sans `__` | Élevé | La CRD SecretSync rejette à l'apply les clés contenant `__` (p. ex. `AUTHENTIK_POSTGRESQL__PASSWORD`) — ce mappage relève du point d'entrée, pas d'un secret synchronisé. |
+| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Moyen | Pointer la sonde vers une page authentifiée renvoie 401/403 au kubelet — le pod ne devient jamais prêt alors qu'authentik a bien démarré. |
+| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Moyen | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
+| `application_version` | Épingler une version | Moyen | `latest` est épinglé silencieusement sur `2026.5.4` ; un épinglage explicite rend les montées de version délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`8Gi`), ≥ 2× un pod | Critique | Des entiers nus sont des octets et bloquent toute planification de pods ; un quota dimensionné pour un seul pod bloque les mises à jour progressives. |
+| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Laisser non défini | Moyen | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts entraîne une authentification avec un rôle inexistant (les noms sont préfixés par le locataire). |
+| `enable_iap` | `false` | Moyen | IAP impose un double contrôle à chaque connexion et casse les rappels OAuth/SAML provenant de parties externes. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — une panne totale des connexions. |
 
 ---
 

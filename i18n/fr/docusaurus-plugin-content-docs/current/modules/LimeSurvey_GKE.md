@@ -67,8 +67,8 @@ ensemble ciblé de services Google Cloud :
   et les exports soient conservés et partagés entre les pods.
 - **L'affinité de session est `ClientIP`** afin que les requêtes d'un client
   atteignent le même pod.
-- **Installation automatique au premier démarrage (pas de tâche de migration
-  distincte).** Le point d'entrée upstream `martialblog/limesurvey` exécute
+- **Installation automatique au premier démarrage (pas de job de migration
+  distinct).** Le point d'entrée upstream `martialblog/limesurvey` exécute
   l'installateur en console / `updatedb` de LimeSurvey au premier démarrage du
   conteneur, une fois que `db-init` a provisionné la base de données et
   l'utilisateur.
@@ -122,7 +122,7 @@ l'échelle et du type de charge de travail (Deployment ou StatefulSet).
 LimeSurvey stocke toutes les données d'enquête (enquêtes, questions, réponses,
 utilisateurs, paramètres) dans une instance gérée Cloud SQL for MySQL 8.0. Les pods
 la joignent via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:3306` ; aucune
-IP publique n'est exposée. Lors du premier déploiement, la tâche `db-init` crée la
+IP publique n'est exposée. Lors du premier déploiement, le job `db-init` crée la
 base de données applicative, l'utilisateur et les privilèges ; l'installateur en
 console de LimeSurvey crée ensuite le schéma avec le moteur `InnoDB` forcé.
 
@@ -211,16 +211,16 @@ règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application LimeSurvey {#3-limesurvey-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `mysql:8.0-debian`. Elle privilégie un socket
-  Unix Cloud SQL s'il en existe un sous `/cloudsql`, sinon elle se rabat sur le TCP
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `mysql:8.0-debian`. Il privilégie un socket
+  Unix Cloud SQL s'il en existe un sous `/cloudsql`, sinon il se rabat sur le TCP
   via `DB_IP`/`DB_HOST`, crée de manière idempotente la base de données applicative,
   l'utilisateur et les privilèges, vérifie que l'utilisateur de l'application peut
   se connecter, puis arrête le sidecar du proxy via le point de terminaison
-  d'administration `quitquitquit` (avec `SIGKILL` en dernier recours). La tâche peut
-  être réexécutée sans risque (`execute_on_apply = true`, `max_retries = 3`).
-- **Installation automatique au premier démarrage (pas de tâche de migration
-  distincte).** Une fois la base de données provisionnée, le point d'entrée propre à
+  d'administration `quitquitquit` (avec `SIGKILL` en dernier recours). Le job peut
+  être réexécuté sans risque (`execute_on_apply = true`, `max_retries = 3`).
+- **Installation automatique au premier démarrage (pas de job de migration
+  distinct).** Une fois la base de données provisionnée, le point d'entrée propre à
   l'image martialblog génère `application/config/config.php` à partir de
   l'environnement et exécute l'installateur en console / `updatedb` de LimeSurvey au
   premier démarrage du pod, créant le schéma dans la base de données vide avec le
@@ -358,7 +358,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms de la tâche de configuration (`db-init`) et de la tâche d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -372,8 +372,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -386,19 +386,19 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0` imposé) | Critical | Seul MySQL 8.0 est pris en charge par le point d'entrée et le schéma. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et rend toutes les données orphelines. |
-| Variables d'environnement du moteur de base de données (`DB_MYSQL_ENGINE`/`DBENGINE`) | Laisser `InnoDB` (valeur par défaut du module) | Critical | Revenir à la valeur par défaut MyISAM de l'image empêche la création des tables sur Cloud SQL — le pod semble sain mais chaque page renvoie une erreur 500. |
-| `enable_nfs` | `true` | High | Le désactiver rend éphémères les ressources et exports d'enquête téléversés — perdus lors de la recréation du pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
-| `max_instance_count` | `1` | High | Passer au-delà de 1 sans comportement de partage des sessions vérifié risque de fragmenter les sessions. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
-| `PUBLIC_URL` (défini une fois l'IP connue) | URL externe du LoadBalancer/domaine | High | Une URL publique absente ou erronée casse les liens absolus et la résolution des ressources. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous empêche d'accéder au premier compte super-administrateur jusqu'à sa réinitialisation via la base de données. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `PUBLIC_URL`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `database_type` | `null` (→ `MYSQL_8_0` imposé) | Critique | Seul MySQL 8.0 est pris en charge par le point d'entrée et le schéma. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et rend toutes les données orphelines. |
+| Variables d'environnement du moteur de base de données (`DB_MYSQL_ENGINE`/`DBENGINE`) | Laisser `InnoDB` (valeur par défaut du module) | Critique | Revenir à la valeur par défaut MyISAM de l'image empêche la création des tables sur Cloud SQL — le pod semble sain mais chaque page renvoie une erreur 500. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend éphémères les ressources et exports d'enquête téléversés — perdus lors de la recréation du pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
+| `max_instance_count` | `1` | Élevé | Passer au-delà de 1 sans comportement de partage des sessions vérifié risque de fragmenter les sessions. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
+| `PUBLIC_URL` (défini une fois l'IP connue) | URL externe du LoadBalancer/domaine | Élevé | Une URL publique absente ou erronée casse les liens absolus et la résolution des ressources. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Ne pas le connaître vous empêche d'accéder au premier compte super-administrateur jusqu'à sa réinitialisation via la base de données. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `PUBLIC_URL`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
 
 ---
 
@@ -406,7 +406,7 @@ Pour le comportement du socle mentionné tout au long de ce guide — IAM et Wor
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à LimeSurvey partagée
-avec la variante Cloud Run (génération des secrets, tâche `db-init`, stockage NFS des
+avec la variante Cloud Run (génération des secrets, job `db-init`, stockage NFS des
 téléversements et correspondance des variables d'environnement de base de données)
 est décrite dans **[LimeSurvey_Common](LimeSurvey_Common.md)**.
 

@@ -49,7 +49,7 @@ Vous percevez une part des **frais de module** que vos utilisateurs parrainés p
 | | Les abonnements et les achats de crédits eux-mêmes (vous gagnez lorsque les crédits sont *dépensés* en frais de module) |
 
 - **Taux.** Défini par l'équipe Finance sous le nom *Agent Revenue Share* (15 % au moment de la rédaction), et figé sur chaque frais au moment où il est facturé. Une modification ultérieure du taux ne change jamais ce que vous avez déjà gagné.
-- **Devise.** La commission est calculée en dollars américains à partir du prix catalogue des crédits. Par exemple, des frais de 100 crédits payés avec des crédits achetés, à 10 crédits par dollar et 15 %, rapportent **$1.50**.
+- **Devise.** La commission est calculée en dollars américains à partir du prix catalogue des crédits. Par exemple, des frais de 100 crédits payés avec des crédits achetés, à 10 crédits par dollar et 15 %, rapportent **1,50 $**.
 - **Calendrier.** Seuls comptent les frais facturés **après** le parrainage de la personne, et **pendant que vous déteniez le rôle d'agent**. Si votre rôle vous est retiré, vous conservez ce que vous avez gagné tant que vous le déteniez.
 - **Les comptes désactivés ne gagnent rien.** Si votre compte est désactivé, aucune nouvelle commission n'est enregistrée pour vous, et la commission déjà enregistrée est **retenue sur les versements**. Elle reste sur votre relevé et n'est versée que si le compte est réactivé.
 

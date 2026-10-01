@@ -99,7 +99,7 @@ d'exécution et la répartition du trafic.
 OpenEMR stocke toutes les données cliniques dans une instance Cloud SQL for MySQL 8.0 gérée. Le
 service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix
 (sans IP publique). Lors du premier déploiement, le job Cloud Run `db-init` crée la base de données
-applicative et l'utilisateur ; la tâche `nfs-init` prépare le répertoire NFS `sites/`.
+applicative et l'utilisateur ; le job `nfs-init` prépare le répertoire NFS `sites/`.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -197,12 +197,12 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 
 - **Deux jobs d'initialisation s'exécutent à chaque déploiement.**
 
-  | Tâche | Rôle | Image |
+  | Job | Rôle | Image |
   |---|---|---|
   | `nfs-init` | Prépare l'arborescence du répertoire NFS `sites/`, attribue la propriété à l'UID 1000 (Apache) et restaure éventuellement une sauvegarde lorsque `backup_uri` est défini | `google-cloud-cli:alpine` |
   | `db-init` | Crée la base de données MySQL et l'utilisateur applicatif | `mysql:8.0-debian` |
 
-  Inspectez les tâches et leurs exécutions :
+  Inspectez les jobs et leurs exécutions :
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job nfs-init --project "$PROJECT" --region "$REGION"
@@ -413,12 +413,12 @@ ressources en cours d'exécution.
 | `nfs_instance_tags` | Tags réseau de l'instance NFS. |
 | `nfs_mount_path` | Chemin de montage NFS dans le conteneur. |
 | `nfs_share_path` | Chemin du partage NFS sur le serveur. |
-| `nfs_setup_job` | Nom de la tâche de configuration NFS. |
+| `nfs_setup_job` | Nom du job de configuration NFS. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -430,27 +430,27 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | OpenEMR ne peut pas fonctionner sans NFS. Le répertoire `sites/`, `sqlconf.php` et les documents des patients résident tous sur NFS. Le désactiver provoque un échec immédiat au démarrage. |
-| `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Critical | Doit correspondre au chemin du répertoire sites d'OpenEMR. En cas de non-correspondance, `nfs-init` prépare le mauvais emplacement et le conteneur ne trouve jamais de `sqlconf.php` configuré. |
-| `execution_environment` | `gen2` | Critical | `gen1` ne prend pas en charge les montages NFS ; le service ne démarre pas. |
-| `database_type` | `MYSQL_8_0` | Critical | OpenEMR nécessite MySQL ; PostgreSQL ou `NONE` casse l'installateur et tous les appels PHP à la base de données. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des patients. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import et peut corrompre le répertoire sites sur NFS. |
-| `backup_schedule` | `0 2 * * *` | Critical | Désactiver les sauvegardes d'un DME contenant des PHI constitue une violation de la conformité HIPAA. |
-| `startup_probe` | TCP (par défaut) | High | Une sonde HTTP échoue pendant la phase d'installation au premier démarrage, lorsque Apache n'a pas encore complètement démarré, ce qui conduit Cloud Run à redémarrer le conteneur avant la fin de la configuration. |
-| `enable_redis` | `true` | High | Plusieurs instances avec des magasins de sessions PHP isolés entraînent des pertes de session et des échecs de connexion pour les utilisateurs cliniques. |
-| `redis_host` | `""` (NFS) ou explicite | High | Un hôte Redis injoignable provoque des échecs de session PHP et empêche toute connexion. |
-| `memory_limit` | ≥ `4Gi` | High | La génération de PDF et les rapports de facturation d'OpenEMR sont gourmands en mémoire. En dessous de 2 GiB, des arrêts OOM se produisent en cours de requête. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro ajoute une latence de démarrage à froid et expose à des accès cliniques manqués. |
-| `cpu_always_allocated` | `true` | High | La configuration au premier démarrage d'OpenEMR (vidage du cache Twig, vérification de la mise en page en base, passe de durcissement des permissions) est un travail en arrière-plan, non lié à une requête. Avec la facturation à la requête (`false`), le CPU est réduit quasiment à zéro entre les requêtes, si bien que le premier démarrage peut prendre de nombreuses minutes, voire ne jamais se terminer — confirmé en conditions réelles : un démarrage identique est passé d'un état bloqué à une page de connexion affichée en &lt;15s une fois l'option définie à `true`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Les environnements soumis à HIPAA doivent conserver au moins 90 jours. |
-| `enable_iap` / `enable_cloud_armor` | à activer dans le secteur de la santé | Medium | Sans ces contrôles, l'interface d'administration d'OpenEMR et les dossiers des patients sont joignables publiquement. |
-| `enable_audit_logging` | `true` pour HIPAA | Medium | HIPAA exige la journalisation des accès aux PHI. |
+| `enable_nfs` | `true` | Critique | OpenEMR ne peut pas fonctionner sans NFS. Le répertoire `sites/`, `sqlconf.php` et les documents des patients résident tous sur NFS. Le désactiver provoque un échec immédiat au démarrage. |
+| `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Critique | Doit correspondre au chemin du répertoire sites d'OpenEMR. En cas de non-correspondance, `nfs-init` prépare le mauvais emplacement et le conteneur ne trouve jamais de `sqlconf.php` configuré. |
+| `execution_environment` | `gen2` | Critique | `gen1` ne prend pas en charge les montages NFS ; le service ne démarre pas. |
+| `database_type` | `MYSQL_8_0` | Critique | OpenEMR nécessite MySQL ; PostgreSQL ou `NONE` casse l'installateur et tous les appels PHP à la base de données. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des patients. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import et peut corrompre le répertoire sites sur NFS. |
+| `backup_schedule` | `0 2 * * *` | Critique | Désactiver les sauvegardes d'un DME contenant des PHI constitue une violation de la conformité HIPAA. |
+| `startup_probe` | TCP (par défaut) | Élevé | Une sonde HTTP échoue pendant la phase d'installation au premier démarrage, lorsque Apache n'a pas encore complètement démarré, ce qui conduit Cloud Run à redémarrer le conteneur avant la fin de la configuration. |
+| `enable_redis` | `true` | Élevé | Plusieurs instances avec des magasins de sessions PHP isolés entraînent des pertes de session et des échecs de connexion pour les utilisateurs cliniques. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Un hôte Redis injoignable provoque des échecs de session PHP et empêche toute connexion. |
+| `memory_limit` | ≥ `4Gi` | Élevé | La génération de PDF et les rapports de facturation d'OpenEMR sont gourmands en mémoire. En dessous de 2 GiB, des arrêts OOM se produisent en cours de requête. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro ajoute une latence de démarrage à froid et expose à des accès cliniques manqués. |
+| `cpu_always_allocated` | `true` | Élevé | La configuration au premier démarrage d'OpenEMR (vidage du cache Twig, vérification de la mise en page en base, passe de durcissement des permissions) est un travail en arrière-plan, non lié à une requête. Avec la facturation à la requête (`false`), le CPU est réduit quasiment à zéro entre les requêtes, si bien que le premier démarrage peut prendre de nombreuses minutes, voire ne jamais se terminer — confirmé en conditions réelles : un démarrage identique est passé d'un état bloqué à une page de connexion affichée en &lt;15s une fois l'option définie à `true`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Les environnements soumis à HIPAA doivent conserver au moins 90 jours. |
+| `enable_iap` / `enable_cloud_armor` | à activer dans le secteur de la santé | Moyen | Sans ces contrôles, l'interface d'administration d'OpenEMR et les dossiers des patients sont joignables publiquement. |
+| `enable_audit_logging` | `true` pour HIPAA | Moyen | HIPAA exige la journalisation des accès aux PHI. |
 
 ---
 
