@@ -138,12 +138,11 @@ const config: Config = {
       title: 'RAD Platform',
       logo: {
         alt: 'Tech Equity',
-        src: 'img/techequity-logo.png',
-        srcDark: 'img/techequity-logo-dark.png',
-        // Explicit dimensions reserve layout space before CSS loads (CLS).
-        // Infima forces height:2rem (32px) on the navbar logo, so width must be what the
-        // 442x107 source implies at that height (4.13:1 -> 132) or the lockup is squashed.
-        width: 132,
+        src: 'img/techequity-icon.png',
+        srcDark: 'img/techequity-icon-dark.png',
+        // Explicit dimensions reserve layout space before CSS loads (CLS). The icon is
+        // square, matching Infima's fixed 2rem (32px) navbar logo height.
+        width: 32,
         height: 32,
       },
       items: [
