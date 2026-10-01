@@ -3,6 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import {copyFile, access} from 'node:fs/promises';
 import path from 'node:path';
+import siteLinks from './src/remark/site-links.mjs';
 
 const config: Config = {
   title: 'RAD Platform',
@@ -76,6 +77,8 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: 'docs',
+          // Full docs.radmodules.dev URLs become in-site paths, so they localise (/fr/).
+          beforeDefaultRemarkPlugins: [siteLinks],
           // Surface git-derived freshness signals to users and crawlers
           // (requires full git history at build time — see fetch-depth in deploy.yml).
           showLastUpdateTime: true,
