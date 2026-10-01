@@ -102,13 +102,19 @@ export function inlineCodeSpans(prose) {
   // backtick rows away. Whitespace inside a span is ignored for comparison: a
   // span the English wrapped as `a.` / `b` and the French wrote as `a.b` is the
   // same code.
-  const units = prose
-    .split(/\n[ \t]*\n/)
-    .flatMap((para) => para.split('\n').reduce((acc, line) => {
-      if (/^\s*\|/.test(line)) acc.push(line, '');
-      else acc[acc.length - 1] += (acc[acc.length - 1] ? '\n' : '') + line;
-      return acc;
-    }, ['']));
+  const units = prose.split(/\n[ \t]*\n/).flatMap((para) => {
+    const out = [];
+    let run = null;
+    for (const line of para.split('\n')) {
+      if (/^\s*\|/.test(line)) {
+        if (run !== null) out.push(run.join('\n'));
+        run = null;
+        out.push(line);
+      } else (run ??= []).push(line);
+    }
+    if (run !== null) out.push(run.join('\n'));
+    return out;
+  });
   return units.flatMap((u) => [...u.matchAll(INLINE_CODE)].map((m) => m[2].replace(/\s+/g, '')));
 }
 
