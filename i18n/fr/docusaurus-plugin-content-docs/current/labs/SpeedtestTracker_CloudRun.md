@@ -1,0 +1,238 @@
+---
+title: "Speedtest Tracker sur Cloud Run — Guide de lab"
+description: "Lab pratique : déployez Speedtest Tracker sur Cloud Run dans votre propre projet Google Cloud — mise en place guidée, vérification, exploitation, observabilité et suppression."
+---
+
+<!-- translated-from: docs/labs/SpeedtestTracker_CloudRun.md @ 3055034 sha256:aa4350309b7c -->
+
+# Speedtest Tracker sur Cloud Run — Guide de lab {#speedtest-tracker-on-cloud-run--lab-guide}
+
+📖 **[Guide de configuration](https://docs.radmodules.dev/docs/modules/SpeedtestTracker_CloudRun)**
+
+## Vue d'ensemble {#overview}
+
+**Durée estimée :** 45 à 60 minutes
+
+Speedtest Tracker est un outil open source et auto-hébergé de surveillance du débit internet,
+qui exécute des tests de débit automatisés selon une planification et en présente les résultats sous forme de graphiques
+dans le temps. Ce lab vous fait parcourir le cycle de vie opérationnel complet du
+module **Speedtest Tracker on Cloud Run** sur Google Cloud : le déployer, y accéder et
+le vérifier, l'exploiter au quotidien, l'observer, diagnostiquer les problèmes courants et le
+supprimer.
+
+Le lab porte sur l'exploitation du **module Cloud Run et de la plateforme Google
+Cloud**, et non sur les fonctionnalités du produit Speedtest Tracker. Pour la liste complète des
+services provisionnés et de chaque paramètre de configuration (organisés par groupe), consultez le
+[Guide de configuration](https://docs.radmodules.dev/docs/modules/SpeedtestTracker_CloudRun) —
+ce lab ne reprend volontairement pas ce détail afin de rester exact dans la durée.
+
+## Objectifs {#objectives}
+
+À la fin de ce lab, vous saurez :
+
+- Déployer le module depuis la plateforme RAD et localiser les ressources qu'il provisionne.
+- Accéder au service en cours d'exécution et le vérifier.
+- Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle (correctement, compte tenu du planificateur cron),
+  mettre à jour, et gérer les secrets et les sauvegardes.
+- Observer le service avec Cloud Logging et Cloud Monitoring.
+- Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants, y compris le
+  mode de défaillance « semble sain mais la planification ne se déclenche jamais ».
+- Supprimer proprement le déploiement.
+
+## Prérequis {#prerequisites}
+
+- **Services_GCP** (fournit le VPC, Cloud SQL, Artifact Registry et les comptes de
+  service partagés dont dépend ce module). Vous n'avez pas besoin de le déployer
+  vous-même au préalable — la plateforme détecte automatiquement s'il existe déjà
+  dans le projet cible et, sinon, le provisionne avant ce module (voir la tâche
+  1).
+- Un projet Google Cloud avec la **facturation activée**.
+- **gcloud CLI** authentifié : `gcloud auth login` et `gcloud auth application-default login`.
+- Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
+- **Vous apportez votre propre projet ?** Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes affichées en tant que propriétaire (Owner) du projet, puis **Verify**) et d'attribuer le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous n'exige ni l'un ni l'autre.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tout autre paramètre du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifie ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
+
+Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :
+
+```bash
+export PROJECT="<your-gcp-project-id>"
+export REGION="us-central1"          # the region you deploy into
+```
+
+---
+
+## Tâche 1 — Déployer le module [Automatisé] {#task-1--deploy-the-module-automated}
+
+1. Ouvrez **Solutions → Solution Catalog → RAD modules** dans la plateforme RAD, puis ouvrez **Speedtest Tracker (Cloud Run)** dans la liste **Platform Modules**, choisissez **Configuration Form** sous *How would you like to configure this deployment?* (le formulaire s'ouvre sur le **Conversational Assistant** si vous détenez des crédits achetés ou si vous êtes partenaire ou administrateur), définissez `project_id`
+   et passez en revue les paramètres. Ne configurez que ce dont vous avez besoin — le
+   [Guide de configuration](https://docs.radmodules.dev/docs/modules/SpeedtestTracker_CloudRun)
+   documente chaque paramètre par groupe, avec ses valeurs par défaut. Cliquez sur **Deploy Module**, vérifiez le coût estimé dans la boîte de dialogue **Deployment Confirmation** lorsqu'elle apparaît et cliquez sur **Submit** (si la boîte de dialogue ajoute ensuite une étape de confirmation, comme la vérification d'un projet que vous apportez, effectuez-la et cliquez sur **Confirm**), ce qui ouvre la page d'état
+   du déploiement avec les journaux en temps réel.
+
+2. La plateforme provisionne le service Cloud Run (maintenu en permanence actif afin que son
+   planificateur cron se déclenche de manière fiable), une base de données Cloud SQL (MySQL 8.0) avec ses secrets Secret
+   Manager (`APP_KEY` et le mot de passe de la base de données), et exécute un job ponctuel
+   d'initialisation de la base de données. Les premiers déploiements prennent environ **15 à 25 minutes** (la création de Cloud
+   SQL représente l'essentiel de ce temps).
+
+3. Une fois l'opération terminée, repérez les ressources avec des filtres indépendants des noms (afin que les
+   commandes continuent de fonctionner quel que soit le suffixe du déploiement) :
+
+   ```bash
+   SERVICE=$(gcloud run services list --project="$PROJECT" --region="$REGION" \
+     --filter="metadata.name~speedtesttracker" --format="value(metadata.name)" --limit=1)
+   SERVICE_URL=$(gcloud run services describe "$SERVICE" \
+     --project="$PROJECT" --region="$REGION" --format="value(status.url)")
+   echo "Service: $SERVICE"
+   echo "URL:     $SERVICE_URL"
+   ```
+
+---
+
+## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
+
+1. Confirmez que le service est sain et connecté à sa base de données. Speedtest Tracker
+   expose un point de terminaison de santé non authentifié :
+
+   ```bash
+   curl -s "$SERVICE_URL/api/healthcheck"   # expect a 200 JSON message
+   ```
+
+2. Ouvrez `$SERVICE_URL` dans un navigateur. Lors de la première visite, l'assistant de configuration de Speedtest Tracker
+   vous guide dans la création du compte administrateur initial — aucun
+   identifiant administrateur prédéfini n'existe dans Secret Manager. Une fois le compte administrateur
+   créé, consultez la page **Settings → General** et vérifiez que la planification des tests de débit
+   (`SPEEDTEST_SCHEDULE`) correspond à ce que vous attendez ; lancez un test à la demande
+   depuis le tableau de bord pour confirmer que la connectivité de bout en bout fonctionne avant de vous fier
+   à la planification.
+
+---
+
+## Tâche 3 — Exploiter et maintenir en service (jour 2) [Manuel] {#task-3--operate--keep-it-running-day-2-manual}
+
+1. **Inspectez le service et ses révisions** (chaque déploiement crée une révision
+   immuable ; le trafic bascule vers la plus récente qui est saine) :
+
+   ```bash
+   gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION"
+   gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
+   ```
+
+2. **Mettez à l'échelle avec prudence — cette application n'est PAS une candidate classique à la montée en charge horizontale.** Le
+   planificateur Laravel intégré au processus de Speedtest Tracker ne dispose d'aucune coordination entre instances ; c'est pourquoi
+   `max_instance_count` doit rester à `1` tant que `speedtest_schedule` est défini (une
+   validation au moment du plan l'impose). N'augmentez pas `max_instance_count` sauf si
+   vous désactivez la planification et utilisez ce déploiement uniquement comme tableau de bord
+   multi-instance. Ne définissez pas non plus `min_instance_count = 0` ni
+   `cpu_always_allocated = false` — l'une ou l'autre modification empêche silencieusement la planification de
+   jamais se déclencher, alors que le service continue d'apparaître sain.
+
+3. **Mettez à jour l'étiquette de version de l'application** en modifiant le paramètre de version dans la plateforme
+   RAD et en l'appliquant via **Update** ; une nouvelle image est récupérée et une nouvelle
+   révision est déployée.
+
+4. **Gérez les secrets et les sauvegardes :**
+
+   ```bash
+   gcloud secrets list --project="$PROJECT" --filter="name~speedtesttracker"
+   gcloud run jobs list --project="$PROJECT" --region="$REGION"   # db-init job
+   ```
+
+5. **Ouvrez une session de base de données** pour l'inspection ou la maintenance :
+
+   ```bash
+   INSTANCE=$(gcloud sql instances list --project="$PROJECT" --format="value(name)" --limit=1)
+   # Role and database are tenant-prefixed (e.g. speedtesttrackerdemo426161cf) — not the bare app name.
+   DB_USER=$(gcloud sql users list --instance="$INSTANCE" --project="$PROJECT" \
+     --format="value(name)" --filter="name~^speedtesttracker" --limit=1)
+   gcloud sql connect "$INSTANCE" --user="$DB_USER" --project="$PROJECT"
+   ```
+
+---
+
+## Tâche 4 — Observer : journalisation et surveillance [Manuel] {#task-4--observe-logging--monitoring-manual}
+
+1. **Journaux** — depuis la CLI ou le Logs Explorer :
+
+   ```bash
+   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=50
+   ```
+
+   Filtre du Logs Explorer :
+   `resource.type="cloud_run_revision" AND resource.labels.service_name="<service>"`.
+
+2. **Surveillance** — ouvrez le tableau de bord Cloud Run du service et examinez le nombre
+   de requêtes, la latence des requêtes, le nombre d'instances et l'utilisation du CPU et de la mémoire. Comme
+   ce service est actif en permanence (`min_instance_count = 1`), attendez-vous à une base
+   stable d'une instance plutôt qu'à une mise à l'échelle jusqu'à zéro. Le module peut provisionner un
+   **test de disponibilité** (lorsque `uptime_check_config.enabled = true` — la valeur par défaut est
+   `false`) ; s'il est activé, confirmez qu'il est au vert sous Monitoring → Uptime checks.
+
+3. **Confirmez que la planification se déclenche réellement** — consultez l'historique des résultats du tableau de bord
+   pour vérifier que de nouvelles entrées apparaissent à la cadence attendue. Un service qui est
+   `Ready` et réussit ses contrôles de santé peut tout de même avoir une planification silencieusement morte si
+   `cpu_always_allocated` ou `min_instance_count` ont un jour été modifiés par rapport à leurs
+   valeurs par défaut — c'est l'historique des résultats qui fait foi, et non l'état
+   de la révision.
+
+---
+
+## Tâche 5 — Dépanner et déboguer [Manuel] {#task-5--troubleshoot--debug-manual}
+
+Des techniques durables pour les modes de défaillance que vous rencontrerez le plus probablement. Il s'agit de
+diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de Speedtest Tracker.
+
+- **Révision non saine / le service ne répond pas :** inspectez la dernière révision et ses
+  journaux à la recherche d'erreurs de démarrage, et vérifiez que les variables d'environnement et les secrets ont été résolus.
+  ```bash
+  gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
+  gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
+  ```
+- **« Sain, mais aucun nouveau résultat n'apparaît jamais » :** c'est le symptôme n° 1 propre à
+  Speedtest Tracker. Vérifiez que `cpu_always_allocated = true` et
+  `min_instance_count >= 1` sur la révision déployée — si l'un ou l'autre a été modifié, le
+  planificateur cron intégré au processus cesse de mener son travail à terme sous la limitation du CPU
+  basée sur les requêtes de Cloud Run, alors même que la révision indique `Ready`.
+  ```bash
+  gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" \
+    --format='value(spec.template.metadata.annotations)' | grep -i cpu-throttling
+  ```
+- **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
+  secret du mot de passe de la base existe et que le job d'initialisation s'est terminé avec succès.
+- **Échec du job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
+  ```bash
+  gcloud run jobs executions list --job="${SERVICE}-db-init" \
+    --project="$PROJECT" --region="$REGION"
+  ```
+- **Échecs de récupération d'image / d'exécution :** si l'initialisation s6-overlay de l'image LinuxServer n'affiche jamais
+  sa bannière de démarrage dans les journaux (aucune sortie du conteneur avant « Application
+  exec likely failed »), il s'agit de la catégorie documentée d'incompatibilité de s6-overlay
+  sous gVisor — basculez `container_image` vers
+  `ghcr.io/alexjustesen/speedtest-tracker:<tag>` (basée sur Alpine) comme solution de repli.
+- **Erreurs 403 / d'autorisation :** vérifiez les rôles IAM du compte de service d'exécution.
+
+Consultez la section *Configuration Pitfalls* du Guide de configuration pour les pièges propres
+à chaque paramètre (y compris la règle essentielle de ne jamais faire tourner `APP_KEY` après le premier démarrage).
+
+---
+
+## Tâche 6 — Supprimer [Automatisé] {#task-6--tear-down-automated}
+
+Sur la page **Deployments**, ouvrez le déploiement et cliquez sur l'icône **Trash** (**Delete**). La suppression exécute `terraform destroy` et est irréversible (l'enregistrement du déploiement est conservé pour l'historique). Si un déploiement est bloqué et que la plateforme RAD ne peut plus le gérer (par exemple après des modifications manuelles en conflit avec l'état Terraform), utilisez plutôt **Purge** (depuis la même boîte de dialogue **Delete**) — cette action retire le déploiement des enregistrements de RAD **sans** détruire les ressources cloud (RAD oublie le déploiement). Cela supprime tout ce que le module a créé — le service Cloud Run,
+la base de données Cloud SQL et les secrets Secret Manager. Les ressources appartenant à **Services_GCP**
+(le VPC, le Cloud SQL partagé, le registre) sont gérées séparément et ne sont pas supprimées
+ici.
+
+---
+
+## Récapitulatif {#summary}
+
+| Tâche | Type | Résultat |
+|---|---|---|
+| 1 — Déployer | Automatisé | Le module provisionne Cloud Run (actif en permanence), Cloud SQL (MySQL 8.0), les secrets, et exécute l'initialisation de la base |
+| 2 — Accéder et vérifier | Manuel | Le contrôle de santé réussit ; créer le compte administrateur initial dans l'interface ; lancer un test |
+| 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle avec prudence (max=1), mettre à jour la version, gérer les secrets et sauvegardes, accéder à la base |
+| 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring ; confirmer que la planification produit réellement de nouveaux résultats |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de « sain mais sans résultats », de base de données, de job d'initialisation et d'image |
+| 6 — Supprimer | Automatisé | Delete (Trash) supprime toutes les ressources du module |
