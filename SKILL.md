@@ -80,11 +80,11 @@ Docs originate in three source repositories. When the same page exists in more t
 
 Edit the canonical source, then sync directly into `docs/` (§11). These are sibling checkouts of this repo, not an in-repo `updates/` staging directory.
 
-**Do not validate a page's existence against `partner-modules/modules/` alone.** Sixteen
-pages — `AKS_GKE`, `Bank_GKE`, `Container_Migration`, `EKS_GKE`, `Istio_GKE`,
-`MC_Bank_GKE`, `Migration_Center`, `VMware_Engine`, each as both a `docs/modules/` and a
-`docs/labs/` page — are sourced from **`rad-modules`**, whose eight modules exist in
-`rad-modules/modules/` and in no other catalogue. Commit `846fdf8` (2026-07-29) deleted
+**Do not validate a page's existence against `partner-modules/modules/` alone.** Eighteen
+pages — `AKS_GKE`, `Bank_GKE`, `Container_Migration`, `EKS_GKE`, `Gemini_Enterprise`,
+`Istio_GKE`, `MC_Bank_GKE`, `Migration_Center`, `VMware_Engine`, each as both a
+`docs/modules/` and a `docs/labs/` page — are sourced from **`rad-modules`**, whose nine
+modules exist in `rad-modules/modules/` and in no other catalogue. Commit `846fdf8` (2026-07-29) deleted
 all sixteen as "phantom published pages" on exactly that test, and they stayed unpublished
 until restored. A page is orphaned only when it is absent from **all three** source repos;
 check `rad-modules/modules/` and `rad-automation/` before concluding anything is a phantom.

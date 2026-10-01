@@ -50,6 +50,7 @@ export const APP_TRACKS: Record<string, AppTrack> = {
   Elasticsearch: {name: 'Elasticsearch', certs: ['PCDE']},
   Flowise: {name: 'Flowise', certs: [], ai: true},
   Formbricks: {name: 'Formbricks', certs: ['ACE']},
+  Gemini_Enterprise: {name: 'Gemini Enterprise', certs: [], ai: true, standalone: true},
   Ghost: {name: 'Ghost', certs: ['ACE']},
   Grafana: {name: 'Grafana', certs: ['PDE']},
   InvoiceNinja: {name: 'Invoice Ninja', certs: ['ACE']},

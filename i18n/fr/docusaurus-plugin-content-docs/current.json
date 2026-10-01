@@ -2903,6 +2903,10 @@
     "message": "Container Migration",
     "description": "The label for the doc item 'Container Migration' in sidebar 'modulesSidebar', linking to the doc modules/Container_Migration"
   },
+  "sidebar.modulesSidebar.doc.modules/Gemini_Enterprise": {
+    "message": "Gemini Enterprise",
+    "description": "The label for the doc item 'Gemini Enterprise' in sidebar 'modulesSidebar', linking to the doc modules/Gemini_Enterprise"
+  },
   "sidebar.modulesSidebar.doc.modules/Migration_Center": {
     "message": "Migration Center",
     "description": "The label for the doc item 'Migration Center' in sidebar 'modulesSidebar', linking to the doc modules/Migration_Center"
@@ -5022,6 +5026,10 @@
   "sidebar.labsSidebar.doc.labs/Container_Migration": {
     "message": "Container Migration",
     "description": "The label for the doc item 'Container Migration' in sidebar 'labsSidebar', linking to the doc labs/Container_Migration"
+  },
+  "sidebar.labsSidebar.doc.labs/Gemini_Enterprise": {
+    "message": "Gemini Enterprise",
+    "description": "The label for the doc item 'Gemini Enterprise' in sidebar 'labsSidebar', linking to the doc labs/Gemini_Enterprise"
   },
   "sidebar.labsSidebar.doc.labs/Migration_Center": {
     "message": "Migration Center",
