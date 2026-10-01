@@ -21,7 +21,7 @@
 import {existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import path from 'node:path';
-import {ROOT, frenchFor, readText, sha12, markerLine, writeMarker, headCommit, splitFences, analyse, englishIds} from './lib.mjs';
+import {ROOT, frenchFor, readText, sha12, markerLine, writeMarker, headCommit, splitFences, analyse, englishIds, INLINE_CODE} from './lib.mjs';
 import {checkFile} from './check.mjs';
 
 const PROVIDER = process.env.TRANSLATE_PROVIDER || 'vertex';
@@ -191,10 +191,32 @@ function maskCode(text) {
       }
       continue;
     }
-    out.push(line.replace(/`[^`\n]+`/g, (m) => put('I', m)));
+    out.push(line);
   }
   if (fence) out.push(put('C', buf.join('\n')));
-  return {masked: out.join('\n'), saved};
+  // Inline code, matched the way lib.mjs's validator reads it: per paragraph,
+  // each table row on its own, so a span the English wraps across a line is
+  // masked whole. Fenced blocks are already placeholders by now.
+  const masked = out
+    .join('\n')
+    .split(/(\n[ \t]*\n)/)
+    .map((para) => {
+      // Units: a run of non-table lines, or one table row. Joined back with the
+      // same '\n' that separated them, so the text is reproduced exactly.
+      const units = [];
+      let run = null;
+      for (const line of para.split('\n')) {
+        if (/^\s*\|/.test(line)) {
+          if (run !== null) units.push(run.join('\n'));
+          run = null;
+          units.push(line);
+        } else (run ??= []).push(line);
+      }
+      if (run !== null) units.push(run.join('\n'));
+      return units.map((u) => u.replace(INLINE_CODE, (m) => put('I', m))).join('\n');
+    })
+    .join('');
+  return {masked, saved};
 }
 
 function unmaskCode(text, saved) {

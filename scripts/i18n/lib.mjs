@@ -85,6 +85,39 @@ export function splitFences(body) {
 
 const stripHtmlComments = (s) => s.replace(/<!--[\s\S]*?-->/g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 
+/**
+ * Inline code spans, matched the way CommonMark does: a span may continue
+ * across a line break inside a paragraph (the break renders as a space), but
+ * never across a blank line, and it opens and closes with the same number of
+ * backticks. Matching one line at a time paired the wrong backticks wherever
+ * the English wrapped a span (`stateful_pvc_enabled =` / `true`), turning the
+ * prose between them into "code" -- 112 false failures in the first bulk run.
+ * Whitespace inside a span is normalised so a span wrapped differently in
+ * French still compares equal.
+ */
+export const INLINE_CODE = /(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
+export function inlineCodeSpans(prose) {
+  // Paragraphs end at a blank line; a TABLE ROW is always its own unit (a span
+  // never crosses rows), so a stray backtick in one cell cannot pair with a
+  // backtick rows away. Whitespace inside a span is ignored for comparison: a
+  // span the English wrapped as `a.` / `b` and the French wrote as `a.b` is the
+  // same code.
+  const units = prose.split(/\n[ \t]*\n/).flatMap((para) => {
+    const out = [];
+    let run = null;
+    for (const line of para.split('\n')) {
+      if (/^\s*\|/.test(line)) {
+        if (run !== null) out.push(run.join('\n'));
+        run = null;
+        out.push(line);
+      } else (run ??= []).push(line);
+    }
+    if (run !== null) out.push(run.join('\n'));
+    return out;
+  });
+  return units.flatMap((u) => [...u.matchAll(INLINE_CODE)].map((m) => m[2].replace(/\s+/g, '')));
+}
+
 /** Everything the validator compares, extracted from one markdown file. */
 export function analyse(text) {
   const parsed = matter(text);
@@ -97,7 +130,7 @@ export function analyse(text) {
     const idm = h[2].match(/\s*\{#([^}]+)\}\s*$/);
     headings.push({level: h[1].length, text: idm ? h[2].slice(0, idm.index).trim() : h[2].trim(), id: idm ? idm[1] : null});
   }
-  const inlineCode = [...clean.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]);
+  const inlineCode = inlineCodeSpans(clean);
   const links = [
     ...[...clean.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)].map((m) => m[1]),
     ...[...clean.matchAll(/\b(?:href|src)=["']([^"']+)["']/g)].map((m) => m[1]),

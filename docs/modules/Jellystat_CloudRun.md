@@ -44,7 +44,7 @@ Google Cloud services:
   application layer.
 - **Non-standard database env var names.** Jellystat reads `POSTGRES_IP`,
   `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and
-  `POSTGRES_DATABASE` — **not** `POSTGRES_DB** (community-confirmed that name
+  `POSTGRES_DATABASE` — **not** `POSTGRES_DB`** (community-confirmed that name
   does not work), and not the platform's generic `DB_*` names. Both sets are
   injected side by side via `main.tf`'s `db_*_env_var_name` aliasing.
 - **`container_port = 3000` is fixed.** Jellystat's server hardcodes this
