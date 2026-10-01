@@ -412,25 +412,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `PGSQL_SSL_MODE` (`require` automatique) | Laisser tel quel | High | Cloud SQL refuse le TCP non chiffré sur IP privée ; `disable` coupe la connexion. |
-| `STATIC_CRON_TOKEN` / tâche cron | Planifier un appel quotidien | High | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
-| `enable_nfs` | `true` | High | Le désactiver place les pièces jointes sur un disque éphémère — les fichiers téléversés disparaissent lors d'un démarrage à froid ou d'une nouvelle révision. |
-| `memory_limit` | `2Gi` | High | Une valeur inférieure à 512Mi est refusée en gen2 ; une mémoire insuffisante provoque l'arrêt OOM de PHP pendant les imports. |
-| `enable_iap` | à activer pour des données privées | High | Firefly III contient des données financières ; le laisser accessible publiquement les expose à quiconque dispose de l'URL. |
-| Inscription à la première exécution | Désactiver après le premier administrateur | High | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` | `1` pour un usage quotidien | Medium | La mise à l'échelle à zéro ajoute 10–30 s de latence de démarrage à froid après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface et l'API sont accessibles publiquement sans protection WAF. |
+| `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `PGSQL_SSL_MODE` (`require` automatique) | Laisser tel quel | Élevé | Cloud SQL refuse le TCP non chiffré sur IP privée ; `disable` coupe la connexion. |
+| `STATIC_CRON_TOKEN` / tâche cron | Planifier un appel quotidien | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
+| `enable_nfs` | `true` | Élevé | Le désactiver place les pièces jointes sur un disque éphémère — les fichiers téléversés disparaissent lors d'un démarrage à froid ou d'une nouvelle révision. |
+| `memory_limit` | `2Gi` | Élevé | Une valeur inférieure à 512Mi est refusée en gen2 ; une mémoire insuffisante provoque l'arrêt OOM de PHP pendant les imports. |
+| `enable_iap` | à activer pour des données privées | Élevé | Firefly III contient des données financières ; le laisser accessible publiquement les expose à quiconque dispose de l'URL. |
+| Inscription à la première exécution | Désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `min_instance_count` | `1` pour un usage quotidien | Moyen | La mise à l'échelle à zéro ajoute 10–30 s de latence de démarrage à froid après une période d'inactivité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface et l'API sont accessibles publiquement sans protection WAF. |
 
 ---
 

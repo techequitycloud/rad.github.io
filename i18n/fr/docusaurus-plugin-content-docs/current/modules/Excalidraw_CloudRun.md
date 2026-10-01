@@ -288,8 +288,8 @@ autres modules, mais se résolvent ici en valeurs vides.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par
 > le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -300,14 +300,14 @@ autres modules, mais se résolvent ici en valeurs vides.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `container_port` | `80` | High | Le nginx de l'image n'écoute que sur 80 ; un port différent empêche la sonde de démarrage de réussir et la révision ne sert jamais de trafic. |
-| `container_image_source` | `custom` | High | Passer à `prebuilt` sans image mise en miroir fait pointer le service vers un chemin Artifact Registry jamais construit (`Image not found`). |
-| `memory_limit` | `512Mi` | Medium | Gen2 refuse `< 512Mi` à l'application ; le bundle statique n'a pas besoin de plus. |
-| `ingress_settings` | `all` | Medium | `internal` rend le tableau blanc injoignable depuis un navigateur situé hors du VPC. |
-| `application_version` | épingler en production | Medium | `latest` est glissant — un nouveau tag amont peut modifier l'interface ou le comportement au prochain rebuild. Épinglez une version. |
-| `enable_redis` / entrées de base de données | laisser par défaut | Low | Les activer provisionne Redis/Cloud SQL qu'Excalidraw n'utilise jamais — un coût inutile, sans bénéfice. |
-| `homeserver_url` / `homeserver_name` | laisser vide | Low | Entrées résiduelles d'Element ; les définir n'a aucun effet sur la SPA Excalidraw. |
-| `min_instance_count` | `0` | Low | La mise à zéro est idéale ici ; forcer `> 0` n'ajoute qu'un coût d'inactivité, sans aucun état à garder actif. |
+| `container_port` | `80` | Élevé | Le nginx de l'image n'écoute que sur 80 ; un port différent empêche la sonde de démarrage de réussir et la révision ne sert jamais de trafic. |
+| `container_image_source` | `custom` | Élevé | Passer à `prebuilt` sans image mise en miroir fait pointer le service vers un chemin Artifact Registry jamais construit (`Image not found`). |
+| `memory_limit` | `512Mi` | Moyen | Gen2 refuse `< 512Mi` à l'application ; le bundle statique n'a pas besoin de plus. |
+| `ingress_settings` | `all` | Moyen | `internal` rend le tableau blanc injoignable depuis un navigateur situé hors du VPC. |
+| `application_version` | épingler en production | Moyen | `latest` est glissant — un nouveau tag amont peut modifier l'interface ou le comportement au prochain rebuild. Épinglez une version. |
+| `enable_redis` / entrées de base de données | laisser par défaut | Faible | Les activer provisionne Redis/Cloud SQL qu'Excalidraw n'utilise jamais — un coût inutile, sans bénéfice. |
+| `homeserver_url` / `homeserver_name` | laisser vide | Faible | Entrées résiduelles d'Element ; les définir n'a aucun effet sur la SPA Excalidraw. |
+| `min_instance_count` | `0` | Faible | La mise à zéro est idéale ici ; forcer `> 0` n'ajoute qu'un coût d'inactivité, sans aucun état à garder actif. |
 
 ---
 

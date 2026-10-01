@@ -270,23 +270,23 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `cpu_always_allocated` | `true` (par défaut) | Critical | La facturation à la requête bride la CPU à ~0 entre les requêtes — le planificateur de vérifications interne au processus se bloque, les vérifications se déclenchent en retard ou pas du tout, et des alertes sont manquées. La boucle de supervision EST le produit. |
-| `enable_nfs` | `true` (par défaut) | Critical | Sans le volume NFS, la base de données SQLite (moniteurs, historique, compte administrateur) réside sur un disque éphémère et est effacée à chaque redémarrage ou nouvelle révision. |
-| `nfs_mount_path` | `/app/data` (par défaut) | Critical | Tout autre chemin conduit Uptime Kuma à écrire sur un stockage éphémère — perte totale et silencieuse des données au redémarrage. |
-| `min_instance_count` | `1` pour une supervision de production | Critical | Avec la valeur par défaut `0`, le service descend à zéro lorsqu'il est inactif et **aucune vérification ne s'exécute pendant qu'il est arrêté** — les pannes des systèmes supervisés passent inaperçues. |
-| `max_instance_count` | `1` en production | High | SQLite est à écrivain unique ; plusieurs instances écrivant via NFS risquent des conflits de verrouillage ou une corruption de la base de données. |
-| `container_port` | `3001` (par défaut) | Critical | Un port différent du port natif d'Uptime Kuma fait échouer toutes les sondes de santé, et la révision ne devient jamais prête. |
-| `database_type` | `NONE` (par défaut) | High | Provisionner Cloud SQL est un gaspillage d'argent — Uptime Kuma v1 ne peut pas l'utiliser. |
-| `execution_environment` | `gen2` (par défaut) | High | Les montages NFS nécessitent gen2 ; gen1 ne peut pas monter Filestore. |
-| `vpc_egress_setting` | selon la portée des cibles | Medium | `PRIVATE_RANGES_ONLY` n'achemine via le VPC que les sondes vers des plages privées ; définissez `ALL_TRAFFIC` si les sondes des moniteurs vers des cibles externes ont besoin d'une sortie VPC/NAT. |
-| `enable_iap` / `ingress_settings` | IAP ou `internal` pour des tableaux de bord privés | Medium | Sinon, le tableau de bord (et la page de configuration, au premier déploiement) est accessible publiquement à l'URL `run.app`. Effectuez la configuration administrateur initiale immédiatement après le déploiement. |
-| `enable_image_mirroring` | `true` (par défaut) | Low | Les téléchargements directs depuis Docker Hub peuvent atteindre les limites de débit et faire échouer les déploiements. |
-| `container_image_source` | `custom` (par défaut) | Critical | Définir `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a provoqué des corruptions de base de données `SQLITE_CORRUPT` constatées. |
+| `cpu_always_allocated` | `true` (par défaut) | Critique | La facturation à la requête bride la CPU à ~0 entre les requêtes — le planificateur de vérifications interne au processus se bloque, les vérifications se déclenchent en retard ou pas du tout, et des alertes sont manquées. La boucle de supervision EST le produit. |
+| `enable_nfs` | `true` (par défaut) | Critique | Sans le volume NFS, la base de données SQLite (moniteurs, historique, compte administrateur) réside sur un disque éphémère et est effacée à chaque redémarrage ou nouvelle révision. |
+| `nfs_mount_path` | `/app/data` (par défaut) | Critique | Tout autre chemin conduit Uptime Kuma à écrire sur un stockage éphémère — perte totale et silencieuse des données au redémarrage. |
+| `min_instance_count` | `1` pour une supervision de production | Critique | Avec la valeur par défaut `0`, le service descend à zéro lorsqu'il est inactif et **aucune vérification ne s'exécute pendant qu'il est arrêté** — les pannes des systèmes supervisés passent inaperçues. |
+| `max_instance_count` | `1` en production | Élevé | SQLite est à écrivain unique ; plusieurs instances écrivant via NFS risquent des conflits de verrouillage ou une corruption de la base de données. |
+| `container_port` | `3001` (par défaut) | Critique | Un port différent du port natif d'Uptime Kuma fait échouer toutes les sondes de santé, et la révision ne devient jamais prête. |
+| `database_type` | `NONE` (par défaut) | Élevé | Provisionner Cloud SQL est un gaspillage d'argent — Uptime Kuma v1 ne peut pas l'utiliser. |
+| `execution_environment` | `gen2` (par défaut) | Élevé | Les montages NFS nécessitent gen2 ; gen1 ne peut pas monter Filestore. |
+| `vpc_egress_setting` | selon la portée des cibles | Moyen | `PRIVATE_RANGES_ONLY` n'achemine via le VPC que les sondes vers des plages privées ; définissez `ALL_TRAFFIC` si les sondes des moniteurs vers des cibles externes ont besoin d'une sortie VPC/NAT. |
+| `enable_iap` / `ingress_settings` | IAP ou `internal` pour des tableaux de bord privés | Moyen | Sinon, le tableau de bord (et la page de configuration, au premier déploiement) est accessible publiquement à l'URL `run.app`. Effectuez la configuration administrateur initiale immédiatement après le déploiement. |
+| `enable_image_mirroring` | `true` (par défaut) | Faible | Les téléchargements directs depuis Docker Hub peuvent atteindre les limites de débit et faire échouer les déploiements. |
+| `container_image_source` | `custom` (par défaut) | Critique | Définir `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a provoqué des corruptions de base de données `SQLITE_CORRUPT` constatées. |
 
 ---
 

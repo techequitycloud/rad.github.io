@@ -484,32 +484,32 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
-> (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
-> **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
+> **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Zammad requiert PostgreSQL ; MySQL est rejeté lors du plan. |
-| `container_image_source` | `custom` (par défaut) | Critical | Utiliser `prebuilt` sans le point d'entrée personnalisé signifie que la correspondance `DB_*` → `POSTGRESQL_*` n'a pas lieu et que toutes les connexions à la base de données échouent au démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver supprime le socket de l'Auth Proxy ; toutes les connexions à la base de données échouent. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données / l'utilisateur et détruit toutes les données du helpdesk. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import ; l'activer à chaque apply écrase les données en production. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont des octets et bloquent toute planification. |
-| `enable_redis` | `true` | Critical | Sans Redis, ActionCable et Sidekiq ne parviennent pas à s'initialiser ; Zammad ne démarre pas. |
-| `redis_host` | explicite ou adresse IP NFS | Critical | Vide avec NFS désactivé, aucun point de terminaison Redis valide n'existe — Zammad ne démarre pas. |
-| `container_resources.memory_limit` | `4Gi` | High | En dessous de 2 GiB, Zammad manque de mémoire (OOM) pendant la migration du schéma ou sous charge. |
-| `nfs_mount_path` | `/opt/zammad/storage` | High | Le modifier entraîne l'écriture des pièces jointes sur le stockage éphémère du pod ; les pièces jointes NFS existantes deviennent inaccessibles. |
-| `enable_nfs` | `true` | High | Sans NFS, toutes les pièces jointes téléversées sont perdues au redémarrage d'un pod ou lors d'une mise à jour progressive. |
-| `min_instance_count` | `1` | High | `0` provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
-| `session_affinity` | `ClientIP` | Medium | N'affecte que le routage des requêtes HTTP ordinaires entre les réplicas ; n'active PAS ActionCable — `additional_services` est vide par défaut, si bien que le port 6042 n'est jamais exposé via un Service Kubernetes et que la diffusion en temps réel par WebSocket ne fonctionne pas, quel que soit ce paramètre. Ne comptez pas sur lui pour les mises à jour des tickets en direct. |
-| `stateful_pvc_enabled = true` avec `workload_type = "Deployment"` | à éviter | High | Cette combinaison échoue lors du plan. |
-| `startup_probe.initial_delay_seconds` | `60` (ou plus) | High | Une valeur trop courte provoque des boucles de redémarrage au premier démarrage pendant la migration du schéma. |
-| `max_instance_count` > 1 sans Redis | configurez d'abord Redis | Medium | Plusieurs pods sans Redis provoquent des situations de concurrence sur l'attribution des tickets et une divergence de l'état en temps réel. |
-| `enable_topology_spread` | à activer avec plusieurs réplicas | Medium | Sans répartition, tous les pods peuvent se retrouver dans une seule zone ; une défaillance de zone met le helpdesk hors service. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Medium | Sinon, l'interface d'administration de Zammad est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `database_type` | `POSTGRES_15` | Critique | Zammad requiert PostgreSQL ; MySQL est rejeté lors du plan. |
+| `container_image_source` | `custom` (par défaut) | Critique | Utiliser `prebuilt` sans le point d'entrée personnalisé signifie que la correspondance `DB_*` → `POSTGRESQL_*` n'a pas lieu et que toutes les connexions à la base de données échouent au démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver supprime le socket de l'Auth Proxy ; toutes les connexions à la base de données échouent. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données / l'utilisateur et détruit toutes les données du helpdesk. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import ; l'activer à chaque apply écrase les données en production. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
+| `enable_redis` | `true` | Critique | Sans Redis, ActionCable et Sidekiq ne parviennent pas à s'initialiser ; Zammad ne démarre pas. |
+| `redis_host` | explicite ou adresse IP NFS | Critique | Vide avec NFS désactivé, aucun point de terminaison Redis valide n'existe — Zammad ne démarre pas. |
+| `container_resources.memory_limit` | `4Gi` | Élevé | En dessous de 2 GiB, Zammad manque de mémoire (OOM) pendant la migration du schéma ou sous charge. |
+| `nfs_mount_path` | `/opt/zammad/storage` | Élevé | Le modifier entraîne l'écriture des pièces jointes sur le stockage éphémère du pod ; les pièces jointes NFS existantes deviennent inaccessibles. |
+| `enable_nfs` | `true` | Élevé | Sans NFS, toutes les pièces jointes téléversées sont perdues au redémarrage d'un pod ou lors d'une mise à jour progressive. |
+| `min_instance_count` | `1` | Élevé | `0` provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
+| `session_affinity` | `ClientIP` | Moyen | N'affecte que le routage des requêtes HTTP ordinaires entre les réplicas ; n'active PAS ActionCable — `additional_services` est vide par défaut, si bien que le port 6042 n'est jamais exposé via un Service Kubernetes et que la diffusion en temps réel par WebSocket ne fonctionne pas, quel que soit ce paramètre. Ne comptez pas sur lui pour les mises à jour des tickets en direct. |
+| `stateful_pvc_enabled = true` avec `workload_type = "Deployment"` | à éviter | Élevé | Cette combinaison échoue lors du plan. |
+| `startup_probe.initial_delay_seconds` | `60` (ou plus) | Élevé | Une valeur trop courte provoque des boucles de redémarrage au premier démarrage pendant la migration du schéma. |
+| `max_instance_count` > 1 sans Redis | configurez d'abord Redis | Moyen | Plusieurs pods sans Redis provoquent des situations de concurrence sur l'attribution des tickets et une divergence de l'état en temps réel. |
+| `enable_topology_spread` | à activer avec plusieurs réplicas | Moyen | Sans répartition, tous les pods peuvent se retrouver dans une seule zone ; une défaillance de zone met le helpdesk hors service. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'administration | Moyen | Sinon, l'interface d'administration de Zammad est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
 
 ---
 

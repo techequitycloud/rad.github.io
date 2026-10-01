@@ -440,30 +440,30 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Wiki.js nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
-| `application_database_name` / `DB_NAME` | `wikijs` pour les deux | Critical | En cas d'incohérence, `db-init` crée une autre base de données que celle à laquelle Wiki.js se connecte — boucle de plantage. Immuable après le premier déploiement. |
-| `enable_postgres_extensions` / `postgres_extensions` | `true` / `["pg_trgm"]` | Critical | Supprimer `pg_trgm` désactive toute la recherche plein texte avec une erreur de fonction introuvable. |
-| `quota_memory_requests` / `_limits` | unités binaires (`Gi`, `Mi`) | Critical | Les entiers bruts sont des octets — toute planification de pod est bloquée. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver supprime le sidecar Auth Proxy — toutes les connexions PostgreSQL échouent. |
-| `application_database_user` / `DB_USER` | `wikijs` pour les deux | High | En cas d'incohérence, les droits sont accordés à un utilisateur alors que Wiki.js s'authentifie avec un autre — échec d'authentification. |
-| `enable_nfs` | `true` | High | Sans stockage partagé, les fichiers téléversés écrits par un pod sont invisibles pour les autres et perdus au redémarrage. |
-| `nfs_mount_path` + `HA_STORAGE_PATH` | `/wiki-storage` pour les deux | High | Si le chemin de montage NFS et `HA_STORAGE_PATH` ne concordent pas, Wiki.js écrit sur le disque éphémère du pod. |
-| `container_resources.memory_limit` | `2Gi` | High | En dessous de `1Gi`, Wiki.js est arrêté pour manque de mémoire (OOM) au démarrage ou sous charge. |
-| `startup_probe_config.initial_delay_seconds` | `60` | High | Trop bas — Wiki.js est arrêté avant la fin de la migration du schéma au premier démarrage. |
-| `min_instance_count` | `1` | High | La mise à zéro provoque des démarrages à froid de 15 à 30 s et des reconnexions à la base de données en cours de requête. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les déploiements à plusieurs réplicas perdent le contexte de session en mémoire. |
-| `application_version` | `2.5.311` | High | Les schémas de Wiki.js 2.x et 3.x sont incompatibles. Testez les mises à niveau en préproduction. |
-| `network_tags` | `["nfsserver"]` | High | Supprimer le tag casse la règle de pare-feu NFS — le montage échoue. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les wikis internes | Medium | Sinon, la page de connexion de Wiki.js est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_redis` | `false`, sauf besoin | Low | Wiki.js n'a pas besoin de Redis pour son fonctionnement de base. |
+| `database_type` | `POSTGRES_15` | Critique | Wiki.js nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
+| `application_database_name` / `DB_NAME` | `wikijs` pour les deux | Critique | En cas d'incohérence, `db-init` crée une autre base de données que celle à laquelle Wiki.js se connecte — boucle de plantage. Immuable après le premier déploiement. |
+| `enable_postgres_extensions` / `postgres_extensions` | `true` / `["pg_trgm"]` | Critique | Supprimer `pg_trgm` désactive toute la recherche plein texte avec une erreur de fonction introuvable. |
+| `quota_memory_requests` / `_limits` | unités binaires (`Gi`, `Mi`) | Critique | Les entiers bruts sont des octets — toute planification de pod est bloquée. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver supprime le sidecar Auth Proxy — toutes les connexions PostgreSQL échouent. |
+| `application_database_user` / `DB_USER` | `wikijs` pour les deux | Élevé | En cas d'incohérence, les droits sont accordés à un utilisateur alors que Wiki.js s'authentifie avec un autre — échec d'authentification. |
+| `enable_nfs` | `true` | Élevé | Sans stockage partagé, les fichiers téléversés écrits par un pod sont invisibles pour les autres et perdus au redémarrage. |
+| `nfs_mount_path` + `HA_STORAGE_PATH` | `/wiki-storage` pour les deux | Élevé | Si le chemin de montage NFS et `HA_STORAGE_PATH` ne concordent pas, Wiki.js écrit sur le disque éphémère du pod. |
+| `container_resources.memory_limit` | `2Gi` | Élevé | En dessous de `1Gi`, Wiki.js est arrêté pour manque de mémoire (OOM) au démarrage ou sous charge. |
+| `startup_probe_config.initial_delay_seconds` | `60` | Élevé | Trop bas — Wiki.js est arrêté avant la fin de la migration du schéma au premier démarrage. |
+| `min_instance_count` | `1` | Élevé | La mise à zéro provoque des démarrages à froid de 15 à 30 s et des reconnexions à la base de données en cours de requête. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les déploiements à plusieurs réplicas perdent le contexte de session en mémoire. |
+| `application_version` | `2.5.311` | Élevé | Les schémas de Wiki.js 2.x et 3.x sont incompatibles. Testez les mises à niveau en préproduction. |
+| `network_tags` | `["nfsserver"]` | Élevé | Supprimer le tag casse la règle de pare-feu NFS — le montage échoue. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les wikis internes | Moyen | Sinon, la page de connexion de Wiki.js est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_redis` | `false`, sauf besoin | Faible | Wiki.js n'a pas besoin de Redis pour son fonctionnement de base. |
 
 ---
 

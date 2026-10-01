@@ -226,20 +226,20 @@ Toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) ave
 
 ## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des entrées hors limites ou contradictoires sont détectées avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | Le désactiver sans montage POSIX tout aussi durable ramène `/config` sur GCS FUSE (ou sur un chemin éphémère dans le conteneur), ce qui reproduit la boucle de plantage et redémarrage confirmée (`BufferedWriteHandler.OutOfOrderError`, des `429`, erreurs de descripteur de fichier obsolète) — ou fait perdre silencieusement tout l'état à chaque redémarrage. |
-| `nfs_mount_path` | `/config` | Critical | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
-| `max_instance_count` | `1` | Critical | La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering. Toute valeur supérieure à `1` expose à une corruption de la base par des écrivains concurrents. |
-| `container_image_source` | `custom` (la valeur par défaut du module) | High | Une surcharge parasite `"prebuilt"` contourne silencieusement le build du Dockerfile personnalisé (déjà rencontré une fois lors du build de ce module, et documenté pour UptimeKuma) — Cloud Run pointe alors vers un chemin Artifact Registry jamais construit. |
-| `database_type` | `NONE` | Medium | Grocy l'ignore totalement (aucun chemin de code ne le lit), mais toute autre valeur provisionne une instance Cloud SQL inutilisée et facturée. |
-| Mot de passe administrateur | À changer à la première connexion | High | Les identifiants par défaut `admin` / `admin` de l'image amont sont documentés publiquement ; les laisser inchangés sur un déploiement public `ingress_settings = "all"` constitue une réelle exposition. |
-| `min_instance_count` | `1` | Low | Le définir à `0` réduit les coûts mais réintroduit des démarrages à froid sur la pile nginx + php-fpm de Grocy. |
+| `enable_nfs` | `true` | Critique | Le désactiver sans montage POSIX tout aussi durable ramène `/config` sur GCS FUSE (ou sur un chemin éphémère dans le conteneur), ce qui reproduit la boucle de plantage et redémarrage confirmée (`BufferedWriteHandler.OutOfOrderError`, des `429`, erreurs de descripteur de fichier obsolète) — ou fait perdre silencieusement tout l'état à chaque redémarrage. |
+| `nfs_mount_path` | `/config` | Critique | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
+| `max_instance_count` | `1` | Critique | La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering. Toute valeur supérieure à `1` expose à une corruption de la base par des écrivains concurrents. |
+| `container_image_source` | `custom` (la valeur par défaut du module) | Élevé | Une surcharge parasite `"prebuilt"` contourne silencieusement le build du Dockerfile personnalisé (déjà rencontré une fois lors du build de ce module, et documenté pour UptimeKuma) — Cloud Run pointe alors vers un chemin Artifact Registry jamais construit. |
+| `database_type` | `NONE` | Moyen | Grocy l'ignore totalement (aucun chemin de code ne le lit), mais toute autre valeur provisionne une instance Cloud SQL inutilisée et facturée. |
+| Mot de passe administrateur | À changer à la première connexion | Élevé | Les identifiants par défaut `admin` / `admin` de l'image amont sont documentés publiquement ; les laisser inchangés sur un déploiement public `ingress_settings = "all"` constitue une réelle exposition. |
+| `min_instance_count` | `1` | Faible | Le définir à `0` réduit les coûts mais réintroduit des démarrages à froid sur la pile nginx + php-fpm de Grocy. |
 
 ---
 

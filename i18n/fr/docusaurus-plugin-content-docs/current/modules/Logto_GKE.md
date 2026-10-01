@@ -364,27 +364,27 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `database_type` non PostgreSQL, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, IAP sans identités autorisées, un domaine personnalisé sans noms d'hôte. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Base de données Cloud SQL | La sauvegarder ; ne jamais l'effacer | Critical | Les clés de signature OIDC de Logto résident dans la base. L'effacer régénère de nouvelles clés et invalide chaque jeton émis et chaque client enregistré. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/le rôle et détruit toutes les données d'identité. |
-| `database_type` | `POSTGRES_15` | Critical | MySQL et les autres moteurs sont rejetés au moment du plan ; Logto ne fonctionne que sur PostgreSQL. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
-| `ENDPOINT` | URL externe du LoadBalancer / du domaine personnalisé | High | Un émetteur incohérent casse la découverte OIDC, les URI de redirection et chaque callback OAuth. |
-| `container_port` | `3001` | High | Le cœur écoute sur 3001 ; un mauvais port fait échouer chaque sonde et chaque requête. La console d'administration (3002) n'est volontairement pas publiée. |
-| `enable_iap` | `false` pour un IdP public | High | IAP bloque toutes les requêtes non authentifiées, y compris les parcours OIDC/de connexion que Logto existe pour servir. |
-| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | High | En dessous d'environ 2 GiB, Logto est sujet aux OOM sous charge. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, des requêtes successives d'un même client peuvent atteindre des pods différents en plein parcours. |
-| Accès à la console d'administration (3002) | `kubectl port-forward` pour la configuration | High | L'interface de premier administrateur/de configuration est sur 3002, inaccessible via le LoadBalancer — la configuration initiale est bloquée sans port-forward. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour le chemin PostgreSQL par loopback sur GKE. |
-| `enable_redis` | `false` | Low | Logto n'utilise pas Redis ; l'activer câble une dépendance inutilisée. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| Base de données Cloud SQL | La sauvegarder ; ne jamais l'effacer | Critique | Les clés de signature OIDC de Logto résident dans la base. L'effacer régénère de nouvelles clés et invalide chaque jeton émis et chaque client enregistré. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/le rôle et détruit toutes les données d'identité. |
+| `database_type` | `POSTGRES_15` | Critique | MySQL et les autres moteurs sont rejetés au moment du plan ; Logto ne fonctionne que sur PostgreSQL. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
+| `ENDPOINT` | URL externe du LoadBalancer / du domaine personnalisé | Élevé | Un émetteur incohérent casse la découverte OIDC, les URI de redirection et chaque callback OAuth. |
+| `container_port` | `3001` | Élevé | Le cœur écoute sur 3001 ; un mauvais port fait échouer chaque sonde et chaque requête. La console d'administration (3002) n'est volontairement pas publiée. |
+| `enable_iap` | `false` pour un IdP public | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les parcours OIDC/de connexion que Logto existe pour servir. |
+| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | Élevé | En dessous d'environ 2 GiB, Logto est sujet aux OOM sous charge. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, des requêtes successives d'un même client peuvent atteindre des pods différents en plein parcours. |
+| Accès à la console d'administration (3002) | `kubectl port-forward` pour la configuration | Élevé | L'interface de premier administrateur/de configuration est sur 3002, inaccessible via le LoadBalancer — la configuration initiale est bloquée sans port-forward. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour le chemin PostgreSQL par loopback sur GKE. |
+| `enable_redis` | `false` | Faible | Logto n'utilise pas Redis ; l'activer câble une dépendance inutilisée. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
 
 ---
 

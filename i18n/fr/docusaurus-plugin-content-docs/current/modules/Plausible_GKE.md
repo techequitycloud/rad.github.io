@@ -411,8 +411,8 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -423,22 +423,22 @@ d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_version` de ClickHouse_GKE | Conservez l'épinglage `24.12-alpine` | Critical | Remplacer l'épinglage de ClickHouse par une version non testée a déjà cassé Plausible en amont (plausible/analytics#3855) — les migrations ou les requêtes échouent contre un ClickHouse incompatible. Plausible épingle la version de ClickHouse pour une bonne raison. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation | Critical | La rotation invalide toutes les sessions Phoenix — tous les utilisateurs sont déconnectés d'un coup. |
-| `TOTP_VAULT_KEY` (généré automatiquement) | Ne jamais effectuer de rotation | Critical | La rotation rend inutilisables tous les appareils 2FA enregistrés ; les utilisateurs concernés ne peuvent plus se connecter avec la 2FA. |
-| `clickhouse_url` | `clickhouse_internal_endpoint` de ClickHouse_GKE | High (bloqué) | Laissée vide, le déploiement est **bloqué au moment du plan** par la garde de validation — déployez d'abord ClickHouse_GKE et collez son output. Une URL erronée mais non vide échoue à l'exécution (le point d'entrée/les migrations ne peuvent pas joindre le magasin d'événements). |
-| `clickhouse_password_secret` | `clickhouse_password_secret_id` de ClickHouse_GKE | High | Secret absent ou erroné → `CLICKHOUSE_PASSWORD` est absent et l'authentification ClickHouse échoue ; les pods redémarrent en boucle lors de la migration. |
-| `DISABLE_REGISTRATION` | `"true"` (ou `"invite_only"`) après le premier compte | Medium | L'inscription reste **ouverte par défaut** — quiconque trouve l'URL peut créer un compte sur votre instance d'analyse. |
-| `application_version` | `latest` (épingle `v3.2.1`) ou un tag CE explicite | High | CE ne publie aucun tag `latest` ; sans l'épinglage, le build échouerait avec `MANIFEST_UNKNOWN`. Épinglez des versions explicites en production. |
-| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orpheline la configuration des comptes/sites. |
-| `container_resources.memory_limit` | `1Gi` | High | En dessous du plancher BEAM + Oban intégré au processus, les pods subissent un OOM sous charge ou pendant les migrations. |
-| `base_url` | URL du domaine personnalisé le cas échéant | High | Une `BASE_URL` erronée place un mauvais `src` de script dans chaque extrait de suivi et casse les liens des e-mails. |
-| `path` des sondes | `/api/health` | High | Rediriger les sondes vers une page authentifiée renvoie 401/403 — le pod ne devient jamais Ready alors que l'application a bien démarré. |
-| `enable_cloudsql_volume` | `true` | High | Le point d'entrée se connecte à `127.0.0.1:5432` via le sidecar Auth Proxy ; le désactiver casse le chemin PostgreSQL (et c'est bloqué lorsque `database_type = "NONE"`). |
-| `enable_iap` | `false` pour une analyse publique | High | IAP devant Plausible bloque le script de suivi sur vos sites web — les navigateurs des visiteurs ne peuvent pas envoyer d'événements en POST à travers un écran de connexion Google. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| Ordre de suppression | Plausible d'abord, puis ClickHouse | Medium | Détruire ClickHouse alors que Plausible tourne encore laisse les pods redémarrer en boucle contre un magasin d'événements disparu (et l'autorisation sur le secret en suspens). |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `application_version` de ClickHouse_GKE | Conservez l'épinglage `24.12-alpine` | Critique | Remplacer l'épinglage de ClickHouse par une version non testée a déjà cassé Plausible en amont (plausible/analytics#3855) — les migrations ou les requêtes échouent contre un ClickHouse incompatible. Plausible épingle la version de ClickHouse pour une bonne raison. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation | Critique | La rotation invalide toutes les sessions Phoenix — tous les utilisateurs sont déconnectés d'un coup. |
+| `TOTP_VAULT_KEY` (généré automatiquement) | Ne jamais effectuer de rotation | Critique | La rotation rend inutilisables tous les appareils 2FA enregistrés ; les utilisateurs concernés ne peuvent plus se connecter avec la 2FA. |
+| `clickhouse_url` | `clickhouse_internal_endpoint` de ClickHouse_GKE | Élevé (bloqué) | Laissée vide, le déploiement est **bloqué au moment du plan** par la garde de validation — déployez d'abord ClickHouse_GKE et collez son output. Une URL erronée mais non vide échoue à l'exécution (le point d'entrée/les migrations ne peuvent pas joindre le magasin d'événements). |
+| `clickhouse_password_secret` | `clickhouse_password_secret_id` de ClickHouse_GKE | Élevé | Secret absent ou erroné → `CLICKHOUSE_PASSWORD` est absent et l'authentification ClickHouse échoue ; les pods redémarrent en boucle lors de la migration. |
+| `DISABLE_REGISTRATION` | `"true"` (ou `"invite_only"`) après le premier compte | Moyen | L'inscription reste **ouverte par défaut** — quiconque trouve l'URL peut créer un compte sur votre instance d'analyse. |
+| `application_version` | `latest` (épingle `v3.2.1`) ou un tag CE explicite | Élevé | CE ne publie aucun tag `latest` ; sans l'épinglage, le build échouerait avec `MANIFEST_UNKNOWN`. Épinglez des versions explicites en production. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orpheline la configuration des comptes/sites. |
+| `container_resources.memory_limit` | `1Gi` | Élevé | En dessous du plancher BEAM + Oban intégré au processus, les pods subissent un OOM sous charge ou pendant les migrations. |
+| `base_url` | URL du domaine personnalisé le cas échéant | Élevé | Une `BASE_URL` erronée place un mauvais `src` de script dans chaque extrait de suivi et casse les liens des e-mails. |
+| `path` des sondes | `/api/health` | Élevé | Rediriger les sondes vers une page authentifiée renvoie 401/403 — le pod ne devient jamais Ready alors que l'application a bien démarré. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le point d'entrée se connecte à `127.0.0.1:5432` via le sidecar Auth Proxy ; le désactiver casse le chemin PostgreSQL (et c'est bloqué lorsque `database_type = "NONE"`). |
+| `enable_iap` | `false` pour une analyse publique | Élevé | IAP devant Plausible bloque le script de suivi sur vos sites web — les navigateurs des visiteurs ne peuvent pas envoyer d'événements en POST à travers un écran de connexion Google. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| Ordre de suppression | Plausible d'abord, puis ClickHouse | Moyen | Détruire ClickHouse alors que Plausible tourne encore laisse les pods redémarrer en boucle contre un magasin d'événements disparu (et l'autorisation sur le secret en suspens). |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
 
 ---
 

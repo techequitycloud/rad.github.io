@@ -329,8 +329,8 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle
 > [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP
@@ -341,16 +341,16 @@ ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| S'attendre à ce que ce soit un résolveur DNS | Ne faites pas pointer les paramètres DNS des clients vers ce déploiement | **Critical** | Le port 53/udp+tcp n'est jamais exposé par le modèle Gateway HTTP(S) de ce module — les requêtes DNS vers ce déploiement échouent tout simplement ; seules la console web et l'API sont joignables. |
-| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | Critical | Sans IAP, la console n'est protégée que par son propre mot de passe administrateur, sur l'internet public. |
-| Rotation de `DNS_SERVER_ADMIN_PASSWORD` | Modifiez le mot de passe depuis la console après la première connexion | High | Technitium ne relit jamais la variable d'environnement après le premier démarrage — faire tourner uniquement la valeur dans Secret Manager ne change PAS le mot de passe effectif de la console. |
-| `stateful_pvc_mount_path` | `/etc/dns` | High | Monter le PVC ailleurs que sur `/etc/dns` laisse le véritable chemin de configuration non persisté. |
-| `enable_cloudsql_volume` | `false` | High | Définir `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à joindre — rejeté par le garde-fou au moment du plan. |
-| Identifiants de `enable_iap` | Définissez `iap_oauth_client_id` et `_secret` ensemble | High | Activer IAP sans ces deux valeurs est rejeté au moment du plan par le garde-fou de validation. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'expulser tous les pods simultanément pendant la maintenance. |
-| `reserve_static_ip` | `true` en production | Medium | Une IP éphémère peut changer lors de la recréation du Service, ce qui casse toute URL de console mise en favori ou codée en dur. |
-| `application_version` | Épinglez une version explicite en production | Low | `latest` suit les versions amont ; épinglez explicitement pour maîtriser le calendrier des mises à niveau. |
+| S'attendre à ce que ce soit un résolveur DNS | Ne faites pas pointer les paramètres DNS des clients vers ce déploiement | **Critique** | Le port 53/udp+tcp n'est jamais exposé par le modèle Gateway HTTP(S) de ce module — les requêtes DNS vers ce déploiement échouent tout simplement ; seules la console web et l'API sont joignables. |
+| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | Critique | Sans IAP, la console n'est protégée que par son propre mot de passe administrateur, sur l'internet public. |
+| Rotation de `DNS_SERVER_ADMIN_PASSWORD` | Modifiez le mot de passe depuis la console après la première connexion | Élevé | Technitium ne relit jamais la variable d'environnement après le premier démarrage — faire tourner uniquement la valeur dans Secret Manager ne change PAS le mot de passe effectif de la console. |
+| `stateful_pvc_mount_path` | `/etc/dns` | Élevé | Monter le PVC ailleurs que sur `/etc/dns` laisse le véritable chemin de configuration non persisté. |
+| `enable_cloudsql_volume` | `false` | Élevé | Définir `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à joindre — rejeté par le garde-fou au moment du plan. |
+| Identifiants de `enable_iap` | Définissez `iap_oauth_client_id` et `_secret` ensemble | Élevé | Activer IAP sans ces deux valeurs est rejeté au moment du plan par le garde-fou de validation. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'expulser tous les pods simultanément pendant la maintenance. |
+| `reserve_static_ip` | `true` en production | Moyen | Une IP éphémère peut changer lors de la recréation du Service, ce qui casse toute URL de console mise en favori ou codée en dur. |
+| `application_version` | Épinglez une version explicite en production | Faible | `latest` suit les versions amont ; épinglez explicitement pour maîtriser le calendrier des mises à niveau. |
 
 ---
 

@@ -314,8 +314,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 7. Pièges et points d'attention {#7-pitfalls--gotchas}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs et
@@ -324,14 +324,14 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| SQLite sur GCS Fuse | Acceptez le compromis, ou utilisez `Headscale_GKE` en production | **Critical** | Les fichiers WAL/journal de SQLite exigent un véritable verrouillage de fichiers POSIX, que gcsfuse ne fournit pas de manière fiable — confirmé en conditions réelles par des entrées de journal `BufferedWriteHandler.OutOfOrderError` répétées pour `db.sqlite`/`db.sqlite-wal`/`db.sqlite-shm`. gcsfuse se rabat sur un chemin d'écriture hérité plus lent ; l'application a continué de fonctionner lors des tests observés, mais il s'agit d'une catégorie connue de risque de corruption SQLite, documentée ailleurs dans ce catalogue. **Aucune correction n'est possible sur Cloud Run** — il n'existe pas d'alternative de volume en mode bloc, seulement gcsfuse ou un stockage éphémère. Pour un déploiement de production, utilisez plutôt [Headscale_GKE](Headscale_GKE.md) avec `stateful_pvc_enabled = true` (sa valeur par défaut). |
-| `max_instance_count` | Laissez `1` (elle est de toute façon codée en dur) | High | La variable est déclarée mais jamais réellement lue par `Headscale_Common` — `config.max_instance_count` est un `1` littéral. La définir plus haut donne la fausse impression qu'une mise à l'échelle horizontale est possible ; elle ne l'est pas, et corromprait le fichier SQLite si elle l'était. |
-| `server_url` | Définissez-la une fois, avant d'enregistrer des clients | Critical | Intégrée à l'enregistrement de chaque client. La modifier après l'enregistrement des clients impose de réenregistrer chaque nœud auprès de la nouvelle URL. |
-| `ingress_settings` | `all` | Critical | Définir `internal` rend le serveur de coordination injoignable pour de vrais clients Tailscale sur internet — la raison d'être même du déploiement est alors compromise. |
-| `enable_iap` | `false` | Critical | IAP exige une identité Google pour chaque requête. La CLI `tailscale` ne peut pas en présenter, si bien qu'activer IAP bloque tout enregistrement de client et tout le trafic de synchronisation du maillage. |
-| Perte du volume/bucket de stockage | Ne supprimez jamais manuellement le bucket `storage` tant que des nœuds sont enregistrés | Critical | La clé privée du protocole Noise et l'intégralité du registre des nœuds s'y trouvent. Sa perte oblige chaque client à se réenregistrer de zéro. |
-| MagicDNS (`dns.magic_dns`) | Laissez `false` à moins de définir aussi un véritable `dns.base_domain` | Medium | Activer MagicDNS sans `base_domain` valide et distinct du domaine de `server_url` entraîne une résolution DNS défaillante pour les clients ; le module le livre désactivé à dessein. |
-| Hypothèse sur l'image `-debug` | Ne supposez pas qu'un shell est disponible | Low (au build) | Le tag `-debug` embarque busybox mais n'a pas de `/bin/sh` dans le `PATH` — une modification naïve du Dockerfile utilisant `#!/bin/sh` ou des étapes shell `RUN` sur cette base échouera. Déjà correctement géré dans le Dockerfile/point d'entrée livré ; à prendre en compte si vous en faites un fork. |
+| SQLite sur GCS Fuse | Acceptez le compromis, ou utilisez `Headscale_GKE` en production | **Critique** | Les fichiers WAL/journal de SQLite exigent un véritable verrouillage de fichiers POSIX, que gcsfuse ne fournit pas de manière fiable — confirmé en conditions réelles par des entrées de journal `BufferedWriteHandler.OutOfOrderError` répétées pour `db.sqlite`/`db.sqlite-wal`/`db.sqlite-shm`. gcsfuse se rabat sur un chemin d'écriture hérité plus lent ; l'application a continué de fonctionner lors des tests observés, mais il s'agit d'une catégorie connue de risque de corruption SQLite, documentée ailleurs dans ce catalogue. **Aucune correction n'est possible sur Cloud Run** — il n'existe pas d'alternative de volume en mode bloc, seulement gcsfuse ou un stockage éphémère. Pour un déploiement de production, utilisez plutôt [Headscale_GKE](Headscale_GKE.md) avec `stateful_pvc_enabled = true` (sa valeur par défaut). |
+| `max_instance_count` | Laissez `1` (elle est de toute façon codée en dur) | Élevé | La variable est déclarée mais jamais réellement lue par `Headscale_Common` — `config.max_instance_count` est un `1` littéral. La définir plus haut donne la fausse impression qu'une mise à l'échelle horizontale est possible ; elle ne l'est pas, et corromprait le fichier SQLite si elle l'était. |
+| `server_url` | Définissez-la une fois, avant d'enregistrer des clients | Critique | Intégrée à l'enregistrement de chaque client. La modifier après l'enregistrement des clients impose de réenregistrer chaque nœud auprès de la nouvelle URL. |
+| `ingress_settings` | `all` | Critique | Définir `internal` rend le serveur de coordination injoignable pour de vrais clients Tailscale sur internet — la raison d'être même du déploiement est alors compromise. |
+| `enable_iap` | `false` | Critique | IAP exige une identité Google pour chaque requête. La CLI `tailscale` ne peut pas en présenter, si bien qu'activer IAP bloque tout enregistrement de client et tout le trafic de synchronisation du maillage. |
+| Perte du volume/bucket de stockage | Ne supprimez jamais manuellement le bucket `storage` tant que des nœuds sont enregistrés | Critique | La clé privée du protocole Noise et l'intégralité du registre des nœuds s'y trouvent. Sa perte oblige chaque client à se réenregistrer de zéro. |
+| MagicDNS (`dns.magic_dns`) | Laissez `false` à moins de définir aussi un véritable `dns.base_domain` | Moyen | Activer MagicDNS sans `base_domain` valide et distinct du domaine de `server_url` entraîne une résolution DNS défaillante pour les clients ; le module le livre désactivé à dessein. |
+| Hypothèse sur l'image `-debug` | Ne supposez pas qu'un shell est disponible | Faible (au build) | Le tag `-debug` embarque busybox mais n'a pas de `/bin/sh` dans le `PATH` — une modification naïve du Dockerfile utilisant `#!/bin/sh` ou des étapes shell `RUN` sur cette base échouera. Déjà correctement géré dans le Dockerfile/point d'entrée livré ; à prendre en compte si vous en faites un fork. |
 
 ---
 

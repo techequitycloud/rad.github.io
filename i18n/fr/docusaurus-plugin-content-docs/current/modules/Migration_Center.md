@@ -227,22 +227,22 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `region` | à définir une seule fois, correctement | Critical | La région d'évaluation de Migration Center est permanente. Pour la modifier, vous devez utiliser un nouveau projet — toutes les données d'évaluation sont liées à la région. |
-| `mc_discovery_client_name` | à faire correspondre dans MCDCv6 | High | La valeur doit être saisie à l'identique (sensible à la casse) dans MCDCv6 lors de la connexion. Une différence crée une seconde source non enregistrée, et les résultats d'analyse n'atteignent jamais la source attendue. |
-| `aws_access_key_id` / `aws_secret_access_key` | les deux ou aucun | High | Les deux doivent être fournis ensemble. La clé d'amorçage doit disposer de droits d'écriture IAM (`iam:CreateUser`, `iam:CreatePolicy`, `iam:AttachUserPolicy`, `iam:CreateAccessKey` et leurs équivalents de suppression) — des identifiants en lecture seule sur EC2 échouent à l'étape de provisionnement IAM. La CLI `aws` doit être présente dans l'environnement d'exécution. |
-| `aws_region` | la région hébergeant vos instances EC2 | Medium | Consultée uniquement lorsque des identifiants AWS sont définis ; une mauvaise région importe zéro instance (l'étape d'importation ne fait alors rien). |
-| `create_vpc` + `create_default_firewall_rules` | `true` / `true` | Medium | Avec `create_vpc = false`, un réseau nommé `migcenter-<id>-vpc` doit déjà exister (il n'existe pas de variable de nom personnalisé). Créer des règles de pare-feu sur un VPC inexistant fait échouer l'application. |
-| `create_ssh_key_bucket` | `true` | Medium | Avec `false`, la clé privée n'existe que dans l'état Terraform — il n'y a aucun `lab-ssh-key.pem` à télécharger, donc l'étape d'identifiant SSH de MCDCv6 n'a rien à charger. |
-| Identifiants RDP | à changer pour tout usage hors lab | High | L'utilisateur et le mot de passe de la VM Windows sont codés en dur pour la commodité du lab, et `allow-rdp` est ouvert à `0.0.0.0/0`. Restreignez la plage source et changez le mot de passe pour tout usage non jetable. |
-| Exposition de `lab-ssh-key.pem` | restreignez le bucket et l'état | High | La clé privée RSA réside dans l'état et dans le bucket. Verrouillez les deux, et faites tourner la clé après la session. |
-| `linux_vm_count` | `3` | Low/Medium | Un nombre plus élevé donne un inventaire plus riche mais coûte plus cher ; `0` ne déploie aucune cible d'analyse (seule l'importation AWS alimenterait alors les assets). |
-| Objets Migration Center lors de la destruction | à nettoyer manuellement | Medium | Les sources, les tâches d'importation, les groupes, les préférences et les rapports ne figurent pas dans l'état Terraform et survivent à la destruction. Supprimez-les via la console/l'API ou en supprimant le projet. |
-| Dimensionnement à partir d'une seule analyse MCDCv6 | à exécuter plus longtemps pour un travail réel | Medium | Une analyse unique sous-estime la demande réelle ; les évaluations de production collectent 2 à 4 semaines d'utilisation avant de se fier aux recommandations de dimensionnement. |
+| `region` | à définir une seule fois, correctement | Critique | La région d'évaluation de Migration Center est permanente. Pour la modifier, vous devez utiliser un nouveau projet — toutes les données d'évaluation sont liées à la région. |
+| `mc_discovery_client_name` | à faire correspondre dans MCDCv6 | Élevé | La valeur doit être saisie à l'identique (sensible à la casse) dans MCDCv6 lors de la connexion. Une différence crée une seconde source non enregistrée, et les résultats d'analyse n'atteignent jamais la source attendue. |
+| `aws_access_key_id` / `aws_secret_access_key` | les deux ou aucun | Élevé | Les deux doivent être fournis ensemble. La clé d'amorçage doit disposer de droits d'écriture IAM (`iam:CreateUser`, `iam:CreatePolicy`, `iam:AttachUserPolicy`, `iam:CreateAccessKey` et leurs équivalents de suppression) — des identifiants en lecture seule sur EC2 échouent à l'étape de provisionnement IAM. La CLI `aws` doit être présente dans l'environnement d'exécution. |
+| `aws_region` | la région hébergeant vos instances EC2 | Moyen | Consultée uniquement lorsque des identifiants AWS sont définis ; une mauvaise région importe zéro instance (l'étape d'importation ne fait alors rien). |
+| `create_vpc` + `create_default_firewall_rules` | `true` / `true` | Moyen | Avec `create_vpc = false`, un réseau nommé `migcenter-<id>-vpc` doit déjà exister (il n'existe pas de variable de nom personnalisé). Créer des règles de pare-feu sur un VPC inexistant fait échouer l'application. |
+| `create_ssh_key_bucket` | `true` | Moyen | Avec `false`, la clé privée n'existe que dans l'état Terraform — il n'y a aucun `lab-ssh-key.pem` à télécharger, donc l'étape d'identifiant SSH de MCDCv6 n'a rien à charger. |
+| Identifiants RDP | à changer pour tout usage hors lab | Élevé | L'utilisateur et le mot de passe de la VM Windows sont codés en dur pour la commodité du lab, et `allow-rdp` est ouvert à `0.0.0.0/0`. Restreignez la plage source et changez le mot de passe pour tout usage non jetable. |
+| Exposition de `lab-ssh-key.pem` | restreignez le bucket et l'état | Élevé | La clé privée RSA réside dans l'état et dans le bucket. Verrouillez les deux, et faites tourner la clé après la session. |
+| `linux_vm_count` | `3` | Faible/Moyen | Un nombre plus élevé donne un inventaire plus riche mais coûte plus cher ; `0` ne déploie aucune cible d'analyse (seule l'importation AWS alimenterait alors les assets). |
+| Objets Migration Center lors de la destruction | à nettoyer manuellement | Moyen | Les sources, les tâches d'importation, les groupes, les préférences et les rapports ne figurent pas dans l'état Terraform et survivent à la destruction. Supprimez-les via la console/l'API ou en supprimant le projet. |
+| Dimensionnement à partir d'une seule analyse MCDCv6 | à exécuter plus longtemps pour un travail réel | Moyen | Une analyse unique sous-estime la demande réelle ; les évaluations de production collectent 2 à 4 semaines d'utilisation avant de se fier aux recommandations de dimensionnement. |
 
 ---
 

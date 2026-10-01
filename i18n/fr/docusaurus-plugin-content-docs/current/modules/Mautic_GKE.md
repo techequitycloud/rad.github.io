@@ -444,26 +444,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé : service dégradé) —
-> **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `cron_jobs` | configurés (§3) | Critical | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les fichiers téléversés sont perdus au redémarrage et ne sont pas partagés entre les réplicas. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers sans suffixe sont des octets et bloquent toute planification. |
-| `enable_redis` | `true` | High | Avec plus d'un réplica, des caches isolés par pod provoquent des incohérences. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
-| `memory_limit` | `4Gi` | High | Une mémoire insuffisante provoque des OOM PHP pendant les imports et les envois. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les connexions en multi-réplica perdent l'état de session. |
-| `mautic_admin_email` / `mailer_from_email` | adresses réelles | High | Les valeurs d'exemple n'aboutissent nulle part et sont rejetées ou classées en spam. |
-| `min_instance_count` | `1` | High | `0` laisse les tâches planifiées sans pod sur lequel s'exécuter. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Medium | Sinon, l'interface d'administration est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `database_type` | `MYSQL_8_0` | Critique | Mautic nécessite MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `cron_jobs` | configurés (§3) | Critique | Sans les commandes planifiées, aucune campagne ne se déclenche et aucun e-mail n'est envoyé. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les fichiers téléversés sont perdus au redémarrage et ne sont pas partagés entre les réplicas. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers sans suffixe sont des octets et bloquent toute planification. |
+| `enable_redis` | `true` | Élevé | Avec plus d'un réplica, des caches isolés par pod provoquent des incohérences. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison valide si Redis est activé alors que NFS est désactivé et qu'aucun hôte n'est défini. |
+| `memory_limit` | `4Gi` | Élevé | Une mémoire insuffisante provoque des OOM PHP pendant les imports et les envois. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les connexions en multi-réplica perdent l'état de session. |
+| `mautic_admin_email` / `mailer_from_email` | adresses réelles | Élevé | Les valeurs d'exemple n'aboutissent nulle part et sont rejetées ou classées en spam. |
+| `min_instance_count` | `1` | Élevé | `0` laisse les tâches planifiées sans pod sur lequel s'exécuter. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
 
 ---
 

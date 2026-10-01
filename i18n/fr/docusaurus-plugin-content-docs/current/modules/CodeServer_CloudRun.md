@@ -323,22 +323,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages GCS FUSE/NFS, IAP sans identité autorisée, un `timeout_seconds` hors limites, etc. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_password` | `true` (à conserver pour une entrée publique) | Critical | Le désactiver avec `ingress_settings = "all"` expose à internet un IDE entièrement non authentifié — terminal compris. |
-| Bucket de l'espace de travail | Ne jamais le supprimer | Critical | Le bucket GCS FUSE sur `/home/coder` est le seul état persistant ; le supprimer efface tous les paramètres, extensions et fichiers. |
-| Chemin de `startup_probe` / `liveness_probe` | `/healthz` | High | Pointer les sondes vers `/health` alors qu'un mot de passe est défini renvoie `401` ; la révision ne devient jamais Ready. |
-| `max_instance_count` | `1` | High | Dépasser 1 répartit les sessions de l'éditeur entre instances et expose à des écritures concurrentes sur l'unique volume d'espace de travail. |
-| `min_instance_count` | `1` | Medium | La mise à zéro (`0`) ajoute une latence de démarrage à froid et remonte l'espace de travail à la requête suivante. |
-| `execution_environment` | `gen2` | High | `gen1` ne peut pas monter GCS FUSE — le volume de l'espace de travail échoue et l'état est perdu au redémarrage. |
-| `ingress_settings` | `all` + mot de passe (ou `internal`) | High | `all` sans mot de passe publie un IDE ouvert ; `internal` bloque tout accès par navigateur depuis l'extérieur du VPC. |
-| `enable_cloudsql_volume` | `false` | Low | code-server n'a pas de base de données ; l'activer ajoute un sidecar Auth Proxy inutile. |
-| `memory_limit` | `1Gi`+ | Medium | Des serveurs de langage ou des extensions gourmands peuvent provoquer un OOM en dessous de 1 GiB. |
+| `enable_password` | `true` (à conserver pour une entrée publique) | Critique | Le désactiver avec `ingress_settings = "all"` expose à internet un IDE entièrement non authentifié — terminal compris. |
+| Bucket de l'espace de travail | Ne jamais le supprimer | Critique | Le bucket GCS FUSE sur `/home/coder` est le seul état persistant ; le supprimer efface tous les paramètres, extensions et fichiers. |
+| Chemin de `startup_probe` / `liveness_probe` | `/healthz` | Élevé | Pointer les sondes vers `/health` alors qu'un mot de passe est défini renvoie `401` ; la révision ne devient jamais Ready. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 répartit les sessions de l'éditeur entre instances et expose à des écritures concurrentes sur l'unique volume d'espace de travail. |
+| `min_instance_count` | `1` | Moyen | La mise à zéro (`0`) ajoute une latence de démarrage à froid et remonte l'espace de travail à la requête suivante. |
+| `execution_environment` | `gen2` | Élevé | `gen1` ne peut pas monter GCS FUSE — le volume de l'espace de travail échoue et l'état est perdu au redémarrage. |
+| `ingress_settings` | `all` + mot de passe (ou `internal`) | Élevé | `all` sans mot de passe publie un IDE ouvert ; `internal` bloque tout accès par navigateur depuis l'extérieur du VPC. |
+| `enable_cloudsql_volume` | `false` | Faible | code-server n'a pas de base de données ; l'activer ajoute un sidecar Auth Proxy inutile. |
+| `memory_limit` | `1Gi`+ | Moyen | Des serveurs de langage ou des extensions gourmands peuvent provoquer un OOM en dessous de 1 GiB. |
 
 ---
 

@@ -317,25 +317,25 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `container_port` hors limites, une quantité de CPU/mémoire invalide, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Cloud Run comme plateforme | GKE pour la persistance | Critical | Cloud Run n'a pas de disque durable — `/data` (tout l'état CouchDB + MinIO) est perdu à chaque redémarrage/révision. N'utilisez Budibase_CloudRun que pour la démonstration/l'évaluation. |
-| `API_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critical | Sa rotation corrompt toutes les données chiffrées stockées — elles ne peuvent plus être déchiffrées. |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (générés automatiquement) | Aucune rotation après le premier démarrage | Critical | Leur rotation rompt l'accès aux magasins d'objets/de documents intégrés chiffrés sur `/data`. |
-| `JWT_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | High | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
-| `max_instance_count` | `1` | Critical | Plus d'une instance scinde le magasin de données local — les réplicas ne partagent pas `/data` (split-brain, perte de données). |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro fait perdre le magasin de données en cours dans le conteneur. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête réduit à ~0 CPU, entre les requêtes, le travail d'arrière-plan des CouchDB/MinIO/Redis intégrés. |
-| `container_port` | `80` | High | Le proxy nginx sert l'application sur le port 80 ; tout autre port fait échouer les sondes et le service ne passe jamais à l'état Ready. |
-| `database_type` | `NONE` | High | Choisir un moteur externe provisionne une instance Cloud SQL inutilisée ; Budibase ne s'y connecte jamais. |
-| `memory_limit` | `8Gi` | High | Avec 4Gi, l'instance boucle en OOM (redémarrages ~toutes les 60 s) — le répertoire inscriptible `/data` (état CouchDB/MinIO/Redis) est en mémoire sur Cloud Run gen2 et décompté de la limite ; 8Gi est le minimum fiable. |
-| Premier compte administrateur | À créer immédiatement après le déploiement | High | Budibase auto-hébergé est livré sans administrateur par défaut — une instance non revendiquée peut être revendiquée par quiconque atteint l'URL. |
-| `enable_iap` | à activer pour les déploiements privés | Medium | Sans IAP ni WAF, l'interface est publiquement accessible à l'URL `run.app`. |
+| Cloud Run comme plateforme | GKE pour la persistance | Critique | Cloud Run n'a pas de disque durable — `/data` (tout l'état CouchDB + MinIO) est perdu à chaque redémarrage/révision. N'utilisez Budibase_CloudRun que pour la démonstration/l'évaluation. |
+| `API_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critique | Sa rotation corrompt toutes les données chiffrées stockées — elles ne peuvent plus être déchiffrées. |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (générés automatiquement) | Aucune rotation après le premier démarrage | Critique | Leur rotation rompt l'accès aux magasins d'objets/de documents intégrés chiffrés sur `/data`. |
+| `JWT_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Élevé | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
+| `max_instance_count` | `1` | Critique | Plus d'une instance scinde le magasin de données local — les réplicas ne partagent pas `/data` (split-brain, perte de données). |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro fait perdre le magasin de données en cours dans le conteneur. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête réduit à ~0 CPU, entre les requêtes, le travail d'arrière-plan des CouchDB/MinIO/Redis intégrés. |
+| `container_port` | `80` | Élevé | Le proxy nginx sert l'application sur le port 80 ; tout autre port fait échouer les sondes et le service ne passe jamais à l'état Ready. |
+| `database_type` | `NONE` | Élevé | Choisir un moteur externe provisionne une instance Cloud SQL inutilisée ; Budibase ne s'y connecte jamais. |
+| `memory_limit` | `8Gi` | Élevé | Avec 4Gi, l'instance boucle en OOM (redémarrages ~toutes les 60 s) — le répertoire inscriptible `/data` (état CouchDB/MinIO/Redis) est en mémoire sur Cloud Run gen2 et décompté de la limite ; 8Gi est le minimum fiable. |
+| Premier compte administrateur | À créer immédiatement après le déploiement | Élevé | Budibase auto-hébergé est livré sans administrateur par défaut — une instance non revendiquée peut être revendiquée par quiconque atteint l'URL. |
+| `enable_iap` | à activer pour les déploiements privés | Moyen | Sans IAP ni WAF, l'interface est publiquement accessible à l'URL `run.app`. |
 
 ---
 

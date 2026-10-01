@@ -359,8 +359,8 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs et leurs
@@ -370,15 +370,15 @@ ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| Premier compte créé par inscription | Le créer immédiatement après le déploiement | Critical | Le **premier** compte inscrit devient l'hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'approprie ce rôle. |
-| Auto-inscription publique | La désactiver après le premier administrateur | High | Memos est livré avec l'inscription ouverte par défaut ; la laisser activée permet à quiconque dispose de l'URL de créer un compte. |
-| `container_image_source` | `custom` (défaut) | High | `"prebuilt"` déploie directement l'image officielle, mais cette image ne contient aucune logique pour calculer `MEMOS_DSN` à partir des variables `DB_*` de la plateforme — elle doit être raccordée manuellement via `environment_variables`, sinon l'application ne parvient pas à se connecter à la base de données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| `memory_limit` | `512Mi` (la valeur par défaut suffit) | Medium | L'empreinte de Memos est faible ; l'augmenter affecte surtout le coût, pas le bon fonctionnement. |
-| `min_instance_count` | `0` (défaut) | Low | La mise à l'échelle à zéro ajoute un bref démarrage à froid (binaire Go, démarrage rapide) à la première requête après une période d'inactivité — bien plus court que pour les applications JVM/Node.js de ce catalogue. |
-| `gcs_volumes` pour les pièces jointes | À ajouter explicitement si nécessaire | Medium | Sans lui, les pièces jointes binaires téléversées résident sur le système de fichiers éphémère de Cloud Run et ne survivent pas à un redémarrage de révision — les notes textuelles dans PostgreSQL ne sont pas affectées. |
-| `enable_cloud_armor` | à activer en production | Medium | Le formulaire de connexion/d'inscription est accessible publiquement sans protection WAF par défaut. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| Premier compte créé par inscription | Le créer immédiatement après le déploiement | Critique | Le **premier** compte inscrit devient l'hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'approprie ce rôle. |
+| Auto-inscription publique | La désactiver après le premier administrateur | Élevé | Memos est livré avec l'inscription ouverte par défaut ; la laisser activée permet à quiconque dispose de l'URL de créer un compte. |
+| `container_image_source` | `custom` (défaut) | Élevé | `"prebuilt"` déploie directement l'image officielle, mais cette image ne contient aucune logique pour calculer `MEMOS_DSN` à partir des variables `DB_*` de la plateforme — elle doit être raccordée manuellement via `environment_variables`, sinon l'application ne parvient pas à se connecter à la base de données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `memory_limit` | `512Mi` (la valeur par défaut suffit) | Moyen | L'empreinte de Memos est faible ; l'augmenter affecte surtout le coût, pas le bon fonctionnement. |
+| `min_instance_count` | `0` (défaut) | Faible | La mise à l'échelle à zéro ajoute un bref démarrage à froid (binaire Go, démarrage rapide) à la première requête après une période d'inactivité — bien plus court que pour les applications JVM/Node.js de ce catalogue. |
+| `gcs_volumes` pour les pièces jointes | À ajouter explicitement si nécessaire | Moyen | Sans lui, les pièces jointes binaires téléversées résident sur le système de fichiers éphémère de Cloud Run et ne survivent pas à un redémarrage de révision — les notes textuelles dans PostgreSQL ne sont pas affectées. |
+| `enable_cloud_armor` | à activer en production | Moyen | Le formulaire de connexion/d'inscription est accessible publiquement sans protection WAF par défaut. |
 
 ---
 

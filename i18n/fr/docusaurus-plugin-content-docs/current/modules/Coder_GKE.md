@@ -371,8 +371,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -387,18 +387,18 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse toutes les requêtes émises par Coder. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail, modèles, utilisateurs et clés de signature auto-générées. |
-| `container_image_source` | `custom` | Critical | Passer à `prebuilt` fait pointer GKE vers l'image brute `ghcr.io/coder/coder`, qui ne sait pas assembler `CODER_PG_CONNECTION_URL` à partir des variables de base de données du socle et ne démarre pas. |
-| `enable_cloudsql_volume` | `true` | Critical | Requis pour la connectivité à la base de données sur GKE ; une garde au moment du plan le bloque également lorsque `database_type = "NONE"` pour éviter un side-car de proxy sans rien à quoi se connecter. |
-| `nfs_mount_path` (si `enable_nfs=true`) | Un véritable répertoire, par ex. `/home/coder/data` | Critical | Un montage par-dessus `/opt/coder` — le binaire `coder` lui-même — masque l'exécutable et le conteneur ne démarre pas. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, une session WebSocket de terminal/IDE en cours peut être routée vers un autre pod en pleine session et être interrompue. |
-| `enable_redis` | `false` | Medium | Inutile — l'activer sans définir `redis_host` ni `enable_nfs=true` fait échouer la validation au moment du plan ; même correctement configuré, il ajoute une dépendance inutilisée puisque Coder conserve tout son état dans PostgreSQL. |
-| `max_instance_count` | `5` (à ajuster selon la charge) | Medium | Peut être augmenté sans risque pour un plan de contrôle sans état, mais chaque réplica ouvre son propre pool de connexions à la base de données — surveillez `max_connections` de Cloud SQL avec un nombre élevé de réplicas. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, `CODER_ACCESS_URL` et toute redirection OAuth/OIDC enregistrée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires de l'historique des espaces de travail et des modèles. |
-| `elasticsearch_url` / `elasticsearch_username` / `elasticsearch_password_secret` | Laisser non définies | Low | Inertes dans ce module (non transmises à l'appel du socle) — les définir n'a aucun effet et n'active aucune intégration de recherche. |
+| `database_type` | `POSTGRES_15` (ou 13/14) | Critique | Tout moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse toutes les requêtes émises par Coder. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail, modèles, utilisateurs et clés de signature auto-générées. |
+| `container_image_source` | `custom` | Critique | Passer à `prebuilt` fait pointer GKE vers l'image brute `ghcr.io/coder/coder`, qui ne sait pas assembler `CODER_PG_CONNECTION_URL` à partir des variables de base de données du socle et ne démarre pas. |
+| `enable_cloudsql_volume` | `true` | Critique | Requis pour la connectivité à la base de données sur GKE ; une garde au moment du plan le bloque également lorsque `database_type = "NONE"` pour éviter un side-car de proxy sans rien à quoi se connecter. |
+| `nfs_mount_path` (si `enable_nfs=true`) | Un véritable répertoire, par ex. `/home/coder/data` | Critique | Un montage par-dessus `/opt/coder` — le binaire `coder` lui-même — masque l'exécutable et le conteneur ne démarre pas. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, une session WebSocket de terminal/IDE en cours peut être routée vers un autre pod en pleine session et être interrompue. |
+| `enable_redis` | `false` | Moyen | Inutile — l'activer sans définir `redis_host` ni `enable_nfs=true` fait échouer la validation au moment du plan ; même correctement configuré, il ajoute une dépendance inutilisée puisque Coder conserve tout son état dans PostgreSQL. |
+| `max_instance_count` | `5` (à ajuster selon la charge) | Moyen | Peut être augmenté sans risque pour un plan de contrôle sans état, mais chaque réplica ouvre son propre pool de connexions à la base de données — surveillez `max_connections` de Cloud SQL avec un nombre élevé de réplicas. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, `CODER_ACCESS_URL` et toute redirection OAuth/OIDC enregistrée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires de l'historique des espaces de travail et des modèles. |
+| `elasticsearch_url` / `elasticsearch_username` / `elasticsearch_password_secret` | Laisser non définies | Faible | Inertes dans ce module (non transmises à l'appel du socle) — les définir n'a aucun effet et n'active aucune intégration de recherche. |
 
 ---
 

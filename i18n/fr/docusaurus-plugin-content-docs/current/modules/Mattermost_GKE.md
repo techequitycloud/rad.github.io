@@ -367,7 +367,7 @@ Ce ne sont pas des alias. Modifier `startup_probe` affecte la sonde réellement 
 |---|---|---|---|
 | `path` | `"/api/v4/system/ping"` | `"/healthz"` | Point de terminaison de disponibilité intégré de Mattermost. |
 | `initial_delay_seconds` | `60` | `10` | Mattermost exécute les migrations PostgreSQL au premier démarrage, ce qui peut prendre 30 à 60 secondes pour les bases de données volumineuses. |
-| `failure_threshold` | `30` | `3` | Accorde jusqu'à 7.5 minutes de démarrage (`30 × 15s`). Suffisant pour les nouveaux déploiements avec migration de schéma. |
+| `failure_threshold` | `30` | `3` | Accorde jusqu'à 7,5 minutes de démarrage (`30 × 15s`). Suffisant pour les nouveaux déploiements avec migration de schéma. |
 | `period_seconds` | `15` | `10` | — |
 
 **Sonde de vivacité** (`liveness_probe` → `Mattermost Common`) :
@@ -575,30 +575,30 @@ gcloud secrets list \
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critical** (critique : perte de données, panne complète, faille de sécurité) — **High** (élevé : service indisponible ou dégradation importante) — **Medium** (moyen : fonctionnement dégradé ou coût accru) — **Low** (faible : impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation importante) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critical** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"POSTGRES_15"` | **Critical** | Mattermost ne prend en charge que PostgreSQL. Définir `MYSQL_8_0` ou `NONE` fait échouer le job `db-init` et planter Mattermost au démarrage. |
-| `application_database_name` | `"mattermost"` | **Critical** | Immuable après le déploiement — le modifier recrée la base de données et détruit toutes les données Mattermost (canaux, messages, utilisateurs). |
-| `application_database_user` | `"mattermost"` | **Critical** | Immuable après le déploiement — le modifier recrée l'utilisateur, invalide les identifiants et rompt la connexion de Mattermost à la base de données. |
-| `site_url` | `""` | **High** | Un `site_url` vide empêche Mattermost de générer correctement les liens des e-mails de notification, les redirections OAuth et les liens profonds mobiles. Configurez-le avant d'inviter des utilisateurs. |
-| `edition` | `"team"` | **High** | Définir `"enterprise"` sans clé de licence valide fait démarrer Mattermost sans licence et désactive silencieusement les fonctionnalités enterprise. Fournissez la clé via `environment_variables`. |
-| `enable_redis` | `false` | **High** | Sans risque pour les déploiements à un seul réplica. Avec `min_instance_count > 1`, la mise en cache des sessions dans le processus provoque des échecs d'authentification intermittents lorsque les requêtes sont réparties entre les pods. Activez Redis pour tout déploiement multi-réplica. |
-| `min_instance_count` | `1` | **High** | Définir `0` autorise la mise à l'échelle à zéro. Les démarrages à froid coupent les connexions WebSocket actives : les utilisateurs voient des bannières de déconnexion et manquent des messages en temps réel jusqu'à la reconnexion. Conservez `1` en production. |
-| `container_resources.memory_limit` | `"4Gi"` | **High** | Mattermost met en cache en mémoire les canaux actifs et les sessions utilisateur. Un sous-dimensionnement (en dessous de `2Gi`) provoque des arrêts OOM sous une charge d'équipe modérée, en particulier lors d'exports massifs de messages ou de l'exécution de plugins. |
-| `session_affinity` | `"ClientIP"` | **High** | Sans Redis et sans affinité de session, les sessions administrateur et utilisateur ne sont pas partagées entre les pods. Les utilisateurs sont de fait déconnectés à chaque requête acheminée vers un autre réplica. |
-| `container_port` | `8065` | **Critical** | Mattermost écoute sur `8065`. Modifier cette valeur sans l'aligner sur le port lié par le conteneur fait échouer toutes les sondes de santé et fait entrer le pod dans une boucle de redémarrage. |
-| `timeout_seconds` | `300` | **Medium** | Les connexions WebSocket de Mattermost sont de longue durée. Un timeout de backend de 300 secondes coupe régulièrement les connexions actives. Définissez `3600` pour les déploiements faisant un usage intensif des WebSockets. |
-| `enable_nfs` | `false` | **Medium** | NFS est désactivé par défaut. Si `gcs_volumes` n'est pas non plus configuré, les fichiers téléversés dans Mattermost sont stockés dans le système de fichiers éphémère du conteneur et perdus au redémarrage du pod. Configurez des volumes GCS Fuse pour un stockage durable des fichiers. |
-| `create_cloud_storage` | `false` | **Medium** | Ce module ne provisionne automatiquement aucun bucket GCS. Sans `create_cloud_storage = true` et une entrée `gcs_volumes`, les fichiers téléversés ne survivent pas aux redémarrages de pods. |
-| `stateful_pvc_size` | `"10Gi"` | **Medium** | Pour des équipes qui partagent activement des fichiers et des médias, `10Gi` se remplit vite. Provisionnez 50–100 Gi pour les équipes actives. La taille d'un PVC peut être augmentée mais pas réduite. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers sans suffixe sont interprétés comme des octets et empêchent la planification de tous les pods. |
-| `backup_retention_days` | `7` | **Medium** | Trop court pour des équipes actives. Portez-la à 30 jours ou plus pour disposer d'une fenêtre de reprise utile. |
-| `enable_cloud_armor` | `false` | **Medium** | Sans Cloud Armor, la page de connexion et les points de terminaison de l'API de Mattermost sont exposés aux attaques par force brute et par bourrage d'identifiants. Activez-le pour tout déploiement accessible publiquement. |
-| `enable_pod_disruption_budget` | `false` | **Medium** | Désactivé par défaut. Sans PDB, les mises à niveau des nœuds GKE peuvent arrêter simultanément tous les pods Mattermost et provoquer une panne complète. Activez-le en production. |
-| `startup_probe.failure_threshold` | `30` | **High** | Mattermost exécute les migrations de schéma PostgreSQL au premier démarrage. Réduire `failure_threshold` en dessous de `20` sur de nouveaux déploiements avec des bases de données volumineuses peut amener Kubernetes à redémarrer le pod avant la fin des migrations, créant une boucle de redémarrage. |
+| `project_id` | _(obligatoire)_ | **Critique** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
+| `database_type` | `"POSTGRES_15"` | **Critique** | Mattermost ne prend en charge que PostgreSQL. Définir `MYSQL_8_0` ou `NONE` fait échouer le job `db-init` et planter Mattermost au démarrage. |
+| `application_database_name` | `"mattermost"` | **Critique** | Immuable après le déploiement — le modifier recrée la base de données et détruit toutes les données Mattermost (canaux, messages, utilisateurs). |
+| `application_database_user` | `"mattermost"` | **Critique** | Immuable après le déploiement — le modifier recrée l'utilisateur, invalide les identifiants et rompt la connexion de Mattermost à la base de données. |
+| `site_url` | `""` | **Élevé** | Un `site_url` vide empêche Mattermost de générer correctement les liens des e-mails de notification, les redirections OAuth et les liens profonds mobiles. Configurez-le avant d'inviter des utilisateurs. |
+| `edition` | `"team"` | **Élevé** | Définir `"enterprise"` sans clé de licence valide fait démarrer Mattermost sans licence et désactive silencieusement les fonctionnalités enterprise. Fournissez la clé via `environment_variables`. |
+| `enable_redis` | `false` | **Élevé** | Sans risque pour les déploiements à un seul réplica. Avec `min_instance_count > 1`, la mise en cache des sessions dans le processus provoque des échecs d'authentification intermittents lorsque les requêtes sont réparties entre les pods. Activez Redis pour tout déploiement multi-réplica. |
+| `min_instance_count` | `1` | **Élevé** | Définir `0` autorise la mise à l'échelle à zéro. Les démarrages à froid coupent les connexions WebSocket actives : les utilisateurs voient des bannières de déconnexion et manquent des messages en temps réel jusqu'à la reconnexion. Conservez `1` en production. |
+| `container_resources.memory_limit` | `"4Gi"` | **Élevé** | Mattermost met en cache en mémoire les canaux actifs et les sessions utilisateur. Un sous-dimensionnement (en dessous de `2Gi`) provoque des arrêts OOM sous une charge d'équipe modérée, en particulier lors d'exports massifs de messages ou de l'exécution de plugins. |
+| `session_affinity` | `"ClientIP"` | **Élevé** | Sans Redis et sans affinité de session, les sessions administrateur et utilisateur ne sont pas partagées entre les pods. Les utilisateurs sont de fait déconnectés à chaque requête acheminée vers un autre réplica. |
+| `container_port` | `8065` | **Critique** | Mattermost écoute sur `8065`. Modifier cette valeur sans l'aligner sur le port lié par le conteneur fait échouer toutes les sondes de santé et fait entrer le pod dans une boucle de redémarrage. |
+| `timeout_seconds` | `300` | **Moyen** | Les connexions WebSocket de Mattermost sont de longue durée. Un timeout de backend de 300 secondes coupe régulièrement les connexions actives. Définissez `3600` pour les déploiements faisant un usage intensif des WebSockets. |
+| `enable_nfs` | `false` | **Moyen** | NFS est désactivé par défaut. Si `gcs_volumes` n'est pas non plus configuré, les fichiers téléversés dans Mattermost sont stockés dans le système de fichiers éphémère du conteneur et perdus au redémarrage du pod. Configurez des volumes GCS Fuse pour un stockage durable des fichiers. |
+| `create_cloud_storage` | `false` | **Moyen** | Ce module ne provisionne automatiquement aucun bucket GCS. Sans `create_cloud_storage = true` et une entrée `gcs_volumes`, les fichiers téléversés ne survivent pas aux redémarrages de pods. |
+| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Pour des équipes qui partagent activement des fichiers et des médias, `10Gi` se remplit vite. Provisionnez 50–100 Gi pour les équipes actives. La taille d'un PVC peut être augmentée mais pas réduite. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers sans suffixe sont interprétés comme des octets et empêchent la planification de tous les pods. |
+| `backup_retention_days` | `7` | **Moyen** | Trop court pour des équipes actives. Portez-la à 30 jours ou plus pour disposer d'une fenêtre de reprise utile. |
+| `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, la page de connexion et les points de terminaison de l'API de Mattermost sont exposés aux attaques par force brute et par bourrage d'identifiants. Activez-le pour tout déploiement accessible publiquement. |
+| `enable_pod_disruption_budget` | `false` | **Moyen** | Désactivé par défaut. Sans PDB, les mises à niveau des nœuds GKE peuvent arrêter simultanément tous les pods Mattermost et provoquer une panne complète. Activez-le en production. |
+| `startup_probe.failure_threshold` | `30` | **Élevé** | Mattermost exécute les migrations de schéma PostgreSQL au premier démarrage. Réduire `failure_threshold` en dessous de `20` sur de nouveaux déploiements avec des bases de données volumineuses peut amener Kubernetes à redémarrer le pod avant la fin des migrations, créant une boucle de redémarrage. |
 
 <!-- related-guides -->
 

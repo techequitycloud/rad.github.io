@@ -473,29 +473,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critical | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
-| `mongodb_uri` | conserver la valeur par défaut (service auxiliaire `mongo:7` dans l'espace de noms) ou la définir explicitement | Critical | LibreChat nécessite MongoDB. Le service auxiliaire `mongo:7` dans l'espace de noms par défaut a besoin de `enable_nfs = true` pour son répertoire de données ; remplacer `mongodb_uri` par `""` dans l'appel à `LibreChat_Common` (en contournant le câblage par défaut de ce module) avec une configuration Firestore/Atlas défaillante fait planter le pod au démarrage, qui ne sert alors aucun trafic. |
-| `enable_cloudsql_volume` | `false` | Critical | Doit rester à `false`. L'activer injecte un sidecar Cloud SQL Auth Proxy qui entre en conflit avec le routage des connexions exclusivement MongoDB. |
-| `database_type` | `NONE` | Critical | Le définir sur un moteur SQL provisionne une instance Cloud SQL inutilisée, à un coût supplémentaire, sans aucun bénéfice pour LibreChat. |
-| `secret_environment_variables` (clés d'IA) | utiliser des secrets | Critical | Les clés des fournisseurs d'IA transmises en simples `environment_variables` sont visibles dans `kubectl describe pod` et dans les journaux d'audit GCP. Utilisez toujours des références Secret Manager. |
-| `iap_oauth_client_id` / `_secret` | à définir lorsque IAP est activé | Critical | Obligatoires lorsque `enable_iap = true`. S'ils ne sont pas fournis, la passerelle IAP ne parvient pas à s'initialiser et le service devient injoignable. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification. |
-| `allow_registration` | `false` après la configuration | High | Une inscription ouverte sur un déploiement exposé par LoadBalancer permet à n'importe qui de créer un compte. Désactivez-la après la création de l'administrateur ou restreignez l'accès avec IAP. |
-| `enable_redis` | `true` en multi-réplicas | High | Sans Redis, les redémarrages et replanifications de pods interrompent toutes les sessions actives et tous les flux SSE acheminés vers ce pod. |
-| `redis_host` | point de terminaison explicite | High | Requis lorsque `enable_redis = true`. S'il est vide, LibreChat ne parvient pas à se connecter à Redis au démarrage. |
-| `timeout_seconds` | `600` | High | Le streaming SSE de longues réponses d'IA peut dépasser plusieurs minutes. Un délai insuffisant tronque les réponses en cours de diffusion. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro interrompt tous les flux SSE en cours et provoque une latence de démarrage à froid au réveil. |
-| `JWT_SECRET` (généré automatiquement) | défini une seule fois | High | Sa rotation invalide simultanément toutes les sessions actives. Planifiez la rotation pendant une fenêtre de maintenance. |
-| `enable_nfs` | `true` avec le service auxiliaire MongoDB par défaut | High | Vaut `false` par défaut. Le service auxiliaire `mongo:7` dans l'espace de noms (le backend de base de données par défaut) monte son répertoire de données (`/data/db`) depuis le volume NFS — laisser `enable_nfs` à sa valeur par défaut avec le service auxiliaire actif signifie qu'il n'a aucun volume à monter. Également nécessaire pour les déploiements multi-réplicas afin que les fichiers téléversés ne restent pas locaux au pod. |
-| `backup_schedule` | à définir en production | High | Sans sauvegardes, l'historique des conversations et les données utilisateurs dans MongoDB/Firestore ne disposent d'aucun instantané au niveau GCS. |
-| `application_version` | version figée | Medium | `latest` peut introduire des changements incompatibles du schéma MongoDB ou des incompatibilités d'API lors de montées de version non planifiées. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, LibreChat est directement joignable depuis l'internet public, protégé uniquement par la connexion au niveau de l'application. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `CREDS_KEY` / `CREDS_IV` (générés automatiquement) | définis une seule fois | Critique | Clés AES-GCM des identifiants de fournisseurs d'IA enregistrés. Leur rotation après que des utilisateurs ont enregistré des clés détruit tous les identifiants stockés — chaque utilisateur doit saisir à nouveau ses clés d'API. |
+| `mongodb_uri` | conserver la valeur par défaut (service auxiliaire `mongo:7` dans l'espace de noms) ou la définir explicitement | Critique | LibreChat nécessite MongoDB. Le service auxiliaire `mongo:7` dans l'espace de noms par défaut a besoin de `enable_nfs = true` pour son répertoire de données ; remplacer `mongodb_uri` par `""` dans l'appel à `LibreChat_Common` (en contournant le câblage par défaut de ce module) avec une configuration Firestore/Atlas défaillante fait planter le pod au démarrage, qui ne sert alors aucun trafic. |
+| `enable_cloudsql_volume` | `false` | Critique | Doit rester à `false`. L'activer injecte un sidecar Cloud SQL Auth Proxy qui entre en conflit avec le routage des connexions exclusivement MongoDB. |
+| `database_type` | `NONE` | Critique | Le définir sur un moteur SQL provisionne une instance Cloud SQL inutilisée, à un coût supplémentaire, sans aucun bénéfice pour LibreChat. |
+| `secret_environment_variables` (clés d'IA) | utiliser des secrets | Critique | Les clés des fournisseurs d'IA transmises en simples `environment_variables` sont visibles dans `kubectl describe pod` et dans les journaux d'audit GCP. Utilisez toujours des références Secret Manager. |
+| `iap_oauth_client_id` / `_secret` | à définir lorsque IAP est activé | Critique | Obligatoires lorsque `enable_iap = true`. S'ils ne sont pas fournis, la passerelle IAP ne parvient pas à s'initialiser et le service devient injoignable. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification. |
+| `allow_registration` | `false` après la configuration | Élevé | Une inscription ouverte sur un déploiement exposé par LoadBalancer permet à n'importe qui de créer un compte. Désactivez-la après la création de l'administrateur ou restreignez l'accès avec IAP. |
+| `enable_redis` | `true` en multi-réplicas | Élevé | Sans Redis, les redémarrages et replanifications de pods interrompent toutes les sessions actives et tous les flux SSE acheminés vers ce pod. |
+| `redis_host` | point de terminaison explicite | Élevé | Requis lorsque `enable_redis = true`. S'il est vide, LibreChat ne parvient pas à se connecter à Redis au démarrage. |
+| `timeout_seconds` | `600` | Élevé | Le streaming SSE de longues réponses d'IA peut dépasser plusieurs minutes. Un délai insuffisant tronque les réponses en cours de diffusion. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro interrompt tous les flux SSE en cours et provoque une latence de démarrage à froid au réveil. |
+| `JWT_SECRET` (généré automatiquement) | défini une seule fois | Élevé | Sa rotation invalide simultanément toutes les sessions actives. Planifiez la rotation pendant une fenêtre de maintenance. |
+| `enable_nfs` | `true` avec le service auxiliaire MongoDB par défaut | Élevé | Vaut `false` par défaut. Le service auxiliaire `mongo:7` dans l'espace de noms (le backend de base de données par défaut) monte son répertoire de données (`/data/db`) depuis le volume NFS — laisser `enable_nfs` à sa valeur par défaut avec le service auxiliaire actif signifie qu'il n'a aucun volume à monter. Également nécessaire pour les déploiements multi-réplicas afin que les fichiers téléversés ne restent pas locaux au pod. |
+| `backup_schedule` | à définir en production | Élevé | Sans sauvegardes, l'historique des conversations et les données utilisateurs dans MongoDB/Firestore ne disposent d'aucun instantané au niveau GCS. |
+| `application_version` | version figée | Moyen | `latest` peut introduire des changements incompatibles du schéma MongoDB ou des incompatibilités d'API lors de montées de version non planifiées. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, LibreChat est directement joignable depuis l'internet public, protégé uniquement par la connexion au niveau de l'application. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
 
 ---
 

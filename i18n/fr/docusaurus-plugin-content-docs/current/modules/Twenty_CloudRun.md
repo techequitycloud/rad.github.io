@@ -438,31 +438,31 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SERVER_URL` / `FRONT_BASE_URL` (dans `environment_variables`) | URL publique du déploiement | Critical | Les liens d'API sont incorrects, des erreurs CORS bloquent toutes les requêtes, les invitations par e-mail échouent. À définir avant la première utilisation. |
-| `database_type` | `POSTGRES_15` | Critical | Twenty exige PostgreSQL ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
-| `db_name` / `db_user` | défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_cloudsql_volume` | `true` | Critical | Twenty se connecte via le socket Unix de l'Auth Proxy ; le désactiver supprime le socket et coupe toutes les connexions à la base. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import ; le réactiver sur un déploiement en service écrase les données. |
-| `APP_SECRET` / `ENCRYPTION_KEY` (générés automatiquement) | ne pas faire de rotation manuelle | Critical | La rotation du secret invalide toutes les sessions JWT actives et déconnecte immédiatement tous les utilisateurs. |
-| `enable_redis` | `true` (requis en v0.4+) | High | Sans Redis, Twenty v0.4+ ne démarre pas ; le stockage des sessions et du cache est imposé sur Redis. |
-| `redis_host` | hôte explicite ou `enable_nfs = true` | High | Lorsque `enable_redis = true` et que `redis_host` est vide sans VM NFS, l'URL Redis est vide et Twenty ne parvient pas à se connecter. |
-| `additional_services` (worker) | configuré lors de l'utilisation de Redis | High | Lorsque `enable_redis = true`, bull-mq est actif mais aucun worker ne traite la file ; les tâches d'arrière-plan (e-mail, webhooks) ne s'exécutent jamais. |
-| `enable_gcs_storage` | `true` en production | High | Sans stockage GCS, les pièces jointes sont stockées dans le stockage éphémère du conteneur et perdues lors du déploiement d'une nouvelle révision. |
-| `STORAGE_S3_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | via `secret_environment_variables` | High | Lorsque le stockage GCS est activé, les clés HMAC ne sont pas générées automatiquement ; toutes les opérations sur les fichiers échouent sans elles. |
-| `memory_limit` | `2Gi` | High | En dessous de 1 GiB, le processus Node.js est tué pour OOM sous charge. |
-| `application_version` | version épinglée (p. ex. `0.50.0`) | High | `latest` se résout en une image différente à chaque exécution de Cloud Build, ce qui rend les retours arrière imprévisibles. |
-| `container_port` | `3000` | High | Le serveur de Twenty écoute sur le port 3000 ; toute autre valeur fait échouer définitivement les contrôles de santé. |
-| `startup_probe` | HTTP `/healthz`, délai généreux | High | Une fenêtre trop courte entraîne l'arrêt du service pendant les migrations du premier démarrage (qui prennent 8–10 minutes sur un schéma neuf). |
-| `min_instance_count` | `1` | Medium | `0` ajoute une latence de démarrage à froid et risque de manquer des webhooks entrants pendant la montée en charge de l'instance. |
-| `cpu_always_allocated` | `false` sauf si un worker est déployé | Medium | Définir `true` sans worker/cron s'exécutant dans ce conteneur revient à payer du CPU inactif sans rien à brider ; nécessaire uniquement si un travail d'arrière-plan est ajouté à ce service. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements non publics | Medium | Sinon, l'interface du CRM est accessible publiquement. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | Lorsque Memorystore Redis est utilisé, son IP privée peut nécessiter `ALL_TRAFFIC` pour le routage. |
-| `organization_id` | défini explicitement pour VPC-SC | Medium | Sans lui, le périmètre VPC-SC n'est pas activé — `enable_vpc_sc = true` n'a aucun effet. |
+| `SERVER_URL` / `FRONT_BASE_URL` (dans `environment_variables`) | URL publique du déploiement | Critique | Les liens d'API sont incorrects, des erreurs CORS bloquent toutes les requêtes, les invitations par e-mail échouent. À définir avant la première utilisation. |
+| `database_type` | `POSTGRES_15` | Critique | Twenty exige PostgreSQL ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
+| `db_name` / `db_user` | défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_cloudsql_volume` | `true` | Critique | Twenty se connecte via le socket Unix de l'Auth Proxy ; le désactiver supprime le socket et coupe toutes les connexions à la base. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import ; le réactiver sur un déploiement en service écrase les données. |
+| `APP_SECRET` / `ENCRYPTION_KEY` (générés automatiquement) | ne pas faire de rotation manuelle | Critique | La rotation du secret invalide toutes les sessions JWT actives et déconnecte immédiatement tous les utilisateurs. |
+| `enable_redis` | `true` (requis en v0.4+) | Élevé | Sans Redis, Twenty v0.4+ ne démarre pas ; le stockage des sessions et du cache est imposé sur Redis. |
+| `redis_host` | hôte explicite ou `enable_nfs = true` | Élevé | Lorsque `enable_redis = true` et que `redis_host` est vide sans VM NFS, l'URL Redis est vide et Twenty ne parvient pas à se connecter. |
+| `additional_services` (worker) | configuré lors de l'utilisation de Redis | Élevé | Lorsque `enable_redis = true`, bull-mq est actif mais aucun worker ne traite la file ; les tâches d'arrière-plan (e-mail, webhooks) ne s'exécutent jamais. |
+| `enable_gcs_storage` | `true` en production | Élevé | Sans stockage GCS, les pièces jointes sont stockées dans le stockage éphémère du conteneur et perdues lors du déploiement d'une nouvelle révision. |
+| `STORAGE_S3_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | via `secret_environment_variables` | Élevé | Lorsque le stockage GCS est activé, les clés HMAC ne sont pas générées automatiquement ; toutes les opérations sur les fichiers échouent sans elles. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 1 GiB, le processus Node.js est tué pour OOM sous charge. |
+| `application_version` | version épinglée (p. ex. `0.50.0`) | Élevé | `latest` se résout en une image différente à chaque exécution de Cloud Build, ce qui rend les retours arrière imprévisibles. |
+| `container_port` | `3000` | Élevé | Le serveur de Twenty écoute sur le port 3000 ; toute autre valeur fait échouer définitivement les contrôles de santé. |
+| `startup_probe` | HTTP `/healthz`, délai généreux | Élevé | Une fenêtre trop courte entraîne l'arrêt du service pendant les migrations du premier démarrage (qui prennent 8–10 minutes sur un schéma neuf). |
+| `min_instance_count` | `1` | Moyen | `0` ajoute une latence de démarrage à froid et risque de manquer des webhooks entrants pendant la montée en charge de l'instance. |
+| `cpu_always_allocated` | `false` sauf si un worker est déployé | Moyen | Définir `true` sans worker/cron s'exécutant dans ce conteneur revient à payer du CPU inactif sans rien à brider ; nécessaire uniquement si un travail d'arrière-plan est ajouté à ce service. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements non publics | Moyen | Sinon, l'interface du CRM est accessible publiquement. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Moyen | Lorsque Memorystore Redis est utilisé, son IP privée peut nécessiter `ALL_TRAFFIC` pour le routage. |
+| `organization_id` | défini explicitement pour VPC-SC | Moyen | Sans lui, le périmètre VPC-SC n'est pas activé — `enable_vpc_sc = true` n'a aucun effet. |
 
 ---
 

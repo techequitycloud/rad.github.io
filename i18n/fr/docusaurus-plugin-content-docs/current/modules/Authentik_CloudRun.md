@@ -392,26 +392,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AUTHENTIK_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler | Critical | Le renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants et jetons stockés). |
-| `database_type` | `POSTGRES_15` | Critical | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
-| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
-| Ports d'écoute du worker (gérés par le point d'entrée) | Conserver les valeurs par défaut en loopback `AUTHENTIK_LISTEN__*` du point d'entrée | Critical | Le `ak worker` colocalisé démarre lui aussi un écouteur HTTP et hérite de la valeur par défaut du serveur, `0.0.0.0:9000` ; s'il remporte la course au bind, il répond à **toutes** les routes — points de contrôle d'état compris — par des 200 vides : une interface blanche avec des sondes faussement saines. Le point d'entrée cantonne le worker à des ports en loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur possède `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
-| `min_instance_count` | `1` (avec CPU toujours allouée) | High | `0` laisse l'instance disparaître : les WebSockets des outposts se déconnectent et les tâches d'arrière-plan (jobs planifiés, synchronisation des outposts) sont retardées jusqu'à ce que la requête suivante réveille une instance. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête bride le worker colocalisé entre les requêtes — la file de tâches se bloque même avec `min=1`. |
-| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Medium | Pointer la sonde vers une page authentifiée renvoie 401/403 au sondeur — la révision ne devient jamais prête alors qu'authentik a bien démarré. |
-| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Medium | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
-| `application_version` | Épingler une version | Medium | `latest` est silencieusement épinglé sur `2026.5.4` ; un épinglage explicite rend les mises à niveau délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
-| `memory_limit` | `2Gi` | Medium | Le serveur et le worker partagent la limite ; des valeurs plus basses exposent à un OOM pendant les migrations ou les imports de flux. |
-| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Ne pas définir | Medium | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts conduit à s'authentifier avec un rôle inexistant (les noms sont préfixés par le locataire). |
-| Outposts LDAP/RADIUS | Pas sur Cloud Run | Low | Les écouteurs non HTTP ne peuvent pas être servis par Cloud Run — utilisez la variante GKE ou un hôte externe pour ces outposts. |
-| `enable_iap` | `false` | Medium | IAP impose une double barrière à chaque connexion et casse les callbacks OAuth/SAML provenant de tiers externes. |
+| `AUTHENTIK_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler | Critique | Le renouveler invalide **toutes** les sessions actives et rend illisibles les champs chiffrés (identifiants et jetons stockés). |
+| `database_type` | `POSTGRES_15` | Critique | MySQL est bloqué par la validation — authentik exige PostgreSQL ≥ 14. |
+| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données d'identité. |
+| Ports d'écoute du worker (gérés par le point d'entrée) | Conserver les valeurs par défaut en loopback `AUTHENTIK_LISTEN__*` du point d'entrée | Critique | Le `ak worker` colocalisé démarre lui aussi un écouteur HTTP et hérite de la valeur par défaut du serveur, `0.0.0.0:9000` ; s'il remporte la course au bind, il répond à **toutes** les routes — points de contrôle d'état compris — par des 200 vides : une interface blanche avec des sondes faussement saines. Le point d'entrée cantonne le worker à des ports en loopback (`127.0.0.1:9001`/`9444`/`9301`) afin que le serveur possède `:9000` — un 200 avec un corps vide signifie que le mauvais processus a répondu. |
+| `min_instance_count` | `1` (avec CPU toujours allouée) | Élevé | `0` laisse l'instance disparaître : les WebSockets des outposts se déconnectent et les tâches d'arrière-plan (jobs planifiés, synchronisation des outposts) sont retardées jusqu'à ce que la requête suivante réveille une instance. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête bride le worker colocalisé entre les requêtes — la file de tâches se bloque même avec `min=1`. |
+| `startup_probe.path` | `/-/health/ready/` (non authentifié) | Moyen | Pointer la sonde vers une page authentifiée renvoie 401/403 au sondeur — la révision ne devient jamais prête alors qu'authentik a bien démarré. |
+| `bootstrap_password` / `bootstrap_email` | À définir avant le premier déploiement | Moyen | Appliqués au **premier** démarrage uniquement. Les modifier ensuite n'a aucun effet — gérez `akadmin` dans l'application, ou utilisez `/if/flow/initial-setup/` si les variables d'amorçage étaient absentes au premier démarrage. |
+| `application_version` | Épingler une version | Moyen | `latest` est silencieusement épinglé sur `2026.5.4` ; un épinglage explicite rend les mises à niveau délibérées. Des tags inexistants font échouer le Cloud Build avec `MANIFEST_UNKNOWN`. |
+| `memory_limit` | `2Gi` | Moyen | Le serveur et le worker partagent la limite ; des valeurs plus basses exposent à un OOM pendant les migrations ou les imports de flux. |
+| `environment_variables` → `AUTHENTIK_POSTGRESQL__*` | Ne pas définir | Moyen | Le point d'entrée mappe les valeurs `DB_*` injectées ; coder en dur des noms de base de données courts conduit à s'authentifier avec un rôle inexistant (les noms sont préfixés par le locataire). |
+| Outposts LDAP/RADIUS | Pas sur Cloud Run | Faible | Les écouteurs non HTTP ne peuvent pas être servis par Cloud Run — utilisez la variante GKE ou un hôte externe pour ces outposts. |
+| `enable_iap` | `false` | Moyen | IAP impose une double barrière à chaque connexion et casse les callbacks OAuth/SAML provenant de tiers externes. |
 
 ---
 

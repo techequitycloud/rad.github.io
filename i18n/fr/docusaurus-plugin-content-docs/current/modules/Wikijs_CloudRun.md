@@ -395,26 +395,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Wiki.js nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
-| `db_name` / `DB_NAME` | tous deux `wikijs` | Critical | Non-concordance : `db-init` crée une base de données différente de celle à laquelle Wiki.js se connecte — boucle de plantage. Immuable après le premier déploiement. |
-| `enable_cloudsql_volume` | `true` | Critical | La désactivation supprime le sidecar Auth Proxy — toutes les connexions PostgreSQL échouent. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `db_user` / `DB_USER` | tous deux `wikijs` | High | Non-concordance : les droits sont accordés à un utilisateur mais Wiki.js s'authentifie avec un autre — échec d'authentification. |
-| `enable_nfs` | `true` | High | Sans stockage partagé, les fichiers téléversés écrits par une instance sont invisibles pour les autres. |
-| `nfs_mount_path` + `HA_STORAGE_PATH` | tous deux `/wiki-storage` | High | Si le chemin de montage et `HA_STORAGE_PATH` divergent, Wiki.js écrit sur un disque éphémère. |
-| `memory_limit` | `2Gi` | High | En dessous de `1Gi`, Wiki.js est arrêté par manque de mémoire (OOM) au démarrage ou sous charge. |
-| `startup_probe.initial_delay_seconds` | `60` | High | Trop faible — Wiki.js est arrêté avant la fin de la migration du schéma au premier lancement. |
-| `min_instance_count` | `1` | High | La mise à zéro provoque des démarrages à froid de 15 à 30 s avec des requêtes en cours qui échouent. |
-| `gcs_volumes` | montage sur `/wiki-storage` | High | Le bucket `wikijs-storage` est provisionné mais pas monté automatiquement ; sans `gcs_volumes`, les fichiers téléversés vont sur un disque éphémère. |
-| `application_version` | `2.5.311` | High | Wiki.js 2.x et 3.x ont des schémas incompatibles. Testez les mises à niveau en préproduction. |
-| `enable_iap` / `ingress_settings` | restreindre pour les wikis internes | High | La valeur par défaut (`all`) expose la page de connexion de Wiki.js à l'internet public. |
-| `enable_redis` | `false` sauf si nécessaire | Low | Wiki.js n'a pas besoin de Redis pour son fonctionnement de base. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` | Critique | Wiki.js nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
+| `db_name` / `DB_NAME` | tous deux `wikijs` | Critique | Non-concordance : `db-init` crée une base de données différente de celle à laquelle Wiki.js se connecte — boucle de plantage. Immuable après le premier déploiement. |
+| `enable_cloudsql_volume` | `true` | Critique | La désactivation supprime le sidecar Auth Proxy — toutes les connexions PostgreSQL échouent. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `db_user` / `DB_USER` | tous deux `wikijs` | Élevé | Non-concordance : les droits sont accordés à un utilisateur mais Wiki.js s'authentifie avec un autre — échec d'authentification. |
+| `enable_nfs` | `true` | Élevé | Sans stockage partagé, les fichiers téléversés écrits par une instance sont invisibles pour les autres. |
+| `nfs_mount_path` + `HA_STORAGE_PATH` | tous deux `/wiki-storage` | Élevé | Si le chemin de montage et `HA_STORAGE_PATH` divergent, Wiki.js écrit sur un disque éphémère. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de `1Gi`, Wiki.js est arrêté par manque de mémoire (OOM) au démarrage ou sous charge. |
+| `startup_probe.initial_delay_seconds` | `60` | Élevé | Trop faible — Wiki.js est arrêté avant la fin de la migration du schéma au premier lancement. |
+| `min_instance_count` | `1` | Élevé | La mise à zéro provoque des démarrages à froid de 15 à 30 s avec des requêtes en cours qui échouent. |
+| `gcs_volumes` | montage sur `/wiki-storage` | Élevé | Le bucket `wikijs-storage` est provisionné mais pas monté automatiquement ; sans `gcs_volumes`, les fichiers téléversés vont sur un disque éphémère. |
+| `application_version` | `2.5.311` | Élevé | Wiki.js 2.x et 3.x ont des schémas incompatibles. Testez les mises à niveau en préproduction. |
+| `enable_iap` / `ingress_settings` | restreindre pour les wikis internes | Élevé | La valeur par défaut (`all`) expose la page de connexion de Wiki.js à l'internet public. |
+| `enable_redis` | `false` sauf si nécessaire | Faible | Wiki.js n'a pas besoin de Redis pour son fonctionnement de base. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

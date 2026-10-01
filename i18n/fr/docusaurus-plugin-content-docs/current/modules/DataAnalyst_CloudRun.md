@@ -336,18 +336,18 @@ Options standard d'App_CloudRun (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_sandbox_launcher` | `true` | Critical | `false` supprime la SEULE isolation entre le code généré par le LLM et le reste du conteneur — tout le modèle de sécurité du module repose sur son maintien. |
-| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | High | Laissé à `false`, un appelant non authentifié peut provoquer une facturation Vertex AI illimitée et un nombre illimité d'exécutions de code, bornés uniquement par la limite de débit par connexion. |
-| `execute_code_memory_limit_mb` | nettement inférieur à `memory_limit` | High | Trop proche de `memory_limit` (ou supérieur), une seule allocation pathologique peut encore menacer l'instance entière au lieu d'échouer proprement avec `MemoryError`. |
-| `max_concurrent_requests` | `1` pour des données réellement sensibles | Medium | Les répertoires de session ne sont isolés que par un nom impossible à deviner, et non par une frontière d'autorisations au niveau du système d'exploitation — des sessions simultanées sur une même instance chaude peuvent, en principe, lire les fichiers téléversés les unes des autres. |
-| `application_version` | à incrémenter à chaque modification du code seul | Medium | L'image est référencée par un tag mutable ; une reconstruction sous le même tag ne crée aucune nouvelle révision, si bien qu'un « redéploiement » continue silencieusement de servir l'ancien conteneur. |
-| `allowed_upload_extensions` | limité aux formats de données | Medium | L'élargir à des types de fichiers arbitraires étend ce qu'un processus Python réel, bien qu'en bac à sable, peut être amené à analyser. |
-| `upload_ttl_seconds` | plus court pour les déploiements publics | Low | Une durée longue conserve les données téléversées par un inconnu sur le disque de l'instance plus longtemps que nécessaire si l'onglet du navigateur est simplement abandonné. |
+| `enable_sandbox_launcher` | `true` | Critique | `false` supprime la SEULE isolation entre le code généré par le LLM et le reste du conteneur — tout le modèle de sécurité du module repose sur son maintien. |
+| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | Élevé | Laissé à `false`, un appelant non authentifié peut provoquer une facturation Vertex AI illimitée et un nombre illimité d'exécutions de code, bornés uniquement par la limite de débit par connexion. |
+| `execute_code_memory_limit_mb` | nettement inférieur à `memory_limit` | Élevé | Trop proche de `memory_limit` (ou supérieur), une seule allocation pathologique peut encore menacer l'instance entière au lieu d'échouer proprement avec `MemoryError`. |
+| `max_concurrent_requests` | `1` pour des données réellement sensibles | Moyen | Les répertoires de session ne sont isolés que par un nom impossible à deviner, et non par une frontière d'autorisations au niveau du système d'exploitation — des sessions simultanées sur une même instance chaude peuvent, en principe, lire les fichiers téléversés les unes des autres. |
+| `application_version` | à incrémenter à chaque modification du code seul | Moyen | L'image est référencée par un tag mutable ; une reconstruction sous le même tag ne crée aucune nouvelle révision, si bien qu'un « redéploiement » continue silencieusement de servir l'ancien conteneur. |
+| `allowed_upload_extensions` | limité aux formats de données | Moyen | L'élargir à des types de fichiers arbitraires étend ce qu'un processus Python réel, bien qu'en bac à sable, peut être amené à analyser. |
+| `upload_ttl_seconds` | plus court pour les déploiements publics | Faible | Une durée longue conserve les données téléversées par un inconnu sur le disque de l'instance plus longtemps que nécessaire si l'onglet du navigateur est simplement abandonné. |
 
 ---
 

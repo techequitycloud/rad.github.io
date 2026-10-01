@@ -300,8 +300,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
 > configuration par le moteur du socle [App_CloudRun](App_CloudRun.md),
@@ -311,13 +311,13 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| S'attendre à une vraie résolution DNS de la part de ce déploiement | Ne pas compter dessus | **Critical** | Cloud Run ne peut exposer le port 53 TCP/UDP brut dans aucune configuration — les clients qui utilisent l'IP/le nom d'hôte de ce déploiement pour le DNS n'obtiendront aucune réponse. Le périmètre de ce module se limite à une console de gestion de configuration. |
-| `container_port` modifié sans modifier aussi le port de l'interface web de l'assistant de configuration | Conserver les deux à `3000` | Critical | Le port d'exécution de l'interface web d'AdGuard Home provient de `AdGuardHome.yaml` (défini pendant la configuration) — s'il diverge de `container_port`, la sonde de santé de la plateforme et l'URL publique ne correspondent plus au port sur lequel le conteneur écoute réellement, et la révision ne devient jamais Ready après le premier redémarrage. |
-| `database_type` | `NONE` (ne pas modifier) | Critical | AdGuard Home n'a aucune intégration de base de données ; y définir un vrai moteur n'a aucun effet, mais traduit une mauvaise compréhension du module. |
-| `gcs_volumes` | Laisser vide (valeur par défaut du module) | Critical | Le remplacer sans monter aussi `conf`/`work` fait perdre la configuration et l'historique des requêtes d'AdGuard Home à chaque démarrage à froid / redémarrage. |
-| Console d'administration laissée sans IAP / équivalent d'une inscription ouverte | Activer `enable_iap` ou restreindre `ingress_settings` | High | La console d'administration contrôle la politique de filtrage DNS ; une console ouverte et non authentifiée permet à n'importe qui de reconfigurer le filtrage ou de lire les journaux des requêtes. |
-| `min_instance_count = 0` (mise à l'échelle jusqu'à zéro) | Valeur par défaut acceptable | Low | Les démarrages à froid ajoutent quelques secondes de latence à la première requête après une période d'inactivité — acceptable pour une console d'administration, contrairement à un résolveur DNS temps réel. |
-| `memory_limit` inférieur à `512Mi` | Conserver `512Mi` (plancher gen2) | Medium | L'environnement d'exécution gen2 de Cloud Run rejette d'emblée `memory_limit < 512Mi` au moment du plan. |
+| S'attendre à une vraie résolution DNS de la part de ce déploiement | Ne pas compter dessus | **Critique** | Cloud Run ne peut exposer le port 53 TCP/UDP brut dans aucune configuration — les clients qui utilisent l'IP/le nom d'hôte de ce déploiement pour le DNS n'obtiendront aucune réponse. Le périmètre de ce module se limite à une console de gestion de configuration. |
+| `container_port` modifié sans modifier aussi le port de l'interface web de l'assistant de configuration | Conserver les deux à `3000` | Critique | Le port d'exécution de l'interface web d'AdGuard Home provient de `AdGuardHome.yaml` (défini pendant la configuration) — s'il diverge de `container_port`, la sonde de santé de la plateforme et l'URL publique ne correspondent plus au port sur lequel le conteneur écoute réellement, et la révision ne devient jamais Ready après le premier redémarrage. |
+| `database_type` | `NONE` (ne pas modifier) | Critique | AdGuard Home n'a aucune intégration de base de données ; y définir un vrai moteur n'a aucun effet, mais traduit une mauvaise compréhension du module. |
+| `gcs_volumes` | Laisser vide (valeur par défaut du module) | Critique | Le remplacer sans monter aussi `conf`/`work` fait perdre la configuration et l'historique des requêtes d'AdGuard Home à chaque démarrage à froid / redémarrage. |
+| Console d'administration laissée sans IAP / équivalent d'une inscription ouverte | Activer `enable_iap` ou restreindre `ingress_settings` | Élevé | La console d'administration contrôle la politique de filtrage DNS ; une console ouverte et non authentifiée permet à n'importe qui de reconfigurer le filtrage ou de lire les journaux des requêtes. |
+| `min_instance_count = 0` (mise à l'échelle jusqu'à zéro) | Valeur par défaut acceptable | Faible | Les démarrages à froid ajoutent quelques secondes de latence à la première requête après une période d'inactivité — acceptable pour une console d'administration, contrairement à un résolveur DNS temps réel. |
+| `memory_limit` inférieur à `512Mi` | Conserver `512Mi` (plancher gen2) | Moyen | L'environnement d'exécution gen2 de Cloud Run rejette d'emblée `memory_limit < 512Mi` au moment du plan. |
 
 ---
 

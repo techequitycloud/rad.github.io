@@ -467,28 +467,28 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` ou `POSTGRES_15` | Critical | Django exige PostgreSQL ; MySQL ou `NONE` fera échouer le job `db-init`. |
-| `application_name` / `tenant_id` | définis une seule fois | Critical | Intégrés aux noms des ressources ; les modifier recrée toutes les ressources nommées et détruit les données. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers nus sont des octets et bloquent la planification de tous les pods. |
-| `failure_threshold` de `startup_probe` | ≥ 30 avec des migrations | Critical | Trop bas : Kubernetes tue le pod avant la fin des migrations, ce qui provoque une boucle de redémarrage. |
-| `cloudsql_volume_mount_path` | `/cloudsql` (par défaut) | Critical | Chemin erroné : `db-init.sh` ne trouve pas le socket de l'Auth Proxy ; toutes les opérations sur la base de données échouent. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
-| `enable_nfs` | `true` (par défaut) | High | Le désactiver avec `max_instance_count > 1` signifie que chaque pod dispose d'un stockage éphémère isolé ; les téléversements sont perdus au redémarrage. |
-| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | High | Une incohérence amène Django à écrire les médias sur un stockage local éphémère ; les fichiers sont perdus au redémarrage du pod. |
-| Mémoire de `container_resources` | ≥ `512Mi` ; à augmenter pour les charges de travail intensives en ORM | High | Mémoire insuffisante : le pod est arrêté en OOMKilled (code de sortie 137) sur les querysets volumineux ou le traitement de fichiers. |
-| `min_instance_count` | `1` en production | Medium | `0` provoque des démarrages à froid (> 60 s) sur la première requête après une période d'inactivité ; les tâches planifiées peuvent ne trouver aucun pod. |
-| `application_version` | tag épinglé, pas `latest` | Medium | `latest` rend le retour arrière ambigu ; Kubernetes ne peut pas distinguer deux tirages de `latest`. |
-| `enable_redis` | `true` en cas de sessions stockées dans Redis | Medium | Laissé à `false` avec un `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache ou aux sessions. |
-| `session_affinity` | `ClientIP` pour les sessions stockées en base de données | Medium | `None` avec une mise en cache en processus : les requêtes d'un même utilisateur peuvent atteindre des pods différents et perdre le cache. |
-| `enable_pod_disruption_budget` | `false` lorsque `max_instance_count = 1` | High | `true` avec un seul réplica bloque le drainage des nœuds et paralyse la maintenance du cluster. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration Django est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES` ou `POSTGRES_15` | Critique | Django exige PostgreSQL ; MySQL ou `NONE` fera échouer le job `db-init`. |
+| `application_name` / `tenant_id` | définis une seule fois | Critique | Intégrés aux noms des ressources ; les modifier recrée toutes les ressources nommées et détruit les données. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critique | Les entiers nus sont des octets et bloquent la planification de tous les pods. |
+| `failure_threshold` de `startup_probe` | ≥ 30 avec des migrations | Critique | Trop bas : Kubernetes tue le pod avant la fin des migrations, ce qui provoque une boucle de redémarrage. |
+| `cloudsql_volume_mount_path` | `/cloudsql` (par défaut) | Critique | Chemin erroné : `db-init.sh` ne trouve pas le socket de l'Auth Proxy ; toutes les opérations sur la base de données échouent. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
+| `enable_nfs` | `true` (par défaut) | Élevé | Le désactiver avec `max_instance_count > 1` signifie que chaque pod dispose d'un stockage éphémère isolé ; les téléversements sont perdus au redémarrage. |
+| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | Élevé | Une incohérence amène Django à écrire les médias sur un stockage local éphémère ; les fichiers sont perdus au redémarrage du pod. |
+| Mémoire de `container_resources` | ≥ `512Mi` ; à augmenter pour les charges de travail intensives en ORM | Élevé | Mémoire insuffisante : le pod est arrêté en OOMKilled (code de sortie 137) sur les querysets volumineux ou le traitement de fichiers. |
+| `min_instance_count` | `1` en production | Moyen | `0` provoque des démarrages à froid (> 60 s) sur la première requête après une période d'inactivité ; les tâches planifiées peuvent ne trouver aucun pod. |
+| `application_version` | tag épinglé, pas `latest` | Moyen | `latest` rend le retour arrière ambigu ; Kubernetes ne peut pas distinguer deux tirages de `latest`. |
+| `enable_redis` | `true` en cas de sessions stockées dans Redis | Moyen | Laissé à `false` avec un `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache ou aux sessions. |
+| `session_affinity` | `ClientIP` pour les sessions stockées en base de données | Moyen | `None` avec une mise en cache en processus : les requêtes d'un même utilisateur peuvent atteindre des pods différents et perdre le cache. |
+| `enable_pod_disruption_budget` | `false` lorsque `max_instance_count = 1` | Élevé | `true` avec un seul réplica bloque le drainage des nœuds et paralyse la maintenance du cluster. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface d'administration Django est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

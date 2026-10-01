@@ -376,26 +376,26 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` forcé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. OnlyOffice ajoute ses propres gardes (`database_type` limité à PostgreSQL, `enable_redis` obligatoire, couplage `redis_host`/`enable_nfs`). Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou 13/14) | Critical | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par le Document Server. |
-| `enable_redis` | `true` | Critical | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état de session/d'édition ne peut pas être coordonné entre les pods. |
-| `redis_host` / `enable_nfs` | Laisser `redis_host` vide uniquement avec `enable_nfs = true` | Critical | Un `redis_host` vide avec `enable_nfs = false` échoue au moment du plan — aucun hôte Redis ne peut être résolu. |
-| `JWT_SECRET` (généré automatiquement) | Ne jamais le modifier une fois des intégrations en place | Critical | Sa rotation casse toutes les applications hôtes (Nextcloud/ownCloud/etc.) qui intègrent l'éditeur jusqu'à ce qu'elles soient toutes mises à jour avec la nouvelle valeur. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
-| `stateful_pvc_enabled` | `true` | High | Le désactiver (ou forcer `workload_type = "Deployment"` en même temps) expose à des données de cache/d'index corrompues par gcsfuse — ou échoue au moment du plan si c'est forcé. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ou `standard` (HDD) si le quota est serré | Medium | Le SSD puise dans le quota serré `SSD_TOTAL_GB` ; une large campagne d'applications avec état peut l'épuiser — voir [App_GKE](App_GKE.md). |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
-| `container_resources.memory_limit` | `4Gi` | High | La pile embarquée Postgres/client Redis/RabbitMQ/nginx/convertisseurs sous `supervisord` est lourde ; un sous-dimensionnement expose à un OOM au démarrage. |
-| `max_instance_count` | `5` (à ajuster selon la charge) | Medium | La charge de conversion de chaque pod est gourmande en CPU et en mémoire ; une mise à l'échelle trop élevée sans marge expose à une pression sur les nœuds sous Autopilot. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de rappel d'intégration enregistrée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `database_type` | `POSTGRES_15` (ou 13/14) | Critique | Tout autre moteur est rejeté au moment du plan — MySQL n'est pas pris en charge par le Document Server. |
+| `enable_redis` | `true` | Critique | Une garde au moment du plan rejette `false` — sans Redis partagé, l'état de session/d'édition ne peut pas être coordonné entre les pods. |
+| `redis_host` / `enable_nfs` | Laisser `redis_host` vide uniquement avec `enable_nfs = true` | Critique | Un `redis_host` vide avec `enable_nfs = false` échoue au moment du plan — aucun hôte Redis ne peut être résolu. |
+| `JWT_SECRET` (généré automatiquement) | Ne jamais le modifier une fois des intégrations en place | Critique | Sa rotation casse toutes les applications hôtes (Nextcloud/ownCloud/etc.) qui intègrent l'éditeur jusqu'à ce qu'elles soient toutes mises à jour avec la nouvelle valeur. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend toutes les données orphelines. |
+| `stateful_pvc_enabled` | `true` | Élevé | Le désactiver (ou forcer `workload_type = "Deployment"` en même temps) expose à des données de cache/d'index corrompues par gcsfuse — ou échoue au moment du plan si c'est forcé. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) ou `standard` (HDD) si le quota est serré | Moyen | Le SSD puise dans le quota serré `SSD_TOTAL_GB` ; une large campagne d'applications avec état peut l'épuiser — voir [App_GKE](App_GKE.md). |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
+| `container_resources.memory_limit` | `4Gi` | Élevé | La pile embarquée Postgres/client Redis/RabbitMQ/nginx/convertisseurs sous `supervisord` est lourde ; un sous-dimensionnement expose à un OOM au démarrage. |
+| `max_instance_count` | `5` (à ajuster selon la charge) | Moyen | La charge de conversion de chaque pod est gourmande en CPU et en mémoire ; une mise à l'échelle trop élevée sans marge expose à une pression sur les nœuds sous Autopilot. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de rappel d'intégration enregistrée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 {/* TODO: verify whether enable_custom_domain=true with an empty application_domains list falls back to a nip.io hostname on the reserved LoadBalancer IP, or leaves the Ingress unconfigured until a domain is set. */}
 

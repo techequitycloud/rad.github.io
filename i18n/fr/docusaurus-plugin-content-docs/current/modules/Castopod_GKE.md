@@ -398,25 +398,25 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Choisir un moteur autre que MySQL fait échouer les migrations CodeIgniter et toutes les routes adossées à la base. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données des podcasts. |
-| `enable_nfs` | `true` | Critical | Sans NFS, l'audio et les illustrations des épisodes téléversés résident sur un disque éphémère et sont perdus à chaque redémarrage ou redéploiement de pod. |
-| `CP_ANALYTICS_SALT` (généré automatiquement) | Ne jamais modifier | High | Le modifier après le premier démarrage rompt la continuité de la déduplication des auditeurs pour les statistiques déjà enregistrées. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base sur GKE. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans avoir vérifié le comportement du stockage et du cache partagés expose à un état des médias incohérent et à des statistiques en double. |
-| `session_affinity` | `ClientIP` | High | Sans affinité, les requêtes rebondissent entre les pods et perturbent les sessions d'administration authentifiées. |
-| `memory_limit` | `2Gi` | High | En dessous d'environ 512Mi, le pod PHP/FrankenPHP ne démarre pas ; les grandes médiathèques nécessitent davantage de marge. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe et tout nom d'hôte nip.io dérivé automatiquement peuvent changer entre les redéploiements, ce qui casse les URL enregistrées en favori et celles des flux RSS. |
-| `enable_custom_domain` + `application_domains` vide | Convient par défaut (nip.io) | Low | Produit une URL `<ip>.nip.io` fonctionnelle mais sans image de marque ; définissez `application_domains` pour un vrai nom d'hôte. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Choisir un moteur autre que MySQL fait échouer les migrations CodeIgniter et toutes les routes adossées à la base. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données des podcasts. |
+| `enable_nfs` | `true` | Critique | Sans NFS, l'audio et les illustrations des épisodes téléversés résident sur un disque éphémère et sont perdus à chaque redémarrage ou redéploiement de pod. |
+| `CP_ANALYTICS_SALT` (généré automatiquement) | Ne jamais modifier | Élevé | Le modifier après le premier démarrage rompt la continuité de la déduplication des auditeurs pour les statistiques déjà enregistrées. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base sur GKE. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans avoir vérifié le comportement du stockage et du cache partagés expose à un état des médias incohérent et à des statistiques en double. |
+| `session_affinity` | `ClientIP` | Élevé | Sans affinité, les requêtes rebondissent entre les pods et perturbent les sessions d'administration authentifiées. |
+| `memory_limit` | `2Gi` | Élevé | En dessous d'environ 512Mi, le pod PHP/FrankenPHP ne démarre pas ; les grandes médiathèques nécessitent davantage de marge. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe et tout nom d'hôte nip.io dérivé automatiquement peuvent changer entre les redéploiements, ce qui casse les URL enregistrées en favori et celles des flux RSS. |
+| `enable_custom_domain` + `application_domains` vide | Convient par défaut (nip.io) | Faible | Produit une URL `<ip>.nip.io` fonctionnelle mais sans image de marque ; définissez `application_domains` pour un vrai nom d'hôte. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

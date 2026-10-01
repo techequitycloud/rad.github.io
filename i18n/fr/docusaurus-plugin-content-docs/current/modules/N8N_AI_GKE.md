@@ -513,27 +513,27 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `N8N_ENCRYPTION_KEY` (généré automatiquement) | À sauvegarder immédiatement | Critical | Le modifier après la première exécution détruit définitivement tous les identifiants n8n enregistrés. |
-| `application_name` | `n8nai` — défini une seule fois | Critical | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes avec perte de données. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer fait pointer n8n vers une nouvelle base de données vide, avec perte de tous les workflows. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods. |
-| `enable_qdrant` | `true` | High | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est retiré. |
-| `enable_ollama` | `true` | High | Les workflows utilisant le nœud LLM local échouent ; ne le désactivez que si vous utilisez exclusivement des fournisseurs d'IA externes. |
-| `enable_redis` | `true` | High | Sans Redis, plusieurs réplicas entrent en conflit sur l'état des workflows ; l'exécution en split-brain corrompt les exécutions. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que `redis_host` et NFS ne sont pas définis, n8n ne démarre pas. |
-| `memory_limit` | `4Gi` | High | Les workflows d'IA (embeddings, recherche vectorielle, chaînage de LLM) provoquent des arrêts OOM en dessous de 4 GiB. |
-| `max_instance_count` | `1` sauf si Redis est configuré | High | Dépasser 1 sans Redis provoque un split-brain ; l'augmenter avec Redis est sans risque. |
-| `min_instance_count` | `1` pour les webhooks | Medium | `0` peut laisser les webhooks sans pod cible ; l'état du HPA peut être incohérent sur GKE. |
-| `enable_nfs` | `true` | High | Qdrant et Ollama utilisent GCS Fuse sur le bucket de données d'IA ; sans lui, les fichiers de modèles et les index vectoriels sont perdus au redémarrage des pods. |
-| `enable_iap` | uniquement avec des identifiants OAuth valides | High | L'activer sans `iap_oauth_client_id` / `iap_oauth_client_secret` bloque tout accès. IAP bloque aussi les webhooks publics. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `N8N_ENCRYPTION_KEY` (généré automatiquement) | À sauvegarder immédiatement | Critique | Le modifier après la première exécution détruit définitivement tous les identifiants n8n enregistrés. |
+| `application_name` | `n8nai` — défini une seule fois | Critique | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes avec perte de données. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer fait pointer n8n vers une nouvelle base de données vide, avec perte de tous les workflows. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods. |
+| `enable_qdrant` | `true` | Élevé | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est retiré. |
+| `enable_ollama` | `true` | Élevé | Les workflows utilisant le nœud LLM local échouent ; ne le désactivez que si vous utilisez exclusivement des fournisseurs d'IA externes. |
+| `enable_redis` | `true` | Élevé | Sans Redis, plusieurs réplicas entrent en conflit sur l'état des workflows ; l'exécution en split-brain corrompt les exécutions. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que `redis_host` et NFS ne sont pas définis, n8n ne démarre pas. |
+| `memory_limit` | `4Gi` | Élevé | Les workflows d'IA (embeddings, recherche vectorielle, chaînage de LLM) provoquent des arrêts OOM en dessous de 4 GiB. |
+| `max_instance_count` | `1` sauf si Redis est configuré | Élevé | Dépasser 1 sans Redis provoque un split-brain ; l'augmenter avec Redis est sans risque. |
+| `min_instance_count` | `1` pour les webhooks | Moyen | `0` peut laisser les webhooks sans pod cible ; l'état du HPA peut être incohérent sur GKE. |
+| `enable_nfs` | `true` | Élevé | Qdrant et Ollama utilisent GCS Fuse sur le bucket de données d'IA ; sans lui, les fichiers de modèles et les index vectoriels sont perdus au redémarrage des pods. |
+| `enable_iap` | uniquement avec des identifiants OAuth valides | Élevé | L'activer sans `iap_oauth_client_id` / `iap_oauth_client_secret` bloque tout accès. IAP bloque aussi les webhooks publics. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
 
 ---
 

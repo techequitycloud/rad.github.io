@@ -328,8 +328,8 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -342,16 +342,16 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (ne jamais augmenter) | Critical | SQLite + GCS FUSE sont à écrivain unique ; plus d'une instance corrompt la base de données. |
-| Le bucket de données `/pb_data` | Ne jamais le supprimer ; le sauvegarder | Critical | Le bucket **est** la base de données et le stockage de fichiers — le supprimer ou le vider détruit toutes les données. |
-| `database_type` | `NONE` (fixe) | Critical | PocketBase n'a pas de base de données externe ; sélectionner un moteur provisionne un Cloud SQL inutilisé et ne change pas l'emplacement des données. |
-| Compte administrateur sur `/_/` | À créer immédiatement après le déploiement | Critical | Tant que le superutilisateur n'existe pas, quiconque atteint `/_/` peut se l'approprier et prendre le contrôle de l'instance. |
-| Changement de `application_version` | Sauvegardez d'abord `/pb_data` | High | PocketBase migre automatiquement le schéma au démarrage ; une mise à niveau interrompue peut laisser la base SQLite au milieu d'une migration. |
-| `execution_environment` | `gen2` | High | gen1 ne peut pas monter le volume GCS FUSE `/pb_data` ; le service démarre sans données persistantes. |
-| `ingress_settings` | `all` | High | `internal` bloque l'accès depuis Internet à l'interface publique de l'application et à l'API REST. |
-| `enable_iap` | Uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris les clients de l'API publique et l'interface d'administration. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro (`0`) ajoute la latence des démarrages à froid et interrompt brièvement l'écrivain SQLite unique entre les requêtes. |
-| `memory_limit` | `1Gi` (512Mi min) | Low | PocketBase est léger ; un surdimensionnement ne fait qu'augmenter le coût. |
+| `max_instance_count` | `1` (ne jamais augmenter) | Critique | SQLite + GCS FUSE sont à écrivain unique ; plus d'une instance corrompt la base de données. |
+| Le bucket de données `/pb_data` | Ne jamais le supprimer ; le sauvegarder | Critique | Le bucket **est** la base de données et le stockage de fichiers — le supprimer ou le vider détruit toutes les données. |
+| `database_type` | `NONE` (fixe) | Critique | PocketBase n'a pas de base de données externe ; sélectionner un moteur provisionne un Cloud SQL inutilisé et ne change pas l'emplacement des données. |
+| Compte administrateur sur `/_/` | À créer immédiatement après le déploiement | Critique | Tant que le superutilisateur n'existe pas, quiconque atteint `/_/` peut se l'approprier et prendre le contrôle de l'instance. |
+| Changement de `application_version` | Sauvegardez d'abord `/pb_data` | Élevé | PocketBase migre automatiquement le schéma au démarrage ; une mise à niveau interrompue peut laisser la base SQLite au milieu d'une migration. |
+| `execution_environment` | `gen2` | Élevé | gen1 ne peut pas monter le volume GCS FUSE `/pb_data` ; le service démarre sans données persistantes. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque l'accès depuis Internet à l'interface publique de l'application et à l'API REST. |
+| `enable_iap` | Uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les clients de l'API publique et l'interface d'administration. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro (`0`) ajoute la latence des démarrages à froid et interrompt brièvement l'écrivain SQLite unique entre les requêtes. |
+| `memory_limit` | `1Gi` (512Mi min) | Faible | PocketBase est léger ; un surdimensionnement ne fait qu'augmenter le coût. |
 
 ---
 

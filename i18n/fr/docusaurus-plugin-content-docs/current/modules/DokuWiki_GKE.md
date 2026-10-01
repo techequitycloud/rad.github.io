@@ -291,23 +291,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, `min_instance_count` supérieur à `max`, un workload_type `Deployment` en parallèle de `stateful_pvc_enabled = true`, des valeurs `quota_memory_*` en entiers nus — ainsi que des gardes propres au module pour un `database_type` différent de `NONE`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC bloc `/storage` | Ne jamais le supprimer après le premier déploiement | Critical | Le PVC *est* le wiki — le supprimer (ou supprimer le StatefulSet avec son PVC) fait perdre toutes les pages, tous les médias et tous les utilisateurs. Sauvegardez le disque avant la suppression. |
-| `database_type` | `NONE` | Critical | Toute autre valeur fait échouer la garde au moment du plan ; si elle est contournée, elle provisionne une instance Cloud SQL inutilisée et son coût. |
-| `install.php` après la configuration | Supprimer / bloquer une fois l'administrateur créé | High | Toute personne qui accède à `/install.php` avant que vous ayez terminé la configuration peut s'approprier le compte administrateur. |
-| `workload_type` | `null` (auto → StatefulSet) | High | Définir `Deployment` en parallèle de `stateful_pvc_enabled = true` échoue au moment du plan ; un simple Deployment perdrait des données lors d'un réordonnancement. |
-| `min_instance_count` / `max_instance_count` | `1` pour un wiki partagé | High | Chaque pod du StatefulSet reçoit son propre PVC vide — dépasser 1 répartit les utilisateurs entre des wikis distincts et non synchronisés. |
-| `stateful_pvc_mount_path` | `/storage` | High | Un autre chemin laisse le répertoire de données de DokuWiki sur le système de fichiers racine éphémère du pod — le contenu est perdu à chaque réordonnancement. |
-| `stateful_pvc_size` | Dimensionner dès le départ (`10Gi`+) | Medium | Les PVC sous-dimensionnés se remplissent de médias ; l'extension en ligne dépend de la StorageClass. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `service_type` | `LoadBalancer` (ou IAP/domaine) | Medium | `ClusterIP` rend le wiki injoignable depuis l'extérieur du cluster sans entrée supplémentaire. |
-| `memory_limit` (`container_resources`) | `512Mi` | Medium | En dessous de 256 MiB, le processus PHP/Apache peut subir un OOM sous charge. |
+| PVC bloc `/storage` | Ne jamais le supprimer après le premier déploiement | Critique | Le PVC *est* le wiki — le supprimer (ou supprimer le StatefulSet avec son PVC) fait perdre toutes les pages, tous les médias et tous les utilisateurs. Sauvegardez le disque avant la suppression. |
+| `database_type` | `NONE` | Critique | Toute autre valeur fait échouer la garde au moment du plan ; si elle est contournée, elle provisionne une instance Cloud SQL inutilisée et son coût. |
+| `install.php` après la configuration | Supprimer / bloquer une fois l'administrateur créé | Élevé | Toute personne qui accède à `/install.php` avant que vous ayez terminé la configuration peut s'approprier le compte administrateur. |
+| `workload_type` | `null` (auto → StatefulSet) | Élevé | Définir `Deployment` en parallèle de `stateful_pvc_enabled = true` échoue au moment du plan ; un simple Deployment perdrait des données lors d'un réordonnancement. |
+| `min_instance_count` / `max_instance_count` | `1` pour un wiki partagé | Élevé | Chaque pod du StatefulSet reçoit son propre PVC vide — dépasser 1 répartit les utilisateurs entre des wikis distincts et non synchronisés. |
+| `stateful_pvc_mount_path` | `/storage` | Élevé | Un autre chemin laisse le répertoire de données de DokuWiki sur le système de fichiers racine éphémère du pod — le contenu est perdu à chaque réordonnancement. |
+| `stateful_pvc_size` | Dimensionner dès le départ (`10Gi`+) | Moyen | Les PVC sous-dimensionnés se remplissent de médias ; l'extension en ligne dépend de la StorageClass. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `service_type` | `LoadBalancer` (ou IAP/domaine) | Moyen | `ClusterIP` rend le wiki injoignable depuis l'extérieur du cluster sans entrée supplémentaire. |
+| `memory_limit` (`container_resources`) | `512Mi` | Moyen | En dessous de 256 MiB, le processus PHP/Apache peut subir un OOM sous charge. |
 
 ---
 

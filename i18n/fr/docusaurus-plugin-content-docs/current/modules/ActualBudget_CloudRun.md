@@ -279,22 +279,22 @@ Renvoyées après un déploiement réussi — le moyen le plus rapide de localis
 
 Le module intègre une validation au moment du plan pour les erreurs de configuration les plus dommageables (par exemple `min_instance_count <= max_instance_count`), mais plusieurs paramètres méritent une attention particulière :
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Plusieurs instances écrivent les mêmes fichiers SQLite sur un seul volume partagé — risque de corruption/de conflit. |
-| Mot de passe du serveur à la première exécution | à définir immédiatement | Critical | Tant qu'aucun mot de passe n'est défini, quiconque atteint l'URL peut s'approprier le serveur et ses données de budget. |
-| Contenu du bucket de stockage | ne jamais le supprimer manuellement | Critical | `/data` sur le bucket GCS est la seule copie des bases de données de budget ; supprimer le bucket efface tous les budgets. |
-| `container_port` | `5006` | Critical | Port natif d'actual-server ; une valeur différente fait échouer toutes les sondes de santé. |
-| `execution_environment` | `gen2` | High | Les montages de volumes GCS FUSE nécessitent gen2 ; gen1 laisse `/data` non monté et les données sur un disque éphémère. |
-| `ingress_settings` = `"all"` (la valeur par défaut) | définir le mot de passe du serveur immédiatement après le déploiement | Critical | Le service est accessible publiquement par défaut ; un serveur non revendiqué peut être approprié par le premier venu qui atteint l'URL. Définissez plutôt `internal` si l'accès public n'est pas nécessaire. |
-| `ingress_settings = "all"` avec `enable_api_key = false` | combinaison non valide | Critical | `validation.tf` impose `ingress_settings != "all" \|\| enable_api_key` au moment du plan — cette combinaison fait échouer le plan d'emblée au lieu de déployer de manière non sécurisée. Les deux valeurs par défaut satisfont déjà la précondition (`all` + `true`), si bien que les valeurs par défaut seules se déploient sans erreur ; seul un remplacement explicite par `enable_api_key = false` en laissant l'entrée à `all` déclenche l'échec. |
-| Charge d'écriture multi-utilisateur intensive | passer à ActualBudget_GKE (PVC en mode bloc) | High | SQLite ne tolère pas GCS FUSE sous des écritures concurrentes intensives ; Cloud Run convient à un usage mono-utilisateur / léger. |
-| `enable_api_key` | `true` (la valeur par défaut) | Medium | Sans `ACTUAL_TOKEN`, l'accès programmatique à l'API repose uniquement sur le mot de passe du serveur. Également requis par la précondition d'entrée ci-dessus dès que `ingress_settings = "all"`. |
-| `min_instance_count` | `1` (ou `0` pour réduire les coûts) | Medium | `0` ajoute un démarrage à froid à la première requête après une période d'inactivité ; les données sont en sécurité dans les deux cas (l'état est sur GCS). |
-| `uptime_check_config` | à activer tant que l'entrée est publique | Low | Si `ingress_settings` passe à `internal`, le test ne peut pas atteindre le service et échouera systématiquement. |
+| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent les mêmes fichiers SQLite sur un seul volume partagé — risque de corruption/de conflit. |
+| Mot de passe du serveur à la première exécution | à définir immédiatement | Critique | Tant qu'aucun mot de passe n'est défini, quiconque atteint l'URL peut s'approprier le serveur et ses données de budget. |
+| Contenu du bucket de stockage | ne jamais le supprimer manuellement | Critique | `/data` sur le bucket GCS est la seule copie des bases de données de budget ; supprimer le bucket efface tous les budgets. |
+| `container_port` | `5006` | Critique | Port natif d'actual-server ; une valeur différente fait échouer toutes les sondes de santé. |
+| `execution_environment` | `gen2` | Élevé | Les montages de volumes GCS FUSE nécessitent gen2 ; gen1 laisse `/data` non monté et les données sur un disque éphémère. |
+| `ingress_settings` = `"all"` (la valeur par défaut) | définir le mot de passe du serveur immédiatement après le déploiement | Critique | Le service est accessible publiquement par défaut ; un serveur non revendiqué peut être approprié par le premier venu qui atteint l'URL. Définissez plutôt `internal` si l'accès public n'est pas nécessaire. |
+| `ingress_settings = "all"` avec `enable_api_key = false` | combinaison non valide | Critique | `validation.tf` impose `ingress_settings != "all" \|\| enable_api_key` au moment du plan — cette combinaison fait échouer le plan d'emblée au lieu de déployer de manière non sécurisée. Les deux valeurs par défaut satisfont déjà la précondition (`all` + `true`), si bien que les valeurs par défaut seules se déploient sans erreur ; seul un remplacement explicite par `enable_api_key = false` en laissant l'entrée à `all` déclenche l'échec. |
+| Charge d'écriture multi-utilisateur intensive | passer à ActualBudget_GKE (PVC en mode bloc) | Élevé | SQLite ne tolère pas GCS FUSE sous des écritures concurrentes intensives ; Cloud Run convient à un usage mono-utilisateur / léger. |
+| `enable_api_key` | `true` (la valeur par défaut) | Moyen | Sans `ACTUAL_TOKEN`, l'accès programmatique à l'API repose uniquement sur le mot de passe du serveur. Également requis par la précondition d'entrée ci-dessus dès que `ingress_settings = "all"`. |
+| `min_instance_count` | `1` (ou `0` pour réduire les coûts) | Moyen | `0` ajoute un démarrage à froid à la première requête après une période d'inactivité ; les données sont en sécurité dans les deux cas (l'état est sur GCS). |
+| `uptime_check_config` | à activer tant que l'entrée est publique | Faible | Si `ingress_settings` passe à `internal`, le test ne peut pas atteindre le service et échouera systématiquement. |
 
 ---
 

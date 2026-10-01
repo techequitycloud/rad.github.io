@@ -227,20 +227,20 @@ Regroupées exactement comme elles apparaissent sur la plateforme de déploiemen
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | plages sans chevauchement | Critical | Des plages secondaires qui se chevauchent (entre elles ou avec des réseaux appairés/sur site) font échouer la création du cluster ou provoquent des conflits de routage difficiles à corriger. |
-| `install_ambient_mesh` | choisi une fois au déploiement | High | Le mode est fixé au moment de l'installation ; passer du mode sidecar au mode ambient (ou inversement) après le déploiement nécessite de démanteler puis de réinstaller le maillage. |
-| `istio_version` | une étiquette de version réellement publiée (par ex. `1.30.3`) | High | Une version indisponible ou non prise en charge fait échouer le téléchargement/l'installation de `istioctl`, laissant le cluster sans maillage. |
-| `create_cluster` / `gke_cluster` | correspondre à la cible réelle | High | Avec `create_cluster = false`, un nom `gke_cluster` incorrect fait échouer la recherche du cluster existant et l'installation est interrompue. |
-| `create_network` avec un réseau existant | `network_name` / `subnet_name` corrects | High | Un nom de réseau/sous-réseau existant erroné fait échouer la recherche, ou place le cluster dans un réseau non prévu. |
-| Attentes concernant l'IP d'entrée | à lire depuis le Service, pas depuis `external_ip` | Medium | Se fier à la sortie `external_ip` (souvent `IP not available`) prête à confusion ; l'IP du LoadBalancer figure toujours sur le Service `istio-ingressgateway`. |
-| `release_channel` | `REGULAR` | Medium | `RAPID` introduit des versions précoces de Kubernetes qui peuvent ne pas être validées avec la version `istio_version` choisie ; `NONE` désactive l'application automatique des correctifs. |
-| Nœuds préemptifs (fixe) | acceptables pour les labs uniquement | Medium | Les deux nœuds peuvent être récupérés simultanément, rendant brièvement indisponibles le plan de contrôle et la passerelle. Pas pour la production. |
-| S'attendre à une application de démonstration intégrée | déployer votre propre charge de travail | Low | Le module installe uniquement le maillage ; rien ne sert de trafic tant que vous n'avez pas déployé une charge de travail dans l'espace de noms `default`. |
+| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | plages sans chevauchement | Critique | Des plages secondaires qui se chevauchent (entre elles ou avec des réseaux appairés/sur site) font échouer la création du cluster ou provoquent des conflits de routage difficiles à corriger. |
+| `install_ambient_mesh` | choisi une fois au déploiement | Élevé | Le mode est fixé au moment de l'installation ; passer du mode sidecar au mode ambient (ou inversement) après le déploiement nécessite de démanteler puis de réinstaller le maillage. |
+| `istio_version` | une étiquette de version réellement publiée (par ex. `1.30.3`) | Élevé | Une version indisponible ou non prise en charge fait échouer le téléchargement/l'installation de `istioctl`, laissant le cluster sans maillage. |
+| `create_cluster` / `gke_cluster` | correspondre à la cible réelle | Élevé | Avec `create_cluster = false`, un nom `gke_cluster` incorrect fait échouer la recherche du cluster existant et l'installation est interrompue. |
+| `create_network` avec un réseau existant | `network_name` / `subnet_name` corrects | Élevé | Un nom de réseau/sous-réseau existant erroné fait échouer la recherche, ou place le cluster dans un réseau non prévu. |
+| Attentes concernant l'IP d'entrée | à lire depuis le Service, pas depuis `external_ip` | Moyen | Se fier à la sortie `external_ip` (souvent `IP not available`) prête à confusion ; l'IP du LoadBalancer figure toujours sur le Service `istio-ingressgateway`. |
+| `release_channel` | `REGULAR` | Moyen | `RAPID` introduit des versions précoces de Kubernetes qui peuvent ne pas être validées avec la version `istio_version` choisie ; `NONE` désactive l'application automatique des correctifs. |
+| Nœuds préemptifs (fixe) | acceptables pour les labs uniquement | Moyen | Les deux nœuds peuvent être récupérés simultanément, rendant brièvement indisponibles le plan de contrôle et la passerelle. Pas pour la production. |
+| S'attendre à une application de démonstration intégrée | déployer votre propre charge de travail | Faible | Le module installe uniquement le maillage ; rien ne sert de trafic tant que vous n'avez pas déployé une charge de travail dans l'espace de noms `default`. |
 
 ---
 

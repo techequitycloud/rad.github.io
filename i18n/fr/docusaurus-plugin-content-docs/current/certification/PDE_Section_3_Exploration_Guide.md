@@ -20,11 +20,11 @@ Ce guide couvre la section 3 de l'examen à l'aide des modules fondamentaux de R
 
 **Pourquoi l'examen s'y intéresse** — C'est le cœur du SRE : les SLI mesurent le comportement, les SLO fixent des objectifs internes, les SLA sont des engagements externes (toujours moins stricts que le SLO), et le budget d'erreur (1 − SLO) est la monnaie objective qui arbitre entre la livraison de fonctionnalités et le renforcement de la fiabilité. L'examen teste la couche *décisionnelle* : ce qui se passe lorsque le budget est épuisé, quel taux de consommation doit déclencher une alerte d'astreinte, et qui est responsable de la politique de budget d'erreur.
 
-**Comment RAD le met en œuvre** — Pas sous forme de SLO : aucun objet SLO ou service Cloud Monitoring n'existe dans les modules. La capacité la plus proche est la matière première des SLI et les alertes à seuil : la couche de surveillance crée des alertes fixes d'utilisation du CPU et de la mémoire à 0.9 (90 %) par plateforme, la variable `alert_policies` vous permet d'alerter sur n'importe quelle métrique (par ex. `run.googleapis.com/request_count` ou `request_latencies`), et les tableaux de bord générés automatiquement représentent le nombre de requêtes et la latence p95 — exactement les signaux que vous choisiriez comme SLI de disponibilité et de latence.
+**Comment RAD le met en œuvre** — Pas sous forme de SLO : aucun objet SLO ou service Cloud Monitoring n'existe dans les modules. La capacité la plus proche est la matière première des SLI et les alertes à seuil : la couche de surveillance crée des alertes fixes d'utilisation du CPU et de la mémoire à 0,9 (90 %) par plateforme, la variable `alert_policies` vous permet d'alerter sur n'importe quelle métrique (par ex. `run.googleapis.com/request_count` ou `request_latencies`), et les tableaux de bord générés automatiquement représentent le nombre de requêtes et la latence p95 — exactement les signaux que vous choisiriez comme SLI de disponibilité et de latence.
 
 **À vous de jouer**
-1. Avec un service Cloud Run déployé et recevant un peu de trafic, créez manuellement un véritable SLO sur le service du module : **Console > Monitoring > Services > Define service**, choisissez le service Cloud Run, puis **Create SLO** → type de SLI **Availability** (fondé sur les requêtes) → objectif **99.9 %** sur 30 jours glissants.
-2. Ajoutez sur ce SLO les deux alertes standard de taux de consommation (consommation rapide : 14.4× sur 1h ; consommation lente : 6× sur 6h) depuis l'onglet **Alerts** du SLO.
+1. Avec un service Cloud Run déployé et recevant un peu de trafic, créez manuellement un véritable SLO sur le service du module : **Console > Monitoring > Services > Define service**, choisissez le service Cloud Run, puis **Create SLO** → type de SLI **Availability** (fondé sur les requêtes) → objectif **99,9 %** sur 30 jours glissants.
+2. Ajoutez sur ce SLO les deux alertes standard de taux de consommation (consommation rapide : 14,4× sur 1h ; consommation lente : 6× sur 6h) depuis l'onglet **Alerts** du SLO.
 3. Inspectez ce que la console a construit, via l'API :
 
 ```bash
@@ -38,13 +38,13 @@ gcloud alpha monitoring policies list \
 
 **Testez-vous**
 <details>
-<summary>Q1 : Votre SLO est de 99.9 % de disponibilité sur 30 jours, et un incident vient de consommer 50 % du budget d'erreur restant en 2 heures. Selon la politique SRE standard, que doit faire l'équipe de la release de fonctionnalités prévue demain ?</summary>
+<summary>Q1 : Votre SLO est de 99,9 % de disponibilité sur 30 jours, et un incident vient de consommer 50 % du budget d'erreur restant en 2 heures. Selon la politique SRE standard, que doit faire l'équipe de la release de fonctionnalités prévue demain ?</summary>
 
 R : La suspendre. Une consommation aussi rapide signifie que le rythme soutenable est largement dépassé ; la politique de budget d'erreur échange la vélocité des releases contre du travail de fiabilité jusqu'à ce que le budget se reconstitue. C'est tout l'intérêt du budget — une porte objective, convenue à l'avance, plutôt qu'une décision prise au jugé en plein incident.
 </details>
 
 <details>
-<summary>Q2 : Pourquoi le SLA est-il toujours moins strict que le SLO (par ex. SLA à 99.5 % vs SLO à 99.9 %) ?</summary>
+<summary>Q2 : Pourquoi le SLA est-il toujours moins strict que le SLO (par ex. SLA à 99,5 % vs SLO à 99,9 %) ?</summary>
 
 R : Le SLO est l'objectif interne dont vous maîtrisez les conséquences (gel des releases) ; le SLA entraîne des pénalités externes (remboursements, contrats). L'écart constitue la marge opérationnelle : vous voulez franchir votre objectif interne, réagir et rétablir la situation bien avant toute violation contractuelle.
 </details>
@@ -52,12 +52,12 @@ R : Le SLO est l'objectif interne dont vous maîtrisez les conséquences (gel de
 <details>
 <summary>Q3 : Pourquoi déclencher l'astreinte sur le *taux de consommation* du budget d'erreur plutôt que sur le pourcentage brut d'erreurs ?</summary>
 
-R : L'alerte sur le taux de consommation proportionne l'urgence à l'impact sur le budget : une consommation 14× sur une heure menace le budget mensuel et mérite une alerte d'astreinte, alors qu'une consommation lente de 1.5× relève d'un ticket. Les alertes à seuil brut alertent soit trop souvent (bruit), soit trop tard (budget déjà épuisé) — le modèle multifenêtre et multitaux du SRE Workbook résout les deux problèmes.
+R : L'alerte sur le taux de consommation proportionne l'urgence à l'impact sur le budget : une consommation 14× sur une heure menace le budget mensuel et mérite une alerte d'astreinte, alors qu'une consommation lente de 1,5× relève d'un ticket. Les alertes à seuil brut alertent soit trop souvent (bruit), soit trop tard (budget déjà épuisé) — le modèle multifenêtre et multitaux du SRE Workbook résout les deux problèmes.
 </details>
 
 **Au-delà des modules** — À étudier : la surveillance des SLO dans Cloud Monitoring (SLI fondés sur les requêtes vs sur des fenêtres), les chapitres du SRE Workbook consacrés aux alertes sur les SLO et à la politique de budget d'erreur, et la mesure du travail opérationnel répétitif (toil). Dans un projet de test, essayez `gcloud monitoring services create` / l'API REST des SLO pour scripter ce que vous avez fait en cliquant dans la console — l'examen peut faire référence à des définitions de SLO au format JSON. Sachez aussi comment Cloud Service Mesh s'inscrit dans le point sur les budgets d'erreur : les charges de travail du maillage apparaissent automatiquement comme services dans Cloud Monitoring, avec des SLI de disponibilité et de latence fondés sur les requêtes, prêts à recevoir des SLO. `Services_GCP` ne peut activer le maillage (`configure_cloud_service_mesh`, par défaut `false`) que dans un projet que vous apportez vous-même ; l'option est masquée pour les projets que RAD crée pour vous.
 
-**⚠️ Piège d'examen** — 99.9 % par mois ≈ 43 minutes d'indisponibilité, 99.99 % ≈ 4.3 minutes. Les réponses d'examen dépendent souvent de la question de savoir si une fenêtre de maintenance ou un temps de reprise proposés *tiennent* seulement dans le budget du SLO indiqué.
+**⚠️ Piège d'examen** — 99,9 % par mois ≈ 43 minutes d'indisponibilité, 99,99 % ≈ 4,3 minutes. Les réponses d'examen dépendent souvent de la question de savoir si une fenêtre de maintenance ou un temps de reprise proposés *tiennent* seulement dans le budget du SLO indiqué.
 
 ---
 

@@ -500,29 +500,29 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critical | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté s'il est vide et que `deploy_application = true`. |
-| `enable_redis` | `true` | Critical | Sans Redis, la file de tâches du traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
-| `database_type` | `MYSQL_8_0` | Critical | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | RAGFlow se connecte via un socket Unix ; désactiver le sidecar proxy provoque un échec de connexion à la base de données au démarrage. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont des octets et bloquent toute planification. |
-| `redis_host` | IP Memorystore explicite ou `""` (repli sur NFS) | High | Un hôte Redis injoignable ou erroné interrompt silencieusement tous les workers de documents asynchrones. |
-| `min_instance_count` | `1` | High | `0` entraîne une mise à l'échelle à zéro ; les démarrages à froid prennent 2 à 3 minutes et les requêtes expirent. |
-| `memory_limit` | `8Gi` | High | Les modèles d'embedding et le serveur d'application nécessitent généralement 4 à 8 GiB ; une valeur trop faible provoque des arrêts OOM pendant le traitement des documents. |
-| `stateful_pvc_enabled` | `true` en production | High | Sans PVC, les redémarrages de pods font perdre tout l'état du traitement en cours. |
-| `session_affinity` | `ClientIP` | High | Sans routage persistant, les sessions de téléversement en multi-réplicas peuvent être réparties entre plusieurs pods. |
-| `elasticsearch_username` | `""` ou utilisateur correct | High | Si la sécurité d'Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et interrompt toute l'indexation. |
-| `enable_nfs` | `true` | High | Les déploiements multi-réplicas sans stockage partagé présentent des vues incohérentes des documents d'un pod à l'autre. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, l'interface web de RAGFlow est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `application_version` | `v0.13.0` | Medium | L'incrémenter déclenche une reconstruction de l'image et un redémarrage progressif ; vérifiez la compatibilité du schéma MySQL lors des sauts de version majeure. |
+| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critique | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté s'il est vide et que `deploy_application = true`. |
+| `enable_redis` | `true` | Critique | Sans Redis, la file de tâches du traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
+| `database_type` | `MYSQL_8_0` | Critique | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | RAGFlow se connecte via un socket Unix ; désactiver le sidecar proxy provoque un échec de connexion à la base de données au démarrage. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
+| `redis_host` | IP Memorystore explicite ou `""` (repli sur NFS) | Élevé | Un hôte Redis injoignable ou erroné interrompt silencieusement tous les workers de documents asynchrones. |
+| `min_instance_count` | `1` | Élevé | `0` entraîne une mise à l'échelle à zéro ; les démarrages à froid prennent 2 à 3 minutes et les requêtes expirent. |
+| `memory_limit` | `8Gi` | Élevé | Les modèles d'embedding et le serveur d'application nécessitent généralement 4 à 8 GiB ; une valeur trop faible provoque des arrêts OOM pendant le traitement des documents. |
+| `stateful_pvc_enabled` | `true` en production | Élevé | Sans PVC, les redémarrages de pods font perdre tout l'état du traitement en cours. |
+| `session_affinity` | `ClientIP` | Élevé | Sans routage persistant, les sessions de téléversement en multi-réplicas peuvent être réparties entre plusieurs pods. |
+| `elasticsearch_username` | `""` ou utilisateur correct | Élevé | Si la sécurité d'Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et interrompt toute l'indexation. |
+| `enable_nfs` | `true` | Élevé | Les déploiements multi-réplicas sans stockage partagé présentent des vues incohérentes des documents d'un pod à l'autre. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'interface web de RAGFlow est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `application_version` | `v0.13.0` | Moyen | L'incrémenter déclenche une reconstruction de l'image et un redémarrage progressif ; vérifiez la compatibilité du schéma MySQL lors des sauts de version majeure. |
 
 ---
 

@@ -297,23 +297,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un type de charge de travail `Deployment` combiné à `stateful_pvc_enabled = true`, des valeurs mémoire de ResourceQuota en unités binaires, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC du StatefulSet / disque sous-jacent | Ne jamais le supprimer | Critical | Le PVC **est** la base SQLite — le supprimer efface tout l'historique de supervision et le compte administrateur. |
-| `max_instance_count` | `1` | Critical | Exécuter plus d'un pod sur le PVC SQLite partagé provoque des conflits de verrous et une corruption de la base. |
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver supprime le volume bloc durable, si bien que l'état SQLite est perdu au redémarrage du pod. |
-| `workload_type` | laisser `null` (→ StatefulSet) | High | Définir `Deployment` avec `stateful_pvc_enabled = true` fait échouer une garde au moment du plan. |
-| `enable_cloudsql_volume` / `database_type` | `false` / pas de SQL | High | Beszel n'a pas de base externe ; activer Cloud SQL provisionne une instance inutilisée et perturbe le démarrage. |
-| `service_type` / domaine personnalisé | exposer délibérément | High | Laissé en `ClusterIP` sans Ingress, les agents distants situés hors du cluster ne peuvent pas joindre le hub. |
-| `enable_iap` | uniquement pour l'interface, jamais avec des agents hors Google | High | IAP bloque toutes les requêtes non authentifiées, y compris la remontée des métriques des agents. |
-| `quota_memory_requests` / `_limits` | unités binaires (`1Gi`, `1024Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| `container_port` | `8090` | Medium | Le hub n'écoute que sur 8090 ; le modifier sans adapter l'image casse les sondes et le Service. |
-| `application_version` | épinglez-la explicitement | Medium | `latest` résout l'image de base vers la version épinglée `0.9.1` ; épinglez un vrai tag pour maîtriser les mises à niveau et les migrations de schéma. |
+| PVC du StatefulSet / disque sous-jacent | Ne jamais le supprimer | Critique | Le PVC **est** la base SQLite — le supprimer efface tout l'historique de supervision et le compte administrateur. |
+| `max_instance_count` | `1` | Critique | Exécuter plus d'un pod sur le PVC SQLite partagé provoque des conflits de verrous et une corruption de la base. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver supprime le volume bloc durable, si bien que l'état SQLite est perdu au redémarrage du pod. |
+| `workload_type` | laisser `null` (→ StatefulSet) | Élevé | Définir `Deployment` avec `stateful_pvc_enabled = true` fait échouer une garde au moment du plan. |
+| `enable_cloudsql_volume` / `database_type` | `false` / pas de SQL | Élevé | Beszel n'a pas de base externe ; activer Cloud SQL provisionne une instance inutilisée et perturbe le démarrage. |
+| `service_type` / domaine personnalisé | exposer délibérément | Élevé | Laissé en `ClusterIP` sans Ingress, les agents distants situés hors du cluster ne peuvent pas joindre le hub. |
+| `enable_iap` | uniquement pour l'interface, jamais avec des agents hors Google | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris la remontée des métriques des agents. |
+| `quota_memory_requests` / `_limits` | unités binaires (`1Gi`, `1024Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| `container_port` | `8090` | Moyen | Le hub n'écoute que sur 8090 ; le modifier sans adapter l'image casse les sondes et le Service. |
+| `application_version` | épinglez-la explicitement | Moyen | `latest` résout l'image de base vers la version épinglée `0.9.1` ; épinglez un vrai tag pour maîtriser les mises à niveau et les migrations de schéma. |
 
 ---
 

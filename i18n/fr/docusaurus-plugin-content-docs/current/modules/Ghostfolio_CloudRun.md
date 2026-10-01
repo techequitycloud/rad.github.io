@@ -314,8 +314,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -324,14 +324,14 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ACCESS_TOKEN_SALT` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner invalide tous les Security Tokens émis précédemment — chaque utilisateur doit se réinscrire. |
-| `JWT_SECRET_KEY` (généré automatiquement) | Ne le faire tourner que pendant une fenêtre de maintenance | Critical | Le faire tourner invalide toutes les sessions actives et impose une reconnexion immédiate. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_redis` | `true`, toujours transmis sans condition | Critical | Le point de terminaison de santé de Ghostfolio vérifie Redis directement — sans lui, l'application n'est jamais déclarée saine, quelle que soit la valeur de `redis_host`. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais qu'aucun hôte n'est résolu (NFS désactivé, pas d'hôte explicite), `REDIS_HOST` est vide et l'application échoue à son propre contrôle de santé. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `application_version` | À épingler en production | Medium | `latest` est réellement valide ici (contrairement à la plupart des modules), mais suit quand même ce que Docker Hub étiquette actuellement comme latest — épinglez une version pour des déploiements reproductibles. |
-| `min_instance_count` | `0` convient à la plupart des déploiements | Low | La mise à l'échelle jusqu'à zéro ajoute un bref délai de démarrage à froid à la première requête après une période d'inactivité ; définissez `1` uniquement si cette latence compte. |
+| `ACCESS_TOKEN_SALT` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide tous les Security Tokens émis précédemment — chaque utilisateur doit se réinscrire. |
+| `JWT_SECRET_KEY` (généré automatiquement) | Ne le faire tourner que pendant une fenêtre de maintenance | Critique | Le faire tourner invalide toutes les sessions actives et impose une reconnexion immédiate. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_redis` | `true`, toujours transmis sans condition | Critique | Le point de terminaison de santé de Ghostfolio vérifie Redis directement — sans lui, l'application n'est jamais déclarée saine, quelle que soit la valeur de `redis_host`. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais qu'aucun hôte n'est résolu (NFS désactivé, pas d'hôte explicite), `REDIS_HOST` est vide et l'application échoue à son propre contrôle de santé. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `application_version` | À épingler en production | Moyen | `latest` est réellement valide ici (contrairement à la plupart des modules), mais suit quand même ce que Docker Hub étiquette actuellement comme latest — épinglez une version pour des déploiements reproductibles. |
+| `min_instance_count` | `0` convient à la plupart des déploiements | Faible | La mise à l'échelle jusqu'à zéro ajoute un bref délai de démarrage à froid à la première requête après une période d'inactivité ; définissez `1` uniquement si cette latence compte. |
 
 ---
 

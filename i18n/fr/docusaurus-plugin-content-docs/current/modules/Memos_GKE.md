@@ -327,18 +327,18 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| Premier compte créé via l'inscription | Créez-le immédiatement après le déploiement | Critical | Le **premier** compte à s'inscrire devient hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'adresse IP externe s'arroge ce rôle. |
-| Inscription publique en libre-service | Désactivez-la après la création du premier administrateur | High | Memos est livré avec l'inscription ouverte par défaut. |
-| `container_image_source` | `custom` (par défaut) | High | `"prebuilt"` déploie directement l'image officielle, qui ne contient aucune logique de calcul de `MEMOS_DSN` — celui-ci doit être câblé manuellement, sinon le pod passe en CrashLoopBackOff sur un échec de connexion à la base de données. |
-| `stateful_pvc_enabled` | `false` (par défaut) | Low | Memos n'a besoin d'aucun stockage bloc ; l'activer consomme inutilement du quota SSD. |
-| `gcs_volumes` pour les pièces jointes | Ajoutez-le explicitement si nécessaire | Medium | Sans lui, les pièces jointes binaires téléversées résident sur le système de fichiers éphémère du pod et ne survivent pas à un redémarrage du pod. |
-| `min_instance_count` | `0` (par défaut) | Low | La réduction à zéro retarde brièvement la première requête après une période d'inactivité, le temps qu'un nouveau pod soit planifié — démarrage à froid d'Autopilot, et non bogue de l'application. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| Premier compte créé via l'inscription | Créez-le immédiatement après le déploiement | Critique | Le **premier** compte à s'inscrire devient hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'adresse IP externe s'arroge ce rôle. |
+| Inscription publique en libre-service | Désactivez-la après la création du premier administrateur | Élevé | Memos est livré avec l'inscription ouverte par défaut. |
+| `container_image_source` | `custom` (par défaut) | Élevé | `"prebuilt"` déploie directement l'image officielle, qui ne contient aucune logique de calcul de `MEMOS_DSN` — celui-ci doit être câblé manuellement, sinon le pod passe en CrashLoopBackOff sur un échec de connexion à la base de données. |
+| `stateful_pvc_enabled` | `false` (par défaut) | Faible | Memos n'a besoin d'aucun stockage bloc ; l'activer consomme inutilement du quota SSD. |
+| `gcs_volumes` pour les pièces jointes | Ajoutez-le explicitement si nécessaire | Moyen | Sans lui, les pièces jointes binaires téléversées résident sur le système de fichiers éphémère du pod et ne survivent pas à un redémarrage du pod. |
+| `min_instance_count` | `0` (par défaut) | Faible | La réduction à zéro retarde brièvement la première requête après une période d'inactivité, le temps qu'un nouveau pod soit planifié — démarrage à froid d'Autopilot, et non bogue de l'application. |
 
 ---
 

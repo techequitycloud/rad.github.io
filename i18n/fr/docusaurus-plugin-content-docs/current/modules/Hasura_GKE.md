@@ -338,25 +338,25 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critical | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods dans l'espace de noms. |
-| Chemin de `startup_probe_config` / `health_check_config` | `/healthz` | High | Faire pointer une sonde vers `/v1/graphql` ou `/console` renvoie 401 — les pods ne deviennent jamais Ready alors que le moteur a démarré. |
-| `container_image_source` | `custom` | High | `prebuilt` ignore le point d'entrée qui assemble les deux valeurs `*_DATABASE_URL` — le moteur démarre sans base de données et chaque requête échoue. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs non valides. Conserver 1 garantit que l'API est toujours joignable. |
-| `workload_type` / `stateful_pvc_enabled` | `Deployment` / non défini | Medium | Imposer un StatefulSet n'apporte rien (l'état est dans Postgres) et complique les mises à jour progressives. |
-| `HASURA_GRAPHQL_ENABLE_CONSOLE` | `false` en production | Medium | Laisser la console activée élargit la surface d'attaque ; gérez plutôt les métadonnées via la CLI `hasura`/les migrations. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critique | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods dans l'espace de noms. |
+| Chemin de `startup_probe_config` / `health_check_config` | `/healthz` | Élevé | Faire pointer une sonde vers `/v1/graphql` ou `/console` renvoie 401 — les pods ne deviennent jamais Ready alors que le moteur a démarré. |
+| `container_image_source` | `custom` | Élevé | `prebuilt` ignore le point d'entrée qui assemble les deux valeurs `*_DATABASE_URL` — le moteur démarre sans base de données et chaque requête échoue. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs non valides. Conserver 1 garantit que l'API est toujours joignable. |
+| `workload_type` / `stateful_pvc_enabled` | `Deployment` / non défini | Moyen | Imposer un StatefulSet n'apporte rien (l'état est dans Postgres) et complique les mises à jour progressives. |
+| `HASURA_GRAPHQL_ENABLE_CONSOLE` | `false` en production | Moyen | Laisser la console activée élargit la surface d'attaque ; gérez plutôt les métadonnées via la CLI `hasura`/les migrations. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
 
 ---
 

@@ -335,28 +335,28 @@ Renvoyées lorsqu'un déploiement réussit — le moyen le plus rapide de locali
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Variables d'environnement `OIDC_*` | configurées après le déploiement | Critical | Livrées volontairement vides — tant qu'aucun IdP n'est configuré, la page de connexion n'affiche **aucun fournisseur** et le wiki est inutilisable, même si le déploiement est sain. |
-| `service_url_env_var_name` | `URL` | Critical | La vider supprime l'`URL` injectée ; Outline ne peut pas construire la `redirect_uri` OIDC et n'enregistre aucun fournisseur d'authentification. |
-| `database_type` | `POSTGRES_15` | Critical | Outline nécessite PostgreSQL ; MySQL fait échouer le démarrage. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les documents. |
-| `enable_redis` | `true` | Critical | Outline nécessite Redis pour les sessions et sa file d'attente ; sans lui, le conteneur ne devient jamais sain. |
-| `enable_nfs` | `true` | Critical | Sans stockage partagé, les pièces jointes téléversées sont perdues entre les instances/redémarrages. |
-| `enable_cloudsql_volume` | `true` | Critical | La connexion Postgres du point d'entrée utilise le socket de l'Auth Proxy ; une connexion TCP directe par IP privée est rejetée par Cloud SQL sans configuration SSL. |
-| `DATABASE_URL` / `REDIS_URL` dans `environment_variables` | ne jamais les définir | High | Le point d'entrée assemble correctement les deux pour chaque plateforme ; une valeur définie à la main la remplace avec une forme d'hôte incorrecte. |
-| `FORCE_HTTPS` | `false` (valeur par défaut du module) | High | Le réactiver amène Outline à rediriger en 301 les sondes de santé HTTP → échec de la sonde → redémarrages en boucle. TLS est déjà terminé par Cloud Run. |
-| Liaison des secrets OIDC | supprimer puis mettre à jour | High | `OIDC_CLIENT_ID`/`SECRET` sont des variables d'environnement simples et vides ; un `--update-secrets` unique échoue avec « already set with a different type » — appliquez-leur d'abord `--remove-env-vars`. |
-| URI de redirection OIDC | `<URL>/auth/oidc.callback` sur le même hôte que `URL` | High | Une différence d'hôte entre `URL`, le callback enregistré et le navigateur rompt l'aller-retour OAuth. |
-| `nfs_mount_path` | `/var/lib/outline/data` | High | Doit correspondre à `FILE_STORAGE_LOCAL_ROOT_DIR`, sinon les téléversements atterrissent sur un disque éphémère et disparaissent. |
-| `startup_probe` initial_delay_seconds | `60` | High | Le réduire tue Outline avant la fin des migrations Sequelize du premier démarrage. |
-| `execution_environment` | `gen2` | High | Les montages NFS nécessitent gen2 ; gen1 ne peut pas monter Filestore. |
-| `memory_limit` | `1Gi`+ (`2Gi` en prod) | Medium | Une mémoire trop faible provoque des OOM de Node.js pendant l'indexation de la recherche ou les exports volumineux. |
-| `min_instance_count` | `0` (dev) / `1` (prod) | Medium | `0` ajoute un démarrage à froid (avec vérification des migrations) à la première requête après une période d'inactivité. |
-| `backup_retention_days` | `7` (augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
+| Variables d'environnement `OIDC_*` | configurées après le déploiement | Critique | Livrées volontairement vides — tant qu'aucun IdP n'est configuré, la page de connexion n'affiche **aucun fournisseur** et le wiki est inutilisable, même si le déploiement est sain. |
+| `service_url_env_var_name` | `URL` | Critique | La vider supprime l'`URL` injectée ; Outline ne peut pas construire la `redirect_uri` OIDC et n'enregistre aucun fournisseur d'authentification. |
+| `database_type` | `POSTGRES_15` | Critique | Outline nécessite PostgreSQL ; MySQL fait échouer le démarrage. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les documents. |
+| `enable_redis` | `true` | Critique | Outline nécessite Redis pour les sessions et sa file d'attente ; sans lui, le conteneur ne devient jamais sain. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, les pièces jointes téléversées sont perdues entre les instances/redémarrages. |
+| `enable_cloudsql_volume` | `true` | Critique | La connexion Postgres du point d'entrée utilise le socket de l'Auth Proxy ; une connexion TCP directe par IP privée est rejetée par Cloud SQL sans configuration SSL. |
+| `DATABASE_URL` / `REDIS_URL` dans `environment_variables` | ne jamais les définir | Élevé | Le point d'entrée assemble correctement les deux pour chaque plateforme ; une valeur définie à la main la remplace avec une forme d'hôte incorrecte. |
+| `FORCE_HTTPS` | `false` (valeur par défaut du module) | Élevé | Le réactiver amène Outline à rediriger en 301 les sondes de santé HTTP → échec de la sonde → redémarrages en boucle. TLS est déjà terminé par Cloud Run. |
+| Liaison des secrets OIDC | supprimer puis mettre à jour | Élevé | `OIDC_CLIENT_ID`/`SECRET` sont des variables d'environnement simples et vides ; un `--update-secrets` unique échoue avec « already set with a different type » — appliquez-leur d'abord `--remove-env-vars`. |
+| URI de redirection OIDC | `<URL>/auth/oidc.callback` sur le même hôte que `URL` | Élevé | Une différence d'hôte entre `URL`, le callback enregistré et le navigateur rompt l'aller-retour OAuth. |
+| `nfs_mount_path` | `/var/lib/outline/data` | Élevé | Doit correspondre à `FILE_STORAGE_LOCAL_ROOT_DIR`, sinon les téléversements atterrissent sur un disque éphémère et disparaissent. |
+| `startup_probe` initial_delay_seconds | `60` | Élevé | Le réduire tue Outline avant la fin des migrations Sequelize du premier démarrage. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS nécessitent gen2 ; gen1 ne peut pas monter Filestore. |
+| `memory_limit` | `1Gi`+ (`2Gi` en prod) | Moyen | Une mémoire trop faible provoque des OOM de Node.js pendant l'indexation de la recherche ou les exports volumineux. |
+| `min_instance_count` | `0` (dev) / `1` (prod) | Moyen | `0` ajoute un démarrage à froid (avec vérification des migrations) à la première requête après une période d'inactivité. |
+| `backup_retention_days` | `7` (augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

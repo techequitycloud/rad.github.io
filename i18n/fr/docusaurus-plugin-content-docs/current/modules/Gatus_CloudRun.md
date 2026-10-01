@@ -347,22 +347,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `container_port`/`timeout_seconds` hors limites, une valeur de mémoire inférieure au plancher de gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` (pour un historique durable) | Laissez `false` ; utilisez plutôt `Gatus_GKE` avec `stateful_pvc_enabled` | Critical | Gatus code en dur le mode de journalisation WAL de SQLite, que la documentation de SQLite elle-même indique comme non pris en charge sur les systèmes de fichiers réseau — un historique sur NFS risque une corruption silencieuse au fil du temps. |
-| `max_instance_count` | `1` | High | Au-delà de 1, chaque réplica interroge indépendamment tous les points de terminaison, ce qui duplique les notifications d'alerte sans aucune coordination entre les instances. |
-| `cpu_always_allocated` | `true` | High | Le définir sur `false` permet à Cloud Run de brider le CPU entre les requêtes, ce qui bloque ou saute silencieusement les vérifications planifiées des points de terminaison par le watchdog. |
-| `ingress_settings` | `all` | High | `internal` rend une page de statut publique inaccessible depuis l'extérieur du VPC. |
-| `enable_iap` | uniquement si l'accès doit être authentifié | High | IAP exige une connexion Google pour chaque requête, ce qui bloque la consultation non authentifiée de la page de statut — rarement ce que souhaite une page de statut publique. |
-| Bloc `security` de Gatus dans `config.yaml` | À configurer si la page contient des noms de points de terminaison sensibles | Medium | Laissée par défaut, la page de statut (y compris les noms de tous les points de terminaison configurés et leur historique de disponibilité) est visible publiquement par toute personne disposant de l'URL. |
-| `container_port` | `8080` | Medium | Le remplacer par une valeur sur laquelle Gatus n'écoute pas fait échouer toutes les sondes de santé. |
-| `memory_limit` | `512Mi` | Low | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'apply. |
-| `application_version` | Épinglez `v5.x.y` en production | Low | `latest` correspond à une base épinglée (`v5.36.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `enable_nfs` (pour un historique durable) | Laissez `false` ; utilisez plutôt `Gatus_GKE` avec `stateful_pvc_enabled` | Critique | Gatus code en dur le mode de journalisation WAL de SQLite, que la documentation de SQLite elle-même indique comme non pris en charge sur les systèmes de fichiers réseau — un historique sur NFS risque une corruption silencieuse au fil du temps. |
+| `max_instance_count` | `1` | Élevé | Au-delà de 1, chaque réplica interroge indépendamment tous les points de terminaison, ce qui duplique les notifications d'alerte sans aucune coordination entre les instances. |
+| `cpu_always_allocated` | `true` | Élevé | Le définir sur `false` permet à Cloud Run de brider le CPU entre les requêtes, ce qui bloque ou saute silencieusement les vérifications planifiées des points de terminaison par le watchdog. |
+| `ingress_settings` | `all` | Élevé | `internal` rend une page de statut publique inaccessible depuis l'extérieur du VPC. |
+| `enable_iap` | uniquement si l'accès doit être authentifié | Élevé | IAP exige une connexion Google pour chaque requête, ce qui bloque la consultation non authentifiée de la page de statut — rarement ce que souhaite une page de statut publique. |
+| Bloc `security` de Gatus dans `config.yaml` | À configurer si la page contient des noms de points de terminaison sensibles | Moyen | Laissée par défaut, la page de statut (y compris les noms de tous les points de terminaison configurés et leur historique de disponibilité) est visible publiquement par toute personne disposant de l'URL. |
+| `container_port` | `8080` | Moyen | Le remplacer par une valeur sur laquelle Gatus n'écoute pas fait échouer toutes les sondes de santé. |
+| `memory_limit` | `512Mi` | Faible | L'environnement d'exécution gen2 rejette les valeurs inférieures à 512Mi au moment de l'apply. |
+| `application_version` | Épinglez `v5.x.y` en production | Faible | `latest` correspond à une base épinglée (`v5.36.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
 
 ---
 

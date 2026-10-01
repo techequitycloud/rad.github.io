@@ -340,8 +340,8 @@ n'utilise pas de cache) et Cloud Armor, VPC Service Controls. Consultez
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
@@ -351,14 +351,14 @@ n'utilise pas de cache) et Cloud Armor, VPC Service Controls. Consultez
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_size` | Planifiez la capacité en fonction de votre parc de clients réel + politique de rétention | **Critical** | Un sous-dimensionnement fait échouer les sauvegardes des clients avec « disk full » dès que le PVC est plein — il s'agit d'une application à gros volume de données, et non d'une application à petite configuration ; la valeur par défaut de 200Gi n'est qu'un point de départ pour un petit pilote. |
-| `stateful_pvc_mount_path` | Conservez `/var/urbackup` | **Critical** | Le correctif du point d'entrée appliqué au moment du build de l'image personnalisée redirige les données de sauvegarde vers un sous-répertoire de ce chemin exact ; le modifier sans modifier également le Dockerfile casse entièrement l'organisation base de données/données de sauvegarde. |
-| `stateful_pvc_storage_class` | Conservez `standard` (HDD), sauf besoin spécifique d'IOPS élevées | **Medium** | Le SSD (`standard-rwo`/`premium-rwo`) puise dans le quota serré `SSD_TOTAL_GB` (500GB seulement sur certains projets contraints) — un PVC de grande capacité de sauvegarde sur SSD peut épuiser rapidement ce quota sans réel gain de performances (les écritures de sauvegarde sont séquentielles, et non limitées par les IOPS). |
-| Connectivité des clients | Dirigez les agents clients vers `urbackup_client_external_ip`, jamais vers `service_url`/`service_external_ip` | **High** | Ces dernières sorties correspondent au Service du socle, interne uniquement (port de l'interface web seulement) ; les clients qui y sont dirigés ne peuvent pas mener à bien le véritable protocole de transfert des données de sauvegarde. |
-| `min_instance_count` | Conservez `1` | **High** | Avec une mise à l'échelle à zéro, le serveur peut ne pas être en cours d'exécution lorsqu'arrive la tentative de sauvegarde automatique d'un client, planifiée à un moment arbitraire — des sauvegardes manquées en silence, et non une erreur visible. |
-| `max_instance_count` | Conservez `1` | **Critical** | La base de données SQLite intégrée et la déduplication par liens physiques n'ont aucune coordination multi-instance ; des serveurs concurrents corrompraient l'état les uns des autres ou entreraient en concurrence. |
-| Sondes de santé | Conservez TCP (valeur par défaut du module) | **Medium** | Il n'est pas confirmé qu'un chemin HTTP de l'interface web soit accessible sans authentification en toute sécurité pour cette image — une sonde HTTP incorrecte pourrait bloquer le déploiement progressif si l'hypothèse est fausse. |
-| `urbackup_static_ip_address` | Laissez vide, sauf si vous avez pré-réservé une adresse | **Low** | Ce module ne provisionne pas automatiquement de réservation (pour éviter d'épuiser silencieusement un quota d'IP statiques rare, à l'échelle du projet) — définir ici une adresse que vous n'avez pas réellement réservée fait échouer l'application. |
+| `stateful_pvc_size` | Planifiez la capacité en fonction de votre parc de clients réel + politique de rétention | **Critique** | Un sous-dimensionnement fait échouer les sauvegardes des clients avec « disk full » dès que le PVC est plein — il s'agit d'une application à gros volume de données, et non d'une application à petite configuration ; la valeur par défaut de 200Gi n'est qu'un point de départ pour un petit pilote. |
+| `stateful_pvc_mount_path` | Conservez `/var/urbackup` | **Critique** | Le correctif du point d'entrée appliqué au moment du build de l'image personnalisée redirige les données de sauvegarde vers un sous-répertoire de ce chemin exact ; le modifier sans modifier également le Dockerfile casse entièrement l'organisation base de données/données de sauvegarde. |
+| `stateful_pvc_storage_class` | Conservez `standard` (HDD), sauf besoin spécifique d'IOPS élevées | **Moyen** | Le SSD (`standard-rwo`/`premium-rwo`) puise dans le quota serré `SSD_TOTAL_GB` (500GB seulement sur certains projets contraints) — un PVC de grande capacité de sauvegarde sur SSD peut épuiser rapidement ce quota sans réel gain de performances (les écritures de sauvegarde sont séquentielles, et non limitées par les IOPS). |
+| Connectivité des clients | Dirigez les agents clients vers `urbackup_client_external_ip`, jamais vers `service_url`/`service_external_ip` | **Élevé** | Ces dernières sorties correspondent au Service du socle, interne uniquement (port de l'interface web seulement) ; les clients qui y sont dirigés ne peuvent pas mener à bien le véritable protocole de transfert des données de sauvegarde. |
+| `min_instance_count` | Conservez `1` | **Élevé** | Avec une mise à l'échelle à zéro, le serveur peut ne pas être en cours d'exécution lorsqu'arrive la tentative de sauvegarde automatique d'un client, planifiée à un moment arbitraire — des sauvegardes manquées en silence, et non une erreur visible. |
+| `max_instance_count` | Conservez `1` | **Critique** | La base de données SQLite intégrée et la déduplication par liens physiques n'ont aucune coordination multi-instance ; des serveurs concurrents corrompraient l'état les uns des autres ou entreraient en concurrence. |
+| Sondes de santé | Conservez TCP (valeur par défaut du module) | **Moyen** | Il n'est pas confirmé qu'un chemin HTTP de l'interface web soit accessible sans authentification en toute sécurité pour cette image — une sonde HTTP incorrecte pourrait bloquer le déploiement progressif si l'hypothèse est fausse. |
+| `urbackup_static_ip_address` | Laissez vide, sauf si vous avez pré-réservé une adresse | **Faible** | Ce module ne provisionne pas automatiquement de réservation (pour éviter d'épuiser silencieusement un quota d'IP statiques rare, à l'échelle du projet) — définir ici une adresse que vous n'avez pas réellement réservée fait échouer l'application. |
 
 ---
 

@@ -331,20 +331,20 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) — **Medium**
-> (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) — **Moyen**
+> (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `PAYLOAD_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `startup_probe_config` / délai de `payload-migrate` | Conserver la fenêtre complète d'environ 12 minutes | High | Si la fenêtre de la sonde est raccourcie en deçà du temps nécessaire à `payload-migrate`, le pod peut être marqué comme défaillant avant la fin de la migration du schéma, car les deux s'exécutent en parallèle au lieu que la sonde attende le job. |
-| Persistance des médias/téléversements | Ajouter un véritable adaptateur de stockage avant toute utilisation en production | High | Sans bucket de stockage raccordé, tous les médias téléversés résident sur le disque local du conteneur et sont perdus à chaque redémarrage de pod ou redéploiement. |
-| `service_type` | `LoadBalancer` (par défaut) | High | S'il reste en `ClusterIP` (par exemple après un repli dû au quota), l'application n'est pas accessible de l'extérieur tant qu'il n'est pas rebasculé. |
-| `enable_gcs_storage` | Ne pas compter sur ce paramètre | Medium | Déclaré mais non transmis à `Payload_Common` — l'activer ne provisionne ni ne raccorde aucun stockage. |
-| `enable_redis` / `redis_*` | Ne pas compter sur ces paramètres | Medium | Déclarés mais non transmis à `Payload_Common`, qui ne dispose d'aucun raccordement Redis — les définir n'a aucun effet. |
-| Création du premier administrateur | À effectuer rapidement après le déploiement | Medium | Tant que le premier administrateur n'a pas été créé via le formulaire d'inscription `/admin`, l'instance ne possède aucun utilisateur authentifié. |
-| `container_image_source` | Laisser à `custom` | Low | Il n'existe aucune image Payload préconstruite ; définir `prebuilt` sans `container_image` valide fait échouer le déploiement. |
+| `PAYLOAD_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `startup_probe_config` / délai de `payload-migrate` | Conserver la fenêtre complète d'environ 12 minutes | Élevé | Si la fenêtre de la sonde est raccourcie en deçà du temps nécessaire à `payload-migrate`, le pod peut être marqué comme défaillant avant la fin de la migration du schéma, car les deux s'exécutent en parallèle au lieu que la sonde attende le job. |
+| Persistance des médias/téléversements | Ajouter un véritable adaptateur de stockage avant toute utilisation en production | Élevé | Sans bucket de stockage raccordé, tous les médias téléversés résident sur le disque local du conteneur et sont perdus à chaque redémarrage de pod ou redéploiement. |
+| `service_type` | `LoadBalancer` (par défaut) | Élevé | S'il reste en `ClusterIP` (par exemple après un repli dû au quota), l'application n'est pas accessible de l'extérieur tant qu'il n'est pas rebasculé. |
+| `enable_gcs_storage` | Ne pas compter sur ce paramètre | Moyen | Déclaré mais non transmis à `Payload_Common` — l'activer ne provisionne ni ne raccorde aucun stockage. |
+| `enable_redis` / `redis_*` | Ne pas compter sur ces paramètres | Moyen | Déclarés mais non transmis à `Payload_Common`, qui ne dispose d'aucun raccordement Redis — les définir n'a aucun effet. |
+| Création du premier administrateur | À effectuer rapidement après le déploiement | Moyen | Tant que le premier administrateur n'a pas été créé via le formulaire d'inscription `/admin`, l'instance ne possède aucun utilisateur authentifié. |
+| `container_image_source` | Laisser à `custom` | Faible | Il n'existe aucune image Payload préconstruite ; définir `prebuilt` sans `container_image` valide fait échouer le déploiement. |
 
 ---
 

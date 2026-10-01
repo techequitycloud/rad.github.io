@@ -401,27 +401,27 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé conjointement à un paramètre sans état, IAP sans identité autorisée, des `quota_memory_*` fournis sous forme d'entiers nus, une valeur `container_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource : la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | `db-init.sh` ne fonctionne qu'avec `psql` ; MySQL/`NONE` casse la configuration de la base de données, même si les métadonnées de la variable les proposent. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelins tous les dépôts, tickets et PR stockés sous l'ancien rôle. |
-| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais modifier | Critical | Leur rotation invalide les données chiffrées 2FA/OAuth ainsi que l'authentification de l'API interne de Forgejo, ce qui casse les opérations Git et d'API. |
-| `enable_nfs` | `true` | Critical | La désactiver rend éphémères les dépôts, les objets LFS et les pièces jointes — ils sont perdus lors de la recréation du pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE ; la sélection du mode SSL par le point d'entrée en dépend. |
-| `public_domain` / `public_url` | Le véritable nom d'hôte externe | High | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
-| `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | High | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
-| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucun job d'initialisation n'amorce d'administrateur ; tant qu'aucun n'est créé via la CLI Forgejo, l'instance ne dispose d'aucun utilisateur privilégié. |
-| `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Medium | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |
-| `max_instance_count` | `3` (par défaut) | Medium | Les réplicas concurrents partagent le même répertoire de données Git sur NFS et la même base de données Postgres ; l'exactitude multi-réplica des écritures concurrentes n'est pas documentée ici — traitez la mise à l'échelle comme pour toute charge de travail sur un système de fichiers partagé. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `storage_buckets` | Laisser tel quel ou définir `create_cloud_storage = false` | Low | Le bucket par défaut suffixé `data` est provisionné mais inutilisé par Forgejo (toutes les données de l'application résident sur NFS) — un léger coût inutile s'il reste activé sans raison. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `public_domain`/`public_url`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
+| `database_type` | `POSTGRES_15` | Critique | `db-init.sh` ne fonctionne qu'avec `psql` ; MySQL/`NONE` casse la configuration de la base de données, même si les métadonnées de la variable les proposent. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelins tous les dépôts, tickets et PR stockés sous l'ancien rôle. |
+| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais modifier | Critique | Leur rotation invalide les données chiffrées 2FA/OAuth ainsi que l'authentification de l'API interne de Forgejo, ce qui casse les opérations Git et d'API. |
+| `enable_nfs` | `true` | Critique | La désactiver rend éphémères les dépôts, les objets LFS et les pièces jointes — ils sont perdus lors de la recréation du pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE ; la sélection du mode SSL par le point d'entrée en dépend. |
+| `public_domain` / `public_url` | Le véritable nom d'hôte externe | Élevé | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
+| `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | Élevé | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
+| Compte administrateur initial | À créer manuellement après le déploiement | Élevé | Aucun job d'initialisation n'amorce d'administrateur ; tant qu'aucun n'est créé via la CLI Forgejo, l'instance ne dispose d'aucun utilisateur privilégié. |
+| `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Moyen | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |
+| `max_instance_count` | `3` (par défaut) | Moyen | Les réplicas concurrents partagent le même répertoire de données Git sur NFS et la même base de données Postgres ; l'exactitude multi-réplica des écritures concurrentes n'est pas documentée ici — traitez la mise à l'échelle comme pour toute charge de travail sur un système de fichiers partagé. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `storage_buckets` | Laisser tel quel ou définir `create_cloud_storage = false` | Faible | Le bucket par défaut suffixé `data` est provisionné mais inutilisé par Forgejo (toutes les données de l'application résident sur NFS) — un léger coût inutile s'il reste activé sans raison. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `public_domain`/`public_url`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
 
 ---
 

@@ -370,24 +370,24 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration via le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs combinaisons au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ENCRYPTION_KEY` (générée automatiquement) | Ne jamais la renouveler après le premier démarrage | Critical | Son renouvellement rend tous les secrets précédemment stockés définitivement impossibles à déchiffrer. |
-| `AUTH_SECRET` (généré automatiquement) | Ne le renouveler que pendant une fenêtre de maintenance | Critical | Son renouvellement invalide toutes les sessions utilisateur actives. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_redis` | Transmettre `var.enable_redis` inconditionnellement à `App_GKE` | Critical | Le coder en dur à `false` lors de l'appel au socle laisse `REDIS_URL` complètement non défini dans le cas courant sans authentification — Infisical plante au démarrage. |
-| `database_type` | `POSTGRES_15` | Critical | MySQL n'est pas pris en charge ; toute valeur autre que Postgres rompt entièrement la connexion. |
-| `site_url` | À définir après le premier déploiement, une fois l'IP du LoadBalancer/le domaine connus | High | Laissée vide, le `SITE_URL` propre à l'application reste `http://localhost:8080`, ce qui casse les liens d'invitation/d'e-mail et CORS (`admin-bootstrap` résout tout de même `GKE_SERVICE_URL`). Définie sur un hôte qui n'est pas réellement joignable, le job d'amorçage échoue aussi à chaque tentative — aucun compte administrateur n'est jamais créé. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
-| `postgres_extensions` / `enable_postgres_extensions` | N/A | Low | Déclarées mais non transmises à `App_GKE` — les définir n'a aucun effet ; Infisical n'a pas besoin de pgvector. |
-| `smtp_host` / `smtp_user` / `smtp_password` / `mail_from` / `cubejs_api_url` / `hub_api_url` | N/A | Low | Déclarées par souci de parité avec la convention mais jamais transmises à `Infisical_Common` — les définir n'a aucun effet. |
-| `reserve_static_ip` | `true` (par défaut) | Medium | Sans IP stable, `service_url`/`site_url` peuvent référencer une adresse obsolète d'un redéploiement à l'autre. |
-| `memory_limit` | `2Gi` (par défaut) ou plus | Medium | Des valeurs inférieures risquent un OOM sous une charge de récupération de secrets concurrente. |
+| `ENCRYPTION_KEY` (générée automatiquement) | Ne jamais la renouveler après le premier démarrage | Critique | Son renouvellement rend tous les secrets précédemment stockés définitivement impossibles à déchiffrer. |
+| `AUTH_SECRET` (généré automatiquement) | Ne le renouveler que pendant une fenêtre de maintenance | Critique | Son renouvellement invalide toutes les sessions utilisateur actives. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_redis` | Transmettre `var.enable_redis` inconditionnellement à `App_GKE` | Critique | Le coder en dur à `false` lors de l'appel au socle laisse `REDIS_URL` complètement non défini dans le cas courant sans authentification — Infisical plante au démarrage. |
+| `database_type` | `POSTGRES_15` | Critique | MySQL n'est pas pris en charge ; toute valeur autre que Postgres rompt entièrement la connexion. |
+| `site_url` | À définir après le premier déploiement, une fois l'IP du LoadBalancer/le domaine connus | Élevé | Laissée vide, le `SITE_URL` propre à l'application reste `http://localhost:8080`, ce qui casse les liens d'invitation/d'e-mail et CORS (`admin-bootstrap` résout tout de même `GKE_SERVICE_URL`). Définie sur un hôte qui n'est pas réellement joignable, le job d'amorçage échoue aussi à chaque tentative — aucun compte administrateur n'est jamais créé. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
+| `postgres_extensions` / `enable_postgres_extensions` | N/A | Faible | Déclarées mais non transmises à `App_GKE` — les définir n'a aucun effet ; Infisical n'a pas besoin de pgvector. |
+| `smtp_host` / `smtp_user` / `smtp_password` / `mail_from` / `cubejs_api_url` / `hub_api_url` | N/A | Faible | Déclarées par souci de parité avec la convention mais jamais transmises à `Infisical_Common` — les définir n'a aucun effet. |
+| `reserve_static_ip` | `true` (par défaut) | Moyen | Sans IP stable, `service_url`/`site_url` peuvent référencer une adresse obsolète d'un redéploiement à l'autre. |
+| `memory_limit` | `2Gi` (par défaut) ou plus | Moyen | Des valeurs inférieures risquent un OOM sous une charge de récupération de secrets concurrente. |
 
 ---
 

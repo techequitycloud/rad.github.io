@@ -372,27 +372,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `service_type` | `ClusterIP` | Critical | `LoadBalancer` expose publiquement l'API Ollama non authentifiée sur le port 11434. Ollama n'a aucune authentification intégrée. |
-| `container_resources.memory_limit` | `16Gi` (7B) / `8Gi` (3B) | Critical | Une mémoire insuffisante provoque un arrêt OOM en pleine inférence et fait redémarrer le pod en boucle. Allouez au moins 2× la taille des poids quantifiés du modèle. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8Gi`) | Critical | Les entiers nus (par exemple `"4"`) sont interprétés comme des octets par Kubernetes et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_iap` | `true` si `service_type = "LoadBalancer"` | Critical | Sans IAP ni restriction VPC, l'API Ollama est non authentifiée et accessible publiquement. |
-| `container_resources.cpu_limit` | `8` (7B) / `4` (3B) | High | Trop peu de CPU rend la génération de tokens extrêmement lente. Pour une inférence 7B en production, 6–8 cœurs sont nécessaires. |
-| `min_instance_count` | `1` | High | `0` active la mise à l'échelle à zéro mais provoque des démarrages à froid de 60–120 s pendant le rechargement du modèle depuis GCS. |
-| `model_pull_timeout_seconds` | `3600` | High | Un délai trop court fait échouer le job model-pull avant la fin du téléchargement pour les modèles de plus de 2 GB. |
-| `deployment_timeout` | `600` | High | Trop court pour un grand modèle (13B et plus) chargé depuis GCS au premier démarrage. Passez à `1200`. |
-| `max_instance_count` | `3` | High | Chaque pod charge indépendamment le modèle complet en mémoire. Trois réplicas 7B requièrent environ 48 GiB. |
-| `default_model` | le modèle souhaité | Medium | Laisser vide est sans danger pour le déploiement initial, mais l'API renvoie une erreur sur toutes les requêtes d'inférence tant qu'aucun modèle n'a été téléchargé manuellement. |
-| `environment_variables.OLLAMA_NUM_PARALLEL` | `2`–`4` pour un usage partagé | Medium | La valeur par défaut `1` sérialise toutes les requêtes. Augmentez-la pour les déploiements de cluster partagés avec des appelants simultanés. |
-| `environment_variables.OLLAMA_KEEP_ALIVE` | `24h` (injectée automatiquement) | Medium | La valeur par défaut propre à Ollama (`5m`) évince les modèles de la mémoire après une période d'inactivité, ce qui entraîne des délais de rechargement de 30–60 s. Le module injecte automatiquement `24h`. |
-| `enable_pod_disruption_budget` | `true` | Medium | Avec `pdb_min_available = 1` et un seul réplica, les mises à niveau progressives des nœuds se bloquent. Assurez-vous que `max_instance_count ≥ 2`. |
-| `enable_resource_quota` | à activer pour les clusters partagés | Medium | Sans ResourceQuota, un pod mal configuré peut consommer toutes les ressources du cluster. |
-| options de montage de `gcs_volumes` | inclure `implicit-dirs` | Medium | Sans `implicit-dirs`, les listages de répertoires GCS Fuse échouent et Ollama ne peut pas découvrir les modèles en cache. |
-| `enable_image_mirroring` | `true` | Medium | La désactivation entraîne des téléchargements depuis Docker Hub, soumis à des limites de débit. Conservez `true` en production. |
+| `service_type` | `ClusterIP` | Critique | `LoadBalancer` expose publiquement l'API Ollama non authentifiée sur le port 11434. Ollama n'a aucune authentification intégrée. |
+| `container_resources.memory_limit` | `16Gi` (7B) / `8Gi` (3B) | Critique | Une mémoire insuffisante provoque un arrêt OOM en pleine inférence et fait redémarrer le pod en boucle. Allouez au moins 2× la taille des poids quantifiés du modèle. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8Gi`) | Critique | Les entiers nus (par exemple `"4"`) sont interprétés comme des octets par Kubernetes et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_iap` | `true` si `service_type = "LoadBalancer"` | Critique | Sans IAP ni restriction VPC, l'API Ollama est non authentifiée et accessible publiquement. |
+| `container_resources.cpu_limit` | `8` (7B) / `4` (3B) | Élevé | Trop peu de CPU rend la génération de tokens extrêmement lente. Pour une inférence 7B en production, 6–8 cœurs sont nécessaires. |
+| `min_instance_count` | `1` | Élevé | `0` active la mise à l'échelle à zéro mais provoque des démarrages à froid de 60–120 s pendant le rechargement du modèle depuis GCS. |
+| `model_pull_timeout_seconds` | `3600` | Élevé | Un délai trop court fait échouer le job model-pull avant la fin du téléchargement pour les modèles de plus de 2 GB. |
+| `deployment_timeout` | `600` | Élevé | Trop court pour un grand modèle (13B et plus) chargé depuis GCS au premier démarrage. Passez à `1200`. |
+| `max_instance_count` | `3` | Élevé | Chaque pod charge indépendamment le modèle complet en mémoire. Trois réplicas 7B requièrent environ 48 GiB. |
+| `default_model` | le modèle souhaité | Moyen | Laisser vide est sans danger pour le déploiement initial, mais l'API renvoie une erreur sur toutes les requêtes d'inférence tant qu'aucun modèle n'a été téléchargé manuellement. |
+| `environment_variables.OLLAMA_NUM_PARALLEL` | `2`–`4` pour un usage partagé | Moyen | La valeur par défaut `1` sérialise toutes les requêtes. Augmentez-la pour les déploiements de cluster partagés avec des appelants simultanés. |
+| `environment_variables.OLLAMA_KEEP_ALIVE` | `24h` (injectée automatiquement) | Moyen | La valeur par défaut propre à Ollama (`5m`) évince les modèles de la mémoire après une période d'inactivité, ce qui entraîne des délais de rechargement de 30–60 s. Le module injecte automatiquement `24h`. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Avec `pdb_min_available = 1` et un seul réplica, les mises à niveau progressives des nœuds se bloquent. Assurez-vous que `max_instance_count ≥ 2`. |
+| `enable_resource_quota` | à activer pour les clusters partagés | Moyen | Sans ResourceQuota, un pod mal configuré peut consommer toutes les ressources du cluster. |
+| options de montage de `gcs_volumes` | inclure `implicit-dirs` | Moyen | Sans `implicit-dirs`, les listages de répertoires GCS Fuse échouent et Ollama ne peut pas découvrir les modèles en cache. |
+| `enable_image_mirroring` | `true` | Moyen | La désactivation entraîne des téléchargements depuis Docker Hub, soumis à des limites de débit. Conservez `true` en production. |
 
 ---
 

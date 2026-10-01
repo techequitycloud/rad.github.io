@@ -300,8 +300,8 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du
 > socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment
@@ -310,13 +310,13 @@ ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| S'attendre à ce que ce déploiement soit un résolveur DNS | Ne pas faire pointer les paramètres DNS des clients vers ce déploiement | **Critical** | Le port 53/udp+tcp n'est jamais exposé par l'ingress HTTP(S) uniquement de Cloud Run — les requêtes DNS adressées à ce déploiement échouent tout simplement ; seules la console web et l'API sont joignables. |
-| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | Critical | Sans IAP, la console n'est protégée que par son propre mot de passe administrateur sur l'internet public — un seul identifiant divulgué ou faible donne un accès complet à la gestion DNS. |
-| Rotation de `DNS_SERVER_ADMIN_PASSWORD` | Modifier le mot de passe depuis la console après la première connexion | High | Technitium ne relit jamais la variable d'environnement après le premier démarrage — effectuer la rotation de la seule valeur dans Secret Manager ne modifie PAS le mot de passe effectif de la console. |
-| Volume GCS sur `/etc/dns` | Laisser `enable_gcs_storage_volume` activé (par défaut) | Critical | Sans volume persistant monté, le système de fichiers racine en lecture seule de Cloud Run empêcherait toute modification de configuration ou de zone de survivre à un redémarrage ou à un redéploiement. |
-| `ingress_settings` | `all` pour l'accès à la console, `internal` derrière IAP/VPN uniquement si c'est l'intention | Medium | `internal` bloque tout accès externe à la console, y compris celui de l'opérateur, sauf s'il existe un chemin via VPN ou bastion. |
-| `min_instance_count` | `0` (par défaut) convient pour un usage d'administration occasionnel | Low | Les démarrages à froid ajoutent quelques secondes de latence à la première requête après une période d'inactivité ; passez à `1` uniquement si cela compte. |
-| `application_version` | Épingler une version explicite en production | Low | `latest` suit les versions publiées en amont ; épinglez explicitement pour maîtriser le calendrier des mises à niveau. |
+| S'attendre à ce que ce déploiement soit un résolveur DNS | Ne pas faire pointer les paramètres DNS des clients vers ce déploiement | **Critique** | Le port 53/udp+tcp n'est jamais exposé par l'ingress HTTP(S) uniquement de Cloud Run — les requêtes DNS adressées à ce déploiement échouent tout simplement ; seules la console web et l'API sont joignables. |
+| `enable_iap` | `true` pour tout usage au-delà d'un test rapide | Critique | Sans IAP, la console n'est protégée que par son propre mot de passe administrateur sur l'internet public — un seul identifiant divulgué ou faible donne un accès complet à la gestion DNS. |
+| Rotation de `DNS_SERVER_ADMIN_PASSWORD` | Modifier le mot de passe depuis la console après la première connexion | Élevé | Technitium ne relit jamais la variable d'environnement après le premier démarrage — effectuer la rotation de la seule valeur dans Secret Manager ne modifie PAS le mot de passe effectif de la console. |
+| Volume GCS sur `/etc/dns` | Laisser `enable_gcs_storage_volume` activé (par défaut) | Critique | Sans volume persistant monté, le système de fichiers racine en lecture seule de Cloud Run empêcherait toute modification de configuration ou de zone de survivre à un redémarrage ou à un redéploiement. |
+| `ingress_settings` | `all` pour l'accès à la console, `internal` derrière IAP/VPN uniquement si c'est l'intention | Moyen | `internal` bloque tout accès externe à la console, y compris celui de l'opérateur, sauf s'il existe un chemin via VPN ou bastion. |
+| `min_instance_count` | `0` (par défaut) convient pour un usage d'administration occasionnel | Faible | Les démarrages à froid ajoutent quelques secondes de latence à la première requête après une période d'inactivité ; passez à `1` uniquement si cela compte. |
+| `application_version` | Épingler une version explicite en production | Faible | `latest` suit les versions publiées en amont ; épinglez explicitement pour maîtriser le calendrier des mises à niveau. |
 
 ---
 

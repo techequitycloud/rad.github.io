@@ -305,26 +305,26 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 Les validations au moment du plan dans `validation.tf` détectent tôt les pires combinaisons : ordre entre minimum et maximum d'instances, Redis sans hôte, moteurs autres que PostgreSQL, et side-car de proxy Cloud SQL avec `database_type = "NONE"`.
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Coder exige PostgreSQL 13+ ; MySQL est rejeté au moment du plan. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les modèles, espaces de travail, utilisateurs et clés de signature. |
-| `container_image_source` | `custom` | Critical | L'image en amont ne peut pas assembler `CODER_PG_CONNECTION_URL` à partir des variables `DB_*` du socle — le serveur ne se connecte jamais à PostgreSQL. |
-| `container_port` | `3000` | Critical | Doit correspondre à `CODER_HTTP_ADDRESS = 0.0.0.0:3000` ; une incohérence fait échouer toutes les sondes de santé. |
-| `cpu_always_allocated` | `true` | High | Avec la facturation à la requête, les démons de provisionnement intégrés sont limités à ~0 entre les requêtes — les builds d'espaces de travail se bloquent sans aucun message. |
-| `min_instance_count` | `1` | High | À `0`, le plan de contrôle est mis à l'échelle à zéro et aucun provisionneur n'interroge — les builds d'espaces de travail en file d'attente attendent qu'une requête entrante réveille une instance. |
-| `memory_limit` | `4Gi` (≥ `2Gi`) | High | En dessous de 2Gi, le serveur Go risque un OOM lors des pics de builds d'espaces de travail et des importations de modèles. |
-| `application_version` | tag épinglé (par ex. `v2.24.1`) | High | Les tags GHCR de Coder sont préfixés selon semver (`vX.Y.Z`) ; `latest` est associé à un tag épinglé par le module — ne le remplacez que par un tag réel. |
-| `startup_probe` chemin / délai | `/healthz`, 60s | High | Pointer les sondes vers un chemin authentifié renvoie 401/403 et la révision ne devient jamais prête ; réduire le seuil interrompt les premiers démarrages en pleine migration. |
-| `CODER_ACCESS_URL` (via `environment_variables`) | URL du service (auto) ou domaine personnalisé | High | Une URL d'accès erronée casse les connexions des agents d'espace de travail et les URI de redirection OAuth — définissez-la explicitement lorsque vous placez un domaine personnalisé en amont. |
-| `enable_nfs` / `nfs_mount_path` | `false` / véritable répertoire | High | NFS est inutile ; s'il est activé, un montage sous `/opt/coder` masque le binaire coder et le conteneur ne peut pas démarrer. |
-| `enable_redis` | `false` | Medium | Coder ne lit jamais Redis ; l'activer provisionne un point de terminaison que rien n'utilise. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les équipes privées | Medium | Tant que le premier compte administrateur n'est pas créé, la page de configuration est accessible publiquement à l'URL `run.app`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Medium | L'activer sans `backup_file` valide fait échouer la tâche d'importation. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | Coder exige PostgreSQL 13+ ; MySQL est rejeté au moment du plan. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les modèles, espaces de travail, utilisateurs et clés de signature. |
+| `container_image_source` | `custom` | Critique | L'image en amont ne peut pas assembler `CODER_PG_CONNECTION_URL` à partir des variables `DB_*` du socle — le serveur ne se connecte jamais à PostgreSQL. |
+| `container_port` | `3000` | Critique | Doit correspondre à `CODER_HTTP_ADDRESS = 0.0.0.0:3000` ; une incohérence fait échouer toutes les sondes de santé. |
+| `cpu_always_allocated` | `true` | Élevé | Avec la facturation à la requête, les démons de provisionnement intégrés sont limités à ~0 entre les requêtes — les builds d'espaces de travail se bloquent sans aucun message. |
+| `min_instance_count` | `1` | Élevé | À `0`, le plan de contrôle est mis à l'échelle à zéro et aucun provisionneur n'interroge — les builds d'espaces de travail en file d'attente attendent qu'une requête entrante réveille une instance. |
+| `memory_limit` | `4Gi` (≥ `2Gi`) | Élevé | En dessous de 2Gi, le serveur Go risque un OOM lors des pics de builds d'espaces de travail et des importations de modèles. |
+| `application_version` | tag épinglé (par ex. `v2.24.1`) | Élevé | Les tags GHCR de Coder sont préfixés selon semver (`vX.Y.Z`) ; `latest` est associé à un tag épinglé par le module — ne le remplacez que par un tag réel. |
+| `startup_probe` chemin / délai | `/healthz`, 60s | Élevé | Pointer les sondes vers un chemin authentifié renvoie 401/403 et la révision ne devient jamais prête ; réduire le seuil interrompt les premiers démarrages en pleine migration. |
+| `CODER_ACCESS_URL` (via `environment_variables`) | URL du service (auto) ou domaine personnalisé | Élevé | Une URL d'accès erronée casse les connexions des agents d'espace de travail et les URI de redirection OAuth — définissez-la explicitement lorsque vous placez un domaine personnalisé en amont. |
+| `enable_nfs` / `nfs_mount_path` | `false` / véritable répertoire | Élevé | NFS est inutile ; s'il est activé, un montage sous `/opt/coder` masque le binaire coder et le conteneur ne peut pas démarrer. |
+| `enable_redis` | `false` | Moyen | Coder ne lit jamais Redis ; l'activer provisionne un point de terminaison que rien n'utilise. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les équipes privées | Moyen | Tant que le premier compte administrateur n'est pas créé, la page de configuration est accessible publiquement à l'URL `run.app`. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Moyen | L'activer sans `backup_file` valide fait échouer la tâche d'importation. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 

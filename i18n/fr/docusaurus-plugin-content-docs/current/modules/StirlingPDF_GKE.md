@@ -412,22 +412,22 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un StatefulSet imposé avec un type de charge de travail `Deployment`, des `quota_memory_*` exprimés dans des unités non binaires, un `redis_port`/`timeout_seconds` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | High | La valeur par défaut `enable_login = false` associée à un LoadBalancer externe laisse une boîte à outils PDF ouverte, utilisable par quiconque connaît l'adresse IP. |
-| `enable_iap` | À activer pour les instances traitant des documents sensibles | High | Sans IAP (et avec la connexion désactivée), la charge de travail n'est pas authentifiée ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
-| `container_resources.memory_limit` | `2Gi` | High | En dessous d'environ 2Gi, la JVM et LibreOffice sont arrêtés pour manque de mémoire (OOM) pendant les conversions. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `timeout_seconds` | `60`, à augmenter pour les gros fichiers | High | Les traitements volumineux d'OCR/de conversion qui dépassent le délai renvoient une erreur 504 en cours d'opération. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette `0`. |
-| Fenêtre de `startup_probe` | Conserver la valeur par défaut d'environ 5 minutes | Medium | La raccourcir marque les pods comme non sains avant que LibreOffice n'ait terminé son préchauffage, ce qui bloque le déploiement progressif. |
-| `enable_cloud_armor` | À activer pour les instances publiques | Medium | Une boîte à outils publique sans WAF est exposée aux abus et aux analyses. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | Élevé | La valeur par défaut `enable_login = false` associée à un LoadBalancer externe laisse une boîte à outils PDF ouverte, utilisable par quiconque connaît l'adresse IP. |
+| `enable_iap` | À activer pour les instances traitant des documents sensibles | Élevé | Sans IAP (et avec la connexion désactivée), la charge de travail n'est pas authentifiée ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
+| `container_resources.memory_limit` | `2Gi` | Élevé | En dessous d'environ 2Gi, la JVM et LibreOffice sont arrêtés pour manque de mémoire (OOM) pendant les conversions. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `timeout_seconds` | `60`, à augmenter pour les gros fichiers | Élevé | Les traitements volumineux d'OCR/de conversion qui dépassent le délai renvoient une erreur 504 en cours d'opération. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette `0`. |
+| Fenêtre de `startup_probe` | Conserver la valeur par défaut d'environ 5 minutes | Moyen | La raccourcir marque les pods comme non sains avant que LibreOffice n'ait terminé son préchauffage, ce qui bloque le déploiement progressif. |
+| `enable_cloud_armor` | À activer pour les instances publiques | Moyen | Une boîte à outils publique sans WAF est exposée aux abus et aux analyses. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
 
 ---
 

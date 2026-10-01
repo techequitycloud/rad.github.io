@@ -375,26 +375,26 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution. ClassicPress exécute également ses propres préconditions (`validation.tf`) pour `upload_max_filesize ≤ post_max_size`, `min_instance_count ≤ max_instance_count`, Redis sans source d'hôte, IAP sans identifiants OAuth, et `enable_cloudsql_volume` avec `database_type = "NONE"`.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Le job `db-init` et le point d'entrée de `ClassicPress_Common` sont propres à MySQL ; les surcharger avec un moteur Postgres/SQL Server casse les deux. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `CLASSICPRESS_SALT_SEED` (généré automatiquement) | Ne jamais modifier | Critical | Modifier la graine après le premier démarrage invalide tous les cookies signés et toutes les sessions connectées. |
-| `stateful_pvc_size` / `stateful_pvc_mount_path` | `10Gi` / `/var/www/html` | Critical | Ce PVC contient toute l'installation (code + uploads) — le réduire ou perdre le PVC détruit le site ; le chemin de montage doit correspondre à l'emplacement où écrit le point d'entrée de ClassicPress. |
-| `max_instance_count` | `1` | High | Chaque pod du StatefulSet obtient son propre PVC ; dépasser 1 donne à chaque réplica une copie distincte et divergente du site plutôt qu'une copie partagée. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est nécessaire à la connectivité à la base de données sur GKE. |
-| `enable_nfs` | `true` | Low | Provisionne et facture une instance Filestore montée sur `/var/www/html/wp-content` — le mécanisme confirmé de persistance des uploads/extensions/thèmes (voir la [section 3](#3-classicpress-application-behaviour)), en plus de la persistance par pod du PVC du StatefulSet pour le reste de la racine web. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Consomme le quota régional serré `SSD_TOTAL_GB`. Surchargez avec `standard` (HDD `pd-standard`) sur les projets dont le quota est limité — suffisant pour une charge de travail PHP/MySQL à faible IOPS. |
-| Configuration de l'administrateur au premier lancement | Terminer `/wp-admin/install.php` rapidement après le déploiement | Medium | Tant que l'installateur n'a pas été exécuté, le site n'a ni schéma ni compte administrateur — il n'existe aucun secret de mot de passe administrateur généré permettant de récupérer l'accès. |
-| `memory_limit` | `2Gi` | Medium | En dessous d'environ 512Mi, le pod PHP/Apache risque un OOM sous charge ou avec des extensions plus lourdes. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de site codée en dur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Le job `db-init` et le point d'entrée de `ClassicPress_Common` sont propres à MySQL ; les surcharger avec un moteur Postgres/SQL Server casse les deux. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `CLASSICPRESS_SALT_SEED` (généré automatiquement) | Ne jamais modifier | Critique | Modifier la graine après le premier démarrage invalide tous les cookies signés et toutes les sessions connectées. |
+| `stateful_pvc_size` / `stateful_pvc_mount_path` | `10Gi` / `/var/www/html` | Critique | Ce PVC contient toute l'installation (code + uploads) — le réduire ou perdre le PVC détruit le site ; le chemin de montage doit correspondre à l'emplacement où écrit le point d'entrée de ClassicPress. |
+| `max_instance_count` | `1` | Élevé | Chaque pod du StatefulSet obtient son propre PVC ; dépasser 1 donne à chaque réplica une copie distincte et divergente du site plutôt qu'une copie partagée. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est nécessaire à la connectivité à la base de données sur GKE. |
+| `enable_nfs` | `true` | Faible | Provisionne et facture une instance Filestore montée sur `/var/www/html/wp-content` — le mécanisme confirmé de persistance des uploads/extensions/thèmes (voir la [section 3](#3-classicpress-application-behaviour)), en plus de la persistance par pod du PVC du StatefulSet pour le reste de la racine web. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Moyen | Consomme le quota régional serré `SSD_TOTAL_GB`. Surchargez avec `standard` (HDD `pd-standard`) sur les projets dont le quota est limité — suffisant pour une charge de travail PHP/MySQL à faible IOPS. |
+| Configuration de l'administrateur au premier lancement | Terminer `/wp-admin/install.php` rapidement après le déploiement | Moyen | Tant que l'installateur n'a pas été exécuté, le site n'a ni schéma ni compte administrateur — il n'existe aucun secret de mot de passe administrateur généré permettant de récupérer l'accès. |
+| `memory_limit` | `2Gi` | Moyen | En dessous d'environ 512Mi, le pod PHP/Apache risque un OOM sous charge ou avec des extensions plus lourdes. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toute URL de site codée en dur. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

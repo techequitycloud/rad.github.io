@@ -395,27 +395,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé :
-> service dégradé) — **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible :
-> mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (> service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (> mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend illisibles toutes les sessions existantes et toutes les colonnes chiffrées de la base de données. |
-| `db_name` / `db_user` | Définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_nfs` | `true` | Critical | Le désactiver place les pièces jointes sur un disque éphémère — elles sont perdues à chaque révision/redéploiement. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_cloudsql_volume` | `false` sur Cloud Run | High | Activer le socket rend le DSN sous forme d'URL de Rails impossible à analyser (les deux-points du socket cassent l'URL) ; l'application ne parvient pas à se connecter. |
-| `startup_probe.type` | `TCP` | High | Une sonde de démarrage HTTP se heurte au Host Authorization de Rails (`400 Invalid host_name`) et ne réussit jamais — la révision ne devient jamais Ready alors que Puma est sain. |
-| `liveness_probe.enabled` | `false` | High | Une sonde de vivacité HTTP reçoit `400` du Host Authorization et fait redémarrer en boucle un conteneur sain. |
-| `memory_limit` | `4Gi` | High | Les migrations et les workers dans le processus subissent des arrêts OOM en dessous d'environ 2 GiB. |
-| `cpu_always_allocated` | `true` | Medium | Définir `false` réduit le worker/cron `good_job` à environ 0 entre les requêtes — les e-mails et notifications en arrière-plan sont bloqués. Ne revenez en arrière qu'avec un point de terminaison cron externe Cloud Scheduler. |
-| `application_version` | Épingler une version majeure (`16`) | Medium | `latest` n'a pas de tag d'image sur Docker Hub ; le module l'épingle sur `16`. Épinglez explicitement une version pour maîtriser les mises à niveau. |
-| `min_instance_count` | `1` | Medium | Ne définissez `0` qu'en association avec `cpu_always_allocated = false` et un cron externe — sinon les jobs en arrière-plan s'arrêtent entre les requêtes. |
-| `enable_iap` | selon les besoins | Medium | IAP bloque tout accès non authentifié, y compris à l'API ; ne l'activez que si c'est l'effet recherché. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend illisibles toutes les sessions existantes et toutes les colonnes chiffrées de la base de données. |
+| `db_name` / `db_user` | Définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_nfs` | `true` | Critique | Le désactiver place les pièces jointes sur un disque éphémère — elles sont perdues à chaque révision/redéploiement. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_cloudsql_volume` | `false` sur Cloud Run | Élevé | Activer le socket rend le DSN sous forme d'URL de Rails impossible à analyser (les deux-points du socket cassent l'URL) ; l'application ne parvient pas à se connecter. |
+| `startup_probe.type` | `TCP` | Élevé | Une sonde de démarrage HTTP se heurte au Host Authorization de Rails (`400 Invalid host_name`) et ne réussit jamais — la révision ne devient jamais Ready alors que Puma est sain. |
+| `liveness_probe.enabled` | `false` | Élevé | Une sonde de vivacité HTTP reçoit `400` du Host Authorization et fait redémarrer en boucle un conteneur sain. |
+| `memory_limit` | `4Gi` | Élevé | Les migrations et les workers dans le processus subissent des arrêts OOM en dessous d'environ 2 GiB. |
+| `cpu_always_allocated` | `true` | Moyen | Définir `false` réduit le worker/cron `good_job` à environ 0 entre les requêtes — les e-mails et notifications en arrière-plan sont bloqués. Ne revenez en arrière qu'avec un point de terminaison cron externe Cloud Scheduler. |
+| `application_version` | Épingler une version majeure (`16`) | Moyen | `latest` n'a pas de tag d'image sur Docker Hub ; le module l'épingle sur `16`. Épinglez explicitement une version pour maîtriser les mises à niveau. |
+| `min_instance_count` | `1` | Moyen | Ne définissez `0` qu'en association avec `cpu_always_allocated = false` et un cron externe — sinon les jobs en arrière-plan s'arrêtent entre les requêtes. |
+| `enable_iap` | selon les besoins | Moyen | IAP bloque tout accès non authentifié, y compris à l'API ; ne l'activez que si c'est l'effet recherché. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
 
 ---
 

@@ -381,24 +381,24 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Tout autre moteur empêche le démarrage d'Unleash — il ne prend en charge que PostgreSQL. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données des flags. |
-| `DATABASE_SSL_REJECT_UNAUTHORIZED` (auto) | Conserver `true` sur IP privée | Critical | Désactiver la vérification des certificats sur une connexion TCP par IP privée affaiblit la sécurité du transport. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| Chemin de `startup_probe` / `liveness_probe` | `/health` | High | Diriger une sonde vers `/api/admin/*` renvoie 401/403 et la révision ne devient jamais Ready. |
-| `enable_iap` | uniquement en l'absence de trafic SDK | High | IAP bloque toutes les requêtes non authentifiées, y compris les appels SDK/CI authentifiés par jeton vers l'API Unleash. |
-| `ingress_settings` | `all` | High | `internal` empêche les clients SDK externes et la CI d'atteindre l'API Unleash. |
-| `INIT_ADMIN_API_TOKENS` (auto) | À récupérer dans Secret Manager | Medium | Le jeton enregistré accorde des droits d'administration complets sur l'API — traitez-le comme un secret et effectuez sa rotation s'il est exposé. |
-| Identifiants par défaut de l'interface `admin` / `unleash4all` | À modifier à la première connexion | High | Conserver le mot de passe par défaut expose le contrôle administrateur complet de tous les flags. |
-| `min_instance_count` | `0` (défaut) ou `1` | Medium | La mise à l'échelle à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | Tout autre moteur empêche le démarrage d'Unleash — il ne prend en charge que PostgreSQL. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données des flags. |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` (auto) | Conserver `true` sur IP privée | Critique | Désactiver la vérification des certificats sur une connexion TCP par IP privée affaiblit la sécurité du transport. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| Chemin de `startup_probe` / `liveness_probe` | `/health` | Élevé | Diriger une sonde vers `/api/admin/*` renvoie 401/403 et la révision ne devient jamais Ready. |
+| `enable_iap` | uniquement en l'absence de trafic SDK | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les appels SDK/CI authentifiés par jeton vers l'API Unleash. |
+| `ingress_settings` | `all` | Élevé | `internal` empêche les clients SDK externes et la CI d'atteindre l'API Unleash. |
+| `INIT_ADMIN_API_TOKENS` (auto) | À récupérer dans Secret Manager | Moyen | Le jeton enregistré accorde des droits d'administration complets sur l'API — traitez-le comme un secret et effectuez sa rotation s'il est exposé. |
+| Identifiants par défaut de l'interface `admin` / `unleash4all` | À modifier à la première connexion | Élevé | Conserver le mot de passe par défaut expose le contrôle administrateur complet de tous les flags. |
+| `min_instance_count` | `0` (défaut) ou `1` | Moyen | La mise à l'échelle à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

@@ -399,25 +399,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres instances (bus de messages interne au processus). |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans sauvegarde valide fait échouer la tâche d'import. |
-| `cpu_always_allocated` | `true` | High | Avec une facturation à la requête, le CPU est bridé entre les requêtes et la diffusion des flux WebSocket se bloque pendant l'inactivité. |
-| `container_port` | `80` | High | Gotify écoute sur le port 80 ; un port différent fait échouer la sonde de démarrage et la révision ne sert jamais de trafic. |
-| `memory_limit` | `512Mi` | High | En dessous du minimum gen2 de 512 MiB, le plan est rejeté. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro interrompt tous les flux WebSocket actifs chaque fois que l'instance est récupérée. |
-| `ingress_settings` | `all` | High | La valeur `internal` empêche les émetteurs et récepteurs externes d'atteindre le service. |
-| `enable_iap` | uniquement lorsque les appelants de l'API présentent une identité | High | IAP exige une identité Google sur chaque requête, ce qui bloque les appelants qui envoient ou reçoivent uniquement par jeton. |
-| `GOTIFY_DEFAULTUSER_PASS` (généré automatiquement) | Modifier le mot de passe administrateur après la première connexion | High | Le mot de passe d'initialisation ne s'applique qu'à la première initialisation ; laisser le mot de passe administrateur par défaut inchangé constitue une exposition permanente d'identifiants. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | L'API et l'interface sont accessibles publiquement sans protection WAF. |
+| `max_instance_count` | `1` | Critique | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres instances (bus de messages interne au processus). |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer la tâche d'import. |
+| `cpu_always_allocated` | `true` | Élevé | Avec une facturation à la requête, le CPU est bridé entre les requêtes et la diffusion des flux WebSocket se bloque pendant l'inactivité. |
+| `container_port` | `80` | Élevé | Gotify écoute sur le port 80 ; un port différent fait échouer la sonde de démarrage et la révision ne sert jamais de trafic. |
+| `memory_limit` | `512Mi` | Élevé | En dessous du minimum gen2 de 512 MiB, le plan est rejeté. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro interrompt tous les flux WebSocket actifs chaque fois que l'instance est récupérée. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` empêche les émetteurs et récepteurs externes d'atteindre le service. |
+| `enable_iap` | uniquement lorsque les appelants de l'API présentent une identité | Élevé | IAP exige une identité Google sur chaque requête, ce qui bloque les appelants qui envoient ou reçoivent uniquement par jeton. |
+| `GOTIFY_DEFAULTUSER_PASS` (généré automatiquement) | Modifier le mot de passe administrateur après la première connexion | Élevé | Le mot de passe d'initialisation ne s'applique qu'à la première initialisation ; laisser le mot de passe administrateur par défaut inchangé constitue une exposition permanente d'identifiants. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'API et l'interface sont accessibles publiquement sans protection WAF. |
 
 ---
 

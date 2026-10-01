@@ -327,8 +327,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur
 > du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -341,18 +341,18 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Clés AES-256 (`WF_KEY_*`, générées automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Une rotation déconnecte tous les utilisateurs et rend indéchiffrables les données d'e-mail chiffrées. |
-| `db_name` / `db_user` | Défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `database_type` | `MYSQL_8_0` | Critical | Changer de moteur après le premier déploiement rend orphelines les données existantes. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `container_image_source` | `custom` | High | Définir `prebuilt` sans image intégrant le point d'entrée de génération de configuration produit un conteneur incapable de produire `config.ini`, qui ne démarre pas. |
-| `enable_cloudsql_volume` | `false` | High | Sur Cloud Run, imposer le socket sans logique de point d'entrée adaptée rompt la connectivité MySQL ; le TCP sur IP privée est le chemin testé. |
-| `application_version` | Figer une version | Medium | `latest` peut changer l'image de base d'un redéploiement à l'autre ; figer la version garantit des builds reproductibles. |
-| `ingress_settings` | `all` | Medium | `internal` rend le blog injoignable depuis l'Internet public. |
-| `enable_iap` | Désactivé pour un blog public | Medium | IAP bloque tous les lecteurs non authentifiés. |
-| `min_instance_count` | `1` pour un service toujours prêt | Medium | La mise à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| `WF_OPEN_REGISTRATION` | `false` après le premier administrateur | Medium | Laisser l'inscription ouverte permet à quiconque possède l'URL de créer un compte. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
+| Clés AES-256 (`WF_KEY_*`, générées automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Une rotation déconnecte tous les utilisateurs et rend indéchiffrables les données d'e-mail chiffrées. |
+| `db_name` / `db_user` | Défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `database_type` | `MYSQL_8_0` | Critique | Changer de moteur après le premier déploiement rend orphelines les données existantes. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `container_image_source` | `custom` | Élevé | Définir `prebuilt` sans image intégrant le point d'entrée de génération de configuration produit un conteneur incapable de produire `config.ini`, qui ne démarre pas. |
+| `enable_cloudsql_volume` | `false` | Élevé | Sur Cloud Run, imposer le socket sans logique de point d'entrée adaptée rompt la connectivité MySQL ; le TCP sur IP privée est le chemin testé. |
+| `application_version` | Figer une version | Moyen | `latest` peut changer l'image de base d'un redéploiement à l'autre ; figer la version garantit des builds reproductibles. |
+| `ingress_settings` | `all` | Moyen | `internal` rend le blog injoignable depuis l'Internet public. |
+| `enable_iap` | Désactivé pour un blog public | Moyen | IAP bloque tous les lecteurs non authentifiés. |
+| `min_instance_count` | `1` pour un service toujours prêt | Moyen | La mise à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| `WF_OPEN_REGISTRATION` | `false` après le premier administrateur | Moyen | Laisser l'inscription ouverte permet à quiconque possède l'URL de créer un compte. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
 
 ---
 

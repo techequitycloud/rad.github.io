@@ -382,24 +382,24 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identifiants OAuth, `enable_cloudsql_volume = true` avec `database_type = "NONE"`, `min_instance_count > max_instance_count`, `quota_memory_*` sans unités binaires. Le fichier `validation.tf` propre à la variante GKE applique ces gardes. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` (pour un historique durable) | Préférez plutôt `stateful_pvc_enabled` | Critical | Gatus code en dur le mode de journalisation WAL de SQLite, que la documentation de SQLite elle-même indique comme non pris en charge sur les systèmes de fichiers réseau — un historique sur NFS risque une corruption silencieuse au fil du temps. |
-| `stateful_pvc_mount_path` | `/data` | High | Monter le PVC ailleurs que dans le répertoire `storage.path` intégré de Gatus rend persistant le mauvais chemin, et l'historique reste éphémère. |
-| `stateful_pvc_storage_class` | `standard` (HDD) | Medium | La classe par défaut adossée au SSD (`standard-rwo`) consomme le quota régional serré `SSD_TOTAL_GB` pour une charge de travail qui n'a pas besoin des IOPS d'un SSD. |
-| `max_instance_count` | `1` | High | Au-delà de 1, chaque réplica interroge indépendamment tous les points de terminaison, ce qui duplique les notifications d'alerte sans aucune coordination entre les instances. |
-| `enable_cloudsql_volume` | `false` | High | Le définir sur `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à joindre — rejeté par la garde au moment du plan. |
-| `enable_iap` | uniquement si l'accès doit être authentifié | High | IAP exige une connexion Google pour chaque requête, ce qui bloque la consultation non authentifiée de la page de statut. |
-| `min_instance_count` | `1` | High | GKE exige un minimum d'au moins 1 ; la garde de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour servir la page de statut. |
-| Bloc `security` de Gatus dans `config.yaml` | À configurer si la page contient des noms de points de terminaison sensibles | Medium | Laissée par défaut, la page de statut (y compris les noms de tous les points de terminaison configurés et leur historique de disponibilité) est visible publiquement par toute personne disposant de l'adresse IP externe. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `application_version` | Épinglez `v5.x.y` en production | Low | `latest` correspond à une base épinglée (`v5.36.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
+| `enable_nfs` (pour un historique durable) | Préférez plutôt `stateful_pvc_enabled` | Critique | Gatus code en dur le mode de journalisation WAL de SQLite, que la documentation de SQLite elle-même indique comme non pris en charge sur les systèmes de fichiers réseau — un historique sur NFS risque une corruption silencieuse au fil du temps. |
+| `stateful_pvc_mount_path` | `/data` | Élevé | Monter le PVC ailleurs que dans le répertoire `storage.path` intégré de Gatus rend persistant le mauvais chemin, et l'historique reste éphémère. |
+| `stateful_pvc_storage_class` | `standard` (HDD) | Moyen | La classe par défaut adossée au SSD (`standard-rwo`) consomme le quota régional serré `SSD_TOTAL_GB` pour une charge de travail qui n'a pas besoin des IOPS d'un SSD. |
+| `max_instance_count` | `1` | Élevé | Au-delà de 1, chaque réplica interroge indépendamment tous les points de terminaison, ce qui duplique les notifications d'alerte sans aucune coordination entre les instances. |
+| `enable_cloudsql_volume` | `false` | Élevé | Le définir sur `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à joindre — rejeté par la garde au moment du plan. |
+| `enable_iap` | uniquement si l'accès doit être authentifié | Élevé | IAP exige une connexion Google pour chaque requête, ce qui bloque la consultation non authentifiée de la page de statut. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum d'au moins 1 ; la garde de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour servir la page de statut. |
+| Bloc `security` de Gatus dans `config.yaml` | À configurer si la page contient des noms de points de terminaison sensibles | Moyen | Laissée par défaut, la page de statut (y compris les noms de tous les points de terminaison configurés et leur historique de disponibilité) est visible publiquement par toute personne disposant de l'adresse IP externe. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `application_version` | Épinglez `v5.x.y` en production | Faible | `latest` correspond à une base épinglée (`v5.36.0`) ; épinglez explicitement pour maîtriser les mises à niveau. |
 
 ---
 

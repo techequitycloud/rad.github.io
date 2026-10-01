@@ -500,28 +500,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` associée à `stateful_pvc_enabled = true`, IAP sans identités autorisées, `quota_memory_*` sans suffixes d'unité binaires, un `timeout_seconds`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| PVC `/config` | Ne jamais supprimer | Critical | Le PVC contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
-| `stateful_pvc_enabled` | `true` | Critical | Sans PVC persistant, `/config` est éphémère et la bibliothèque est perdue à chaque redémarrage du pod. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans une même bibliothèque SQLite et la corrompent. |
-| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critical | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `stateful_pvc_size` | Adaptée à la bibliothèque | High | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
-| `stateful_fs_group` | `3000` | High | Un mauvais fsGroup rend le PVC non inscriptible par Jellyfin (UID 1000 / GID 2000) — le démarrage échoue. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | High | Trop peu de mémoire provoque l'arrêt OOM du pod pendant l'analyse ou le transcodage d'une grande bibliothèque. |
-| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | High | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_api_key` | Laisser `false` ; non fonctionnel actuellement | Medium | Le secret généré est fourni sous `QDRANT__SERVICE__API_KEY` (un reliquat de copier-coller de Qdrant_GKE) — Jellyfin ne le lit jamais ; il ne matérialise donc qu'un Secret Kubernetes inutilisé. Créez plutôt les clés d'API dans l'application sous Dashboard → API Keys. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour restaurer un instantané plus ancien de la bibliothèque. |
-| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des quotas serrés | Medium | Jellyfin est une application multimédia/SQLite — la valeur par défaut `standard-rwo` puise dans le quota régional serré `SSD_TOTAL_GB`, et la mise à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; remplacez-la par du HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture de Jellyfin ne nécessite pas les IOPS d'un SSD. |
+| PVC `/config` | Ne jamais supprimer | Critique | Le PVC contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'intégralité du serveur. |
+| `stateful_pvc_enabled` | `true` | Critique | Sans PVC persistant, `/config` est éphémère et la bibliothèque est perdue à chaque redémarrage du pod. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent dans une même bibliothèque SQLite et la corrompent. |
+| `workload_type` vs `stateful_pvc_enabled` | Laisser `workload_type` non défini | Critique | `Deployment` + `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour une résolution automatique en StatefulSet. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `stateful_pvc_size` | Adaptée à la bibliothèque | Élevé | Un PVC sous-dimensionné se remplit pendant la mise en cache des métadonnées/du transcodage et bloque le serveur. |
+| `stateful_fs_group` | `3000` | Élevé | Un mauvais fsGroup rend le PVC non inscriptible par Jellyfin (UID 1000 / GID 2000) — le démarrage échoue. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Élevé | Trop peu de mémoire provoque l'arrêt OOM du pod pendant l'analyse ou le transcodage d'une grande bibliothèque. |
+| `cpu_limit` | `1000m` (à augmenter pour le transcodage) | Élevé | Le transcodage en direct (sans GPU) sature le CPU ; privilégiez les clients en lecture directe. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette les valeurs invalides. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_api_key` | Laisser `false` ; non fonctionnel actuellement | Moyen | Le secret généré est fourni sous `QDRANT__SERVICE__API_KEY` (un reliquat de copier-coller de Qdrant_GKE) — Jellyfin ne le lit jamais ; il ne matérialise donc qu'un Secret Kubernetes inutilisé. Créez plutôt les clés d'API dans l'application sous Dashboard → API Keys. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer l'unique pod pendant la maintenance, ce qui interrompt les diffusions. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour restaurer un instantané plus ancien de la bibliothèque. |
+| `stateful_pvc_storage_class` | `standard` (HDD) sur les projets soumis à des quotas serrés | Moyen | Jellyfin est une application multimédia/SQLite — la valeur par défaut `standard-rwo` puise dans le quota régional serré `SSD_TOTAL_GB`, et la mise à zéro ne libère PAS le PVC. Une série de modules avec état peut épuiser le quota SSD ; remplacez-la par du HDD (`stateful_pvc_storage_class=standard`), car le profil d'écriture de Jellyfin ne nécessite pas les IOPS d'un SSD. |
 
 ---
 

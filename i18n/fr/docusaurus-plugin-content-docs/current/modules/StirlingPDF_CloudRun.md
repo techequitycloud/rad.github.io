@@ -367,22 +367,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`timeout_seconds` hors limites, une mémoire inférieure au plancher de gen2. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | High | La valeur par défaut `enable_login = false` associée à une entrée publique laisse une boîte à outils PDF ouverte, utilisable par quiconque possède l'URL. |
-| `enable_iap` | À activer pour les instances traitant des documents sensibles | High | Sans IAP (et avec la connexion désactivée), le service n'est pas authentifié ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
-| `memory_limit` | `2Gi` | High | En dessous d'environ 2Gi, la JVM et LibreOffice sont arrêtés pour manque de mémoire (OOM) pendant les conversions ; gen2 rejette également `< 512Mi` au moment du plan. |
-| `timeout_seconds` | `60`, à augmenter pour les gros fichiers | High | Les traitements volumineux d'OCR/de conversion qui dépassent le délai renvoient une erreur 504 en cours d'opération. |
-| Fenêtre de `startup_probe` | Conserver la valeur par défaut d'environ 70s | Medium | Raccourcir le délai initial / le seuil d'échec marque la révision comme non saine avant que LibreOffice n'ait terminé son préchauffage. |
-| `enable_cloud_armor` | À activer pour les instances publiques | Medium | Une boîte à outils publique sans WAF est exposée aux abus et aux analyses automatisées. |
-| `enable_redis` | Laisser à `false` — il est inerte pour cette application | Low | L'activer ne fait qu'ajouter des variables d'environnement `REDIS_*` inutilisées à la révision ; Stirling-PDF ne les lit jamais, cela n'apporte donc **aucune** limitation de débit ni détection de bots. Utilisez plutôt `enable_cloud_armor` pour une véritable protection contre les abus. |
-| `min_instance_count` | `0` (fixe) | Low | La mise à l'échelle jusqu'à zéro ajoute quelques secondes de préchauffage de la JVM à la première requête après une période d'inactivité. Le module code `min_instance_count = 0` en dur — la variable n'est pas transmise et ne peut donc pas être portée à `1` pour éliminer les démarrages à froid. |
-| `SYSTEM_MAXFILESIZE` (via `environment_variables`) | Définir un plafond raisonnable | Low | Des envois non plafonnés permettent à un seul gros fichier de consommer la mémoire de l'instance. |
+| `enable_login` + entrée | `enable_login = true` **ou** IAP pour un usage privé | Élevé | La valeur par défaut `enable_login = false` associée à une entrée publique laisse une boîte à outils PDF ouverte, utilisable par quiconque possède l'URL. |
+| `enable_iap` | À activer pour les instances traitant des documents sensibles | Élevé | Sans IAP (et avec la connexion désactivée), le service n'est pas authentifié ; les utilisateurs peuvent envoyer des documents confidentiels vers un point de terminaison ouvert. |
+| `memory_limit` | `2Gi` | Élevé | En dessous d'environ 2Gi, la JVM et LibreOffice sont arrêtés pour manque de mémoire (OOM) pendant les conversions ; gen2 rejette également `< 512Mi` au moment du plan. |
+| `timeout_seconds` | `60`, à augmenter pour les gros fichiers | Élevé | Les traitements volumineux d'OCR/de conversion qui dépassent le délai renvoient une erreur 504 en cours d'opération. |
+| Fenêtre de `startup_probe` | Conserver la valeur par défaut d'environ 70s | Moyen | Raccourcir le délai initial / le seuil d'échec marque la révision comme non saine avant que LibreOffice n'ait terminé son préchauffage. |
+| `enable_cloud_armor` | À activer pour les instances publiques | Moyen | Une boîte à outils publique sans WAF est exposée aux abus et aux analyses automatisées. |
+| `enable_redis` | Laisser à `false` — il est inerte pour cette application | Faible | L'activer ne fait qu'ajouter des variables d'environnement `REDIS_*` inutilisées à la révision ; Stirling-PDF ne les lit jamais, cela n'apporte donc **aucune** limitation de débit ni détection de bots. Utilisez plutôt `enable_cloud_armor` pour une véritable protection contre les abus. |
+| `min_instance_count` | `0` (fixe) | Faible | La mise à l'échelle jusqu'à zéro ajoute quelques secondes de préchauffage de la JVM à la première requête après une période d'inactivité. Le module code `min_instance_count = 0` en dur — la variable n'est pas transmise et ne peut donc pas être portée à `1` pour éliminer les démarrages à froid. |
+| `SYSTEM_MAXFILESIZE` (via `environment_variables`) | Définir un plafond raisonnable | Faible | Des envois non plafonnés permettent à un seul gros fichier de consommer la mémoire de l'instance. |
 
 ---
 

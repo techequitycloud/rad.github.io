@@ -389,28 +389,28 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, IAP sans client OAuth, Redis activé sans `redis_host` ni NFS, `enable_cloudsql_volume` avec `database_type = NONE`, et des valeurs de ResourceQuota en unités binaires. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `CALENDSO_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critical | Sa rotation rend indéchiffrables tous les identifiants de calendrier/OAuth stockés — chaque intégration doit être réautorisée. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Le schéma Prisma de Cal.com cible uniquement PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `webapp_url` | URL du LoadBalancer externe / du domaine | Critical | Une URL erronée ou non définie est intégrée à chaque lien de réservation/OAuth ; la valeur par défaut de l'image, `localhost:3000`, empêche le serveur de démarrer. |
-| `enable_redis` + `redis_host`/`enable_nfs` | paire cohérente | High | Redis activé sans hôte ni NFS fait échouer une précondition au moment du plan — `REDIS_URL` serait vide et Cal.com ne pourrait pas se connecter. |
-| `memory_limit` | `2Gi` | High | En dessous de 2 GiB, Next.js 16 plante en OOM au démarrage et le pod ne passe jamais à l'état Ready. |
-| `session_affinity` | `ClientIP` | High | Sans persistance de session, les requêtes d'un client passent d'un pod à l'autre, ce qui perturbe les sessions de l'interface. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy fournit le point de terminaison PostgreSQL en loopback ; le désactiver avec une base de données réelle est bloqué par un garde-fou au moment du plan. |
-| `enable_postgres_extensions` / `postgres_extensions` | `true` / `["vector", "uuid-ossp"]` | High | GKE les active par défaut (contrairement à la désactivation par défaut propre à `CalCom_Common` et contrairement à `CalCom_CloudRun`, qui ne les transmet pas du tout) afin que le job privilégié `db-extensions` crée à l'avance `vector` — sans cela, la commande non privilégiée `CREATE EXTENSION IF NOT EXISTS` propre à Cal.com se heurte à une erreur d'autorisation refusée sur Cloud SQL. |
-| `enable_iap` | uniquement pour les instances privées | High | IAP bloque toutes les requêtes non authentifiées — y compris les intégrations et les pages de réservation publiques. |
-| Inscription ouverte | à désactiver pour les instances privées | High | Cal.com auto-hébergé autorise l'inscription en libre-service ; la laisser ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` ≤ `max_instance_count` | conserver l'ordre | Medium | Une plage HPA incohérente fait échouer une précondition au moment du plan. |
-| Délais de `startup_probe` | conserver la valeur par défaut généreuse | Medium | Une fenêtre trop serrée fait échouer la sonde pendant les migrations Prisma du premier démarrage, bloquant le déploiement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `CALENDSO_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critique | Sa rotation rend indéchiffrables tous les identifiants de calendrier/OAuth stockés — chaque intégration doit être réautorisée. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Le schéma Prisma de Cal.com cible uniquement PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `webapp_url` | URL du LoadBalancer externe / du domaine | Critique | Une URL erronée ou non définie est intégrée à chaque lien de réservation/OAuth ; la valeur par défaut de l'image, `localhost:3000`, empêche le serveur de démarrer. |
+| `enable_redis` + `redis_host`/`enable_nfs` | paire cohérente | Élevé | Redis activé sans hôte ni NFS fait échouer une précondition au moment du plan — `REDIS_URL` serait vide et Cal.com ne pourrait pas se connecter. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 2 GiB, Next.js 16 plante en OOM au démarrage et le pod ne passe jamais à l'état Ready. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance de session, les requêtes d'un client passent d'un pod à l'autre, ce qui perturbe les sessions de l'interface. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy fournit le point de terminaison PostgreSQL en loopback ; le désactiver avec une base de données réelle est bloqué par un garde-fou au moment du plan. |
+| `enable_postgres_extensions` / `postgres_extensions` | `true` / `["vector", "uuid-ossp"]` | Élevé | GKE les active par défaut (contrairement à la désactivation par défaut propre à `CalCom_Common` et contrairement à `CalCom_CloudRun`, qui ne les transmet pas du tout) afin que le job privilégié `db-extensions` crée à l'avance `vector` — sans cela, la commande non privilégiée `CREATE EXTENSION IF NOT EXISTS` propre à Cal.com se heurte à une erreur d'autorisation refusée sur Cloud SQL. |
+| `enable_iap` | uniquement pour les instances privées | Élevé | IAP bloque toutes les requêtes non authentifiées — y compris les intégrations et les pages de réservation publiques. |
+| Inscription ouverte | à désactiver pour les instances privées | Élevé | Cal.com auto-hébergé autorise l'inscription en libre-service ; la laisser ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `min_instance_count` ≤ `max_instance_count` | conserver l'ordre | Moyen | Une plage HPA incohérente fait échouer une précondition au moment du plan. |
+| Délais de `startup_probe` | conserver la valeur par défaut généreuse | Moyen | Une fenêtre trop serrée fait échouer la sonde pendant les migrations Prisma du premier démarrage, bloquant le déploiement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

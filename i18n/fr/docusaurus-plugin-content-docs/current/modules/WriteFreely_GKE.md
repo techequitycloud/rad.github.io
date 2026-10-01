@@ -260,8 +260,8 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au
@@ -273,20 +273,20 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Clés AES-256 (`WF_KEY_*`, générées automatiquement) | Ne jamais les faire tourner après le premier démarrage | Critical | Une rotation déconnecte tous les utilisateurs et rend indéchiffrables les adresses e-mail chiffrées. |
-| `application_database_name` / `application_database_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_cloudsql_volume` | `true` | Critical | Sur GKE, le sidecar Auth Proxy est obligatoire ; le désactiver supprime l'écoute sur `127.0.0.1:3306` et rompt la connectivité à MySQL. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
-| `container_image_source` | `custom` | High | Définir `prebuilt` sans image intégrant le point d'entrée de génération de configuration produit un pod incapable de générer `config.ini`, qui ne démarre pas. |
-| `WF_PUBLIC_URL` | URL du LoadBalancer externe / domaine | High | Un hôte public incorrect casse les liens générés, la fédération et les redirections. |
-| `reserve_static_ip` | `true` | High | Avec `false`, `GKE_SERVICE_URL` peut se rabattre sur un hôte interne `*.svc.cluster.local` injoignable au moment de l'apply (une condition de concurrence liée à l'IP éphémère du LB), que le point d'entrée inscrit dans `config.ini` comme hôte public — constaté sur WriteFreely. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions peuvent passer d'un pod à l'autre ; des clés de cookies stables rendent cela tolérable, mais l'affinité est préférable. |
-| `application_version` | Épingler une version | Medium | `latest` peut faire changer l'image de base d'un redéploiement à l'autre ; l'épinglage garantit des builds reproductibles. |
-| `WF_OPEN_REGISTRATION` | `false` après le premier administrateur | Medium | Laisser les inscriptions ouvertes permet à toute personne disposant de l'URL de créer un compte. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| Clés AES-256 (`WF_KEY_*`, générées automatiquement) | Ne jamais les faire tourner après le premier démarrage | Critique | Une rotation déconnecte tous les utilisateurs et rend indéchiffrables les adresses e-mail chiffrées. |
+| `application_database_name` / `application_database_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_cloudsql_volume` | `true` | Critique | Sur GKE, le sidecar Auth Proxy est obligatoire ; le désactiver supprime l'écoute sur `127.0.0.1:3306` et rompt la connectivité à MySQL. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
+| `container_image_source` | `custom` | Élevé | Définir `prebuilt` sans image intégrant le point d'entrée de génération de configuration produit un pod incapable de générer `config.ini`, qui ne démarre pas. |
+| `WF_PUBLIC_URL` | URL du LoadBalancer externe / domaine | Élevé | Un hôte public incorrect casse les liens générés, la fédération et les redirections. |
+| `reserve_static_ip` | `true` | Élevé | Avec `false`, `GKE_SERVICE_URL` peut se rabattre sur un hôte interne `*.svc.cluster.local` injoignable au moment de l'apply (une condition de concurrence liée à l'IP éphémère du LB), que le point d'entrée inscrit dans `config.ini` comme hôte public — constaté sur WriteFreely. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions peuvent passer d'un pod à l'autre ; des clés de cookies stables rendent cela tolérable, mais l'affinité est préférable. |
+| `application_version` | Épingler une version | Moyen | `latest` peut faire changer l'image de base d'un redéploiement à l'autre ; l'épinglage garantit des builds reproductibles. |
+| `WF_OPEN_REGISTRATION` | `false` après le premier administrateur | Moyen | Laisser les inscriptions ouvertes permet à toute personne disposant de l'URL de créer un compte. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

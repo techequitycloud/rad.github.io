@@ -326,22 +326,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Le mode par défaut de LubeLogger sert un unique fichier de base de données intégré et partagé depuis un seul volume ; plus d'une instance expose à une corruption de la base par des écritures concurrentes. |
-| Buckets `storage`/`dpkeys` | Ne jamais les supprimer | Critical | Perdre `storage` fait perdre tous les dossiers de véhicules ; perdre `dpkeys` invalide toutes les sessions de connexion existantes (récupérable — impose seulement une nouvelle connexion). |
-| `EnableAuth` | `true` (par défaut) | Critical | Le passer à `false` rétablit le mode d'accès entièrement ouvert de LubeLogger — toute personne disposant de l'URL peut consulter et modifier toutes les données sans aucune connexion. |
-| Inscription au premier lancement | À effectuer immédiatement après le déploiement | High | Tant qu'aucun premier compte n'est inscrit, le formulaire d'inscription est accessible à quiconque peut atteindre l'URL. |
-| Chemin de `startup_probe`/`liveness_probe` | `/Login` | Critical | Pointer les sondes sur `/` (ou sur tout chemin protégé par `[Authorize]`) fait échouer la sonde sur un conteneur par ailleurs en bonne santé — la révision ne devient jamais Ready. |
-| `database_type` | `NONE` (par défaut) | High | Le mode par défaut de LubeLogger ignore entièrement ce paramètre ; le modifier ne connecte pas LubeLogger à une instance Cloud SQL — utilisez plutôt `POSTGRES_CONNECTION` pour l'option Postgres externe facultative. |
-| `min_instance_count` | `1` | Medium | La valeur `0` autorise les démarrages à froid ; comme `max_instance_count` est fixé à `1`, il n'y a aucun risque lié à la répartition du trafic, seulement une latence accrue sur la première requête après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `enable_cloud_armor` | à activer en production | Medium | Sinon, l'interface web publique et l'API REST sont accessibles sans protection WAF. |
+| `max_instance_count` | `1` | Critique | Le mode par défaut de LubeLogger sert un unique fichier de base de données intégré et partagé depuis un seul volume ; plus d'une instance expose à une corruption de la base par des écritures concurrentes. |
+| Buckets `storage`/`dpkeys` | Ne jamais les supprimer | Critique | Perdre `storage` fait perdre tous les dossiers de véhicules ; perdre `dpkeys` invalide toutes les sessions de connexion existantes (récupérable — impose seulement une nouvelle connexion). |
+| `EnableAuth` | `true` (par défaut) | Critique | Le passer à `false` rétablit le mode d'accès entièrement ouvert de LubeLogger — toute personne disposant de l'URL peut consulter et modifier toutes les données sans aucune connexion. |
+| Inscription au premier lancement | À effectuer immédiatement après le déploiement | Élevé | Tant qu'aucun premier compte n'est inscrit, le formulaire d'inscription est accessible à quiconque peut atteindre l'URL. |
+| Chemin de `startup_probe`/`liveness_probe` | `/Login` | Critique | Pointer les sondes sur `/` (ou sur tout chemin protégé par `[Authorize]`) fait échouer la sonde sur un conteneur par ailleurs en bonne santé — la révision ne devient jamais Ready. |
+| `database_type` | `NONE` (par défaut) | Élevé | Le mode par défaut de LubeLogger ignore entièrement ce paramètre ; le modifier ne connecte pas LubeLogger à une instance Cloud SQL — utilisez plutôt `POSTGRES_CONNECTION` pour l'option Postgres externe facultative. |
+| `min_instance_count` | `1` | Moyen | La valeur `0` autorise les démarrages à froid ; comme `max_instance_count` est fixé à `1`, il n'y a aucun risque lié à la répartition du trafic, seulement une latence accrue sur la première requête après une période d'inactivité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'interface web publique et l'API REST sont accessibles sans protection WAF. |
 
 ---
 

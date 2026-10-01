@@ -291,24 +291,24 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Shlink est configuré ici pour PostgreSQL (`DB_DRIVER=postgres`) ; un autre moteur empêche le démarrage. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les URL courtes et les données de visites. |
-| `environment_variables` `DB_USER` / `DB_NAME` | Jamais définis manuellement | Critical | Remplace les noms propres au tenant du socle → `password authentication failed for user "shlink"`. Laissez-les non définis. |
-| `container_port` | `8080` | Critical | Port natif de Shlink ; une valeur différente fait échouer toutes les sondes de santé. |
-| `enable_cloudsql_volume` | `true` | Critical | Shlink attend le socket Unix de l'Auth Proxy ; le désactiver casse le chemin de connexion à la base de données. |
-| `path` de sonde / test de disponibilité | `/rest/health` | High | `/` renvoie **404 par conception** — le sonder tue des révisions saines. |
-| `startup_probe` failure_threshold | `30` | High | Le réduire peut tuer le conteneur avant la fin des migrations du premier démarrage. |
-| `DEFAULT_DOMAIN` | Défini après le déploiement | High | S'il reste vide, les URL courtes générées peuvent porter le mauvais hôte ; définissez-le sur le domaine `run.app` ou personnalisé. |
-| `enable_iap` | `false` pour des liens publics | High | IAP placé devant Shlink soumet chaque redirection de lien court à une connexion Google. |
-| `max_instance_count` sans Redis | `3` | Medium | De nombreuses instances sans Redis perdent le cache et le verrouillage partagés ; activez `enable_redis` avant une large montée en charge. |
-| `min_instance_count` | `0` (par défaut) ou `1` | Medium | `0` est quasi gratuit mais ajoute un démarrage à froid d'environ 5–15 s à la première redirection après une inactivité. |
-| `GEOLITE_LICENSE_KEY` | À définir si les analyses comptent | Low | Sans elle, les visites sont enregistrées mais pas géolocalisées. |
-| `enable_nfs` / `create_cloud_storage` | `false` / désactivé | Low | Coût inutile — Shlink conserve tout son état dans PostgreSQL. |
+| `database_type` | `POSTGRES_15` | Critique | Shlink est configuré ici pour PostgreSQL (`DB_DRIVER=postgres`) ; un autre moteur empêche le démarrage. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les URL courtes et les données de visites. |
+| `environment_variables` `DB_USER` / `DB_NAME` | Jamais définis manuellement | Critique | Remplace les noms propres au tenant du socle → `password authentication failed for user "shlink"`. Laissez-les non définis. |
+| `container_port` | `8080` | Critique | Port natif de Shlink ; une valeur différente fait échouer toutes les sondes de santé. |
+| `enable_cloudsql_volume` | `true` | Critique | Shlink attend le socket Unix de l'Auth Proxy ; le désactiver casse le chemin de connexion à la base de données. |
+| `path` de sonde / test de disponibilité | `/rest/health` | Élevé | `/` renvoie **404 par conception** — le sonder tue des révisions saines. |
+| `startup_probe` failure_threshold | `30` | Élevé | Le réduire peut tuer le conteneur avant la fin des migrations du premier démarrage. |
+| `DEFAULT_DOMAIN` | Défini après le déploiement | Élevé | S'il reste vide, les URL courtes générées peuvent porter le mauvais hôte ; définissez-le sur le domaine `run.app` ou personnalisé. |
+| `enable_iap` | `false` pour des liens publics | Élevé | IAP placé devant Shlink soumet chaque redirection de lien court à une connexion Google. |
+| `max_instance_count` sans Redis | `3` | Moyen | De nombreuses instances sans Redis perdent le cache et le verrouillage partagés ; activez `enable_redis` avant une large montée en charge. |
+| `min_instance_count` | `0` (par défaut) ou `1` | Moyen | `0` est quasi gratuit mais ajoute un démarrage à froid d'environ 5–15 s à la première redirection après une inactivité. |
+| `GEOLITE_LICENSE_KEY` | À définir si les analyses comptent | Faible | Sans elle, les visites sont enregistrées mais pas géolocalisées. |
+| `enable_nfs` / `create_cloud_storage` | `false` / désactivé | Faible | Coût inutile — Shlink conserve tout son état dans PostgreSQL. |
 
 ---
 

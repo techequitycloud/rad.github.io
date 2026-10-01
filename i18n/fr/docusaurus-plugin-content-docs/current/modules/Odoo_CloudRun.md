@@ -52,7 +52,7 @@ services Google Cloud :
   ne le définissez jamais en clair.
 - **Le premier démarrage est lent.** Odoo installe le module de base et exécute les migrations de schéma au premier
   démarrage ; la sonde de démarrage utilise un contrôle **TCP** (délai initial de 60s, période de 30s, 3 tentatives —
-  environ 2.5 minutes au total), car HTTP n'est pas fiable avant la fin de l'initialisation de la base de données.
+  environ 2,5 minutes au total), car HTTP n'est pas fiable avant la fin de l'initialisation de la base de données.
 - **`execution_environment = "gen2"` est requis.** Les montages de volumes NFS ne sont pris en charge que par
   l'environnement d'exécution Cloud Run de deuxième génération.
 
@@ -425,27 +425,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Odoo exige exclusivement PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
-| `enable_nfs` | `true` | Critical | Sans NFS, les pièces jointes et les données de session sont isolées par instance et perdues au redémarrage. |
-| `execution_environment` | `gen2` | Critical | Les montages de volumes NFS ne sont pas pris en charge en `gen1` ; le service ne démarrera pas. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'ERP. |
-| `memory_limit` | `≥ 4Gi` pour la production | Critical | La valeur par défaut `1Gi` peut provoquer un OOM Python lors du chargement des modules ou du traitement de transactions volumineuses. |
-| `explicit_secret_values` (ODOO_MASTER_PASS) | fort et unique | Critical | Le gestionnaire de bases de données à l'adresse `/web/database/manager` n'est protégé que par ce mot de passe ; une valeur faible permet à quiconque peut atteindre l'URL de supprimer la base de données. |
-| `max_instance_count` avec Redis désactivé | `1` | High | Plusieurs instances sans Redis invalident en permanence les sessions les unes des autres. |
-| `enable_redis` | `true` lorsque `max_instance_count > 1` | High | Sans Redis, les utilisateurs sont déconnectés lorsque leur requête aboutit sur une autre instance. |
-| `redis_host` | point de terminaison explicite | High | Requis lorsque `enable_redis = true` ; une valeur vide provoque des défaillances du backend de sessions au démarrage. |
-| `min_instance_count` | `1` pour la production | High | La descente à zéro ajoute des délais de démarrage à froid de 30 à 90 secondes et arrête le planificateur d'arrière-plan d'Odoo. |
-| `cpu_always_allocated` | `true` si vous dépendez du cron d'Odoo | High | La valeur par défaut `false` correspond à la facturation à la requête — la CPU est bridée à quasi zéro entre les requêtes **même avec `min_instance_count = 1`**, si bien que le cron interne au processus d'Odoo (`max_cron_threads`) qui pilote les actions planifiées (factures récurrentes/relances) peut se bloquer ou ne jamais s'exécuter. Définissez `true` pour conserver la CPU allouée au worker cron. |
-| `backup_retention_days` | `90` pour la production | High | Odoo contient des données financières ; 7 jours ne suffisent pas pour la plupart des exigences de conformité. |
-| `application_version` | LTS valide (`18.0`, `17.0`) | High | Un tag de version invalide fait échouer l'étape Cloud Build lors du build de l'image. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour la production | High | Le gestionnaire de bases de données et le portail d'administration d'Odoo ne doivent pas être accessibles publiquement sans authentification. |
-| `ingress_settings` | `internal-and-cloud-load-balancing` avec Cloud Armor | Medium | `all` expose directement l'URL Cloud Run, en contournant la couche WAF. |
-| `timeout_seconds` | `900` pour les déploiements riches en rapports | Medium | Les rapports ou imports Odoo longs peuvent dépasser 5 minutes ; la valeur par défaut `300` renverra une erreur 504 lors de la génération de rapports volumineux. |
+| `database_type` | `POSTGRES_15` | Critique | Odoo exige exclusivement PostgreSQL ; MySQL ou `NONE` empêche le démarrage. |
+| `enable_nfs` | `true` | Critique | Sans NFS, les pièces jointes et les données de session sont isolées par instance et perdues au redémarrage. |
+| `execution_environment` | `gen2` | Critique | Les montages de volumes NFS ne sont pas pris en charge en `gen1` ; le service ne démarrera pas. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'ERP. |
+| `memory_limit` | `≥ 4Gi` pour la production | Critique | La valeur par défaut `1Gi` peut provoquer un OOM Python lors du chargement des modules ou du traitement de transactions volumineuses. |
+| `explicit_secret_values` (ODOO_MASTER_PASS) | fort et unique | Critique | Le gestionnaire de bases de données à l'adresse `/web/database/manager` n'est protégé que par ce mot de passe ; une valeur faible permet à quiconque peut atteindre l'URL de supprimer la base de données. |
+| `max_instance_count` avec Redis désactivé | `1` | Élevé | Plusieurs instances sans Redis invalident en permanence les sessions les unes des autres. |
+| `enable_redis` | `true` lorsque `max_instance_count > 1` | Élevé | Sans Redis, les utilisateurs sont déconnectés lorsque leur requête aboutit sur une autre instance. |
+| `redis_host` | point de terminaison explicite | Élevé | Requis lorsque `enable_redis = true` ; une valeur vide provoque des défaillances du backend de sessions au démarrage. |
+| `min_instance_count` | `1` pour la production | Élevé | La descente à zéro ajoute des délais de démarrage à froid de 30 à 90 secondes et arrête le planificateur d'arrière-plan d'Odoo. |
+| `cpu_always_allocated` | `true` si vous dépendez du cron d'Odoo | Élevé | La valeur par défaut `false` correspond à la facturation à la requête — la CPU est bridée à quasi zéro entre les requêtes **même avec `min_instance_count = 1`**, si bien que le cron interne au processus d'Odoo (`max_cron_threads`) qui pilote les actions planifiées (factures récurrentes/relances) peut se bloquer ou ne jamais s'exécuter. Définissez `true` pour conserver la CPU allouée au worker cron. |
+| `backup_retention_days` | `90` pour la production | Élevé | Odoo contient des données financières ; 7 jours ne suffisent pas pour la plupart des exigences de conformité. |
+| `application_version` | LTS valide (`18.0`, `17.0`) | Élevé | Un tag de version invalide fait échouer l'étape Cloud Build lors du build de l'image. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour la production | Élevé | Le gestionnaire de bases de données et le portail d'administration d'Odoo ne doivent pas être accessibles publiquement sans authentification. |
+| `ingress_settings` | `internal-and-cloud-load-balancing` avec Cloud Armor | Moyen | `all` expose directement l'URL Cloud Run, en contournant la couche WAF. |
+| `timeout_seconds` | `900` pour les déploiements riches en rapports | Moyen | Les rapports ou imports Odoo longs peuvent dépasser 5 minutes ; la valeur par défaut `300` renverra une erreur 504 lors de la génération de rapports volumineux. |
 
 ---
 

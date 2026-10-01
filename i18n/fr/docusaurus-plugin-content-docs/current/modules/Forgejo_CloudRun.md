@@ -532,31 +532,31 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, une valeur `timeout_seconds`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource : la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | `db-init.sh` ne fonctionne qu'avec `psql` ; MySQL/`NONE` casse la configuration de la base de données, même si les métadonnées de la variable les proposent. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelins tous les dépôts, tickets et PR stockés sous l'ancien rôle. |
-| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais modifier | Critical | Leur rotation invalide les données chiffrées 2FA/OAuth ainsi que l'authentification de l'API interne de Forgejo, ce qui casse les opérations Git et d'API. |
-| `enable_nfs` | `true` | Critical | La désactiver rend éphémères les dépôts, les objets LFS et les pièces jointes — ils sont perdus lorsque l'instance de conteneur est remplacée. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `enable_cloudsql_volume` | `false` (par défaut) ou `true` | High | Par défaut, la connexion se fait en TCP direct sur IP privée avec SSL obligatoire — assurez-vous que `vpc_egress_setting` et les règles de pare-feu l'autorisent. Définir `true` bascule vers le socket Unix ; la sélection du mode SSL par le point d'entrée suppose le mode réellement actif. |
-| `public_domain` / `public_url` | Le véritable nom d'hôte externe | High | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
-| `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | High | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
-| Compte administrateur initial | À créer manuellement après le déploiement | High | Aucun job d'initialisation n'amorce d'administrateur ; Cloud Run n'a pas d'équivalent à `kubectl exec`, si bien que la reprise exige une entrée ponctuelle dans `initialization_jobs` ou l'exécution de la CLI sur la même base de données. |
-| `enable_iap` | uniquement si l'accès par la CLI Git n'est pas nécessaire | High | IAP exige une connexion Google interactive que la CLI `git` ne peut pas effectuer — le clonage et le push via HTTPS échouent pour tous les clients autres que les navigateurs. |
-| `ingress_settings` | `all` | High | La définir sur `internal` bloque tout clonage et push Git externes ainsi que l'accès web. |
-| `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Medium | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |
-| `max_instance_count` | `1` (par défaut) | Medium | L'augmenter permet à plusieurs instances de partager le même répertoire de données Git sur NFS et la même base de données Postgres ; l'exactitude multi-instance des écritures Git concurrentes n'est ni documentée ni testée ici. |
-| `application_version` | `11` ou un tag épinglé précis | Medium | `latest` ne suit pas la version amont — l'argument de build `FORGEJO_VERSION` du Dockerfile fait correspondre `"latest"` au tag épinglé `11`, si bien qu'une simple valeur `latest` reste silencieusement sur ce tag. |
-| `memory_limit` | `2Gi` | Medium | Minimum 512Mi ; des valeurs inférieures exposent à des arrêts pour manque de mémoire (OOM) lors d'opérations concurrentes sur les dépôts. |
-| `storage_buckets` / `create_cloud_storage` | Laisser tel quel ou définir `create_cloud_storage = false` | Low | Le bucket par défaut suffixé `data` est provisionné mais inutilisé par Forgejo (toutes les données de l'application résident sur NFS/Postgres) — un léger coût inutile s'il reste activé sans raison. |
-| Git sur SSH | Non disponible sur cette plateforme | Low | Cloud Run n'expose que le port HTTP(S) ; les URL de clonage `git+ssh://` ne fonctionneront pas, quelle que soit la configuration — utilisez `https://`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
+| `database_type` | `POSTGRES_15` | Critique | `db-init.sh` ne fonctionne qu'avec `psql` ; MySQL/`NONE` casse la configuration de la base de données, même si les métadonnées de la variable les proposent. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelins tous les dépôts, tickets et PR stockés sous l'ancien rôle. |
+| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais modifier | Critique | Leur rotation invalide les données chiffrées 2FA/OAuth ainsi que l'authentification de l'API interne de Forgejo, ce qui casse les opérations Git et d'API. |
+| `enable_nfs` | `true` | Critique | La désactiver rend éphémères les dépôts, les objets LFS et les pièces jointes — ils sont perdus lorsque l'instance de conteneur est remplacée. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_cloudsql_volume` | `false` (par défaut) ou `true` | Élevé | Par défaut, la connexion se fait en TCP direct sur IP privée avec SSL obligatoire — assurez-vous que `vpc_egress_setting` et les règles de pare-feu l'autorisent. Définir `true` bascule vers le socket Unix ; la sélection du mode SSL par le point d'entrée suppose le mode réellement actif. |
+| `public_domain` / `public_url` | Le véritable nom d'hôte externe | Élevé | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
+| `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | Élevé | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |
+| Compte administrateur initial | À créer manuellement après le déploiement | Élevé | Aucun job d'initialisation n'amorce d'administrateur ; Cloud Run n'a pas d'équivalent à `kubectl exec`, si bien que la reprise exige une entrée ponctuelle dans `initialization_jobs` ou l'exécution de la CLI sur la même base de données. |
+| `enable_iap` | uniquement si l'accès par la CLI Git n'est pas nécessaire | Élevé | IAP exige une connexion Google interactive que la CLI `git` ne peut pas effectuer — le clonage et le push via HTTPS échouent pour tous les clients autres que les navigateurs. |
+| `ingress_settings` | `all` | Élevé | La définir sur `internal` bloque tout clonage et push Git externes ainsi que l'accès web. |
+| `enable_redis` | `true`, mais vérifiez qu'elle est réellement nécessaire | Moyen | `REDIS_HOST`/`REDIS_PORT` sont injectées sans effet, sauf si vous ajoutez aussi la configuration `GITEA__cache__*`/`GITEA__session__*` correspondante — sinon, vous provisionnez de la capacité Redis sans aucun bénéfice. |
+| `max_instance_count` | `1` (par défaut) | Moyen | L'augmenter permet à plusieurs instances de partager le même répertoire de données Git sur NFS et la même base de données Postgres ; l'exactitude multi-instance des écritures Git concurrentes n'est ni documentée ni testée ici. |
+| `application_version` | `11` ou un tag épinglé précis | Moyen | `latest` ne suit pas la version amont — l'argument de build `FORGEJO_VERSION` du Dockerfile fait correspondre `"latest"` au tag épinglé `11`, si bien qu'une simple valeur `latest` reste silencieusement sur ce tag. |
+| `memory_limit` | `2Gi` | Moyen | Minimum 512Mi ; des valeurs inférieures exposent à des arrêts pour manque de mémoire (OOM) lors d'opérations concurrentes sur les dépôts. |
+| `storage_buckets` / `create_cloud_storage` | Laisser tel quel ou définir `create_cloud_storage = false` | Faible | Le bucket par défaut suffixé `data` est provisionné mais inutilisé par Forgejo (toutes les données de l'application résident sur NFS/Postgres) — un léger coût inutile s'il reste activé sans raison. |
+| Git sur SSH | Non disponible sur cette plateforme | Faible | Cloud Run n'expose que le port HTTP(S) ; les URL de clonage `git+ssh://` ne fonctionneront pas, quelle que soit la configuration — utilisez `https://`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
 
 ---
 

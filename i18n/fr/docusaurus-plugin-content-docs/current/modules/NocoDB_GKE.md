@@ -456,24 +456,24 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critical | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers sans unité sont des octets et bloquent toute planification. |
-| `container_resources.memory_limit` | `1Gi` | High | Le processus Node.js de NocoDB est tué pour OOM en dessous de 512 Mi ; les charges de travail de production comportant de nombreuses automatisations nécessitent 2 Gi. |
-| `enable_redis` | `true` lorsque >1 réplica | High | Plusieurs pods sans Redis provoquent l'invalidation des sessions lorsque les requêtes sont acheminées vers des pods différents. |
-| `redis_host` | explicite lorsque Redis est activé | High | Un hôte manquant fait échouer toutes les connexions Redis au démarrage du pod. |
-| `min_instance_count` | `1` | High | `0` permet des démarrages à froid pendant lesquels les rappels de webhooks expirent et sont perdus. |
-| `max_instance_count` | maintenir bas sans Redis | Medium | Dépasser `1` sans Redis provoque l'invalidation des sessions. |
-| `enable_iap` / `enable_cloud_armor` | activer pour un usage interne | Medium | Sinon, NocoDB est publiquement accessible depuis l'IP de l'équilibreur de charge. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
-| `application_version` | épingler un tag précis | Medium | `latest` déclenche des mises à niveau non maîtrisées à chaque reconstruction du conteneur. |
+| `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critique | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers sans unité sont des octets et bloquent toute planification. |
+| `container_resources.memory_limit` | `1Gi` | Élevé | Le processus Node.js de NocoDB est tué pour OOM en dessous de 512 Mi ; les charges de travail de production comportant de nombreuses automatisations nécessitent 2 Gi. |
+| `enable_redis` | `true` lorsque >1 réplica | Élevé | Plusieurs pods sans Redis provoquent l'invalidation des sessions lorsque les requêtes sont acheminées vers des pods différents. |
+| `redis_host` | explicite lorsque Redis est activé | Élevé | Un hôte manquant fait échouer toutes les connexions Redis au démarrage du pod. |
+| `min_instance_count` | `1` | Élevé | `0` permet des démarrages à froid pendant lesquels les rappels de webhooks expirent et sont perdus. |
+| `max_instance_count` | maintenir bas sans Redis | Moyen | Dépasser `1` sans Redis provoque l'invalidation des sessions. |
+| `enable_iap` / `enable_cloud_armor` | activer pour un usage interne | Moyen | Sinon, NocoDB est publiquement accessible depuis l'IP de l'équilibreur de charge. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `application_version` | épingler un tag précis | Moyen | `latest` déclenche des mises à niveau non maîtrisées à chaque reconstruction du conteneur. |
 
 ---
 

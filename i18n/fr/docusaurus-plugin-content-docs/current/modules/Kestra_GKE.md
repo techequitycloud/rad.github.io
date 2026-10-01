@@ -456,29 +456,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `db_name` | `kestra` — à définir une fois | Critical | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, avec perte de tous les flux, de l'historique des exécutions, des déclencheurs et des namespaces. |
-| `application_name` | `kestra` — à définir une fois | Critical | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP/Kubernetes, ce qui entraîne une recréation complète avec perte de données. |
-| `KESTRA_BASICAUTH_ENABLED` (injectée à `true`) | laisser telle qu'injectée | Critical | La forcer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne la désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `max_instance_count` | `1` | High | Kestra Community Edition utilise le verrouillage de file d'attente PostgreSQL — plusieurs réplicas provoquent une double affectation des tâches et des conflits d'exécution. |
-| `min_instance_count` | `1` | High | La valeur `0` entraîne des déclencheurs planifiés manqués pendant les périodes de démarrage à froid. Le démarrage de la JVM Kestra peut prendre plusieurs minutes. |
-| `memory_limit` | `4Gi` | High | Des valeurs inférieures à 2 GiB provoquent des erreurs OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
-| `enable_cloudsql_volume` | `true` | High | Requis pour la connectivité PostgreSQL ; bloqué au moment du plan lorsque `database_type != "NONE"`. |
-| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectées à `postgres`) | laisser telles qu'injectées | High | Seul PostgreSQL est provisionné ; les forcer vers un type de backend non pris en charge provoque un échec au démarrage. |
-| `KESTRA_STORAGE_TYPE` (injectée à `gcs`) | laisser telle qu'injectée | High | Passer à `local` fait écrire tous les artefacts d'exécution dans le stockage éphémère du pod, perdus au redémarrage. |
-| Seuil d'échec de `startup_probe` | 40 (par défaut) | High | Le réduire en dessous de ~10 provoque des redémarrages prématurés du pod lors des démarrages lents de la JVM, avant que Kestra ait fini de charger tous les flux. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les connexions de diffusion des journaux de l'interface Kestra se coupent lorsqu'elles sont acheminées vers un autre pod. |
-| `termination_grace_period_seconds` | `60` | Medium | Des valeurs inférieures à 30 s interrompent les exécutions de tâches en cours. |
-| `enable_pod_disruption_budget` | `true` | Medium | Désactiver le PDB permet à GKE d'évincer le pod Kestra pendant la maintenance des nœuds, interrompant toutes les exécutions en cours. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification dans l'espace de noms. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface et l'API Kestra sont accessibles publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
-| `organization_id` | à définir en cas d'utilisation de VPC-SC | Medium | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
+| `db_name` | `kestra` — à définir une fois | Critique | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, avec perte de tous les flux, de l'historique des exécutions, des déclencheurs et des namespaces. |
+| `application_name` | `kestra` — à définir une fois | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP/Kubernetes, ce qui entraîne une recréation complète avec perte de données. |
+| `KESTRA_BASICAUTH_ENABLED` (injectée à `true`) | laisser telle qu'injectée | Critique | La forcer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne la désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `max_instance_count` | `1` | Élevé | Kestra Community Edition utilise le verrouillage de file d'attente PostgreSQL — plusieurs réplicas provoquent une double affectation des tâches et des conflits d'exécution. |
+| `min_instance_count` | `1` | Élevé | La valeur `0` entraîne des déclencheurs planifiés manqués pendant les périodes de démarrage à froid. Le démarrage de la JVM Kestra peut prendre plusieurs minutes. |
+| `memory_limit` | `4Gi` | Élevé | Des valeurs inférieures à 2 GiB provoquent des erreurs OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
+| `enable_cloudsql_volume` | `true` | Élevé | Requis pour la connectivité PostgreSQL ; bloqué au moment du plan lorsque `database_type != "NONE"`. |
+| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectées à `postgres`) | laisser telles qu'injectées | Élevé | Seul PostgreSQL est provisionné ; les forcer vers un type de backend non pris en charge provoque un échec au démarrage. |
+| `KESTRA_STORAGE_TYPE` (injectée à `gcs`) | laisser telle qu'injectée | Élevé | Passer à `local` fait écrire tous les artefacts d'exécution dans le stockage éphémère du pod, perdus au redémarrage. |
+| Seuil d'échec de `startup_probe` | 40 (par défaut) | Élevé | Le réduire en dessous de ~10 provoque des redémarrages prématurés du pod lors des démarrages lents de la JVM, avant que Kestra ait fini de charger tous les flux. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les connexions de diffusion des journaux de l'interface Kestra se coupent lorsqu'elles sont acheminées vers un autre pod. |
+| `termination_grace_period_seconds` | `60` | Moyen | Des valeurs inférieures à 30 s interrompent les exécutions de tâches en cours. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Désactiver le PDB permet à GKE d'évincer le pod Kestra pendant la maintenance des nœuds, interrompant toutes les exécutions en cours. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont interprétés comme des octets par Kubernetes et bloquent toute planification dans l'espace de noms. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface et l'API Kestra sont accessibles publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
+| `organization_id` | à définir en cas d'utilisation de VPC-SC | Moyen | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
 
 ---
 

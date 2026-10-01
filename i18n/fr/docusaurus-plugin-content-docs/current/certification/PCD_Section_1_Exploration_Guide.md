@@ -91,7 +91,7 @@ R : Lorsque la charge de travail a besoin d'un stockage stable par pod (Stateful
 
 ## 1.2 Conception d'applications sécurisées (Designing secure applications) {#12-designing-secure-applications}
 
-> ⏱ ~75 min · 💰 faible (Secret Manager : quelques centimes ; clés KMS ~$0.06/clé/mois ; IAP gratuit) · ⚙️ Prérequis : profil Hardened edge (`enable_iap`, `enable_auto_password_rotation`) ; ajoutez `enable_binary_authorization` sur les deux modules
+> ⏱ ~75 min · 💰 faible (Secret Manager : quelques centimes ; clés KMS ~0,06 $/clé/mois ; IAP gratuit) · ⚙️ Prérequis : profil Hardened edge (`enable_iap`, `enable_auto_password_rotation`) ; ajoutez `enable_binary_authorization` sur les deux modules
 
 **Pourquoi l'examen s'y intéresse** — Les questions de sécurité du PCD portent sur *l'emplacement des identifiants et sur qui peut appeler quoi* : les secrets doivent parvenir au code à l'exécution (jamais intégrés aux images ou à l'état), l'authentification des utilisateurs finaux doit avoir lieu avant que le trafic n'atteigne l'application (IAP), et seules les images dont le build est prouvé doivent s'exécuter (Binary Authorization). On attend de vous que vous sachiez quel mécanisme résout quel problème, pas que vous administriez l'organisation.
 

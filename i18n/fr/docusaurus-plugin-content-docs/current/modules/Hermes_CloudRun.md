@@ -347,8 +347,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan.** Le `validation.tf` de ce module et le moteur
 > du socle [App_CloudRun](App_CloudRun.md) valident les valeurs *et leurs
@@ -359,16 +359,16 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (validé) | Critical | Une seconde instance concurrente écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt l'intégralité de l'état de l'agent. |
-| `enable_nfs` | `true` (validé) | Critical | Sans le montage NFS, `/opt/data` est un disque éphémère — chaque démarrage à froid / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
-| `gcs_volumes` sur `/opt/data` | jamais | Critical | GCSFuse ne dispose ni du verrouillage POSIX ni des renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
-| `min_instance_count` | `1` | High | Avec `0`, les connecteurs sont endormis entre les requêtes — les messages Telegram/Discord sont manqués jusqu'à ce qu'un appel HTTP entrant réveille par hasard l'instance. |
-| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | High | Sans aucune clé de fournisseur, l'agent ne peut exécuter aucun tour, et le secret Anthropic vide fait échouer le déploiement Cloud Run (« Secret was not found »). |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête bride le CPU à ~0 entre les requêtes, bloquant le long-polling des connecteurs et les tours asynchrones de l'agent. |
-| `startup_probe` | TCP (par défaut) | Medium | Une sonde de démarrage HTTP sur le serveur d'API authentifié renvoie indéfiniment 401/403 — la révision ne devient jamais Ready et le déploiement progressif reste bloqué. |
-| `liveness_probe` | désactivée (par défaut) | Medium | Les sondes s'exécutent sans authentification ; activer une sonde de vivacité HTTP exige de vérifier d'abord que l'endpoint est non authentifié — un endpoint renvoyant 401/403 tuerait des instances saines. Cloud Run n'offre pas d'option de vivacité TCP. |
-| `application_version` | épinglez un tag de version | Medium | `latest` est résolu à nouveau à chaque exécution du miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
-| `enable_telegram` sans jeton | bloqué | Low | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
+| `max_instance_count` | `1` (validé) | Critique | Une seconde instance concurrente écrit dans la même base SQLite sur NFS — la violation du modèle à écrivain unique corrompt l'intégralité de l'état de l'agent. |
+| `enable_nfs` | `true` (validé) | Critique | Sans le montage NFS, `/opt/data` est un disque éphémère — chaque démarrage à froid / redéploiement efface silencieusement l'identité de l'agent (configuration, sessions, compétences, mémoires). |
+| `gcs_volumes` sur `/opt/data` | jamais | Critique | GCSFuse ne dispose ni du verrouillage POSIX ni des renommages atomiques ; SQLite sur GCSFuse se corrompt. Conservez l'état sur NFS. |
+| `min_instance_count` | `1` | Élevé | Avec `0`, les connecteurs sont endormis entre les requêtes — les messages Telegram/Discord sont manqués jusqu'à ce qu'un appel HTTP entrant réveille par hasard l'instance. |
+| `anthropic_api_key` (ou la paire OpenAI) | définie au premier déploiement | Élevé | Sans aucune clé de fournisseur, l'agent ne peut exécuter aucun tour, et le secret Anthropic vide fait échouer le déploiement Cloud Run (« Secret was not found »). |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête bride le CPU à ~0 entre les requêtes, bloquant le long-polling des connecteurs et les tours asynchrones de l'agent. |
+| `startup_probe` | TCP (par défaut) | Moyen | Une sonde de démarrage HTTP sur le serveur d'API authentifié renvoie indéfiniment 401/403 — la révision ne devient jamais Ready et le déploiement progressif reste bloqué. |
+| `liveness_probe` | désactivée (par défaut) | Moyen | Les sondes s'exécutent sans authentification ; activer une sonde de vivacité HTTP exige de vérifier d'abord que l'endpoint est non authentifié — un endpoint renvoyant 401/403 tuerait des instances saines. Cloud Run n'offre pas d'option de vivacité TCP. |
+| `application_version` | épinglez un tag de version | Moyen | `latest` est résolu à nouveau à chaque exécution du miroir ; le comportement peut changer à votre insu lors d'un redéploiement. |
+| `enable_telegram` sans jeton | bloqué | Faible | La validation au moment du plan le rejette ; le connecteur ne peut pas démarrer sans le jeton du bot. |
 
 ---
 

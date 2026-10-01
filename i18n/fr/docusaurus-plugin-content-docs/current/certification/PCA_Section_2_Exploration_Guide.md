@@ -4,7 +4,7 @@ description: "Préparez la section 2 de l'examen PCA — gestion et provisionnem
 ---
 <!-- translated-from: docs/certification/PCA_Section_2_Exploration_Guide.md @ cb682e8 sha256:da14ff533b73 -->
 
-# Guide de préparation à la certification PCA : Section 2 — Gestion et provisionnement d'une infrastructure de solution cloud (Managing and provisioning a cloud solution infrastructure) (~17.5 % de l'examen) {#pca-certification-preparation-guide-section-2--managing-and-provisioning-a-cloud-solution-infrastructure-175-of-the-exam}
+# Guide de préparation à la certification PCA : Section 2 — Gestion et provisionnement d'une infrastructure de solution cloud (Managing and provisioning a cloud solution infrastructure) (~17,5 % de l'examen) {#pca-certification-preparation-guide-section-2--managing-and-provisioning-a-cloud-solution-infrastructure-175-of-the-exam}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section2.png" alt="Guide de préparation à la certification PCA : Section 2 — Gestion et provisionnement d'une infrastructure de solution cloud (~17.5 % de l'examen)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
@@ -66,7 +66,7 @@ R : Les instances Cloud SQL s'exécutent dans un VPC producteur géré par Googl
 R : Le transfert TCP d'IAP — la règle `fw-allow-iap-ssh` n'admet tcp:22 que depuis la plage IAP de Google `35.235.240.0/20`, et les administrateurs utilisent `gcloud compute ssh --tunnel-through-iap`. L'identité est vérifiée par IAP avant qu'un seul paquet n'atteigne la VM.
 </details>
 
-**Au-delà des modules** — Non mis en œuvre : VPC partagé, appairage entre VPC clients, Cloud VPN / Cloud Interconnect (hybride), Cross-Cloud Interconnect (multicloud), Network Connectivity Center, Cloud DNS, journaux de flux VPC, stratégies de pare-feu hiérarchiques et protection contre les intrusions (Cloud NGFW Enterprise / Cloud IDS). Ces sujets sont très présents à l'examen — étudiez « Choosing a Network Connectivity product » (l'arbre de décision Dedicated Interconnect, Partner Interconnect ou HA VPN ; un SLA de 99.99 % exige HA VPN ou des rattachements Interconnect redondants), ainsi que l'IAM des projets hôtes/de service de VPC partagé. Dans un projet de test, essayez `gcloud compute networks subnets update <subnet> --enable-flow-logs`.
+**Au-delà des modules** — Non mis en œuvre : VPC partagé, appairage entre VPC clients, Cloud VPN / Cloud Interconnect (hybride), Cross-Cloud Interconnect (multicloud), Network Connectivity Center, Cloud DNS, journaux de flux VPC, stratégies de pare-feu hiérarchiques et protection contre les intrusions (Cloud NGFW Enterprise / Cloud IDS). Ces sujets sont très présents à l'examen — étudiez « Choosing a Network Connectivity product » (l'arbre de décision Dedicated Interconnect, Partner Interconnect ou HA VPN ; un SLA de 99,99 % exige HA VPN ou des rattachements Interconnect redondants), ainsi que l'IAM des projets hôtes/de service de VPC partagé. Dans un projet de test, essayez `gcloud compute networks subnets update <subnet> --enable-flow-logs`.
 
 **⚠️ Piège d'examen** — L'accès privé à Google (Private Google Access), l'accès aux services privés (private services access) et Private Service Connect sont trois choses différentes. Ce module utilise l'accès aux *services* privés (appairage de VPC avec les producteurs de services gérés). Ne choisissez pas des points de terminaison PSC lorsque le scénario décrit l'adresse IP privée de Cloud SQL via une plage d'appairage allouée.
 

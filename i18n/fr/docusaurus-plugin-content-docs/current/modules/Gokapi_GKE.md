@@ -334,23 +334,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé conjointement à un paramètre sans état, IAP sans identités autorisées, des `quota_memory_*` fournis sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de la moindre ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver fait basculer la base SQLite sur un montage GCS FUSE — la sémantique d'écriture de gcsfuse n'est pas sûre pour SQLite et expose à une corruption des métadonnées en usage réel. |
-| `stateful_pvc_mount_path` | `/data` (conservez la valeur par défaut) | Critical | `GOKAPI_CONFIG_DIR` et `GOKAPI_DATA_DIR` sont tous deux calculés par rapport à ce chemin ; le modifier sans remplacements correspondants dans `environment_variables` rend orphelines la base SQLite et les téléversements existants. |
-| `max_instance_count` | `1` | Critical | La base de données SQLite de Gokapi n'accepte qu'un seul rédacteur et ne propose pas de clustering ; exécuter plus d'un réplica expose à une corruption de la base et à des téléversements incohérents. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Convient à un usage courant ; sur un projet soumis à des quotas serrés (par exemple un `SSD_TOTAL_GB` limité), remplacez-le par le HDD `standard` conformément à [App_GKE](App_GKE.md) si le quota est rare — le profil d'E/S de Gokapi n'exige pas des IOPS de niveau SSD. |
-| `create_cloud_storage` | `true` (par défaut) avec `stateful_pvc_enabled = true` | Medium | Crée un bucket GCS `storage` inutilisé, jamais monté tant que le PVC est actif — définissez `create_cloud_storage = false` pour éviter ce bucket superflu, ou laissez-le si vous pourriez désactiver le PVC ultérieurement. |
-| `enable_api_key` (secret généré automatiquement) | Laissez `false`, sauf si vous avez besoin d'une clé préprovisionnée | Low | Le jeton n'est qu'un outil de commodité ; les véritables clés API de téléversement/téléchargement de Gokapi sont créées depuis l'interface d'administration, quel que soit ce paramètre. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_custom_domain` / `reserve_static_ip` | `true` / `true` (valeurs par défaut) | Medium | Désactiver les deux laisse Gokapi joignable uniquement via le `ClusterIP` interne, sans URL publique pour les liens de téléchargement qu'il génère — ce qui va à l'encontre de la finalité de l'application pour le partage externe. |
-| `enable_cloudsql_volume` | `false` | Low | Le définir à `true` injecte un sidecar Cloud SQL Auth Proxy inutile ; Gokapi ne l'utilise jamais. |
-| `enable_nfs` | `false` | Low | Gokapi assure par défaut sa persistance via le PVC du StatefulSet ; activer NFS ajoute une instance Filestore inutilisée, sauf si vous désactivez délibérément le PVC et souhaitez plutôt un stockage partagé. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver fait basculer la base SQLite sur un montage GCS FUSE — la sémantique d'écriture de gcsfuse n'est pas sûre pour SQLite et expose à une corruption des métadonnées en usage réel. |
+| `stateful_pvc_mount_path` | `/data` (conservez la valeur par défaut) | Critique | `GOKAPI_CONFIG_DIR` et `GOKAPI_DATA_DIR` sont tous deux calculés par rapport à ce chemin ; le modifier sans remplacements correspondants dans `environment_variables` rend orphelines la base SQLite et les téléversements existants. |
+| `max_instance_count` | `1` | Critique | La base de données SQLite de Gokapi n'accepte qu'un seul rédacteur et ne propose pas de clustering ; exécuter plus d'un réplica expose à une corruption de la base et à des téléversements incohérents. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Moyen | Convient à un usage courant ; sur un projet soumis à des quotas serrés (par exemple un `SSD_TOTAL_GB` limité), remplacez-le par le HDD `standard` conformément à [App_GKE](App_GKE.md) si le quota est rare — le profil d'E/S de Gokapi n'exige pas des IOPS de niveau SSD. |
+| `create_cloud_storage` | `true` (par défaut) avec `stateful_pvc_enabled = true` | Moyen | Crée un bucket GCS `storage` inutilisé, jamais monté tant que le PVC est actif — définissez `create_cloud_storage = false` pour éviter ce bucket superflu, ou laissez-le si vous pourriez désactiver le PVC ultérieurement. |
+| `enable_api_key` (secret généré automatiquement) | Laissez `false`, sauf si vous avez besoin d'une clé préprovisionnée | Faible | Le jeton n'est qu'un outil de commodité ; les véritables clés API de téléversement/téléchargement de Gokapi sont créées depuis l'interface d'administration, quel que soit ce paramètre. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_custom_domain` / `reserve_static_ip` | `true` / `true` (valeurs par défaut) | Moyen | Désactiver les deux laisse Gokapi joignable uniquement via le `ClusterIP` interne, sans URL publique pour les liens de téléchargement qu'il génère — ce qui va à l'encontre de la finalité de l'application pour le partage externe. |
+| `enable_cloudsql_volume` | `false` | Faible | Le définir à `true` injecte un sidecar Cloud SQL Auth Proxy inutile ; Gokapi ne l'utilise jamais. |
+| `enable_nfs` | `false` | Faible | Gokapi assure par défaut sa persistance via le PVC du StatefulSet ; activer NFS ajoute une instance Filestore inutilisée, sauf si vous désactivez délibérément le PVC et souhaitez plutôt un stockage partagé. |
 
 ---
 

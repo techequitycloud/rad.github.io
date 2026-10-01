@@ -4,7 +4,7 @@ description: "Préparez la section 5 de l'examen Professional Cloud Architect (P
 ---
 <!-- translated-from: docs/certification/PCA_Section_5_Exploration_Guide.md @ cb682e8 sha256:f04ecd349cdb -->
 
-# Guide de préparation à la certification PCA : Section 5 — Gestion de la mise en œuvre (Managing implementation) (~12.5 % de l'examen) {#pca-certification-preparation-guide-section-5--managing-implementation-125-of-the-exam}
+# Guide de préparation à la certification PCA : Section 5 — Gestion de la mise en œuvre (Managing implementation) (~12,5 % de l'examen) {#pca-certification-preparation-guide-section-5--managing-implementation-125-of-the-exam}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/certification/pca_section5.png" alt="Guide de préparation à la certification PCA : Section 5 — Gestion de la mise en œuvre (~12.5 % de l'examen)" style={{maxWidth: "100%", borderRadius: "8px"}} />
 

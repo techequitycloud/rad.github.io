@@ -232,24 +232,24 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `private_cloud_type` + `node_count` | `TIME_LIMITED`+`1` ou `STANDARD`+`3` | Critical | Les combinaisons incohérentes sont rejetées par l'API : `TIME_LIMITED` exige exactement 1 nœud, `STANDARD` au moins 3. L'apply échoue après la longue tentative de provisionnement. |
-| `private_cloud_type` | `TIME_LIMITED` pour les labs | High (coût) | Chaque nœud bare metal est facturé à un tarif horaire élevé. `STANDARD` avec 3 nœuds multiplie ce coût ; ne l'utilisez que pour les charges de travail qui doivent perdurer. |
-| `management_cidr` | défini une seule fois, sans chevauchement | Critical | Immuable après la création. Un CIDR erroné ou qui se chevauche impose une destruction/recréation complète (plusieurs heures) et entraîne la perte de toutes les VM. |
-| `edge_services_cidr` | `/26` sans chevauchement | High | Un chevauchement avec `management_cidr` ou les sous-réseaux du VPC appairé est rejeté à la création ; la règle de réseau ne peut pas être appliquée. |
-| `node_type_id` | `standard-72` (forme de l'API) | High | Utiliser le libellé de l'interface `ve1-standard-72`, ou un type de nœud indisponible dans la zone cible, provoque une erreur bloquante de l'API lors de la création du cloud privé. |
-| `region` / `zone` | zone située dans la région | High | Le cloud privé est créé dans `zone` et la règle de réseau dans `region` ; une paire incohérente fait échouer la création de la règle. |
-| `deployment_id` | défini une seule fois | Critical | Le modifier après le déploiement renomme toutes les ressources — ce qui force la recréation du cloud privé (plusieurs heures) et détruit toutes les VM. |
-| `reset_vcenter_credentials` | `true` (avec gcloud disponible) | Medium | Sans `gcloud` dans l'exécuteur, la réinitialisation est ignorée ; vous devez réinitialiser les identifiants manuellement avant de vous connecter à vCenter. |
-| Identifiants vCenter | à récupérer rapidement dans les journaux | Medium | Ils sont affichés dans les journaux, et non stockés en tant que sortie, et le mot de passe du solution-user expire ; relancez la réinitialisation pour les actualiser. |
-| Accès aux consoles | uniquement via l'hôte de rebond | Medium | Les FQDN vCenter/NSX-T/HCX se résolvent en IP privées accessibles uniquement depuis le VPC appairé. Un accès direct depuis un poste de travail expire. |
-| `create_vpc = false` | uniquement avec un VPC existant correspondant | High | Les règles de pare-feu et l'appairage référencent le nom de VPC calculé `altostrat-<id>-vpc` ; si ce VPC n'existe pas, ces ressources échouent. |
-| `enable_internet_access` / `enable_external_ip` | `false` pour les clouds isolés | Medium | Les deux valent `true` par défaut : les VM de charge de travail peuvent donc accéder à Internet et recevoir des IP publiques d'emblée ; désactivez-les pour un environnement totalement isolé. |
-| Délai de suppression | prévoir du temps, sauvegarder d'abord | Critical | La suppression du cloud privé est irréversible et détruit toutes les VM/données, et le déprovisionnement du bare metal est lent — ne l'interrompez pas. |
+| `private_cloud_type` + `node_count` | `TIME_LIMITED`+`1` ou `STANDARD`+`3` | Critique | Les combinaisons incohérentes sont rejetées par l'API : `TIME_LIMITED` exige exactement 1 nœud, `STANDARD` au moins 3. L'apply échoue après la longue tentative de provisionnement. |
+| `private_cloud_type` | `TIME_LIMITED` pour les labs | Élevé (coût) | Chaque nœud bare metal est facturé à un tarif horaire élevé. `STANDARD` avec 3 nœuds multiplie ce coût ; ne l'utilisez que pour les charges de travail qui doivent perdurer. |
+| `management_cidr` | défini une seule fois, sans chevauchement | Critique | Immuable après la création. Un CIDR erroné ou qui se chevauche impose une destruction/recréation complète (plusieurs heures) et entraîne la perte de toutes les VM. |
+| `edge_services_cidr` | `/26` sans chevauchement | Élevé | Un chevauchement avec `management_cidr` ou les sous-réseaux du VPC appairé est rejeté à la création ; la règle de réseau ne peut pas être appliquée. |
+| `node_type_id` | `standard-72` (forme de l'API) | Élevé | Utiliser le libellé de l'interface `ve1-standard-72`, ou un type de nœud indisponible dans la zone cible, provoque une erreur bloquante de l'API lors de la création du cloud privé. |
+| `region` / `zone` | zone située dans la région | Élevé | Le cloud privé est créé dans `zone` et la règle de réseau dans `region` ; une paire incohérente fait échouer la création de la règle. |
+| `deployment_id` | défini une seule fois | Critique | Le modifier après le déploiement renomme toutes les ressources — ce qui force la recréation du cloud privé (plusieurs heures) et détruit toutes les VM. |
+| `reset_vcenter_credentials` | `true` (avec gcloud disponible) | Moyen | Sans `gcloud` dans l'exécuteur, la réinitialisation est ignorée ; vous devez réinitialiser les identifiants manuellement avant de vous connecter à vCenter. |
+| Identifiants vCenter | à récupérer rapidement dans les journaux | Moyen | Ils sont affichés dans les journaux, et non stockés en tant que sortie, et le mot de passe du solution-user expire ; relancez la réinitialisation pour les actualiser. |
+| Accès aux consoles | uniquement via l'hôte de rebond | Moyen | Les FQDN vCenter/NSX-T/HCX se résolvent en IP privées accessibles uniquement depuis le VPC appairé. Un accès direct depuis un poste de travail expire. |
+| `create_vpc = false` | uniquement avec un VPC existant correspondant | Élevé | Les règles de pare-feu et l'appairage référencent le nom de VPC calculé `altostrat-<id>-vpc` ; si ce VPC n'existe pas, ces ressources échouent. |
+| `enable_internet_access` / `enable_external_ip` | `false` pour les clouds isolés | Moyen | Les deux valent `true` par défaut : les VM de charge de travail peuvent donc accéder à Internet et recevoir des IP publiques d'emblée ; désactivez-les pour un environnement totalement isolé. |
+| Délai de suppression | prévoir du temps, sauvegarder d'abord | Critique | La suppression du cloud privé est irréversible et détruit toutes les VM/données, et le déprovisionnement du bare metal est lent — ne l'interrompez pas. |
 
 ---
 

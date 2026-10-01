@@ -203,21 +203,21 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `deployment_id` | défini une seule fois | Critical | Intégré à chaque nom de ressource. Le modifier après le déploiement force la recréation du VPC, des VM et du cluster GKE. |
-| `create_vpc` | `true` | High | Définir `false` exige un VPC préexistant nommé exactement `mig-<id>-vpc` — aucune variable ne permet de désigner un réseau nommé différemment ; l'apply échoue donc s'il est absent. |
-| `zone` | zone valide et disponible | High | Toutes les VM et le cluster GKE sont déployés dans `zone` ; une zone invalide ou à capacité limitée fait échouer l'apply. `region` étant inerte, une `zone` en dehors de `region` est sans conséquence. |
-| `m2c_disk_size_gb` | `200` | High | Un disque de poste de travail trop petit ne peut pas contenir les systèmes de fichiers sources copiés, et `m2c copy` échoue en cours de route. |
-| `enable_services` | `true` | High | Si les API requises ne sont pas déjà activées et que ce paramètre vaut `false`, la création des ressources échoue immédiatement. Ne le désactivez que lorsque toutes les API requises sont confirmées comme activées. |
-| `gke_node_count` | `3` | Medium | Avec moins de 3 nœuds, un StatefulSet et un Deployment migrés peuvent ne pas pouvoir être planifiés ensemble pendant le lab. |
-| `create_default_firewall_rules` | `true` | Medium | Sans la règle allow-internal, le poste de travail ne peut pas atteindre les VM sources pour copier leurs systèmes de fichiers ; sans allow-SSH, vous ne pouvez pas vous connecter pour piloter le lab. |
-| `postgres_disk_size_gb` / `tomcat_disk_size_gb` | `20`+ | Medium | Des disques de démarrage sous-dimensionnés peuvent manquer d'espace pendant la configuration de PostgreSQL ou le build Maven de PetClinic. |
-| Portée du pare-feu SSH / Tomcat | à restreindre pour les projets partagés | Medium | SSH (22) et Tomcat (8080) sont ouverts à `0.0.0.0/0` par défaut — acceptable pour un lab de courte durée, mais resserrez les plages sources dans les projets durables ou partagés. |
-| Images et PVC construits pendant le lab | à nettoyer manuellement | Low | Les images poussées pendant le lab et les PVC conservés ne sont pas supprimés par la destruction et continuent d'engendrer des coûts de stockage jusqu'à leur suppression. |
+| `deployment_id` | défini une seule fois | Critique | Intégré à chaque nom de ressource. Le modifier après le déploiement force la recréation du VPC, des VM et du cluster GKE. |
+| `create_vpc` | `true` | Élevé | Définir `false` exige un VPC préexistant nommé exactement `mig-<id>-vpc` — aucune variable ne permet de désigner un réseau nommé différemment ; l'apply échoue donc s'il est absent. |
+| `zone` | zone valide et disponible | Élevé | Toutes les VM et le cluster GKE sont déployés dans `zone` ; une zone invalide ou à capacité limitée fait échouer l'apply. `region` étant inerte, une `zone` en dehors de `region` est sans conséquence. |
+| `m2c_disk_size_gb` | `200` | Élevé | Un disque de poste de travail trop petit ne peut pas contenir les systèmes de fichiers sources copiés, et `m2c copy` échoue en cours de route. |
+| `enable_services` | `true` | Élevé | Si les API requises ne sont pas déjà activées et que ce paramètre vaut `false`, la création des ressources échoue immédiatement. Ne le désactivez que lorsque toutes les API requises sont confirmées comme activées. |
+| `gke_node_count` | `3` | Moyen | Avec moins de 3 nœuds, un StatefulSet et un Deployment migrés peuvent ne pas pouvoir être planifiés ensemble pendant le lab. |
+| `create_default_firewall_rules` | `true` | Moyen | Sans la règle allow-internal, le poste de travail ne peut pas atteindre les VM sources pour copier leurs systèmes de fichiers ; sans allow-SSH, vous ne pouvez pas vous connecter pour piloter le lab. |
+| `postgres_disk_size_gb` / `tomcat_disk_size_gb` | `20`+ | Moyen | Des disques de démarrage sous-dimensionnés peuvent manquer d'espace pendant la configuration de PostgreSQL ou le build Maven de PetClinic. |
+| Portée du pare-feu SSH / Tomcat | à restreindre pour les projets partagés | Moyen | SSH (22) et Tomcat (8080) sont ouverts à `0.0.0.0/0` par défaut — acceptable pour un lab de courte durée, mais resserrez les plages sources dans les projets durables ou partagés. |
+| Images et PVC construits pendant le lab | à nettoyer manuellement | Faible | Les images poussées pendant le lab et les PVC conservés ne sont pas supprimés par la destruction et continuent d'engendrer des coûts de stockage jusqu'à leur suppression. |
 
 ---
 

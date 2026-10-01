@@ -228,8 +228,8 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 
 ## 7. Pièges de configuration et valeurs par défaut judicieuses {#7-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs
@@ -238,14 +238,14 @@ Toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur com
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver sans montage `gcs_volumes` correspondant ramène `/config` sur GCS FUSE, ce qui reproduit le risque de corruption lié à la fréquence d'écriture confirmé sur `Grocy_CloudRun` — une couche de traduction réseau/stockage d'objets ne peut pas soutenir le schéma d'écriture de `grocy.db-journal` de Grocy. |
-| `stateful_pvc_mount_path` | `/config` | Critical | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
-| `max_instance_count` | `1` | Critical | La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering. Comme le StatefulSet utilise `volumeClaimTemplates`, toute valeur supérieure à `1` ne partage même pas le stockage entre réplicas — chaque pod obtient sa propre copie déconnectée des données. |
-| `stateful_fs_group` | `1000` | High | Grocy s'exécute en UID 1000 / GID 1000 (PUID/PGID LinuxServer). Un `fsGroup` ne correspondant pas laisse le PVC inaccessible en écriture au processus réel du conteneur, ce qui provoque des erreurs de permission au premier démarrage. |
-| `enable_redis` | Toute valeur — ignorée | Low | `main.tf` code en dur `enable_redis = false` quelle que soit cette variable ; la définir à `true` n'a donc aucun effet. Ce n'est pas un risque, simplement une opération sans effet qu'il vaut mieux connaître. |
-| `database_type` | `NONE` | Medium | Grocy l'ignore totalement (aucun chemin de code ne le lit), mais toute autre valeur provisionne une instance Cloud SQL inutilisée et facturée. |
-| Mot de passe administrateur | À changer à la première connexion | High | Les identifiants par défaut `admin` / `admin` de l'image amont sont documentés publiquement ; les laisser inchangés sur un déploiement exposé par un `LoadBalancer` constitue une réelle exposition. |
-| `min_instance_count` | `1` | Low | Le définir à `0` réduit les coûts mais réintroduit des démarrages à froid sur la pile nginx + php-fpm de Grocy. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver sans montage `gcs_volumes` correspondant ramène `/config` sur GCS FUSE, ce qui reproduit le risque de corruption lié à la fréquence d'écriture confirmé sur `Grocy_CloudRun` — une couche de traduction réseau/stockage d'objets ne peut pas soutenir le schéma d'écriture de `grocy.db-journal` de Grocy. |
+| `stateful_pvc_mount_path` | `/config` | Critique | Grocy code en dur son chemin de données sur `/config`. Modifier le chemin de montage sans modification correspondante de l'image fait perdre l'accès à la base de données, à la configuration et aux téléversements. |
+| `max_instance_count` | `1` | Critique | La base de données SQLite de Grocy est à écrivain unique, sans prise en charge du clustering. Comme le StatefulSet utilise `volumeClaimTemplates`, toute valeur supérieure à `1` ne partage même pas le stockage entre réplicas — chaque pod obtient sa propre copie déconnectée des données. |
+| `stateful_fs_group` | `1000` | Élevé | Grocy s'exécute en UID 1000 / GID 1000 (PUID/PGID LinuxServer). Un `fsGroup` ne correspondant pas laisse le PVC inaccessible en écriture au processus réel du conteneur, ce qui provoque des erreurs de permission au premier démarrage. |
+| `enable_redis` | Toute valeur — ignorée | Faible | `main.tf` code en dur `enable_redis = false` quelle que soit cette variable ; la définir à `true` n'a donc aucun effet. Ce n'est pas un risque, simplement une opération sans effet qu'il vaut mieux connaître. |
+| `database_type` | `NONE` | Moyen | Grocy l'ignore totalement (aucun chemin de code ne le lit), mais toute autre valeur provisionne une instance Cloud SQL inutilisée et facturée. |
+| Mot de passe administrateur | À changer à la première connexion | Élevé | Les identifiants par défaut `admin` / `admin` de l'image amont sont documentés publiquement ; les laisser inchangés sur un déploiement exposé par un `LoadBalancer` constitue une réelle exposition. |
+| `min_instance_count` | `1` | Faible | Le définir à `0` réduit les coûts mais réintroduit des démarrages à froid sur la pile nginx + php-fpm de Grocy. |
 
 ---
 

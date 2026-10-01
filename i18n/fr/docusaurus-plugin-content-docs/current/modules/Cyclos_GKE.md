@@ -443,27 +443,27 @@ et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` ou `POSTGRES_15` | Critical | Cyclos exige PostgreSQL. MySQL ou `NONE` empêche complètement le démarrage. |
-| `db_name` / `db_user` | définis une fois (`cyclos` / `cyclos`) | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données financières. |
-| `max_instance_count` | `1` (par défaut) | Critical | Plus de 1 sans clustering Hazelcast entraîne des transactions non atomiques et une corruption potentielle des données. |
-| `application_name` | `cyclos` (ne pas modifier) | Critical | Intégré à l'espace de noms GKE, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
-| Variable d'environnement `cyclos.storedFileContentManager` | `gcs` (codé en dur) | Critical | La surcharger avec `local` écrit les fichiers dans le stockage éphémère du pod ; tous les téléversements sont perdus au redémarrage. |
-| `memory_limit` (dans `container_resources`) | `≥ 2Gi` (`4Gi` recommandé) | Critical | La JVM lève `OutOfMemoryError` ; le pod est tué pour manque de mémoire (code de sortie 137). |
-| Variable d'environnement `CYCLOS_OPTIONS` | `-Xmx3g` pour une limite de 4 GiB | Critical | Sans `-Xmx`, la JVM croît jusqu'à consommer toute la mémoire du conteneur ; le pod est tué pour manque de mémoire sous charge. |
-| `startup_probe.path` | `/api` | Critical | Un chemin erroné signifie que la sonde ne reçoit jamais de HTTP 200 ; GKE arrête le pod avant qu'il n'accepte du trafic. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent l'ordonnancement de tous les pods. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance la restauration à chaque apply et écrase les données financières en production. |
-| CPU de `container_resources` | `≥ 2000m` | High | Le GC Java et le démarrage de Cyclos sont limités par le CPU ; un CPU insuffisant fait échouer la sonde de démarrage. |
-| `startup_probe.failure_threshold` | `≥ 5` (porter à `10` pour le premier déploiement) | High | Trop bas : la création des extensions par `db-init` prend 1 à 3 min ; le pod est arrêté avant que le schéma ne soit prêt. |
-| `min_instance_count` | `1` | High | `0` provoque des démarrages à froid de la JVM de 45 à 120 s ; les transactions bancaires expirent en attendant le préchauffage. |
-| `enable_pod_disruption_budget` | `false` sauf si `min_instance_count > 1` | High | Un PDB à `1/1` bloque le drainage des nœuds ; les mises à niveau d'Autopilot restent bloquées indéfiniment. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration de Cyclos est joignable publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire des données financières. |
+| `database_type` | `POSTGRES` ou `POSTGRES_15` | Critique | Cyclos exige PostgreSQL. MySQL ou `NONE` empêche complètement le démarrage. |
+| `db_name` / `db_user` | définis une fois (`cyclos` / `cyclos`) | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données financières. |
+| `max_instance_count` | `1` (par défaut) | Critique | Plus de 1 sans clustering Hazelcast entraîne des transactions non atomiques et une corruption potentielle des données. |
+| `application_name` | `cyclos` (ne pas modifier) | Critique | Intégré à l'espace de noms GKE, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
+| Variable d'environnement `cyclos.storedFileContentManager` | `gcs` (codé en dur) | Critique | La surcharger avec `local` écrit les fichiers dans le stockage éphémère du pod ; tous les téléversements sont perdus au redémarrage. |
+| `memory_limit` (dans `container_resources`) | `≥ 2Gi` (`4Gi` recommandé) | Critique | La JVM lève `OutOfMemoryError` ; le pod est tué pour manque de mémoire (code de sortie 137). |
+| Variable d'environnement `CYCLOS_OPTIONS` | `-Xmx3g` pour une limite de 4 GiB | Critique | Sans `-Xmx`, la JVM croît jusqu'à consommer toute la mémoire du conteneur ; le pod est tué pour manque de mémoire sous charge. |
+| `startup_probe.path` | `/api` | Critique | Un chemin erroné signifie que la sonde ne reçoit jamais de HTTP 200 ; GKE arrête le pod avant qu'il n'accepte du trafic. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent l'ordonnancement de tous les pods. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance la restauration à chaque apply et écrase les données financières en production. |
+| CPU de `container_resources` | `≥ 2000m` | Élevé | Le GC Java et le démarrage de Cyclos sont limités par le CPU ; un CPU insuffisant fait échouer la sonde de démarrage. |
+| `startup_probe.failure_threshold` | `≥ 5` (porter à `10` pour le premier déploiement) | Élevé | Trop bas : la création des extensions par `db-init` prend 1 à 3 min ; le pod est arrêté avant que le schéma ne soit prêt. |
+| `min_instance_count` | `1` | Élevé | `0` provoque des démarrages à froid de la JVM de 45 à 120 s ; les transactions bancaires expirent en attendant le préchauffage. |
+| `enable_pod_disruption_budget` | `false` sauf si `min_instance_count > 1` | Élevé | Un PDB à `1/1` bloque le drainage des nœuds ; les mises à niveau d'Autopilot restent bloquées indéfiniment. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface d'administration de Cyclos est joignable publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire des données financières. |
 
 ---
 

@@ -431,27 +431,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par BookStack, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner rend définitivement indéchiffrables toutes les valeurs chiffrées de la base (secrets d'authentification à deux facteurs, certains paramètres). |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `database_type` | `MYSQL_8_0` | Critical | BookStack nécessite MySQL ; tout autre moteur empêche le démarrage. |
-| `APP_URL` (via `environment_variables`) | URL réelle du service | High | Une URL de base erronée casse le chargement des ressources, les liens et les redirections de connexion. |
-| `enable_nfs` | `true` | High | Le désactiver fait perdre toutes les images et pièces jointes téléversées lors d'un redéploiement ou d'une mise à zéro. |
-| `memory_limit` | `2Gi` | High | Des valeurs plus faibles exposent à des arrêts OOM lors d'éditions simultanées et de l'indexation en texte intégral. |
-| `enable_cloudsql_volume` | `false` (TCP via IP privée) | High | Sur Cloud Run, BookStack se connecte en TCP via l'IP privée ; forcer le chemin du socket est inutile et peut casser la connectivité à la base. |
-| `ingress_settings` | `all` | High | Le définir sur `internal` bloque tous les lecteurs externes du wiki. |
-| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | High | IAP bloque tout accès anonyme, y compris pour les lecteurs de documentation publique. |
-| `max_instance_count` | `1` | Medium | BookStack n'a pas de coordination multi-instances ; la mise à l'échelle horizontale expose à des incohérences de cache/session. |
-| `min_instance_count` | `0` (CR) | Medium | La mise à zéro ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| Mot de passe par défaut de `admin@admin.com` | À modifier à la première connexion | Medium | Conserver le `password` par défaut permet à quiconque connaît l'URL de se connecter en tant qu'administrateur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner rend définitivement indéchiffrables toutes les valeurs chiffrées de la base (secrets d'authentification à deux facteurs, certains paramètres). |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `database_type` | `MYSQL_8_0` | Critique | BookStack nécessite MySQL ; tout autre moteur empêche le démarrage. |
+| `APP_URL` (via `environment_variables`) | URL réelle du service | Élevé | Une URL de base erronée casse le chargement des ressources, les liens et les redirections de connexion. |
+| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre toutes les images et pièces jointes téléversées lors d'un redéploiement ou d'une mise à zéro. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs plus faibles exposent à des arrêts OOM lors d'éditions simultanées et de l'indexation en texte intégral. |
+| `enable_cloudsql_volume` | `false` (TCP via IP privée) | Élevé | Sur Cloud Run, BookStack se connecte en TCP via l'IP privée ; forcer le chemin du socket est inutile et peut casser la connectivité à la base. |
+| `ingress_settings` | `all` | Élevé | Le définir sur `internal` bloque tous les lecteurs externes du wiki. |
+| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | Élevé | IAP bloque tout accès anonyme, y compris pour les lecteurs de documentation publique. |
+| `max_instance_count` | `1` | Moyen | BookStack n'a pas de coordination multi-instances ; la mise à l'échelle horizontale expose à des incohérences de cache/session. |
+| `min_instance_count` | `0` (CR) | Moyen | La mise à zéro ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| Mot de passe par défaut de `admin@admin.com` | À modifier à la première connexion | Moyen | Conserver le `password` par défaut permet à quiconque connaît l'URL de se connecter en tant qu'administrateur. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

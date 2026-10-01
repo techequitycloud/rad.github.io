@@ -389,27 +389,27 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `signups_allowed` | `false` | Critical | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
-| `enable_cloudsql_volume` | `true` | Critical | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation fait échouer toutes les connexions à la base de données au démarrage. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Les modifier après le premier déploiement amène Vaultwarden à se connecter à une base de données vide ; tous les identifiants semblent perdus. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `domain` | URL `https://` complète | High | Sans elle, les codes QR TOTP pointent vers `localhost`, les e-mails d'invitation à une organisation contiennent des liens cassés et les URL des pièces jointes sont invalides. |
-| `database_type` | défini une seule fois | High | Le modifier après le premier déploiement amène Vaultwarden à voir une base de données vide ; tous les identifiants semblent perdus. |
-| `cpu_limit` | `1000m` ou plus | High | Cloud Run gen2 avec CPU toujours allouée rejette les valeurs inférieures à `1000m` au moment du déploiement. |
-| `container_port` | `80` | High | Doit correspondre à `ROCKET_PORT` ; en cas de discordance, les vérifications de santé de Cloud Run échouent et toutes les requêtes expirent. |
-| `execution_environment` | `gen2` | High | Gen1 ne prend pas en charge le chemin de socket Unix utilisé par le Cloud SQL Auth Proxy, ce qui provoque des échecs de connexion à la base de données au démarrage. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro rend un gestionnaire de mots de passe indisponible pendant 5–15 s lors d'un démarrage à froid ; les clients Bitwarden affichent des erreurs de connexion. |
-| `cpu_always_allocated` | `false` sauf si le push WS est activé | Medium | Laisser `false` alors que le serveur de notifications push WebSocket est activé limite la CPU entre les requêtes et casse la connexion WS persistante ; passez à `true` dans ce cas. |
-| `enable_cloud_armor` | activer en production | Medium | Sans Cloud Armor, le point de terminaison de connexion de Vaultwarden est exposé aux attaques par force brute depuis Internet. |
-| `enable_cdn` | `false` ou avec contrôles de cache | Medium | Mettre en cache des réponses d'API authentifiées divulgue des données du coffre-fort entre utilisateurs. |
-| `backup_retention_days` | `30` (à augmenter en production) | Medium | Un gestionnaire de mots de passe sans rétention suffisante entraîne une perte d'identifiants en cas de défaillance de la base de données. |
-| `enable_iap` avec des clients natifs | à utiliser avec précaution | Medium | IAP exige une authentification OAuth dans un navigateur ; les clients Bitwarden natifs ne peuvent pas mener à bien le flux IAP. |
-| variables d'environnement `smtp_*` | à configurer comme un ensemble complet | High | Une configuration SMTP partielle provoque des échecs silencieux d'envoi d'e-mails — les codes de récupération 2FA et les e-mails d'invitation ne sont jamais envoyés. |
+| `signups_allowed` | `false` | Critique | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
+| `enable_cloudsql_volume` | `true` | Critique | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation fait échouer toutes les connexions à la base de données au démarrage. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Les modifier après le premier déploiement amène Vaultwarden à se connecter à une base de données vide ; tous les identifiants semblent perdus. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `domain` | URL `https://` complète | Élevé | Sans elle, les codes QR TOTP pointent vers `localhost`, les e-mails d'invitation à une organisation contiennent des liens cassés et les URL des pièces jointes sont invalides. |
+| `database_type` | défini une seule fois | Élevé | Le modifier après le premier déploiement amène Vaultwarden à voir une base de données vide ; tous les identifiants semblent perdus. |
+| `cpu_limit` | `1000m` ou plus | Élevé | Cloud Run gen2 avec CPU toujours allouée rejette les valeurs inférieures à `1000m` au moment du déploiement. |
+| `container_port` | `80` | Élevé | Doit correspondre à `ROCKET_PORT` ; en cas de discordance, les vérifications de santé de Cloud Run échouent et toutes les requêtes expirent. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne prend pas en charge le chemin de socket Unix utilisé par le Cloud SQL Auth Proxy, ce qui provoque des échecs de connexion à la base de données au démarrage. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro rend un gestionnaire de mots de passe indisponible pendant 5–15 s lors d'un démarrage à froid ; les clients Bitwarden affichent des erreurs de connexion. |
+| `cpu_always_allocated` | `false` sauf si le push WS est activé | Moyen | Laisser `false` alors que le serveur de notifications push WebSocket est activé limite la CPU entre les requêtes et casse la connexion WS persistante ; passez à `true` dans ce cas. |
+| `enable_cloud_armor` | activer en production | Moyen | Sans Cloud Armor, le point de terminaison de connexion de Vaultwarden est exposé aux attaques par force brute depuis Internet. |
+| `enable_cdn` | `false` ou avec contrôles de cache | Moyen | Mettre en cache des réponses d'API authentifiées divulgue des données du coffre-fort entre utilisateurs. |
+| `backup_retention_days` | `30` (à augmenter en production) | Moyen | Un gestionnaire de mots de passe sans rétention suffisante entraîne une perte d'identifiants en cas de défaillance de la base de données. |
+| `enable_iap` avec des clients natifs | à utiliser avec précaution | Moyen | IAP exige une authentification OAuth dans un navigateur ; les clients Bitwarden natifs ne peuvent pas mener à bien le flux IAP. |
+| variables d'environnement `smtp_*` | à configurer comme un ensemble complet | Élevé | Une configuration SMTP partielle provoque des échecs silencieux d'envoi d'e-mails — les codes de récupération 2FA et les e-mails d'invitation ne sont jamais envoyés. |
 
 ---
 

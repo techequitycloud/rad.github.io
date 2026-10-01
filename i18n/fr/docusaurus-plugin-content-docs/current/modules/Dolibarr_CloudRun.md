@@ -313,25 +313,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `container_port` invalide, un `timeout_seconds`/`backup_retention_days` hors limites, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `DOLI_INSTANCE_UNIQUE_ID` (généré automatiquement) | Ne jamais le modifier | Critical | Modifier le sel après le premier démarrage invalide les jetons signés et les URL cron. |
-| `enable_nfs` | `true` | High | Le désactiver rend les documents/PDF téléversés éphémères — perdus à chaque recréation du conteneur. |
-| `max_instance_count` | `1` | High | L'augmenter sans stockage partagé ni routage persistant (sticky) expose à des sessions scindées, à de la contention de verrous et à un état documentaire incohérent. |
-| `enable_backup_import` | `false` sauf pour une restauration | High | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `DOLI_URL_ROOT` (défini automatiquement) | URL réelle du service | High | Une URL racine erronée casse les liens absolus et la redirection de connexion. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, le conteneur PHP/Apache subit un OOM sous charge ; gen2 impose un plancher de 512Mi. |
-| `DOLI_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer avant la première connexion | Medium | Sans lui, vous ne pouvez pas accéder au premier compte super-administrateur tant qu'il n'est pas réinitialisé via la base. |
-| `ingress_settings` | `all` | Medium | `internal` bloque l'accès public à l'interface Dolibarr. |
-| `min_instance_count` | `1` en production | Medium | La mise à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface est accessible publiquement sans protection WAF. |
+| `database_type` | `MYSQL_8_0` | Critique | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `DOLI_INSTANCE_UNIQUE_ID` (généré automatiquement) | Ne jamais le modifier | Critique | Modifier le sel après le premier démarrage invalide les jetons signés et les URL cron. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend les documents/PDF téléversés éphémères — perdus à chaque recréation du conteneur. |
+| `max_instance_count` | `1` | Élevé | L'augmenter sans stockage partagé ni routage persistant (sticky) expose à des sessions scindées, à de la contention de verrous et à un état documentaire incohérent. |
+| `enable_backup_import` | `false` sauf pour une restauration | Élevé | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `DOLI_URL_ROOT` (défini automatiquement) | URL réelle du service | Élevé | Une URL racine erronée casse les liens absolus et la redirection de connexion. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, le conteneur PHP/Apache subit un OOM sous charge ; gen2 impose un plancher de 512Mi. |
+| `DOLI_ADMIN_PASSWORD` (généré automatiquement) | Le récupérer avant la première connexion | Moyen | Sans lui, vous ne pouvez pas accéder au premier compte super-administrateur tant qu'il n'est pas réinitialisé via la base. |
+| `ingress_settings` | `all` | Moyen | `internal` bloque l'accès public à l'interface Dolibarr. |
+| `min_instance_count` | `1` en production | Moyen | La mise à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface est accessible publiquement sans protection WAF. |
 
 ---
 

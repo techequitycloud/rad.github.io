@@ -306,8 +306,8 @@ cohérence d'interface avec les autres modules, mais se résolvent ici en valeur
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par
 > le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -318,14 +318,14 @@ cohérence d'interface avec les autres modules, mais se résolvent ici en valeur
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `container_port` | `80` | High | Le nginx de l'image n'écoute que sur 80 ; un port différent empêche la sonde de démarrage de réussir et le pod ne devient jamais Ready. |
-| `container_image_source` | `custom` | High | Passer à `prebuilt` sans image mise en miroir déclenche `build_and_push_application_image` sans Dockerfile / pointe vers un chemin jamais construit. |
-| `min_instance_count` | Sans objet — codé en dur à `1` | Low | `excalidraw.tf` remplace toujours la configuration par `min_instance_count = 1`, quelle que soit la valeur de cette variable (aucun garde-fou au moment du plan ne rejette `0` — App_GKE lui-même autorise `0` pour les applications capables de mise à zéro). Définir cette variable à `0` n'a aucun effet et ne réduit pas les coûts ; un pod résident garde le tableau blanc joignable en permanence. |
-| `service_type` | `LoadBalancer` | Medium | `ClusterIP` rend Excalidraw injoignable depuis l'extérieur du cluster. |
-| `application_version` | épingler en production | Medium | `latest` est glissant — un nouveau tag amont peut modifier l'interface ou le comportement au prochain rebuild. Épinglez une version. |
-| `stateful_pvc_enabled` / `enable_redis` / entrées de base de données | laisser par défaut (désactivé) | Low | Les activer provisionne des PVC/Redis/Cloud SQL qu'Excalidraw n'utilise jamais — un coût inutile, sans bénéfice. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Medium | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (pertinent uniquement si vous activez les quotas de ressources). |
-| `homeserver_url` / `homeserver_name` | laisser vide | Low | Entrées résiduelles d'Element ; les définir n'a aucun effet sur la SPA Excalidraw. |
+| `container_port` | `80` | Élevé | Le nginx de l'image n'écoute que sur 80 ; un port différent empêche la sonde de démarrage de réussir et le pod ne devient jamais Ready. |
+| `container_image_source` | `custom` | Élevé | Passer à `prebuilt` sans image mise en miroir déclenche `build_and_push_application_image` sans Dockerfile / pointe vers un chemin jamais construit. |
+| `min_instance_count` | Sans objet — codé en dur à `1` | Faible | `excalidraw.tf` remplace toujours la configuration par `min_instance_count = 1`, quelle que soit la valeur de cette variable (aucun garde-fou au moment du plan ne rejette `0` — App_GKE lui-même autorise `0` pour les applications capables de mise à zéro). Définir cette variable à `0` n'a aucun effet et ne réduit pas les coûts ; un pod résident garde le tableau blanc joignable en permanence. |
+| `service_type` | `LoadBalancer` | Moyen | `ClusterIP` rend Excalidraw injoignable depuis l'extérieur du cluster. |
+| `application_version` | épingler en production | Moyen | `latest` est glissant — un nouveau tag amont peut modifier l'interface ou le comportement au prochain rebuild. Épinglez une version. |
+| `stateful_pvc_enabled` / `enable_redis` / entrées de base de données | laisser par défaut (désactivé) | Faible | Les activer provisionne des PVC/Redis/Cloud SQL qu'Excalidraw n'utilise jamais — un coût inutile, sans bénéfice. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Moyen | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms (pertinent uniquement si vous activez les quotas de ressources). |
+| `homeserver_url` / `homeserver_name` | laisser vide | Faible | Entrées résiduelles d'Element ; les définir n'a aucun effet sur la SPA Excalidraw. |
 
 ---
 

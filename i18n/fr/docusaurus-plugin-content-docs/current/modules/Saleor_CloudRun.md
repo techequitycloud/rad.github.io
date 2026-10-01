@@ -416,24 +416,24 @@ sous la forme `SALEOR_DASHBOARD_URL`, plutôt que comme sortie Terraform de prem
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critical | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
-| `SECRET_KEY` (généré automatiquement) | Jamais de rotation à la légère | Critical | La rotation de la clé de signature de Django invalide les cookies/sessions signés. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `cpu_always_allocated` | `true` | High | Le définir sur `false` prive le worker Celery colocalisé de ressources entre les requêtes — le traitement des commandes/webhooks/e-mails se dégrade ou se bloque. |
-| `container_resources` | `{ cpu_limit="2000m", memory_limit="3Gi" }` | High | Des tailles inférieures provoquent des OOMKill sous la charge combinée uvicorn + Celery — confirmé en conditions réelles. |
-| `enable_redis` | `true` avant de compter sur le débit des tâches asynchrones à grande échelle | Medium | Sans Redis, le cache et le broker Celery se replient sur un comportement inopérant/en mémoire lié à une seule instance. |
-| `redis_host` | À définir explicitement lorsque `enable_redis = true` | High | Cloud Run n'a pas de repli automatique pour l'hôte Redis ; un hôte vide casse la composition de `CACHE_URL`/`CELERY_BROKER_URL`. |
-| `min_instance_count` | `1` en production | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité, plus un bref intervalle avant la reprise du worker Celery. |
-| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer rapidement depuis Secret Manager | High | Le compte administrateur d'amorçage est le seul moyen d'accès au premier déploiement ; perdre la trace du mot de passe généré impose une réinitialisation manuelle via le shell Django. |
-| `enable_iap` | uniquement lorsque le Dashboard/l'API n'ont pas besoin d'un accès public | High | IAP bloque les requêtes non authentifiées vers les services API et Dashboard. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences. |
+| `RSA_PRIVATE_KEY` (généré automatiquement) | Jamais de rotation hors d'une fenêtre de maintenance | Critique | Sa rotation invalide chaque JWT émis — toutes les sessions actives doivent se réauthentifier. |
+| `SECRET_KEY` (généré automatiquement) | Jamais de rotation à la légère | Critique | La rotation de la clé de signature de Django invalide les cookies/sessions signés. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `cpu_always_allocated` | `true` | Élevé | Le définir sur `false` prive le worker Celery colocalisé de ressources entre les requêtes — le traitement des commandes/webhooks/e-mails se dégrade ou se bloque. |
+| `container_resources` | `{ cpu_limit="2000m", memory_limit="3Gi" }` | Élevé | Des tailles inférieures provoquent des OOMKill sous la charge combinée uvicorn + Celery — confirmé en conditions réelles. |
+| `enable_redis` | `true` avant de compter sur le débit des tâches asynchrones à grande échelle | Moyen | Sans Redis, le cache et le broker Celery se replient sur un comportement inopérant/en mémoire lié à une seule instance. |
+| `redis_host` | À définir explicitement lorsque `enable_redis = true` | Élevé | Cloud Run n'a pas de repli automatique pour l'hôte Redis ; un hôte vide casse la composition de `CACHE_URL`/`CELERY_BROKER_URL`. |
+| `min_instance_count` | `1` en production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité, plus un bref intervalle avant la reprise du worker Celery. |
+| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer rapidement depuis Secret Manager | Élevé | Le compte administrateur d'amorçage est le seul moyen d'accès au premier déploiement ; perdre la trace du mot de passe généré impose une réinitialisation manuelle via le shell Django. |
+| `enable_iap` | uniquement lorsque le Dashboard/l'API n'ont pas besoin d'un accès public | Élevé | IAP bloque les requêtes non authentifiées vers les services API et Dashboard. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences. |
 
 ---
 

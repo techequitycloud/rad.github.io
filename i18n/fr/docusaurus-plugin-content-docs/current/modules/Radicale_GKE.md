@@ -239,16 +239,16 @@ leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` en production | Medium | Sans cela, `/var/lib/radicale` est adossé à GCS FUSE — acceptable compte tenu du plafond d'une seule instance, mais ce n'est pas un véritable système de fichiers avec verrouillage POSIX. |
-| S'attendre à des collections par défaut sur un déploiement adossé à un PVC | Créer le premier agenda via un véritable client CalDAV ou `curl -X MKCOL` | Medium | La tâche `seed-default-collections` ne peut pas monter le PVC `ReadWriteOnce` d'un StatefulSet, si bien que ses écritures aboutissent dans le bucket GCS inutilisé — les collections pré-amorcées n'apparaissent silencieusement pas sur le système de fichiers du pod en cours d'exécution. |
-| `max_instance_count` | Laisser à `1` | **Critical** | Le backend de stockage de Radicale n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
-| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Low–Medium | Passer à `standard-rwo`/`premium-rwo` (SSD) consomme le quota `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — le profil d'E/S de Radicale ne nécessite pas les IOPS d'un SSD. |
-| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critical** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
+| `stateful_pvc_enabled` | `true` en production | Moyen | Sans cela, `/var/lib/radicale` est adossé à GCS FUSE — acceptable compte tenu du plafond d'une seule instance, mais ce n'est pas un véritable système de fichiers avec verrouillage POSIX. |
+| S'attendre à des collections par défaut sur un déploiement adossé à un PVC | Créer le premier agenda via un véritable client CalDAV ou `curl -X MKCOL` | Moyen | La tâche `seed-default-collections` ne peut pas monter le PVC `ReadWriteOnce` d'un StatefulSet, si bien que ses écritures aboutissent dans le bucket GCS inutilisé — les collections pré-amorcées n'apparaissent silencieusement pas sur le système de fichiers du pod en cours d'exécution. |
+| `max_instance_count` | Laisser à `1` | **Critique** | Le backend de stockage de Radicale n'est pas conçu pour un accès concurrent par plusieurs instances ; augmenter cette valeur expose à une corruption des données. |
+| `stateful_pvc_storage_class` | Laisser à `standard` (HDD) | Faible–Moyen | Passer à `standard-rwo`/`premium-rwo` (SSD) consomme le quota `SSD_TOTAL_GB`, bien plus restreint, sans réel bénéfice — le profil d'E/S de Radicale ne nécessite pas les IOPS d'un SSD. |
+| Identifiant administrateur | À récupérer dans Secret Manager après le premier déploiement | **Critique** | Contrairement aux applications dotées d'un identifiant par défaut bien connu, Radicale génère un véritable secret — impossible de se connecter tant que vous n'avez pas récupéré `ADMIN_PASSWORD`. |
 
 ---
 

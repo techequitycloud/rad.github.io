@@ -363,26 +363,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Metabase requiert PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver casse toutes les connexions à la base de données (le sidecar Auth Proxy est requis). |
-| `memory_limit` | `4Gi` | Critical | En dessous de 2 GiB, la JVM plante avec une OutOfMemoryError au démarrage. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'application. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `application_version` | à incrémenter avec prudence | Critical | Les migrations de Metabase sont à sens unique ; revenir à une version antérieure corrompt le schéma. |
-| `startup_probe.failure_threshold` | `15` (≥ 15) | High | Le réduire provoque l'arrêt prématuré du conteneur avant que la JVM n'ait terminé son démarrage. |
-| `min_instance_count` | `1` en production | High | `0` entraîne des démarrages à froid de 60 à 120s ; échecs de la sonde de démarrage à la première requête. |
-| `cpu_limit` | `2000m` | High | En dessous de 500m, la compilation JIT de la JVM bloque le démarrage et déclenche des échecs de sonde. |
-| `cpu_always_allocated` | `true` si vous utilisez des abonnements/pulses planifiés ou des analyses de synchronisation de bases de données | Medium | Vaut `false` par défaut (facturation à la requête) ; les abonnements/pulses planifiés et les analyses de synchronisation s'exécutent sans requête entrante et sont bridés à un processeur quasi nul, ils risquent donc de ne pas aboutir à moins de passer la valeur à `true`. |
-| `enable_iap` / `ingress_settings` | IAP activé ; `internal-and-cloud-load-balancing` | High | Sinon, la page de connexion de Metabase est joignable publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `timeout_seconds` | `300` | Medium | Une valeur inférieure à 120s interrompt les requêtes analytiques en cours. |
-| `enable_auto_password_rotation` | `false` | Medium | L'activer sans `rotation_propagation_delay_sec` suffisant provoque de brèves erreurs 500 pendant la rotation. |
-| `enable_redis` | `false` | Low | Metabase n'utilise pas Redis ; l'activer n'a aucun effet. |
+| `database_type` | `POSTGRES_15` | Critique | Metabase requiert PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver casse toutes les connexions à la base de données (le sidecar Auth Proxy est requis). |
+| `memory_limit` | `4Gi` | Critique | En dessous de 2 GiB, la JVM plante avec une OutOfMemoryError au démarrage. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'application. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `application_version` | à incrémenter avec prudence | Critique | Les migrations de Metabase sont à sens unique ; revenir à une version antérieure corrompt le schéma. |
+| `startup_probe.failure_threshold` | `15` (≥ 15) | Élevé | Le réduire provoque l'arrêt prématuré du conteneur avant que la JVM n'ait terminé son démarrage. |
+| `min_instance_count` | `1` en production | Élevé | `0` entraîne des démarrages à froid de 60 à 120s ; échecs de la sonde de démarrage à la première requête. |
+| `cpu_limit` | `2000m` | Élevé | En dessous de 500m, la compilation JIT de la JVM bloque le démarrage et déclenche des échecs de sonde. |
+| `cpu_always_allocated` | `true` si vous utilisez des abonnements/pulses planifiés ou des analyses de synchronisation de bases de données | Moyen | Vaut `false` par défaut (facturation à la requête) ; les abonnements/pulses planifiés et les analyses de synchronisation s'exécutent sans requête entrante et sont bridés à un processeur quasi nul, ils risquent donc de ne pas aboutir à moins de passer la valeur à `true`. |
+| `enable_iap` / `ingress_settings` | IAP activé ; `internal-and-cloud-load-balancing` | Élevé | Sinon, la page de connexion de Metabase est joignable publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `timeout_seconds` | `300` | Moyen | Une valeur inférieure à 120s interrompt les requêtes analytiques en cours. |
+| `enable_auto_password_rotation` | `false` | Moyen | L'activer sans `rotation_propagation_delay_sec` suffisant provoque de brèves erreurs 500 pendant la rotation. |
+| `enable_redis` | `false` | Faible | Metabase n'utilise pas Redis ; l'activer n'a aucun effet. |
 
 ---
 

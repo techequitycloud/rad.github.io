@@ -496,8 +496,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs
@@ -511,21 +511,21 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` (fixe) | Critical | Snipe-IT nécessite MySQL ; `SnipeIT_Common` ignore les autres valeurs. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `APP_KEY` (généré automatiquement) | Ne jamais le modifier après le premier démarrage | Critical | Le régénérer invalide toutes les sessions actives et toutes les données chiffrées avec l'ancienne clé. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `enable_cloudsql_volume` | `false` (TCP) | High | C'est la valeur par défaut testée pour le client Laravel/MySQL de Snipe-IT ; passer à `true` monte à la place le chemin du socket, mais cela n'a pas été vérifié avec la configuration de base de données Laravel de Snipe-IT pour ce module. |
-| `enable_nfs` | `true` | High | Le désactiver rend éphémères les images d'actifs, signatures et codes-barres téléversés — isolés par instance et perdus lors d'un démarrage à froid. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans comportement vérifié du NFS partagé et du pilote de sessions expose à des incohérences dans les fichiers téléversés et la gestion des sessions. |
-| `ingress_settings` | `all` | High | La restreindre à `internal` bloque l'assistant public `/setup` nécessaire à la création du premier compte administrateur. |
-| `container_port` | `80` | High | L'Apache de Snipe-IT écoute sur le port 80 ; le modifier sans image personnalisée correspondante casse le routage. |
-| `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | À laisser tels quels | Low | Ces variables sont inertes pour ce module — `main.tf` code en dur les bons noms natifs de Laravel, quelle que soit leur valeur. |
-| `php_memory_limit` / `upload_max_filesize` / `post_max_size` | N'importe quelle valeur | Low | Acceptés mais non appliqués à l'image préconstruite — ne comptez pas sur eux pour modifier le comportement de PHP. |
-| `min_instance_count` | `1` pour la production | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| `memory_limit` | `2Gi` | Medium | Des valeurs proches du plancher de 512Mi exposent à des arrêts OOM lors d'imports/téléversements d'actifs simultanés. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | À activer en production | Medium | L'assistant d'installation et l'interface d'administration sont accessibles publiquement sans protection WAF. |
+| `database_type` | `MYSQL_8_0` (fixe) | Critique | Snipe-IT nécessite MySQL ; `SnipeIT_Common` ignore les autres valeurs. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le modifier après le premier démarrage | Critique | Le régénérer invalide toutes les sessions actives et toutes les données chiffrées avec l'ancienne clé. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_cloudsql_volume` | `false` (TCP) | Élevé | C'est la valeur par défaut testée pour le client Laravel/MySQL de Snipe-IT ; passer à `true` monte à la place le chemin du socket, mais cela n'a pas été vérifié avec la configuration de base de données Laravel de Snipe-IT pour ce module. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend éphémères les images d'actifs, signatures et codes-barres téléversés — isolés par instance et perdus lors d'un démarrage à froid. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans comportement vérifié du NFS partagé et du pilote de sessions expose à des incohérences dans les fichiers téléversés et la gestion des sessions. |
+| `ingress_settings` | `all` | Élevé | La restreindre à `internal` bloque l'assistant public `/setup` nécessaire à la création du premier compte administrateur. |
+| `container_port` | `80` | Élevé | L'Apache de Snipe-IT écoute sur le port 80 ; le modifier sans image personnalisée correspondante casse le routage. |
+| `db_user_env_var_name` / `db_name_env_var_name` / `db_password_env_var_name` | À laisser tels quels | Faible | Ces variables sont inertes pour ce module — `main.tf` code en dur les bons noms natifs de Laravel, quelle que soit leur valeur. |
+| `php_memory_limit` / `upload_max_filesize` / `post_max_size` | N'importe quelle valeur | Faible | Acceptés mais non appliqués à l'image préconstruite — ne comptez pas sur eux pour modifier le comportement de PHP. |
+| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
+| `memory_limit` | `2Gi` | Moyen | Des valeurs proches du plancher de 512Mi exposent à des arrêts OOM lors d'imports/téléversements d'actifs simultanés. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | À activer en production | Moyen | L'assistant d'installation et l'interface d'administration sont accessibles publiquement sans protection WAF. |
 
 ---
 

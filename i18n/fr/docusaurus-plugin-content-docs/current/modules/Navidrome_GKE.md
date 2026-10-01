@@ -358,24 +358,24 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` forcé avec un paramètre sans état, IAP sans identité autorisée, des `quota_memory_*` donnés sous forme d'entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver (ou faire reposer `/data` sur `gcsfuse` d'une autre manière) risque de corrompre le modèle de verrouillage en écriture de SQLite — corruption de la base, perte des métadonnées de la bibliothèque. |
-| `stateful_pvc_storage_class` | `standard-rwo` (ou `standard` en cas de pression sur le quota) | High | Le SSD consomme le quota régional `SSD_TOTAL_GB`, très limité ; un large ensemble d'applications avec état peut l'épuiser — passez alors au HDD `standard`. |
-| `max_instance_count` | `1` | Critical | Navidrome n'a aucun mode SQLite multi-écrivain ; dépasser 1 risque des écritures concurrentes sur le même PVC et une corruption de la base. |
-| Volume `/music` (`gcs_volumes` ou `enable_nfs`) | Configurer explicitement | High | Rien n'est monté sur `/music` par défaut — l'analyse de la bibliothèque ne trouve aucun fichier et Navidrome sert un catalogue vide tant qu'aucun volume n'est ajouté. |
-| `enable_admin_password` | `true` pour tout déploiement accessible depuis l'extérieur | High | `false` laisse l'assistant du premier lancement exposé à la première personne qui atteint l'URL — elle devient administrateur. |
-| `application_domains` / `service_type` | Définir l'un des deux pour exposer à l'extérieur | Medium | La combinaison par défaut `ClusterIP` + `application_domains` vide rend Navidrome accessible uniquement à l'intérieur du VPC — normal pour un usage interne, surprenant si vous vouliez un accès public. |
-| `stateful_pvc_size` | `20Gi` (à augmenter pour les très grandes bibliothèques) | Medium | Un sous-dimensionnement risque que la base SQLite/le cache/l'index remplissent le PVC sur les grandes bibliothèques ; le pod n'étend pas automatiquement le stockage. |
-| `quota_cpu_requests` / `quota_memory_requests` / etc. | N/A | Low | Ces variables `quota_*` sont déclarées mais **non transmises** au socle par ce module — les définir n'a aucun effet ; seul `enable_resource_quota` est relayé (en se rabattant sur les valeurs de quota par défaut d'App_GKE). |
-| `memory_limit` | `1Gi` | Medium | En dessous d'environ 512Mi, le pod risque un OOM en conservant l'index de recherche en mémoire pendant l'analyse d'une grande bibliothèque. |
-| `stateful_fs_group` | `3000` | Medium | Un `fsGroup` incohérent peut rendre le PVC non inscriptible par l'UID non root de Navidrome, bloquant les écritures de la base au démarrage. |
-| `backup_retention_days` | `7` (à augmenter en production) | Low | Trop court pour une conservation conforme des sauvegardes de `/data`. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver (ou faire reposer `/data` sur `gcsfuse` d'une autre manière) risque de corrompre le modèle de verrouillage en écriture de SQLite — corruption de la base, perte des métadonnées de la bibliothèque. |
+| `stateful_pvc_storage_class` | `standard-rwo` (ou `standard` en cas de pression sur le quota) | Élevé | Le SSD consomme le quota régional `SSD_TOTAL_GB`, très limité ; un large ensemble d'applications avec état peut l'épuiser — passez alors au HDD `standard`. |
+| `max_instance_count` | `1` | Critique | Navidrome n'a aucun mode SQLite multi-écrivain ; dépasser 1 risque des écritures concurrentes sur le même PVC et une corruption de la base. |
+| Volume `/music` (`gcs_volumes` ou `enable_nfs`) | Configurer explicitement | Élevé | Rien n'est monté sur `/music` par défaut — l'analyse de la bibliothèque ne trouve aucun fichier et Navidrome sert un catalogue vide tant qu'aucun volume n'est ajouté. |
+| `enable_admin_password` | `true` pour tout déploiement accessible depuis l'extérieur | Élevé | `false` laisse l'assistant du premier lancement exposé à la première personne qui atteint l'URL — elle devient administrateur. |
+| `application_domains` / `service_type` | Définir l'un des deux pour exposer à l'extérieur | Moyen | La combinaison par défaut `ClusterIP` + `application_domains` vide rend Navidrome accessible uniquement à l'intérieur du VPC — normal pour un usage interne, surprenant si vous vouliez un accès public. |
+| `stateful_pvc_size` | `20Gi` (à augmenter pour les très grandes bibliothèques) | Moyen | Un sous-dimensionnement risque que la base SQLite/le cache/l'index remplissent le PVC sur les grandes bibliothèques ; le pod n'étend pas automatiquement le stockage. |
+| `quota_cpu_requests` / `quota_memory_requests` / etc. | N/A | Faible | Ces variables `quota_*` sont déclarées mais **non transmises** au socle par ce module — les définir n'a aucun effet ; seul `enable_resource_quota` est relayé (en se rabattant sur les valeurs de quota par défaut d'App_GKE). |
+| `memory_limit` | `1Gi` | Moyen | En dessous d'environ 512Mi, le pod risque un OOM en conservant l'index de recherche en mémoire pendant l'analyse d'une grande bibliothèque. |
+| `stateful_fs_group` | `3000` | Moyen | Un `fsGroup` incohérent peut rendre le PVC non inscriptible par l'UID non root de Navidrome, bloquant les écritures de la base au démarrage. |
+| `backup_retention_days` | `7` (à augmenter en production) | Faible | Trop court pour une conservation conforme des sauvegardes de `/data`. |
 
 ---
 

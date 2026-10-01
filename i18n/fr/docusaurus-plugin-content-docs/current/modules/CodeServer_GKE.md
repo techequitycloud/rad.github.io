@@ -356,23 +356,23 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `workload_type = "Deployment"` avec `stateful_pvc_enabled = true`, IAP sans identité autorisée, une valeur `quota_memory_*` en entier brut, un `timeout_seconds` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_password` | `true` (à conserver en cas d'exposition externe) | Critical | Le désactiver avec `service_type = LoadBalancer` (ou un domaine personnalisé) expose à internet un IDE entièrement non authentifié — terminal compris. |
-| Volume de l'espace de travail (bucket / PVC) | Ne jamais le supprimer | Critical | Le bucket GCS ou le PVC de `/home/coder` est le seul état persistant ; le supprimer efface tous les paramètres, extensions et fichiers. |
-| Chemin de `startup_probe` / `liveness_probe` | `/healthz` lorsqu'un mot de passe est défini | High | La valeur par défaut GKE `/health` renvoie `401` avec un mot de passe ; le pod ne devient jamais Ready et redémarre en boucle. |
-| `stateful_pvc_enabled` + `workload_type` | Ne définissez pas `Deployment` avec le PVC activé | High | La combinaison est rejetée au moment du plan ; le PVC nécessite un StatefulSet. |
-| `max_instance_count` | `1` | High | Dépasser 1 répartit les sessions de l'éditeur entre pods et expose à des écritures concurrentes sur un unique volume d'espace de travail. |
-| `stateful_fs_group` | `3000` (non nul) | High | La valeur `0` laisse `fsGroup` non défini ; le PVC bloc peut appartenir à root et code-server (UID 1000) ne peut pas écrire dans `/home/coder`. |
-| `service_type` | `ClusterIP` (ou LoadBalancer + mot de passe) | High | `LoadBalancer` sans mot de passe publie un IDE ouvert ; `ClusterIP` bloque tout accès externe par navigateur. |
-| `enable_cloudsql_volume` | `false` | Low | code-server n'a pas de base de données ; l'activer ajoute un sidecar Auth Proxy inutile. |
-| `memory_limit` | `1Gi`+ | Medium | Des serveurs de langage ou des extensions gourmands peuvent provoquer un OOM en dessous de 1 GiB. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_password` | `true` (à conserver en cas d'exposition externe) | Critique | Le désactiver avec `service_type = LoadBalancer` (ou un domaine personnalisé) expose à internet un IDE entièrement non authentifié — terminal compris. |
+| Volume de l'espace de travail (bucket / PVC) | Ne jamais le supprimer | Critique | Le bucket GCS ou le PVC de `/home/coder` est le seul état persistant ; le supprimer efface tous les paramètres, extensions et fichiers. |
+| Chemin de `startup_probe` / `liveness_probe` | `/healthz` lorsqu'un mot de passe est défini | Élevé | La valeur par défaut GKE `/health` renvoie `401` avec un mot de passe ; le pod ne devient jamais Ready et redémarre en boucle. |
+| `stateful_pvc_enabled` + `workload_type` | Ne définissez pas `Deployment` avec le PVC activé | Élevé | La combinaison est rejetée au moment du plan ; le PVC nécessite un StatefulSet. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 répartit les sessions de l'éditeur entre pods et expose à des écritures concurrentes sur un unique volume d'espace de travail. |
+| `stateful_fs_group` | `3000` (non nul) | Élevé | La valeur `0` laisse `fsGroup` non défini ; le PVC bloc peut appartenir à root et code-server (UID 1000) ne peut pas écrire dans `/home/coder`. |
+| `service_type` | `ClusterIP` (ou LoadBalancer + mot de passe) | Élevé | `LoadBalancer` sans mot de passe publie un IDE ouvert ; `ClusterIP` bloque tout accès externe par navigateur. |
+| `enable_cloudsql_volume` | `false` | Faible | code-server n'a pas de base de données ; l'activer ajoute un sidecar Auth Proxy inutile. |
+| `memory_limit` | `1Gi`+ | Moyen | Des serveurs de langage ou des extensions gourmands peuvent provoquer un OOM en dessous de 1 GiB. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
 
 ---
 

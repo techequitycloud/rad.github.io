@@ -336,25 +336,25 @@ en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `anthropic_api_key` | Définie au premier déploiement | Critical | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
-| Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critical | Effectuer la rotation du jeton dans Secret Manager sans redéployer le service entraîne le rejet de toutes les requêtes clientes jusqu'au redéploiement du service. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `execution_environment` | `gen2` | High | Gen1 ne prend pas en charge GCS Fuse ; le montage de l'espace de travail échoue silencieusement. |
-| `cpu_always_allocated` | `true` | High | La limitation du CPU casse les connexions WebSocket et les opérations asynchrones des agents. |
-| `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | High | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |
-| `telegram_webhook_secret` / `slack_signing_secret` | définis lorsque l'intégration est activée | High | Une valeur vide désactive la vérification des signatures, ce qui permet l'injection de faux webhooks. |
-| `min_instance_count` | `1` pour les agents en production | High | `0` signifie que les événements de webhook Telegram/Slack sont perdus pendant un démarrage à froid (15 à 20 s). |
-| `skills_repo_url` | URL joignable ou vide | High | Une URL injoignable fait échouer le clonage git au démarrage, ce qui redémarre le conteneur. |
-| `skills_repo_ref` | référence existante | High | Une branche ou un tag inexistant fait échouer le clonage à chaque démarrage. |
-| `max_instance_count` | `1` par tenant | High | Plusieurs instances pour le même tenant répartissent l'état des agents entre les réplicas. |
-| `enable_iap` | à activer pour un usage d'administration | Medium | Sinon, la passerelle est joignable via son URL `run.app`. Les points de terminaison de webhooks Telegram/Slack ne peuvent pas s'authentifier avec une identité Google — veillez à ce qu'ils ne soient pas derrière IAP. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conformité ; une purge accidentelle du bucket fait perdre définitivement l'état des agents. |
-| `enable_vpc_sc` sans `organization_id` | à définir explicitement | Medium | VPC-SC est ignoré silencieusement, ce qui laisse les identifiants sans protection de périmètre. |
+| `anthropic_api_key` | Définie au premier déploiement | Critique | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
+| Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critique | Effectuer la rotation du jeton dans Secret Manager sans redéployer le service entraîne le rejet de toutes les requêtes clientes jusqu'au redéploiement du service. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne prend pas en charge GCS Fuse ; le montage de l'espace de travail échoue silencieusement. |
+| `cpu_always_allocated` | `true` | Élevé | La limitation du CPU casse les connexions WebSocket et les opérations asynchrones des agents. |
+| `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | Élevé | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |
+| `telegram_webhook_secret` / `slack_signing_secret` | définis lorsque l'intégration est activée | Élevé | Une valeur vide désactive la vérification des signatures, ce qui permet l'injection de faux webhooks. |
+| `min_instance_count` | `1` pour les agents en production | Élevé | `0` signifie que les événements de webhook Telegram/Slack sont perdus pendant un démarrage à froid (15 à 20 s). |
+| `skills_repo_url` | URL joignable ou vide | Élevé | Une URL injoignable fait échouer le clonage git au démarrage, ce qui redémarre le conteneur. |
+| `skills_repo_ref` | référence existante | Élevé | Une branche ou un tag inexistant fait échouer le clonage à chaque démarrage. |
+| `max_instance_count` | `1` par tenant | Élevé | Plusieurs instances pour le même tenant répartissent l'état des agents entre les réplicas. |
+| `enable_iap` | à activer pour un usage d'administration | Moyen | Sinon, la passerelle est joignable via son URL `run.app`. Les points de terminaison de webhooks Telegram/Slack ne peuvent pas s'authentifier avec une identité Google — veillez à ce qu'ils ne soient pas derrière IAP. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conformité ; une purge accidentelle du bucket fait perdre définitivement l'état des agents. |
+| `enable_vpc_sc` sans `organization_id` | à définir explicitement | Moyen | VPC-SC est ignoré silencieusement, ce qui laisse les identifiants sans protection de périmètre. |
 
 ---
 

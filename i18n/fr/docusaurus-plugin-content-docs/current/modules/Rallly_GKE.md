@@ -333,25 +333,25 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `min_instance_count > max_instance_count`, IAP sans identifiant/secret de client OAuth, `enable_redis` sans `redis_host` ni NFS, `enable_cloudsql_volume = true` avec `database_type = NONE`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_PASSWORD` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Rallly ne prend en charge que PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `smtp_host` / `smtp_user` / `smtp_password` | À définir pour activer l'e-mail | High | Sans relais SMTP fonctionnel, les e-mails de connexion ne partent jamais et les utilisateurs ne peuvent pas se connecter. |
-| `base_url` | URL du LoadBalancer externe / du domaine personnalisé | High | Si elle reste vide, les liens d'invitation et de connexion ne pointent pas vers l'adresse que visitent les utilisateurs. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; une garde au moment du plan le bloque avec `database_type = NONE`. |
-| `min_instance_count` / `max_instance_count` | `min ≤ max` | High | Une plage inversée crée une configuration HPA contradictoire ; la garde de validation la rejette. |
-| `enable_redis` | `false` | Medium | Rallly n'utilise pas Redis ; l'activer sans `redis_host` ni NFS est rejeté par la garde de validation. |
-| Délais de `startup_probe` | Conserver la valeur par défaut généreuse | Medium | Une fenêtre trop courte peut faire échouer la sonde pendant la migration Prisma du premier démarrage. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences. |
+| `SECRET_PASSWORD` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide les données chiffrées précédemment et les sessions actives. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Rallly ne prend en charge que PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `smtp_host` / `smtp_user` / `smtp_password` | À définir pour activer l'e-mail | Élevé | Sans relais SMTP fonctionnel, les e-mails de connexion ne partent jamais et les utilisateurs ne peuvent pas se connecter. |
+| `base_url` | URL du LoadBalancer externe / du domaine personnalisé | Élevé | Si elle reste vide, les liens d'invitation et de connexion ne pointent pas vers l'adresse que visitent les utilisateurs. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; une garde au moment du plan le bloque avec `database_type = NONE`. |
+| `min_instance_count` / `max_instance_count` | `min ≤ max` | Élevé | Une plage inversée crée une configuration HPA contradictoire ; la garde de validation la rejette. |
+| `enable_redis` | `false` | Moyen | Rallly n'utilise pas Redis ; l'activer sans `redis_host` ni NFS est rejeté par la garde de validation. |
+| Délais de `startup_probe` | Conserver la valeur par défaut généreuse | Moyen | Une fenêtre trop courte peut faire échouer la sonde pendant la migration Prisma du premier démarrage. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences. |
 
 ---
 

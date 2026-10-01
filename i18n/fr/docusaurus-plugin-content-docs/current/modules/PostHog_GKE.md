@@ -508,25 +508,25 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_redis` | `true` (ne peut pas être désactivé) | Critical | Le broker Celery, le pub/sub du plugin-server et le cache Django de PostHog nécessitent tous Redis ; le serveur refuse de démarrer sans lui. |
-| `clickhouse_host` / `enable_inline_clickhouse` | l'un des deux doit être résolu | Critical | Sans point de terminaison ClickHouse joignable, l'ensemble du pipeline d'événements analytiques de PostHog ne peut pas fonctionner — ni événements, ni insights, ni relecture de session. |
-| `kafka_hosts` / `enable_inline_kafka` | l'un des deux doit être résolu (par défaut : intégré) | Critical | Sans Kafka, les événements ingérés n'ont nulle part où être mis en file d'attente — le pipeline se bloque. |
-| `max_instance_count` | `1` (validé, ne peut pas être dépassé) | Critical | L'ordonnanceur Celery beat colocalisé déclenche chaque tâche périodique une fois par réplica ; N réplicas signifient N exécutions en double des tâches planifiées. |
-| `enable_inline_clickhouse` | `false` en production | Critical | La solution de repli intégrée au module n'a pas de volume persistant — chaque redémarrage du pod perd toutes les données analytiques (événements, relectures de session, insights). |
-| `enable_inline_kafka` | `true` acceptable dans la plupart des cas, `false` + broker externe pour une file d'attente durable | High | Le Redpanda intégré n'a pas de volume persistant — une replanification du pod perd les événements non consommés (acceptable pour une ingestion renvoyée, pas pour une file d'attente durable). |
-| `redis_host` | hôte explicite, ou laisser `""` avec `enable_nfs=true` | Critical | Si aucun des deux n'est défini, `REDIS_HOST` est vide et PostHog échoue immédiatement au démarrage avec une erreur claire. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur. Notez que cela n'affecte que les métadonnées de l'application, pas les données analytiques (qui résident dans ClickHouse). |
-| `cpu_limit` / `memory_limit` | `4000m` / `8Gi` minimum | High | En dessous, le premier démarrage réellement lourd de PostHog (Django enregistrant ~80 sous-applications, plus le Celery worker+beat colocalisé) provoque, comme vérifié en conditions réelles, des expirations de la sonde de démarrage (CPU) ou des arrêts OOM (mémoire, confirmés à 4Gi comme à 6Gi). |
-| `clickhouse_image_tag` (solution de repli intégrée) | `26.6.1.1193` — n'utilisez pas de tag récent générique | High | Une version récente générique (par exemple `24.12-alpine`) échoue à une vérification de validation d'expression TTL utilisée par l'une des migrations ClickHouse de PostHog, sans contournement possible par la configuration. |
-| Rotation de `SECRET_KEY` | ne jamais effectuer de rotation après le premier démarrage | Critical | La rotation de la clé de signature de Django invalide toutes les sessions actives. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, l'interface web de PostHog (et l'écran initial d'inscription de l'administrateur) est accessible publiquement. |
-| `site_url` | à définir dès qu'un domaine personnalisé/une IP statique existe | Medium | S'il reste sur la valeur par défaut interne au cluster prévue, les liens des tableaux de bord, les insights partagés et les charges utiles de webhooks pointent vers une URL interne inaccessible une fois l'accès externe configuré. |
-| `application_version` | `latest` (réellement à jour, contrairement à plusieurs applications de ce catalogue) | Medium | Une incrémentation déclenche une reconstruction de l'image et un redémarrage progressif ; vérifiez la compatibilité des schémas Postgres + ClickHouse lors des changements de version majeure. |
+| `enable_redis` | `true` (ne peut pas être désactivé) | Critique | Le broker Celery, le pub/sub du plugin-server et le cache Django de PostHog nécessitent tous Redis ; le serveur refuse de démarrer sans lui. |
+| `clickhouse_host` / `enable_inline_clickhouse` | l'un des deux doit être résolu | Critique | Sans point de terminaison ClickHouse joignable, l'ensemble du pipeline d'événements analytiques de PostHog ne peut pas fonctionner — ni événements, ni insights, ni relecture de session. |
+| `kafka_hosts` / `enable_inline_kafka` | l'un des deux doit être résolu (par défaut : intégré) | Critique | Sans Kafka, les événements ingérés n'ont nulle part où être mis en file d'attente — le pipeline se bloque. |
+| `max_instance_count` | `1` (validé, ne peut pas être dépassé) | Critique | L'ordonnanceur Celery beat colocalisé déclenche chaque tâche périodique une fois par réplica ; N réplicas signifient N exécutions en double des tâches planifiées. |
+| `enable_inline_clickhouse` | `false` en production | Critique | La solution de repli intégrée au module n'a pas de volume persistant — chaque redémarrage du pod perd toutes les données analytiques (événements, relectures de session, insights). |
+| `enable_inline_kafka` | `true` acceptable dans la plupart des cas, `false` + broker externe pour une file d'attente durable | Élevé | Le Redpanda intégré n'a pas de volume persistant — une replanification du pod perd les événements non consommés (acceptable pour une ingestion renvoyée, pas pour une file d'attente durable). |
+| `redis_host` | hôte explicite, ou laisser `""` avec `enable_nfs=true` | Critique | Si aucun des deux n'est défini, `REDIS_HOST` est vide et PostHog échoue immédiatement au démarrage avec une erreur claire. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur. Notez que cela n'affecte que les métadonnées de l'application, pas les données analytiques (qui résident dans ClickHouse). |
+| `cpu_limit` / `memory_limit` | `4000m` / `8Gi` minimum | Élevé | En dessous, le premier démarrage réellement lourd de PostHog (Django enregistrant ~80 sous-applications, plus le Celery worker+beat colocalisé) provoque, comme vérifié en conditions réelles, des expirations de la sonde de démarrage (CPU) ou des arrêts OOM (mémoire, confirmés à 4Gi comme à 6Gi). |
+| `clickhouse_image_tag` (solution de repli intégrée) | `26.6.1.1193` — n'utilisez pas de tag récent générique | Élevé | Une version récente générique (par exemple `24.12-alpine`) échoue à une vérification de validation d'expression TTL utilisée par l'une des migrations ClickHouse de PostHog, sans contournement possible par la configuration. |
+| Rotation de `SECRET_KEY` | ne jamais effectuer de rotation après le premier démarrage | Critique | La rotation de la clé de signature de Django invalide toutes les sessions actives. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'interface web de PostHog (et l'écran initial d'inscription de l'administrateur) est accessible publiquement. |
+| `site_url` | à définir dès qu'un domaine personnalisé/une IP statique existe | Moyen | S'il reste sur la valeur par défaut interne au cluster prévue, les liens des tableaux de bord, les insights partagés et les charges utiles de webhooks pointent vers une URL interne inaccessible une fois l'accès externe configuré. |
+| `application_version` | `latest` (réellement à jour, contrairement à plusieurs applications de ce catalogue) | Moyen | Une incrémentation déclenche une reconstruction de l'image et un redémarrage progressif ; vérifiez la compatibilité des schémas Postgres + ClickHouse lors des changements de version majeure. |
 
 ---
 

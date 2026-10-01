@@ -363,25 +363,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Le mode par défaut de LubeLogger sert un unique fichier de base de données intégré et partagé depuis un seul volume ; plus d'un réplica expose à une corruption de la base par des écritures concurrentes. Imposé par une garde de validation au moment du plan. |
-| `stateful_pvc_enabled` | `true` | High | Un véritable PVC bloc garantit un verrouillage de fichiers fiable ; revenir à GCS FUSE pour `/App/data` (en passant ce paramètre à `false`) expose à une contention sur les verrous en cas d'écritures concurrentes. |
-| `stateful_pvc_mount_path` | `/App/data` | Critical | Doit correspondre au répertoire de données réel de LubeLogger — un mauvais chemin signifie que la base de données et les fichiers téléversés sont écrits dans le stockage éphémère du pod et perdus à chaque redémarrage. |
-| Buckets `storage`/`dpkeys`, ou le PVC | Ne jamais les supprimer | Critical | Perdre `/App/data` (PVC ou bucket `storage`) fait perdre tous les dossiers de véhicules ; perdre `dpkeys` invalide toutes les sessions de connexion existantes (récupérable — impose seulement une nouvelle connexion). |
-| `EnableAuth` | `true` (par défaut) | Critical | Le passer à `false` rétablit le mode d'accès entièrement ouvert de LubeLogger — toute personne disposant de l'URL peut consulter et modifier toutes les données sans aucune connexion. |
-| Inscription au premier lancement | À effectuer immédiatement après le déploiement | High | Tant qu'aucun premier compte n'est inscrit, le formulaire d'inscription est accessible à quiconque peut atteindre l'URL. |
-| Chemin de `startup_probe`/`liveness_probe` | `/Login` | Critical | Pointer les sondes sur `/` (ou sur tout chemin protégé par `[Authorize]`) fait échouer la sonde sur un pod par ailleurs en bonne santé — il ne devient jamais Ready. |
-| `workload_type` | laisser `null` (auto) | High | Définir `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` échoue au moment du plan — un modèle de PVC exige un StatefulSet. |
-| `database_type` | `NONE` (par défaut) | High | Le mode par défaut de LubeLogger ignore entièrement ce paramètre ; le modifier ne connecte pas LubeLogger à une instance Cloud SQL — utilisez plutôt `POSTGRES_CONNECTION` pour l'option Postgres externe facultative. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods de l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
-| `service_type` | `LoadBalancer` (par défaut) | Medium | La valeur `ClusterIP` rend l'interface web publique injoignable depuis l'extérieur du cluster. |
+| `max_instance_count` | `1` | Critique | Le mode par défaut de LubeLogger sert un unique fichier de base de données intégré et partagé depuis un seul volume ; plus d'un réplica expose à une corruption de la base par des écritures concurrentes. Imposé par une garde de validation au moment du plan. |
+| `stateful_pvc_enabled` | `true` | Élevé | Un véritable PVC bloc garantit un verrouillage de fichiers fiable ; revenir à GCS FUSE pour `/App/data` (en passant ce paramètre à `false`) expose à une contention sur les verrous en cas d'écritures concurrentes. |
+| `stateful_pvc_mount_path` | `/App/data` | Critique | Doit correspondre au répertoire de données réel de LubeLogger — un mauvais chemin signifie que la base de données et les fichiers téléversés sont écrits dans le stockage éphémère du pod et perdus à chaque redémarrage. |
+| Buckets `storage`/`dpkeys`, ou le PVC | Ne jamais les supprimer | Critique | Perdre `/App/data` (PVC ou bucket `storage`) fait perdre tous les dossiers de véhicules ; perdre `dpkeys` invalide toutes les sessions de connexion existantes (récupérable — impose seulement une nouvelle connexion). |
+| `EnableAuth` | `true` (par défaut) | Critique | Le passer à `false` rétablit le mode d'accès entièrement ouvert de LubeLogger — toute personne disposant de l'URL peut consulter et modifier toutes les données sans aucune connexion. |
+| Inscription au premier lancement | À effectuer immédiatement après le déploiement | Élevé | Tant qu'aucun premier compte n'est inscrit, le formulaire d'inscription est accessible à quiconque peut atteindre l'URL. |
+| Chemin de `startup_probe`/`liveness_probe` | `/Login` | Critique | Pointer les sondes sur `/` (ou sur tout chemin protégé par `[Authorize]`) fait échouer la sonde sur un pod par ailleurs en bonne santé — il ne devient jamais Ready. |
+| `workload_type` | laisser `null` (auto) | Élevé | Définir `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` échoue au moment du plan — un modèle de PVC exige un StatefulSet. |
+| `database_type` | `NONE` (par défaut) | Élevé | Le mode par défaut de LubeLogger ignore entièrement ce paramètre ; le modifier ne connecte pas LubeLogger à une instance Cloud SQL — utilisez plutôt `POSTGRES_CONNECTION` pour l'option Postgres externe facultative. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods de l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
+| `service_type` | `LoadBalancer` (par défaut) | Moyen | La valeur `ClusterIP` rend l'interface web publique injoignable depuis l'extérieur du cluster. |
 
 ---
 

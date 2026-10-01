@@ -293,17 +293,17 @@ standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `DB` (défini automatiquement) | `"postgres"` | Critical | S'il n'était pas défini pour une raison quelconque, l'application utiliserait silencieusement une base SQLite locale jetable — les vérifications et l'historique des alertes disparaîtraient à chaque redémarrage, sans aucune erreur. |
-| `container_image_source` | `prebuilt` | Critical | Passer à `custom` sans Dockerfile dans `Healthchecks_Common/scripts` fait échouer le build Kaniko. |
-| `ADMIN_PASSWORD` (généré automatiquement) | Récupérez-le une fois, puis changez-le via l'interface | Medium | Le mot de passe initial n'est défini que lors de la PREMIÈRE exécution réussie d'`admin-bootstrap` ; relancer le job ne le met pas à jour. |
-| `DEFAULT_FROM_EMAIL` / variables SMTP | Configurez un vrai SMTP après le déploiement | High | Si la valeur provisoire par défaut est conservée, `sendalerts` journalise des erreurs de remise au lieu de réellement avertir qui que ce soit d'un signalement manqué. |
-| `ALLOWED_HOSTS` (défini automatiquement à `"*"`) | Laissez tel quel, sauf raison particulière | Low | Désactiver entièrement la validation de l'en-tête Host de Django est ici un compromis accepté pour que les sondes de santé de la plateforme continuent de fonctionner. |
-| `application_database_name` / `application_database_user` | Définissez-les une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
+| `DB` (défini automatiquement) | `"postgres"` | Critique | S'il n'était pas défini pour une raison quelconque, l'application utiliserait silencieusement une base SQLite locale jetable — les vérifications et l'historique des alertes disparaîtraient à chaque redémarrage, sans aucune erreur. |
+| `container_image_source` | `prebuilt` | Critique | Passer à `custom` sans Dockerfile dans `Healthchecks_Common/scripts` fait échouer le build Kaniko. |
+| `ADMIN_PASSWORD` (généré automatiquement) | Récupérez-le une fois, puis changez-le via l'interface | Moyen | Le mot de passe initial n'est défini que lors de la PREMIÈRE exécution réussie d'`admin-bootstrap` ; relancer le job ne le met pas à jour. |
+| `DEFAULT_FROM_EMAIL` / variables SMTP | Configurez un vrai SMTP après le déploiement | Élevé | Si la valeur provisoire par défaut est conservée, `sendalerts` journalise des erreurs de remise au lieu de réellement avertir qui que ce soit d'un signalement manqué. |
+| `ALLOWED_HOSTS` (défini automatiquement à `"*"`) | Laissez tel quel, sauf raison particulière | Faible | Désactiver entièrement la validation de l'en-tête Host de Django est ici un compromis accepté pour que les sondes de santé de la plateforme continuent de fonctionner. |
+| `application_database_name` / `application_database_user` | Définissez-les une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
 
 ---
 

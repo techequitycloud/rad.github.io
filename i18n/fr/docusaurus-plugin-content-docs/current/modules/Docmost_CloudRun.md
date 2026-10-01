@@ -369,25 +369,25 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_SECRET` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions et rend irrécupérables les données chiffrées avec l'ancienne valeur. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` | Critical | Docmost exige PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_redis` | `true` | Critical | L'éditeur en temps réel et les files d'attente de jobs de Docmost ont besoin de Redis ; le désactiver empêche l'application de fonctionner correctement. |
-| `enable_nfs` | `true` | High | Sans NFS, les pièces jointes téléversées atterrissent sur un disque éphémère et sont perdues au redémarrage / non partagées entre les instances. |
-| `APP_URL` | URL réelle du service / du domaine personnalisé | High | Une URL erronée casse les liens absolus et le point de terminaison WebSocket de collaboration. |
-| `max_instance_count` | À augmenter uniquement avec Redis | High | Plusieurs instances sans coordination via un Redis partagé dégradent l'édition collaborative. |
-| `ingress_settings` | `all` | High | `internal` bloque le partage externe et le point de terminaison public de collaboration. |
-| `enable_iap` | uniquement pour les wikis privés | Medium | IAP bloque tout accès non authentifié, y compris les consultations anonymes de pages si vous les utilisez. |
-| `memory_limit` | `1Gi` ou plus | Medium | Des limites très faibles exposent à des arrêts OOM sous une charge d'édition ou de téléversement concurrente. |
-| `min_instance_count` | `1` pour les usages sensibles à la latence | Medium | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid sur la première requête après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `APP_SECRET` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions et rend irrécupérables les données chiffrées avec l'ancienne valeur. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` | Critique | Docmost exige PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
+| `enable_redis` | `true` | Critique | L'éditeur en temps réel et les files d'attente de jobs de Docmost ont besoin de Redis ; le désactiver empêche l'application de fonctionner correctement. |
+| `enable_nfs` | `true` | Élevé | Sans NFS, les pièces jointes téléversées atterrissent sur un disque éphémère et sont perdues au redémarrage / non partagées entre les instances. |
+| `APP_URL` | URL réelle du service / du domaine personnalisé | Élevé | Une URL erronée casse les liens absolus et le point de terminaison WebSocket de collaboration. |
+| `max_instance_count` | À augmenter uniquement avec Redis | Élevé | Plusieurs instances sans coordination via un Redis partagé dégradent l'édition collaborative. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque le partage externe et le point de terminaison public de collaboration. |
+| `enable_iap` | uniquement pour les wikis privés | Moyen | IAP bloque tout accès non authentifié, y compris les consultations anonymes de pages si vous les utilisez. |
+| `memory_limit` | `1Gi` ou plus | Moyen | Des limites très faibles exposent à des arrêts OOM sous une charge d'édition ou de téléversement concurrente. |
+| `min_instance_count` | `1` pour les usages sensibles à la latence | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid sur la première requête après une période d'inactivité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

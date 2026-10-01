@@ -333,27 +333,27 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Directus nécessite PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
-| `application_name` | à définir une seule fois | Critical | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions actives et tous les JWT sont immédiatement invalidés. |
-| `tenant_id` | à définir une seule fois | Critical | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouvelles KEY/SECRET, invalidant toutes les sessions. |
-| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critical | La rotation de KEY déconnecte tous les utilisateurs. La rotation de SECRET invalide tous les jetons d'API. N'effectuez de rotation que pendant une fenêtre de maintenance planifiée. |
-| Variable d'environnement `ADMIN_EMAIL` | une adresse e-mail réelle | High | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse e-mail facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
-| `enable_nfs` | `true` | High | Sans NFS partagé, les ressources téléversées écrites par une instance sont invisibles pour les autres et perdues lors d'une réduction d'échelle (sauf si GCS est utilisé exclusivement). |
-| `enable_redis` | `true` en multi-instances | High | Sans Redis, chaque instance dispose d'un cache isolé ; la limitation de débit s'applique par instance et la mise en cache de Directus ne fonctionne plus entre les réplicas. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
-| `startup_probe.failure_threshold` | `10` au premier déploiement | High | Trop bas : les migrations de Directus peuvent prendre 1 à 3 minutes sur une base de données vierge ; l'instance est arrêtée avant la fin des migrations. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance l'importation à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
-| `memory_limit` | `2Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou de la transformation d'images. |
-| `min_instance_count` | `1` en production | Medium | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête d'API après une période d'inactivité. |
-| `max_instance_count` | à adapter au trafic | Medium | `1` bloque la mise à l'échelle horizontale et provoque la mise en file d'attente des requêtes sous charge. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les usages d'administration | Medium | Sinon, l'interface d'administration est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de rétention liées à la conformité. |
-| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer avec `vpc_sc_dry_run = true` | Critical | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
+| `database_type` | `POSTGRES_15` | Critique | Directus nécessite PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
+| `application_name` | à définir une seule fois | Critique | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions actives et tous les JWT sont immédiatement invalidés. |
+| `tenant_id` | à définir une seule fois | Critique | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouvelles KEY/SECRET, invalidant toutes les sessions. |
+| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critique | La rotation de KEY déconnecte tous les utilisateurs. La rotation de SECRET invalide tous les jetons d'API. N'effectuez de rotation que pendant une fenêtre de maintenance planifiée. |
+| Variable d'environnement `ADMIN_EMAIL` | une adresse e-mail réelle | Élevé | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse e-mail facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
+| `enable_nfs` | `true` | Élevé | Sans NFS partagé, les ressources téléversées écrites par une instance sont invisibles pour les autres et perdues lors d'une réduction d'échelle (sauf si GCS est utilisé exclusivement). |
+| `enable_redis` | `true` en multi-instances | Élevé | Sans Redis, chaque instance dispose d'un cache isolé ; la limitation de débit s'applique par instance et la mise en cache de Directus ne fonctionne plus entre les réplicas. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
+| `startup_probe.failure_threshold` | `10` au premier déploiement | Élevé | Trop bas : les migrations de Directus peuvent prendre 1 à 3 minutes sur une base de données vierge ; l'instance est arrêtée avant la fin des migrations. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance l'importation à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
+| `memory_limit` | `2Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou de la transformation d'images. |
+| `min_instance_count` | `1` en production | Moyen | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête d'API après une période d'inactivité. |
+| `max_instance_count` | à adapter au trafic | Moyen | `1` bloque la mise à l'échelle horizontale et provoque la mise en file d'attente des requêtes sous charge. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les usages d'administration | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de rétention liées à la conformité. |
+| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer avec `vpc_sc_dry_run = true` | Critique | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
 
 ---
 

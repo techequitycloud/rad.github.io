@@ -397,8 +397,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -412,19 +412,19 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critical | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de tâches d'arrière-plan fonctionnelle ni interface en temps réel. |
-| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critical | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `min_instance_count` | `1` | High | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
-| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | High | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
-| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | High | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les tâches ne sont jamais traitées ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
-| `container_resources.memory_limit` | `4Gi` (par défaut) | High | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
-| `backup_retention_days` | `7` (à augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
+| `enable_redis` | `true` | Critique | La garde au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a ni file de tâches d'arrière-plan fonctionnelle ni interface en temps réel. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le modifier | Critique | Le faire tourner après le premier démarrage invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `min_instance_count` | `1` | Élevé | Une mise à l'échelle à 0 arrête le worker Sidekiq co-localisé — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité à la base de données sur GKE. |
+| `enable_nfs` | `true` (sauf si `redis_host` est défini explicitement) | Élevé | S'il est laissé à `false` avec `redis_host` vide, la garde au moment du plan échoue ; s'il est désactivé après un déploiement fonctionnel avec un `redis_host` explicite, les pièces jointes téléversées deviennent éphémères. |
+| `redis_host` | `""` (utiliser l'IP NFS) ou un hôte réel et joignable | Élevé | Un hôte Redis injoignable fait que `REDIS_URL` se résout mais ne parvient pas à se connecter — Sidekiq démarre mais les tâches ne sont jamais traitées ; le point d'entrée ne renonce à Sidekiq que lorsque `REDIS_URL` est entièrement vide. |
+| `container_resources.memory_limit` | `4Gi` (par défaut) | Élevé | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; la réduire expose à des OOM. {/* TODO: verify the exact minimum safe memory floor */} |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes rebondissent d'un pod à l'autre et peuvent perturber les sessions authentifiées. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer lors des redéploiements, ce qui casse le DNS et tout domaine personnalisé configuré. |
+| `backup_retention_days` | `7` (à augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

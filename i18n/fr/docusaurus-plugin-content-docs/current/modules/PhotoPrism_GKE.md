@@ -341,8 +341,8 @@ de localiser et d'explorer les ressources en fonctionnement.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs
@@ -355,17 +355,17 @@ de localiser et d'explorer les ressources en fonctionnement.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver fait se rabattre sur GCS FUSE, qui ne peut pas héberger SQLite ni l'index des médias en toute sécurité — risque de corruption. |
-| `max_instance_count` | `1` | Critical | Dépasser 1 donne à deux pods une unique base SQLite et un unique PVC accessibles en écriture — corruption et contention de verrous. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) — envisagez `standard` (HDD) | Medium–High | `standard-rwo` consomme le quota régional serré `SSD_TOTAL_GB` (500GB sur Qwiklabs) ; une série d'applications avec état peut l'épuiser vers la 8e application. PhotoPrism n'a pas besoin des IOPS d'un SSD pour fonctionner correctement, seulement pour le débit d'indexation et de génération des miniatures — remplacez par du HDD (`-var stateful_pvc_storage_class=standard`) sur les projets soumis à des contraintes de quota. |
-| `enable_redis` | Forcé à `false` dans `main.tf` | Low | Aucune action requise — le forçage est intentionnel et ne peut pas être contourné en définissant la variable sur `true`. |
-| `create_cloud_storage` | `true` | Low | Le bucket `storage` est créé mais inutilisé tant que le PVC bloc est actif ; sans conséquence, hormis un faible coût de stockage inactif. |
-| `PHOTOPRISM_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous bloque hors du premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
-| `site_url` | À définir sur l'URL déployée dès qu'elle est connue | Medium | Laissée vide, PhotoPrism se rabat sur l'hôte de la requête ; les liens absolus et les URL des miniatures peuvent être erronés derrière un proxy ou un domaine personnalisé. |
-| `stateful_fs_group` | `3000` | High | Un fsGroup incohérent ou non défini peut rendre le PVC inaccessible en écriture pour l'UID 1000/GID 2000 de PhotoPrism, ce qui bloque le démarrage. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods de l'espace de noms. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `site_url`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver fait se rabattre sur GCS FUSE, qui ne peut pas héberger SQLite ni l'index des médias en toute sécurité — risque de corruption. |
+| `max_instance_count` | `1` | Critique | Dépasser 1 donne à deux pods une unique base SQLite et un unique PVC accessibles en écriture — corruption et contention de verrous. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) — envisagez `standard` (HDD) | Moyen–Élevé | `standard-rwo` consomme le quota régional serré `SSD_TOTAL_GB` (500GB sur Qwiklabs) ; une série d'applications avec état peut l'épuiser vers la 8e application. PhotoPrism n'a pas besoin des IOPS d'un SSD pour fonctionner correctement, seulement pour le débit d'indexation et de génération des miniatures — remplacez par du HDD (`-var stateful_pvc_storage_class=standard`) sur les projets soumis à des contraintes de quota. |
+| `enable_redis` | Forcé à `false` dans `main.tf` | Faible | Aucune action requise — le forçage est intentionnel et ne peut pas être contourné en définissant la variable sur `true`. |
+| `create_cloud_storage` | `true` | Faible | Le bucket `storage` est créé mais inutilisé tant que le PVC bloc est actif ; sans conséquence, hormis un faible coût de stockage inactif. |
+| `PHOTOPRISM_ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Ne pas le connaître vous bloque hors du premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
+| `site_url` | À définir sur l'URL déployée dès qu'elle est connue | Moyen | Laissée vide, PhotoPrism se rabat sur l'hôte de la requête ; les liens absolus et les URL des miniatures peuvent être erronés derrière un proxy ou un domaine personnalisé. |
+| `stateful_fs_group` | `3000` | Élevé | Un fsGroup incohérent ou non défini peut rendre le PVC inaccessible en écriture pour l'UID 1000/GID 2000 de PhotoPrism, ce qui bloque le démarrage. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent la planification de tous les pods de l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `site_url`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

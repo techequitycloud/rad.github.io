@@ -387,26 +387,26 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High**
-> (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low**
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
 > (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` forcé conjointement à un paramètre sans état, IAP sans identités autorisées, `quota_memory_*` fourni sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Choisir un moteur autre que PostgreSQL casse `self-host-predeploy` et toutes les requêtes. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `enable_redis` | `true` | Critical | La synchronisation des documents en temps réel et la file de tâches d'AFFiNE dépendent de Redis ; le désactiver sans alternative casse la collaboration et les tâches en arrière-plan. |
-| `enable_nfs` | `true` (sauf si un `redis_host` externe est fourni) | Critical | La VM NFS partagée co-héberge également Redis — désactiver NFS sans Redis externe supprime silencieusement la connexion Redis d'AFFiNE, et pas seulement la persistance des blobs. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
-| `container_resources.memory_limit` | `4Gi` | High | Le seul job d'initialisation `affine-migrate` demande 2Gi ; sous-dimensionner le conteneur serveur expose à un OOM sous la charge de la collaboration en temps réel. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes rebondissent entre les pods et perturbent les sessions en temps réel reposant sur WebSocket. |
-| `AFFINE_SERVER_EXTERNAL_URL` (valeur par défaut automatique) | URL du service de la plateforme | Medium | Si elle est mal remplacée via `environment_variables`, les liens d'invitation et de partage pointent vers le mauvais hôte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `AFFINE_INDEXER_ENABLED` (fixé à `false`) | Laisser tel quel, sauf si une base vectorielle est raccordée | Low | L'activer sans backend reposant sur pgvector casse l'indexeur plein texte. |
-| `reserve_static_ip` | `true` | Medium | Sans cela, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `AFFINE_SERVER_EXTERNAL_URL`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | Choisir un moteur autre que PostgreSQL casse `self-host-predeploy` et toutes les requêtes. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `enable_redis` | `true` | Critique | La synchronisation des documents en temps réel et la file de tâches d'AFFiNE dépendent de Redis ; le désactiver sans alternative casse la collaboration et les tâches en arrière-plan. |
+| `enable_nfs` | `true` (sauf si un `redis_host` externe est fourni) | Critique | La VM NFS partagée co-héberge également Redis — désactiver NFS sans Redis externe supprime silencieusement la connexion Redis d'AFFiNE, et pas seulement la persistance des blobs. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
+| `container_resources.memory_limit` | `4Gi` | Élevé | Le seul job d'initialisation `affine-migrate` demande 2Gi ; sous-dimensionner le conteneur serveur expose à un OOM sous la charge de la collaboration en temps réel. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes rebondissent entre les pods et perturbent les sessions en temps réel reposant sur WebSocket. |
+| `AFFINE_SERVER_EXTERNAL_URL` (valeur par défaut automatique) | URL du service de la plateforme | Moyen | Si elle est mal remplacée via `environment_variables`, les liens d'invitation et de partage pointent vers le mauvais hôte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `AFFINE_INDEXER_ENABLED` (fixé à `false`) | Laisser tel quel, sauf si une base vectorielle est raccordée | Faible | L'activer sans backend reposant sur pgvector casse l'indexeur plein texte. |
+| `reserve_static_ip` | `true` | Moyen | Sans cela, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et `AFFINE_SERVER_EXTERNAL_URL`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 

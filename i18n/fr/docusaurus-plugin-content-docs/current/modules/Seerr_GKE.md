@@ -256,16 +256,16 @@ d'[App_GKE](App_GKE.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Variable d'environnement `DB_TYPE` | Laissez intacte la valeur par défaut de `Seerr_Common` (`postgres`) | **Critical** | Un `DB_TYPE` manquant ou écrasé fait basculer silencieusement Seerr sur un fichier SQLite propre à chaque pod, effacé à chaque redémarrage. |
-| `mount_options` GCS FUSE sur `/app/config` | Conservez le correctif `uid=1000`/`gid=1000` de `Seerr_Common` | **Critical** | Sans lui, le pod redémarre en boucle avec `EACCES: permission denied` dès le premier démarrage — un mode de défaillance propre à GKE, absent sur Cloud Run. |
-| `db_password_env_var_name` | Laissez à `DB_PASS` | **Critical** | La source de données TypeORM de Seerr ne lit que `DB_PASS` ; le `DB_PASSWORD` par défaut du socle n'est jamais lu à lui seul. |
-| `max_instance_count` | Définissez `1` si les modifications de paramètres ne doivent jamais entrer en concurrence | Medium | `settings.json` est un unique fichier modifiable — des écrivains concurrents issus de plusieurs pods risquent une écriture perdue. La valeur par défaut du module est `5`, plus permissive que la valeur sûre pour un écrivain unique. |
-| `stateful_pvc_enabled` | Laissez à `false` sauf raison précise de recourir au stockage en mode bloc | Low | `settings.json` n'a pas besoin du verrouillage de fichiers POSIX comme une application SQLite en mode WAL ; GCS FUSE est ici une valeur par défaut appropriée, contrairement aux applications qui exigent réellement un véritable périphérique en mode bloc. |
+| Variable d'environnement `DB_TYPE` | Laissez intacte la valeur par défaut de `Seerr_Common` (`postgres`) | **Critique** | Un `DB_TYPE` manquant ou écrasé fait basculer silencieusement Seerr sur un fichier SQLite propre à chaque pod, effacé à chaque redémarrage. |
+| `mount_options` GCS FUSE sur `/app/config` | Conservez le correctif `uid=1000`/`gid=1000` de `Seerr_Common` | **Critique** | Sans lui, le pod redémarre en boucle avec `EACCES: permission denied` dès le premier démarrage — un mode de défaillance propre à GKE, absent sur Cloud Run. |
+| `db_password_env_var_name` | Laissez à `DB_PASS` | **Critique** | La source de données TypeORM de Seerr ne lit que `DB_PASS` ; le `DB_PASSWORD` par défaut du socle n'est jamais lu à lui seul. |
+| `max_instance_count` | Définissez `1` si les modifications de paramètres ne doivent jamais entrer en concurrence | Moyen | `settings.json` est un unique fichier modifiable — des écrivains concurrents issus de plusieurs pods risquent une écriture perdue. La valeur par défaut du module est `5`, plus permissive que la valeur sûre pour un écrivain unique. |
+| `stateful_pvc_enabled` | Laissez à `false` sauf raison précise de recourir au stockage en mode bloc | Faible | `settings.json` n'a pas besoin du verrouillage de fichiers POSIX comme une application SQLite en mode WAL ; GCS FUSE est ici une valeur par défaut appropriée, contrairement aux applications qui exigent réellement un véritable périphérique en mode bloc. |
 
 ---
 

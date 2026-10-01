@@ -223,22 +223,22 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `deployment_id` | défini une seule fois | Critical | Intégré dans chaque nom de ressource. Le modifier recrée l'application (en perdant les connecteurs et enregistrements d'agents rattachés manuellement), le bucket, le data store et l'agent. |
-| `create_gemini_enterprise_app` | `true` | High | Si la création de l'application échoue avec une erreur de licence, Gemini Enterprise n'est pas activé dans le projet : démarrez l'essai gratuit dans la console et redéployez, ou définissez `false` et créez l'application manuellement. (Inutile sur le projet Qwiklabs sur lequel ce module a été testé.) |
-| `agent_model` | un modèle autorisé par `constraints/vertexai.allowedModels` | High | Les projets de lab peuvent restreindre ou refuser tous les modèles Vertex AI. L'agent se déploie quand même, mais chaque requête échoue avec `FAILED_PRECONDITION ... disallowed Gen AI model`. Vérifiez la règle effective avant le cours. |
-| `ge_location` | `global` (ou `us` sur les sandbox à quota limité) | High | Les connecteurs et l'enregistrement de l'agent doivent se trouver au même emplacement que l'application, et une incohérence est rejetée. Certains projets sandbox ont un quota d'agents personnalisés de 0 à `global` ; utilisez `us` dans ce cas. Le modifier recrée l'application. |
-| `configure_google_identity` | `true` | High | Sans IdP pour l'emplacement, l'assistant de création des connecteurs Drive/Calendar échoue avec « IdP must be selected before creating an ACLed Data Connector ». |
-| `region` | une région autorisée par la règle d'administration | High | `constraints/gcp.resourceLocations` peut rejeter Agent Runtime dans la région par défaut avec une erreur 412 ; choisissez une région autorisée. |
-| `public_announcement_image` | `true`, ou `false` en cas de prévention de l'accès public | Medium | Lorsque `constraints/storage.publicAccessPrevention` est appliquée, l'ACL publique échoue avec une erreur 412. Définissez `false` et utilisez une image hébergée ailleurs pour l'annonce. |
-| `agent_model` / `agent_auth_id` | définis avant l'enregistrement de l'agent | Medium | Toute modification de l'un ou l'autre redéploie l'agent sous la forme d'un **nouveau** moteur ; l'enregistrement Gemini Enterprise qui pointe vers l'ancien `reasoning_engine` doit donc être recréé. |
-| `agent_auth_id` | vide, sauf pour démontrer l'accès par utilisateur | Medium | Lorsqu'il est défini, les requêtes s'exécutent en tant qu'utilisateur connecté, qui a alors besoin d'un accès BigQuery au dataset ; un Authorization ID non enregistré ou incohérent ne fournit aucun identifiant à l'agent. |
-| `enable_services` | `true` | High | Si les API requises ne sont pas déjà activées et que ce paramètre vaut `false`, la création des ressources échoue immédiatement. |
-| `model_armor_confidence` | `MEDIUM_AND_ABOVE` | Low | `HIGH` peut laisser passer certains des prompts de test les plus modérés du lab ; `LOW_AND_ABOVE` peut bloquer des prompts de démonstration ordinaires. |
+| `deployment_id` | défini une seule fois | Critique | Intégré dans chaque nom de ressource. Le modifier recrée l'application (en perdant les connecteurs et enregistrements d'agents rattachés manuellement), le bucket, le data store et l'agent. |
+| `create_gemini_enterprise_app` | `true` | Élevé | Si la création de l'application échoue avec une erreur de licence, Gemini Enterprise n'est pas activé dans le projet : démarrez l'essai gratuit dans la console et redéployez, ou définissez `false` et créez l'application manuellement. (Inutile sur le projet Qwiklabs sur lequel ce module a été testé.) |
+| `agent_model` | un modèle autorisé par `constraints/vertexai.allowedModels` | Élevé | Les projets de lab peuvent restreindre ou refuser tous les modèles Vertex AI. L'agent se déploie quand même, mais chaque requête échoue avec `FAILED_PRECONDITION ... disallowed Gen AI model`. Vérifiez la règle effective avant le cours. |
+| `ge_location` | `global` (ou `us` sur les sandbox à quota limité) | Élevé | Les connecteurs et l'enregistrement de l'agent doivent se trouver au même emplacement que l'application, et une incohérence est rejetée. Certains projets sandbox ont un quota d'agents personnalisés de 0 à `global` ; utilisez `us` dans ce cas. Le modifier recrée l'application. |
+| `configure_google_identity` | `true` | Élevé | Sans IdP pour l'emplacement, l'assistant de création des connecteurs Drive/Calendar échoue avec « IdP must be selected before creating an ACLed Data Connector ». |
+| `region` | une région autorisée par la règle d'administration | Élevé | `constraints/gcp.resourceLocations` peut rejeter Agent Runtime dans la région par défaut avec une erreur 412 ; choisissez une région autorisée. |
+| `public_announcement_image` | `true`, ou `false` en cas de prévention de l'accès public | Moyen | Lorsque `constraints/storage.publicAccessPrevention` est appliquée, l'ACL publique échoue avec une erreur 412. Définissez `false` et utilisez une image hébergée ailleurs pour l'annonce. |
+| `agent_model` / `agent_auth_id` | définis avant l'enregistrement de l'agent | Moyen | Toute modification de l'un ou l'autre redéploie l'agent sous la forme d'un **nouveau** moteur ; l'enregistrement Gemini Enterprise qui pointe vers l'ancien `reasoning_engine` doit donc être recréé. |
+| `agent_auth_id` | vide, sauf pour démontrer l'accès par utilisateur | Moyen | Lorsqu'il est défini, les requêtes s'exécutent en tant qu'utilisateur connecté, qui a alors besoin d'un accès BigQuery au dataset ; un Authorization ID non enregistré ou incohérent ne fournit aucun identifiant à l'agent. |
+| `enable_services` | `true` | Élevé | Si les API requises ne sont pas déjà activées et que ce paramètre vaut `false`, la création des ressources échoue immédiatement. |
+| `model_armor_confidence` | `MEDIUM_AND_ABOVE` | Faible | `HIGH` peut laisser passer certains des prompts de test les plus modérés du lab ; `LOW_AND_ABOVE` peut bloquer des prompts de démonstration ordinaires. |
 
 ---
 

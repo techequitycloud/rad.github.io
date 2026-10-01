@@ -245,7 +245,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure sans déployer le conteneur. |
-| `cpu_limit` | `1000m` | CPU par instance ; ~0.5–1 vCPU par contexte de navigateur actif. |
+| `cpu_limit` | `1000m` | CPU par instance ; ~0,5–1 vCPU par contexte de navigateur actif. |
 | `memory_limit` | `4Gi` | Mémoire par instance. 4 GiB minimum pour un fonctionnement stable de Chromium ; 8 GiB recommandés pour les explorations simultanées. |
 | `min_instance_count` | `0` | Nombre minimal d'instances. Définissez 1 pour un pool Chromium maintenu actif ; la valeur par défaut `0` entraîne des démarrages à froid de 30–60 s. |
 | `max_instance_count` | `3` | Nombre maximal d'instances (plafond de coût). |
@@ -364,24 +364,24 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `vpc_egress_setting` | `ALL_TRAFFIC` | Critical | Utiliser `PRIVATE_RANGES_ONLY` bloque toutes les cibles d'exploration externes ; chaque exploration d'une URL publique échoue avec une erreur de connexion. |
-| `memory_limit` | `8Gi` | Critical | En dessous de 4 GiB, les processus Chromium sont tués par OOM en pleine exploration et renvoient des résultats partiels ; en dessous de 2 GiB, le conteneur ne démarre pas. |
-| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | à ne pas définir | Critical | Les remplacer casse la connexion au Redis intégré ; toutes les tâches d'exploration asynchrones échouent immédiatement. |
-| `database_type` | `NONE` | Critical | Crawl4AI n'a pas de base de données ; modifier ce paramètre provoque un provisionnement Cloud SQL inutile et un échec au démarrage. |
-| `execution_environment` | `gen2` | High | Gen1 ne peut pas exécuter l'arborescence de processus de supervisord ; le déploiement du service échoue avec la configuration réseau VPC. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro (`0`) entraîne des démarrages à froid de 30–60 s (supervisord doit démarrer Redis puis Gunicorn) ; la première requête expire généralement. |
-| `cpu_limit` | `4000m` | High | En dessous de 2000m, le rendu Chromium déclenche des délais d'expiration internes sur les pages complexes ; le débit d'exploration chute nettement. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | High | Avec `ingress_settings = "all"`, l'API est accessible publiquement et n'importe qui peut soumettre des tâches d'exploration consommant des ressources cloud. |
-| `LLM_API_KEY` / clés d'API des fournisseurs | via `secret_environment_variables` | High | Des clés manquantes ou expirées font échouer sans aucun message l'extraction basée sur les LLM (`extracted_content` vide). Injectez-les sous forme de secrets, et non de variables d'environnement en clair. |
-| `redis_task_ttl_seconds` | `3600` | Medium | Trop court (< 300 s), les résultats expirent avant que les clients asynchrones ne les interrogent ; trop long, la mémoire croît sans limite. Plage valide : 300–86400. |
-| `timeout_seconds` | `3600` | Medium | Les explorations profondes ou l'extraction par LLM de pages volumineuses peuvent prendre plusieurs minutes ; ne réduisez cette valeur que pour des API de courte durée où les requêtes zombies doivent être interrompues plus rapidement. |
-| `application_version` | tag épinglé | Medium | Utiliser `"latest"` n'est pas reproductible ; une reconstruction peut récupérer un changement incompatible de l'API Crawl4AI. |
-| `enable_image_mirroring` | `true` | Low | Les images Crawl4AI sont volumineuses ; sans mise en miroir, chaque déploiement les extrait de Docker Hub et s'expose à des échecs dus aux limites de débit et à des démarrages à froid lents. |
+| `vpc_egress_setting` | `ALL_TRAFFIC` | Critique | Utiliser `PRIVATE_RANGES_ONLY` bloque toutes les cibles d'exploration externes ; chaque exploration d'une URL publique échoue avec une erreur de connexion. |
+| `memory_limit` | `8Gi` | Critique | En dessous de 4 GiB, les processus Chromium sont tués par OOM en pleine exploration et renvoient des résultats partiels ; en dessous de 2 GiB, le conteneur ne démarre pas. |
+| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | à ne pas définir | Critique | Les remplacer casse la connexion au Redis intégré ; toutes les tâches d'exploration asynchrones échouent immédiatement. |
+| `database_type` | `NONE` | Critique | Crawl4AI n'a pas de base de données ; modifier ce paramètre provoque un provisionnement Cloud SQL inutile et un échec au démarrage. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas exécuter l'arborescence de processus de supervisord ; le déploiement du service échoue avec la configuration réseau VPC. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro (`0`) entraîne des démarrages à froid de 30–60 s (supervisord doit démarrer Redis puis Gunicorn) ; la première requête expire généralement. |
+| `cpu_limit` | `4000m` | Élevé | En dessous de 2000m, le rendu Chromium déclenche des délais d'expiration internes sur les pages complexes ; le débit d'exploration chute nettement. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Élevé | Avec `ingress_settings = "all"`, l'API est accessible publiquement et n'importe qui peut soumettre des tâches d'exploration consommant des ressources cloud. |
+| `LLM_API_KEY` / clés d'API des fournisseurs | via `secret_environment_variables` | Élevé | Des clés manquantes ou expirées font échouer sans aucun message l'extraction basée sur les LLM (`extracted_content` vide). Injectez-les sous forme de secrets, et non de variables d'environnement en clair. |
+| `redis_task_ttl_seconds` | `3600` | Moyen | Trop court (< 300 s), les résultats expirent avant que les clients asynchrones ne les interrogent ; trop long, la mémoire croît sans limite. Plage valide : 300–86400. |
+| `timeout_seconds` | `3600` | Moyen | Les explorations profondes ou l'extraction par LLM de pages volumineuses peuvent prendre plusieurs minutes ; ne réduisez cette valeur que pour des API de courte durée où les requêtes zombies doivent être interrompues plus rapidement. |
+| `application_version` | tag épinglé | Moyen | Utiliser `"latest"` n'est pas reproductible ; une reconstruction peut récupérer un changement incompatible de l'API Crawl4AI. |
+| `enable_image_mirroring` | `true` | Faible | Les images Crawl4AI sont volumineuses ; sans mise en miroir, chaque déploiement les extrait de Docker Hub et s'expose à des échecs dus aux limites de débit et à des démarrages à froid lents. |
 
 ---
 

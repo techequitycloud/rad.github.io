@@ -283,8 +283,8 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs et leurs
@@ -294,12 +294,12 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Configuration de la forge (`forge_url`/`forge_client_id`/`forge_client_secret`) | Remplacez les trois, après le déploiement, par une véritable application OAuth enregistrée sur une instance Gitea/Forgejo réelle | **High** | Le serveur démarre et se déclare en bonne santé avec les valeurs fictives, mais les pipelines ne se déclenchent jamais et la connexion via la forge ne fonctionne jamais — un déploiement qui semble fonctionner mais qui n'est pas réellement utilisable pour la CI. |
-| `service_type` / `reserve_static_ip` | `LoadBalancer` / `true` dès que le quota d'IP externes le permet | **High** | Le déploiement de référence a utilisé `ClusterIP` / `false` uniquement parce que le quota `IN_USE_ADDRESSES` du projet de test était épuisé. Les webhooks de la forge (événements push/PR) doivent pouvoir atteindre ce serveur depuis Internet — un déploiement `ClusterIP` ne peut pas les recevoir et les pipelines ne se déclencheront pas automatiquement. |
-| `max_instance_count` | `1` (imposé au moment du plan) | **Critical** | Chaque pod exécute un serveur et un agent co-localisés ; plus d'un réplica exécuterait plusieurs serveurs sur la même base de données sans coordination vérifiée. |
-| Sondes de santé | Conserver HTTP `/healthz` (valeur par défaut du module) | **Medium** | Il est vérifié que `/healthz` ne requiert pas d'authentification et renvoie `204` ; pointer une sonde vers un point de terminaison authentifié bloquerait le déploiement progressif. |
-| `enable_nfs` | Conserver `false` | **Low** | Correct par défaut. Le définir à `true` provisionne dans le pod un montage NFS inutilisé, sans effet fonctionnel, et qui n'est pas gratuit. |
-| `enable_redis` | Conserver la valeur par défaut ; non confirmé comme requis | **Low** | La description affirme que Redis est « REQUIRED », mais le point d'entrée de `Woodpecker_Common` ne lit jamais `REDIS_HOST`/`REDIS_PORT` — il semble s'agir d'un reliquat inerte de la source dont le module a été cloné, et non d'un comportement vérifié de Woodpecker CI. |
+| Configuration de la forge (`forge_url`/`forge_client_id`/`forge_client_secret`) | Remplacez les trois, après le déploiement, par une véritable application OAuth enregistrée sur une instance Gitea/Forgejo réelle | **Élevé** | Le serveur démarre et se déclare en bonne santé avec les valeurs fictives, mais les pipelines ne se déclenchent jamais et la connexion via la forge ne fonctionne jamais — un déploiement qui semble fonctionner mais qui n'est pas réellement utilisable pour la CI. |
+| `service_type` / `reserve_static_ip` | `LoadBalancer` / `true` dès que le quota d'IP externes le permet | **Élevé** | Le déploiement de référence a utilisé `ClusterIP` / `false` uniquement parce que le quota `IN_USE_ADDRESSES` du projet de test était épuisé. Les webhooks de la forge (événements push/PR) doivent pouvoir atteindre ce serveur depuis Internet — un déploiement `ClusterIP` ne peut pas les recevoir et les pipelines ne se déclencheront pas automatiquement. |
+| `max_instance_count` | `1` (imposé au moment du plan) | **Critique** | Chaque pod exécute un serveur et un agent co-localisés ; plus d'un réplica exécuterait plusieurs serveurs sur la même base de données sans coordination vérifiée. |
+| Sondes de santé | Conserver HTTP `/healthz` (valeur par défaut du module) | **Moyen** | Il est vérifié que `/healthz` ne requiert pas d'authentification et renvoie `204` ; pointer une sonde vers un point de terminaison authentifié bloquerait le déploiement progressif. |
+| `enable_nfs` | Conserver `false` | **Faible** | Correct par défaut. Le définir à `true` provisionne dans le pod un montage NFS inutilisé, sans effet fonctionnel, et qui n'est pas gratuit. |
+| `enable_redis` | Conserver la valeur par défaut ; non confirmé comme requis | **Faible** | La description affirme que Redis est « REQUIRED », mais le point d'entrée de `Woodpecker_Common` ne lit jamais `REDIS_HOST`/`REDIS_PORT` — il semble s'agir d'un reliquat inerte de la source dont le module a été cloné, et non d'un comportement vérifié de Woodpecker CI. |
 
 ---
 

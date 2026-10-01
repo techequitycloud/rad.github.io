@@ -138,7 +138,9 @@ export function analyse(text) {
   const tableRows = clean.split('\n').filter((l) => /^\s*\|.*\|\s*$/.test(l)).length;
   const words = clean.replace(/`[^`]*`/g, ' ').split(/\s+/).filter((w) => /\p{L}/u.test(w)).length;
   const numbers = [...clean.replace(/`[^`]*`/g, ' ').matchAll(/\d[\d,.   ]*\d|\d/g)]
-    .map((m) => m[0].replace(/(\d)[,   ](?=\d{3}\b)/g, '$1').replace(/\s+/g, ''));
+    // Thousands separators go first (English 1,000 and French 1 000 both become
+    // 1000); a comma left after that is a French decimal, so 0,5 compares as 0.5.
+    .map((m) => m[0].replace(/(\d)[,   ](?=\d{3}\b)/g, '$1').replace(/\s+/g, '').replace(/(\d),(\d)/g, '$1.$2'));
   return {frontmatter: parsed.data, headings, blocks, inlineCode, links, tableRows, words, numbers};
 }
 

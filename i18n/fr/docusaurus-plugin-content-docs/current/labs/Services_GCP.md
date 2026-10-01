@@ -15,7 +15,7 @@ description: "Lab pratique : déployez le module de fondation Services GCP — V
 
 **Vous n'avez pas besoin de le déployer vous-même avant de déployer un module applicatif.** La plateforme détecte automatiquement si `Services GCP` existe déjà dans le projet cible et, sinon, le provisionne automatiquement — avec les ressources précises (`create_postgres`, `create_mysql`, `create_google_kubernetes_engine`, etc.) dont le module applicatif que vous déployez a réellement besoin — avant de poursuivre le build de votre propre module. Ce lab présente le déploiement et la vérification de `Services GCP` **directement et manuellement**, ce qui reste utile pour comprendre ce qu'il provisionne en coulisses, pour le pré-provisionner avec une configuration précise avant qu'une application n'en dépende, ou pour partager délibérément, dès le départ, un même déploiement `Services GCP` entre plusieurs déploiements d'applications.
 
-**Durée estimée :** 1.5 à 2.5 heures (ajoutez 30 à 40 minutes si vous déployez un cluster GKE)
+**Durée estimée :** 1.5 à 2,5 heures (ajoutez 30 à 40 minutes si vous déployez un cluster GKE)
 
 ### Ce que le module automatise {#what-the-module-automates}
 
@@ -105,7 +105,7 @@ Les variables se configurent dans le formulaire de configuration du module de la
 | `create_postgres` | `false` | Provisionne une instance Cloud SQL PostgreSQL. Désactivée par défaut — le tfvars du lab ci-dessous la définit explicitement. |
 | `postgres_database_version` | `POSTGRES_17` | Version du moteur PostgreSQL (`POSTGRES_17`/`16`/`15`/`14` — validée) |
 | `postgres_database_availability_type` | `ZONAL` | `ZONAL` pour le développement et les tests ; `REGIONAL` pour une production en haute disponibilité |
-| `postgres_tier` | `db-custom-1-3840` | Type de machine Cloud SQL (1 vCPU, 3.75 GB de RAM) |
+| `postgres_tier` | `db-custom-1-3840` | Type de machine Cloud SQL (1 vCPU, 3,75 GB de RAM) |
 | `create_mysql` | `false` | Provisionne une instance Cloud SQL MySQL (requise par WordPress, Moodle, Odoo) |
 | `enable_alloydb` | `false` | Provisionne un cluster AlloyDB pour PostgreSQL (charges de travail d'analyse/IA/vectorielles). Coût supérieur à celui d'une petite instance Cloud SQL. |
 | `create_firestore` | `false` | Crée une base de données documentaire Firestore Native (Enterprise). Serverless, facturée à l'usage. |
@@ -499,7 +499,7 @@ Cette phase vérifie le modèle de stockage/cache que vous avez choisi. Les **é
 
 ### (VM autogérée) {#self-managed-vm}
 
-Les étapes 4.1 à 4.4 s'appliquent lorsque `create_network_filesystem = true` (la valeur par défaut). Si vous avez plutôt choisi les services gérés, passez directement à l'étape 4.5.
+Les étapes 4.1 à 4,4 s'appliquent lorsque `create_network_filesystem = true` (la valeur par défaut). Si vous avez plutôt choisi les services gérés, passez directement à l'étape 4.5.
 
 ### Étape 4.1 — Vérifier que la VM est en cours d'exécution {#step-41--confirm-the-vm-is-running}
 

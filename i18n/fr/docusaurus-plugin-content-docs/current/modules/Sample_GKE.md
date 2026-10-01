@@ -477,27 +477,27 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` / `POSTGRES_15` | Critical | PostgreSQL 15 est imposé par `Sample_Common` ; passer à MySQL ou à `NONE` casse la tâche `db-init` et le démarrage. |
-| `application_database_name` / `_user` | défini une seule fois | Critical | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
-| `application_name` | défini une seule fois | Critical | Intégré aux noms des ressources et aux identifiants des secrets Secret Manager. Le modifier après le déploiement rend orphelins les secrets existants et reconstruit toutes les ressources nommées. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification des pods. |
-| `container_port` | `8080` | Critical | Une incohérence fait échouer la sonde de démarrage — le pod n'atteint jamais l'état Ready. |
-| Chemin de `startup_probe_config` / `health_check_config` | `/healthz` pour une vérification sans base de données | Medium | Les valeurs par défaut (démarrage TCP `/`, vivacité HTTP `GET /`) sollicitent la route du compteur de visiteurs, ce qui ajoute une écriture en base de données à chaque vérification de vivacité. |
-| `enable_cloudsql_volume` | `true` | Critical | `false` avec une base de données PostgreSQL : toutes les connexions à la base de données échouent au démarrage. La tâche `db-init` échoue également. |
-| `enable_nfs` | `true` avec `network_tags = ["nfsserver"]` | High | Retirer `nfsserver` des tags réseau casse la règle de pare-feu NFS et empêche les montages. |
-| `enable_redis` | `false` (par défaut) | High | `true` sans `redis_host` joignable (ou avec NFS désactivé) : l'application Flask journalise un avertissement et se rabat sur les cookies ; pas de plantage franc, mais le stockage des sessions se dégrade silencieusement. |
-| `max_instance_count` | `1` en développement ; à augmenter en gardant une marge sur le pool de connexions à la base de données | High | Dépasser la limite de connexions de Cloud SQL : tous les pods voient leurs requêtes à la base de données échouer simultanément. |
-| `container_resources.memory_limit` | `512Mi` ou plus | High | Moins de `~128Mi` entraîne l'arrêt de Flask pour dépassement de mémoire (OOM) au démarrage, lors du chargement des bibliothèques clientes. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sinon, l'application est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
-| `pdb_min_available` vs `min_instance_count` | garder une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_vpc_sc` avec `vpc_sc_dry_run = false` | tester d'abord en mode simulation (dry-run) | Critical | Si un compte de service ou une adresse IP manque dans le niveau d'accès, tous les appels à l'API GKE échouent simultanément. |
+| `database_type` | `POSTGRES` / `POSTGRES_15` | Critique | PostgreSQL 15 est imposé par `Sample_Common` ; passer à MySQL ou à `NONE` casse la tâche `db-init` et le démarrage. |
+| `application_database_name` / `_user` | défini une seule fois | Critique | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
+| `application_name` | défini une seule fois | Critique | Intégré aux noms des ressources et aux identifiants des secrets Secret Manager. Le modifier après le déploiement rend orphelins les secrets existants et reconstruit toutes les ressources nommées. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification des pods. |
+| `container_port` | `8080` | Critique | Une incohérence fait échouer la sonde de démarrage — le pod n'atteint jamais l'état Ready. |
+| Chemin de `startup_probe_config` / `health_check_config` | `/healthz` pour une vérification sans base de données | Moyen | Les valeurs par défaut (démarrage TCP `/`, vivacité HTTP `GET /`) sollicitent la route du compteur de visiteurs, ce qui ajoute une écriture en base de données à chaque vérification de vivacité. |
+| `enable_cloudsql_volume` | `true` | Critique | `false` avec une base de données PostgreSQL : toutes les connexions à la base de données échouent au démarrage. La tâche `db-init` échoue également. |
+| `enable_nfs` | `true` avec `network_tags = ["nfsserver"]` | Élevé | Retirer `nfsserver` des tags réseau casse la règle de pare-feu NFS et empêche les montages. |
+| `enable_redis` | `false` (par défaut) | Élevé | `true` sans `redis_host` joignable (ou avec NFS désactivé) : l'application Flask journalise un avertissement et se rabat sur les cookies ; pas de plantage franc, mais le stockage des sessions se dégrade silencieusement. |
+| `max_instance_count` | `1` en développement ; à augmenter en gardant une marge sur le pool de connexions à la base de données | Élevé | Dépasser la limite de connexions de Cloud SQL : tous les pods voient leurs requêtes à la base de données échouer simultanément. |
+| `container_resources.memory_limit` | `512Mi` ou plus | Élevé | Moins de `~128Mi` entraîne l'arrêt de Flask pour dépassement de mémoire (OOM) au démarrage, lors du chargement des bibliothèques clientes. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sinon, l'application est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `pdb_min_available` vs `min_instance_count` | garder une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_vpc_sc` avec `vpc_sc_dry_run = false` | tester d'abord en mode simulation (dry-run) | Critique | Si un compte de service ou une adresse IP manque dans le niveau d'accès, tous les appels à l'API GKE échouent simultanément. |
 
 ---
 

@@ -399,28 +399,28 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | LiteLLM nécessite PostgreSQL ; changer de moteur casse l'ORM Prisma et empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le sidecar Auth Proxy est requis pour la connectivité à la base de données ; le désactiver fait échouer Prisma au démarrage. |
-| `LITELLM_SALT_KEY` | générée automatiquement, jamais renouvelée | Critical | Renouveler la clé de salage invalide toutes les clés virtuelles émises auparavant ; tous les consommateurs de l'API perdent immédiatement l'accès. |
-| `db_name` / `db_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les clés virtuelles et données de dépenses. |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
-| `ingress_settings` | à restreindre en production | Critical | `"all"` expose publiquement le point de terminaison de la clé maîtresse ; utilisez `"internal"` pour les déploiements de passerelle d'API limités au VPC. |
-| `LITELLM_MASTER_KEY` | générée automatiquement | High | À traiter comme un identifiant ; la renouveler casse toutes les intégrations existantes qui détiennent la clé jusqu'à leur mise à jour. |
-| `enable_redis` | `true` en multi-instances | High | Sans Redis, les compteurs de limites de débit sont propres à chaque instance et non partagés ; les quotas ne sont pas appliqués entre les réplicas. |
-| `redis_host` | à définir lorsque Redis est activé | High | Un hôte vide avec `enable_redis = true` provoque des erreurs de connexion à chaque requête. |
-| `min_instance_count` | `1` | High | Les démarrages à froid ajoutent 20 à 40 s de latence et mettent en file d'attente tous les services dépendants. |
-| `timeout_seconds` | `600` | High | L'inférence d'un grand modèle de langage peut prendre plusieurs minutes ; un délai trop court provoque des erreurs 504 sur les modèles lents. |
-| `enable_iap` | `false` pour les points de terminaison d'API | High | IAP bloque tous les appels d'API programmatiques directs ; n'utilisez IAP que si l'accès se limite à l'interface d'administration. |
-| `execution_environment` | `gen2` | High | Les montages NFS et Direct VPC Egress sont réservés à gen2 ; revenir à une génération antérieure casse le réseau. |
-| `application_version` | à épingler en production | Medium | LiteLLM publie fréquemment de nouvelles versions ; des versions non épinglées peuvent modifier le schéma Prisma ou casser les formats des clés virtuelles. |
-| `NUM_WORKERS` | `1` (à augmenter pour le débit) | Medium | Un worker unique sérialise toutes les requêtes ; passez à 2–4 et augmentez `cpu_limit` en proportion pour les passerelles à fort trafic. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
-| `enable_auto_password_rotation` | `false` tant que vous n'êtes pas prêt | Medium | L'activer sans `rotation_propagation_delay_sec` suffisant peut provoquer une situation de concurrence dans laquelle le service redémarre avant que le nouveau mot de passe se soit propagé. |
+| `database_type` | `POSTGRES_15` | Critique | LiteLLM nécessite PostgreSQL ; changer de moteur casse l'ORM Prisma et empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy est requis pour la connectivité à la base de données ; le désactiver fait échouer Prisma au démarrage. |
+| `LITELLM_SALT_KEY` | générée automatiquement, jamais renouvelée | Critique | Renouveler la clé de salage invalide toutes les clés virtuelles émises auparavant ; tous les consommateurs de l'API perdent immédiatement l'accès. |
+| `db_name` / `db_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les clés virtuelles et données de dépenses. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `ingress_settings` | à restreindre en production | Critique | `"all"` expose publiquement le point de terminaison de la clé maîtresse ; utilisez `"internal"` pour les déploiements de passerelle d'API limités au VPC. |
+| `LITELLM_MASTER_KEY` | générée automatiquement | Élevé | À traiter comme un identifiant ; la renouveler casse toutes les intégrations existantes qui détiennent la clé jusqu'à leur mise à jour. |
+| `enable_redis` | `true` en multi-instances | Élevé | Sans Redis, les compteurs de limites de débit sont propres à chaque instance et non partagés ; les quotas ne sont pas appliqués entre les réplicas. |
+| `redis_host` | à définir lorsque Redis est activé | Élevé | Un hôte vide avec `enable_redis = true` provoque des erreurs de connexion à chaque requête. |
+| `min_instance_count` | `1` | Élevé | Les démarrages à froid ajoutent 20 à 40 s de latence et mettent en file d'attente tous les services dépendants. |
+| `timeout_seconds` | `600` | Élevé | L'inférence d'un grand modèle de langage peut prendre plusieurs minutes ; un délai trop court provoque des erreurs 504 sur les modèles lents. |
+| `enable_iap` | `false` pour les points de terminaison d'API | Élevé | IAP bloque tous les appels d'API programmatiques directs ; n'utilisez IAP que si l'accès se limite à l'interface d'administration. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS et Direct VPC Egress sont réservés à gen2 ; revenir à une génération antérieure casse le réseau. |
+| `application_version` | à épingler en production | Moyen | LiteLLM publie fréquemment de nouvelles versions ; des versions non épinglées peuvent modifier le schéma Prisma ou casser les formats des clés virtuelles. |
+| `NUM_WORKERS` | `1` (à augmenter pour le débit) | Moyen | Un worker unique sérialise toutes les requêtes ; passez à 2–4 et augmentez `cpu_limit` en proportion pour les passerelles à fort trafic. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `enable_auto_password_rotation` | `false` tant que vous n'êtes pas prêt | Moyen | L'activer sans `rotation_propagation_delay_sec` suffisant peut provoquer une situation de concurrence dans laquelle le service redémarre avant que le nouveau mot de passe se soit propagé. |
 
 ---
 

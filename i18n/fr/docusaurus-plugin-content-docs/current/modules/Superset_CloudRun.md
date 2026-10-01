@@ -397,26 +397,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SUPERSET_SECRET_KEY` (généré automatiquement) | immuable après le premier déploiement | Critical | Modifier la clé invalide toutes les sessions actives et rend définitivement illisibles les identifiants de connexion aux bases de données stockés. |
-| `database_type` | `POSTGRES_15` | Critical | Superset nécessite PostgreSQL ; le modifier empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver supprime le sidecar Auth Proxy ; toutes les connexions PostgreSQL échouent. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les tableaux de bord et métadonnées. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` en production | High | Sans Redis, les workers Celery n'ont pas de broker ; les requêtes asynchrones et les rapports planifiés sont indisponibles. |
-| `redis_host` | à définir explicitement | High | Obligatoire lorsque `enable_redis = true` ; une valeur vide fait échouer les workers Celery au démarrage. |
-| `container_resources.memory_limit` | `2Gi` minimum | High | En dessous de 1 GiB, les workers Gunicorn sont arrêtés pour manque de mémoire (OOM) pendant l'exécution des requêtes. |
-| `container_resources.cpu_limit` | `2000m` | High | En dessous de 1000m, le job de migration app-init peut dépasser sa fenêtre de 30 minutes. |
-| `min_instance_count` | `1` | High | `0` ajoute une latence de démarrage à froid et risque de manquer du travail asynchrone ; Superset met 30–60 s à démarrer. |
-| `startup_probe.failure_threshold` | `12` ou plus | High | Le réduire trop fortement amène Cloud Run à arrêter le conteneur avant que Superset ait terminé les migrations de la base de données. |
-| `application_version` | fixer une version précise | Medium | `latest` déclenche des mises à niveau non maîtrisées susceptibles d'introduire des changements d'API incompatibles. |
-| `enable_iap` / `enable_cloud_armor` | à activer en production | Medium | Sans eux, le formulaire de connexion de Superset est accessible publiquement. |
-| `timeout_seconds` | `600` | Medium | Le réduire en dessous de 120 s interrompt en cours d'exécution les requêtes analytiques de longue durée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `SUPERSET_SECRET_KEY` (généré automatiquement) | immuable après le premier déploiement | Critique | Modifier la clé invalide toutes les sessions actives et rend définitivement illisibles les identifiants de connexion aux bases de données stockés. |
+| `database_type` | `POSTGRES_15` | Critique | Superset nécessite PostgreSQL ; le modifier empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver supprime le sidecar Auth Proxy ; toutes les connexions PostgreSQL échouent. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les tableaux de bord et métadonnées. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `enable_redis` | `true` en production | Élevé | Sans Redis, les workers Celery n'ont pas de broker ; les requêtes asynchrones et les rapports planifiés sont indisponibles. |
+| `redis_host` | à définir explicitement | Élevé | Obligatoire lorsque `enable_redis = true` ; une valeur vide fait échouer les workers Celery au démarrage. |
+| `container_resources.memory_limit` | `2Gi` minimum | Élevé | En dessous de 1 GiB, les workers Gunicorn sont arrêtés pour manque de mémoire (OOM) pendant l'exécution des requêtes. |
+| `container_resources.cpu_limit` | `2000m` | Élevé | En dessous de 1000m, le job de migration app-init peut dépasser sa fenêtre de 30 minutes. |
+| `min_instance_count` | `1` | Élevé | `0` ajoute une latence de démarrage à froid et risque de manquer du travail asynchrone ; Superset met 30–60 s à démarrer. |
+| `startup_probe.failure_threshold` | `12` ou plus | Élevé | Le réduire trop fortement amène Cloud Run à arrêter le conteneur avant que Superset ait terminé les migrations de la base de données. |
+| `application_version` | fixer une version précise | Moyen | `latest` déclenche des mises à niveau non maîtrisées susceptibles d'introduire des changements d'API incompatibles. |
+| `enable_iap` / `enable_cloud_armor` | à activer en production | Moyen | Sans eux, le formulaire de connexion de Superset est accessible publiquement. |
+| `timeout_seconds` | `600` | Moyen | Le réduire en dessous de 120 s interrompt en cours d'exécution les requêtes analytiques de longue durée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

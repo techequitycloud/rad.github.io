@@ -390,24 +390,24 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, un `quota_memory_*` exprimé en entier nu. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critical | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
-| `container_port` | `4000` | Critical | Le point d'entrée définit `PORT=4000` par défaut sur GKE ; un port de Service ou de sonde non concordant frappe un port mort et le pod ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | Critical | Le sidecar Auth Proxy fournit la connexion à la base de données sur `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque l'amorçage `db-init`. |
-| `enable_nfs` | `true` | Low | Provisionne Filestore, mais n'a aucun effet sur Azimutt lui-même — `FILE_STORAGE_ADAPTER` n'est jamais dirigé vers le montage NFS ; les téléversements arrivent donc toujours sur le disque éphémère du pod quel que soit ce paramètre (les données de projet elles-mêmes sont en sécurité dans Postgres). |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
-| `application_version` | Épingler une version | High | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions de l'interface rebondissent d'un pod à l'autre. |
-| `enable_iap` / domaine personnalisé | Restreindre après le premier compte | High | L'inscription est ouverte par défaut ; laisser le LoadBalancer accessible publiquement permet à n'importe qui de créer un compte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_redis` | `false` | Low | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critique | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
+| `container_port` | `4000` | Critique | Le point d'entrée définit `PORT=4000` par défaut sur GKE ; un port de Service ou de sonde non concordant frappe un port mort et le pod ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy fournit la connexion à la base de données sur `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque l'amorçage `db-init`. |
+| `enable_nfs` | `true` | Faible | Provisionne Filestore, mais n'a aucun effet sur Azimutt lui-même — `FILE_STORAGE_ADAPTER` n'est jamais dirigé vers le montage NFS ; les téléversements arrivent donc toujours sur le disque éphémère du pod quel que soit ce paramètre (les données de projet elles-mêmes sont en sécurité dans Postgres). |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la validation rejette les valeurs invalides. |
+| `application_version` | Épingler une version | Élevé | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions de l'interface rebondissent d'un pod à l'autre. |
+| `enable_iap` / domaine personnalisé | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le LoadBalancer accessible publiquement permet à n'importe qui de créer un compte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 

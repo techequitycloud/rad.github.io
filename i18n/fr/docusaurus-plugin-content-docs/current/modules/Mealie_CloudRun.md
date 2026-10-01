@@ -232,16 +232,16 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile sans Dockerfile dans ce module — le build échoue. |
-| Identifiant administrateur par défaut (`changeme@example.com` / `MyPassword`) | Connectez-vous et modifiez-le immédiatement après le premier déploiement | **Critical** | Il s'agit d'une valeur par défaut amont fixe et documentée publiquement — et non d'un secret généré — dès que la base de données est initialisée, quiconque connaît l'identifiant par défaut de Mealie peut se connecter tant que vous n'avez pas effectué la réinitialisation du mot de passe imposée à la première connexion. |
-| `gcs_volumes` pour les images des recettes | Laisser vide (utiliser le propre montage `/app/data` du module) | Medium | `Mealie_Common` monte déjà le bucket `data` sur `/app/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/app/data`, les images de recettes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Le texte des recettes n'est pas concerné. |
-| Variables `db_*_env_var_name` | Les laisser à leurs valeurs par défaut propres à Mealie | Critical | Les modifier ou les vider casse entièrement la connexion Postgres de Mealie — il lit `POSTGRES_*`, et non `DB_*`. |
+| `application_database_name` / `application_database_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile sans Dockerfile dans ce module — le build échoue. |
+| Identifiant administrateur par défaut (`changeme@example.com` / `MyPassword`) | Connectez-vous et modifiez-le immédiatement après le premier déploiement | **Critique** | Il s'agit d'une valeur par défaut amont fixe et documentée publiquement — et non d'un secret généré — dès que la base de données est initialisée, quiconque connaît l'identifiant par défaut de Mealie peut se connecter tant que vous n'avez pas effectué la réinitialisation du mot de passe imposée à la première connexion. |
+| `gcs_volumes` pour les images des recettes | Laisser vide (utiliser le propre montage `/app/data` du module) | Moyen | `Mealie_Common` monte déjà le bucket `data` sur `/app/data`. Fournir une liste `gcs_volumes` non vide remplace entièrement ce montage — si le remplacement ne couvre pas aussi `/app/data`, les images de recettes téléversées retombent sur le système de fichiers éphémère de Cloud Run et ne survivent pas au redémarrage d'une révision. Le texte des recettes n'est pas concerné. |
+| Variables `db_*_env_var_name` | Les laisser à leurs valeurs par défaut propres à Mealie | Critique | Les modifier ou les vider casse entièrement la connexion Postgres de Mealie — il lit `POSTGRES_*`, et non `DB_*`. |
 
 ---
 

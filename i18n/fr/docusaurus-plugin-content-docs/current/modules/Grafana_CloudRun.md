@@ -413,24 +413,24 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critical | Grafana est livré avec les valeurs par défaut `admin`/`admin`. Déployer sans définir de mot de passe robuste expose l'interface d'administration. |
-| `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critical | La valeur `"true"` expose tous les tableaux de bord aux utilisateurs non authentifiés. |
-| `database_type` | `POSTGRES_15` | Critical | PostgreSQL est obligatoire ; le remplacer par SQLite entraîne une perte de données à chaque nouvelle révision — le fichier SQLite réside sur un disque éphémère. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `GF_SERVER_ROOT_URL` (via `environment_variables`) | URL publique | High | Sans elle, les redirections OAuth, les liens des notifications par e-mail et les iframes pointent vers la mauvaise origine et ne fonctionnent plus. |
-| `enable_iap` | `true` pour un usage interne | High | Sans IAP, la page de connexion de Grafana est accessible publiquement sur Internet. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, Grafana subit un OOM au démarrage avec des ensembles de tableaux de bord volumineux. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro ajoute une latence de démarrage à froid et risque de faire manquer des évaluations d'alertes pendant la fenêtre de démarrage. |
-| `max_instance_count` | `1`–`3` | Medium | Plusieurs instances partagent PostgreSQL mais pas l'état des alertes en mémoire — des alertes peuvent être déclenchées en double. |
-| `enable_redis` | `false` (par défaut) | Low | L'activer sans `redis_host` valide provoque une erreur de validation au moment du plan. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `ingress_settings` | `internal-and-cloud-load-balancing` pour un usage privé | High | La valeur par défaut `all` autorise le trafic de n'importe quelle source ; restreignez-la pour les déploiements uniquement internes. |
+| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critique | Grafana est livré avec les valeurs par défaut `admin`/`admin`. Déployer sans définir de mot de passe robuste expose l'interface d'administration. |
+| `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critique | La valeur `"true"` expose tous les tableaux de bord aux utilisateurs non authentifiés. |
+| `database_type` | `POSTGRES_15` | Critique | PostgreSQL est obligatoire ; le remplacer par SQLite entraîne une perte de données à chaque nouvelle révision — le fichier SQLite réside sur un disque éphémère. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `GF_SERVER_ROOT_URL` (via `environment_variables`) | URL publique | Élevé | Sans elle, les redirections OAuth, les liens des notifications par e-mail et les iframes pointent vers la mauvaise origine et ne fonctionnent plus. |
+| `enable_iap` | `true` pour un usage interne | Élevé | Sans IAP, la page de connexion de Grafana est accessible publiquement sur Internet. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, Grafana subit un OOM au démarrage avec des ensembles de tableaux de bord volumineux. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro ajoute une latence de démarrage à froid et risque de faire manquer des évaluations d'alertes pendant la fenêtre de démarrage. |
+| `max_instance_count` | `1`–`3` | Moyen | Plusieurs instances partagent PostgreSQL mais pas l'état des alertes en mémoire — des alertes peuvent être déclenchées en double. |
+| `enable_redis` | `false` (par défaut) | Faible | L'activer sans `redis_host` valide provoque une erreur de validation au moment du plan. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `ingress_settings` | `internal-and-cloud-load-balancing` pour un usage privé | Élevé | La valeur par défaut `all` autorise le trafic de n'importe quelle source ; restreignez-la pour les déploiements uniquement internes. |
 
 ---
 

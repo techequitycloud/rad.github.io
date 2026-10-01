@@ -413,26 +413,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives, obligeant chacun à se reconnecter immédiatement. |
-| `SALT` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'attribution de nouvelles clés. |
-| `db_name` / `db_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données de traces. |
-| `application_version` | `2` (branche v2) | Critical | Indiquer un tag v3 fait pointer le build vers une image nécessitant ClickHouse + Redis + S3, que ce module ne provisionne pas — le service ne démarre pas. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans sauvegarde valide fait échouer la tâche d'importation. |
-| `memory_limit` | `4Gi` (≥ 2Gi) | High | En dessous de 2 GiB, le serveur Next.js de Langfuse est tué (OOM) pendant les migrations du premier démarrage ou sous la charge d'ingestion. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque tous les appels d'ingestion SDK externes. |
-| `enable_iap` | uniquement lorsque l'ingestion SDK n'est pas nécessaire | High | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion des traces par les SDK. |
-| `AUTH_DISABLE_SIGNUP` (injecté automatiquement à `"false"`) | Désactiver après le premier propriétaire | High | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` | `1` | Medium | La mise à zéro (`0`) arrête le traitement en arrière-plan et ajoute la latence du démarrage à froid à la première requête après une période d'inactivité. |
-| `cpu_always_allocated` | `true` | Medium | La facturation à la requête réduit le traitement en arrière-plan à ~0 CPU entre les requêtes. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface et les points de terminaison d'ingestion sont joignables publiquement sans protection WAF. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives, obligeant chacun à se reconnecter immédiatement. |
+| `SALT` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'attribution de nouvelles clés. |
+| `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données de traces. |
+| `application_version` | `2` (branche v2) | Critique | Indiquer un tag v3 fait pointer le build vers une image nécessitant ClickHouse + Redis + S3, que ce module ne provisionne pas — le service ne démarre pas. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer la tâche d'importation. |
+| `memory_limit` | `4Gi` (≥ 2Gi) | Élevé | En dessous de 2 GiB, le serveur Next.js de Langfuse est tué (OOM) pendant les migrations du premier démarrage ou sous la charge d'ingestion. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque tous les appels d'ingestion SDK externes. |
+| `enable_iap` | uniquement lorsque l'ingestion SDK n'est pas nécessaire | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion des traces par les SDK. |
+| `AUTH_DISABLE_SIGNUP` (injecté automatiquement à `"false"`) | Désactiver après le premier propriétaire | Élevé | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
+| `min_instance_count` | `1` | Moyen | La mise à zéro (`0`) arrête le traitement en arrière-plan et ajoute la latence du démarrage à froid à la première requête après une période d'inactivité. |
+| `cpu_always_allocated` | `true` | Moyen | La facturation à la requête réduit le traitement en arrière-plan à ~0 CPU entre les requêtes. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface et les points de terminaison d'ingestion sont joignables publiquement sans protection WAF. |
 
 ---
 

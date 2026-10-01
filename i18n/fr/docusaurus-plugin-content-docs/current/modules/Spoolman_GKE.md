@@ -273,19 +273,19 @@ Spoolman n'en utilise aucune par défaut.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critical | Quiconque peut atteindre le Service peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
-| `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critical | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage du pod. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `container_image_source` | `prebuilt` (ne pas remplacer par `custom`) | Critical | Définir `"custom"` déclenche une tentative de build Kaniko sur un module dépourvu de Dockerfile — le build échoue purement et simplement. |
-| `service_type` | `LoadBalancer` (valeur par défaut) | High | Passer à `ClusterIP` rend le service inaccessible depuis un navigateur sans `kubectl port-forward` ou une entrée distincte. |
-| `SPOOLMAN_DB_QUERY` | Laisser vide, sauf pour un dépannage | Medium | Échappatoire pour un repli TCP + `sslmode` — nécessaire uniquement si le chemin de connexion par boucle locale s'avérait un jour peu fiable ; inutile en fonctionnement normal. |
-| `reserve_static_ip` | `false` (valeur par défaut) | Low | Définissez `true` uniquement si vous avez besoin d'une adresse IP stable pour le DNS ou une liste d'autorisation de pare-feu — le quota d'adresses IP statiques du projet est limité et partagé au sein du locataire. |
-| `min_instance_count` | `0` (valeur par défaut) | Low | Spoolman n'effectue aucun travail en arrière-plan, la mise à l'échelle jusqu'à zéro est donc sûre. |
+| Aucune authentification (intégrée) | Placer derrière IAP ou Cloud Armor si nécessaire | Critique | Quiconque peut atteindre le Service peut lire et modifier l'intégralité de l'inventaire de filament — il n'existe aucune page de connexion à désactiver. |
+| `SPOOLMAN_DB_TYPE` (injectée automatiquement à `postgres`) | Ne jamais la supprimer via `environment_variables` | Critique | La supprimer provoque un repli silencieux sur un fichier SQLite jetable, local au conteneur — aucune erreur, et toutes les données sont perdues à chaque redémarrage du pod. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `container_image_source` | `prebuilt` (ne pas remplacer par `custom`) | Critique | Définir `"custom"` déclenche une tentative de build Kaniko sur un module dépourvu de Dockerfile — le build échoue purement et simplement. |
+| `service_type` | `LoadBalancer` (valeur par défaut) | Élevé | Passer à `ClusterIP` rend le service inaccessible depuis un navigateur sans `kubectl port-forward` ou une entrée distincte. |
+| `SPOOLMAN_DB_QUERY` | Laisser vide, sauf pour un dépannage | Moyen | Échappatoire pour un repli TCP + `sslmode` — nécessaire uniquement si le chemin de connexion par boucle locale s'avérait un jour peu fiable ; inutile en fonctionnement normal. |
+| `reserve_static_ip` | `false` (valeur par défaut) | Faible | Définissez `true` uniquement si vous avez besoin d'une adresse IP stable pour le DNS ou une liste d'autorisation de pare-feu — le quota d'adresses IP statiques du projet est limité et partagé au sein du locataire. |
+| `min_instance_count` | `0` (valeur par défaut) | Faible | Spoolman n'effectue aucun travail en arrière-plan, la mise à l'échelle jusqu'à zéro est donc sûre. |
 
 ---
 

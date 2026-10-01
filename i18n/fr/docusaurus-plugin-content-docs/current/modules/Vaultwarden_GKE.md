@@ -444,28 +444,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `signups_allowed` | `false` | Critical | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
-| `enable_cloudsql_volume` | `true` | Critical | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation provoque immédiatement un CrashLoopBackOff. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et Vaultwarden voit un coffre-fort vide. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont des octets et bloquent toute planification. |
-| `workload_type` + `stateful_pvc_enabled` | StatefulSet / true | Critical | Définir `workload_type = "Deployment"` en même temps que `stateful_pvc_enabled = true` échoue au moment du plan. |
-| `domain` | URL `https://` complète | High | Sans elle, les codes QR TOTP pointent vers `localhost`, les e-mails d'invitation à une organisation contiennent des liens cassés et les URL des pièces jointes sont invalides. |
-| `database_type` | défini une seule fois | High | Le modifier après le premier déploiement amène Vaultwarden à se connecter à une base de données vide ; tous les identifiants semblent perdus. |
-| `container_port` | `80` | High | Doit correspondre à `ROCKET_PORT` ; en cas de discordance, la sonde de disponibilité échoue et le pod ne devient jamais Ready. |
-| `min_instance_count` | `1` | High | `0` met à l'échelle à zéro ; un gestionnaire de mots de passe devient indisponible pendant plusieurs secondes lors d'un démarrage à froid — les clients Bitwarden affichent des erreurs de connexion. |
-| `stateful_pvc_size` | `10Gi` | High | Une taille trop petite se remplit lorsque les utilisateurs stockent des pièces jointes, ce qui provoque des erreurs d'écriture. Augmentez-la avant qu'il ne soit plein. |
-| `session_affinity` | `ClientIP` | Medium | Sans affinité, les opérations de synchronisation du coffre-fort en cours peuvent être acheminées vers différents pods et rencontrer un état obsolète. |
-| `enable_cloud_armor` | activer en production | Medium | Sans Cloud Armor, le point de terminaison de connexion de Vaultwarden est exposé aux attaques par force brute depuis Internet. |
-| `backup_retention_days` | `30` (par défaut, à augmenter en production) | Medium | Un gestionnaire de mots de passe sans rétention de sauvegarde suffisante entraîne une perte d'identifiants en cas de défaillance de la base de données. |
-| `pdb_min_available` vs `min_instance_count` | conserver une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_iap` avec des clients natifs | à utiliser avec précaution | Medium | IAP exige une authentification OAuth dans un navigateur ; les clients Bitwarden natifs ne peuvent pas mener à bien le flux IAP. |
-| variables d'environnement `smtp_*` | à configurer comme un ensemble complet | High | Une configuration SMTP partielle provoque des échecs silencieux d'envoi d'e-mails — les codes de récupération 2FA et les e-mails d'invitation ne sont jamais envoyés. |
+| `signups_allowed` | `false` | Critique | Tant que la valeur est `true`, n'importe quel internaute peut s'inscrire lui-même sur le coffre-fort. Désactivez-la immédiatement après avoir créé les comptes administrateurs. |
+| `enable_cloudsql_volume` | `true` | Critique | Vaultwarden se connecte à Cloud SQL par socket Unix ; la désactivation provoque immédiatement un CrashLoopBackOff. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et Vaultwarden voit un coffre-fort vide. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
+| `workload_type` + `stateful_pvc_enabled` | StatefulSet / true | Critique | Définir `workload_type = "Deployment"` en même temps que `stateful_pvc_enabled = true` échoue au moment du plan. |
+| `domain` | URL `https://` complète | Élevé | Sans elle, les codes QR TOTP pointent vers `localhost`, les e-mails d'invitation à une organisation contiennent des liens cassés et les URL des pièces jointes sont invalides. |
+| `database_type` | défini une seule fois | Élevé | Le modifier après le premier déploiement amène Vaultwarden à se connecter à une base de données vide ; tous les identifiants semblent perdus. |
+| `container_port` | `80` | Élevé | Doit correspondre à `ROCKET_PORT` ; en cas de discordance, la sonde de disponibilité échoue et le pod ne devient jamais Ready. |
+| `min_instance_count` | `1` | Élevé | `0` met à l'échelle à zéro ; un gestionnaire de mots de passe devient indisponible pendant plusieurs secondes lors d'un démarrage à froid — les clients Bitwarden affichent des erreurs de connexion. |
+| `stateful_pvc_size` | `10Gi` | Élevé | Une taille trop petite se remplit lorsque les utilisateurs stockent des pièces jointes, ce qui provoque des erreurs d'écriture. Augmentez-la avant qu'il ne soit plein. |
+| `session_affinity` | `ClientIP` | Moyen | Sans affinité, les opérations de synchronisation du coffre-fort en cours peuvent être acheminées vers différents pods et rencontrer un état obsolète. |
+| `enable_cloud_armor` | activer en production | Moyen | Sans Cloud Armor, le point de terminaison de connexion de Vaultwarden est exposé aux attaques par force brute depuis Internet. |
+| `backup_retention_days` | `30` (par défaut, à augmenter en production) | Moyen | Un gestionnaire de mots de passe sans rétention de sauvegarde suffisante entraîne une perte d'identifiants en cas de défaillance de la base de données. |
+| `pdb_min_available` vs `min_instance_count` | conserver une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_iap` avec des clients natifs | à utiliser avec précaution | Moyen | IAP exige une authentification OAuth dans un navigateur ; les clients Bitwarden natifs ne peuvent pas mener à bien le flux IAP. |
+| variables d'environnement `smtp_*` | à configurer comme un ensemble complet | Élevé | Une configuration SMTP partielle provoque des échecs silencieux d'envoi d'e-mails — les codes de récupération 2FA et les e-mails d'invitation ne sont jamais envoyés. |
 
 ---
 

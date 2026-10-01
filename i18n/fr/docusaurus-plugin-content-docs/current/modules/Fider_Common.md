@@ -190,7 +190,7 @@ Fider sert les requêtes. Une fenêtre de démarrage généreuse absorbe les mig
 exécutées au premier démarrage.
 
 - **Sonde de démarrage** — HTTP `/_health`, délai initial de 30 secondes, période
-  de 15 secondes, 30 échecs tolérés (environ 7.5 minutes de marge pour les
+  de 15 secondes, 30 échecs tolérés (environ 7,5 minutes de marge pour les
   migrations du premier démarrage).
 - **Sonde de vivacité** — HTTP `/_health`, période de 30 secondes.
 - **Sonde de disponibilité** — HTTP `/_health`, période de 10 secondes.

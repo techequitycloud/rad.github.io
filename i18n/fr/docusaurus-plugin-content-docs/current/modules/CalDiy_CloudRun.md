@@ -196,7 +196,7 @@ disponibilité et des règles d'alerte facultatifs.
 - **Sonde de démarrage.** Les sondes de santé ciblent `/api/auth/session` (HTTP 200
   lorsque NextAuth est prêt). `CalDiy_Common` définit une fenêtre de démarrage totale
   de 6 minutes (`initial_delay=180s`, `failure_threshold=18`, `period=10s`) pour
-  laisser le temps à `replace-placeholder.sh` (~2.5 min), `db-migrate` (~60s) et
+  laisser le temps à `replace-placeholder.sh` (~2,5 min), `db-migrate` (~60s) et
   `seed-app-store` (~30s), qui s'exécutent au premier démarrage dans le `start.sh` du
   conteneur.
 
@@ -419,31 +419,31 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Cal.diy nécessite PostgreSQL avec Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
-| `container_port` | `3000` | Critical | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé de Cloud Run et le routage du trafic. |
-| `enable_cloudsql_volume` | `true` | Critical | Cal.diy se connecte via un socket Unix ; le désactiver supprime le socket et toutes les connexions à la base de données échouent. |
-| `db_name` / `db_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et rend orphelines les données existantes. |
-| `application_version` | version publiée épinglée | Critical | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide fait échouer l'extraction de l'image. |
-| `NEXT_PUBLIC_WEBAPP_URL` | identique à l'URL publique | Critical | Cal.diy intègre cette valeur dans les blocs statiques Next.js via `replace-placeholder.sh` ; une discordance casse les callbacks OAuth et les liens de réservation. |
-| `NEXTAUTH_URL` | identique à l'URL publique | Critical | NextAuth valide les URI de redirection OAuth par rapport à cette valeur ; une discordance bloque toutes les connexions. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation et peut écraser des données en production lors des applications suivantes. |
-| `startup_probe.initial_delay_seconds` | `180` (via CalDiy_Common) | High | Le `start.sh` de Cal.diy exécute la réécriture d'URL (~2.5 min) + les migrations Prisma + l'alimentation initiale avant de servir les requêtes ; une fenêtre trop courte provoque une boucle de redémarrage. |
-| `startup_probe.failure_threshold` | `18` à `period=10s` | High | Donne environ 6 minutes au total ; descendre sous 12 tue le conteneur avant la fin de l'initialisation. |
-| `container_image_source` | `custom` | High | Cloud Run nécessite l'image wrapper qui assemble `DATABASE_URL` ; utiliser `prebuilt` sans le point d'entrée du wrapper laisse `DATABASE_URL` non défini et toutes les requêtes à la base de données échouent. |
-| `memory_limit` | `2Gi` minimum | High | Le démarrage de Cal.diy (réécriture d'URL + migrations) nécessite ≥ 2 GiB ; des arrêts OOM surviennent avant que l'application ne soit prête. |
-| `enable_redis` | `true` en multi-instance | High | Sans Redis, les sessions sont propres à chaque instance ; les utilisateurs sont déconnectés lors d'une mise à l'échelle jusqu'à zéro ou d'une rotation d'instances. |
-| `redis_host` | obligatoire lorsque `enable_redis=true` | High | Un `redis_host` vide avec Redis activé injecte une URL malformée ; les opérations de session échouent à l'exécution. |
-| `min_instance_count` | `1` en production | Medium | La mise à l'échelle jusqu'à zéro est le comportement par défaut ; le démarrage à froid de 4 à 5 minutes de Cal.diy ajoute une latence inacceptable pour la planification en production. |
-| flux planifiés / pilotés par cron | non pris en charge sans modification du module | Medium | Selon l'audit `cpu_always_allocated` de CLAUDE.md (2026-07-10 OPEN CAVEAT), les composants planificateur/worker/cron/file d'attente de Cal.diy nécessitent `cpu_always_allocated = true` pour se déclencher de façon fiable lorsqu'ils sont réduits à zéro — mais ce module ne déclare ni ne transmet cette variable du socle, elle ne peut donc pas être définie aujourd'hui. |
-| `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Medium | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais envoyés. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Medium | Si vous utilisez Memorystore Redis, son IP privée peut ne pas figurer dans les plages VPC par défaut ; passez à `ALL_TRAFFIC` ou assurez un routage VPC correct. |
-| `organization_id` | défini explicitement pour VPC-SC | Medium | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
-| `execution_environment` | `gen2` | Medium | `gen1` ne prend pas en charge les montages NFS ; si `enable_nfs = true`, `gen2` est obligatoire. |
+| `database_type` | `POSTGRES_15` | Critique | Cal.diy nécessite PostgreSQL avec Prisma ; MySQL ou `NONE` font échouer les migrations de schéma et le démarrage. |
+| `container_port` | `3000` | Critique | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur fausse les contrôles de santé de Cloud Run et le routage du trafic. |
+| `enable_cloudsql_volume` | `true` | Critique | Cal.diy se connecte via un socket Unix ; le désactiver supprime le socket et toutes les connexions à la base de données échouent. |
+| `db_name` / `db_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et rend orphelines les données existantes. |
+| `application_version` | version publiée épinglée | Critique | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide fait échouer l'extraction de l'image. |
+| `NEXT_PUBLIC_WEBAPP_URL` | identique à l'URL publique | Critique | Cal.diy intègre cette valeur dans les blocs statiques Next.js via `replace-placeholder.sh` ; une discordance casse les callbacks OAuth et les liens de réservation. |
+| `NEXTAUTH_URL` | identique à l'URL publique | Critique | NextAuth valide les URI de redirection OAuth par rapport à cette valeur ; une discordance bloque toutes les connexions. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation et peut écraser des données en production lors des applications suivantes. |
+| `startup_probe.initial_delay_seconds` | `180` (via CalDiy_Common) | Élevé | Le `start.sh` de Cal.diy exécute la réécriture d'URL (~2,5 min) + les migrations Prisma + l'alimentation initiale avant de servir les requêtes ; une fenêtre trop courte provoque une boucle de redémarrage. |
+| `startup_probe.failure_threshold` | `18` à `period=10s` | Élevé | Donne environ 6 minutes au total ; descendre sous 12 tue le conteneur avant la fin de l'initialisation. |
+| `container_image_source` | `custom` | Élevé | Cloud Run nécessite l'image wrapper qui assemble `DATABASE_URL` ; utiliser `prebuilt` sans le point d'entrée du wrapper laisse `DATABASE_URL` non défini et toutes les requêtes à la base de données échouent. |
+| `memory_limit` | `2Gi` minimum | Élevé | Le démarrage de Cal.diy (réécriture d'URL + migrations) nécessite ≥ 2 GiB ; des arrêts OOM surviennent avant que l'application ne soit prête. |
+| `enable_redis` | `true` en multi-instance | Élevé | Sans Redis, les sessions sont propres à chaque instance ; les utilisateurs sont déconnectés lors d'une mise à l'échelle jusqu'à zéro ou d'une rotation d'instances. |
+| `redis_host` | obligatoire lorsque `enable_redis=true` | Élevé | Un `redis_host` vide avec Redis activé injecte une URL malformée ; les opérations de session échouent à l'exécution. |
+| `min_instance_count` | `1` en production | Moyen | La mise à l'échelle jusqu'à zéro est le comportement par défaut ; le démarrage à froid de 4 à 5 minutes de Cal.diy ajoute une latence inacceptable pour la planification en production. |
+| flux planifiés / pilotés par cron | non pris en charge sans modification du module | Moyen | Selon l'audit `cpu_always_allocated` de CLAUDE.md (2026-07-10 OPEN CAVEAT), les composants planificateur/worker/cron/file d'attente de Cal.diy nécessitent `cpu_always_allocated = true` pour se déclencher de façon fiable lorsqu'ils sont réduits à zéro — mais ce module ne déclare ni ne transmet cette variable du socle, elle ne peut donc pas être définie aujourd'hui. |
+| `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Moyen | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais envoyés. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Moyen | Si vous utilisez Memorystore Redis, son IP privée peut ne pas figurer dans les plages VPC par défaut ; passez à `ALL_TRAFFIC` ou assurez un routage VPC correct. |
+| `organization_id` | défini explicitement pour VPC-SC | Moyen | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
+| `execution_environment` | `gen2` | Moyen | `gen1` ne prend pas en charge les montages NFS ; si `enable_nfs = true`, `gen2` est obligatoire. |
 
 ---
 

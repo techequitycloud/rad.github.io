@@ -288,19 +288,19 @@ leur comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `JWT_SECRET` (généré automatiquement) | À ne faire tourner que délibérément | Medium | Sa rotation invalide toutes les sessions actives — les utilisateurs doivent se reconnecter — mais n'entraîne aucune perte de données. |
-| `container_image_source` | `prebuilt` | Critical | Définir `custom` fait échouer l'étape Cloud Build — ce catalogue ne contient pas de Dockerfile pour Jellystat. |
-| `container_port` | `3000` (à titre informatif) | Low | Le serveur de Jellystat code le port 3000 en dur, quelle que soit la valeur de cette variable. |
-| Association URL/clé d'API Jellyfin | Manuelle, après le déploiement | High | Il n'existe aucune variable d'environnement pour cela — omettre l'étape manuelle dans l'interface laisse Jellystat sans aucune donnée, même si le déploiement est sain. |
-| `enable_redis` | laisser `false` | Low | Jellystat n'a aucune intégration Redis ; définir `true` n'a aucun effet. |
-| Chemin de `startup_probe`/`liveness_probe` | `/auth/isConfigured` | High | Diriger les sondes vers un point de terminaison authentifié provoque des 401/403 et la révision ne devient jamais Ready. |
-| `min_instance_count` | `0` (par défaut) convient | Low | Jellystat est un tableau de bord requête/réponse sans planificateur en arrière-plan — inutile de disposer d'un CPU toujours actif. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `JWT_SECRET` (généré automatiquement) | À ne faire tourner que délibérément | Moyen | Sa rotation invalide toutes les sessions actives — les utilisateurs doivent se reconnecter — mais n'entraîne aucune perte de données. |
+| `container_image_source` | `prebuilt` | Critique | Définir `custom` fait échouer l'étape Cloud Build — ce catalogue ne contient pas de Dockerfile pour Jellystat. |
+| `container_port` | `3000` (à titre informatif) | Faible | Le serveur de Jellystat code le port 3000 en dur, quelle que soit la valeur de cette variable. |
+| Association URL/clé d'API Jellyfin | Manuelle, après le déploiement | Élevé | Il n'existe aucune variable d'environnement pour cela — omettre l'étape manuelle dans l'interface laisse Jellystat sans aucune donnée, même si le déploiement est sain. |
+| `enable_redis` | laisser `false` | Faible | Jellystat n'a aucune intégration Redis ; définir `true` n'a aucun effet. |
+| Chemin de `startup_probe`/`liveness_probe` | `/auth/isConfigured` | Élevé | Diriger les sondes vers un point de terminaison authentifié provoque des 401/403 et la révision ne devient jamais Ready. |
+| `min_instance_count` | `0` (par défaut) convient | Faible | Jellystat est un tableau de bord requête/réponse sans planificateur en arrière-plan — inutile de disposer d'un CPU toujours actif. |
 
 ---
 

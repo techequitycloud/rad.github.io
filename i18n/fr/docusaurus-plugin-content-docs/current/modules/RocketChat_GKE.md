@@ -419,24 +419,24 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `workload_type = "Deployment"` avec `stateful_pvc_enabled = true`, IAP sans identités autorisées, des unités de quota non binaires, un `backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | Sur `gcsfuse` (la valeur par défaut lorsqu'il n'est pas défini), le jeu de données WiredTiger de MongoDB se corrompt — l'espace de travail est irrécupérable. |
-| `stateful_pvc_mount_path` | `/data/db` | Critical | Tout autre chemin signifie que le PVC ne contient pas le jeu de données MongoDB ; les données résident sur le système de fichiers éphémère du pod et sont perdues au redémarrage. |
-| `max_instance_count` | `1` | Critical | Le PVC `RWO` et la base MongoDB à rédacteur unique ne peuvent pas prendre en charge un second réplica ; le pod supplémentaire ne parvient pas à attacher le disque et corrompt l'état si on le force. |
-| PVC / `/data/db` (auto) | Ne jamais supprimer | Critical | Supprimer le PVC supprime l'ensemble de l'espace de travail. |
-| `workload_type` | laisser `null` | High | Définir `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour qu'il se résolve automatiquement en StatefulSet. |
-| `ROOT_URL` (domaine personnalisé) | Correspondre au nom d'hôte servi | High | Un `ROOT_URL` incorrect casse les liens d'invitation, les URL de fichiers et les rappels OAuth. |
-| `memory_limit` | `4Gi` (par défaut) | High | Rocket.Chat et MongoDB dans un même pod subissent un OOM en dessous d'environ 2 GiB sous une charge réelle. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `stateful_pvc_storage_class` | `standard-rwo` (ou `premium-rwo`) | Medium | `premium-rwo` offre plus d'IOPS à MongoDB pour les espaces de travail chargés, pour un coût plus élevé. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences. |
+| `stateful_pvc_enabled` | `true` | Critique | Sur `gcsfuse` (la valeur par défaut lorsqu'il n'est pas défini), le jeu de données WiredTiger de MongoDB se corrompt — l'espace de travail est irrécupérable. |
+| `stateful_pvc_mount_path` | `/data/db` | Critique | Tout autre chemin signifie que le PVC ne contient pas le jeu de données MongoDB ; les données résident sur le système de fichiers éphémère du pod et sont perdues au redémarrage. |
+| `max_instance_count` | `1` | Critique | Le PVC `RWO` et la base MongoDB à rédacteur unique ne peuvent pas prendre en charge un second réplica ; le pod supplémentaire ne parvient pas à attacher le disque et corrompt l'état si on le force. |
+| PVC / `/data/db` (auto) | Ne jamais supprimer | Critique | Supprimer le PVC supprime l'ensemble de l'espace de travail. |
+| `workload_type` | laisser `null` | Élevé | Définir `Deployment` avec `stateful_pvc_enabled = true` échoue au moment du plan ; laissez-le non défini pour qu'il se résolve automatiquement en StatefulSet. |
+| `ROOT_URL` (domaine personnalisé) | Correspondre au nom d'hôte servi | Élevé | Un `ROOT_URL` incorrect casse les liens d'invitation, les URL de fichiers et les rappels OAuth. |
+| `memory_limit` | `4Gi` (par défaut) | Élevé | Rocket.Chat et MongoDB dans un même pod subissent un OOM en dessous d'environ 2 GiB sous une charge réelle. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `stateful_pvc_storage_class` | `standard-rwo` (ou `premium-rwo`) | Moyen | `premium-rwo` offre plus d'IOPS à MongoDB pour les espaces de travail chargés, pour un coût plus élevé. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer le pod pendant la maintenance sans aucune protection. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences. |
 
 ---
 

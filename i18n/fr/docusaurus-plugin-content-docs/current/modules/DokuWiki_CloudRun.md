@@ -293,22 +293,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages GCS Fuse, un `backup_retention_days` hors limites et (propre au module) un `database_type` différent de `NONE`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket `gcs-dokuwiki<tenant-prefix>-data` | Ne jamais le supprimer ni le faire pointer ailleurs après le premier déploiement | Critical | Le bucket *est* le wiki — le supprimer ou le faire pointer ailleurs fait perdre toutes les pages, tous les médias et tous les utilisateurs. `force_destroy = true` signifie que la destruction du module le supprime ; sauvegardez-le d'abord. |
-| `database_type` | `NONE` | Critical | Toute autre valeur échoue à la garde du plan ; si elle est contournée, elle provisionne une instance Cloud SQL inutilisée et engendre des coûts. |
-| `install.php` après la configuration | À supprimer / bloquer dès que l'administrateur existe | High | Toute personne qui atteint `/install.php` avant la fin de votre configuration peut s'approprier le compte administrateur. |
-| `execution_environment` | `gen2` | High | `gen1` ne peut pas monter le volume gcsfuse `/storage` — le conteneur n'a nulle part où conserver les données du wiki. |
-| `max_instance_count` | Rester modeste (p. ex. `3`) | High | Une forte concurrence entre instances crée des conflits sur les mêmes fichiers adossés à gcsfuse ; les verrous de fichiers de DokuWiki ne sont qu'à cohérence éventuelle sur un stockage objet. |
-| `ingress_settings` | `all` (ou IAP) | High | Laissé public avec une inscription / des ACL mal configurées, n'importe qui peut modifier le wiki ; verrouillez l'accès via les ACL du wiki et/ou IAP. |
-| `memory_limit` | `512Mi` | Medium | En dessous de 256 MiB, le processus PHP/Apache peut subir des arrêts OOM en charge. |
-| `min_instance_count` | Sans objet — codé en dur à `0` | Low | `dokuwiki.tf` impose toujours `min_instance_count = 0` ; définir cette variable à `1` n'a aucun effet. La mise à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `application_version` | Épingler une version datée | Low | `latest` est résolu en un tag épinglé au moment du build, mais l'épingler explicitement rend les mises à niveau délibérées. |
+| Bucket `gcs-dokuwiki<tenant-prefix>-data` | Ne jamais le supprimer ni le faire pointer ailleurs après le premier déploiement | Critique | Le bucket *est* le wiki — le supprimer ou le faire pointer ailleurs fait perdre toutes les pages, tous les médias et tous les utilisateurs. `force_destroy = true` signifie que la destruction du module le supprime ; sauvegardez-le d'abord. |
+| `database_type` | `NONE` | Critique | Toute autre valeur échoue à la garde du plan ; si elle est contournée, elle provisionne une instance Cloud SQL inutilisée et engendre des coûts. |
+| `install.php` après la configuration | À supprimer / bloquer dès que l'administrateur existe | Élevé | Toute personne qui atteint `/install.php` avant la fin de votre configuration peut s'approprier le compte administrateur. |
+| `execution_environment` | `gen2` | Élevé | `gen1` ne peut pas monter le volume gcsfuse `/storage` — le conteneur n'a nulle part où conserver les données du wiki. |
+| `max_instance_count` | Rester modeste (p. ex. `3`) | Élevé | Une forte concurrence entre instances crée des conflits sur les mêmes fichiers adossés à gcsfuse ; les verrous de fichiers de DokuWiki ne sont qu'à cohérence éventuelle sur un stockage objet. |
+| `ingress_settings` | `all` (ou IAP) | Élevé | Laissé public avec une inscription / des ACL mal configurées, n'importe qui peut modifier le wiki ; verrouillez l'accès via les ACL du wiki et/ou IAP. |
+| `memory_limit` | `512Mi` | Moyen | En dessous de 256 MiB, le processus PHP/Apache peut subir des arrêts OOM en charge. |
+| `min_instance_count` | Sans objet — codé en dur à `0` | Faible | `dokuwiki.tf` impose toujours `min_instance_count = 0` ; définir cette variable à `1` n'a aucun effet. La mise à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `application_version` | Épingler une version datée | Faible | `latest` est résolu en un tag épinglé au moment du build, mais l'épingler explicitement rend les mises à niveau délibérées. |
 
 ---
 

@@ -333,27 +333,27 @@ Renvoyées lorsqu'un déploiement réussit — le moyen le plus rapide de locali
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critical | WordPress exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `enable_nfs` | `true` | Critical | Sans NFS, chaque nouvelle révision Cloud Run efface l'ensemble des extensions, thèmes et médias téléversés — WordPress est inutilisable pour tout site réel. |
-| `db_name` / `db_user` | défini une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données WordPress. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `execution_environment` | `gen2` | High | Les montages NFS nécessitent Cloud Run gen2 ; passer en gen1 provoque une erreur de montage de volume et l'échec du démarrage du service. |
-| `container_image_source` | `custom` | High | L'image WordPress personnalisée met en place le lien symbolique NFS et le socket Cloud SQL. Utiliser `prebuilt` avec l'image WordPress standard rompt la connectivité au socket Cloud SQL. |
-| `nfs_mount_path` | `/mnt/nfs` (ne pas modifier après le déploiement) | High | Le script de démarrage crée un lien symbolique de `wp-content` vers ce chemin ; le modifier après le déploiement casse le lien symbolique. |
-| `startup_probe` | TCP (par défaut) | High | Une sonde HTTP peut échouer pendant l'initialisation de la base de données au premier démarrage. Ne réduisez pas `failure_threshold` en dessous de 10. |
-| `memory_limit` | `2Gi` | High | WordPress avec des extensions populaires (WooCommerce, Elementor) nécessite au moins 2 GiB ; une mémoire insuffisante provoque des erreurs fatales PHP. |
-| `enable_redis` | `true` | Medium | Plusieurs instances avec des caches en mémoire isolés provoquent des requêtes redondantes vers la base de données. |
-| `redis_host` | `""` (IP NFS) ou explicite | High | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
-| `enable_cloud_armor` | à activer pour les sites publics | High | Les pages de connexion WordPress (`/wp-login.php`, `xmlrpc.php`) sont des cibles privilégiées des attaques par force brute. |
-| `php_memory_limit` | `512M` | Medium | Doit rester dans les limites de `memory_limit` ; le définir au-delà de la limite du conteneur provoque un arrêt OOM au lieu d'une erreur PHP. |
-| `min_instance_count` | `1` | Medium | `0` entraîne des délais de démarrage à froid et peut provoquer des erreurs visibles pour le premier visiteur après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les sites e-commerce ou riches en contenu. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Medium | Sinon, le panneau d'administration WordPress est accessible publiquement. |
+| `database_type` | `MYSQL_8_0` | Critique | WordPress exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `enable_nfs` | `true` | Critique | Sans NFS, chaque nouvelle révision Cloud Run efface l'ensemble des extensions, thèmes et médias téléversés — WordPress est inutilisable pour tout site réel. |
+| `db_name` / `db_user` | défini une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit toutes les données WordPress. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS nécessitent Cloud Run gen2 ; passer en gen1 provoque une erreur de montage de volume et l'échec du démarrage du service. |
+| `container_image_source` | `custom` | Élevé | L'image WordPress personnalisée met en place le lien symbolique NFS et le socket Cloud SQL. Utiliser `prebuilt` avec l'image WordPress standard rompt la connectivité au socket Cloud SQL. |
+| `nfs_mount_path` | `/mnt/nfs` (ne pas modifier après le déploiement) | Élevé | Le script de démarrage crée un lien symbolique de `wp-content` vers ce chemin ; le modifier après le déploiement casse le lien symbolique. |
+| `startup_probe` | TCP (par défaut) | Élevé | Une sonde HTTP peut échouer pendant l'initialisation de la base de données au premier démarrage. Ne réduisez pas `failure_threshold` en dessous de 10. |
+| `memory_limit` | `2Gi` | Élevé | WordPress avec des extensions populaires (WooCommerce, Elementor) nécessite au moins 2 GiB ; une mémoire insuffisante provoque des erreurs fatales PHP. |
+| `enable_redis` | `true` | Moyen | Plusieurs instances avec des caches en mémoire isolés provoquent des requêtes redondantes vers la base de données. |
+| `redis_host` | `""` (IP NFS) ou explicite | Élevé | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
+| `enable_cloud_armor` | à activer pour les sites publics | Élevé | Les pages de connexion WordPress (`/wp-login.php`, `xmlrpc.php`) sont des cibles privilégiées des attaques par force brute. |
+| `php_memory_limit` | `512M` | Moyen | Doit rester dans les limites de `memory_limit` ; le définir au-delà de la limite du conteneur provoque un arrêt OOM au lieu d'une erreur PHP. |
+| `min_instance_count` | `1` | Moyen | `0` entraîne des délais de démarrage à froid et peut provoquer des erreurs visibles pour le premier visiteur après une période d'inactivité. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les sites e-commerce ou riches en contenu. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour l'accès d'administration | Moyen | Sinon, le panneau d'administration WordPress est accessible publiquement. |
 
 ---
 

@@ -371,8 +371,8 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High**
-> (service dégradé) — **Medium** (coût ou dégradation partielle) — **Low**
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
 > (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
@@ -390,17 +390,17 @@ d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critical | Pas bloqué au moment du plan au-dessus de 1, mais chaque pod du StatefulSet reçoit son propre PVC **vide** — un second réplica exécute une MongoDB embarquée divergente et non synchronisée, sans mise en cluster, ce qui rompt l'hypothèse d'une source de vérité unique. |
-| `stateful_pvc_enabled` | `true` | Critical | Le désactiver supprime le PVC — tout l'état (Mongo embarquée, Redis, téléversements, configuration des applications connectées à Git) devient éphémère et est perdu au redémarrage/à la replanification du pod. |
-| `APPSMITH_ENCRYPTION_PASSWORD` / `APPSMITH_ENCRYPTION_SALT` (générés automatiquement) | Ne jamais modifier après le premier démarrage | Critical | Renouveler l'un ou l'autre indépendamment d'une réinitialisation complète des données rend définitivement illisibles les identifiants de sources de données et les clés SSH Git déjà chiffrés. |
-| `database_type` | `NONE` | Critical | Appsmith CE n'a pas d'intégration de base de données externe ; définir un moteur Cloud SQL provisionne une instance inutilisée et n'apporte rien à l'application. |
-| `enable_cloudsql_volume` | `false` | High | Bloqué au moment du plan lorsque `database_type = "NONE"` — il n'y a pas d'instance Cloud SQL vers laquelle servir de proxy. |
-| `enable_redis` | `false` | Medium | Appsmith CE embarque Redis en interne et ne lit pas les variables d'environnement génériques `REDIS_HOST`/`REDIS_URL` que ce paramètre injecte — l'activer ajoute des variables d'environnement inertes et, si on le prend à tort pour une vraie dépendance, une fausse confiance dans un cache externe qui n'est pas utilisé. |
-| `stateful_pvc_size` | `20Gi` (à augmenter si nécessaire) | Medium | Un sous-dimensionnement impose plus tard une extension manuelle du PVC ; la Mongo embarquée et les ressources téléversées partagent ce même volume. |
-| Délais de `startup_probe_config` | `initial_delay_seconds=120`, `failure_threshold=40` | Medium | Le conteneur « fat » (Mongo + Redis + Java) démarre lentement ; une fenêtre plus courte peut signaler comme défaillant un pod sain encore en démarrage et déclencher une boucle de redémarrage. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout domaine personnalisé configuré. |
-| `stateful_pvc_storage_class` | `""` (SSD) ou `standard` (HDD) | Low–Medium | Le SSD (`standard-rwo`) puise dans le quota régional `SSD_TOTAL_GB`, plus restreint ; remplacez par le HDD `standard` sur les projets limités en quota — une application à pod unique n'a aucun besoin d'IOPS qui exige du SSD. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
+| `max_instance_count` | `1` | Critique | Pas bloqué au moment du plan au-dessus de 1, mais chaque pod du StatefulSet reçoit son propre PVC **vide** — un second réplica exécute une MongoDB embarquée divergente et non synchronisée, sans mise en cluster, ce qui rompt l'hypothèse d'une source de vérité unique. |
+| `stateful_pvc_enabled` | `true` | Critique | Le désactiver supprime le PVC — tout l'état (Mongo embarquée, Redis, téléversements, configuration des applications connectées à Git) devient éphémère et est perdu au redémarrage/à la replanification du pod. |
+| `APPSMITH_ENCRYPTION_PASSWORD` / `APPSMITH_ENCRYPTION_SALT` (générés automatiquement) | Ne jamais modifier après le premier démarrage | Critique | Renouveler l'un ou l'autre indépendamment d'une réinitialisation complète des données rend définitivement illisibles les identifiants de sources de données et les clés SSH Git déjà chiffrés. |
+| `database_type` | `NONE` | Critique | Appsmith CE n'a pas d'intégration de base de données externe ; définir un moteur Cloud SQL provisionne une instance inutilisée et n'apporte rien à l'application. |
+| `enable_cloudsql_volume` | `false` | Élevé | Bloqué au moment du plan lorsque `database_type = "NONE"` — il n'y a pas d'instance Cloud SQL vers laquelle servir de proxy. |
+| `enable_redis` | `false` | Moyen | Appsmith CE embarque Redis en interne et ne lit pas les variables d'environnement génériques `REDIS_HOST`/`REDIS_URL` que ce paramètre injecte — l'activer ajoute des variables d'environnement inertes et, si on le prend à tort pour une vraie dépendance, une fausse confiance dans un cache externe qui n'est pas utilisé. |
+| `stateful_pvc_size` | `20Gi` (à augmenter si nécessaire) | Moyen | Un sous-dimensionnement impose plus tard une extension manuelle du PVC ; la Mongo embarquée et les ressources téléversées partagent ce même volume. |
+| Délais de `startup_probe_config` | `initial_delay_seconds=120`, `failure_threshold=40` | Moyen | Le conteneur « fat » (Mongo + Redis + Java) démarre lentement ; une fenêtre plus courte peut signaler comme défaillant un pod sain encore en démarrage et déclencher une boucle de redémarrage. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et tout domaine personnalisé configuré. |
+| `stateful_pvc_storage_class` | `""` (SSD) ou `standard` (HDD) | Faible–Moyen | Le SSD (`standard-rwo`) puise dans le quota régional `SSD_TOTAL_GB`, plus restreint ; remplacez par le HDD `standard` sur les projets limités en quota — une application à pod unique n'a aucun besoin d'IOPS qui exige du SSD. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
 
 ---
 

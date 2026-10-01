@@ -421,28 +421,28 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High**
-> (élevé : service dégradé) — **Medium** (moyen : coût ou dégradation partielle) —
-> **Low** (faible : mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
+> **Faible** (mineur).
 
 > **Validation héritée lors du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* lors du plan — un `database_type` autre que Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critical | Le renouveler rend définitivement illisibles toutes les données précédemment chiffrées (secrets clients, matériel de clés). |
-| `database_type` | `POSTGRES_15` | Critical | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté lors du plan, et un mauvais moteur empêche le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données / le rôle et détruit toutes les données d'identité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
-| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur / à l'hôte | Critical | S'il ne correspond pas à l'hôte qu'atteignent les utilisateurs, l'émetteur OIDC et les redirections de la console sont erronés et chaque connexion ou échange de jetons échoue. Définissez-le explicitement derrière un domaine personnalisé. |
-| `enable_cloudsql_volume` | `true` | High | Le socket de l'Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver alors qu'une base de données est configurée est bloqué par une vérification lors du plan. |
-| `ingress_settings` | `all` | High | `internal` bloque la console et tous les clients OIDC/OAuth externes. |
-| `enable_iap` | uniquement pour des consoles privées | High | IAP exige une connexion Google pour toutes les requêtes, ce qui bloque les clients OIDC / machine et les points de terminaison de jetons. |
-| `application_version` | Épingler une version | High | `latest` correspond aujourd'hui à un tag épinglé, mais un épinglage explicite évite des migrations inattendues lors d'un redéploiement. |
-| `memory_limit` | `4Gi` | Medium | Une valeur trop basse expose à des OOM sous charge ; gen2 impose également un plancher de 512 MiB. |
-| `min_instance_count` | `1` | Medium | `0` (mise à l'échelle à zéro) ajoute une latence de démarrage à froid aux requêtes de jetons / de connexion après une période d'inactivité. |
-| `enable_nfs` | `false` (inutilisé) | Low | Activé par défaut, mais Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation des données d'identité liées à la conformité. |
-| `enable_cloud_armor` | à activer en production | Medium | La console et les points de terminaison OIDC sont accessibles publiquement sans protection WAF. |
+| `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler rend définitivement illisibles toutes les données précédemment chiffrées (secrets clients, matériel de clés). |
+| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté lors du plan, et un mauvais moteur empêche le démarrage. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données / le rôle et détruit toutes les données d'identité. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
+| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur / à l'hôte | Critique | S'il ne correspond pas à l'hôte qu'atteignent les utilisateurs, l'émetteur OIDC et les redirections de la console sont erronés et chaque connexion ou échange de jetons échoue. Définissez-le explicitement derrière un domaine personnalisé. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket de l'Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver alors qu'une base de données est configurée est bloqué par une vérification lors du plan. |
+| `ingress_settings` | `all` | Élevé | `internal` bloque la console et tous les clients OIDC/OAuth externes. |
+| `enable_iap` | uniquement pour des consoles privées | Élevé | IAP exige une connexion Google pour toutes les requêtes, ce qui bloque les clients OIDC / machine et les points de terminaison de jetons. |
+| `application_version` | Épingler une version | Élevé | `latest` correspond aujourd'hui à un tag épinglé, mais un épinglage explicite évite des migrations inattendues lors d'un redéploiement. |
+| `memory_limit` | `4Gi` | Moyen | Une valeur trop basse expose à des OOM sous charge ; gen2 impose également un plancher de 512 MiB. |
+| `min_instance_count` | `1` | Moyen | `0` (mise à l'échelle à zéro) ajoute une latence de démarrage à froid aux requêtes de jetons / de connexion après une période d'inactivité. |
+| `enable_nfs` | `false` (inutilisé) | Faible | Activé par défaut, mais Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation des données d'identité liées à la conformité. |
+| `enable_cloud_armor` | à activer en production | Moyen | La console et les points de terminaison OIDC sont accessibles publiquement sans protection WAF. |
 
 ---
 

@@ -500,8 +500,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration
 > par le moteur du socle [App_CloudRun](App_CloudRun.md), ainsi que par ses propres
@@ -514,18 +514,18 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critical | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critical | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de tâches d'arrière-plan fonctionnelle. |
-| `db_name` / `db_user` | À définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
-| `enable_cloudsql_volume` | `false` (Cloud Run) | Critical | L'activer transforme `DB_HOST` en un répertoire de socket que Rails ne sait pas analyser directement ; le point d'entrée se rabat sur `DB_IP`, mais une valeur erronée `database_type = "NONE"` combinée à `enable_cloudsql_volume = true` est bloquée au moment du plan, car le sidecar proxy n'aurait aucune instance à laquelle se connecter. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que `enable_nfs` est désactivé et qu'aucun hôte n'est défini, la précondition au moment du plan échoue ; si `enable_nfs` est désactivé après un déploiement fonctionnel, les pièces jointes téléversées deviennent éphémères et l'hôte Redis peut devenir obsolète. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` en production | High | Avec les valeurs par défaut privilégiant le coût (`0` / `false`), le worker Sidekiq co-localisé ne s'exécute que lorsqu'une instance se trouve être active — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement entre les requêtes et pendant les fenêtres de mise à l'échelle à zéro. |
-| `memory_limit` | `4Gi` (par défaut) | High | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; Maybe recommande au moins 2Gi. |
-| `SELF_HOSTED` (injecté automatiquement à `"true"`) | Inscrire rapidement le premier administrateur | High | Laisser le déploiement joignable avant qu'un administrateur ne s'inscrive permet à quiconque dispose de l'URL de s'approprier le compte administrateur initial. |
-| `ingress_settings` | `all` | Medium | La définir à `internal` bloque l'accès à l'interface web pour toute personne extérieure au VPC. |
-| `backup_retention_days` | `7` (à augmenter en prod) | Medium | Trop court pour une rétention de conformité. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface d'administration est publiquement accessible sans protection WAF. |
+| `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
+| `enable_redis` | `true` | Critique | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de tâches d'arrière-plan fonctionnelle. |
+| `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
+| `enable_cloudsql_volume` | `false` (Cloud Run) | Critique | L'activer transforme `DB_HOST` en un répertoire de socket que Rails ne sait pas analyser directement ; le point d'entrée se rabat sur `DB_IP`, mais une valeur erronée `database_type = "NONE"` combinée à `enable_cloudsql_volume = true` est bloquée au moment du plan, car le sidecar proxy n'aurait aucune instance à laquelle se connecter. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que `enable_nfs` est désactivé et qu'aucun hôte n'est défini, la précondition au moment du plan échoue ; si `enable_nfs` est désactivé après un déploiement fonctionnel, les pièces jointes téléversées deviennent éphémères et l'hôte Redis peut devenir obsolète. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` en production | Élevé | Avec les valeurs par défaut privilégiant le coût (`0` / `false`), le worker Sidekiq co-localisé ne s'exécute que lorsqu'une instance se trouve être active — la synchronisation des comptes, le traitement des imports et les notifications cessent silencieusement entre les requêtes et pendant les fenêtres de mise à l'échelle à zéro. |
+| `memory_limit` | `4Gi` (par défaut) | Élevé | Le processus combiné Rails + Sidekiq est gourmand en mémoire sous les charges de travail d'import/de synchronisation ; Maybe recommande au moins 2Gi. |
+| `SELF_HOSTED` (injecté automatiquement à `"true"`) | Inscrire rapidement le premier administrateur | Élevé | Laisser le déploiement joignable avant qu'un administrateur ne s'inscrive permet à quiconque dispose de l'URL de s'approprier le compte administrateur initial. |
+| `ingress_settings` | `all` | Moyen | La définir à `internal` bloque l'accès à l'interface web pour toute personne extérieure au VPC. |
+| `backup_retention_days` | `7` (à augmenter en prod) | Moyen | Trop court pour une rétention de conformité. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface d'administration est publiquement accessible sans protection WAF. |
 
 ---
 

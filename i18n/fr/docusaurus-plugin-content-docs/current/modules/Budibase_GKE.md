@@ -320,25 +320,25 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `workload_type = "Deployment"` associé à `stateful_pvc_enabled = true`, des `quota_memory_*` sans suffixe d'unité binaire, un `container_port` hors limites, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` | Critical | S'il vaut false, Budibase ne dispose d'aucun `/data` durable — tout l'état CouchDB + MinIO est perdu à chaque redémarrage/replanification du pod. |
-| `API_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critical | Sa rotation corrompt toutes les données chiffrées stockées — elles ne peuvent plus être déchiffrées. |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (générés automatiquement) | Aucune rotation après le premier démarrage | Critical | Leur rotation rompt l'accès aux magasins d'objets/de documents intégrés sur le PVC `/data`. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas ne peuvent pas partager l'unique PVC `/data` — split-brain et perte de données. |
-| `JWT_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | High | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
-| `workload_type` | `null` (auto → StatefulSet) | High | Forcer `Deployment` avec `stateful_pvc_enabled = true` fait échouer le plan ; un Deployment ne peut pas générer de PVC par pod. |
-| `container_port` | `80` | High | Le proxy nginx sert l'application sur le port 80 ; tout autre port fait échouer les sondes et le pod ne passe jamais à l'état Ready. |
-| `database_type` | `NONE` | High | Choisir un moteur externe provisionne une instance Cloud SQL inutilisée ; Budibase ne s'y connecte jamais. |
-| `memory_limit` | `4Gi` | High | Exécuter CouchDB + MinIO + Redis + la couche applicative avec moins de ~2 GiB provoque des arrêts OOM au démarrage. |
-| `stateful_pvc_size` | `20Gi`+ | Medium | Un sous-dimensionnement risque de remplir le PVC à mesure que les données/pièces jointes croissent, bloquant les écritures CouchDB/MinIO. |
-| Premier compte administrateur | À créer immédiatement après le déploiement | High | Budibase auto-hébergé est livré sans administrateur par défaut — une instance non revendiquée peut être revendiquée par quiconque atteint l'URL. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `stateful_pvc_enabled` | `true` | Critique | S'il vaut false, Budibase ne dispose d'aucun `/data` durable — tout l'état CouchDB + MinIO est perdu à chaque redémarrage/replanification du pod. |
+| `API_ENCRYPTION_KEY` (généré automatiquement) | Aucune rotation après le premier démarrage | Critique | Sa rotation corrompt toutes les données chiffrées stockées — elles ne peuvent plus être déchiffrées. |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (générés automatiquement) | Aucune rotation après le premier démarrage | Critique | Leur rotation rompt l'accès aux magasins d'objets/de documents intégrés sur le PVC `/data`. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas ne peuvent pas partager l'unique PVC `/data` — split-brain et perte de données. |
+| `JWT_SECRET` (généré automatiquement) | Rotation uniquement lors d'une fenêtre de maintenance | Élevé | Sa rotation invalide toutes les sessions utilisateur actives et impose une reconnexion immédiate. |
+| `workload_type` | `null` (auto → StatefulSet) | Élevé | Forcer `Deployment` avec `stateful_pvc_enabled = true` fait échouer le plan ; un Deployment ne peut pas générer de PVC par pod. |
+| `container_port` | `80` | Élevé | Le proxy nginx sert l'application sur le port 80 ; tout autre port fait échouer les sondes et le pod ne passe jamais à l'état Ready. |
+| `database_type` | `NONE` | Élevé | Choisir un moteur externe provisionne une instance Cloud SQL inutilisée ; Budibase ne s'y connecte jamais. |
+| `memory_limit` | `4Gi` | Élevé | Exécuter CouchDB + MinIO + Redis + la couche applicative avec moins de ~2 GiB provoque des arrêts OOM au démarrage. |
+| `stateful_pvc_size` | `20Gi`+ | Moyen | Un sous-dimensionnement risque de remplir le PVC à mesure que les données/pièces jointes croissent, bloquant les écritures CouchDB/MinIO. |
+| Premier compte administrateur | À créer immédiatement après le déploiement | Élevé | Budibase auto-hébergé est livré sans administrateur par défaut — une instance non revendiquée peut être revendiquée par quiconque atteint l'URL. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
 
 ---
 

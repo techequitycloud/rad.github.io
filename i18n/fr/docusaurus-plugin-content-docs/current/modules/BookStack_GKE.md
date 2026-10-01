@@ -496,28 +496,28 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par BookStack, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner rend définitivement indéchiffrables toutes les valeurs chiffrées de la base (secrets d'authentification à deux facteurs, certains paramètres). |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `database_type` | `MYSQL_8_0` | Critical | BookStack nécessite MySQL ; tout autre moteur empêche le démarrage. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| `APP_URL` (via `environment_variables`) | URL du LoadBalancer externe / du domaine personnalisé | High | Une URL de base erronée casse le chargement des ressources, les liens et les redirections de connexion. |
-| `enable_nfs` | `true` | High | Le désactiver fait perdre toutes les images et pièces jointes téléversées lors d'un redéploiement ou d'un réordonnancement de pod. |
-| `memory_limit` | `2Gi` | High | Des valeurs plus faibles exposent à des arrêts OOM lors d'éditions simultanées et de l'indexation en texte intégral. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE ; le désactiver casse la connectivité à la base (ce n'est pas bloqué au moment du plan). |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; conserver 1 est approprié pour le déploiement à pod unique adossé à NFS. |
-| `max_instance_count` | `1` | High | Plusieurs pods sur le même volume NFS et la même base se retrouvent en interblocage ; ne passez pas à l'échelle horizontalement sans coordination externe. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les sessions d'interface passent d'un pod à l'autre (pertinent uniquement en cas de passage à plus d'un pod). |
-| Chemin de `liveness_probe` | `/status` (par défaut) | Medium | Pointer la sonde vers tout autre chemin ne renvoie jamais d'état sain pour BookStack — `/status` est son point de terminaison de santé JSON non authentifié. |
-| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | High | IAP bloque tout accès anonyme, y compris pour les lecteurs de documentation publique. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `APP_KEY` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner rend définitivement indéchiffrables toutes les valeurs chiffrées de la base (secrets d'authentification à deux facteurs, certains paramètres). |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `database_type` | `MYSQL_8_0` | Critique | BookStack nécessite MySQL ; tout autre moteur empêche le démarrage. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| `APP_URL` (via `environment_variables`) | URL du LoadBalancer externe / du domaine personnalisé | Élevé | Une URL de base erronée casse le chargement des ressources, les liens et les redirections de connexion. |
+| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre toutes les images et pièces jointes téléversées lors d'un redéploiement ou d'un réordonnancement de pod. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs plus faibles exposent à des arrêts OOM lors d'éditions simultanées et de l'indexation en texte intégral. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE ; le désactiver casse la connectivité à la base (ce n'est pas bloqué au moment du plan). |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; conserver 1 est approprié pour le déploiement à pod unique adossé à NFS. |
+| `max_instance_count` | `1` | Élevé | Plusieurs pods sur le même volume NFS et la même base se retrouvent en interblocage ; ne passez pas à l'échelle horizontalement sans coordination externe. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions d'interface passent d'un pod à l'autre (pertinent uniquement en cas de passage à plus d'un pod). |
+| Chemin de `liveness_probe` | `/status` (par défaut) | Moyen | Pointer la sonde vers tout autre chemin ne renvoie jamais d'état sain pour BookStack — `/status` est son point de terminaison de santé JSON non authentifié. |
+| `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | Élevé | IAP bloque tout accès anonyme, y compris pour les lecteurs de documentation publique. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

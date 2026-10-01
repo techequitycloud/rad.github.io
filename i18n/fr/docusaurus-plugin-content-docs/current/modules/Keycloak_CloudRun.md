@@ -302,24 +302,24 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Keycloak nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `enable_cloudsql_volume` | `false` | Critical | JDBC ne peut pas utiliser le socket Unix Cloud SQL. Avec une connexion par socket uniquement et sans repli sur `DB_IP`, Keycloak ne peut pas atteindre PostgreSQL. |
-| `db_name` / `db_user` | à définir une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les realms et utilisateurs. |
-| `application_version` | ne jamais rétrograder | Critical | Les migrations de schéma de Keycloak sont à sens unique ; une rétrogradation corrompt le schéma ou le refuse. |
-| `container_image_source` | `custom` | High | L'image amont ne dispose pas du point d'entrée qui mappe les identifiants de la base de données, assemble l'URL JDBC et détecte `KC_HOSTNAME` — et elle n'est pas pré-construite pour `start --optimized`. |
-| `startup_probe` | TCP sur 8080, ≥30 échecs | High | Une sonde HTTP sur `8080/health` renvoie toujours 404 (la santé est sur le port 9000) ; la révision ne devient jamais prête alors que Keycloak a bien démarré. |
-| Administrateur d'amorçage | à remplacer après la première connexion | High | `admin` + le mot de passe Secret Manager est un identifiant d'amorçage **temporaire** ; le conserver comme unique administrateur constitue un risque permanent. |
-| `KC_HOSTNAME` (via `environment_variables`) | explicite en cas de domaine personnalisé / équilibreur de charge | High | La détection automatique fige l'URL `run.app` ; les redirections OIDC et les URL d'émetteur ne correspondent alors plus au domaine réellement visité par les utilisateurs. |
-| `memory_limit` | `2Gi` | High | OOM de la JVM en dessous d'environ 1 GiB, en particulier pendant les migrations du premier démarrage. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` (ou `ALL_TRAFFIC`) | High | Sans egress VPC, le service ne peut pas atteindre l'IP privée de Cloud SQL. |
-| `min_instance_count` | `1` en production | Medium | `0` ajoute un démarrage à froid de la JVM de 60 à 120 s à la première redirection SSO après une période d'inactivité — très visible dans les flux de connexion. |
-| `enable_cloud_armor` | activé pour les connexions exposées à Internet | Medium | Sinon, les points de terminaison de connexion et d'administration ne sont pas protégés contre le trafic volumétrique ou le bourrage d'identifiants. |
-| `enable_redis` | `false` | Low | Keycloak n'utilise pas Redis ; l'activer ne fait qu'injecter des variables d'environnement inutilisées. |
+| `database_type` | `POSTGRES_15` | Critique | Keycloak nécessite PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `enable_cloudsql_volume` | `false` | Critique | JDBC ne peut pas utiliser le socket Unix Cloud SQL. Avec une connexion par socket uniquement et sans repli sur `DB_IP`, Keycloak ne peut pas atteindre PostgreSQL. |
+| `db_name` / `db_user` | à définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les realms et utilisateurs. |
+| `application_version` | ne jamais rétrograder | Critique | Les migrations de schéma de Keycloak sont à sens unique ; une rétrogradation corrompt le schéma ou le refuse. |
+| `container_image_source` | `custom` | Élevé | L'image amont ne dispose pas du point d'entrée qui mappe les identifiants de la base de données, assemble l'URL JDBC et détecte `KC_HOSTNAME` — et elle n'est pas pré-construite pour `start --optimized`. |
+| `startup_probe` | TCP sur 8080, ≥30 échecs | Élevé | Une sonde HTTP sur `8080/health` renvoie toujours 404 (la santé est sur le port 9000) ; la révision ne devient jamais prête alors que Keycloak a bien démarré. |
+| Administrateur d'amorçage | à remplacer après la première connexion | Élevé | `admin` + le mot de passe Secret Manager est un identifiant d'amorçage **temporaire** ; le conserver comme unique administrateur constitue un risque permanent. |
+| `KC_HOSTNAME` (via `environment_variables`) | explicite en cas de domaine personnalisé / équilibreur de charge | Élevé | La détection automatique fige l'URL `run.app` ; les redirections OIDC et les URL d'émetteur ne correspondent alors plus au domaine réellement visité par les utilisateurs. |
+| `memory_limit` | `2Gi` | Élevé | OOM de la JVM en dessous d'environ 1 GiB, en particulier pendant les migrations du premier démarrage. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` (ou `ALL_TRAFFIC`) | Élevé | Sans egress VPC, le service ne peut pas atteindre l'IP privée de Cloud SQL. |
+| `min_instance_count` | `1` en production | Moyen | `0` ajoute un démarrage à froid de la JVM de 60 à 120 s à la première redirection SSO après une période d'inactivité — très visible dans les flux de connexion. |
+| `enable_cloud_armor` | activé pour les connexions exposées à Internet | Moyen | Sinon, les points de terminaison de connexion et d'administration ne sont pas protégés contre le trafic volumétrique ou le bourrage d'identifiants. |
+| `enable_redis` | `false` | Faible | Keycloak n'utilise pas Redis ; l'activer ne fait qu'injecter des variables d'environnement inutilisées. |
 
 ---
 

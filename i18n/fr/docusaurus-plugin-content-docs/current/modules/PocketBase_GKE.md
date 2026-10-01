@@ -333,8 +333,8 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du
 > socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du
@@ -346,17 +346,17 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (ne jamais augmenter) | Critical | SQLite n'accepte qu'un seul rédacteur et le PVC est ReadWriteOnce ; un second réplica ne peut pas monter le volume et des rédacteurs concurrents corrompent la base de données. |
-| `stateful_pvc_enabled` | `true` | Critical | Sans PVC en mode bloc, SQLite se rabat sur un stockage de type GCS FUSE au verrouillage peu fiable → corruption de la base de données. |
-| Le PVC `/pb_data` | Ne jamais le supprimer ; le sauvegarder | Critical | Le PVC **est** la base de données et le stockage de fichiers — le supprimer détruit toutes les données. |
-| `stateful_pvc_mount_path` | `/pb_data` (fixe) | Critical | Monter le PVC ailleurs conduit PocketBase à écrire sa base de données sur le stockage éphémère du pod, perdu au redémarrage. |
-| Compte administrateur sur `/_/` | Le créer dès que l'accès est possible | Critical | Tant que le superutilisateur n'existe pas, quiconque atteint `/_/` peut se l'approprier et prendre le contrôle de l'instance. |
-| Changement de `application_version` | Sauvegarder d'abord le PVC | High | PocketBase migre automatiquement le schéma au démarrage ; une mise à niveau interrompue peut laisser la base SQLite en pleine migration. |
-| `workload_type` | laisser `null` (StatefulSet automatique) | High | Forcer `Deployment` avec `stateful_pvc_enabled = true` fait échouer la validation au moment du plan. |
-| `service_type` | `LoadBalancer` (externe, la valeur par défaut) ou `ClusterIP` (interne) | High | Passer à `ClusterIP` alors qu'un accès externe est nécessaire rend l'application inaccessible depuis l'extérieur du cluster. |
-| `enable_iap` | Uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris les clients publics de l'API et l'interface d'administration. |
-| `stateful_pvc_size` | `20Gi` (à augmenter en cas de nombreux téléversements) | Medium | Un PVC trop petit se remplit à mesure que les fichiers téléversés s'accumulent, et les PVC ne peuvent pas toujours être réduits. |
-| `memory_limit` | `1Gi` | Low | PocketBase est léger ; le surprovisionnement ne fait qu'augmenter le coût sur Autopilot. |
+| `max_instance_count` | `1` (ne jamais augmenter) | Critique | SQLite n'accepte qu'un seul rédacteur et le PVC est ReadWriteOnce ; un second réplica ne peut pas monter le volume et des rédacteurs concurrents corrompent la base de données. |
+| `stateful_pvc_enabled` | `true` | Critique | Sans PVC en mode bloc, SQLite se rabat sur un stockage de type GCS FUSE au verrouillage peu fiable → corruption de la base de données. |
+| Le PVC `/pb_data` | Ne jamais le supprimer ; le sauvegarder | Critique | Le PVC **est** la base de données et le stockage de fichiers — le supprimer détruit toutes les données. |
+| `stateful_pvc_mount_path` | `/pb_data` (fixe) | Critique | Monter le PVC ailleurs conduit PocketBase à écrire sa base de données sur le stockage éphémère du pod, perdu au redémarrage. |
+| Compte administrateur sur `/_/` | Le créer dès que l'accès est possible | Critique | Tant que le superutilisateur n'existe pas, quiconque atteint `/_/` peut se l'approprier et prendre le contrôle de l'instance. |
+| Changement de `application_version` | Sauvegarder d'abord le PVC | Élevé | PocketBase migre automatiquement le schéma au démarrage ; une mise à niveau interrompue peut laisser la base SQLite en pleine migration. |
+| `workload_type` | laisser `null` (StatefulSet automatique) | Élevé | Forcer `Deployment` avec `stateful_pvc_enabled = true` fait échouer la validation au moment du plan. |
+| `service_type` | `LoadBalancer` (externe, la valeur par défaut) ou `ClusterIP` (interne) | Élevé | Passer à `ClusterIP` alors qu'un accès externe est nécessaire rend l'application inaccessible depuis l'extérieur du cluster. |
+| `enable_iap` | Uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les clients publics de l'API et l'interface d'administration. |
+| `stateful_pvc_size` | `20Gi` (à augmenter en cas de nombreux téléversements) | Moyen | Un PVC trop petit se remplit à mesure que les fichiers téléversés s'accumulent, et les PVC ne peuvent pas toujours être réduits. |
+| `memory_limit` | `1Gi` | Faible | PocketBase est léger ; le surprovisionnement ne fait qu'augmenter le coût sur Autopilot. |
 
 ---
 

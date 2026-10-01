@@ -363,25 +363,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé en même temps qu'un réglage sans état, IAP sans identités autorisées, des `quota_memory_*` exprimés en entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` (valeur par défaut) | Critical | Le désactiver déplace la base de données SQLite de Kavita vers un montage GCS FUSE, ce qui risque de corrompre le fichier SQLite et l'index de la bibliothèque en cas d'écritures concurrentes. |
-| `stateful_pvc_mount_path` | `/kavita/config` | Critical | Doit correspondre au répertoire de données fixe de Kavita ; le modifier sépare l'application de son état de configuration/SQLite. |
-| `max_instance_count` | `1` | Critical | Kavita n'offre ni clustering ni coordination des écritures partagées ; plus d'un réplica sur le même PVC risque de corrompre SQLite. |
-| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Medium | Le SSD consomme le quota `SSD_TOTAL_GB`, très limité ; sur un projet contraint par les quotas, passez au HDD (`standard`), car les besoins d'E/S de Kavita n'exigent pas les IOPS d'un SSD. |
-| `enable_nfs` | `false` | Low | NFS est inutile — la persistance passe par le PVC bloc ; l'activer ajoute un coût sans aucun bénéfice pour la disposition par défaut de ce module. |
-| `enable_redis` | forcé à `false` dans `main.tf` | Low | Définir cette variable n'a aucun effet — Kavita n'utilise jamais Redis, quelle que soit la valeur transmise. |
-| `stateful_fs_group` | `3000` | High | Kavita s'exécute en tant qu'UID 1000/GID 2000 ; un `fsGroup` incorrect ou non défini peut empêcher le conteneur d'écrire sur le PVC au démarrage. |
-| `memory_limit` | `1Gi` | Medium | Suffisant pour de grandes bibliothèques ; une valeur trop basse expose à des erreurs OOM pendant les analyses de la bibliothèque ou l'indexation plein texte. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| Compte administrateur du premier lancement | Terminez l'assistant de configuration rapidement après le déploiement | Medium | Tant que l'assistant n'a pas été exécuté, le service est accessible mais ne dispose d'aucun compte administrateur ni d'aucune bibliothèque configurée. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et les URL OPDS enregistrées en favoris. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire ; Kavita n'a pas de voie de sauvegarde de base de données distincte, puisque tout son état réside sur le PVC. |
+| `stateful_pvc_enabled` | `true` (valeur par défaut) | Critique | Le désactiver déplace la base de données SQLite de Kavita vers un montage GCS FUSE, ce qui risque de corrompre le fichier SQLite et l'index de la bibliothèque en cas d'écritures concurrentes. |
+| `stateful_pvc_mount_path` | `/kavita/config` | Critique | Doit correspondre au répertoire de données fixe de Kavita ; le modifier sépare l'application de son état de configuration/SQLite. |
+| `max_instance_count` | `1` | Critique | Kavita n'offre ni clustering ni coordination des écritures partagées ; plus d'un réplica sur le même PVC risque de corrompre SQLite. |
+| `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Moyen | Le SSD consomme le quota `SSD_TOTAL_GB`, très limité ; sur un projet contraint par les quotas, passez au HDD (`standard`), car les besoins d'E/S de Kavita n'exigent pas les IOPS d'un SSD. |
+| `enable_nfs` | `false` | Faible | NFS est inutile — la persistance passe par le PVC bloc ; l'activer ajoute un coût sans aucun bénéfice pour la disposition par défaut de ce module. |
+| `enable_redis` | forcé à `false` dans `main.tf` | Faible | Définir cette variable n'a aucun effet — Kavita n'utilise jamais Redis, quelle que soit la valeur transmise. |
+| `stateful_fs_group` | `3000` | Élevé | Kavita s'exécute en tant qu'UID 1000/GID 2000 ; un `fsGroup` incorrect ou non défini peut empêcher le conteneur d'écrire sur le PVC au démarrage. |
+| `memory_limit` | `1Gi` | Moyen | Suffisant pour de grandes bibliothèques ; une valeur trop basse expose à des erreurs OOM pendant les analyses de la bibliothèque ou l'indexation plein texte. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| Compte administrateur du premier lancement | Terminez l'assistant de configuration rapidement après le déploiement | Moyen | Tant que l'assistant n'a pas été exécuté, le service est accessible mais ne dispose d'aucun compte administrateur ni d'aucune bibliothèque configurée. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et les URL OPDS enregistrées en favoris. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire ; Kavita n'a pas de voie de sauvegarde de base de données distincte, puisque tout son état réside sur le PVC. |
 
 ---
 

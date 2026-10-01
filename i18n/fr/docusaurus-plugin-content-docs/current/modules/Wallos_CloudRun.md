@@ -357,25 +357,25 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec des montages GCS FUSE, `min_instance_count > max_instance_count`, des délais d'expiration hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `min_instance_count` | `1` | Critical | La mise à zéro arrête silencieusement le démon cron de Wallos — les notifications de renouvellement et toutes les autres tâches planifiées cessent de se déclencher, sans aucune erreur nulle part. |
-| `max_instance_count` | `1` | Critical | Une valeur >1 place des écrivains concurrents sur le fichier SQLite du volume NFS partagé, ce qui corrompt la base de données. |
-| `cpu_always_allocated` | `true` | Critical | `false` réduit le CPU à presque zéro entre les requêtes, privant le démon cron des cycles CPU dont il a besoin pour exécuter les tâches planifiées. |
-| Volume NFS / bucket GCS `uploads` | Ne jamais supprimer | Critical | La base SQLite embarquée (NFS) et les logos personnalisés (bucket `uploads`) résident ici ; supprimer l'un ou l'autre détruit définitivement cet état. |
-| `admin` / `admin` (identifiant initial) | À modifier à la première connexion | Critical | Conserver l'identifiant par défaut permet à quiconque peut joindre le service d'en prendre le contrôle total. |
-| `ingress_settings` | `all` (ou `internal` pour restreindre) | High | La valeur par défaut `all` expose le service à l'internet public — associez-la à IAP ou Cloud Armor si ce n'est pas souhaité ; définissez `internal` pour un accès limité au VPC. |
-| `container_port` | `80` | High | Wallos écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et la révision ne devient jamais Ready. |
-| Chemin de `startup_probe` / `liveness_probe` | `/` | Medium | Aucun point de terminaison `/health` dédié n'est documenté pour `bellamy/wallos` — si l'application venait à protéger son chemin racine par une authentification, le chemin de la sonde devrait être ajusté. |
-| `container_image_source` | `prebuilt` (transmis) | High | S'il n'est pas transmis, la valeur par défaut propre à App_CloudRun (`custom`) l'emporte silencieusement et déclenche un build Kaniko depuis les sources pour une image sans Dockerfile — le déploiement échoue. |
-| `enable_cloudsql_volume` | `false` | Medium | Wallos n'a pas de Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
-| `execution_environment` | `gen2` | High | `gen1` ne peut pas monter les volumes NFS ou GCS FUSE, donc l'état n'est pas conservé. |
-| Masquage par les volumes `db`/`uploads` | À vérifier au premier déploiement | High | Si `bellamy/wallos` place des ressources par défaut dans `/var/www/html/db` ou `/var/www/html/images/uploads/logos`, monter un nouveau volume vide exactement sur ce chemin les masque au premier démarrage — ce point n'a été confirmé dans aucun sens lors des recherches. |
+| `min_instance_count` | `1` | Critique | La mise à zéro arrête silencieusement le démon cron de Wallos — les notifications de renouvellement et toutes les autres tâches planifiées cessent de se déclencher, sans aucune erreur nulle part. |
+| `max_instance_count` | `1` | Critique | Une valeur >1 place des écrivains concurrents sur le fichier SQLite du volume NFS partagé, ce qui corrompt la base de données. |
+| `cpu_always_allocated` | `true` | Critique | `false` réduit le CPU à presque zéro entre les requêtes, privant le démon cron des cycles CPU dont il a besoin pour exécuter les tâches planifiées. |
+| Volume NFS / bucket GCS `uploads` | Ne jamais supprimer | Critique | La base SQLite embarquée (NFS) et les logos personnalisés (bucket `uploads`) résident ici ; supprimer l'un ou l'autre détruit définitivement cet état. |
+| `admin` / `admin` (identifiant initial) | À modifier à la première connexion | Critique | Conserver l'identifiant par défaut permet à quiconque peut joindre le service d'en prendre le contrôle total. |
+| `ingress_settings` | `all` (ou `internal` pour restreindre) | Élevé | La valeur par défaut `all` expose le service à l'internet public — associez-la à IAP ou Cloud Armor si ce n'est pas souhaité ; définissez `internal` pour un accès limité au VPC. |
+| `container_port` | `80` | Élevé | Wallos écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et la révision ne devient jamais Ready. |
+| Chemin de `startup_probe` / `liveness_probe` | `/` | Moyen | Aucun point de terminaison `/health` dédié n'est documenté pour `bellamy/wallos` — si l'application venait à protéger son chemin racine par une authentification, le chemin de la sonde devrait être ajusté. |
+| `container_image_source` | `prebuilt` (transmis) | Élevé | S'il n'est pas transmis, la valeur par défaut propre à App_CloudRun (`custom`) l'emporte silencieusement et déclenche un build Kaniko depuis les sources pour une image sans Dockerfile — le déploiement échoue. |
+| `enable_cloudsql_volume` | `false` | Moyen | Wallos n'a pas de Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
+| `execution_environment` | `gen2` | Élevé | `gen1` ne peut pas monter les volumes NFS ou GCS FUSE, donc l'état n'est pas conservé. |
+| Masquage par les volumes `db`/`uploads` | À vérifier au premier déploiement | Élevé | Si `bellamy/wallos` place des ressources par défaut dans `/var/www/html/db` ou `/var/www/html/images/uploads/logos`, monter un nouveau volume vide exactement sur ce chemin les masque au premier démarrage — ce point n'a été confirmé dans aucun sens lors des recherches. |
 
 ---
 

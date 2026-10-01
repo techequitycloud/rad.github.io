@@ -407,28 +407,28 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `db_name` | `kestra` — défini une fois pour toutes | Critical | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, ce qui fait perdre tous les flux, l'historique des exécutions, les déclencheurs et les espaces de noms. |
-| `application_name` | `kestra` — défini une fois pour toutes | Critical | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne leur recréation complète avec perte de données. |
-| `KESTRA_BASICAUTH_ENABLED` (injecté à `true`) | laissez la valeur injectée | Critical | Le passer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne le désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
-| `max_instance_count` | `1` | High | Plusieurs instances provoquent des conflits de verrouillage de la file d'attente PostgreSQL et la double attribution de tâches dans la Community Edition. |
-| `min_instance_count` | `1` | High | La valeur `0` fait manquer des déclencheurs planifiés pendant les périodes de démarrage à froid. |
-| `memory_limit` | `4Gi` | High | Des valeurs inférieures à 2 Gio provoquent des OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
-| `enable_cloudsql_volume` | `true` | High | Requis pour le pont JDBC par socket Unix ; sans lui, le pont de socket de `entrypoint.sh` n'a aucun socket à relier. |
-| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectés à `postgres`) | laissez les valeurs injectées | High | Seul PostgreSQL est provisionné ; les remplacer par un backend non pris en charge fait échouer le démarrage. |
-| `execution_environment` | `gen2` | High | Les montages NFS et GCS Fuse nécessitent gen2 ; passer à `gen1` fait échouer les montages. |
-| Seuil d'échecs de `startup_probe` | 40 (valeur par défaut) | High | Le réduire en dessous d'environ 10 provoque des redémarrages prématurés lors d'un démarrage lent de la JVM, avant que Kestra n'ait fini de se charger. |
-| `ENDPOINTS_ALL_PORT` (injecté à `8080`) | laissez la valeur injectée | High | Remplacer ce port casse les contrôles de santé de Cloud Run et provoque des redémarrages continus du conteneur. |
-| `min_instance_count` | `1` | Medium | La valeur `0` ajoute une latence de démarrage à froid et expose au risque de manquer des tâches planifiées. |
-| `ingress_settings` | `all` (ou équilibreur de charge uniquement en production) | Medium | La valeur `internal` bloque tous les déclencheurs webhook externes et les appels d'API provenant de l'extérieur du VPC. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface et l'API de Kestra sont accessibles publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaire. |
-| `organization_id` | à définir en cas d'utilisation de VPC-SC | Medium | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
+| `db_name` | `kestra` — défini une fois pour toutes | Critique | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, ce qui fait perdre tous les flux, l'historique des exécutions, les déclencheurs et les espaces de noms. |
+| `application_name` | `kestra` — défini une fois pour toutes | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne leur recréation complète avec perte de données. |
+| `KESTRA_BASICAUTH_ENABLED` (injecté à `true`) | laissez la valeur injectée | Critique | Le passer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne le désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `max_instance_count` | `1` | Élevé | Plusieurs instances provoquent des conflits de verrouillage de la file d'attente PostgreSQL et la double attribution de tâches dans la Community Edition. |
+| `min_instance_count` | `1` | Élevé | La valeur `0` fait manquer des déclencheurs planifiés pendant les périodes de démarrage à froid. |
+| `memory_limit` | `4Gi` | Élevé | Des valeurs inférieures à 2 Gio provoquent des OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |
+| `enable_cloudsql_volume` | `true` | Élevé | Requis pour le pont JDBC par socket Unix ; sans lui, le pont de socket de `entrypoint.sh` n'a aucun socket à relier. |
+| `KESTRA_QUEUE_TYPE` / `KESTRA_REPOSITORY_TYPE` (injectés à `postgres`) | laissez les valeurs injectées | Élevé | Seul PostgreSQL est provisionné ; les remplacer par un backend non pris en charge fait échouer le démarrage. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS et GCS Fuse nécessitent gen2 ; passer à `gen1` fait échouer les montages. |
+| Seuil d'échecs de `startup_probe` | 40 (valeur par défaut) | Élevé | Le réduire en dessous d'environ 10 provoque des redémarrages prématurés lors d'un démarrage lent de la JVM, avant que Kestra n'ait fini de se charger. |
+| `ENDPOINTS_ALL_PORT` (injecté à `8080`) | laissez la valeur injectée | Élevé | Remplacer ce port casse les contrôles de santé de Cloud Run et provoque des redémarrages continus du conteneur. |
+| `min_instance_count` | `1` | Moyen | La valeur `0` ajoute une latence de démarrage à froid et expose au risque de manquer des tâches planifiées. |
+| `ingress_settings` | `all` (ou équilibreur de charge uniquement en production) | Moyen | La valeur `internal` bloque tous les déclencheurs webhook externes et les appels d'API provenant de l'extérieur du VPC. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface et l'API de Kestra sont accessibles publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaire. |
+| `organization_id` | à définir en cas d'utilisation de VPC-SC | Moyen | S'il est vide, VPC Service Controls est ignoré sans avertissement. |
 
 ### Suppression des ressources — délai connu du sous-réseau Cloud Run {#destroying-resources--known-cloud-run-subnet-delay}
 

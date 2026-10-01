@@ -106,7 +106,7 @@ Indépendamment de ces dumps logiques, l'instance Cloud SQL conserve elle-même 
 <details>
 <summary>Q1 : Un ingénieur a supprimé une table à 14:32. Le dernier dump nocturne date de 02:00. Quelle est la récupération qui perd le moins de données, et pourquoi est-elle disponible ici ?</summary>
 
-R : La récupération à un moment précis (PITR) — restaurez (clonez) l'instance Cloud SQL à 14:31. Le PITR est activé sur l'instance avec une conservation des journaux de transactions de 7 jours ; n'importe quelle seconde de cette fenêtre est donc récupérable, alors que le dump GCS de 02:00 ferait perdre 12.5 heures d'écritures. L'examen attend de vous que vous sachiez que le PITR crée une nouvelle instance au lieu de rembobiner l'instance existante.
+R : La récupération à un moment précis (PITR) — restaurez (clonez) l'instance Cloud SQL à 14:31. Le PITR est activé sur l'instance avec une conservation des journaux de transactions de 7 jours ; n'importe quelle seconde de cette fenêtre est donc récupérable, alors que le dump GCS de 02:00 ferait perdre 12,5 heures d'écritures. L'examen attend de vous que vous sachiez que le PITR crée une nouvelle instance au lieu de rembobiner l'instance existante.
 </details>
 
 <details>

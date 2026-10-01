@@ -420,26 +420,26 @@ d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. Le `validation.tf` propre à `GoToSocial_GKE` bloque en outre `min_instance_count > max_instance_count`, `enable_redis = true` sans `redis_host` ni `enable_nfs`, un `database_type` autre que PostgreSQL, `enable_iap = true` sans les deux identifiants OAuth, et `enable_cloudsql_volume = true` avec `database_type = "NONE"`.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `host` (`GTS_HOST`) | Définissez votre domaine réel avant le premier déploiement | Critical | Inscrit dans chaque URI d'acteur/objet ActivityPub au moment de sa création ; le modifier une fois que des comptes/publications réels existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
-| `max_instance_count` | `1` (ne pas augmenter) | Critical | Le cache en mémoire de GoToSocial n'a aucune synchronisation entre instances ; le projet amont ne prend pas en charge plusieurs instances sur la même base de données/le même stockage. |
-| `database_type` | `POSTGRES_15` | Critical | Validé au moment du plan par le `validation.tf` propre à `GoToSocial_GKE` — MySQL/SQL Server sont rejetés avant l'apply. |
-| `container_port` / ports des sondes | `8080` partout | Critical | Une incohérence fait sonder un port inactif, et le pod ne devient jamais Ready alors que l'application est saine. |
-| Câblage IAM du stockage (`google_storage_bucket_iam_member`) | Laissez tel que livré (référence `module.app_gke.storage_buckets["storage"]`) | Critical | GoToSocial panique au démarrage sans accès S3. Une alternative `depends_on = [module.app_gke]` provoquerait un interblocage du Deployment avec son propre prérequis IAM. |
-| Récupération d'`admin-create` | Appliquez le correctif SQL de la ligne de compte orpheline si une nouvelle tentative panique avec « no rows » | High | Une première tentative partiellement échouée peut laisser une ligne `accounts` orpheline sans ligne `users` correspondante ; les nouvelles tentatives naïves échouent de façon déroutante sans le SQL de nettoyage. |
-| Sondes de santé (`startup_probe`/`liveness_probe`) | Laissez `type = "TCP"` | High | Les `/readyz`/`/livez` de GoToSocial rejettent toute requête sans en-tête `User-Agent` (`418`) ; passer à `type = "HTTP"` fait échouer la sonde indéfiniment, puisque la sonde de Kubernetes n'en envoie jamais. |
-| Résultat de la tâche `admin-create` | Vérifiez, ne supposez pas | High | L'ordonnancement plus souple des tâches sur GKE permet souvent à `admin-create` de gagner automatiquement sa course contre le démarrage du pod, mais pas toujours — vérifiez que le compte existe avant de considérer le déploiement comme pleinement opérationnel. |
-| `reserve_static_ip` | `true` (par défaut) | Medium | Sans cela, `GKE_SERVICE_URL` peut se rabattre sur un nom d'hôte interne injoignable `*.svc.cluster.local` avant que l'IP éphémère du LoadBalancer ne soit connue — une situation de concurrence documentée sur l'ensemble du parc. |
-| `curl`/contrôles de santé manuels | Passez toujours `-A "<agent>"` | Medium | Un `curl` nu (et la plupart des clients/moniteurs HTTP par défaut) reçoit `418 I'm a teapot` de la barrière anti-scraping de GoToSocial fondée sur le User-Agent, même sur des points de terminaison « non authentifiés ». |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_nfs` | `true` (par défaut) ou `false` si inutile | Low | Filestore est facturé que l'application y écrive ou non ; GoToSocial n'utilise pas du tout le montage NFS dans sa configuration par défaut. |
-| `enable_redis` | `false` (par défaut) | Low | GoToSocial ne dépend pas de Redis ; laisser cette valeur à `true` n'a aucun effet fonctionnel. |
+| `host` (`GTS_HOST`) | Définissez votre domaine réel avant le premier déploiement | Critique | Inscrit dans chaque URI d'acteur/objet ActivityPub au moment de sa création ; le modifier une fois que des comptes/publications réels existent casse la fédération pour tout ce qui a été créé sous l'ancienne valeur. |
+| `max_instance_count` | `1` (ne pas augmenter) | Critique | Le cache en mémoire de GoToSocial n'a aucune synchronisation entre instances ; le projet amont ne prend pas en charge plusieurs instances sur la même base de données/le même stockage. |
+| `database_type` | `POSTGRES_15` | Critique | Validé au moment du plan par le `validation.tf` propre à `GoToSocial_GKE` — MySQL/SQL Server sont rejetés avant l'apply. |
+| `container_port` / ports des sondes | `8080` partout | Critique | Une incohérence fait sonder un port inactif, et le pod ne devient jamais Ready alors que l'application est saine. |
+| Câblage IAM du stockage (`google_storage_bucket_iam_member`) | Laissez tel que livré (référence `module.app_gke.storage_buckets["storage"]`) | Critique | GoToSocial panique au démarrage sans accès S3. Une alternative `depends_on = [module.app_gke]` provoquerait un interblocage du Deployment avec son propre prérequis IAM. |
+| Récupération d'`admin-create` | Appliquez le correctif SQL de la ligne de compte orpheline si une nouvelle tentative panique avec « no rows » | Élevé | Une première tentative partiellement échouée peut laisser une ligne `accounts` orpheline sans ligne `users` correspondante ; les nouvelles tentatives naïves échouent de façon déroutante sans le SQL de nettoyage. |
+| Sondes de santé (`startup_probe`/`liveness_probe`) | Laissez `type = "TCP"` | Élevé | Les `/readyz`/`/livez` de GoToSocial rejettent toute requête sans en-tête `User-Agent` (`418`) ; passer à `type = "HTTP"` fait échouer la sonde indéfiniment, puisque la sonde de Kubernetes n'en envoie jamais. |
+| Résultat de la tâche `admin-create` | Vérifiez, ne supposez pas | Élevé | L'ordonnancement plus souple des tâches sur GKE permet souvent à `admin-create` de gagner automatiquement sa course contre le démarrage du pod, mais pas toujours — vérifiez que le compte existe avant de considérer le déploiement comme pleinement opérationnel. |
+| `reserve_static_ip` | `true` (par défaut) | Moyen | Sans cela, `GKE_SERVICE_URL` peut se rabattre sur un nom d'hôte interne injoignable `*.svc.cluster.local` avant que l'IP éphémère du LoadBalancer ne soit connue — une situation de concurrence documentée sur l'ensemble du parc. |
+| `curl`/contrôles de santé manuels | Passez toujours `-A "<agent>"` | Moyen | Un `curl` nu (et la plupart des clients/moniteurs HTTP par défaut) reçoit `418 I'm a teapot` de la barrière anti-scraping de GoToSocial fondée sur le User-Agent, même sur des points de terminaison « non authentifiés ». |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_nfs` | `true` (par défaut) ou `false` si inutile | Faible | Filestore est facturé que l'application y écrive ou non ; GoToSocial n'utilise pas du tout le montage NFS dans sa configuration par défaut. |
+| `enable_redis` | `false` (par défaut) | Faible | GoToSocial ne dépend pas de Redis ; laisser cette valeur à `true` n'a aucun effet fonctionnel. |
 
 ---
 

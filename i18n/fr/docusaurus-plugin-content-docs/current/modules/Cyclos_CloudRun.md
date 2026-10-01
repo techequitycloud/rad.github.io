@@ -382,28 +382,28 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (codé en dur via Cyclos_Common) | Critical | Cyclos exige PostgreSQL avec six extensions. MySQL ou `NONE` empêche complètement le démarrage. |
-| `db_name` / `db_user` | définis une fois (`cyclos` / `cyclos`) | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données financières. |
-| `max_instance_count` | `1` (par défaut) | Critical | Plus de 1 sans clustering Hazelcast entraîne des transactions non atomiques et une corruption potentielle des données. |
-| `application_name` | `cyclos` (ne pas modifier) | Critical | Intégré au nom du service Cloud Run, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
-| `application_version` | tag épinglé (par ex. `4.16.17`) | Critical | Les migrations de schéma de Cyclos sont à sens unique ; déployer une version plus récente sans chemin de migration testé corrompt le schéma. |
-| Variable d'environnement `cyclos.storedFileContentManager` | `gcs` (codé en dur) | Critical | La surcharger avec `local` écrit les fichiers dans le stockage éphémère du conteneur ; tous les téléversements sont perdus au redémarrage. |
-| `memory_limit` | `≥ 2Gi` (`4Gi` recommandé) | Critical | La JVM lève `OutOfMemoryError` ; le conteneur est tué pour manque de mémoire (code de sortie 137). |
-| Variable d'environnement `CYCLOS_OPTIONS` | `-Xmx2g` pour une limite de 4 GiB | Critical | Sans plafond du tas JVM, Cyclos consomme toute la mémoire du conteneur et est tué pour manque de mémoire sous charge. |
-| `startup_probe.type` | `TCP` (par défaut) | High | Une sonde HTTP sur `/api` pendant une mise à jour progressive provoque un interblocage du verrou de base de données ; la nouvelle révision ne devient jamais saine. |
-| `startup_probe.path` (vivacité) | `/api` | Critical | Chemin erroné : la sonde ne reçoit jamais de HTTP 200 ; Cloud Run arrête la révision. |
-| `enable_cloudsql_volume` | `false` (par défaut) | High | Si Private Service Access n'est pas configuré, la connexion TCP directe à l'adresse IP privée de Cloud SQL échoue ; db-init et le démarrage de l'application échouent tous deux. |
-| `min_instance_count` | `1` | High | `0` (mise à l'échelle à zéro) ajoute des démarrages à froid de la JVM de 45 à 120 s ; les transactions bancaires expirent. |
-| `execution_environment` | `gen2` | High | Gen1 peut rencontrer des problèmes de routage vers l'adresse IP privée de Cloud SQL via le VPC. Utilisez toujours gen2 pour Cyclos. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance la restauration à chaque apply et écrase les données financières en production. |
-| `SMTP_HOST` / `EMAIL_FROM` | serveur réel / adresse réelle | High | Les valeurs fictives par défaut n'envoient aucun e-mail ; les réinitialisations de mot de passe et les notifications de transaction sont silencieusement perdues. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration de Cyclos est joignable publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire des données financières. |
+| `database_type` | `POSTGRES_15` (codé en dur via Cyclos_Common) | Critique | Cyclos exige PostgreSQL avec six extensions. MySQL ou `NONE` empêche complètement le démarrage. |
+| `db_name` / `db_user` | définis une fois (`cyclos` / `cyclos`) | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelines toutes les données financières. |
+| `max_instance_count` | `1` (par défaut) | Critique | Plus de 1 sans clustering Hazelcast entraîne des transactions non atomiques et une corruption potentielle des données. |
+| `application_name` | `cyclos` (ne pas modifier) | Critique | Intégré au nom du service Cloud Run, au dépôt Artifact Registry, aux secrets Secret Manager et au nom du bucket GCS. Le modifier rend orphelines toutes les ressources. |
+| `application_version` | tag épinglé (par ex. `4.16.17`) | Critique | Les migrations de schéma de Cyclos sont à sens unique ; déployer une version plus récente sans chemin de migration testé corrompt le schéma. |
+| Variable d'environnement `cyclos.storedFileContentManager` | `gcs` (codé en dur) | Critique | La surcharger avec `local` écrit les fichiers dans le stockage éphémère du conteneur ; tous les téléversements sont perdus au redémarrage. |
+| `memory_limit` | `≥ 2Gi` (`4Gi` recommandé) | Critique | La JVM lève `OutOfMemoryError` ; le conteneur est tué pour manque de mémoire (code de sortie 137). |
+| Variable d'environnement `CYCLOS_OPTIONS` | `-Xmx2g` pour une limite de 4 GiB | Critique | Sans plafond du tas JVM, Cyclos consomme toute la mémoire du conteneur et est tué pour manque de mémoire sous charge. |
+| `startup_probe.type` | `TCP` (par défaut) | Élevé | Une sonde HTTP sur `/api` pendant une mise à jour progressive provoque un interblocage du verrou de base de données ; la nouvelle révision ne devient jamais saine. |
+| `startup_probe.path` (vivacité) | `/api` | Critique | Chemin erroné : la sonde ne reçoit jamais de HTTP 200 ; Cloud Run arrête la révision. |
+| `enable_cloudsql_volume` | `false` (par défaut) | Élevé | Si Private Service Access n'est pas configuré, la connexion TCP directe à l'adresse IP privée de Cloud SQL échoue ; db-init et le démarrage de l'application échouent tous deux. |
+| `min_instance_count` | `1` | Élevé | `0` (mise à l'échelle à zéro) ajoute des démarrages à froid de la JVM de 45 à 120 s ; les transactions bancaires expirent. |
+| `execution_environment` | `gen2` | Élevé | Gen1 peut rencontrer des problèmes de routage vers l'adresse IP privée de Cloud SQL via le VPC. Utilisez toujours gen2 pour Cyclos. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance la restauration à chaque apply et écrase les données financières en production. |
+| `SMTP_HOST` / `EMAIL_FROM` | serveur réel / adresse réelle | Élevé | Les valeurs fictives par défaut n'envoient aucun e-mail ; les réinitialisations de mot de passe et les notifications de transaction sont silencieusement perdues. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface d'administration de Cyclos est joignable publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire des données financières. |
 
 ---
 

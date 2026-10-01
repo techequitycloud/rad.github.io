@@ -497,27 +497,27 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `jwt_secret` | généré automatiquement ou fixé au premier déploiement | Critical | Le modifier après le déploiement invalide tous les JWT émis ; toutes les connexions clientes cessent de fonctionner. `anon_key` et `service_role_key` doivent être régénérées ensemble. |
-| `anon_key` / `service_role_key` | JWT signés (remplacer les valeurs provisoires) | Critical | Les valeurs provisoires font renvoyer une 401 à chaque appel d'API Supabase. Les trois identifiants JWT doivent être régénérés comme un ensemble atomique. |
-| `enable_cloudsql_volume` | `true` | Low | Inerte pour Supabase — GoTrue, PostgREST, Realtime et Storage se connectent tous au `supabase/postgres` de l'espace de noms via leurs propres URL `postgres://`, et non via l'Auth Proxy. |
-| `database_type` | `POSTGRES_15` | Low | Inerte — `main.tf` transmet quoi qu'il arrive `"NONE"` au socle, car PostgreSQL 15 s'exécute comme service `supabase/postgres` dans l'espace de noms. |
-| `application_database_name` / `_user` | définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods. |
-| `enable_postgres_extensions` | `true` | Low | Remplacé par `false` dans `main.tf` (les tâches d'extensions du socle ciblent Cloud SQL, que ce module n'utilise pas) ; les extensions sont fournies dans l'image `supabase/postgres`. |
-| `min_instance_count` | `1` | High | Une valeur de `0` autorise la mise à l'échelle à zéro ; les démarrages à froid de Kong prennent 15–30 s et perturbent les flux de redirection OAuth. |
-| `container_resources` CPU | `2000m` en production | High | Un CPU insuffisant provoque une latence élevée et des délais d'attente 504 sous charge. |
-| `container_resources` mémoire | `2Gi` minimum | High | Une mémoire insuffisante provoque des arrêts OOM sous charge concurrente. |
-| `startup_probe_config` / `startup_probe` | inertes — `main.tf` code en dur la sonde déployée en TCP (`failure_threshold=30`, `period_seconds=10`, ~5 min) | High | Définir ces variables n'a aucun effet sur le conteneur Kong déployé ; ne comptez pas sur elles pour allonger la tolérance au premier démarrage — voir §3. |
-| `site_url` / `api_external_url` / `supabase_public_url` | vraies URL publiques | High | Les valeurs par défaut localhost empêchent les flux OAuth et la construction des redirections de fonctionner en dehors du cluster. |
-| `application_version` | figée (pas `latest`) | Medium | Récupérer `latest` expose à des versions de Kong incompatibles avec la configuration déclarative fournie. |
-| `enable_nfs` | `false` | Low | NFS est inutile pour Supabase ; l'activer ajoute un coût Filestore et une dépendance susceptible de retarder le provisionnement. |
-| `enable_redis` | `false` | Medium | Redis est facultatif. S'il vaut `true`, `redis_host` doit pointer vers un point de terminaison joignable ; un hôte injoignable provoque des délais d'attente au démarrage de Kong. |
+| `jwt_secret` | généré automatiquement ou fixé au premier déploiement | Critique | Le modifier après le déploiement invalide tous les JWT émis ; toutes les connexions clientes cessent de fonctionner. `anon_key` et `service_role_key` doivent être régénérées ensemble. |
+| `anon_key` / `service_role_key` | JWT signés (remplacer les valeurs provisoires) | Critique | Les valeurs provisoires font renvoyer une 401 à chaque appel d'API Supabase. Les trois identifiants JWT doivent être régénérés comme un ensemble atomique. |
+| `enable_cloudsql_volume` | `true` | Faible | Inerte pour Supabase — GoTrue, PostgREST, Realtime et Storage se connectent tous au `supabase/postgres` de l'espace de noms via leurs propres URL `postgres://`, et non via l'Auth Proxy. |
+| `database_type` | `POSTGRES_15` | Faible | Inerte — `main.tf` transmet quoi qu'il arrive `"NONE"` au socle, car PostgreSQL 15 s'exécute comme service `supabase/postgres` dans l'espace de noms. |
+| `application_database_name` / `_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods. |
+| `enable_postgres_extensions` | `true` | Faible | Remplacé par `false` dans `main.tf` (les tâches d'extensions du socle ciblent Cloud SQL, que ce module n'utilise pas) ; les extensions sont fournies dans l'image `supabase/postgres`. |
+| `min_instance_count` | `1` | Élevé | Une valeur de `0` autorise la mise à l'échelle à zéro ; les démarrages à froid de Kong prennent 15–30 s et perturbent les flux de redirection OAuth. |
+| `container_resources` CPU | `2000m` en production | Élevé | Un CPU insuffisant provoque une latence élevée et des délais d'attente 504 sous charge. |
+| `container_resources` mémoire | `2Gi` minimum | Élevé | Une mémoire insuffisante provoque des arrêts OOM sous charge concurrente. |
+| `startup_probe_config` / `startup_probe` | inertes — `main.tf` code en dur la sonde déployée en TCP (`failure_threshold=30`, `period_seconds=10`, ~5 min) | Élevé | Définir ces variables n'a aucun effet sur le conteneur Kong déployé ; ne comptez pas sur elles pour allonger la tolérance au premier démarrage — voir §3. |
+| `site_url` / `api_external_url` / `supabase_public_url` | vraies URL publiques | Élevé | Les valeurs par défaut localhost empêchent les flux OAuth et la construction des redirections de fonctionner en dehors du cluster. |
+| `application_version` | figée (pas `latest`) | Moyen | Récupérer `latest` expose à des versions de Kong incompatibles avec la configuration déclarative fournie. |
+| `enable_nfs` | `false` | Faible | NFS est inutile pour Supabase ; l'activer ajoute un coût Filestore et une dépendance susceptible de retarder le provisionnement. |
+| `enable_redis` | `false` | Moyen | Redis est facultatif. S'il vaut `true`, `redis_host` doit pointer vers un point de terminaison joignable ; un hôte injoignable provoque des délais d'attente au démarrage de Kong. |
 
 ---
 

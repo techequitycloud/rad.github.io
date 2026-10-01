@@ -349,22 +349,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan. La plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
-| `database_type` | `POSTGRES_15` (imposé) | Critical | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro arrête le worker d'archivage en arrière-plan entre les requêtes — les liens en file d'attente ne sont jamais archivés. |
-| `memory_limit` | `2Gi` minimum | High | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
-| `enable_nfs` + `gcs_volumes` | Laisser `enable_nfs=false`, utiliser le volume GCS par défaut | Medium | Activer NFS sans désactiver également la configuration du volume GCS par défaut peut répartir le contenu archivé entre deux backends de stockage. |
-| `disable_browser` | `false` sauf si Chrome échoue dans le bac à sable de Cloud Run | Medium | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths — Linkwarden devient une simple liste de liens. |
-| `archive_take_count` | `5` (valeur par défaut) | Low | Des valeurs élevées provoquent de forts pics de CPU et de mémoire à chaque lot (instances simultanées de Chrome headless). |
-| `ingress_settings` | `all` pour un usage normal | Medium | Le restreindre à `internal` bloque le flux public de connexion et d'inscription nécessaire au compte propriétaire du premier lancement. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et oblige tous les utilisateurs à se reconnecter. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données. |
+| `database_type` | `POSTGRES_15` (imposé) | Critique | Tout autre moteur fait entièrement échouer la migration Prisma du premier démarrage. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro arrête le worker d'archivage en arrière-plan entre les requêtes — les liens en file d'attente ne sont jamais archivés. |
+| `memory_limit` | `2Gi` minimum | Élevé | L'archivage par Chrome headless subit un OOM en dessous de ce seuil ; le serveur web peut continuer à répondre alors que l'archivage échoue silencieusement. |
+| `enable_nfs` + `gcs_volumes` | Laisser `enable_nfs=false`, utiliser le volume GCS par défaut | Moyen | Activer NFS sans désactiver également la configuration du volume GCS par défaut peut répartir le contenu archivé entre deux backends de stockage. |
+| `disable_browser` | `false` sauf si Chrome échoue dans le bac à sable de Cloud Run | Moyen | Le laisser à `true` sans nécessité désactive tout l'archivage des captures d'écran, PDF et monoliths — Linkwarden devient une simple liste de liens. |
+| `archive_take_count` | `5` (valeur par défaut) | Faible | Des valeurs élevées provoquent de forts pics de CPU et de mémoire à chaque lot (instances simultanées de Chrome headless). |
+| `ingress_settings` | `all` pour un usage normal | Moyen | Le restreindre à `internal` bloque le flux public de connexion et d'inscription nécessaire au compte propriétaire du premier lancement. |
 
 ---
 

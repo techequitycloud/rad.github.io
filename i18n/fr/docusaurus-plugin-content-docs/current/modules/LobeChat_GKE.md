@@ -296,8 +296,8 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au
@@ -308,15 +308,15 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ACCESS_CODE` | À définir sur tout déploiement exposé | High | Sans lui, l'interface de chat — et toutes les clés de fournisseur que collent les utilisateurs — est ouverte à quiconque atteint l'IP du LoadBalancer. |
-| Mémoire de `container_resources` | `1Gi` (minimum) | High | En dessous de 1 GiB, le `next-server` de Next.js plante par manque de mémoire au démarrage (`JavaScript heap out of memory`) et le pod ne devient jamais Ready. |
-| `container_port` | `3210` | High | L'image épingle `PORT=3210` ; une incohérence signifie que la sonde ne se connecte jamais et que le pod ne démarre pas. |
-| Clés de fournisseur côté serveur | À injecter via `secret_environment_variables` | High | Placer une clé d'API dans `environment_variables` en clair l'expose dans la spécification du pod et dans les journaux. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; la garde de validation rejette `0`. Conserver 1 garantit que l'interface reste accessible. |
-| `stateful_pvc_enabled` | laisser non défini (`null`) | Medium | Activer un PVC ajoute un stockage par pod inutile — LobeChat ne persiste rien côté serveur dans le mode par défaut. |
-| `enable_redis` | `false` sauf déploiement public | Medium | L'activer sans `redis_host` joignable (vide → `127.0.0.1`) laisse la limitation de débit inopérante. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `application_version` | Épingler un tag en production | Medium | `latest` suit l'amont ; une version inattendue peut modifier le comportement lors du prochain déploiement. |
+| `ACCESS_CODE` | À définir sur tout déploiement exposé | Élevé | Sans lui, l'interface de chat — et toutes les clés de fournisseur que collent les utilisateurs — est ouverte à quiconque atteint l'IP du LoadBalancer. |
+| Mémoire de `container_resources` | `1Gi` (minimum) | Élevé | En dessous de 1 GiB, le `next-server` de Next.js plante par manque de mémoire au démarrage (`JavaScript heap out of memory`) et le pod ne devient jamais Ready. |
+| `container_port` | `3210` | Élevé | L'image épingle `PORT=3210` ; une incohérence signifie que la sonde ne se connecte jamais et que le pod ne démarre pas. |
+| Clés de fournisseur côté serveur | À injecter via `secret_environment_variables` | Élevé | Placer une clé d'API dans `environment_variables` en clair l'expose dans la spécification du pod et dans les journaux. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; la garde de validation rejette `0`. Conserver 1 garantit que l'interface reste accessible. |
+| `stateful_pvc_enabled` | laisser non défini (`null`) | Moyen | Activer un PVC ajoute un stockage par pod inutile — LobeChat ne persiste rien côté serveur dans le mode par défaut. |
+| `enable_redis` | `false` sauf déploiement public | Moyen | L'activer sans `redis_host` joignable (vide → `127.0.0.1`) laisse la limitation de débit inopérante. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `application_version` | Épingler un tag en production | Moyen | `latest` suit l'amont ; une version inattendue peut modifier le comportement lors du prochain déploiement. |
 
 ---
 

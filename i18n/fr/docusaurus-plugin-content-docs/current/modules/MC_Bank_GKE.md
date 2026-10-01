@@ -254,21 +254,21 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `cluster_size` | `2` (ou plus) | High | La valeur `1` va à l'encontre de l'objectif — ni ingress multi-cluster, ni maillage étendu, ni basculement. Des valeurs très élevées peuvent épuiser le quota régional et faire échouer l'apply en cours de route. |
-| `available_regions` | ≥ 2 régions distinctes | High | Une seule région supprime la géo-redondance ; tous les clusters partagent le domaine de défaillance d'une même région. |
-| Cluster principal (`cluster1`) | à traiter comme la couche de données | Critical | Les bases de données `accounts-db` / `ledger-db` ne s'exécutent que sur le cluster principal. Perdre sa région, ou le réduire à zéro, met la couche de données hors ligne pour tous les clusters. |
-| `deployment_id` | à définir une fois, puis à ne plus toucher | Critical | Le modifier après le premier déploiement force la recréation des ressources nommées (VPC, clusters), ce qui détruit l'état en cours d'exécution. |
-| `release_channel` | laisser `REGULAR` sauf raison particulière | High | Le label de révision CSM géré (`asm-managed`/`-rapid`/`-stable`) et la ConfigMap de configuration du maillage `istio-<revision>` en dérivent tous deux. Changer de channel après le premier déploiement ne déplace **pas** le maillage — CSM conserve la channel avec laquelle il a été provisionné. |
-| `create_network` / `network_name` | `true` pour un nouveau projet | Medium | Pointer (avec `false`) vers un réseau existant inexistant ou dont les plages se chevauchent casse la création des sous-réseaux et des clusters. |
-| Attente du certificat géré | prévoir 10 à 60 min | Medium | Ouvrir `https://boa.<IP>.sslip.io` avant que le certificat soit `Active` affiche des avertissements ou des échecs TLS — c'est attendu pendant le provisionnement et ne constitue pas une erreur de déploiement. |
-| `create_autopilot_cluster` | `true` | Low | Les clusters Standard ajoutent la gestion des pools de nœuds et un coût par nœud ; Autopilot est plus simple et moins coûteux pour cette démo. |
-| `enable_cloud_service_mesh` | `true` | Medium | Le désactiver supprime le mTLS, la gestion du trafic inter-clusters et l'observabilité Service Mesh que le module est conçu pour démontrer. |
-| Durée du premier déploiement | prévoir 40 à 60 min | Low | Le provisionnement multi-cluster + Fleet + maillage géré + équilibreur de charge global est intrinsèquement lent ; ne concluez pas à un blocage. |
+| `cluster_size` | `2` (ou plus) | Élevé | La valeur `1` va à l'encontre de l'objectif — ni ingress multi-cluster, ni maillage étendu, ni basculement. Des valeurs très élevées peuvent épuiser le quota régional et faire échouer l'apply en cours de route. |
+| `available_regions` | ≥ 2 régions distinctes | Élevé | Une seule région supprime la géo-redondance ; tous les clusters partagent le domaine de défaillance d'une même région. |
+| Cluster principal (`cluster1`) | à traiter comme la couche de données | Critique | Les bases de données `accounts-db` / `ledger-db` ne s'exécutent que sur le cluster principal. Perdre sa région, ou le réduire à zéro, met la couche de données hors ligne pour tous les clusters. |
+| `deployment_id` | à définir une fois, puis à ne plus toucher | Critique | Le modifier après le premier déploiement force la recréation des ressources nommées (VPC, clusters), ce qui détruit l'état en cours d'exécution. |
+| `release_channel` | laisser `REGULAR` sauf raison particulière | Élevé | Le label de révision CSM géré (`asm-managed`/`-rapid`/`-stable`) et la ConfigMap de configuration du maillage `istio-<revision>` en dérivent tous deux. Changer de channel après le premier déploiement ne déplace **pas** le maillage — CSM conserve la channel avec laquelle il a été provisionné. |
+| `create_network` / `network_name` | `true` pour un nouveau projet | Moyen | Pointer (avec `false`) vers un réseau existant inexistant ou dont les plages se chevauchent casse la création des sous-réseaux et des clusters. |
+| Attente du certificat géré | prévoir 10 à 60 min | Moyen | Ouvrir `https://boa.<IP>.sslip.io` avant que le certificat soit `Active` affiche des avertissements ou des échecs TLS — c'est attendu pendant le provisionnement et ne constitue pas une erreur de déploiement. |
+| `create_autopilot_cluster` | `true` | Faible | Les clusters Standard ajoutent la gestion des pools de nœuds et un coût par nœud ; Autopilot est plus simple et moins coûteux pour cette démo. |
+| `enable_cloud_service_mesh` | `true` | Moyen | Le désactiver supprime le mTLS, la gestion du trafic inter-clusters et l'observabilité Service Mesh que le module est conçu pour démontrer. |
+| Durée du premier déploiement | prévoir 40 à 60 min | Faible | Le provisionnement multi-cluster + Fleet + maillage géré + équilibreur de charge global est intrinsèquement lent ; ne concluez pas à un blocage. |
 
 ---
 

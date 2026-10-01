@@ -314,24 +314,24 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation au moment du plan héritée.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critical | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| Chemin de `startup_probe` / `liveness_probe` | `/healthz` | High | Faire pointer une sonde vers `/v1/graphql` ou `/console` renvoie 401 — la révision ne devient jamais Ready alors que le moteur a démarré. |
-| `HASURA_GRAPHQL_ENABLE_CONSOLE` | `false` en production | High | Laisser la console activée en production élargit la surface d'attaque ; gérez plutôt les métadonnées via la CLI `hasura`/les migrations. |
-| `ingress_settings` + `enable_iap` | `all` ; IAP uniquement si l'API peut être protégée par identité | High | IAP bloque toutes les requêtes non authentifiées, y compris les clients d'API programmatiques qui s'authentifient avec l'en-tête admin/JWT et non avec une identité Google. |
-| `container_image_source` | `custom` | High | `prebuilt` ignore le point d'entrée qui assemble les deux valeurs `*_DATABASE_URL` — le moteur démarre sans base de données et chaque requête échoue. |
-| `memory_limit` | `512Mi`+ | Medium | Des métadonnées très volumineuses ou une forte concurrence de requêtes peuvent provoquer un OOM en dessous de 512 MiB ; l'environnement gen2 impose de toute façon un minimum de 512 MiB de mémoire. |
-| `min_instance_count` | `0` (ou `1` pour la latence) | Medium | La mise à l'échelle jusqu'à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité ; définissez `1` pour les API sensibles à la latence. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
-| `enable_cloud_armor` | à activer en production | Medium | L'API et la console sont accessibles publiquement sans protection WAF. |
+| `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critique | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| Chemin de `startup_probe` / `liveness_probe` | `/healthz` | Élevé | Faire pointer une sonde vers `/v1/graphql` ou `/console` renvoie 401 — la révision ne devient jamais Ready alors que le moteur a démarré. |
+| `HASURA_GRAPHQL_ENABLE_CONSOLE` | `false` en production | Élevé | Laisser la console activée en production élargit la surface d'attaque ; gérez plutôt les métadonnées via la CLI `hasura`/les migrations. |
+| `ingress_settings` + `enable_iap` | `all` ; IAP uniquement si l'API peut être protégée par identité | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les clients d'API programmatiques qui s'authentifient avec l'en-tête admin/JWT et non avec une identité Google. |
+| `container_image_source` | `custom` | Élevé | `prebuilt` ignore le point d'entrée qui assemble les deux valeurs `*_DATABASE_URL` — le moteur démarre sans base de données et chaque requête échoue. |
+| `memory_limit` | `512Mi`+ | Moyen | Des métadonnées très volumineuses ou une forte concurrence de requêtes peuvent provoquer un OOM en dessous de 512 MiB ; l'environnement gen2 impose de toute façon un minimum de 512 MiB de mémoire. |
+| `min_instance_count` | `0` (ou `1` pour la latence) | Moyen | La mise à l'échelle jusqu'à zéro ajoute quelques secondes de latence de démarrage à froid à la première requête après une période d'inactivité ; définissez `1` pour les API sensibles à la latence. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'API et la console sont accessibles publiquement sans protection WAF. |
 
 ---
 

@@ -245,25 +245,25 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, des valeurs `quota_memory_*` sous forme d'entiers nus, un workload_type `Deployment` conjointement à `stateful_pvc_enabled`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, si bien que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les champs chiffrés de la base de données et invalide toutes les sessions. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `database_type` | `MYSQL_8_0` | Critical | Monica est une application MySQL ; un moteur autre que MySQL casse le pilote et les migrations. |
-| `enable_nfs` | `true` | High | Le désactiver supprime le volume partagé `storage/` — les photos et documents téléversés ne sont pas partagés entre les pods et sont perdus lors de la recréation d'un pod. |
-| `container_image_source` | `prebuilt` | High | Définir `custom` amène App_GKE à tenter un build sans Dockerfile. |
-| `container_port` | `80` | High | L'image Apache écoute sur 80 ; un port différent fait échouer la sonde de démarrage. |
-| `enable_cloudsql_volume` | `true` (GKE) | High | Le sidecar Auth Proxy fournit `127.0.0.1:3306` ; le désactiver casse la connectivité MySQL. |
-| `DB_HOST` (défini automatiquement à `127.0.0.1`) | conserver la valeur injectée | High | Sur GKE, le sidecar du proxy est sur la boucle locale ; un autre hôte ne peut pas joindre MySQL. |
-| `APP_URL` | URL du LoadBalancer externe ou du domaine | High | Une URL erronée casse les liens absolus et la redirection `/` → configuration/inscription. |
-| `min_instance_count` | `1` | Medium | GKE exige min ≥ 1 ; un seul réplica convient à un CRM personnel. |
-| `memory_limit` | `2Gi` | Medium | Réduire trop fortement la mémoire expose à des OOM PHP pendant les migrations du premier démarrage et sur les pages lourdes. |
-| `enable_redis` | désactivé sauf besoin | Low | Cache et sessions Redis facultatifs ; s'il est activé sans hôte et avec NFS désactivé, le point de terminaison Redis est vide. |
+| `APP_KEY` (généré automatiquement) | Ne jamais en faire la rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les champs chiffrés de la base de données et invalide toutes les sessions. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `database_type` | `MYSQL_8_0` | Critique | Monica est une application MySQL ; un moteur autre que MySQL casse le pilote et les migrations. |
+| `enable_nfs` | `true` | Élevé | Le désactiver supprime le volume partagé `storage/` — les photos et documents téléversés ne sont pas partagés entre les pods et sont perdus lors de la recréation d'un pod. |
+| `container_image_source` | `prebuilt` | Élevé | Définir `custom` amène App_GKE à tenter un build sans Dockerfile. |
+| `container_port` | `80` | Élevé | L'image Apache écoute sur 80 ; un port différent fait échouer la sonde de démarrage. |
+| `enable_cloudsql_volume` | `true` (GKE) | Élevé | Le sidecar Auth Proxy fournit `127.0.0.1:3306` ; le désactiver casse la connectivité MySQL. |
+| `DB_HOST` (défini automatiquement à `127.0.0.1`) | conserver la valeur injectée | Élevé | Sur GKE, le sidecar du proxy est sur la boucle locale ; un autre hôte ne peut pas joindre MySQL. |
+| `APP_URL` | URL du LoadBalancer externe ou du domaine | Élevé | Une URL erronée casse les liens absolus et la redirection `/` → configuration/inscription. |
+| `min_instance_count` | `1` | Moyen | GKE exige min ≥ 1 ; un seul réplica convient à un CRM personnel. |
+| `memory_limit` | `2Gi` | Moyen | Réduire trop fortement la mémoire expose à des OOM PHP pendant les migrations du premier démarrage et sur les pages lourdes. |
+| `enable_redis` | désactivé sauf besoin | Faible | Cache et sessions Redis facultatifs ; s'il est activé sans hôte et avec NFS désactivé, le point de terminaison Redis est vide. |
 
 ---
 

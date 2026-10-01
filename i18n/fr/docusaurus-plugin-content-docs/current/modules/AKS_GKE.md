@@ -189,19 +189,19 @@ Consignez le nom de l'appartenance immédiatement après le déploiement ; toute
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `client_id` / `client_secret` / `azure_tenant_id` / `subscription_id` | identifiants valides d'un principal de service, Contributor sur l'abonnement | Critical | Des identifiants absents ou erronés font échouer l'apply à la création d'AKS ; un principal insuffisamment privilégié provisionne partiellement et laisse des ressources Azure orphelines. Le principal de service a besoin du rôle Contributor au niveau de l'abonnement, car le module crée lui-même le Resource Group. |
-| `platform_version` ↔ `k8s_version` | gardez des versions mineures compatibles (p. ex. `1.35.0-gke.1` avec `1.35` ; la mineure de la plateforme peut aussi être inférieure d'un) | High | Une association incompatible fait échouer le rattachement ou laisse l'agent Connect en mauvais état, de sorte que le cluster ne devient jamais gérable depuis Google Cloud. |
-| `cluster_name_prefix` | défini une seule fois, unique par projet/abonnement | High | Le modifier après le premier déploiement recrée le cluster dans les deux clouds, détruisant le cluster AKS Azure et toutes les charges de travail qu'il héberge. Réutiliser un préfixe pour un second déploiement provoque des conflits de ressources. |
-| `trusted_users` | les opérateurs qui ont besoin d'un accès | High | Omettre un opérateur l'empêche d'atteindre le cluster via la passerelle ; rappelez-vous que l'identité qui déploie est toujours administratrice, et que les entrées ne peuvent être ni vides ni dupliquées. |
-| `node_count` | `3` (≥2 pour la HA) | Medium | `1` supprime la haute disponibilité — la défaillance ou le drainage d'un seul nœud arrête les charges de travail du cluster et peut interrompre la connexion à la flotte ; un nombre très élevé gonfle le coût Azure. |
-| `vm_size` | `Standard_D2s_v3` | Medium | Des SKU sous-dimensionnés provoquent une pression sur l'ordonnancement et des arrêts OOM ; des SKU surdimensionnés gonflent le coût Azure ; certains SKU ne sont pas disponibles dans certaines régions. |
-| `azure_region` / `gcp_location` | des régions prenant en charge respectivement AKS et les clusters rattachés | Medium | Une région non prise en charge fait échouer le provisionnement ou le rattachement ; des régions éloignées ajoutent de la latence inter-régions au trafic de gestion. |
-| API Google Cloud activées | laissez-les activées lors du démantèlement (par défaut) | Low | Le module ne désactive volontairement pas les API lors de la destruction, afin de ne pas perturber les autres charges de travail du projet partagé. |
+| `client_id` / `client_secret` / `azure_tenant_id` / `subscription_id` | identifiants valides d'un principal de service, Contributor sur l'abonnement | Critique | Des identifiants absents ou erronés font échouer l'apply à la création d'AKS ; un principal insuffisamment privilégié provisionne partiellement et laisse des ressources Azure orphelines. Le principal de service a besoin du rôle Contributor au niveau de l'abonnement, car le module crée lui-même le Resource Group. |
+| `platform_version` ↔ `k8s_version` | gardez des versions mineures compatibles (p. ex. `1.35.0-gke.1` avec `1.35` ; la mineure de la plateforme peut aussi être inférieure d'un) | Élevé | Une association incompatible fait échouer le rattachement ou laisse l'agent Connect en mauvais état, de sorte que le cluster ne devient jamais gérable depuis Google Cloud. |
+| `cluster_name_prefix` | défini une seule fois, unique par projet/abonnement | Élevé | Le modifier après le premier déploiement recrée le cluster dans les deux clouds, détruisant le cluster AKS Azure et toutes les charges de travail qu'il héberge. Réutiliser un préfixe pour un second déploiement provoque des conflits de ressources. |
+| `trusted_users` | les opérateurs qui ont besoin d'un accès | Élevé | Omettre un opérateur l'empêche d'atteindre le cluster via la passerelle ; rappelez-vous que l'identité qui déploie est toujours administratrice, et que les entrées ne peuvent être ni vides ni dupliquées. |
+| `node_count` | `3` (≥2 pour la HA) | Moyen | `1` supprime la haute disponibilité — la défaillance ou le drainage d'un seul nœud arrête les charges de travail du cluster et peut interrompre la connexion à la flotte ; un nombre très élevé gonfle le coût Azure. |
+| `vm_size` | `Standard_D2s_v3` | Moyen | Des SKU sous-dimensionnés provoquent une pression sur l'ordonnancement et des arrêts OOM ; des SKU surdimensionnés gonflent le coût Azure ; certains SKU ne sont pas disponibles dans certaines régions. |
+| `azure_region` / `gcp_location` | des régions prenant en charge respectivement AKS et les clusters rattachés | Moyen | Une région non prise en charge fait échouer le provisionnement ou le rattachement ; des régions éloignées ajoutent de la latence inter-régions au trafic de gestion. |
+| API Google Cloud activées | laissez-les activées lors du démantèlement (par défaut) | Faible | Le module ne désactive volontairement pas les API lors de la destruction, afin de ne pas perturber les autres charges de travail du projet partagé. |
 
 ---
 

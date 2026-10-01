@@ -474,26 +474,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critical | Grafana est livré avec les identifiants par défaut `admin`/`admin`. Ne pas définir de mot de passe robuste expose l'interface d'administration. |
-| `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critical | La valeur `"true"` expose tous les tableaux de bord sans authentification. |
-| `database_type` | `POSTGRES_15` | Critical | PostgreSQL est obligatoire ; le remplacer par SQLite entraîne une perte de données à chaque redémarrage de pod. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Des entiers seuls sont interprétés en octets et bloquent toute planification. |
-| `GF_SERVER_ROOT_URL` (via `environment_variables`) | URL publique | High | Sans elle, les redirections OAuth, les liens des e-mails et les iframes pointent vers la mauvaise origine. |
-| `enable_iap` | `true` pour un usage interne | High | Sans IAP, la page de connexion de Grafana est accessible publiquement depuis Internet. |
-| `stateful_fs_group` | `472` | High | Toute autre valeur empêche Grafana d'écrire dans les montages PVC, ce qui provoque des échecs au démarrage. |
-| `memory_limit` (dans `container_resources`) | `2Gi` | High | En dessous de 512Mi, Grafana subit un OOM au démarrage avec des ensembles de tableaux de bord volumineux. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro crée des interruptions dans l'évaluation des alertes pendant les démarrages à froid. |
-| `max_instance_count` | `1`–`3` | Medium | Plusieurs réplicas partagent PostgreSQL mais pas l'état des alertes en mémoire — des alertes peuvent être déclenchées en double. |
-| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_redis` | `false` (par défaut) | Low | L'activer sans `redis_host` valide provoque une erreur de validation au moment du plan. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
+| `GF_SECURITY_ADMIN_PASSWORD` (via `secret_environment_variables`) | secret robuste | Critique | Grafana est livré avec les identifiants par défaut `admin`/`admin`. Ne pas définir de mot de passe robuste expose l'interface d'administration. |
+| `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critique | La valeur `"true"` expose tous les tableaux de bord sans authentification. |
+| `database_type` | `POSTGRES_15` | Critique | PostgreSQL est obligatoire ; le remplacer par SQLite entraîne une perte de données à chaque redémarrage de pod. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Des entiers seuls sont interprétés en octets et bloquent toute planification. |
+| `GF_SERVER_ROOT_URL` (via `environment_variables`) | URL publique | Élevé | Sans elle, les redirections OAuth, les liens des e-mails et les iframes pointent vers la mauvaise origine. |
+| `enable_iap` | `true` pour un usage interne | Élevé | Sans IAP, la page de connexion de Grafana est accessible publiquement depuis Internet. |
+| `stateful_fs_group` | `472` | Élevé | Toute autre valeur empêche Grafana d'écrire dans les montages PVC, ce qui provoque des échecs au démarrage. |
+| `memory_limit` (dans `container_resources`) | `2Gi` | Élevé | En dessous de 512Mi, Grafana subit un OOM au démarrage avec des ensembles de tableaux de bord volumineux. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro crée des interruptions dans l'évaluation des alertes pendant les démarrages à froid. |
+| `max_instance_count` | `1`–`3` | Moyen | Plusieurs réplicas partagent PostgreSQL mais pas l'état des alertes en mémoire — des alertes peuvent être déclenchées en double. |
+| `pdb_min_available` vs `min_instance_count` | prévoir une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_redis` | `false` (par défaut) | Faible | L'activer sans `redis_host` valide provoque une erreur de validation au moment du plan. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
 
 ---
 

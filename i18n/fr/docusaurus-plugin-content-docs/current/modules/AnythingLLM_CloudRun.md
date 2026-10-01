@@ -422,29 +422,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
-| Persistance de `STORAGE_DIR` | NFS ou GCS Fuse | Critical | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus à chaque redémarrage d'instance. |
-| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critical | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans `backup_file` valide fait échouer le job d'import. |
-| `enable_cloudsql_volume` | `true` | Critical | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
-| `memory_limit` | `4Gi` | High | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
-| `min_instance_count` | `1` | High | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
-| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | High | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
-| `EMBEDDING_ENGINE` | à définir une seule fois | High | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
-| `ingress_settings` / `enable_iap` | sécurisés pour la production | High | `ingress_settings = "all"` sans IAP expose publiquement l'espace de travail ; seul le formulaire de connexion le protège. |
-| `enable_nfs` / GCS Fuse | à activer en multi-instances | High | Sans stockage partagé, au-delà d'une instance chacune dispose d'une vue de stockage isolée ; l'accès aux documents entre instances échoue. |
-| `execution_environment` | `gen2` (par défaut) | High | Les montages NFS et GCS Fuse nécessitent gen2 ; avec gen1, le montage du volume échoue silencieusement. |
-| `enable_redis` | `false` (ou définir `redis_host`) | Medium | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
-| `application_version` | épingler sur un tag de version publiée | Medium | `latest` expose en production à des mises à niveau qui cassent le schéma. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | AnythingLLM nécessite PostgreSQL ; tout autre moteur casse l'ORM Prisma et fait planter le démarrage. |
+| Persistance de `STORAGE_DIR` | NFS ou GCS Fuse | Critique | Sans volume persistant, tous les documents de l'espace de travail, les index vectoriels et les données de conversation sont perdus à chaque redémarrage d'instance. |
+| `secret_environment_variables` (clés API) | Utiliser des références Secret Manager | Critique | Les clés API des fournisseurs placées en clair dans `environment_variables` sont visibles dans les métadonnées des révisions Cloud Run. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
+| `enable_cloudsql_volume` | `true` | Critique | Le désactiver fait échouer toutes les connexions à la base au démarrage. |
+| `memory_limit` | `4Gi` | Élevé | Le pipeline d'embedding d'AnythingLLM nécessite 3 à 4 GiB de RAM ; les arrêts pour OOM corrompent l'ingestion en cours. |
+| `min_instance_count` | `1` | Élevé | Le scale-to-zero entraîne des démarrages à froid de 30 à 60 s ; les opérations d'IA en cours lors de la réduction d'échelle sont perdues. |
+| `timeout_seconds` | `300` (à augmenter pour les charges lourdes) | Élevé | L'ingestion de longs documents ou des complétions LLM lentes dépassent le délai d'expiration du backend et renvoient une erreur 504. |
+| `EMBEDDING_ENGINE` | à définir une seule fois | Élevé | Changer de moteur d'embedding après l'ingestion rend les vecteurs existants incompatibles ; tous les documents doivent être réingérés. |
+| `ingress_settings` / `enable_iap` | sécurisés pour la production | Élevé | `ingress_settings = "all"` sans IAP expose publiquement l'espace de travail ; seul le formulaire de connexion le protège. |
+| `enable_nfs` / GCS Fuse | à activer en multi-instances | Élevé | Sans stockage partagé, au-delà d'une instance chacune dispose d'une vue de stockage isolée ; l'accès aux documents entre instances échoue. |
+| `execution_environment` | `gen2` (par défaut) | Élevé | Les montages NFS et GCS Fuse nécessitent gen2 ; avec gen1, le montage du volume échoue silencieusement. |
+| `enable_redis` | `false` (ou définir `redis_host`) | Moyen | Si `enable_redis = true` et que `redis_host` ne peut pas être résolu, le conteneur ne démarre pas. |
+| `application_version` | épingler sur un tag de version publiée | Moyen | `latest` expose en production à des mises à niveau qui cassent le schéma. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---
 

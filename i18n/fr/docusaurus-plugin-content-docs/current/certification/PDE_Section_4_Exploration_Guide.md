@@ -215,7 +215,7 @@ R : Les entrées de journal ne sont pas corrélées à la trace. L'application d
 </details>
 
 <details>
-<summary>Q2 : Une requête de paiement prend 3 secondes. La trace montre un span de 2.8 secondes pour un appel à la base de données, exécuté après un span de 50 ms pour le service de tarification. Par où commencez-vous ?</summary>
+<summary>Q2 : Une requête de paiement prend 3 secondes. La trace montre un span de 2,8 secondes pour un appel à la base de données, exécuté après un span de 50 ms pour le service de tarification. Par où commencez-vous ?</summary>
 
 R : Par le span de la base de données : il concentre l'essentiel de la latence sur le chemin critique. Vérifiez s'il s'agit d'une seule requête lente ou de nombreux appels séquentiels (de nombreux spans courts côte à côte suggèrent un schéma N+1), puis utilisez les outils d'analyse des requêtes propres à la base de données pour l'expliquer.
 </details>

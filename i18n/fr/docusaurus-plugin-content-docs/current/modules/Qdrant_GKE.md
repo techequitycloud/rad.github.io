@@ -421,26 +421,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / interruption / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_api_key` | `true` (tout déploiement externe) | Critical | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
-| `stateful_pvc_enabled` | `true` en production | Critical | Sans PVC, les données résident dans le système de fichiers éphémère du pod ; tout redémarrage efface définitivement toutes les collections. |
-| `stateful_pvc_mount_path` | `/qdrant/storage` (valeur par défaut) | Critical | Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. Une incohérence stocke les données dans la couche éphémère et les perd au redémarrage. |
-| `application_name` | à définir une seule fois | Critical | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le stockage, et fait perdre toutes les collections. |
-| `max_instance_count` | `1` | High | Plusieurs pods Qdrant partageant un même PVC (RWO) ou bucket GCS corrompent les collections. Faites évoluer verticalement, pas horizontalement. |
-| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | High | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des pods à chaque chargement d'une grande collection depuis le disque. |
-| `memory_limit` | ≥ `4Gi` en production | High | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index. |
-| `stateful_pvc_size` | généreux (20 Gi+) | High | Un PVC sous-dimensionné se remplit à mesure que les collections grossissent ; un disque plein fait planter Qdrant. La capacité d'un PVC ne peut pas être réduite après sa création. |
-| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Medium | Ne peut pas être modifiée après la création du PVC sans migration des données ; choisissez-la d'emblée en fonction des besoins en IOPS. |
-| `application_version` | épingler une version semver en production | Medium | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
-| `min_instance_count` | `1` | Medium | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis le disque à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers bruts sont des octets et bloquent toute planification. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | High | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant à l'intérieur du réseau. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_api_key` | `true` (tout déploiement externe) | Critique | Sans clé d'API, tout appelant capable de joindre le service peut lire, modifier ou supprimer toutes les collections. |
+| `stateful_pvc_enabled` | `true` en production | Critique | Sans PVC, les données résident dans le système de fichiers éphémère du pod ; tout redémarrage efface définitivement toutes les collections. |
+| `stateful_pvc_mount_path` | `/qdrant/storage` (valeur par défaut) | Critique | Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. Une incohérence stocke les données dans la couche éphémère et les perd au redémarrage. |
+| `application_name` | à définir une seule fois | Critique | Immuable après le premier déploiement ; le modifier recrée l'espace de noms et le stockage, et fait perdre toutes les collections. |
+| `max_instance_count` | `1` | Élevé | Plusieurs pods Qdrant partageant un même PVC (RWO) ou bucket GCS corrompent les collections. Faites évoluer verticalement, pas horizontalement. |
+| Chemin de `liveness_probe` | `/livez` (valeur par défaut) | Élevé | Faire pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des pods à chaque chargement d'une grande collection depuis le disque. |
+| `memory_limit` | ≥ `4Gi` en production | Élevé | La valeur par défaut `1Gi` ne prend en charge que de petites collections de test ; les arrêts pour manque de mémoire (OOM) interrompent toutes les requêtes en cours et déclenchent un rechargement complet des index. |
+| `stateful_pvc_size` | généreux (20 Gi+) | Élevé | Un PVC sous-dimensionné se remplit à mesure que les collections grossissent ; un disque plein fait planter Qdrant. La capacité d'un PVC ne peut pas être réduite après sa création. |
+| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Moyen | Ne peut pas être modifiée après la création du PVC sans migration des données ; choisissez-la d'emblée en fonction des besoins en IOPS. |
+| `application_version` | épingler une version semver en production | Moyen | Utiliser `latest` peut provoquer une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne un rechargement à froid de toutes les collections depuis le disque à la requête suivante ; à éviter pour les charges de travail sensibles à la latence. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les déploiements exposés | Élevé | Sans contrôles d'accès, l'API REST de Qdrant est joignable par tout appelant à l'intérieur du réseau. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `pdb_min_available` vs `min_instance_count` | prévoir de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
 
 ---
 

@@ -480,29 +480,29 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, une mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'apply ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `server_name` (fixé à `matrix.local`) | Non exposé comme entrée de `Synapse_GKE` | Critical | Une vraie fédération et des identifiants utilisateur durables exigent un domaine personnalisé ; ce module n'a pas de variable `server_name`, donc une utilisation en production impose actuellement de surcharger directement `Synapse_Common`. Modifier la valeur sous-jacente après le premier démarrage invalide chaque identifiant utilisateur, chaque session d'appareil et chaque relation de fédération. |
-| Persistance de la clé de signature (`enable_nfs` / PVC de StatefulSet) | persistante | Critical | Si le répertoire de données n'est pas persistant, un redémarrage de pod régénère la clé de signature, ce qui casse la fédération et invalide toutes les sessions d'appareils. |
-| Collation de la base de données (`db-init`) | `C` (automatique) | Critical | Synapse refuse de démarrer avec toute collation autre que `C` ; ne contournez pas le job `db-init`. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `container_port` / port des sondes | `8008` | High | Des sondes sur tout autre port frappent un port mort et le pod ne devient jamais Ready alors même que Synapse est en bonne santé. |
-| Chemin des sondes | `/` (par défaut) ou `/health` | High | Pointer une sonde vers un chemin authentifié de l'API Matrix renvoie 401/403 et le pod ne devient jamais Ready. |
-| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | High | En dessous de 2 GiB, Synapse subit des arrêts OOM sous une charge réelle de salons et de fédération. |
-| `min_instance_count` | `1` | High | GKE exige un minimum ≥ 1 ; conserver 1 garantit que le homeserver est toujours joignable par la fédération. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes d'un client se dispersent entre les pods, ce qui perturbe les connexions de synchronisation de longue durée. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
-| `enable_iap` | uniquement pour les serveurs privés | High | IAP bloque la fédération et les clients externes ; à n'utiliser que pour les déploiements réservés aux administrateurs. |
-| Mise à jour progressive sur des pods adossés à NFS | `Recreate` (automatique) | High | Deux pods utilisant le même répertoire de données + la même base de données peuvent entrer en concurrence ; le socle utilise `Recreate` pour les applications adossées à NFS. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | La désactivation permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
+| `server_name` (fixé à `matrix.local`) | Non exposé comme entrée de `Synapse_GKE` | Critique | Une vraie fédération et des identifiants utilisateur durables exigent un domaine personnalisé ; ce module n'a pas de variable `server_name`, donc une utilisation en production impose actuellement de surcharger directement `Synapse_Common`. Modifier la valeur sous-jacente après le premier démarrage invalide chaque identifiant utilisateur, chaque session d'appareil et chaque relation de fédération. |
+| Persistance de la clé de signature (`enable_nfs` / PVC de StatefulSet) | persistante | Critique | Si le répertoire de données n'est pas persistant, un redémarrage de pod régénère la clé de signature, ce qui casse la fédération et invalide toutes les sessions d'appareils. |
+| Collation de la base de données (`db-init`) | `C` (automatique) | Critique | Synapse refuse de démarrer avec toute collation autre que `C` ; ne contournez pas le job `db-init`. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `container_port` / port des sondes | `8008` | Élevé | Des sondes sur tout autre port frappent un port mort et le pod ne devient jamais Ready alors même que Synapse est en bonne santé. |
+| Chemin des sondes | `/` (par défaut) ou `/health` | Élevé | Pointer une sonde vers un chemin authentifié de l'API Matrix renvoie 401/403 et le pod ne devient jamais Ready. |
+| `container_resources.memory_limit` | `4Gi` (≥ 2 GiB) | Élevé | En dessous de 2 GiB, Synapse subit des arrêts OOM sous une charge réelle de salons et de fédération. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum ≥ 1 ; conserver 1 garantit que le homeserver est toujours joignable par la fédération. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes d'un client se dispersent entre les pods, ce qui perturbe les connexions de synchronisation de longue durée. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est nécessaire à la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `enable_iap` | uniquement pour les serveurs privés | Élevé | IAP bloque la fédération et les clients externes ; à n'utiliser que pour les déploiements réservés aux administrateurs. |
+| Mise à jour progressive sur des pods adossés à NFS | `Recreate` (automatique) | Élevé | Deux pods utilisant le même répertoire de données + la même base de données peuvent entrer en concurrence ; le socle utilise `Recreate` pour les applications adossées à NFS. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | La désactivation permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
 
 ---
 

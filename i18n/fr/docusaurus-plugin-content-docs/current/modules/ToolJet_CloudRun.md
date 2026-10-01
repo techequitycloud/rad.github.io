@@ -434,29 +434,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `LOCKBOX_MASTER_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation corrompt définitivement tous les identifiants de sources de données stockés — ils ne peuvent plus être déchiffrés et doivent tous être ressaisis. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critical | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
-| `PGRST_JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation casse la couche de requêtes de la ToolJet Database jusqu'à ce que chaque instance redémarre et que PostgREST soit reconfiguré. |
-| `db_name` / `db_user` | Définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
-| Rôle applicatif `CREATEROLE` (défini par `db-init`) | Laisser tel que provisionné | High | Sans lui, la création d'espaces de travail ToolJet échoue avec `permission denied to create role`. |
-| Migrations de schéma (point d'entrée) | Laisser tel que provisionné | High | Ignorer `db:migrate:prod` laisse la base de métadonnées vide — l'application démarre et répond à la sonde de santé `/`, mais toute action reposant sur la base échoue. |
-| `min_instance_count` | `1` | High | La valeur `0` permet au worker d'arrière-plan intégré au processus d'être réduit à zéro entre les requêtes, ce qui bloque les tâches en file d'attente. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête limite le worker d'arrière-plan entre les requêtes. |
-| `memory_limit` | `4Gi` | High | ToolJet + PostgREST + le worker sous charge peuvent subir un arrêt OOM en dessous d'environ 2 GiB. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque l'interface de l'éditeur et tous les rappels externes des applications. |
-| `enable_redis` | `true` | Medium | Sans Redis, BullMQ passe en mode de repli et les fonctionnalités d'arrière-plan se dégradent. |
-| `redis_host` | `""` (NFS) ou explicite | Medium | Redis activé mais NFS désactivé et aucun hôte défini laisse `REDIS_HOST` vide. |
-| `DISABLE_SIGNUPS` (injecté automatiquement à `"true"`) | Laisser activé après le premier administrateur | High | Ouvrir l'inscription permet à quiconque dispose de l'URL de créer un compte. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Medium | L'interface de l'éditeur est accessible publiquement sans protection WAF. |
+| `LOCKBOX_MASTER_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les identifiants de sources de données stockés — ils ne peuvent plus être déchiffrés et doivent tous être ressaisis. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions actives et oblige tout le monde à se reconnecter immédiatement. |
+| `PGRST_JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation casse la couche de requêtes de la ToolJet Database jusqu'à ce que chaque instance redémarre et que PostgREST soit reconfiguré. |
+| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| Rôle applicatif `CREATEROLE` (défini par `db-init`) | Laisser tel que provisionné | Élevé | Sans lui, la création d'espaces de travail ToolJet échoue avec `permission denied to create role`. |
+| Migrations de schéma (point d'entrée) | Laisser tel que provisionné | Élevé | Ignorer `db:migrate:prod` laisse la base de métadonnées vide — l'application démarre et répond à la sonde de santé `/`, mais toute action reposant sur la base échoue. |
+| `min_instance_count` | `1` | Élevé | La valeur `0` permet au worker d'arrière-plan intégré au processus d'être réduit à zéro entre les requêtes, ce qui bloque les tâches en file d'attente. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête limite le worker d'arrière-plan entre les requêtes. |
+| `memory_limit` | `4Gi` | Élevé | ToolJet + PostgREST + le worker sous charge peuvent subir un arrêt OOM en dessous d'environ 2 GiB. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque l'interface de l'éditeur et tous les rappels externes des applications. |
+| `enable_redis` | `true` | Moyen | Sans Redis, BullMQ passe en mode de repli et les fonctionnalités d'arrière-plan se dégradent. |
+| `redis_host` | `""` (NFS) ou explicite | Moyen | Redis activé mais NFS désactivé et aucun hôte défini laisse `REDIS_HOST` vide. |
+| `DISABLE_SIGNUPS` (injecté automatiquement à `"true"`) | Laisser activé après le premier administrateur | Élevé | Ouvrir l'inscription permet à quiconque dispose de l'URL de créer un compte. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
+| `enable_cloud_armor` | à activer en production | Moyen | L'interface de l'éditeur est accessible publiquement sans protection WAF. |
 
 ---
 

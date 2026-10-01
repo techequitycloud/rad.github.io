@@ -207,19 +207,19 @@ comportement standard.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` (valeur par défaut fixée) | Critical | L'augmenter expose à une corruption de SQLite par des écrivains NFS concurrents. |
-| Premier compte créé via l'inscription | Le créer immédiatement après le déploiement | Critical | Le premier compte inscrit devient administrateur. |
-| `enable_nfs` | `true` (par défaut) | Critical | Le désactiver supprime tout stockage durable. |
-| `container_image_source` | `prebuilt` (par défaut) | High | `"custom"` déclenche un Cloud Build inutile, sans Dockerfile dans ce module. |
-| Accessibilité du sidecar Meilisearch | Vérifier que `MEILI_ADDR` est résolu après le déploiement | Medium | La recherche cesse silencieusement de fonctionner si le sidecar ne démarre pas. |
-| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Sa rotation invalide toutes les sessions actives. |
-| Variable d'environnement `DATA_DIR` | La définir explicitement (ce module la définit toujours sur `nfs_mount_path`) | Critical | La valeur par défaut propre à Karakeep est une **chaîne vide**, et non `/data` (cette valeur par défaut n'existe que dans le modèle docker-compose amont). Si elle n'est pas définie, les migrations et le fichier SQLite se résolvent silencieusement vers un stockage éphémère au lieu du montage NFS. |
-| Format de la valeur de `additional_services[].secret_env_vars` | Nom de clé simple (par ex. `"MEILI_MASTER_KEY"`) | High | Le Secret K8s consolidé par tenant de GKE stocke des clés portant le nom de la variable d'environnement elle-même — **et non** la chaîne brute `secret_id` de Secret Manager (c'est la convention Cloud Run). Un format erroné provoque `CreateContainerConfigError: couldn't find key <secret_id> in Secret <prefix>-secrets`. |
+| `max_instance_count` | `1` (valeur par défaut fixée) | Critique | L'augmenter expose à une corruption de SQLite par des écrivains NFS concurrents. |
+| Premier compte créé via l'inscription | Le créer immédiatement après le déploiement | Critique | Le premier compte inscrit devient administrateur. |
+| `enable_nfs` | `true` (par défaut) | Critique | Le désactiver supprime tout stockage durable. |
+| `container_image_source` | `prebuilt` (par défaut) | Élevé | `"custom"` déclenche un Cloud Build inutile, sans Dockerfile dans ce module. |
+| Accessibilité du sidecar Meilisearch | Vérifier que `MEILI_ADDR` est résolu après le déploiement | Moyen | La recherche cesse silencieusement de fonctionner si le sidecar ne démarre pas. |
+| `NEXTAUTH_SECRET` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives. |
+| Variable d'environnement `DATA_DIR` | La définir explicitement (ce module la définit toujours sur `nfs_mount_path`) | Critique | La valeur par défaut propre à Karakeep est une **chaîne vide**, et non `/data` (cette valeur par défaut n'existe que dans le modèle docker-compose amont). Si elle n'est pas définie, les migrations et le fichier SQLite se résolvent silencieusement vers un stockage éphémère au lieu du montage NFS. |
+| Format de la valeur de `additional_services[].secret_env_vars` | Nom de clé simple (par ex. `"MEILI_MASTER_KEY"`) | Élevé | Le Secret K8s consolidé par tenant de GKE stocke des clés portant le nom de la variable d'environnement elle-même — **et non** la chaîne brute `secret_id` de Secret Manager (c'est la convention Cloud Run). Un format erroné provoque `CreateContainerConfigError: couldn't find key <secret_id> in Secret <prefix>-secrets`. |
 
 ---
 

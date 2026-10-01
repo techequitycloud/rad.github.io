@@ -353,24 +353,24 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identifiants OAuth, `min_instance_count > max_instance_count`, `workload_type = Deployment` combiné à `stateful_pvc_enabled = true`, des valeurs de mémoire de ResourceQuota sans suffixe d'unité binaire. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Volume `/database` (bucket ou PVC) | Ne jamais le supprimer | Critical | La base SQLite embarquée réside ici ; la supprimer détruit tous les utilisateurs, paramètres et liens de partage. |
-| `admin` / `admin` (identifiant créé initialement) | Modifier à la première connexion | Critical | Conserver l'identifiant par défaut permet à quiconque peut atteindre le service d'en prendre le contrôle total. |
-| `max_instance_count` | `1` | High | Une valeur >1 place des écrivains concurrents sur l'unique base SQLite, ce qui la corrompt. |
-| `stateful_pvc_mount_path` | `/database` | High | Doit correspondre au répertoire de `FB_DATABASE` ; une incohérence stocke la base sur un disque éphémère et perd l'état au redémarrage. |
-| `stateful_pvc_enabled` + `enable_gcs_storage_volume` | Laisser Common désactiver GCS FUSE | High | Les deux sur `/database` provoquent un double montage ; Common définit automatiquement `enable_gcs_storage_volume = false` lorsque le PVC est activé — ne forcez pas les deux. |
-| `container_port` | `80` | High | Filebrowser écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et le pod ne devient jamais Ready. |
-| Chemin de `startup_probe` / `liveness_probe` | `/health` | High | Faire pointer les sondes vers un chemin authentifié renvoie 401/403 et le pod ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `false` | Medium | Filebrowser n'utilise pas Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
-| `enable_redis` | `true` | Medium | Filebrowser n'utilise pas Redis, mais la valeur par défaut `true` d'App_GKE est héritée telle quelle — définissez-la explicitement à `false`, sinon une dépendance inutilisée est ajoutée. |
-| `enable_iap` | identifiants requis | High | Activer IAP sans `iap_oauth_client_id`/`secret` exposerait silencieusement le service sans authentification (bloqué par une vérification au moment du plan). |
-| `application_version` | épingler en production | Medium | `latest` se résout vers la version épinglée `v2.32.0` au moment du build ; épinglez explicitement une version pour maîtriser les mises à niveau. |
+| Volume `/database` (bucket ou PVC) | Ne jamais le supprimer | Critique | La base SQLite embarquée réside ici ; la supprimer détruit tous les utilisateurs, paramètres et liens de partage. |
+| `admin` / `admin` (identifiant créé initialement) | Modifier à la première connexion | Critique | Conserver l'identifiant par défaut permet à quiconque peut atteindre le service d'en prendre le contrôle total. |
+| `max_instance_count` | `1` | Élevé | Une valeur >1 place des écrivains concurrents sur l'unique base SQLite, ce qui la corrompt. |
+| `stateful_pvc_mount_path` | `/database` | Élevé | Doit correspondre au répertoire de `FB_DATABASE` ; une incohérence stocke la base sur un disque éphémère et perd l'état au redémarrage. |
+| `stateful_pvc_enabled` + `enable_gcs_storage_volume` | Laisser Common désactiver GCS FUSE | Élevé | Les deux sur `/database` provoquent un double montage ; Common définit automatiquement `enable_gcs_storage_volume = false` lorsque le PVC est activé — ne forcez pas les deux. |
+| `container_port` | `80` | Élevé | Filebrowser écoute sur le port 80 ; un autre port fait échouer la sonde de démarrage et le pod ne devient jamais Ready. |
+| Chemin de `startup_probe` / `liveness_probe` | `/health` | Élevé | Faire pointer les sondes vers un chemin authentifié renvoie 401/403 et le pod ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `false` | Moyen | Filebrowser n'utilise pas Cloud SQL ; l'activer ajoute un sidecar Auth Proxy inutile. |
+| `enable_redis` | `true` | Moyen | Filebrowser n'utilise pas Redis, mais la valeur par défaut `true` d'App_GKE est héritée telle quelle — définissez-la explicitement à `false`, sinon une dépendance inutilisée est ajoutée. |
+| `enable_iap` | identifiants requis | Élevé | Activer IAP sans `iap_oauth_client_id`/`secret` exposerait silencieusement le service sans authentification (bloqué par une vérification au moment du plan). |
+| `application_version` | épingler en production | Moyen | `latest` se résout vers la version épinglée `v2.32.0` au moment du build ; épinglez explicitement une version pour maîtriser les mises à niveau. |
 
 ---
 

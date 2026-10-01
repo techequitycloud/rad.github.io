@@ -330,8 +330,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs
@@ -343,15 +343,15 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critical | Injectés sous `DB_NAME`/`DB_USER` et immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données des tableaux. |
-| Bucket des pièces jointes / `enable_gcs_storage_volume` | Conserver le montage gcsfuse sur `/data` | Critical | Sans montage persistant sur `filespath`, les pièces jointes téléversées sont écrites sur le disque éphémère de l'instance et perdues au redémarrage / lors de la mise à l'échelle jusqu'à zéro. |
-| `database_type` | `POSTGRES_15` | Critical | Tout autre moteur empêche le démarrage de Focalboard — il n'existe ici aucune voie MySQL/SQLite. |
-| `application_version` | Figer un tag réel (`7.11.4`) | High | `mattermost/focalboard:latest` n'est pas un tag publié ; le build fait correspondre `latest` au `FOCALBOARD_VERSION` figé, mais le figer explicitement évite les surprises. |
-| `container_port` | `8000` | High | Focalboard se lie au port 8000 ; un port différent empêche la sonde de démarrage de réussir. |
-| `enable_redis` | `false` | Medium | Focalboard n'a pas besoin de Redis ; l'activer raccorde une dépendance inutilisée. |
-| `min_instance_count` | `1` pour un usage sensible à la latence | Medium | La mise à l'échelle jusqu'à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
-| `enable_cloudsql_volume` | `true` | Medium | Le point d'entrée se rabat sur une connexion TCP via l'IP privée avec `sslmode=require`, mais le socket de l'Auth Proxy est la voie principale. |
-| Sortie `database_password_secret` | Ne pas l'utiliser pour se connecter | High | Indique le secret `DB_PASSWORD` commun à la flotte, qui ne permet pas de s'authentifier auprès du rôle Postgres de Focalboard. Récupérez `secret-<resource_prefix>-focalboard-safe-db-password` pour obtenir un identifiant fonctionnel. |
+| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Injectés sous `DB_NAME`/`DB_USER` et immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données des tableaux. |
+| Bucket des pièces jointes / `enable_gcs_storage_volume` | Conserver le montage gcsfuse sur `/data` | Critique | Sans montage persistant sur `filespath`, les pièces jointes téléversées sont écrites sur le disque éphémère de l'instance et perdues au redémarrage / lors de la mise à l'échelle jusqu'à zéro. |
+| `database_type` | `POSTGRES_15` | Critique | Tout autre moteur empêche le démarrage de Focalboard — il n'existe ici aucune voie MySQL/SQLite. |
+| `application_version` | Figer un tag réel (`7.11.4`) | Élevé | `mattermost/focalboard:latest` n'est pas un tag publié ; le build fait correspondre `latest` au `FOCALBOARD_VERSION` figé, mais le figer explicitement évite les surprises. |
+| `container_port` | `8000` | Élevé | Focalboard se lie au port 8000 ; un port différent empêche la sonde de démarrage de réussir. |
+| `enable_redis` | `false` | Moyen | Focalboard n'a pas besoin de Redis ; l'activer raccorde une dépendance inutilisée. |
+| `min_instance_count` | `1` pour un usage sensible à la latence | Moyen | La mise à l'échelle jusqu'à zéro (`0`) ajoute une latence de démarrage à froid à la première requête après une période d'inactivité. |
+| `enable_cloudsql_volume` | `true` | Moyen | Le point d'entrée se rabat sur une connexion TCP via l'IP privée avec `sslmode=require`, mais le socket de l'Auth Proxy est la voie principale. |
+| Sortie `database_password_secret` | Ne pas l'utiliser pour se connecter | Élevé | Indique le secret `DB_PASSWORD` commun à la flotte, qui ne permet pas de s'authentifier auprès du rôle Postgres de Focalboard. Récupérez `secret-<resource_prefix>-focalboard-safe-db-password` pour obtenir un identifiant fonctionnel. |
 
 ---
 

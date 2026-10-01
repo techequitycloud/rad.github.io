@@ -404,26 +404,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `anthropic_api_key` | Définie au premier déploiement | Critical | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
-| Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critical | Effectuer la rotation du jeton dans Secret Manager sans redémarrer les pods entraîne le rejet de toutes les requêtes clientes jusqu'au recyclage des pods. |
-| `quota_memory_requests` / `quota_memory_limits` | unités binaires | Critical | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
-| `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | High | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |
-| `telegram_webhook_secret` / `slack_signing_secret` | définis lorsque l'intégration est activée | High | Une valeur vide désactive la vérification des signatures, ce qui permet l'injection de faux webhooks. |
-| `min_instance_count` | `1` | High | `0` signifie que les événements de webhook Telegram/Slack sont perdus pendant un démarrage à froid (généralement 30 à 60 s pour l'initialisation d'un pod GKE). |
-| `skills_repo_url` | URL joignable ou vide | High | Une URL injoignable fait échouer le clonage git au démarrage, ce qui place le pod en CrashLoopBackOff. |
-| `skills_repo_ref` | référence existante | High | Une branche ou un tag inexistant fait échouer le clonage à chaque démarrage. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les déploiements à plusieurs réplicas répartissent l'état WebSocket entre les pods. |
-| `enable_iap` | à activer pour un usage d'administration | Medium | Sinon, la passerelle est joignable publiquement. Les points de terminaison de webhooks Telegram/Slack ne peuvent pas s'authentifier avec une identité Google — veillez à ce qu'ils ne soient pas derrière IAP. |
-| `stateful_pvc_enabled` | `false` | Medium | OpenClaw utilise GCS. Les PVC ajoutent un disque local inutilisé et peuvent bloquer le réordonnancement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conformité ; une purge accidentelle du bucket fait perdre définitivement l'état des agents. |
-| `pdb_min_available` par rapport à `min_instance_count` | laisser une marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
-| `enable_vpc_sc` sans `organization_id` | à définir explicitement | Medium | VPC-SC est ignoré silencieusement, ce qui laisse les identifiants sans protection de périmètre. |
+| `anthropic_api_key` | Définie au premier déploiement | Critique | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
+| Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critique | Effectuer la rotation du jeton dans Secret Manager sans redémarrer les pods entraîne le rejet de toutes les requêtes clientes jusqu'au recyclage des pods. |
+| `quota_memory_requests` / `quota_memory_limits` | unités binaires | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | Élevé | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |
+| `telegram_webhook_secret` / `slack_signing_secret` | définis lorsque l'intégration est activée | Élevé | Une valeur vide désactive la vérification des signatures, ce qui permet l'injection de faux webhooks. |
+| `min_instance_count` | `1` | Élevé | `0` signifie que les événements de webhook Telegram/Slack sont perdus pendant un démarrage à froid (généralement 30 à 60 s pour l'initialisation d'un pod GKE). |
+| `skills_repo_url` | URL joignable ou vide | Élevé | Une URL injoignable fait échouer le clonage git au démarrage, ce qui place le pod en CrashLoopBackOff. |
+| `skills_repo_ref` | référence existante | Élevé | Une branche ou un tag inexistant fait échouer le clonage à chaque démarrage. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les déploiements à plusieurs réplicas répartissent l'état WebSocket entre les pods. |
+| `enable_iap` | à activer pour un usage d'administration | Moyen | Sinon, la passerelle est joignable publiquement. Les points de terminaison de webhooks Telegram/Slack ne peuvent pas s'authentifier avec une identité Google — veillez à ce qu'ils ne soient pas derrière IAP. |
+| `stateful_pvc_enabled` | `false` | Moyen | OpenClaw utilise GCS. Les PVC ajoutent un disque local inutilisé et peuvent bloquer le réordonnancement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conformité ; une purge accidentelle du bucket fait perdre définitivement l'état des agents. |
+| `pdb_min_available` par rapport à `min_instance_count` | laisser une marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (le pod unique ne peut pas être évincé). |
+| `enable_vpc_sc` sans `organization_id` | à définir explicitement | Moyen | VPC-SC est ignoré silencieusement, ce qui laisse les identifiants sans protection de périmètre. |
 
 ---
 

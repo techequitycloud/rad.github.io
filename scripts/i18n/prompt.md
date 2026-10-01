@@ -87,12 +87,12 @@ agent) translating by hand follows it, so the whole site reads as one voice.
 | toil | travail opérationnel répétitif (toil) |
 | observability | observabilité |
 | Overview (as a page or label) | Vue d'ensemble |
-| job (Cloud Run job, Kubernetes job, initialization job) | job (masculine: un job d'initialisation) |
+| job (Cloud Run job, Kubernetes job, Cloud Scheduler job, initialization/migration/import job) | job, masculine (un job d'initialisation, le job de migration, il est relancé). Keep "tâche" only for real tasks: a lab task (tâche 3.4), Celery/worker tasks, a to-do item |
 | namespace (Kubernetes) | espace de noms |
 | replica | réplica (masculine) |
 | image mirroring | mise en miroir des images |
 | liveness probe / health probe | sonde de vivacité / sonde de santé |
-| readiness probe | sonde de disponibilité (readiness) |
+| readiness probe | sonde de disponibilité (readiness) -- add "(readiness)" at the first use on a page; never "sonde de préparation" |
 | uptime check | test de disponibilité |
 | monitoring | surveillance (never "supervision", except product names) |
 | inline (resource created inside the module) | intégré(e) (inline) -- never "en ligne", which means online |
@@ -102,10 +102,20 @@ agent) translating by hand follows it, so the whole site reads as one voice.
 | Default (table column) | Valeur par défaut |
 | sensible defaults | valeurs par défaut judicieuses |
 
-Keep in English: risk labels in tables (Critical, High, Medium, Low), Google
-Cloud product names (Cloud SQL for PostgreSQL, not "Cloud SQL pour"), and
+| risk levels (Critical / High / Medium / Low) | Critique / Élevé / Moyen / Faible (in tables and legends) |
+
+Keep in English: Google Cloud product names (Cloud SQL for PostgreSQL, not "Cloud SQL pour"), and
 Google Cloud Console menu paths (Security, Network services, Load balancing),
 which must match the labels the reader sees in the console.
 
 Module reference pages are mostly settings tables: setting names, types and
 defaults stay as written; translate the descriptions.
+
+## Numbers
+
+Use French number formatting in prose: a decimal comma (0,5 vCPU ; 99,99 % ;
+2,5 heures), a non-breaking space before %, and a narrow non-breaking space as
+the thousands separator (10 000). An amount in dollars is written 0,73 $.
+Leave unchanged anything that is not a quantity: versions (MySQL 8.0, OAuth
+2.0, Apache 2.0, Headscale 0.26+), section and step numbers (2.1, étape 1.3),
+IP addresses, and everything inside code.

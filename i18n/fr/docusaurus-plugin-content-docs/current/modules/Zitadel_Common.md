@@ -105,7 +105,7 @@ Le point d'entrée cloud (`entrypoint.sh`) s'exécute avant le binaire et, en ut
 
 Les sondes de démarrage, de vivacité et de disponibilité par défaut ciblent **`/debug/healthz`** — un point de terminaison sans authentification qui renvoie `200` dès que le serveur HTTP de Zitadel est démarré. Une fenêtre de démarrage généreuse laisse le temps à la configuration et aux migrations que Zitadel exécute au premier démarrage :
 
-- **Sonde de démarrage** — HTTP `/debug/healthz`, délai initial de 60 secondes, période de 15 secondes, 30 échecs autorisés (~7.5 minutes après le délai) — suffisamment de temps pour la configuration du premier démarrage sur une instance Cloud SQL neuve.
+- **Sonde de démarrage** — HTTP `/debug/healthz`, délai initial de 60 secondes, période de 15 secondes, 30 échecs autorisés (~7,5 minutes après le délai) — suffisamment de temps pour la configuration du premier démarrage sur une instance Cloud SQL neuve.
 - **Sonde de vivacité** — HTTP `/debug/healthz`, délai initial de 60 secondes, période de 30 secondes.
 - **Sonde de disponibilité** — HTTP `/debug/healthz`, délai initial de 30 secondes, période de 10 secondes.
 

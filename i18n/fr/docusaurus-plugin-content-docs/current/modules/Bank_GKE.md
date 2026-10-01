@@ -209,21 +209,21 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_cloud_service_mesh` | `true` | High | Sans le maillage, aucun sidecar n'est injecté — les pods s'exécutent en `1/1`, il n'y a ni mTLS ni télémétrie du maillage, et l'attente de disponibilité du maillage qui conditionne le déploiement de l'application est ignorée. |
-| `deployment_id` | à définir une seule fois (ou laisser automatique) | High | Le modifier après le premier déploiement renomme les ressources et force la recréation du VPC/du cluster — en pratique, un nouveau déploiement. |
-| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | CIDR sans chevauchement | High | Des plages secondaires qui se chevauchent ou sont trop petites font échouer la création du cluster ou épuisent les IP de pods/services à mesure que l'application monte en charge. |
-| `region` | une région disposant de quota | High | Un quota insuffisant de CPU/IP/SSD dans la région choisie fait échouer la création du cluster ou du pool de nœuds au milieu d'un long apply. |
-| `enable_config_management` | `false` | Medium | Les entrées ne sont reliées à aucune ressource ; l'activer laisse attendre une configuration GitOps/Config Sync que le module ne fournit pas. |
-| `create_autopilot_cluster` | `true` | Medium | Le mode Standard utilise un pool Spot de 2 nœuds — moins cher mais préemptible ; les nœuds peuvent être récupérés, perturbant brièvement les charges de travail. Utilisez Autopilot pour un comportement plus stable. |
-| Exposition de l'application (HTTP uniquement) | ajouter TLS/IAP manuellement | Medium | Le front-end est servi en HTTP simple sur une IP publique. Pour tout usage au-delà d'une démonstration, placez-le derrière HTTPS et/ou IAP après le déploiement. |
-| `create_network = false` | sous-réseau existant correspondant | Medium | Le sous-réseau existant doit déjà porter des plages secondaires dont les noms correspondent à `pod_ip_range`/`service_ip_range`, sinon la création du cluster échoue. |
-| `release_channel` | `REGULAR` | Low | `RAPID` effectue des mises à niveau fréquentes (plus de remous) ; `NONE` laisse le cluster en mises à niveau manuelles et peut le faire prendre du retard sur les versions prises en charge. |
-| `enable_monitoring` | `true` | Low | Le désactiver supprime les services supervisés et les SLO par charge de travail ; le parcours SLO/observabilité n'a alors rien à montrer. |
+| `enable_cloud_service_mesh` | `true` | Élevé | Sans le maillage, aucun sidecar n'est injecté — les pods s'exécutent en `1/1`, il n'y a ni mTLS ni télémétrie du maillage, et l'attente de disponibilité du maillage qui conditionne le déploiement de l'application est ignorée. |
+| `deployment_id` | à définir une seule fois (ou laisser automatique) | Élevé | Le modifier après le premier déploiement renomme les ressources et force la recréation du VPC/du cluster — en pratique, un nouveau déploiement. |
+| `pod_cidr_block` / `service_cidr_block` / `ip_cidr_ranges` | CIDR sans chevauchement | Élevé | Des plages secondaires qui se chevauchent ou sont trop petites font échouer la création du cluster ou épuisent les IP de pods/services à mesure que l'application monte en charge. |
+| `region` | une région disposant de quota | Élevé | Un quota insuffisant de CPU/IP/SSD dans la région choisie fait échouer la création du cluster ou du pool de nœuds au milieu d'un long apply. |
+| `enable_config_management` | `false` | Moyen | Les entrées ne sont reliées à aucune ressource ; l'activer laisse attendre une configuration GitOps/Config Sync que le module ne fournit pas. |
+| `create_autopilot_cluster` | `true` | Moyen | Le mode Standard utilise un pool Spot de 2 nœuds — moins cher mais préemptible ; les nœuds peuvent être récupérés, perturbant brièvement les charges de travail. Utilisez Autopilot pour un comportement plus stable. |
+| Exposition de l'application (HTTP uniquement) | ajouter TLS/IAP manuellement | Moyen | Le front-end est servi en HTTP simple sur une IP publique. Pour tout usage au-delà d'une démonstration, placez-le derrière HTTPS et/ou IAP après le déploiement. |
+| `create_network = false` | sous-réseau existant correspondant | Moyen | Le sous-réseau existant doit déjà porter des plages secondaires dont les noms correspondent à `pod_ip_range`/`service_ip_range`, sinon la création du cluster échoue. |
+| `release_channel` | `REGULAR` | Faible | `RAPID` effectue des mises à niveau fréquentes (plus de remous) ; `NONE` laisse le cluster en mises à niveau manuelles et peut le faire prendre du retard sur les versions prises en charge. |
+| `enable_monitoring` | `true` | Faible | Le désactiver supprime les services supervisés et les SLO par charge de travail ; le parcours SLO/observabilité n'a alors rien à montrer. |
 
 ---
 

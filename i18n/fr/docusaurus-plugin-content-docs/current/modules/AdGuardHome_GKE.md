@@ -309,8 +309,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa
 > configuration par le moteur du socle [App_GKE](App_GKE.md), qui valide
@@ -320,13 +320,13 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| S'attendre à une vraie résolution DNS de la part de ce déploiement | Ne pas compter dessus | **Critical** | Le modèle Gateway HTTP(S) standard de GKE utilisé par ce module ne peut pas exposer le port 53 TCP/UDP brut — les clients qui utilisent l'IP/le nom d'hôte de ce déploiement pour le DNS n'obtiendront aucune réponse. Un `Service type=LoadBalancer` L4 brut secondaire pour le port 53 est possible en principe sur GKE (contrairement à Cloud Run), mais il est explicitement hors périmètre pour cette première version du module. |
-| `container_port` modifié sans modifier aussi le port de l'interface web de l'assistant de configuration | Conserver les deux à `3000` | Critical | Le port d'exécution de l'interface web d'AdGuard Home provient de `AdGuardHome.yaml` (défini pendant la configuration) — s'il diverge de `container_port`, la sonde de santé de la plateforme et l'URL publique ne correspondent plus au port sur lequel le pod écoute réellement, et le pod ne devient jamais Ready après le premier redémarrage. |
-| `database_type` | `NONE` (ne pas modifier) | Critical | AdGuard Home n'a aucune intégration de base de données ; y définir un vrai moteur n'a aucun effet, mais traduit une mauvaise compréhension du module. |
-| `gcs_volumes` | Laisser vide (valeur par défaut du module) | Critical | Le remplacer sans monter aussi `conf`/`work` fait perdre la configuration et l'historique des requêtes d'AdGuard Home à chaque redémarrage de pod. |
-| Console d'administration laissée sans IAP | Activer `enable_iap` | High | La console d'administration contrôle la politique de filtrage DNS ; une console ouverte et non authentifiée permet à toute personne disposant de l'IP du LoadBalancer de reconfigurer le filtrage ou de lire les journaux des requêtes. |
-| `workload_type` changé en `StatefulSet` | Conserver `Deployment` (valeur par défaut du module) | Medium | Inutile — la persistance passe par GCS Fuse, pas par un PVC bloc ; un StatefulSet ajoute de la complexité sans aucun bénéfice ici. |
-| `memory_limit` inférieur à `512Mi` | Conserver `512Mi` | Medium | Une mémoire sous-dimensionnée expose à des arrêts OOM avec le bin-packing d'Autopilot. |
+| S'attendre à une vraie résolution DNS de la part de ce déploiement | Ne pas compter dessus | **Critique** | Le modèle Gateway HTTP(S) standard de GKE utilisé par ce module ne peut pas exposer le port 53 TCP/UDP brut — les clients qui utilisent l'IP/le nom d'hôte de ce déploiement pour le DNS n'obtiendront aucune réponse. Un `Service type=LoadBalancer` L4 brut secondaire pour le port 53 est possible en principe sur GKE (contrairement à Cloud Run), mais il est explicitement hors périmètre pour cette première version du module. |
+| `container_port` modifié sans modifier aussi le port de l'interface web de l'assistant de configuration | Conserver les deux à `3000` | Critique | Le port d'exécution de l'interface web d'AdGuard Home provient de `AdGuardHome.yaml` (défini pendant la configuration) — s'il diverge de `container_port`, la sonde de santé de la plateforme et l'URL publique ne correspondent plus au port sur lequel le pod écoute réellement, et le pod ne devient jamais Ready après le premier redémarrage. |
+| `database_type` | `NONE` (ne pas modifier) | Critique | AdGuard Home n'a aucune intégration de base de données ; y définir un vrai moteur n'a aucun effet, mais traduit une mauvaise compréhension du module. |
+| `gcs_volumes` | Laisser vide (valeur par défaut du module) | Critique | Le remplacer sans monter aussi `conf`/`work` fait perdre la configuration et l'historique des requêtes d'AdGuard Home à chaque redémarrage de pod. |
+| Console d'administration laissée sans IAP | Activer `enable_iap` | Élevé | La console d'administration contrôle la politique de filtrage DNS ; une console ouverte et non authentifiée permet à toute personne disposant de l'IP du LoadBalancer de reconfigurer le filtrage ou de lire les journaux des requêtes. |
+| `workload_type` changé en `StatefulSet` | Conserver `Deployment` (valeur par défaut du module) | Moyen | Inutile — la persistance passe par GCS Fuse, pas par un PVC bloc ; un StatefulSet ajoute de la complexité sans aucun bénéfice ici. |
+| `memory_limit` inférieur à `512Mi` | Conserver `512Mi` | Moyen | Une mémoire sous-dimensionnée expose à des arrêts OOM avec le bin-packing d'Autopilot. |
 
 ---
 

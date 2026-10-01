@@ -378,28 +378,28 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Directus exige PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
-| `application_name` | définie une seule fois | Critical | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions et tous les JWT actifs sont immédiatement invalidés. |
-| `tenant_id` | défini une seule fois | Critical | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouveaux KEY/SECRET, invalidant toutes les sessions. |
-| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critical | Faire tourner KEY déconnecte tous les utilisateurs. Faire tourner SECRET invalide tous les jetons d'API. Ne les faites tourner que pendant une fenêtre de maintenance planifiée. |
-| Variable d'env. `ADMIN_EMAIL` | une adresse e-mail réelle | High | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
-| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`4Gi`) | Critical | Des entiers nus (par ex. `"4"`) sont interprétés comme des octets — cela bloque définitivement la planification de tous les pods. |
-| `enable_nfs` | `true` | High | Sans NFS partagé, les ressources téléversées écrites par un pod sont invisibles pour les autres et perdues au redémarrage (sauf usage exclusif de GCS Fuse). |
-| `enable_redis` | `true` en multi-réplica | High | Sans Redis, chaque pod dispose d'un cache isolé ; la limitation du débit se fait par pod et la mise en cache de Directus ne fonctionne plus entre réplicas. |
-| `redis_host` | `""` (NFS) ou explicite | High | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
-| `startup_probe.failure_threshold` | `10` ou plus au premier déploiement | High | Trop bas : les migrations Directus peuvent prendre 1 à 3 minutes sur une base de données neuve ; le pod est tué avant la fin des migrations, ce qui provoque une boucle de redémarrage. |
-| `enable_backup_import` | `false` après restauration | High | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
-| `memory_limit` | `2Gi` | High | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou des transformations d'images. |
-| `min_instance_count` | `1` en production | Medium | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête API après une période d'inactivité. |
-| `enable_pod_disruption_budget` + `pdb_min_available` | prévoir une marge | Medium | `pdb_min_available = "1"` avec `min_instance_count = 1` bloque définitivement le drainage des nœuds. |
-| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Medium | Sinon, l'interface d'administration est accessible publiquement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer par `vpc_sc_dry_run = true` | Critical | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
+| `database_type` | `POSTGRES_15` | Critique | Directus exige PostgreSQL ; passer à MySQL ou à `NONE` empêche le démarrage et rend orpheline la base de données existante. |
+| `application_name` | définie une seule fois | Critique | Intégré aux identifiants des secrets Secret Manager (KEY, SECRET, ADMIN_PASSWORD). Le modifier recrée tous les secrets — toutes les sessions et tous les JWT actifs sont immédiatement invalidés. |
+| `tenant_id` | défini une seule fois | Critique | Le modifier après le premier déploiement rend orpheline l'instance Cloud SQL et génère une nouvelle base de données vide ainsi que de nouveaux KEY/SECRET, invalidant toutes les sessions. |
+| Secrets `KEY` / `SECRET` | générés automatiquement, ne jamais les faire tourner à la légère | Critique | Faire tourner KEY déconnecte tous les utilisateurs. Faire tourner SECRET invalide tous les jetons d'API. Ne les faites tourner que pendant une fenêtre de maintenance planifiée. |
+| Variable d'env. `ADMIN_EMAIL` | une adresse e-mail réelle | Élevé | La valeur par défaut `admin@example.com` crée le compte administrateur avec une adresse facile à deviner. Remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement. |
+| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`4Gi`) | Critique | Des entiers nus (par ex. `"4"`) sont interprétés comme des octets — cela bloque définitivement la planification de tous les pods. |
+| `enable_nfs` | `true` | Élevé | Sans NFS partagé, les ressources téléversées écrites par un pod sont invisibles pour les autres et perdues au redémarrage (sauf usage exclusif de GCS Fuse). |
+| `enable_redis` | `true` en multi-réplica | Élevé | Sans Redis, chaque pod dispose d'un cache isolé ; la limitation du débit se fait par pod et la mise en cache de Directus ne fonctionne plus entre réplicas. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Aucun point de terminaison Redis valide si Redis est activé, NFS désactivé et aucun hôte défini. |
+| `startup_probe.failure_threshold` | `10` ou plus au premier déploiement | Élevé | Trop bas : les migrations Directus peuvent prendre 1 à 3 minutes sur une base de données neuve ; le pod est tué avant la fin des migrations, ce qui provoque une boucle de redémarrage. |
+| `enable_backup_import` | `false` après restauration | Élevé | Le laisser à `true` relance l'import à chaque apply, écrasant les données en production par la sauvegarde obsolète. |
+| `memory_limit` | `2Gi` | Élevé | Une mémoire insuffisante provoque des arrêts OOM lors du chargement du schéma ou des transformations d'images. |
+| `min_instance_count` | `1` en production | Moyen | `0` en production provoque des démarrages à froid de 20 à 40 s sur la première requête API après une période d'inactivité. |
+| `enable_pod_disruption_budget` + `pdb_min_available` | prévoir une marge | Moyen | `pdb_min_available = "1"` avec `min_instance_count = 1` bloque définitivement le drainage des nœuds. |
+| `enable_iap` / `enable_cloud_armor` | à activer pour les accès d'administration | Moyen | Sinon, l'interface d'administration est accessible publiquement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `enable_vpc_sc` + `vpc_sc_dry_run` | commencer par `vpc_sc_dry_run = true` | Critique | Activer l'application sans inclure le compte de service dans le niveau d'accès bloque simultanément Cloud SQL, Secret Manager et Artifact Registry. |
 
 ---
 

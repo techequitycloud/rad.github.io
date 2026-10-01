@@ -371,23 +371,23 @@ ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critical | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
-| `container_port` | `4000` | Critical | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
-| `enable_cloudsql_volume` | `true` | High | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
-| `application_version` | Épingler une version | High | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `memory_limit` | `4Gi` | High | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
-| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | High | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
-| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Medium | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
-| `min_instance_count` | `0` (ou `1` pour les tâches d'arrière-plan) | Medium | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les tâches Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
-| `enable_redis` | `false` | Low | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le renouveler hors d'une fenêtre de maintenance | Critique | Le renouveler invalide tous les cookies de session actifs — tous les utilisateurs sont déconnectés. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et rend orphelines toutes les données d'Azimutt. |
+| `container_port` | `4000` | Critique | Phoenix se lie au port 4000 ; un port non concordant fait que chaque sonde frappe un port mort et la révision ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le montage du socket est ce qui permet à `db-init` de créer le rôle et la base de données sans SSL ; le désactiver casse l'amorçage du premier déploiement. |
+| `application_version` | Épingler une version | Élevé | `latest` correspond au tag mobile `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `memory_limit` | `4Gi` | Élevé | Sous-dimensionner la VM BEAM d'Elixir expose à des arrêts pour OOM lors du rendu de grands schémas. |
+| `ingress_settings` / `enable_iap` | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le service accessible publiquement permet à n'importe qui de créer un compte. |
+| `FILE_STORAGE_ADAPTER` (auto `local`) | Conserver `local` sauf en cas d'utilisation de S3 | Moyen | `local` écrit les téléversements sur un disque éphémère — ils sont perdus lors d'un redéploiement ou d'une mise à l'échelle jusqu'à zéro. Les données de projet dans Postgres sont en sécurité. |
+| `min_instance_count` | `0` (ou `1` pour les tâches d'arrière-plan) | Moyen | La mise à l'échelle jusqu'à zéro ajoute une latence de démarrage à froid ; les tâches Oban d'arrière-plan nécessitent `min ≥ 1` + `cpu_always_allocated = true`. |
+| `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 

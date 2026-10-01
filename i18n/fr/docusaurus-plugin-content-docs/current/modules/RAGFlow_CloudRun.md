@@ -441,29 +441,29 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / interruption / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / interruption / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critical | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté si la valeur est vide et que `deploy_application = true`. |
-| `enable_redis` | `true` | Critical | Sans Redis, la file de traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
-| `database_type` | `MYSQL_8_0` | Critical | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | RAGFlow se connecte via un socket Unix relié en TCP par socat ; désactiver le sidecar du proxy provoque un échec de connexion à la base de données au démarrage. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `redis_host` | laisser vide pour utiliser le repli Redis du serveur NFS, ou définir une IP Memorystore explicite | High | Lorsque `redis_host = ""` et `enable_redis = true`, App_CloudRun injecte `REDIS_HOST = <NFS server IP>` (exige `enable_nfs = true`, la valeur par défaut) — comme la variante GKE. Si NFS est désactivé et que `redis_host` est laissé vide, aucun hôte Redis n'est injecté et les workers documentaires asynchrones ne s'exécutent jamais, sans aucun message. |
-| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour une ingestion continue | High | Les valeurs par défaut sont `0` / `false` (démarrage à froid) : le traitement des documents en arrière-plan s'arrête en cas d'inactivité et les démarrages à froid prennent 2 à 3 minutes. Définissez les deux pour une ingestion permanente. |
-| `memory_limit` | `4Gi` (≥ `8Gi` en production) | High | Les modèles d'embedding et le serveur applicatif exigent beaucoup de RAM ; une valeur trop faible provoque des arrêts pour manque de mémoire (OOM). |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | High | Memorystore Redis utilise une IP VPC privée ; un mauvais routage de sortie casse la file de tâches. |
-| `execution_environment` | `gen2` | High | Les montages NFS exigent gen2 ; passer à gen1 avec `enable_nfs = true` échoue au moment du plan. |
-| `elasticsearch_username` | `""` ou l'utilisateur correct | High | Si la sécurité Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et casse toute l'indexation. |
-| `enable_nfs` | `true` | High | Les déploiements multi-instances sans stockage partagé présentent des vues incohérentes des documents d'une instance à l'autre. |
-| `ingress_settings` / `enable_iap` | à restreindre en production | High | Une entrée publique sans IAP expose RAGFlow à des appelants non authentifiés. |
-| `max_instance_count` | `1` (à augmenter uniquement avec NFS) | Medium | Dépasser 1 sans NFS provoque un accès aux documents en « split-brain » entre les instances. |
-| `timeout_seconds` | `600` | Medium | Le téléversement de documents volumineux peut prendre plusieurs minutes ; une valeur trop courte provoque des erreurs 504 avant la fin du traitement. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention de conformité. |
-| `application_version` | `v0.13.0` | Medium | L'incrémenter déclenche une reconstruction de l'image et le déploiement d'une nouvelle révision ; vérifiez la compatibilité du schéma MySQL lors des changements de version majeure. |
+| `elasticsearch_hosts` | obligatoire — à définir depuis `Elasticsearch_GKE` | Critique | RAGFlow ne peut ni indexer ni rechercher ; toutes les opérations d'ingestion et de récupération échouent. Le plan est rejeté si la valeur est vide et que `deploy_application = true`. |
+| `enable_redis` | `true` | Critique | Sans Redis, la file de traitement des documents ne s'exécute jamais ; les fichiers téléversés restent indéfiniment non traités. |
+| `database_type` | `MYSQL_8_0` | Critique | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | RAGFlow se connecte via un socket Unix relié en TCP par socat ; désactiver le sidecar du proxy provoque un échec de connexion à la base de données au démarrage. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `redis_host` | laisser vide pour utiliser le repli Redis du serveur NFS, ou définir une IP Memorystore explicite | Élevé | Lorsque `redis_host = ""` et `enable_redis = true`, App_CloudRun injecte `REDIS_HOST = <NFS server IP>` (exige `enable_nfs = true`, la valeur par défaut) — comme la variante GKE. Si NFS est désactivé et que `redis_host` est laissé vide, aucun hôte Redis n'est injecté et les workers documentaires asynchrones ne s'exécutent jamais, sans aucun message. |
+| `min_instance_count` / `cpu_always_allocated` | `1` / `true` pour une ingestion continue | Élevé | Les valeurs par défaut sont `0` / `false` (démarrage à froid) : le traitement des documents en arrière-plan s'arrête en cas d'inactivité et les démarrages à froid prennent 2 à 3 minutes. Définissez les deux pour une ingestion permanente. |
+| `memory_limit` | `4Gi` (≥ `8Gi` en production) | Élevé | Les modèles d'embedding et le serveur applicatif exigent beaucoup de RAM ; une valeur trop faible provoque des arrêts pour manque de mémoire (OOM). |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Élevé | Memorystore Redis utilise une IP VPC privée ; un mauvais routage de sortie casse la file de tâches. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS exigent gen2 ; passer à gen1 avec `enable_nfs = true` échoue au moment du plan. |
+| `elasticsearch_username` | `""` ou l'utilisateur correct | Élevé | Si la sécurité Elasticsearch est activée, laisser ce champ vide provoque des erreurs HTTP 401 et casse toute l'indexation. |
+| `enable_nfs` | `true` | Élevé | Les déploiements multi-instances sans stockage partagé présentent des vues incohérentes des documents d'une instance à l'autre. |
+| `ingress_settings` / `enable_iap` | à restreindre en production | Élevé | Une entrée publique sans IAP expose RAGFlow à des appelants non authentifiés. |
+| `max_instance_count` | `1` (à augmenter uniquement avec NFS) | Moyen | Dépasser 1 sans NFS provoque un accès aux documents en « split-brain » entre les instances. |
+| `timeout_seconds` | `600` | Moyen | Le téléversement de documents volumineux peut prendre plusieurs minutes ; une valeur trop courte provoque des erreurs 504 avant la fin du traitement. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention de conformité. |
+| `application_version` | `v0.13.0` | Moyen | L'incrémenter déclenche une reconstruction de l'image et le déploiement d'une nouvelle révision ; vérifiez la compatibilité du schéma MySQL lors des changements de version majeure. |
 
 ---
 

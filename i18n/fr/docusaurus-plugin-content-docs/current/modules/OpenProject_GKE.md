@@ -443,27 +443,25 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé :
-> service dégradé) — **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible :
-> mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (> service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (> mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, un `quota_memory_*` en entier sans unité, un `backup_retention_days` hors limites. Une configuration non valide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critical | Sa rotation rend illisibles toutes les sessions existantes et toutes les colonnes chiffrées de la base de données. |
-| `application_database_name` / `application_database_user` | Définis une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_nfs` | `true` | Critical | Le désactiver place les pièces jointes sur le stockage éphémère du pod — elles sont perdues lorsqu'un pod est replanifié. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `startup_probe.type` / `liveness_probe.type` | `TCP` | High | Une sonde HTTP se heurte au Host Authorization de Rails (`400 Invalid host_name`, Host = adresse IP du pod) et ne réussit jamais — un pod sain ne devient jamais Ready, ou un pod sain en TCP redémarre en boucle. |
-| `enable_cloudsql_volume` | `true` sur GKE | High | Le sidecar Auth Proxy fournit la connexion PostgreSQL en loopback ; sa désactivation est bloquée par une protection de validation au moment du plan. |
-| `memory_limit` (via `container_resources`) | `4Gi` | High | Les migrations et les workers dans le processus subissent des arrêts OOM en dessous d'environ 2 GiB. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; la protection de validation rejette les valeurs non valides. |
-| `session_affinity` | `ClientIP` | Medium | Sans persistance, les sessions de l'interface peuvent être acheminées vers des pods différents d'une requête à l'autre. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers sans unité sont des octets et bloquent toute planification des pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — avec la stratégie NFS `Recreate`, le service tombe. |
-| `application_version` | Épingler une version majeure (`16`) | Medium | `latest` n'a pas de tag d'image sur Docker Hub ; le module l'épingle sur `16`. Épinglez explicitement une version pour maîtriser les mises à niveau. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend illisibles toutes les sessions existantes et toutes les colonnes chiffrées de la base de données. |
+| `application_database_name` / `application_database_user` | Définis une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_nfs` | `true` | Critique | Le désactiver place les pièces jointes sur le stockage éphémère du pod — elles sont perdues lorsqu'un pod est replanifié. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `startup_probe.type` / `liveness_probe.type` | `TCP` | Élevé | Une sonde HTTP se heurte au Host Authorization de Rails (`400 Invalid host_name`, Host = adresse IP du pod) et ne réussit jamais — un pod sain ne devient jamais Ready, ou un pod sain en TCP redémarre en boucle. |
+| `enable_cloudsql_volume` | `true` sur GKE | Élevé | Le sidecar Auth Proxy fournit la connexion PostgreSQL en loopback ; sa désactivation est bloquée par une protection de validation au moment du plan. |
+| `memory_limit` (via `container_resources`) | `4Gi` | Élevé | Les migrations et les workers dans le processus subissent des arrêts OOM en dessous d'environ 2 GiB. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la protection de validation rejette les valeurs non valides. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions de l'interface peuvent être acheminées vers des pods différents d'une requête à l'autre. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers sans unité sont des octets et bloquent toute planification des pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance — avec la stratégie NFS `Recreate`, le service tombe. |
+| `application_version` | Épingler une version majeure (`16`) | Moyen | `latest` n'a pas de tag d'image sur Docker Hub ; le module l'épingle sur `16`. Épinglez explicitement une version pour maîtriser les mises à niveau. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
 
 ---
 

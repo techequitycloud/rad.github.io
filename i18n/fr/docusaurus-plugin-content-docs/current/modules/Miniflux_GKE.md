@@ -454,27 +454,27 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, des valeurs `quota_memory_*` en entiers bruts. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Miniflux ne prend en charge que PostgreSQL ; tout autre moteur empêche le démarrage. |
-| `application_database_name` / `application_database_user` | Défini une fois (`miniflux`) | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les flux et entrées. |
-| `enable_backup_import` | `false` sauf restauration | Critical | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
-| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager | High | C'est le seul identifiant de propriétaire créé au premier démarrage ; sans lui, vous ne pouvez pas vous connecter tant que vous ne l'avez pas réinitialisé dans la base de données. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE ; le désactiver rompt la connexion à la base de données. |
-| `min_instance_count` | `1` | High | GKE exige min ≥ 1 ; garder 1 garantit que le collecteur de flux intégré continue d'actualiser les flux. |
-| `enable_redis` | `false` | Medium | Redis n'est pas utilisé ; l'activer gaspille des ressources sans rien changer. |
-| `session_affinity` | `ClientIP` | Medium | Sans affinité, les requêtes d'un client passent d'un pod à l'autre, ce qui perturbe la session d'interface. |
-| `startup_probe.path` | `/healthcheck` | High | Diriger la sonde vers une page authentifiée renvoie 401/403 et le pod ne devient jamais Ready. |
-| `enable_iap` | désactivé sauf si l'interface doit être protégée | Medium | IAP place l'interface/API derrière une connexion Google, ce qui bloque les clients API Fever/Reader qui utilisent des jetons. |
-| `BASE_URL` (env) | URL du LoadBalancer externe / du domaine | Medium | Une URL de base obsolète ou erronée produit des liens absolus et des URL d'images de proxy de flux cassés. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_pod_disruption_budget` | `true` | Medium | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires. |
+| `database_type` | `POSTGRES_15` | Critique | Miniflux ne prend en charge que PostgreSQL ; tout autre moteur empêche le démarrage. |
+| `application_database_name` / `application_database_user` | Défini une fois (`miniflux`) | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les flux et entrées. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
+| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager | Élevé | C'est le seul identifiant de propriétaire créé au premier démarrage ; sans lui, vous ne pouvez pas vous connecter tant que vous ne l'avez pas réinitialisé dans la base de données. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE ; le désactiver rompt la connexion à la base de données. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; garder 1 garantit que le collecteur de flux intégré continue d'actualiser les flux. |
+| `enable_redis` | `false` | Moyen | Redis n'est pas utilisé ; l'activer gaspille des ressources sans rien changer. |
+| `session_affinity` | `ClientIP` | Moyen | Sans affinité, les requêtes d'un client passent d'un pod à l'autre, ce qui perturbe la session d'interface. |
+| `startup_probe.path` | `/healthcheck` | Élevé | Diriger la sonde vers une page authentifiée renvoie 401/403 et le pod ne devient jamais Ready. |
+| `enable_iap` | désactivé sauf si l'interface doit être protégée | Moyen | IAP place l'interface/API derrière une connexion Google, ce qui bloque les clients API Fever/Reader qui utilisent des jetons. |
+| `BASE_URL` (env) | URL du LoadBalancer externe / du domaine | Moyen | Une URL de base obsolète ou erronée produit des liens absolus et des URL d'images de proxy de flux cassés. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'évincer tous les pods simultanément pendant la maintenance. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires. |
 
 ---
 

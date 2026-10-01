@@ -372,8 +372,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -386,19 +386,19 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0` imposé) | Critical | Seul MySQL 8.0 est pris en charge par le point d'entrée et le schéma. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et rend toutes les données orphelines. |
-| Variables d'environnement du moteur de base de données (`DB_MYSQL_ENGINE`/`DBENGINE`) | Laisser `InnoDB` (valeur par défaut du module) | Critical | Revenir à la valeur par défaut MyISAM de l'image empêche la création des tables sur Cloud SQL — le pod semble sain mais chaque page renvoie une erreur 500. |
-| `enable_nfs` | `true` | High | Le désactiver rend éphémères les ressources et exports d'enquête téléversés — perdus lors de la recréation du pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
-| `max_instance_count` | `1` | High | Passer au-delà de 1 sans comportement de partage des sessions vérifié risque de fragmenter les sessions. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
-| `PUBLIC_URL` (défini une fois l'IP connue) | URL externe du LoadBalancer/domaine | High | Une URL publique absente ou erronée casse les liens absolus et la résolution des ressources. |
-| `memory_limit` | `2Gi` | High | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous empêche d'accéder au premier compte super-administrateur jusqu'à sa réinitialisation via la base de données. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `PUBLIC_URL`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme aux exigences réglementaires. |
+| `database_type` | `null` (→ `MYSQL_8_0` imposé) | Critique | Seul MySQL 8.0 est pris en charge par le point d'entrée et le schéma. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et rend toutes les données orphelines. |
+| Variables d'environnement du moteur de base de données (`DB_MYSQL_ENGINE`/`DBENGINE`) | Laisser `InnoDB` (valeur par défaut du module) | Critique | Revenir à la valeur par défaut MyISAM de l'image empêche la création des tables sur Cloud SQL — le pod semble sain mais chaque page renvoie une erreur 500. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend éphémères les ressources et exports d'enquête téléversés — perdus lors de la recréation du pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE. |
+| `max_instance_count` | `1` | Élevé | Passer au-delà de 1 sans comportement de partage des sessions vérifié risque de fragmenter les sessions. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes passent d'un pod à l'autre et perturbent les sessions authentifiées. |
+| `PUBLIC_URL` (défini une fois l'IP connue) | URL externe du LoadBalancer/domaine | Élevé | Une URL publique absente ou erronée casse les liens absolus et la résolution des ressources. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512Mi, le pod PHP/Apache subit un OOM sous charge. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
+| `ADMIN_PASSWORD` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Ne pas le connaître vous empêche d'accéder au premier compte super-administrateur jusqu'à sa réinitialisation via la base de données. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `PUBLIC_URL`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme aux exigences réglementaires. |
 
 ---
 

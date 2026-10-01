@@ -367,26 +367,26 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un `StatefulSet` imposé avec un paramètre sans état, IAP sans identité autorisée, des `quota_memory_*` donnés en entiers nus, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Passer à une valeur MySQL franchit la validation de la variable mais casse le script `db-init.sh`, qui ne gère que PostgreSQL, laissant la base non initialisée. |
-| `db_name` / `db_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais les modifier | Critical | Les modifier après le premier démarrage invalide les secrets 2FA, les jetons OAuth et l'authentification de l'API interne. |
-| `enable_nfs` | `true` | Critical | Le désactiver rend éphémères les dépôts, objets LFS et pièces jointes — perdus à la recréation du pod. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour le chemin de connectivité par défaut à la base (socket/loopback). |
-| `public_domain` / `public_url` | Définir sur le nom d'hôte réel | High | Laissés sur `localhost`, les URL de clonage, les callbacks de webhook et les redirections OAuth sont erronés pour tous les utilisateurs. |
-| `max_instance_count` | Rester prudent (`3` par défaut) | High | Aller au-delà sans vérifier la coordination multi-réplicas du travail Git/Actions en arrière-plan relève d'un comportement non vérifié. |
-| `memory_limit` / `cpu_limit` | `512Mi` / `1000m` (valeurs par défaut) | High | En dessous des seuils équivalents gen2 de Kubernetes, le pod subit des OOM ou un bridage sous charge ; augmentez-les pour des dépôts plus volumineux ou des charges CI. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
-| Création du compte administrateur | Étape manuelle après le déploiement | Medium | Aucun compte n'est amorcé automatiquement ; oublier cette étape alors que l'auto-inscription est ouverte signifie que le premier utilisateur inscrit n'est pas garanti d'être administrateur. |
-| `enable_redis` | Inopérant pour Gitea | Low | Le basculer n'a aucun effet — aucun câblage `GITEA__cache__*`/`GITEA__session__*` n'exploite `REDIS_HOST`. |
-| `reserve_static_ip` | `true` | Medium | Sans lui, l'IP externe peut changer d'un redéploiement à l'autre, cassant le DNS et `public_url`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
+| `database_type` | `POSTGRES_15` | Critique | Passer à une valeur MySQL franchit la validation de la variable mais casse le script `db-init.sh`, qui ne gère que PostgreSQL, laissant la base non initialisée. |
+| `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais les modifier | Critique | Les modifier après le premier démarrage invalide les secrets 2FA, les jetons OAuth et l'authentification de l'API interne. |
+| `enable_nfs` | `true` | Critique | Le désactiver rend éphémères les dépôts, objets LFS et pièces jointes — perdus à la recréation du pod. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour le chemin de connectivité par défaut à la base (socket/loopback). |
+| `public_domain` / `public_url` | Définir sur le nom d'hôte réel | Élevé | Laissés sur `localhost`, les URL de clonage, les callbacks de webhook et les redirections OAuth sont erronés pour tous les utilisateurs. |
+| `max_instance_count` | Rester prudent (`3` par défaut) | Élevé | Aller au-delà sans vérifier la coordination multi-réplicas du travail Git/Actions en arrière-plan relève d'un comportement non vérifié. |
+| `memory_limit` / `cpu_limit` | `512Mi` / `1000m` (valeurs par défaut) | Élevé | En dessous des seuils équivalents gen2 de Kubernetes, le pod subit des OOM ou un bridage sous charge ; augmentez-les pour des dépôts plus volumineux ou des charges CI. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent tout ordonnancement de pod dans l'espace de noms. |
+| Création du compte administrateur | Étape manuelle après le déploiement | Moyen | Aucun compte n'est amorcé automatiquement ; oublier cette étape alors que l'auto-inscription est ouverte signifie que le premier utilisateur inscrit n'est pas garanti d'être administrateur. |
+| `enable_redis` | Inopérant pour Gitea | Faible | Le basculer n'a aucun effet — aucun câblage `GITEA__cache__*`/`GITEA__session__*` n'exploite `REDIS_HOST`. |
+| `reserve_static_ip` | `true` | Moyen | Sans lui, l'IP externe peut changer d'un redéploiement à l'autre, cassant le DNS et `public_url`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
 
 ---
 

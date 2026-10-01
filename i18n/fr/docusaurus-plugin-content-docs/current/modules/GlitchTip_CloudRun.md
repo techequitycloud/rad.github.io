@@ -418,26 +418,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `db_name` / `db_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les événements et projets stockés. |
-| `SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler à la légère | High | La renouveler invalide toutes les sessions et déconnecte tous les utilisateurs. |
-| `min_instance_count` | `1` | High | La mise à l'échelle jusqu'à zéro arrête le worker/beat Celery intégré au processus — les files d'ingestion des événements se bloquent et la purge de rétention ne s'exécute jamais. |
-| `cpu_always_allocated` | `true` | High | La facturation à la requête bride le CPU à ~0 entre les requêtes, privant le worker/beat de ressources. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer le job d'importation. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque l'ingestion des événements des SDK externes. |
-| `enable_iap` | uniquement pour un déploiement limité au tableau de bord | High | IAP bloque toutes les requêtes non authentifiées, y compris les POST d'événements des SDK. |
-| `ENABLE_OPEN_USER_REGISTRATION` (fixé à `false`) | n/a | High | Non exposé comme variable sur cette variante — `GlitchTip_Common` le définit toujours à `false`, si bien que l'inscription reste sur invitation d'un administrateur. |
-| `database_type` | `POSTGRES_15` | High | GlitchTip exige PostgreSQL ; tout autre moteur casse le démarrage (fixé par `GlitchTip_Common`). |
-| `memory_limit` | `4Gi` | Medium | En dessous d'environ 1 GiB, les processus Django + worker + beat risquent un OOM lors des pics d'événements. |
-| `container_port` | valeur par défaut du module | Medium | GlitchTip écoute sur `8080` ; modifier le port sans adapter la liaison de Granian casse les sondes de santé. |
-| `GLITCHTIP_MAX_EVENT_LIFE_DAYS` (fixé à `90`) | n/a | Low | Non exposé comme variable sur cette variante ; une valeur trop élevée ferait croître la base sans limite, une valeur trop basse supprimerait des événements dont vous pourriez encore avoir besoin. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation réglementaire. |
+| `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit tous les événements et projets stockés. |
+| `SECRET_KEY` (générée automatiquement) | Ne jamais la renouveler à la légère | Élevé | La renouveler invalide toutes les sessions et déconnecte tous les utilisateurs. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle jusqu'à zéro arrête le worker/beat Celery intégré au processus — les files d'ingestion des événements se bloquent et la purge de rétention ne s'exécute jamais. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation à la requête bride le CPU à ~0 entre les requêtes, privant le worker/beat de ressources. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'importation. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque l'ingestion des événements des SDK externes. |
+| `enable_iap` | uniquement pour un déploiement limité au tableau de bord | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les POST d'événements des SDK. |
+| `ENABLE_OPEN_USER_REGISTRATION` (fixé à `false`) | n/a | Élevé | Non exposé comme variable sur cette variante — `GlitchTip_Common` le définit toujours à `false`, si bien que l'inscription reste sur invitation d'un administrateur. |
+| `database_type` | `POSTGRES_15` | Élevé | GlitchTip exige PostgreSQL ; tout autre moteur casse le démarrage (fixé par `GlitchTip_Common`). |
+| `memory_limit` | `4Gi` | Moyen | En dessous d'environ 1 GiB, les processus Django + worker + beat risquent un OOM lors des pics d'événements. |
+| `container_port` | valeur par défaut du module | Moyen | GlitchTip écoute sur `8080` ; modifier le port sans adapter la liaison de Granian casse les sondes de santé. |
+| `GLITCHTIP_MAX_EVENT_LIFE_DAYS` (fixé à `90`) | n/a | Faible | Non exposé comme variable sur cette variante ; une valeur trop élevée ferait croître la base sans limite, une valeur trop basse supprimerait des événements dont vous pourriez encore avoir besoin. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation réglementaire. |
 
 ---
 

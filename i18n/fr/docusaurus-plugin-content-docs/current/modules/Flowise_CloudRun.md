@@ -389,26 +389,26 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
-| `application_database_name` / `_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
-| `flowise_username` | à modifier par rapport à `admin` | High | Le nom d'utilisateur par défaut est connu publiquement ; combiné à un mot de passe deviné, il donne un accès complet à tous les flux d'IA. |
-| `FLOWISE_SECRETKEY_OVERWRITE` | à laisser non défini après le premier déploiement | High | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API LLM et tous les identifiants de vector store stockés. |
-| `memory_limit` | `1Gi` | High | En dessous de 512Mi, le processus Node.js est arrêté pour manque de mémoire (OOM) au démarrage. La production avec de grands graphes de flux nécessite 2Gi. |
-| `max_instance_count` | `1` (sans Redis) | High | Plusieurs instances sans magasin Redis partagé font échouer les exécutions de flux lorsque les requêtes sont routées vers une autre instance. |
-| `STORAGE_TYPE` | `gcs` (par défaut) | High | Le remplacer par toute autre valeur écrit les téléversements sur un stockage éphémère, perdu à chaque nouvelle révision. |
-| `ingress_settings` | à restreindre pour un usage d'administration | High | La valeur par défaut `all` autorise le trafic de toute source ; définissez `internal-and-cloud-load-balancing` pour restreindre l'accès. |
-| `enable_iap` | à activer pour un usage d'administration | High | Sinon, l'interface Flowise est accessible publiquement sans authentification. |
-| `min_instance_count` | `1` | Medium | `0` provoque des démarrages à froid de 10–20 s qui dépassent fréquemment les délais d'expiration des clients LLM en aval. |
-| `enable_redis` | à activer avec >1 instance | Medium | Requis pour partager l'état de session/de file d'attente entre plusieurs instances. |
-| `startup_probe.failure_threshold` | `30` (par défaut) | Medium | Le réduire en dessous de 10 conduit Cloud Run à redémarrer le conteneur avant que Flowise ait terminé l'initialisation de sa base de données au premier démarrage. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme. |
+| `database_type` | `POSTGRES_15` | Critique | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
+| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
+| `flowise_username` | à modifier par rapport à `admin` | Élevé | Le nom d'utilisateur par défaut est connu publiquement ; combiné à un mot de passe deviné, il donne un accès complet à tous les flux d'IA. |
+| `FLOWISE_SECRETKEY_OVERWRITE` | à laisser non défini après le premier déploiement | Élevé | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API LLM et tous les identifiants de vector store stockés. |
+| `memory_limit` | `1Gi` | Élevé | En dessous de 512Mi, le processus Node.js est arrêté pour manque de mémoire (OOM) au démarrage. La production avec de grands graphes de flux nécessite 2Gi. |
+| `max_instance_count` | `1` (sans Redis) | Élevé | Plusieurs instances sans magasin Redis partagé font échouer les exécutions de flux lorsque les requêtes sont routées vers une autre instance. |
+| `STORAGE_TYPE` | `gcs` (par défaut) | Élevé | Le remplacer par toute autre valeur écrit les téléversements sur un stockage éphémère, perdu à chaque nouvelle révision. |
+| `ingress_settings` | à restreindre pour un usage d'administration | Élevé | La valeur par défaut `all` autorise le trafic de toute source ; définissez `internal-and-cloud-load-balancing` pour restreindre l'accès. |
+| `enable_iap` | à activer pour un usage d'administration | Élevé | Sinon, l'interface Flowise est accessible publiquement sans authentification. |
+| `min_instance_count` | `1` | Moyen | `0` provoque des démarrages à froid de 10–20 s qui dépassent fréquemment les délais d'expiration des clients LLM en aval. |
+| `enable_redis` | à activer avec >1 instance | Moyen | Requis pour partager l'état de session/de file d'attente entre plusieurs instances. |
+| `startup_probe.failure_threshold` | `30` (par défaut) | Moyen | Le réduire en dessous de 10 conduit Cloud Run à redémarrer le conteneur avant que Flowise ait terminé l'initialisation de sa base de données au premier démarrage. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
 
 ---
 

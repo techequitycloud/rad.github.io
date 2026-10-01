@@ -267,18 +267,18 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `ACCESS_TOKEN_SALT` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critical | Le faire tourner invalide tous les Security Tokens émis auparavant. |
-| `JWT_SECRET_KEY` (généré automatiquement) | Ne le faire tourner que pendant une fenêtre de maintenance | Critical | Le faire tourner invalide toutes les sessions actives. |
-| `application_database_name` / `application_database_user` | Définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_redis` | `true`, toujours transmis inconditionnellement | Critical | Sans lui, le point de terminaison de santé de Ghostfolio ne se déclare jamais en bonne santé. |
-| `service_type` | `LoadBalancer` | High | Passer à `ClusterIP` sans chemin d'entrée distinct rend l'application injoignable depuis l'extérieur du cluster. |
-| `enable_cloudsql_volume` | `true` | High | Le désactiver supprime le sidecar proxy : `DB_IP` revient alors à l'IP privée brute et la logique `sslmode` du point d'entrée cloud ne correspond plus à une connexion loopback. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
+| `ACCESS_TOKEN_SALT` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide tous les Security Tokens émis auparavant. |
+| `JWT_SECRET_KEY` (généré automatiquement) | Ne le faire tourner que pendant une fenêtre de maintenance | Critique | Le faire tourner invalide toutes les sessions actives. |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
+| `enable_redis` | `true`, toujours transmis inconditionnellement | Critique | Sans lui, le point de terminaison de santé de Ghostfolio ne se déclare jamais en bonne santé. |
+| `service_type` | `LoadBalancer` | Élevé | Passer à `ClusterIP` sans chemin d'entrée distinct rend l'application injoignable depuis l'extérieur du cluster. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le désactiver supprime le sidecar proxy : `DB_IP` revient alors à l'IP privée brute et la logique `sslmode` du point d'entrée cloud ne correspond plus à une connexion loopback. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 
 ---
 

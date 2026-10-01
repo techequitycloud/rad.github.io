@@ -328,24 +328,24 @@ localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — `workload_type = "Deployment"` associé à `stateful_pvc_enabled = true`, des `quota_memory_requests`/`_limits` sans suffixe d'unité binaire, IAP sans identités autorisées. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` (PVC en mode bloc) | Critical | Sans PVC en mode bloc persistant, l'espace de travail (base H2 intégrée, connexions, utilisateurs, configuration) est perdu au redémarrage du pod. GCS FUSE n'est pas un stockage sûr pour la base H2 intégrée. |
-| PVC de l'espace de travail | À conserver d'un redéploiement à l'autre | Critical | Le PVC contient tout l'état de CloudBeaver ; le supprimer efface toutes les connexions et tous les paramètres enregistrés. |
-| `max_instance_count` | `1` | Critical | L'espace de travail est à écrivain unique ; deux pods écrivant simultanément dans le magasin H2 intégré le corrompent. |
-| `stateful_pvc_mount_path` | `/opt/cloudbeaver/workspace` | High | Le chemin de l'espace de travail de CloudBeaver est figé dans l'image ; un montage ailleurs laisse l'état sur un stockage éphémère. |
-| Assistant de configuration au premier lancement | À terminer immédiatement | High | Il n'y a pas d'administrateur préconfiguré — quiconque atteint l'interface en premier peut s'approprier le compte administrateur. |
-| `service_type` | `ClusterIP` (ou équilibreur de charge + IAP) | High | `LoadBalancer` sans IAP/Cloud Armor expose une console d'administration de bases de données à l'Internet public. |
-| `memory_limit` | `1Gi` | High | CloudBeaver repose sur la JVM ; une mémoire insuffisante provoque des arrêts pour OOM. |
-| `min_instance_count` | `1` | Medium | GKE exige min ≥ 1 ; un réplica à chaud évite les démarrages à froid lents de la JVM. |
-| `application_version` | Épingler un tag en production | Medium | `latest` peut faire changer la version de CloudBeaver d'un build à l'autre ; épinglez-le pour la reproductibilité. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `enable_redis` / `database_type` | Laisser tels quels (désactivé / `NONE`) | Low | CloudBeaver n'utilise ni l'un ni l'autre ; les surcharger n'apporte rien et n'est pas pris en charge ici. |
+| `stateful_pvc_enabled` | `true` (PVC en mode bloc) | Critique | Sans PVC en mode bloc persistant, l'espace de travail (base H2 intégrée, connexions, utilisateurs, configuration) est perdu au redémarrage du pod. GCS FUSE n'est pas un stockage sûr pour la base H2 intégrée. |
+| PVC de l'espace de travail | À conserver d'un redéploiement à l'autre | Critique | Le PVC contient tout l'état de CloudBeaver ; le supprimer efface toutes les connexions et tous les paramètres enregistrés. |
+| `max_instance_count` | `1` | Critique | L'espace de travail est à écrivain unique ; deux pods écrivant simultanément dans le magasin H2 intégré le corrompent. |
+| `stateful_pvc_mount_path` | `/opt/cloudbeaver/workspace` | Élevé | Le chemin de l'espace de travail de CloudBeaver est figé dans l'image ; un montage ailleurs laisse l'état sur un stockage éphémère. |
+| Assistant de configuration au premier lancement | À terminer immédiatement | Élevé | Il n'y a pas d'administrateur préconfiguré — quiconque atteint l'interface en premier peut s'approprier le compte administrateur. |
+| `service_type` | `ClusterIP` (ou équilibreur de charge + IAP) | Élevé | `LoadBalancer` sans IAP/Cloud Armor expose une console d'administration de bases de données à l'Internet public. |
+| `memory_limit` | `1Gi` | Élevé | CloudBeaver repose sur la JVM ; une mémoire insuffisante provoque des arrêts pour OOM. |
+| `min_instance_count` | `1` | Moyen | GKE exige min ≥ 1 ; un réplica à chaud évite les démarrages à froid lents de la JVM. |
+| `application_version` | Épingler un tag en production | Moyen | `latest` peut faire changer la version de CloudBeaver d'un build à l'autre ; épinglez-le pour la reproductibilité. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `enable_redis` / `database_type` | Laisser tels quels (désactivé / `NONE`) | Faible | CloudBeaver n'utilise ni l'un ni l'autre ; les surcharger n'apporte rien et n'est pas pris en charge ici. |
 
 ---
 

@@ -384,23 +384,23 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `memory_limit` (dans `container_resources`) | `8Gi` | Critical | En dessous de 4 GiB, les processus Chromium sont tués pour manque de mémoire (OOM) en pleine exploration et renvoient des résultats partiels ; en dessous de 2 GiB, le conteneur ne démarre pas. |
-| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`32Gi`) | Critical | Les entiers nus sont lus comme des octets par Kubernetes et bloquent l'ordonnancement de tous les pods. |
-| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | ne pas définir | Critical | Les surcharger rompt la connexion au Redis intégré ; toutes les tâches d'exploration asynchrones échouent immédiatement. |
-| `database_type` | `NONE` | Critical | Crawl4AI n'a pas de base de données ; modifier cette valeur entraîne un provisionnement Cloud SQL inutile et un échec au démarrage. |
-| `min_instance_count` | `1` | High | La mise à l'échelle à zéro (`0`) provoque des démarrages à froid de 30 à 60 s (supervisord doit lancer Redis puis Gunicorn) ; la première requête expire généralement. |
-| `cpu_limit` (dans `container_resources`) | `4` | High | En dessous de 2 vCPU, le rendu JavaScript de Chromium déclenche des délais d'expiration internes sur les pages complexes, ce qui ralentit nettement le débit d'exploration. |
-| `enable_iap` / `enable_cloud_armor` | activer en production | High | Sans IAP ni jeton d'API d'exploration, l'adresse IP du LoadBalancer est publiquement accessible et n'importe qui peut soumettre des tâches d'exploration. |
-| `LLM_API_KEY` / clés d'API des fournisseurs | via `secret_environment_variables` | High | Des clés manquantes ou expirées font échouer silencieusement l'extraction fondée sur les LLM (`extracted_content` vide). Injectez-les comme secrets, pas comme variables d'environnement en clair. |
-| `redis_task_ttl_seconds` | `3600` | Medium | Trop courte (< 300 s), les résultats expirent avant que les clients asynchrones ne les interrogent ; trop longue, la mémoire Redis croît sans limite. |
-| `session_affinity` | `None` | Medium | La valeur `ClientIP` attache les clients à un seul pod et casse la répartition de charge sans aider au routage des tâches (les identifiants de tâche sont déjà locaux au pod). |
-| `application_version` | tag épinglé | Medium | Utiliser `"latest"` n'est pas reproductible ; une reconstruction peut récupérer une modification incompatible de l'API Crawl4AI. |
-| `enable_image_mirroring` | `true` | Low | Les images Crawl4AI sont volumineuses ; sans duplication, chaque démarrage de pod tire l'image depuis Docker Hub et risque des échecs dus aux limites de débit. |
+| `memory_limit` (dans `container_resources`) | `8Gi` | Critique | En dessous de 4 GiB, les processus Chromium sont tués pour manque de mémoire (OOM) en pleine exploration et renvoient des résultats partiels ; en dessous de 2 GiB, le conteneur ne démarre pas. |
+| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`32Gi`) | Critique | Les entiers nus sont lus comme des octets par Kubernetes et bloquent l'ordonnancement de tous les pods. |
+| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | ne pas définir | Critique | Les surcharger rompt la connexion au Redis intégré ; toutes les tâches d'exploration asynchrones échouent immédiatement. |
+| `database_type` | `NONE` | Critique | Crawl4AI n'a pas de base de données ; modifier cette valeur entraîne un provisionnement Cloud SQL inutile et un échec au démarrage. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro (`0`) provoque des démarrages à froid de 30 à 60 s (supervisord doit lancer Redis puis Gunicorn) ; la première requête expire généralement. |
+| `cpu_limit` (dans `container_resources`) | `4` | Élevé | En dessous de 2 vCPU, le rendu JavaScript de Chromium déclenche des délais d'expiration internes sur les pages complexes, ce qui ralentit nettement le débit d'exploration. |
+| `enable_iap` / `enable_cloud_armor` | activer en production | Élevé | Sans IAP ni jeton d'API d'exploration, l'adresse IP du LoadBalancer est publiquement accessible et n'importe qui peut soumettre des tâches d'exploration. |
+| `LLM_API_KEY` / clés d'API des fournisseurs | via `secret_environment_variables` | Élevé | Des clés manquantes ou expirées font échouer silencieusement l'extraction fondée sur les LLM (`extracted_content` vide). Injectez-les comme secrets, pas comme variables d'environnement en clair. |
+| `redis_task_ttl_seconds` | `3600` | Moyen | Trop courte (< 300 s), les résultats expirent avant que les clients asynchrones ne les interrogent ; trop longue, la mémoire Redis croît sans limite. |
+| `session_affinity` | `None` | Moyen | La valeur `ClientIP` attache les clients à un seul pod et casse la répartition de charge sans aider au routage des tâches (les identifiants de tâche sont déjà locaux au pod). |
+| `application_version` | tag épinglé | Moyen | Utiliser `"latest"` n'est pas reproductible ; une reconstruction peut récupérer une modification incompatible de l'API Crawl4AI. |
+| `enable_image_mirroring` | `true` | Faible | Les images Crawl4AI sont volumineuses ; sans duplication, chaque démarrage de pod tire l'image depuis Docker Hub et risque des échecs dus aux limites de débit. |
 
 ---
 

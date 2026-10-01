@@ -296,27 +296,27 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 
 Une validation croisée des variables s'exécute au moment du plan (`validation.tf`) : elle impose PostgreSQL, un Redis obligatoire avec un hôte résolvable, des nombres d'instances `min ≤ max`, et rejette un volume Cloud SQL avec `database_type = "NONE"` — les erreurs de configuration échouent rapidement au lieu de produire un déploiement défectueux.
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | AFFiNE nécessite PostgreSQL ; MySQL est rejeté au moment du plan. |
-| `db_name` / `db_user` | à définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail. |
-| `enable_redis` | `true` | Critical | Obligatoire — la collaboration en temps réel et la file de jobs ont besoin de Redis ; `false` fait échouer le plan. |
-| `redis_host` | `""` (NFS) ou explicite | Critical | Redis activé avec NFS désactivé et aucun hôte défini fait échouer la validation ; un hôte erroné casse la synchronisation des documents à l'exécution. |
-| `enable_nfs` | `true` | Critical | Sans NFS, les blobs téléversés atterrissent sur un disque éphémère et disparaissent à chaque révision/redémarrage — et l'hôte Redis par défaut disparaît. |
-| `container_port` | `3010` | Critical | Port natif d'AFFiNE ; une incohérence fait échouer toutes les sondes de santé. |
-| `max_instance_count` | `1` | Critical | Plus d'une instance fragmente l'état de collaboration propre à chaque processus et les blobs du système de fichiers — divergence silencieuse des données. |
-| `container_image_source` | `custom` | High | L'image amont ne contient pas le point d'entrée qui assemble `DATABASE_URL` / `REDIS_SERVER_*` — le serveur ne peut pas atteindre sa base de données. |
-| `enable_cloudsql_volume` | `false` | High | Les deux-points du chemin du socket cassent l'analyseur d'URL d'AFFiNE (`invalid port`) ; conservez IP privée + `sslmode=require`. |
-| `cpu_always_allocated` | `true` | High | La limitation basée sur les requêtes prive de CPU la synchronisation Yjs par WebSocket entre les requêtes — l'édition en direct se bloque. |
-| `min_instance_count` | `1` | High | La mise à l'échelle jusqu'à zéro interrompt les sessions de collaboration actives et ajoute des délais de démarrage à froid. |
-| `memory_limit` | `4Gi` (≥ `2Gi`) | High | OOM de Node.js pendant la synchronisation des documents ou la migration en dessous de 2Gi. |
-| `environment_variables` `PORT` | ne jamais définir | High | `PORT` est réservé par Cloud Run ; le définir fait échouer chaque création de Job avec une erreur HTTP 400. |
-| `application_version` | `stable` (tag épinglé) | Medium | Des tags inexistants (p. ex. `latest` littéral) font échouer le build de l'image ; le module fait correspondre `latest` → `stable`. |
-| `execution_environment` | `gen2` | High | Les montages NFS nécessitent gen2. |
-| `AFFINE_SERVER_EXTERNAL_URL` | URL du service / domaine personnalisé | Medium | Un hôte erroné casse les liens d'invitation et les URL de partage. |
+| `database_type` | `POSTGRES_15` | Critique | AFFiNE nécessite PostgreSQL ; MySQL est rejeté au moment du plan. |
+| `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail. |
+| `enable_redis` | `true` | Critique | Obligatoire — la collaboration en temps réel et la file de jobs ont besoin de Redis ; `false` fait échouer le plan. |
+| `redis_host` | `""` (NFS) ou explicite | Critique | Redis activé avec NFS désactivé et aucun hôte défini fait échouer la validation ; un hôte erroné casse la synchronisation des documents à l'exécution. |
+| `enable_nfs` | `true` | Critique | Sans NFS, les blobs téléversés atterrissent sur un disque éphémère et disparaissent à chaque révision/redémarrage — et l'hôte Redis par défaut disparaît. |
+| `container_port` | `3010` | Critique | Port natif d'AFFiNE ; une incohérence fait échouer toutes les sondes de santé. |
+| `max_instance_count` | `1` | Critique | Plus d'une instance fragmente l'état de collaboration propre à chaque processus et les blobs du système de fichiers — divergence silencieuse des données. |
+| `container_image_source` | `custom` | Élevé | L'image amont ne contient pas le point d'entrée qui assemble `DATABASE_URL` / `REDIS_SERVER_*` — le serveur ne peut pas atteindre sa base de données. |
+| `enable_cloudsql_volume` | `false` | Élevé | Les deux-points du chemin du socket cassent l'analyseur d'URL d'AFFiNE (`invalid port`) ; conservez IP privée + `sslmode=require`. |
+| `cpu_always_allocated` | `true` | Élevé | La limitation basée sur les requêtes prive de CPU la synchronisation Yjs par WebSocket entre les requêtes — l'édition en direct se bloque. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle jusqu'à zéro interrompt les sessions de collaboration actives et ajoute des délais de démarrage à froid. |
+| `memory_limit` | `4Gi` (≥ `2Gi`) | Élevé | OOM de Node.js pendant la synchronisation des documents ou la migration en dessous de 2Gi. |
+| `environment_variables` `PORT` | ne jamais définir | Élevé | `PORT` est réservé par Cloud Run ; le définir fait échouer chaque création de Job avec une erreur HTTP 400. |
+| `application_version` | `stable` (tag épinglé) | Moyen | Des tags inexistants (p. ex. `latest` littéral) font échouer le build de l'image ; le module fait correspondre `latest` → `stable`. |
+| `execution_environment` | `gen2` | Élevé | Les montages NFS nécessitent gen2. |
+| `AFFINE_SERVER_EXTERNAL_URL` | URL du service / domaine personnalisé | Moyen | Un hôte erroné casse les liens d'invitation et les URL de partage. |
 
 ---
 

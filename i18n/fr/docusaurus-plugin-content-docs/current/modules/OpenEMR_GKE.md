@@ -563,31 +563,29 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (critique : perte de données / panne / sécurité) — **High** (élevé :
-> service dégradé) — **Medium** (moyen : coût ou dégradation partielle) — **Low** (faible :
-> mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (> service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (> mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` | `true` | Critical | OpenEMR ne peut pas fonctionner sans NFS. Le répertoire `sites/`, `sqlconf.php` et les documents des patients résident tous sur le NFS. Le désactiver provoque un échec immédiat au démarrage. |
-| `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Critical | Doit correspondre au chemin du répertoire sites d'OpenEMR. En cas de non-concordance, `openemr-install` écrit `sqlconf.php` à un emplacement que le pod principal ne vérifie jamais — le pod attend indéfiniment la fin de la configuration. |
-| `database_type` (via OpenEMR_Common) | `MYSQL_8_0` | Critical | OpenEMR nécessite MySQL ; PostgreSQL ou `NONE` casse l'installateur et tous les appels PHP à la base de données. |
-| `db_name` / `db_user` | défini une fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des patients. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import et peut corrompre le répertoire sites sur le NFS. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critical | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
-| `backup_schedule` | `0 2 * * *` | Critical | Désactiver les sauvegardes d'un DME contenant des PHI constitue une violation de la conformité HIPAA. |
-| `ephemeral_storage_limit` | `8Gi` | Critical | OpenEMR écrit l'opcache PHP, les journaux Apache et les fichiers temporaires dans la couche du conteneur. La valeur par défaut de 1 GiB de GKE Autopilot est insuffisante — le pod est évincé pendant le démarrage. |
-| `enable_redis` | `true` | High | Avec plus d'un réplica, des sessions PHP isolées par pod provoquent des échecs de connexion et des pertes de session. |
-| `redis_host` | `""` (NFS) ou explicite | High | Un hôte Redis inaccessible provoque des échecs de session PHP et empêche toute connexion. |
-| `memory_limit` | `4Gi` | High | La génération de PDF et les rapports de facturation d'OpenEMR sont gourmands en mémoire. Moins de 2 GiB provoque des arrêts OOM en cours de requête. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les déploiements à plusieurs réplicas perdent l'état des sessions entre les requêtes. |
-| `min_instance_count` | `1` | High | La réduction à zéro entraîne des délais de démarrage à froid de 20 à 40 secondes — inacceptables pour l'accès clinique. |
-| `enable_pod_disruption_budget` | à activer lorsque `min_instance_count` > 1 | High | Désactivé par défaut car `max_instance_count = 1` — un PDB bloquerait définitivement le drainage des nœuds sur un déploiement à pod unique. Activez-le lorsque vous dépassez un réplica. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Les environnements soumis à HIPAA doivent conserver au moins 90 jours. |
-| `enable_iap` / `enable_cloud_armor` | à activer dans le secteur de la santé | Medium | L'interface d'administration d'OpenEMR est accessible publiquement sans ces contrôles. |
-| `enable_audit_logging` | `true` pour HIPAA | Medium | HIPAA exige la journalisation d'audit des accès aux PHI. |
-| `enable_vpc_sc` | définir `organization_id` explicitement | Medium | Sans ID d'organisation explicite, VPC-SC ignore silencieusement la création du périmètre — ce qui donne un faux sentiment de sécurité. |
-| `container_image_source` / `container_port` / `container_resources` / `database_type` / `application_database_name` / `db_password_env_var_name` (Groupe 4/16/10) | laisser la valeur par défaut | Low | Ces variables reprises du socle ne sont déclarées que pour la parité avec `check_conventions.py` et ne sont **pas transmises** par `main.tf` — les modifier n'a aucun effet. Utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`, `db_name`/`db_user` et `startup_probe`/`liveness_probe`. |
+| `enable_nfs` | `true` | Critique | OpenEMR ne peut pas fonctionner sans NFS. Le répertoire `sites/`, `sqlconf.php` et les documents des patients résident tous sur le NFS. Le désactiver provoque un échec immédiat au démarrage. |
+| `nfs_mount_path` | `/var/www/localhost/htdocs/openemr/sites` | Critique | Doit correspondre au chemin du répertoire sites d'OpenEMR. En cas de non-concordance, `openemr-install` écrit `sqlconf.php` à un emplacement que le pod principal ne vérifie jamais — le pod attend indéfiniment la fin de la configuration. |
+| `database_type` (via OpenEMR_Common) | `MYSQL_8_0` | Critique | OpenEMR nécessite MySQL ; PostgreSQL ou `NONE` casse l'installateur et tous les appels PHP à la base de données. |
+| `db_name` / `db_user` | défini une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données des patients. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import et peut corrompre le répertoire sites sur le NFS. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`) | Critique | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
+| `backup_schedule` | `0 2 * * *` | Critique | Désactiver les sauvegardes d'un DME contenant des PHI constitue une violation de la conformité HIPAA. |
+| `ephemeral_storage_limit` | `8Gi` | Critique | OpenEMR écrit l'opcache PHP, les journaux Apache et les fichiers temporaires dans la couche du conteneur. La valeur par défaut de 1 GiB de GKE Autopilot est insuffisante — le pod est évincé pendant le démarrage. |
+| `enable_redis` | `true` | Élevé | Avec plus d'un réplica, des sessions PHP isolées par pod provoquent des échecs de connexion et des pertes de session. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Un hôte Redis inaccessible provoque des échecs de session PHP et empêche toute connexion. |
+| `memory_limit` | `4Gi` | Élevé | La génération de PDF et les rapports de facturation d'OpenEMR sont gourmands en mémoire. Moins de 2 GiB provoque des arrêts OOM en cours de requête. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les déploiements à plusieurs réplicas perdent l'état des sessions entre les requêtes. |
+| `min_instance_count` | `1` | Élevé | La réduction à zéro entraîne des délais de démarrage à froid de 20 à 40 secondes — inacceptables pour l'accès clinique. |
+| `enable_pod_disruption_budget` | à activer lorsque `min_instance_count` > 1 | Élevé | Désactivé par défaut car `max_instance_count = 1` — un PDB bloquerait définitivement le drainage des nœuds sur un déploiement à pod unique. Activez-le lorsque vous dépassez un réplica. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Les environnements soumis à HIPAA doivent conserver au moins 90 jours. |
+| `enable_iap` / `enable_cloud_armor` | à activer dans le secteur de la santé | Moyen | L'interface d'administration d'OpenEMR est accessible publiquement sans ces contrôles. |
+| `enable_audit_logging` | `true` pour HIPAA | Moyen | HIPAA exige la journalisation d'audit des accès aux PHI. |
+| `enable_vpc_sc` | définir `organization_id` explicitement | Moyen | Sans ID d'organisation explicite, VPC-SC ignore silencieusement la création du périmètre — ce qui donne un faux sentiment de sécurité. |
+| `container_image_source` / `container_port` / `container_resources` / `database_type` / `application_database_name` / `db_password_env_var_name` (Groupe 4/16/10) | laisser la valeur par défaut | Faible | Ces variables reprises du socle ne sont déclarées que pour la parité avec `check_conventions.py` et ne sont **pas transmises** par `main.tf` — les modifier n'a aucun effet. Utilisez plutôt `cpu_limit`/`memory_limit`/`ephemeral_storage_limit`, `db_name`/`db_user` et `startup_probe`/`liveness_probe`. |
 
 ---
 

@@ -385,27 +385,27 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — une charge de travail `Deployment` avec `stateful_pvc_enabled = true`, IAP sans identité autorisée, des valeurs de quota mémoire sans suffixe d'unité binaire, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_nfs` (ou un PVC en mode bloc) | `true` | Critical | Sans volume persistant, le répertoire de données de FreshRSS est éphémère — `config.php`, l'état par utilisateur et le cache sont effacés au redémarrage du pod, ce qui impose une réinstallation. |
-| `nfs_mount_path` | `/var/www/FreshRSS/data` | Critical | Un montage ailleurs laisse le répertoire de données éphémère (même effet qu'une absence de NFS). |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur, et rend orphelines toutes les données des flux. |
-| `database_type` | `POSTGRES_15` | Critical | FreshRSS s'installe avec `--db-type pgsql` ; un moteur autre que Postgres casse l'installateur et `db-init`. |
-| `container_port` | `80` | High | FreshRSS/Apache écoute sur le port 80 ; un port erroné fait échouer la sonde de démarrage et les pods ne deviennent jamais Ready. |
-| `enable_cloudsql_volume` | `true` | High | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL via le loopback `127.0.0.1`. |
-| `max_instance_count` | `1` | High | Exécuter plusieurs pods duplique le cron d'actualisation du conteneur et fragmente l'état de session/cache stocké sur fichiers ; une mise à jour progressive sur le répertoire NFS partagé se bloque. |
-| `session_affinity` | `ClientIP` | High | Sans persistance, les requêtes d'un client se dispersent entre les pods, ce qui perturbe les sessions connectées. |
-| `min_instance_count` | `1` | High | GKE exige un minimum d'au moins 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient FreshRSS et son cron d'actualisation en fonctionnement. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
-| `enable_iap` | uniquement pour les déploiements privés | High | IAP bloque toutes les requêtes non authentifiées, y compris celles des clients mobiles utilisant les API Google Reader / Fever. |
-| `FRESHRSS_ADMIN_PASSWORD` (généré automatiquement) | À modifier dans l'interface après la première connexion | Medium | La seule rotation du secret ne réinitialise pas un compte déjà installé ; le premier mot de passe reste valide jusqu'à sa modification dans l'application. |
-| `application_domains` | À définir avec `enable_custom_domain` | Medium | `enable_custom_domain = true` sans nom d'hôte provisionne un Ingress qui ne sert aucun certificat géré. |
-| `memory_limit` | `2Gi` | Medium | Les valeurs inférieures à 512Mi exposent à un OOM lors d'actualisations de flux intensives. |
+| `enable_nfs` (ou un PVC en mode bloc) | `true` | Critique | Sans volume persistant, le répertoire de données de FreshRSS est éphémère — `config.php`, l'état par utilisateur et le cache sont effacés au redémarrage du pod, ce qui impose une réinstallation. |
+| `nfs_mount_path` | `/var/www/FreshRSS/data` | Critique | Un montage ailleurs laisse le répertoire de données éphémère (même effet qu'une absence de NFS). |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur, et rend orphelines toutes les données des flux. |
+| `database_type` | `POSTGRES_15` | Critique | FreshRSS s'installe avec `--db-type pgsql` ; un moteur autre que Postgres casse l'installateur et `db-init`. |
+| `container_port` | `80` | Élevé | FreshRSS/Apache écoute sur le port 80 ; un port erroné fait échouer la sonde de démarrage et les pods ne deviennent jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL via le loopback `127.0.0.1`. |
+| `max_instance_count` | `1` | Élevé | Exécuter plusieurs pods duplique le cron d'actualisation du conteneur et fragmente l'état de session/cache stocké sur fichiers ; une mise à jour progressive sur le répertoire NFS partagé se bloque. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les requêtes d'un client se dispersent entre les pods, ce qui perturbe les sessions connectées. |
+| `min_instance_count` | `1` | Élevé | GKE exige un minimum d'au moins 1 ; la garde de validation rejette les valeurs invalides. Conserver 1 maintient FreshRSS et son cron d'actualisation en fonctionnement. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont interprétés en octets et bloquent toute planification de pods dans l'espace de noms. |
+| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris celles des clients mobiles utilisant les API Google Reader / Fever. |
+| `FRESHRSS_ADMIN_PASSWORD` (généré automatiquement) | À modifier dans l'interface après la première connexion | Moyen | La seule rotation du secret ne réinitialise pas un compte déjà installé ; le premier mot de passe reste valide jusqu'à sa modification dans l'application. |
+| `application_domains` | À définir avec `enable_custom_domain` | Moyen | `enable_custom_domain = true` sans nom d'hôte provisionne un Ingress qui ne sert aucun certificat géré. |
+| `memory_limit` | `2Gi` | Moyen | Les valeurs inférieures à 512Mi exposent à un OOM lors d'actualisations de flux intensives. |
 
 ---
 

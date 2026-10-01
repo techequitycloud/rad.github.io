@@ -474,28 +474,28 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `N8N_ENCRYPTION_KEY` (générée automatiquement) | Sauvegarder immédiatement | Critical | La modifier après la première exécution détruit définitivement tous les identifiants n8n enregistrés. |
-| `application_name` | `n8nai` — défini une seule fois | Critical | Immuable après le premier déploiement ; un renommage recrée toutes les ressources GCP avec perte de données. |
-| `db_name` / `db_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; un renommage fait pointer n8n vers une nouvelle base de données vide, avec perte de tous les workflows. |
-| `database_type` | `POSTGRES_15` | Critical | n8n requiert PostgreSQL ; passer à MySQL ou NONE empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer la tâche d'importation et bloque le démarrage. |
-| `enable_qdrant` | `true` | High | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est supprimé. |
-| `enable_ollama` | `true` | High | Les workflows utilisant le nœud LLM local échouent ; ne le désactivez que si vous utilisez exclusivement des fournisseurs d'IA externes. |
-| `enable_redis` | `true` | High | Sans Redis, plusieurs instances entrent en conflit sur l'état des workflows ; une exécution en split-brain corrompt les exécutions. |
-| `redis_host` | `""` (NFS) ou explicite | High | Lorsque Redis est activé mais que ni `redis_host` ni NFS ne sont définis, n8n ne démarre pas. |
-| `memory_limit` | `4Gi` | High | En dessous de 4 GiB, les workflows d'IA (embeddings, recherche vectorielle, chaînage de LLM) provoquent des arrêts pour OOM. |
-| `ingress_settings` | `all` pour les webhooks publics | High | `internal` ou `internal-and-cloud-load-balancing` bloquent la réception des webhooks externes. |
-| `max_instance_count` | `1` sauf si Redis est configuré | High | Dépasser 1 sans Redis provoque un split-brain ; l'augmenter avec Redis ne pose pas de problème. |
-| `min_instance_count` | `1` pour les webhooks | Medium | `0` provoque des délais de démarrage à froid (30–60s) ; les webhooks manquent le premier événement pendant le préchauffage. |
-| `enable_nfs` | `true` | High | Sans NFS, les données des workflows ne sont pas partagées entre les instances et la découverte de l'hôte Redis échoue. |
-| `enable_iap` | uniquement avec des identifiants OAuth valides | High | L'activer sans `iap_authorized_users` / `iap_authorized_groups` bloque tout accès. IAP bloque aussi les webhooks publics. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les exigences de conservation liées à la conformité. |
-| `execution_environment` | `gen2` | High | `gen1` ne prend pas en charge les montages NFS ; l'intégration Filestore requiert `gen2`. |
+| `N8N_ENCRYPTION_KEY` (générée automatiquement) | Sauvegarder immédiatement | Critique | La modifier après la première exécution détruit définitivement tous les identifiants n8n enregistrés. |
+| `application_name` | `n8nai` — défini une seule fois | Critique | Immuable après le premier déploiement ; un renommage recrée toutes les ressources GCP avec perte de données. |
+| `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage fait pointer n8n vers une nouvelle base de données vide, avec perte de tous les workflows. |
+| `database_type` | `POSTGRES_15` | Critique | n8n requiert PostgreSQL ; passer à MySQL ou NONE empêche le démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation et bloque le démarrage. |
+| `enable_qdrant` | `true` | Élevé | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est supprimé. |
+| `enable_ollama` | `true` | Élevé | Les workflows utilisant le nœud LLM local échouent ; ne le désactivez que si vous utilisez exclusivement des fournisseurs d'IA externes. |
+| `enable_redis` | `true` | Élevé | Sans Redis, plusieurs instances entrent en conflit sur l'état des workflows ; une exécution en split-brain corrompt les exécutions. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que ni `redis_host` ni NFS ne sont définis, n8n ne démarre pas. |
+| `memory_limit` | `4Gi` | Élevé | En dessous de 4 GiB, les workflows d'IA (embeddings, recherche vectorielle, chaînage de LLM) provoquent des arrêts pour OOM. |
+| `ingress_settings` | `all` pour les webhooks publics | Élevé | `internal` ou `internal-and-cloud-load-balancing` bloquent la réception des webhooks externes. |
+| `max_instance_count` | `1` sauf si Redis est configuré | Élevé | Dépasser 1 sans Redis provoque un split-brain ; l'augmenter avec Redis ne pose pas de problème. |
+| `min_instance_count` | `1` pour les webhooks | Moyen | `0` provoque des délais de démarrage à froid (30–60s) ; les webhooks manquent le premier événement pendant le préchauffage. |
+| `enable_nfs` | `true` | Élevé | Sans NFS, les données des workflows ne sont pas partagées entre les instances et la découverte de l'hôte Redis échoue. |
+| `enable_iap` | uniquement avec des identifiants OAuth valides | Élevé | L'activer sans `iap_authorized_users` / `iap_authorized_groups` bloque tout accès. IAP bloque aussi les webhooks publics. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation liées à la conformité. |
+| `execution_environment` | `gen2` | Élevé | `gen1` ne prend pas en charge les montages NFS ; l'intégration Filestore requiert `gen2`. |
 
 ---
 

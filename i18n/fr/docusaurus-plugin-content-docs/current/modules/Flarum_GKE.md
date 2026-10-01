@@ -396,8 +396,8 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au
 > moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
@@ -415,20 +415,20 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `null` (→ `MYSQL_8_0`) | Critical | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `FORUM_URL` (non prédéfini — à définir manuellement) | URL externe du LoadBalancer/du domaine | High | S'il n'est pas défini, Flarum génère des liens absolus, des URL de ressources et des redirections incorrects ; cette variante ne l'injecte pas automatiquement. |
-| `enable_nfs` | `true` | High | Le désactiver rend les avatars/pièces jointes téléversés éphémères — perdus lors de la recréation du pod. |
-| `enable_cloudsql_volume` | `true` (avec un `database_type` réel) | High | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE ; l'activer avec `database_type = "NONE"` fait échouer la validation au moment du plan. |
-| `max_instance_count` | `1` | High | Dépasser 1 sans comportement vérifié du stockage partagé et des verrous expose à des sessions fragmentées et à des conflits de verrous NFS/base de données. |
-| `session_affinity` | `ClientIP` | High | Sans persistance de session, les requêtes rebondissent entre les pods et perturbent les sessions authentifiées. |
-| `enable_redis` + `redis_host` | Ne laisser `redis_host` vide que si `enable_nfs = true` | High | Enfreindre cette combinaison fait échouer la validation au moment du plan plutôt que de déployer un forum incapable de joindre Redis. |
-| `memory_limit` | `2Gi` | High | Sous-dimensionner PHP-FPM sous charge expose à des arrêts pour manque de mémoire (OOM). |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critical | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
-| `FLARUM_ADMIN_PASS` (généré automatiquement) | À récupérer avant la première connexion | Medium | Ne pas le connaître vous empêche d'accéder au premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
-| `gcs_volumes` (vide par défaut) | Ajouter une entrée pour utiliser réellement `flarum-assets` | Medium | Le bucket `flarum-assets` est créé et facturé mais ne sert à rien s'il n'est pas explicitement monté. |
-| `reserve_static_ip` | `true` | Medium | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `FORUM_URL`. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une rétention conforme. |
+| `database_type` | `null` (→ `MYSQL_8_0`) | Critique | Choisir un moteur autre que MySQL casse l'installateur et toutes les requêtes. |
+| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `FORUM_URL` (non prédéfini — à définir manuellement) | URL externe du LoadBalancer/du domaine | Élevé | S'il n'est pas défini, Flarum génère des liens absolus, des URL de ressources et des redirections incorrects ; cette variante ne l'injecte pas automatiquement. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend les avatars/pièces jointes téléversés éphémères — perdus lors de la recréation du pod. |
+| `enable_cloudsql_volume` | `true` (avec un `database_type` réel) | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:3306` est requis pour la connectivité à la base de données sur GKE ; l'activer avec `database_type = "NONE"` fait échouer la validation au moment du plan. |
+| `max_instance_count` | `1` | Élevé | Dépasser 1 sans comportement vérifié du stockage partagé et des verrous expose à des sessions fragmentées et à des conflits de verrous NFS/base de données. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance de session, les requêtes rebondissent entre les pods et perturbent les sessions authentifiées. |
+| `enable_redis` + `redis_host` | Ne laisser `redis_host` vide que si `enable_nfs = true` | Élevé | Enfreindre cette combinaison fait échouer la validation au moment du plan plutôt que de déployer un forum incapable de joindre Redis. |
+| `memory_limit` | `2Gi` | Élevé | Sous-dimensionner PHP-FPM sous charge expose à des arrêts pour manque de mémoire (OOM). |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods de l'espace de noms. |
+| `FLARUM_ADMIN_PASS` (généré automatiquement) | À récupérer avant la première connexion | Moyen | Ne pas le connaître vous empêche d'accéder au premier compte administrateur jusqu'à sa réinitialisation via la base de données. |
+| `gcs_volumes` (vide par défaut) | Ajouter une entrée pour utiliser réellement `flarum-assets` | Moyen | Le bucket `flarum-assets` est créé et facturé mais ne sert à rien s'il n'est pas explicitement monté. |
+| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer entre les redéploiements, ce qui casse le DNS et `FORUM_URL`. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
 
 ---
 

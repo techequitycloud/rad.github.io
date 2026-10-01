@@ -489,8 +489,8 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service
-> dégradé) — **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
+> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
 > au moteur du socle [App_CloudRun](App_CloudRun.md), qui
@@ -503,21 +503,21 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (fixé par Common) | Critical | Le schéma de Chatwoot et sa recherche reposant sur pgvector exigent Postgres 15+ ; tout autre moteur casse `chatwoot-prepare`. |
-| `db_name` / `db_user` | À définir une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais modifier | Critical | Le renouveler invalide chaque session/cookie signé et rend définitivement illisibles les colonnes chiffrées par ActiveRecord ; Sidekiq ne parviendra pas non plus à déchiffrer les jobs en cours. |
-| `enable_redis` | `true` (transmis sans condition) | Critical | Sidekiq (jobs d'arrière-plan, livraison sur les canaux) et ActionCable (interface en temps réel) nécessitent tous deux Redis ; le désactiver casse silencieusement la livraison des messages alors même que l'interface web se charge. |
-| `container_image_source` | `custom` | High | Chatwoot est une image préconstruite de Docker Hub enveloppée dans un point d'entrée personnalisé (correspondance des variables d'environnement + lancement de Sidekiq) ; passer à `prebuilt` contourne ce wrapper et le conteneur ne fera pas correspondre correctement `DB_*`/`REDIS_*`. |
-| Ordre du job `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | High | Exécuter la préparation du schéma avant que la base, le rôle et les droits sur les extensions n'existent fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou base/rôle totalement absents). |
-| `enable_cloudsql_volume` | `true` | High | Le socket Unix du Cloud SQL Auth Proxy est indispensable à la connectivité de la base pour le conteneur applicatif qui s'exécute en continu sur Cloud Run. |
-| `enable_nfs` | `true` | High | Le désactiver rend les pièces jointes téléversées éphémères — perdues à la révision suivante. |
-| `min_instance_count` | `1` en production | High | En dessous de 1, le worker Sidekiq co-localisé ne s'exécute pas entre les requêtes, si bien que les jobs d'arrière-plan (interrogation des canaux, notifications, rapports) sont bloqués. |
-| `cpu_always_allocated` | `true` en production (avec `min_instance_count >= 1`) | Medium/High | La valeur par défaut `false`, qui privilégie le coût, n'alloue le CPU que pendant le traitement d'une requête ; le travail de Sidekiq et d'ActionCable est suspendu en dehors de cette fenêtre et de la période de maintien à chaud. |
-| `ingress_settings` | `all` | High | La valeur `internal` bloque les webhooks des canaux externes et le widget public de chat en direct. |
-| `enable_iap` | uniquement lorsque les canaux publics ne sont pas nécessaires | High | IAP bloque toutes les requêtes non authentifiées, y compris les webhooks des canaux et le widget de chat en direct. |
-| `ENABLE_ACCOUNT_SIGNUP` (par défaut `"false"`) | Laisser à `false`, activer brièvement pour le premier administrateur si nécessaire | Medium | Laisser l'inscription libre publique activée sur un helpdesk exposé à Internet permet à n'importe qui de créer un compte agent/administrateur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour la conservation réglementaire des données de conversation et des données clients. |
-| `enable_cloud_armor` | à activer en production | Medium | La console des agents et les points de terminaison des canaux publics sont joignables sans protection WAF. |
+| `database_type` | `POSTGRES_15` (fixé par Common) | Critique | Le schéma de Chatwoot et sa recherche reposant sur pgvector exigent Postgres 15+ ; tout autre moteur casse `chatwoot-prepare`. |
+| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
+| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais modifier | Critique | Le renouveler invalide chaque session/cookie signé et rend définitivement illisibles les colonnes chiffrées par ActiveRecord ; Sidekiq ne parviendra pas non plus à déchiffrer les jobs en cours. |
+| `enable_redis` | `true` (transmis sans condition) | Critique | Sidekiq (jobs d'arrière-plan, livraison sur les canaux) et ActionCable (interface en temps réel) nécessitent tous deux Redis ; le désactiver casse silencieusement la livraison des messages alors même que l'interface web se charge. |
+| `container_image_source` | `custom` | Élevé | Chatwoot est une image préconstruite de Docker Hub enveloppée dans un point d'entrée personnalisé (correspondance des variables d'environnement + lancement de Sidekiq) ; passer à `prebuilt` contourne ce wrapper et le conteneur ne fera pas correspondre correctement `DB_*`/`REDIS_*`. |
+| Ordre du job `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | Élevé | Exécuter la préparation du schéma avant que la base, le rôle et les droits sur les extensions n'existent fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou base/rôle totalement absents). |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket Unix du Cloud SQL Auth Proxy est indispensable à la connectivité de la base pour le conteneur applicatif qui s'exécute en continu sur Cloud Run. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend les pièces jointes téléversées éphémères — perdues à la révision suivante. |
+| `min_instance_count` | `1` en production | Élevé | En dessous de 1, le worker Sidekiq co-localisé ne s'exécute pas entre les requêtes, si bien que les jobs d'arrière-plan (interrogation des canaux, notifications, rapports) sont bloqués. |
+| `cpu_always_allocated` | `true` en production (avec `min_instance_count >= 1`) | Moyen/Élevé | La valeur par défaut `false`, qui privilégie le coût, n'alloue le CPU que pendant le traitement d'une requête ; le travail de Sidekiq et d'ActionCable est suspendu en dehors de cette fenêtre et de la période de maintien à chaud. |
+| `ingress_settings` | `all` | Élevé | La valeur `internal` bloque les webhooks des canaux externes et le widget public de chat en direct. |
+| `enable_iap` | uniquement lorsque les canaux publics ne sont pas nécessaires | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les webhooks des canaux et le widget de chat en direct. |
+| `ENABLE_ACCOUNT_SIGNUP` (par défaut `"false"`) | Laisser à `false`, activer brièvement pour le premier administrateur si nécessaire | Moyen | Laisser l'inscription libre publique activée sur un helpdesk exposé à Internet permet à n'importe qui de créer un compte agent/administrateur. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire des données de conversation et des données clients. |
+| `enable_cloud_armor` | à activer en production | Moyen | La console des agents et les points de terminaison des canaux publics sont joignables sans protection WAF. |
 
 ---
 

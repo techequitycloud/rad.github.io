@@ -396,24 +396,24 @@ les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS FUSE, un `backup_retention_days` hors plage, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant toute création de ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket GCS du stockage de données | Ne jamais supprimer ni recréer | Critical | Le bucket contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
-| `max_instance_count` | `1` | Critical | Plusieurs instances écrivent simultanément dans le même stockage de données monté via FUSE et corrompent `url-watches.json` ; l'application n'a pas de verrouillage distribué. |
-| Mot de passe de l'interface web | À définir immédiatement | High | Le tableau de bord est livré **sans authentification** ; le laisser ouvert avec un ingress public expose toutes les surveillances et la configuration des notifications à quiconque possède l'URL. |
-| `application_name` | À définir une seule fois | High | Immuable après le premier déploiement ; le renommer recrée le bucket du stockage de données et rend orphelines les données existantes. |
-| `enable_gcs_storage_volume` / montage du stockage de données | À laisser activé | High | Sans le montage `/datastore`, l'état est écrit sur le disque éphémère du conteneur et perdu à chaque révision ou redémarrage. |
-| `execution_environment` | `gen2` | High | GCS FUSE nécessite gen2 ; `gen1` ne peut pas monter le bucket du stockage de données (bloqué au moment du plan). |
-| `ingress_settings` | `all` (ou IAP) | High | Ingress public + aucune authentification = tableau de bord ouvert. Associez `all` à un mot de passe dans l'interface ou à IAP ; `internal` bloque entièrement l'accès depuis un navigateur. |
-| `service_url_env_var_name` / `BASE_URL` | URL réelle du service | Medium | Une `BASE_URL` erronée produit des liens absolus cassés dans les notifications de modification. |
-| `min_instance_count` | `1` | Medium | La mise à zéro (`0`) arrête le planificateur de récupération intégré pendant l'inactivité ; les surveillances ne sont donc pas vérifiées avant la requête entrante suivante. |
-| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | Low | changedetection.io n'a pas de base de données ; activer le raccordement Cloud SQL provisionne une infrastructure inutilisée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour une conservation conforme aux exigences réglementaires de la sauvegarde du stockage de données. |
+| Bucket GCS du stockage de données | Ne jamais supprimer ni recréer | Critique | Le bucket contient chaque surveillance, chaque instantané et chaque entrée d'historique — le supprimer fait perdre définitivement tout l'état de surveillance. |
+| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent simultanément dans le même stockage de données monté via FUSE et corrompent `url-watches.json` ; l'application n'a pas de verrouillage distribué. |
+| Mot de passe de l'interface web | À définir immédiatement | Élevé | Le tableau de bord est livré **sans authentification** ; le laisser ouvert avec un ingress public expose toutes les surveillances et la configuration des notifications à quiconque possède l'URL. |
+| `application_name` | À définir une seule fois | Élevé | Immuable après le premier déploiement ; le renommer recrée le bucket du stockage de données et rend orphelines les données existantes. |
+| `enable_gcs_storage_volume` / montage du stockage de données | À laisser activé | Élevé | Sans le montage `/datastore`, l'état est écrit sur le disque éphémère du conteneur et perdu à chaque révision ou redémarrage. |
+| `execution_environment` | `gen2` | Élevé | GCS FUSE nécessite gen2 ; `gen1` ne peut pas monter le bucket du stockage de données (bloqué au moment du plan). |
+| `ingress_settings` | `all` (ou IAP) | Élevé | Ingress public + aucune authentification = tableau de bord ouvert. Associez `all` à un mot de passe dans l'interface ou à IAP ; `internal` bloque entièrement l'accès depuis un navigateur. |
+| `service_url_env_var_name` / `BASE_URL` | URL réelle du service | Moyen | Une `BASE_URL` erronée produit des liens absolus cassés dans les notifications de modification. |
+| `min_instance_count` | `1` | Moyen | La mise à zéro (`0`) arrête le planificateur de récupération intégré pendant l'inactivité ; les surveillances ne sont donc pas vérifiées avant la requête entrante suivante. |
+| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | Faible | changedetection.io n'a pas de base de données ; activer le raccordement Cloud SQL provisionne une infrastructure inutilisée. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme aux exigences réglementaires de la sauvegarde du stockage de données. |
 
 ---
 

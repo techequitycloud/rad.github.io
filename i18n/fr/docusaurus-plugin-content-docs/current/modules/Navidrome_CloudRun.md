@@ -413,25 +413,25 @@ Manager (`secret-<prefix>-navidrome-admin-password`, voir § 2 / § 4.D).
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un environnement d'exécution `gen1` avec des montages NFS/GCS, IAP sans identités autorisées, un `container_port`/`backup_retention_days`/`timeout_seconds` hors plage. Une garde propre à Navidrome rejette en outre `ingress_settings = "all"` sauf si `enable_admin_password = true`, ainsi que `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket GCS `/data` | Ne jamais le supprimer ni le faire pointer ailleurs | Critical | Le bucket `/data` contient la base SQLite, les utilisateurs et les playlists ; le supprimer efface tout le serveur. |
-| `max_instance_count` | `1` | Critical | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `ingress_settings = "all"` sans `enable_admin_password` | garder le mot de passe administrateur activé | Critical | Bloqué au moment du plan — une URL publique avec un assistant de premier lancement ouvert permet à un inconnu de s'approprier le compte `admin`. |
-| `execution_environment` | `gen2` | High | Gen1 ne peut pas monter GCS FUSE ; `/data` n'est donc jamais persistant. |
-| `min_instance_count` | `1` | High | Les démarrages à froid liés à la mise à l'échelle à zéro interrompent les écoutes en cours et rouvrent la bibliothèque. |
-| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | High | Navidrome conserve son index de recherche en mémoire ; une mémoire insuffisante provoque l'arrêt OOM du serveur pendant l'analyse. |
-| Montage `ND_MUSICFOLDER` | Fournir la musique sur `/music` | High | Sans montage `gcs_volumes`/NFS sur `/music`, la bibliothèque est vide — rien à diffuser. |
-| `enable_admin_password` | `true` | Medium | Désactivé, un assistant de création d'administrateur reste ouvert au premier accès ; terminez-le immédiatement ou restreignez l'entrée. |
-| `ingress_settings` | `internal` sauf usage public | Medium | `all` expose le serveur musical à Internet — associez-le à IAP ou Cloud Armor. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour restaurer un instantané plus ancien de la bibliothèque. |
-| Mot de passe administrateur généré | À modifier après la première connexion | Medium | Le mot de passe d'amorçage reste dans Secret Manager ; modifiez-le dans l'application pour les vrais utilisateurs. |
+| Bucket GCS `/data` | Ne jamais le supprimer ni le faire pointer ailleurs | Critique | Le bucket `/data` contient la base SQLite, les utilisateurs et les playlists ; le supprimer efface tout le serveur. |
+| `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
+| `ingress_settings = "all"` sans `enable_admin_password` | garder le mot de passe administrateur activé | Critique | Bloqué au moment du plan — une URL publique avec un assistant de premier lancement ouvert permet à un inconnu de s'approprier le compte `admin`. |
+| `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas monter GCS FUSE ; `/data` n'est donc jamais persistant. |
+| `min_instance_count` | `1` | Élevé | Les démarrages à froid liés à la mise à l'échelle à zéro interrompent les écoutes en cours et rouvrent la bibliothèque. |
+| `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Élevé | Navidrome conserve son index de recherche en mémoire ; une mémoire insuffisante provoque l'arrêt OOM du serveur pendant l'analyse. |
+| Montage `ND_MUSICFOLDER` | Fournir la musique sur `/music` | Élevé | Sans montage `gcs_volumes`/NFS sur `/music`, la bibliothèque est vide — rien à diffuser. |
+| `enable_admin_password` | `true` | Moyen | Désactivé, un assistant de création d'administrateur reste ouvert au premier accès ; terminez-le immédiatement ou restreignez l'entrée. |
+| `ingress_settings` | `internal` sauf usage public | Moyen | `all` expose le serveur musical à Internet — associez-le à IAP ou Cloud Armor. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour restaurer un instantané plus ancien de la bibliothèque. |
+| Mot de passe administrateur généré | À modifier après la première connexion | Moyen | Le mot de passe d'amorçage reste dans Secret Manager ; modifiez-le dans l'application pour les vrais utilisateurs. |
 
 ---
 

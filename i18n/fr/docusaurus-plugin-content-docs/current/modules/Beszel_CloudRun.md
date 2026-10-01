@@ -295,22 +295,22 @@ d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — IAP sans identité autorisée, un runtime `gen1` avec des montages GCS, un `backup_retention_days` hors limites, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Bucket de données de stockage | Ne jamais le supprimer ni le vider | Critical | Le bucket **est** la base SQLite — le supprimer efface tout l'historique de supervision et le compte administrateur. |
-| `max_instance_count` | `1` | Critical | Exécuter plus d'une instance sur la base SQLite partagée montée via FUSE provoque des conflits de verrous et une corruption de la base. |
-| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | High | Beszel n'a pas de base externe ; activer Cloud SQL provisionne une instance inutilisée et perturbe le démarrage. |
-| `execution_environment` | `gen2` | High | `gen1` ne peut pas monter le volume GCS FUSE `/beszel_data`, si bien que l'état n'est pas conservé. |
-| `ingress_settings` | `all` | High | `internal` empêche les agents situés hors du VPC de remonter leurs données au hub. |
-| `enable_iap` | uniquement pour l'interface, jamais avec des agents hors Google | High | IAP bloque toutes les requêtes non authentifiées, y compris la remontée des métriques des agents. |
-| `min_instance_count` | `1` | Medium | La mise à zéro (`0`) supprime l'écrivain SQLite actif et interrompt la remontée continue des agents ; elle est aussi bloquée par la garde min/max lorsqu'elle est supérieure à `max`. |
-| `container_port` | `8090` | Medium | Le hub n'écoute que sur 8090 ; le modifier sans adapter l'image casse les sondes et l'entrée. |
-| `application_version` | épinglez-la explicitement | Medium | `latest` résout l'image de base vers la version épinglée `0.9.1` ; épinglez un vrai tag pour maîtriser les mises à niveau et éviter des migrations de schéma inattendues. |
+| Bucket de données de stockage | Ne jamais le supprimer ni le vider | Critique | Le bucket **est** la base SQLite — le supprimer efface tout l'historique de supervision et le compte administrateur. |
+| `max_instance_count` | `1` | Critique | Exécuter plus d'une instance sur la base SQLite partagée montée via FUSE provoque des conflits de verrous et une corruption de la base. |
+| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | Élevé | Beszel n'a pas de base externe ; activer Cloud SQL provisionne une instance inutilisée et perturbe le démarrage. |
+| `execution_environment` | `gen2` | Élevé | `gen1` ne peut pas monter le volume GCS FUSE `/beszel_data`, si bien que l'état n'est pas conservé. |
+| `ingress_settings` | `all` | Élevé | `internal` empêche les agents situés hors du VPC de remonter leurs données au hub. |
+| `enable_iap` | uniquement pour l'interface, jamais avec des agents hors Google | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris la remontée des métriques des agents. |
+| `min_instance_count` | `1` | Moyen | La mise à zéro (`0`) supprime l'écrivain SQLite actif et interrompt la remontée continue des agents ; elle est aussi bloquée par la garde min/max lorsqu'elle est supérieure à `max`. |
+| `container_port` | `8090` | Moyen | Le hub n'écoute que sur 8090 ; le modifier sans adapter l'image casse les sondes et l'entrée. |
+| `application_version` | épinglez-la explicitement | Moyen | `latest` résout l'image de base vers la version épinglée `0.9.1` ; épinglez un vrai tag pour maîtriser les mises à niveau et éviter des migrations de schéma inattendues. |
 
 ---
 

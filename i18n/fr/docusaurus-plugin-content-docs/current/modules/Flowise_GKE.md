@@ -448,26 +448,26 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critical** (perte de données / panne / sécurité) — **High** (service dégradé) —
-> **Medium** (coût ou dégradation partielle) — **Low** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critical | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
-| `enable_cloudsql_volume` | `true` | Critical | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
-| `application_database_name` / `_user` | définis une seule fois | Critical | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critical | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critical | Les entiers nus sont des octets et bloquent toute planification. |
-| `flowise_username` | remplacer `admin` | High | Le nom d'utilisateur par défaut est connu de tous ; associé à un mot de passe deviné, il donne un accès complet à tous les flows d'IA. |
-| `FLOWISE_SECRETKEY_OVERWRITE` | ne pas le définir après le premier déploiement | High | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API de LLM et tous les identifiants de vector stores stockés. |
-| `container_resources.memory_limit` | `1Gi` | High | En dessous de 512Mi, le processus Node.js est tué pour manque de mémoire (OOM) au démarrage. La production avec de grands graphes de flows nécessite 2Gi. |
-| `max_instance_count` | `1` (sans Redis) | High | Plusieurs réplicas sans magasin Redis partagé font échouer les exécutions de flows lorsque les requêtes sont routées vers un autre pod. |
-| `enable_iap` | activer pour un usage administrateur | High | Sinon, l'interface Flowise est accessible publiquement sans authentification. |
-| `STORAGE_TYPE` | `gcs` (par défaut) | High | Toute autre valeur écrit les fichiers téléversés dans le stockage éphémère du pod, perdu à chaque redémarrage du pod. |
-| `min_instance_count` | `1` | Medium | `0` expose à une latence de démarrage à froid qui dépasse les délais d'attente des clients LLM en aval. |
-| `enable_redis` | activer avec >1 réplica | Medium | Nécessaire pour partager l'état des sessions et des files d'attente entre plusieurs réplicas. |
-| `backup_retention_days` | `7` (à augmenter en production) | Medium | Trop court pour les obligations de conservation liées à la conformité. |
-| `pdb_min_available` vs `min_instance_count` | garder de la marge | Medium | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
+| `database_type` | `POSTGRES_15` | Critique | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
+| `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
+| `flowise_username` | remplacer `admin` | Élevé | Le nom d'utilisateur par défaut est connu de tous ; associé à un mot de passe deviné, il donne un accès complet à tous les flows d'IA. |
+| `FLOWISE_SECRETKEY_OVERWRITE` | ne pas le définir après le premier déploiement | Élevé | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API de LLM et tous les identifiants de vector stores stockés. |
+| `container_resources.memory_limit` | `1Gi` | Élevé | En dessous de 512Mi, le processus Node.js est tué pour manque de mémoire (OOM) au démarrage. La production avec de grands graphes de flows nécessite 2Gi. |
+| `max_instance_count` | `1` (sans Redis) | Élevé | Plusieurs réplicas sans magasin Redis partagé font échouer les exécutions de flows lorsque les requêtes sont routées vers un autre pod. |
+| `enable_iap` | activer pour un usage administrateur | Élevé | Sinon, l'interface Flowise est accessible publiquement sans authentification. |
+| `STORAGE_TYPE` | `gcs` (par défaut) | Élevé | Toute autre valeur écrit les fichiers téléversés dans le stockage éphémère du pod, perdu à chaque redémarrage du pod. |
+| `min_instance_count` | `1` | Moyen | `0` expose à une latence de démarrage à froid qui dépasse les délais d'attente des clients LLM en aval. |
+| `enable_redis` | activer avec >1 réplica | Moyen | Nécessaire pour partager l'état des sessions et des files d'attente entre plusieurs réplicas. |
+| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les obligations de conservation liées à la conformité. |
+| `pdb_min_available` vs `min_instance_count` | garder de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau des nœuds (un pod unique ne peut pas être évincé). |
 
 ---
 
