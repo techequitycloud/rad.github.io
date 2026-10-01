@@ -13,12 +13,18 @@ name: French translations
 # Cost guard: a broad English edit can make hundreds of pages stale at once. Above
 # max_pages the sync stops and asks for a manual run with approve_large=true.
 #
-# AUTOMATIC TRANSLATION IS OFF by default (no API credits for it): the sync job
-# then only REPORTS which French pages are out of date, in the run summary, and
-# stays green. Retranslate those pages by hand or with an agent, following
-# scripts/i18n/prompt.md (stamp.mjs + check.mjs). To switch automatic
-# translation on, set the repository variable FR_AUTO_TRANSLATE=true and add an
-# ANTHROPIC_API_KEY secret.
+# AUTOMATIC TRANSLATION IS OFF by default: the sync job then only REPORTS which
+# French pages are out of date, in the run summary, and stays green. Retranslate
+# those pages by hand or with an agent, following scripts/i18n/prompt.md
+# (stamp.mjs + check.mjs).
+#
+# Switched on with the repository variable FR_AUTO_TRANSLATE=true, it translates
+# with Gemini on Vertex AI in the platform project, authenticating through
+# Workload Identity Federation as rad-docs-translator (rad-automation
+# docs_translator.tf): no key is stored, and that identity can only call models.
+# Repository variables it needs: GCP_WIF_PROVIDER, GCP_TRANSLATOR_SA,
+# VERTEX_PROJECT; optional VERTEX_LOCATION (us-central1), TRANSLATE_MODEL
+# (gemini-2.5-flash).
 
 on:
   pull_request:
@@ -74,10 +80,15 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write   # Workload Identity Federation (OIDC token exchange)
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       AUTO_TRANSLATE: ${{ vars.FR_AUTO_TRANSLATE }}
-      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'claude-sonnet-5' }}
+      TRANSLATE_PROVIDER: vertex
+      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-2.5-flash' }}
+      VERTEX_PROJECT: ${{ vars.VERTEX_PROJECT }}
+      VERTEX_LOCATION: ${{ vars.VERTEX_LOCATION || 'us-central1' }}
+      WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+      TRANSLATOR_SA: ${{ vars.GCP_TRANSLATOR_SA }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -114,11 +125,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           echo "total=$total" >> "$GITHUB_OUTPUT"
           echo "include_missing=$include_missing" >> "$GITHUB_OUTPUT"
-          if [ "$AUTO_TRANSLATE" != "true" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+          if [ "$AUTO_TRANSLATE" != "true" ] || [ -z "$WIF_PROVIDER" ] || [ -z "$TRANSLATOR_SA" ] || [ -z "$VERTEX_PROJECT" ]; then
             # Report-only mode: name the out-of-date pages so they can be retranslated by hand.
             {
               echo ""
-              echo "Automatic translation is off (repository variable FR_AUTO_TRANSLATE is not 'true', or no ANTHROPIC_API_KEY): nothing was translated. Until these pages are retranslated, /fr shows the previous French (stale) or the English (never translated)."
+              echo "Automatic translation is off (repository variable FR_AUTO_TRANSLATE is not 'true', or GCP_WIF_PROVIDER / GCP_TRANSLATOR_SA / VERTEX_PROJECT is unset): nothing was translated. Until these pages are retranslated, /fr shows the previous French (stale) or the English (never translated)."
               node -e "
                 const s = require('./stale.json');
                 if (s.stale.length) { console.log('', 'French pages out of date:'); for (const p of s.stale) console.log('- ' + p); }
@@ -134,6 +145,19 @@ jobs:
           else
             echo "go=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        if: steps.plan.outputs.go == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_TRANSLATOR_SA }}
+
+      # translate.mjs asks gcloud for access tokens and refreshes them, so a run
+      # longer than one token's lifetime keeps working.
+      - name: Set up gcloud
+        if: steps.plan.outputs.go == 'true'
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Translate
         if: steps.plan.outputs.go == 'true'
