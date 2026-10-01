@@ -41,6 +41,9 @@ on:
       - 'docs/modules/**'
   workflow_dispatch:
     inputs:
+      pages:
+        description: 'Translate exactly these English pages now (space-separated, e.g. docs/labs/Ghost_CloudRun.md). Works even while FR_AUTO_TRANSLATE is off; ignores the options below.'
+        default: ''
       include_missing:
         description: 'Also translate pages that have never been translated'
         type: boolean
@@ -106,7 +109,24 @@ jobs:
           INCLUDE_MISSING: ${{ github.event_name == 'push' || inputs.include_missing }}
           MAX_PAGES: ${{ inputs.max_pages || '50' }}
           APPROVE_LARGE: ${{ inputs.approve_large }}
+          PAGES: ${{ inputs.pages }}
         run: |
+          # An explicit page list (manual run) is a deliberate request: translate
+          # just those, whether or not automatic translation is switched on.
+          if [ -n "$PAGES" ]; then
+            for p in $PAGES; do
+              if ! printf '%s' "$p" | grep -Eq '^docs/(guides|design|certification|labs|modules)/[A-Za-z0-9_.-]+\.mdx?$' || [ ! -f "$p" ]; then
+                echo "Not a translatable English page: $p" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1
+              fi
+            done
+            if [ -z "$WIF_PROVIDER" ] || [ -z "$TRANSLATOR_SA" ] || [ -z "$VERTEX_PROJECT" ]; then
+              echo "GCP_WIF_PROVIDER / GCP_TRANSLATOR_SA / VERTEX_PROJECT are not set on this repository." | tee -a "$GITHUB_STEP_SUMMARY"; exit 1
+            fi
+            echo "### French translation: $(echo $PAGES | wc -w | tr -d ' ') requested page(s)" >> "$GITHUB_STEP_SUMMARY"
+            echo "pages=$PAGES" >> "$GITHUB_OUTPUT"
+            echo "go=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           node scripts/i18n/stale.mjs --json > stale.json
           stale=$(node -e "console.log(require('./stale.json').stale.length)")
           missing=$(node -e "console.log(require('./stale.json').missing.length)")
@@ -163,9 +183,11 @@ jobs:
         if: steps.plan.outputs.go == 'true'
         env:
           INCLUDE_MISSING: ${{ steps.plan.outputs.include_missing }}
+          PAGES: ${{ steps.plan.outputs.pages }}
         run: |
           flags="--from-stale"
           [ "$INCLUDE_MISSING" = "true" ] && flags="$flags --include-missing"
+          [ -n "$PAGES" ] && flags="$PAGES"
           # Failed pages are reported, not written; continue so the good ones still ship.
           node scripts/i18n/translate.mjs $flags > result.json || true
           cat result.json
