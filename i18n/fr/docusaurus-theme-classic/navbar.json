@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "RAD Platform",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Tech Equity",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Certification Guides": {
+    "message": "Guides de certification",
+    "description": "Navbar item with label Certification Guides"
+  },
+  "item.label.Module Guides": {
+    "message": "Guides des modules",
+    "description": "Navbar item with label Module Guides"
+  },
+  "item.label.Module Labs": {
+    "message": "Labs des modules",
+    "description": "Navbar item with label Module Labs"
+  },
+  "item.label.Design Principles": {
+    "message": "Principes de conception",
+    "description": "Navbar item with label Design Principles"
+  },
+  "item.label.RAD Guide": {
+    "message": "Guide RAD",
+    "description": "Navbar item with label RAD Guide"
+  },
+  "item.label.RAD Console": {
+    "message": "RAD Console",
+    "description": "Navbar item with label RAD Console"
+  }
+}

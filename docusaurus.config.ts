@@ -27,9 +27,16 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
 
+  // English is the source; French is a translation. A page with no French
+  // version falls back to its English one, so French can be added page by page
+  // (Phase 1: the RAD guides, design pages and site pages).
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'fr'],
+    localeConfigs: {
+      en: {label: 'English', htmlLang: 'en'},
+      fr: {label: 'Français', htmlLang: 'fr'},
+    },
   },
 
   // Consent-gated analytics. Not @docusaurus/plugin-google-gtag: that loads
@@ -82,11 +89,19 @@ const config: Config = {
     },
     announcementBar: {
       id: 'live-sessions-2026-09',
+      // The bar is not covered by the theme's translation files, so it picks its
+      // text from the locale being built (Docusaurus builds each locale
+      // separately and sets DOCUSAURUS_CURRENT_LOCALE for each).
       content:
-        'Live, hands-on Google Cloud sessions &mdash; deploy a module end to end, or work a ' +
-        'certification as a live lab. Sixty minutes, free to attend. ' +
-        '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
-        '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>Register</b></a>',
+        process.env.DOCUSAURUS_CURRENT_LOCALE === 'fr'
+          ? 'Sessions Google Cloud pratiques en direct &mdash; déployez un module de bout en bout ou ' +
+            'préparez une certification lors d’un lab en direct. Soixante minutes, participation gratuite. ' +
+            '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
+            '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>S’inscrire</b></a>'
+          : 'Live, hands-on Google Cloud sessions &mdash; deploy a module end to end, or work a ' +
+            'certification as a live lab. Sixty minutes, free to attend. ' +
+            '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
+            '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>Register</b></a>',
       backgroundColor: '#1d4ed8',
       textColor: '#ffffff',
       isCloseable: true,
@@ -140,6 +155,10 @@ const config: Config = {
           position: 'left',
           target: '_blank',
           rel: 'noopener noreferrer',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
       ],
     },

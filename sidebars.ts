@@ -3582,4 +3582,26 @@ const sidebars: SidebarsConfig = {
   ],
 };
 
-export default sidebars;
+/**
+ * Give every doc item a translation key equal to its doc id.
+ *
+ * Docusaurus derives a sidebar item's translation key from its LABEL, and
+ * hundreds of items here share one ("Cloud Run", "GKE", "Common"). With a second
+ * locale enabled that is a hard build error ("Multiple docs sidebar items
+ * produce the same translation key"). Applied here rather than written on each
+ * item, so an entry added by hand later cannot reintroduce the collision.
+ */
+type Item = SidebarsConfig[string] extends (infer T)[] ? T : never;
+const withKeys = (items: unknown): unknown =>
+  Array.isArray(items)
+    ? items.map((item) => {
+        if (!item || typeof item !== 'object') return item;
+        const it = item as Record<string, unknown>;
+        const keyed = it.type === 'doc' && typeof it.id === 'string' && it.key === undefined ? {...it, key: it.id} : it;
+        return Array.isArray(keyed.items) ? {...keyed, items: withKeys(keyed.items)} : keyed;
+      })
+    : items;
+
+export default Object.fromEntries(
+  Object.entries(sidebars).map(([name, items]) => [name, withKeys(items) as Item[]]),
+) as SidebarsConfig;
