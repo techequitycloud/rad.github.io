@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 6 : sécurité du réseau cloud"
 description: "Préparez la section 6 de l'examen Professional Cloud Network Engineer (PCNE) — sécurité du réseau cloud — avec des labs pratiques RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_6_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_6_Exploration_Guide.md @ cb682e8 sha256:2c197f1fa737 -->
 
 # Guide de préparation à la certification PCNE : Section 6 — Configuration, mise en œuvre et gestion d'une solution de sécurité réseau cloud (Configuring, implementing and managing a cloud network security solution) (~13 % de l'examen) {#pcne-certification-preparation-guide-section-6--configuring-implementing-and-managing-a-cloud-network-security-solution-13-of-the-exam}
 

@@ -1,0 +1,160 @@
+name: French translations
+
+# Keeps docs.radmodules.dev/fr in step with the English pages.
+#
+# validate  every PR that touches French files or this tooling: the checker in
+#           scripts/i18n/check.mjs fails on changed structure, code, links or
+#           anchors. Applies to translations from people, agents and the bot.
+# sync      when English pages change on main: re-translate the pages whose
+#           English changed (scripts/i18n/stale.mjs compares each French page's
+#           recorded sha256 with its English source), translate new pages, and
+#           open a PR. Untranslated pages keep showing the English meanwhile.
+#
+# Cost guard: a broad English edit can make hundreds of pages stale at once. Above
+# max_pages the sync stops and asks for a manual run with approve_large=true.
+
+on:
+  pull_request:
+    paths:
+      - 'i18n/fr/**'
+      - 'scripts/i18n/**'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/guides/**'
+      - 'docs/design/**'
+      - 'docs/certification/**'
+      - 'docs/labs/**'
+      - 'docs/modules/**'
+  workflow_dispatch:
+    inputs:
+      include_missing:
+        description: 'Also translate pages that have never been translated'
+        type: boolean
+        default: true
+      max_pages:
+        description: 'Stop and ask for approval above this many pages'
+        default: '50'
+      approve_large:
+        description: 'Proceed even above max_pages (cost: roughly proportional to pages)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: translate-fr-${{ github.event_name == 'pull_request' && github.head_ref || 'sync' }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check every French page against its English source
+        run: node scripts/i18n/check.mjs --all
+
+  sync:
+    if: github.event_name != 'pull_request' && !startsWith(github.event.head_commit.message, 'i18n(fr):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'claude-sonnet-5' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Work out what needs translating
+        id: plan
+        # Inputs reach the shell only through env, never interpolated into the script.
+        env:
+          INCLUDE_MISSING: ${{ github.event_name == 'push' || inputs.include_missing }}
+          MAX_PAGES: ${{ inputs.max_pages || '50' }}
+          APPROVE_LARGE: ${{ inputs.approve_large }}
+        run: |
+          node scripts/i18n/stale.mjs --json > stale.json
+          stale=$(node -e "console.log(require('./stale.json').stale.length)")
+          missing=$(node -e "console.log(require('./stale.json').missing.length)")
+          # On push, translate stale pages AND new pages. A manual run can opt out of new ones.
+          include_missing="$INCLUDE_MISSING"
+          total=$stale
+          [ "$include_missing" = "true" ] && total=$((stale + missing))
+          max="$MAX_PAGES"
+          case "$max" in ''|*[!0-9]*) echo "max_pages must be a whole number"; exit 1;; esac
+          echo "stale=$stale missing=$missing total=$total max=$max"
+          {
+            echo "### French translation sync"
+            echo "Stale (English changed since translation): **$stale**"
+            echo "Never translated: **$missing**"
+            echo "To translate this run: **$total**"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "include_missing=$include_missing" >> "$GITHUB_OUTPUT"
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "No ANTHROPIC_API_KEY secret on this repository: nothing translated." >> "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          elif [ "$total" -eq 0 ]; then
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          elif [ "$total" -gt "$max" ] && [ "$APPROVE_LARGE" != "true" ]; then
+            echo "⚠️ $total pages exceeds the $max-page limit. Re-run **French translations** manually with approve_large=true to proceed." >> "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Translate
+        if: steps.plan.outputs.go == 'true'
+        env:
+          INCLUDE_MISSING: ${{ steps.plan.outputs.include_missing }}
+        run: |
+          flags="--from-stale"
+          [ "$INCLUDE_MISSING" = "true" ] && flags="$flags --include-missing"
+          # Failed pages are reported, not written; continue so the good ones still ship.
+          node scripts/i18n/translate.mjs $flags > result.json || true
+          cat result.json
+          node -e "
+            const r = require('./result.json');
+            const lines = ['', 'Translated: **' + r.translated + '** of ' + r.requested + ' (model ' + r.model + ')'];
+            if (r.failed.length) { lines.push('', 'Failed validation twice, left unchanged:'); for (const f of r.failed) lines.push('- ' + f.page + ': ' + String(f.error).split('\n')[0]); }
+            require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          "
+
+      - name: Re-check everything
+        if: steps.plan.outputs.go == 'true'
+        run: node scripts/i18n/check.mjs --all
+
+      - name: Open a PR
+        if: steps.plan.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f stale.json result.json
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard i18n)" ]; then
+            echo "Nothing changed."; exit 0
+          fi
+          branch="i18n/fr-sync-$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add i18n/fr
+          git commit -m "i18n(fr): translate pages changed in English (run $GITHUB_RUN_ID)"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "i18n(fr): French translations for changed English pages" \
+            --body "Automated by the **French translations** workflow (run $GITHUB_RUN_ID). Every page passed scripts/i18n/check.mjs; see the run summary for anything that failed and was left unchanged."

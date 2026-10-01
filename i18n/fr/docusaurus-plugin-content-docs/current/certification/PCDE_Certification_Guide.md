@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Database Engineer (PCDE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Database Engineer (PCDE) à des labs pratiques de déploiement RAD sur Google Cloud : un parcours de révision concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCDE_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCDE_Certification_Guide.md @ cb682e8 sha256:07f7f62a1453 -->
 
 # Carte des labs de la certification Professional Cloud Database Engineer (PCDE) {#professional-cloud-database-engineer-pcde-certification-lab-map}
 

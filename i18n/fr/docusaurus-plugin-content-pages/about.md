@@ -2,7 +2,7 @@
 title: À propos de RAD Platform
 description: "RAD Platform par Tech Equity Cloud — une formation pratique aux certifications Google Cloud qui déploie une infrastructure réelle et inspectable dans votre propre projet GCP."
 ---
-<!-- translated-from: src/pages/about.md @ 6b90c32 -->
+<!-- translated-from: src/pages/about.md @ 6b90c32 sha256:f687ec5661c1 -->
 
 # À propos de RAD Platform {#about-rad-platform}
 

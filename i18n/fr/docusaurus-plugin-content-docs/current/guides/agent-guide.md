@@ -2,7 +2,7 @@
 title: "Guide de l'agent"
 description: "Guide de l'agent de la plateforme RAD — partager votre lien de parrainage, percevoir une commission en argent sur les frais de module des utilisateurs parrainés, la suivre dans Credits → My Commission, et comprendre le fonctionnement des versements."
 ---
-<!-- translated-from: docs/guides/agent-guide.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/agent-guide.md @ 6b90c32 sha256:4e747baa739e -->
 
 # Guide de l'agent {#agent-guide}
 

@@ -2,7 +2,7 @@
 title: "Préparation PCDE, section 1 : conception de solutions de bases de données évolutives"
 description: "Préparez la section 1 de l'examen PCDE (conception de solutions de bases de données évolutives) avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCDE_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCDE_Section_1_Exploration_Guide.md @ cb682e8 sha256:da5998d2ff42 -->
 
 # Guide de préparation à la certification PCDE : Section 1 — Concevoir des solutions de bases de données cloud innovantes, évolutives et hautement disponibles (Design innovative, scalable, and highly available cloud database solutions) (~32 % de l'examen) {#pcde-certification-preparation-guide-section-1--design-innovative-scalable-and-highly-available-cloud-database-solutions-32-of-the-exam}
 

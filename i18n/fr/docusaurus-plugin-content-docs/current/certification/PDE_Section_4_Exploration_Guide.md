@@ -2,7 +2,7 @@
 title: "Préparation PDE, section 4 : observabilité et dépannage"
 description: "Préparez la section 4 de l'examen PDE — mettre en œuvre les pratiques d'observabilité et résoudre les problèmes — avec des labs de déploiement RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PDE_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PDE_Section_4_Exploration_Guide.md @ cb682e8 sha256:e2ab5c3ff879 -->
 
 # Guide de préparation à la certification PDE : Section 4 — Mettre en œuvre les pratiques d'observabilité et résoudre les problèmes (Implementing observability practices and troubleshooting issues) (~25 % de l'examen) {#pde-certification-preparation-guide-section-4--implementing-observability-practices-and-troubleshooting-issues-25-of-the-exam}
 

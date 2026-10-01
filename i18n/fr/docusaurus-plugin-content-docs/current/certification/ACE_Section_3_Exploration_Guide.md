@@ -2,7 +2,7 @@
 title: "Préparation ACE, section 3 : exploitation des solutions cloud"
 description: "Préparez la section 3 de l'examen Associate Cloud Engineer (ACE) — garantir le bon fonctionnement d'une solution cloud — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/ACE_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/ACE_Section_3_Exploration_Guide.md @ cb682e8 sha256:02aff01e0576 -->
 
 # Guide de préparation à la certification ACE : Section 3 — Garantir le bon fonctionnement d'une solution cloud (Ensuring the successful operation of a cloud solution) (~30 % de l'examen) {#ace-certification-preparation-guide-section-3--ensuring-the-successful-operation-of-a-cloud-solution-30-of-the-exam}
 

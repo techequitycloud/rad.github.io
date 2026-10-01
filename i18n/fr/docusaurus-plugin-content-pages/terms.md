@@ -2,7 +2,7 @@
 title: Conditions d'utilisation
 description: "Conditions d'utilisation du site de documentation RAD Platform — utilisation autorisée, avertissements concernant le contenu des labs et les coûts cloud, et mentions de propriété intellectuelle."
 ---
-<!-- translated-from: src/pages/terms.md @ 6b90c32 -->
+<!-- translated-from: src/pages/terms.md @ 6b90c32 sha256:d007ee77a9f2 -->
 
 > Cette traduction est fournie à titre indicatif. En cas de divergence, la version anglaise fait foi.
 

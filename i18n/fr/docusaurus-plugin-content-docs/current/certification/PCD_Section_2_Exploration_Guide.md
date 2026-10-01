@@ -2,7 +2,7 @@
 title: "Préparation PCD, section 2 : création et test d'applications"
 description: "Préparez la section 2 de l'examen Professional Cloud Developer (PCD) — création et test d'applications — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCD_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCD_Section_2_Exploration_Guide.md @ cb682e8 sha256:a0ab6442717a -->
 
 # Guide de préparation à la certification PCD : Section 2 — Création et test d'applications (Building and testing applications) (~23 % de l'examen) {#pcd-certification-preparation-guide-section-2--building-and-testing-applications-23-of-the-exam}
 

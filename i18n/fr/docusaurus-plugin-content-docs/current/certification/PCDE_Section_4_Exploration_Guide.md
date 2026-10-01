@@ -2,7 +2,7 @@
 title: "Préparation PCDE, section 4 : déploiement de bases de données évolutives"
 description: "Préparez la section 4 de l'examen PCDE — déployer des bases de données évolutives et hautement disponibles dans Google Cloud — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCDE_Section_4_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCDE_Section_4_Exploration_Guide.md @ cb682e8 sha256:cffe823e042f -->
 
 # Guide de préparation à la certification PCDE : Section 4 — Déployer des bases de données évolutives et hautement disponibles dans Google Cloud (Deploy scalable and highly available databases in Google Cloud) (~20 % de l'examen) {#pcde-certification-preparation-guide-section-4--deploy-scalable-and-highly-available-databases-in-google-cloud-20-of-the-exam}
 

@@ -2,7 +2,7 @@
 title: "Préparation PCNE, section 1 : conception et planification du réseau VPC"
 description: "Préparez la section 1 de l'examen PCNE — conception et planification d'un réseau VPC Google Cloud — avec des labs pratiques de déploiement RAD sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCNE_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCNE_Section_1_Exploration_Guide.md @ cb682e8 sha256:578363abe171 -->
 
 # Guide de préparation à la certification PCNE : Section 1 — Conception et planification d'un réseau VPC Google Cloud (Designing and planning a Google Cloud VPC network) (~21 % de l'examen) {#pcne-certification-preparation-guide-section-1--designing-and-planning-a-google-cloud-vpc-network-21-of-the-exam}
 

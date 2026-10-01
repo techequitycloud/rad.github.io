@@ -2,7 +2,7 @@
 title: "Préparation ACE, section 1 : configuration de l'environnement de solution cloud"
 description: "Préparez la section 1 de l'examen Associate Cloud Engineer (ACE) — configuration d'un environnement de solution cloud — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/ACE_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/ACE_Section_1_Exploration_Guide.md @ cb682e8 sha256:10ea82a60878 -->
 
 # Guide de préparation à la certification ACE : Section 1 — Configuration d'un environnement de solution cloud (Setting up a cloud solution environment) (~20 % de l'examen) {#ace-certification-preparation-guide-section-1--setting-up-a-cloud-solution-environment-20-of-the-exam}
 

@@ -2,7 +2,7 @@
 title: "Pratiques d'ingénierie"
 description: "Les pratiques d'ingénierie appliquées dans l'ensemble des modules de RAD Platform — infrastructure as code, CI/CD, tests, gestion des versions et gestion des mises en production."
 ---
-<!-- translated-from: docs/design/engineering_practices.md @ 6b90c32 -->
+<!-- translated-from: docs/design/engineering_practices.md @ 6b90c32 sha256:3ae8d76452bd -->
 
 # Pratiques d'ingénierie {#engineering-practices}
 

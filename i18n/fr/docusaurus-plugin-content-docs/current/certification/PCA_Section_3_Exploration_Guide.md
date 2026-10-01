@@ -2,7 +2,7 @@
 title: "Préparation PCA, section 3 : concevoir la sécurité et la conformité"
 description: "Préparez la section 3 de l'examen Professional Cloud Architect (PCA) — conception pour la sécurité et la conformité — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCA_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCA_Section_3_Exploration_Guide.md @ cb682e8 sha256:1063adbc6e3d -->
 
 # Guide de préparation à la certification PCA : Section 3 — Conception pour la sécurité et la conformité (Designing for security and compliance) (~17.5 % de l'examen) {#pca-certification-preparation-guide-section-3--designing-for-security-and-compliance-175-of-the-exam}
 

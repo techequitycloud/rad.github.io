@@ -2,7 +2,7 @@
 title: "L'excellence d'ingénierie, par défaut"
 description: "Les principes d'ingénierie qui sous-tendent les modules de RAD Platform — valeurs par défaut sécurisées, moindre privilège, Terraform reproductible et préparation opérationnelle."
 ---
-<!-- translated-from: docs/design/engineering_excellence.md @ 6b90c32 -->
+<!-- translated-from: docs/design/engineering_excellence.md @ 6b90c32 sha256:ba181dc441d1 -->
 
 # L'excellence d'ingénierie, par défaut {#engineering-excellence-by-default}
 

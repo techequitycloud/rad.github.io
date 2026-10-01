@@ -2,7 +2,7 @@
 title: "Préparation PSE, section 2 : sécurisation des communications et des frontières"
 description: "Préparez la section 2 de l'examen PSE — sécurisation des communications et mise en place de la protection des frontières — avec des labs de déploiement RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PSE_Section_2_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Section_2_Exploration_Guide.md @ cb682e8 sha256:cc12c846ee85 -->
 
 # Guide de préparation à la certification PSE : Section 2 — Sécurisation des communications et mise en place de la protection des frontières (Securing communications and establishing boundary protection) (~22 % de l'examen) {#pse-certification-preparation-guide-section-2--securing-communications-and-establishing-boundary-protection-22-of-the-exam}
 

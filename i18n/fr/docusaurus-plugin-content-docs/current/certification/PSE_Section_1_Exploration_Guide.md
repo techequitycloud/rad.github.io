@@ -2,7 +2,7 @@
 title: "Préparation PSE, section 1 : configuration de l'accès"
 description: "Préparez la section 1 de l'examen Professional Cloud Security Engineer (PSE) — configuration de l'accès — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PSE_Section_1_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Section_1_Exploration_Guide.md @ cb682e8 sha256:0ac145e400b7 -->
 
 # Guide de préparation à la certification PSE : Section 1 — Configuration de l'accès (Configuring access) (~25 % de l'examen) {#pse-certification-preparation-guide-section-1--configuring-access-25-of-the-exam}
 

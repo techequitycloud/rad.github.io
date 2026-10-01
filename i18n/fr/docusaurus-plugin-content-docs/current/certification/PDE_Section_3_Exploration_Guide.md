@@ -2,7 +2,7 @@
 title: "Préparation PDE, section 3 : ingénierie de la fiabilité des sites"
 description: "Préparez la section 3 de l'examen PDE — appliquer les pratiques d'ingénierie de la fiabilité des sites — avec des labs de déploiement RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PDE_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PDE_Section_3_Exploration_Guide.md @ cb682e8 sha256:47ff62afc35f -->
 
 # Guide de préparation à la certification PDE : Section 3 — Appliquer les pratiques d'ingénierie de la fiabilité des sites (Applying site reliability engineering practices) (~18 % de l'examen) {#pde-certification-preparation-guide-section-3--applying-site-reliability-engineering-practices-18-of-the-exam}
 

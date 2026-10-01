@@ -2,7 +2,7 @@
 title: "Préparation PSE, section 3 : protection des données"
 description: "Préparez la section 3 de l'examen Professional Cloud Security Engineer (PSE) — garantie de la protection des données — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PSE_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Section_3_Exploration_Guide.md @ cb682e8 sha256:e1131bdae133 -->
 
 # Guide de préparation à la certification PSE : Section 3 — Garantie de la protection des données (Ensuring data protection) (~23 % de l'examen) {#pse-certification-preparation-guide-section-3--ensuring-data-protection-23-of-the-exam}
 

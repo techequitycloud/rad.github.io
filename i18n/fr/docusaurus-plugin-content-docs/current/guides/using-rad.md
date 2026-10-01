@@ -2,7 +2,7 @@
 title: "Utiliser RAD"
 description: "Comment utiliser la plateforme RAD : connexion, navigation, rôles, déploiement de modules dans votre propre projet Google Cloud, crédits et facturation."
 ---
-<!-- translated-from: docs/guides/using-rad.md @ 6b90c32 -->
+<!-- translated-from: docs/guides/using-rad.md @ 6b90c32 sha256:61fb65b28740 -->
 
 # Utiliser RAD {#using-rad}
 

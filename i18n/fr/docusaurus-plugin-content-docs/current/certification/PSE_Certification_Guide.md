@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Security Engineer (PSE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Security Engineer (PSE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PSE_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PSE_Certification_Guide.md @ cb682e8 sha256:a787a9e24dd9 -->
 
 # Carte des labs de la certification Professional Cloud Security Engineer (PSE) {#professional-cloud-security-engineer-pse-certification-lab-map}
 

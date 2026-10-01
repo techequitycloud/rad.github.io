@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Developer (PCD)"
 description: "Associez chaque domaine de l'examen Professional Cloud Developer (PCD) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCD_Certification_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCD_Certification_Guide.md @ cb682e8 sha256:2368a05fe3da -->
 
 # Carte des labs de la certification Professional Cloud Developer (PCD) {#professional-cloud-developer-pcd-certification-lab-map}
 

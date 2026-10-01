@@ -2,7 +2,7 @@
 title: "Capacités de la plateforme"
 description: "Les capacités de RAD Platform sur Google Cloud : calcul, données, réseau, observabilité, résilience, multi-tenant, IA/LLM et portabilité."
 ---
-<!-- translated-from: docs/design/platform_capabilities.md @ 6b90c32 -->
+<!-- translated-from: docs/design/platform_capabilities.md @ 6b90c32 sha256:3b4dabe4c45f -->
 
 # Capacités de la plateforme {#platform-capabilities}
 

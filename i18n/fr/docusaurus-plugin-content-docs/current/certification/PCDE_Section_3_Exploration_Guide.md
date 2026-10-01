@@ -2,7 +2,7 @@
 title: "Préparation PCDE, section 3 : migration de solutions de données"
 description: "Préparez la section 3 de l'examen Professional Cloud Database Engineer (PCDE) — migrer des solutions de données — avec des labs RAD pratiques sur Google Cloud."
 ---
-<!-- translated-from: docs/certification/PCDE_Section_3_Exploration_Guide.md @ cb682e8 -->
+<!-- translated-from: docs/certification/PCDE_Section_3_Exploration_Guide.md @ cb682e8 sha256:5b74c0e1fb04 -->
 
 # Guide de préparation à la certification PCDE : Section 3 — Migrer des solutions de données (Migrate data solutions) (~23 % de l'examen) {#pcde-certification-preparation-guide-section-3--migrate-data-solutions-23-of-the-exam}
 
