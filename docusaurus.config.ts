@@ -10,9 +10,9 @@ const config: Config = {
   tagline: 'Hands-on Google Cloud certification training — from Associate to Professional',
   favicon: 'img/favicon.ico',
 
-  // Brand typography, matching techequity.cloud: Fraunces display, Inter body, JetBrains Mono.
+  // Typography: Inter Tight headings, Inter body, JetBrains Mono code.
   stylesheets: [
-    { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap',
+    { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap',
       type: 'text/css' },
   ],
 
