@@ -61,7 +61,7 @@ de son état persistant dans un unique fichier SQLite :
 /var/lib/headscale/noise_private.key      # Noise protocol (Tailscale v2) key, auto-generated
 ```
 
-Il n'existe pas de tâche distincte d'initialisation de la base de données —
+Il n'existe pas de job distinct d'initialisation de la base de données —
 Headscale crée et migre automatiquement son propre schéma au premier démarrage,
 de la même manière que sur un déploiement bare-metal ou sur VM.
 

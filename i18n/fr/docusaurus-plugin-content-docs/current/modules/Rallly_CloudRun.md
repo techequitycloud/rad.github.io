@@ -70,7 +70,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Les migrations s'exécutent au démarrage.** Le script `./docker-start.sh` du
   conteneur exécute `prisma migrate deploy` à chaque démarrage, si bien que les mises
   à niveau de version appliquent les modifications de schéma sans étape de migration
-  distincte. La tâche `db-init` se contente de provisionner la base de données vide et
+  distincte. Le job `db-init` se contente de provisionner la base de données vide et
   le rôle.
 
 ---
@@ -228,7 +228,7 @@ d'alerte facultatifs.
   vivacité de Cloud Run ne peut pas utiliser de socket TCP, et une vérification HTTP
   sur `/api/status` ferait redémarrer en boucle un conteneur sain mais pas encore
   entièrement prêt ; la sonde de démarrage TCP conditionne déjà l'acheminement.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -329,7 +329,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -352,7 +352,7 @@ d'explorer les ressources en cours d'exécution.
 | `NEXTAUTH_SECRET` (généré automatiquement) | N'en faire la rotation que pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions actives et les liens de connexion par e-mail en cours. |
 | `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou le rôle et détruit toutes les données. |
 | `database_type` | `POSTGRES_15` | Critique | Rallly ne prend en charge que PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `smtp_user` / `smtp_password` | À définir lorsque `smtp_host` est défini | Élevé | Avec `smtp_host` défini (par défaut `smtp.gmail.com`) mais des identifiants vides, les e-mails de connexion ne sont jamais envoyés et les utilisateurs ne peuvent pas se connecter. |
 | `base_url` | Votre domaine personnalisé | Élevé | S'il est laissé vide derrière un domaine personnalisé, les liens d'invitation et de connexion pointent vers l'URL `run.app` brute au lieu de l'adresse visitée par les utilisateurs. |
 | `enable_iap` | Uniquement pour les déploiements internes | Élevé | IAP place une barrière d'authentification Google devant Rallly ; les participants anonymes aux sondages ne peuvent pas y accéder. |

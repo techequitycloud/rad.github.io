@@ -210,7 +210,7 @@ d'alerte facultatifs sont désactivés par défaut
 ## 3. Comportement de l'application Chibisafe {#3-chibisafe-application-behaviour}
 
 - **Aucun job d'initialisation ni de migration.** Chibisafe gère son propre
-  stockage SQLite ; `Chibisafe_Common` n'injecte aucune tâche `db-init` ni de
+  stockage SQLite ; `Chibisafe_Common` n'injecte aucun job `db-init` ni de
   migration (`database_type =
   NONE`). La variable `initialization_jobs` est transmise au socle, mais n'est
   utile que pour des tâches de chargement de données personnalisées.
@@ -442,7 +442,7 @@ module.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche par défaut n'est injectée ; à utiliser uniquement pour des tâches de chargement de données personnalisées. |
+| `initialization_jobs` | `[]` | Aucun job par défaut n'est injecté ; à utiliser uniquement pour des tâches de chargement de données personnalisées. |
 | `cron_jobs` | `[]` | Jobs Cloud Run planifiés récurrents ; aucun par défaut. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -487,7 +487,7 @@ d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |

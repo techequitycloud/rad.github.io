@@ -168,7 +168,7 @@ d'écoute et le chemin de cache résolu au démarrage.
 
 - **Aucune configuration de base de données au premier déploiement.** ntfy n'a ni base de données externe ni
   étape de migration. Le point d'entrée prépare le répertoire du cache SQLite et lance immédiatement
-  `ntfy serve` via exec. Il n'y a pas de tâche `db-init` par défaut.
+  `ntfy serve` via exec. Il n'y a pas de job `db-init` par défaut.
 - **La persistance dépend du type de charge de travail.** Un `Deployment` sans état utilise un
   cache éphémère ; un `StatefulSet` avec un PVC en mode bloc (ou un montage NFS) rend l'historique
   des messages durable entre les redémarrages de pods.
@@ -330,7 +330,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des éventuelles tâches de configuration et d'import (aucune par défaut). |
+| `initialization_jobs` / `db_import_job` | Noms des éventuels jobs de configuration et d'import (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

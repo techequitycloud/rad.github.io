@@ -93,7 +93,7 @@ export REGION="us-central1"           # the region you deploy into
    echo "External IP: $EXTERNAL_IP"
    ```
 
-2. Vérifiez que le service est en bonne santé. Les sondes de démarrage, de liveness et de readiness d'AFFiNE
+2. Vérifiez que le service est en bonne santé. Les sondes de démarrage, de liveness et de disponibilité (readiness) d'AFFiNE
    ciblent toutes un simple `GET /` HTTP, qui renvoie 200 dès que le serveur est prêt — sans
    authentification (la sonde de démarrage accorde jusqu'à ~510 secondes, mais un
    pod en bonne santé devient généralement Ready bien avant, puisque la migration de schéma
@@ -131,7 +131,7 @@ export REGION="us-central1"           # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances puis en cliquant sur **Update** sur la
    page de détails du déploiement — le module gère la spécification de la charge de travail, la mise à l'échelle est donc une
    modification de configuration, et non un `kubectl scale` manuel (une modification manuelle serait
-   annulée lors du prochain apply). La collaboration en temps réel et la file de tâches d'AFFiNE passent
+   annulée lors du prochain apply). La collaboration en temps réel et la file de jobs d'AFFiNE passent
    par Redis ; plusieurs réplicas dépendent donc de `enable_redis = true` (la valeur
    par défaut) et de la VM NFS partagée. L'affinité de session (`ClientIP`) est définie par défaut
    pour maintenir les sessions de collaboration WebSocket sur le même pod.
@@ -164,7 +164,7 @@ export REGION="us-central1"           # the region you deploy into
    ```
 
 6. **Vérifiez la connectivité Redis** — AFFiNE a besoin de Redis pour la synchronisation des documents
-   en temps réel Yjs et pour sa file de tâches en arrière-plan ; par défaut, il se résout vers
+   en temps réel Yjs et pour sa file de jobs en arrière-plan ; par défaut, il se résout vers
    l'IP de la VM NFS/Redis partagée :
 
    ```bash

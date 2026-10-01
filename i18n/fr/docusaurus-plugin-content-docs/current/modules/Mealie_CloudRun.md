@@ -71,7 +71,7 @@ déploiement assemble un ensemble restreint et ciblé de services Google Cloud :
 - **Facturation à la requête par défaut.** `cpu_always_allocated = false`,
   `min_instance_count = 0` — l'extraction des recettes importées par URL dans
   Mealie s'exécute de manière synchrone dans la requête qui la déclenche, et non
-  en tant que tâche d'arrière-plan.
+  en tant que job d'arrière-plan.
 
 ---
 
@@ -162,7 +162,7 @@ est monté par défaut dans le conteneur sur `/app/data`.
 - **Chemin de santé.** Les sondes de démarrage et d'activité ciblent
   `/api/app/about` — le véritable point de terminaison d'information non
   authentifié de Mealie.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
   ```

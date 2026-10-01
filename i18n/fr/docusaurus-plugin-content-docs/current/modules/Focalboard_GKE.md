@@ -64,9 +64,9 @@ assemble un ensemble ciblé de services Google Cloud :
   adossé au PVC en mode bloc que le point d'entrée configure réellement.
 - **L'affinité de session est `ClientIP`**, afin que les requêtes d'un client
   atteignent le même pod.
-- **Aucune tâche de migration distincte.** Focalboard exécute ses propres migrations de
+- **Aucun job de migration distinct.** Focalboard exécute ses propres migrations de
   schéma au démarrage en tant qu'utilisateur de base de données applicatif (voir
-  `Focalboard_Common/main.tf`) ; la tâche `db-init` se contente de créer la base de
+  `Focalboard_Common/main.tf`) ; le job `db-init` se contente de créer la base de
   données et le rôle, et d'accorder les droits.
 - **`FOCALBOARD_ADMIN_PASSWORD` est généré automatiquement** et stocké dans Secret
   Manager, puis injecté comme variable d'environnement secrète du conteneur — voir la
@@ -113,7 +113,7 @@ mise à l'échelle Autopilot.
 Focalboard stocke toutes les données de l'application (tableaux, cartes, blocs,
 utilisateurs) dans une instance gérée Cloud SQL for PostgreSQL 15. Les pods y accèdent
 via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est
-exposée. Lors du premier déploiement, la tâche `db-init` (`postgres:15-alpine`) crée de
+exposée. Lors du premier déploiement, le job `db-init` (`postgres:15-alpine`) crée de
 manière idempotente la base de données, le rôle et les droits de l'application — le
 binaire de Focalboard exécute ensuite lui-même les migrations de schéma au démarrage.
 
@@ -205,15 +205,15 @@ règles d'alerte facultatifs sont disponibles (`uptime_check_config.enabled` vau
 
 ## 3. Comportement de l'application Focalboard {#3-focalboard-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init`
-  exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que Cloud SQL accepte les
+- **Configuration de la base de données au premier déploiement.** Le job `db-init`
+  exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que Cloud SQL accepte les
   connexions, crée de manière idempotente le rôle applicatif (privilège `CREATEDB`) et
   la base de données, accorde tous les privilèges sur la base de données,
   accorde/transfère le schéma `public` à l'utilisateur applicatif (le transfert de
   propriété du schéma n'est pas bloquant en cas d'échec), puis signale au sidecar Cloud
-  SQL Auth Proxy de s'arrêter (`quitquitquit`) afin que le pod du Job se termine. La
-  tâche peut être relancée sans risque (`execute_on_apply = true`).
-- **Aucune tâche de migration distincte — Focalboard se migre lui-même au démarrage.**
+  SQL Auth Proxy de s'arrêter (`quitquitquit`) afin que le pod du Job se termine. Le
+  job peut être relancé sans risque (`execute_on_apply = true`).
+- **Aucun job de migration distinct — Focalboard se migre lui-même au démarrage.**
   Le commentaire du module `Focalboard_Common` l'indique explicitement : « Focalboard
   runs its own schema migrations on boot; no Postgres extensions are required. »
   L'utilisateur applicatif doit être pleinement propriétaire du schéma `public` pour
@@ -261,7 +261,7 @@ règles d'alerte facultatifs sont disponibles (`uptime_check_config.enabled` vau
   `initial_delay_seconds=60`, `timeout_seconds=10`, `period_seconds=15`,
   `failure_threshold=30` (jusqu'à ~8,5 minutes de marge au démarrage). Sonde de
   vivacité : **HTTP** `GET /`, `initial_delay_seconds=60`, `timeout_seconds=5`,
-  `period_seconds=30`, `failure_threshold=3`. Une sonde de disponibilité (**HTTP**
+  `period_seconds=30`, `failure_threshold=3`. Une sonde de disponibilité (readiness) (**HTTP**
   `GET /`, `initial_delay=30s`, `period=10s`, `failure_threshold=3`) est également codée
   en dur dans `Focalboard_Common` et n'est pas exposée en tant que variable.
 - **L'URL du service se résout automatiquement.** Le `serverRoot` de `config.json` se
@@ -372,7 +372,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

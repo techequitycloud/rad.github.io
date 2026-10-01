@@ -194,7 +194,7 @@ défaut).
 
 - **Aucun job d'initialisation ne s'exécute par défaut.** `Gokapi_Common` ne
   fournit aucune entrée `initialization_jobs` par défaut — Gokapi gère son propre
-  stockage et n'a aucune base de données à amorcer. Seules les tâches fournies par
+  stockage et n'a aucune base de données à amorcer. Seuls les jobs fournis par
   l'utilisateur (pour un chargement de données ou une migration personnalisés)
   apparaissent dans les Jobs Kubernetes.
 - **La configuration au premier démarrage est entièrement interactive.** Il n'y a
@@ -319,7 +319,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation fournis par l'utilisateur (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation fournis par l'utilisateur (aucun par défaut). |
 | `statefulset_name` | Nom du StatefulSet. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

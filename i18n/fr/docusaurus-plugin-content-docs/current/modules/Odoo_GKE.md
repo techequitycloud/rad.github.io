@@ -85,7 +85,7 @@ de charge de travail (Deployment ou StatefulSet).
 
 Odoo stocke toutes les données de l'ERP (contacts, factures, stocks, commandes) dans une instance gérée Cloud SQL
 for PostgreSQL. Les pods s'y connectent en privé via le sidecar **Cloud SQL Auth Proxy**
-sur un socket Unix ; aucune IP publique n'est donc exposée. Au premier déploiement, la tâche `db-init`
+sur un socket Unix ; aucune IP publique n'est donc exposée. Au premier déploiement, le job `db-init`
 crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
@@ -198,7 +198,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
     `/mnt/extra-addons` avec la propriété `101:101` (l'utilisateur du processus Odoo). Doit réussir
     avant le démarrage d'Odoo.
   - `db-init` — s'exécute après `nfs-init` et crée de manière idempotente la base de données PostgreSQL et
-    l'utilisateur de l'application. Les deux tâches peuvent être relancées sans risque.
+    l'utilisateur de l'application. Les deux jobs peuvent être relancés sans risque.
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" -l job-name=nfs-init
@@ -332,7 +332,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `nfs-init` + `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `nfs-init` + `db-init`. |
 | `cron_jobs` | `[]` | Tâches planifiées définies par l'utilisateur (CronJobs Kubernetes). |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
@@ -449,7 +449,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -471,7 +471,7 @@ d'explorer les ressources en cours d'exécution.
 | `enable_nfs` | `true` | Critique | Sans NFS, les pièces jointes et les données de session sont isolées dans chaque pod et perdues au redémarrage. |
 | `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'ERP. |
 | `container_resources.memory_limit` | `≥ 4Gi` pour la production | Critique | La valeur par défaut `512Mi` provoque immédiatement un OOM Python lors du chargement des modules. Augmentez-la toujours à au moins `2Gi`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Kubernetes interprète des entiers nus comme des octets, ce qui bloque toute planification. |
 | `explicit_secret_values` (ODOO_MASTER_PASS) | fort et unique | Critique | Le gestionnaire de bases de données à l'adresse `/web/database/manager` n'est protégé que par ce mot de passe ; une valeur faible permet à quiconque peut atteindre l'URL de supprimer la base de données. |
 | `enable_redis` | `true` lorsque `max_instance_count > 1` | Élevé | Sans Redis ni `session_affinity = ClientIP`, les utilisateurs sont déconnectés lorsqu'ils sont routés vers un autre pod. |

@@ -71,7 +71,7 @@ export REGION="us-central1"          # the region you deploy into
 2. La plateforme provisionne le service Cloud Run, une base de données Cloud SQL (PostgreSQL 15)
    avec ses secrets Secret Manager, un stockage Redis/GCS facultatif, construit l'image
    du conteneur et exécute trois jobs ponctuels d'initialisation à la suite (`db-init`, puis
-   `twenty-migrate`, puis `twenty-verify` — une tâche de garde qui fait échouer le déploiement si le
+   `twenty-migrate`, puis `twenty-verify` — un job de garde qui fait échouer le déploiement si le
    schéma se retrouve vide). Les premiers déploiements prennent environ **20–35 minutes** (la création de Cloud SQL
    en représente l'essentiel).
 
@@ -177,7 +177,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
   secret du mot de passe de la base existe, que `enable_cloudsql_volume` vaut `true` et que les trois
-  jobs d'initialisation (`db-init`, `twenty-migrate`, `twenty-verify`) se sont terminées
+  jobs d'initialisation (`db-init`, `twenty-migrate`, `twenty-verify`) se sont terminés
   avec succès.
 - **Échec d'un job d'initialisation :** listez les exécutions et lisez les journaux de celle qui a échoué :
   ```bash
@@ -193,11 +193,11 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   l'échec d'un job d'initialisation ne fait PAS échouer à lui seul l'application du module ; un job
   `twenty-migrate` en situation de concurrence ou en échec sur un nouveau tenant peut donc laisser le service Ready et servant des requêtes sur une base de données
   **vide** — chaque requête du backend échoue alors avec
-  `relation "core.keyValuePair" does not exist`. C'est précisément le mode de défaillance que la
-  tâche de garde `twenty-verify` est censée détecter (elle fait échouer l'application de manière visible si le schéma `core`
+  `relation "core.keyValuePair" does not exist`. C'est précisément le mode de défaillance que le
+  job de garde `twenty-verify` est censé détecter (il fait échouer l'application de manière visible si le schéma `core`
   ne contient aucune table). Si vous rencontrez malgré tout ce problème — par exemple si la garde a été contournée via une
   surcharge personnalisée de `initialization_jobs` — consultez les journaux d'exécution de `twenty-migrate` à la recherche
-  d'une situation de concurrence avec Cloud SQL sur une instance tout juste provisionnée, puis relancez la tâche manuellement :
+  d'une situation de concurrence avec Cloud SQL sur une instance tout juste provisionnée, puis relancez le job manuellement :
   ```bash
   gcloud run jobs execute "${SERVICE}-twenty-migrate" --project="$PROJECT" --region="$REGION" --wait
   ```

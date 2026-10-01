@@ -30,8 +30,8 @@ guides des plateformes ([Twenty_GKE](Twenty_GKE.md),
 | Secret applicatif | Génère `APP_SECRET` / `ENCRYPTION_KEY` et le stocke dans **Secret Manager** | Récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Épingle `twentycrm/twenty` et l'enveloppe d'un point d'entrée personnalisé via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
-| Amorçage de la base de données | Définit trois tâches de premier déploiement : `db-init` (crée la base et l'utilisateur), `twenty-migrate` (exécute les migrations de schéma) et `twenty-verify` (fait échouer l'apply si le schéma reste vide) | Sortie `initialization_jobs` |
-| Mode des tâches d'arrière-plan | Définit `MESSAGE_QUEUE_TYPE` sur `pg-boss` (par défaut) ou `bull-mq` (lorsque Redis est activé) | Comportement de l'application dans les guides des plateformes |
+| Amorçage de la base de données | Définit trois jobs de premier déploiement : `db-init` (crée la base et l'utilisateur), `twenty-migrate` (exécute les migrations de schéma) et `twenty-verify` (fait échouer l'apply si le schéma reste vide) | Sortie `initialization_jobs` |
+| Mode des jobs d'arrière-plan | Définit `MESSAGE_QUEUE_TYPE` sur `pg-boss` (par défaut) ou `bull-mq` (lorsque Redis est activé) | Comportement de l'application dans les guides des plateformes |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** lorsque `enable_gcs_storage = true` | Sortie `storage_buckets` |
 | Paramètres de base | Injecte les variables d'environnement de base (`SERVER_URL`, `FRONT_BASE_URL`, `STORAGE_TYPE`, `DISABLE_DB_MIGRATIONS`) | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage et de vivacité (`/healthz` avec une fenêtre généreuse au premier démarrage) | Section Observabilité des guides des plateformes |
@@ -69,7 +69,7 @@ partagé des secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Twenty exige **PostgreSQL 15** ; le moteur est imposé et MySQL n'est pas pris en
-charge. Au premier déploiement, trois tâches ponctuelles s'exécutent l'une après
+charge. Au premier déploiement, trois jobs ponctuels s'exécutent l'un après
 l'autre avant le démarrage de l'application :
 
 1. **`db-init`** — utilise l'image `postgres:15-alpine`, se connecte à Cloud SQL via
@@ -82,13 +82,13 @@ l'autre avant le démarrage de l'application :
 
 2. **`twenty-migrate`** — utilise l'image applicative Twenty déployée avec
    `DISABLE_DB_MIGRATIONS=false` pour exécuter les migrations de schéma TypeORM et
-   enregistrer les tâches cron d'arrière-plan dans la base. Elle utilise le point
-   d'entrée propre à Twenty, aucun outil externe n'est donc nécessaire. Cette tâche
+   enregistrer les jobs cron d'arrière-plan dans la base. Il utilise le point
+   d'entrée propre à Twenty, aucun outil externe n'est donc nécessaire. Ce job
    attend la fin de `db-init` et effectue jusqu'à 3 nouvelles tentatives, car
    l'instance Cloud SQL d'un nouveau tenant peut être encore en cours de
-   stabilisation lorsqu'elle démarre.
+   stabilisation lorsqu'il démarre.
 
-3. **`twenty-verify`** — une tâche de garde qui attend la fin de `twenty-migrate`.
+3. **`twenty-verify`** — un job de garde qui attend la fin de `twenty-migrate`.
    Un échec de job d'initialisation NE fait PAS échouer à lui seul l'apply du
    module ; un `twenty-migrate` concurrent ou échoué pourrait donc sinon laisser un
    service apparemment sain pointant vers une base de données **vide** — chaque
@@ -98,7 +98,7 @@ l'autre avant le démarrage de l'application :
    échouer l'apply** s'il n'en trouve aucune, transformant un déploiement silencieux
    sur une base vide en une erreur visible et réessayable.
 
-Les trois tâches peuvent être réexécutées sans risque. Le conteneur applicatif
+Les trois jobs peuvent être réexécutés sans risque. Le conteneur applicatif
 principal s'exécute avec `DISABLE_DB_MIGRATIONS=true` afin que les démarrages à
 froid suivants restent rapides (quelques secondes au lieu de plusieurs minutes).
 Inspectez directement la base de données avec :
@@ -117,7 +117,7 @@ sorties du déploiement de la plateforme.
 `Twenty_Common` établit l'environnement Twenty de base afin que l'application
 démarre correctement dès le premier démarrage :
 
-- **Mode de la file de tâches** — `MESSAGE_QUEUE_TYPE` vaut par défaut `pg-boss`
+- **Mode de la file de jobs** — `MESSAGE_QUEUE_TYPE` vaut par défaut `pg-boss`
   (adossé à PostgreSQL, sans infrastructure supplémentaire). Lorsque
   `enable_redis = true`, il passe à `bull-mq`, qui nécessite une connexion Redis et
   un processus worker distinct.

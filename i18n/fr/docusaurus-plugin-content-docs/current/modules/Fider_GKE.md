@@ -102,7 +102,7 @@ Fider stocke toutes les données de l'application (publications, votes,
 commentaires, utilisateurs, paramètres) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods y accèdent de manière privée via le sidecar
 **Cloud SQL Auth Proxy** sur la boucle locale `127.0.0.1` ; aucune IP publique n'est
-exposée. Lors du premier déploiement, la tâche `db-init` crée le rôle et la base de
+exposée. Lors du premier déploiement, le job `db-init` crée le rôle et la base de
 données de l'application ; Fider exécute ensuite ses propres migrations au
 démarrage.
 
@@ -209,12 +209,12 @@ les liens d'inscription et d'invitation apparaissent dans les journaux des pods.
 
 ## 3. Comportement de l'application Fider {#3-fider-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte via le
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via le
   Cloud SQL Auth Proxy et crée de manière idempotente le rôle et la base de données
   `fider`, accorde les privilèges, transfère la propriété du schéma `public` au rôle
-  de l'application et signale au sidecar du proxy de s'arrêter afin que le pod de la
-  tâche se termine. La tâche peut être réexécutée sans risque.
+  de l'application et signale au sidecar du proxy de s'arrêter afin que le pod du
+  job se termine. Le job peut être réexécuté sans risque.
 - **Migrations de schéma au démarrage.** Le point d'entrée personnalisé exécute
   `./fider migrate` avant de lancer le serveur (le `CMD` de l'image est remplacé par
   `./fider` uniquement). Les migrations sont idempotentes ; la mise à niveau de la
@@ -243,7 +243,7 @@ les liens d'inscription et d'invitation apparaissent dans les journaux des pods.
   progressive exécuterait brièvement deux pods sur le même volume NFS et la même base
   de données partagée ; App_GKE définit donc la stratégie `Recreate` pour les
   applications adossées à NFS.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -347,7 +347,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -371,7 +371,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `JWT_SECRET` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation invalide toutes les sessions actives et les liens de connexion envoyés par e-mail encore en attente. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit toutes les données. |
 | `database_type` | `POSTGRES_15` | Critique | Tout moteur autre que PostgreSQL empêche le démarrage — Fider ne fonctionne qu'avec Postgres. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
 | `container_port` | `3000` | Élevé | GKE n'injecte pas automatiquement `PORT` ; un port incorrect fait que les sondes visent un port inactif et le pod ne devient jamais Ready. |
 | `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL sur GKE. |
 | `application_version` | épingler un tag SHA ; `latest` → `stable` | Élevé | `getfider/fider` n'a pas de tag `:latest` ; le module épingle `latest` sur `stable`, mais épinglez explicitement une version pour des mises à niveau reproductibles. |

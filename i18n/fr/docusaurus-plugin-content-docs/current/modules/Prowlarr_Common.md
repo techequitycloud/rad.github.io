@@ -43,7 +43,7 @@ guide de plateforme ([Prowlarr_GKE](Prowlarr_GKE.md)) et les guides du socle
 | Authentification | **Aucun secret généré** — Prowlarr est livré sans compte administrateur par défaut ; les opérateurs activent l'authentification via Settings → General → Security dans l'interface web s'ils le souhaitent | Sorties `secret_ids` / `secret_values` (deux tables vides) |
 | Image de conteneur | L'image **officielle** `lscr.io/linuxserver/prowlarr`, déployée sans modification — ni Dockerfile, ni build, ni point d'entrée personnalisé | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | **Aucun** — Prowlarr utilise une base de données SQLite interne et intégrée (mode WAL) à `/config/prowlarr.db` (`database_type = "NONE"`) | §3 ci-dessous et guide de plateforme |
-| Initialisation de la base de données | **Aucune** — il n'y a pas de tâche `db-init` ; Prowlarr gère lui-même son schéma | n/a |
+| Initialisation de la base de données | **Aucune** — il n'y a pas de job `db-init` ; Prowlarr gère lui-même son schéma | n/a |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage`, monté à `/config` uniquement lorsqu'aucun PVC en mode bloc n'est utilisé | Sortie `storage_buckets` |
 | Paramètres principaux | Port de conteneur `9696` ; aucun environnement supplémentaire requis pour le premier démarrage | Comportement de l'application dans le guide de plateforme |
 | Contrôles de santé | Fournit les sondes de démarrage/vivacité par défaut ciblant `/ping` | §6 ci-dessous |
@@ -84,7 +84,7 @@ interne et intégrée, en mode WAL**, à `/config/prowlarr.db`. Par conséquent 
 
 - `database_type = "NONE"` — aucune instance, base de données ni utilisateur
   Cloud SQL n'est créé.
-- Il n'y a **pas de tâche `db-init`** — Prowlarr crée et migre lui-même son schéma
+- Il n'y a **pas de job `db-init`** — Prowlarr crée et migre lui-même son schéma
   SQLite au premier démarrage ; rien ne doit être initialisé à l'avance.
 - Aucune extension PostgreSQL, aucun plugin MySQL et aucun Redis n'interviennent
   (`enable_redis` est codé en dur à `false` par le `main.tf` de `Prowlarr_GKE`).

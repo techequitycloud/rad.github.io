@@ -32,7 +32,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Flask/Gunicorn, 1 vCPU / 512 MiB par défaut, mise à l'échelle automatique horizontale |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire ; la tâche `db-init` crée le schéma au premier déploiement |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire ; le job `db-init` crée le schéma au premier déploiement |
 | Fichiers partagés | Filestore (NFS) | Activé par défaut ; volume partagé monté sur `/mnt/nfs` |
 | Stockage d'objets | Cloud Storage | Un unique bucket `data` provisionné par défaut |
 | Cache et sessions | Redis | Facultatif (`enable_redis = false` par défaut) ; lorsqu'il est activé, un sidecar interne `redis:alpine` est déployé |
@@ -43,9 +43,9 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 - **PostgreSQL 15 est imposé.** Le moteur de base de données est fixé à `POSTGRES_15` par
   `Sample_Common` et ne peut pas être remplacé par MySQL ni par `NONE` dans ce module.
-- **Une tâche `db-init` s'exécute à chaque premier déploiement** pour créer la base de
-  données PostgreSQL, l'utilisateur et le schéma. Elle est idempotente et peut être
-  relancée sans risque.
+- **Un job `db-init` s'exécute à chaque premier déploiement** pour créer la base de
+  données PostgreSQL, l'utilisateur et le schéma. Il est idempotent et peut être
+  relancé sans risque.
 - **Redis est désactivé par défaut.** Lorsque `enable_redis = true` et que `redis_host`
   est vide, le module déploie automatiquement un sidecar interne `redis:alpine` et définit
   `REDIS_HOST=127.0.0.1`.
@@ -339,7 +339,7 @@ leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée de `Sample_Common`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré de `Sample_Common`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrentes. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires supplémentaires. |
 
@@ -463,7 +463,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'importation. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'importation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -482,14 +482,14 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES` / `POSTGRES_15` | Critique | PostgreSQL 15 est imposé par `Sample_Common` ; passer à MySQL ou à `NONE` casse la tâche `db-init` et le démarrage. |
+| `database_type` | `POSTGRES` / `POSTGRES_15` | Critique | PostgreSQL 15 est imposé par `Sample_Common` ; passer à MySQL ou à `NONE` casse le job `db-init` et le démarrage. |
 | `application_database_name` / `_user` | défini une seule fois | Critique | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
 | `application_name` | défini une seule fois | Critique | Intégré aux noms des ressources et aux identifiants des secrets Secret Manager. Le modifier après le déploiement rend orphelins les secrets existants et reconstruit toutes les ressources nommées. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification des pods. |
 | `container_port` | `8080` | Critique | Une incohérence fait échouer la sonde de démarrage — le pod n'atteint jamais l'état Ready. |
 | Chemin de `startup_probe_config` / `health_check_config` | `/healthz` pour une vérification sans base de données | Moyen | Les valeurs par défaut (démarrage TCP `/`, vivacité HTTP `GET /`) sollicitent la route du compteur de visiteurs, ce qui ajoute une écriture en base de données à chaque vérification de vivacité. |
-| `enable_cloudsql_volume` | `true` | Critique | `false` avec une base de données PostgreSQL : toutes les connexions à la base de données échouent au démarrage. La tâche `db-init` échoue également. |
+| `enable_cloudsql_volume` | `true` | Critique | `false` avec une base de données PostgreSQL : toutes les connexions à la base de données échouent au démarrage. Le job `db-init` échoue également. |
 | `enable_nfs` | `true` avec `network_tags = ["nfsserver"]` | Élevé | Retirer `nfsserver` des tags réseau casse la règle de pare-feu NFS et empêche les montages. |
 | `enable_redis` | `false` (par défaut) | Élevé | `true` sans `redis_host` joignable (ou avec NFS désactivé) : l'application Flask journalise un avertissement et se rabat sur les cookies ; pas de plantage franc, mais le stockage des sessions se dégrade silencieusement. |
 | `max_instance_count` | `1` en développement ; à augmenter en gardant une marge sur le pool de connexions à la base de données | Élevé | Dépasser la limite de connexions de Cloud SQL : tous les pods voient leurs requêtes à la base de données échouer simultanément. |

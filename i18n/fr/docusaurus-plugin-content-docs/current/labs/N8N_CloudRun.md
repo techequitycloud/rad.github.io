@@ -179,7 +179,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run services logs read "$SERVICE" --project="$PROJECT" --region="$REGION" --limit=100
   ```
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
-  secret du mot de passe de la base existe et que le job d'initialisation (`db-init`) s'est terminée
+  secret du mot de passe de la base existe et que le job d'initialisation (`db-init`) s'est terminé
   avec succès. Au démarrage, le conteneur n8n traduit les variables `DB_*` injectées par la plateforme
   en variables natives n8n `DB_POSTGRESDB_*` ; une variable manquante ou incorrecte se manifestera
   ici.

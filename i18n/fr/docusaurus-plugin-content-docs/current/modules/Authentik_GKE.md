@@ -63,7 +63,7 @@ un ensemble ciblé de services Google Cloud :
   sur GHCR ; le build épingle `latest` sur une version éprouvée (`2026.5.4`) via
   l'ARG de build propre à l'application `AUTHENTIK_VERSION`.
 - **Les migrations s'exécutent automatiquement au démarrage**, protégées par un verrou consultatif
-  PostgreSQL afin que des pods concurrents n'entrent pas en collision — pas de tâche de migration distincte.
+  PostgreSQL afin que des pods concurrents n'entrent pas en collision — pas de job de migration distinct.
 - **Les points de terminaison de santé ne sont pas authentifiés** : démarrage `GET /-/health/ready/`,
   vivacité `GET /-/health/live/`.
 
@@ -105,7 +105,7 @@ le mode SSL selon le type de connexion — `disable` pour le TCP loopback du sid
 (`127.0.0.1` / `localhost` ; le proxy termine le TLS mais ne parle pas SSL
 lui-même, si bien qu'exiger SSL à cet endroit échoue avec « server does not support SSL, but SSL
 was required »), `require` uniquement pour une connexion TCP directe vers tout autre hôte. Lors du premier déploiement,
-une unique tâche (Job) `db-init` crée la base de données et le rôle propres au locataire.
+un unique job `db-init` crée la base de données et le rôle propres au locataire.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, sauvegardes, flags et métriques.
 - **CLI :**
@@ -185,11 +185,11 @@ stdout/stderr du conteneur). Les métriques de GKE et de Cloud SQL arrivent dans
 - **Configuration de la base de données au premier déploiement.** Un unique job d'initialisation exécute `db-init.sh`
   avec `postgres:15-alpine` : il attend PostgreSQL, crée le rôle et la base de données
   propres au locataire, accorde les privilèges, accorde `cloudsqlsuperuser` par précaution,
-  et signale au sidecar proxy de s'arrêter pour que la tâche se termine. Idempotent et
+  et signale au sidecar proxy de s'arrêter pour que le job se termine. Idempotent et
   réexécutable sans risque.
 - **Démarrage avec auto-migration.** Le serveur authentik exécute ses propres migrations Django à
   chaque démarrage, protégées par un verrou consultatif PostgreSQL afin que des pods concurrents n'entrent pas
-  en collision. Il n'existe pas de tâche de migration distincte. Le premier démarrage exécute la suite complète —
+  en collision. Il n'existe pas de job de migration distinct. Le premier démarrage exécute la suite complète —
   comptez plusieurs minutes avant que `/-/health/ready/` ne renvoie 200 ; la sonde de démarrage
   accorde environ 11 minutes.
 - **Première connexion.** Connectez-vous en tant que **`akadmin`** avec la valeur de `bootstrap_email` et
@@ -209,7 +209,7 @@ stdout/stderr du conteneur). Les métriques de GKE et de Cloud SQL arrivent dans
   curl -s "$SERVICE_URL/-/health/ready/" -o /dev/null -w '%{http_code}\n'   # 200 = migrated + DB reachable
   curl -s "$SERVICE_URL/-/health/live/"  -o /dev/null -w '%{http_code}\n'   # 200 = process alive
   ```
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -302,7 +302,7 @@ héritées d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par d
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser l'unique job intégré `db-init`. |
 | `cron_jobs` | `[]` | Inutile — le worker co-localisé exécute les tâches planifiées d'authentik. |
 | `additional_services` | `[]` | À utiliser pour des outposts supplémentaires (p. ex. LDAP/RADIUS) si nécessaire. |
 
@@ -401,7 +401,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` / `github_repository_*` | État et détails du CI/CD. |

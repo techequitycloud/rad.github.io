@@ -40,7 +40,7 @@ l'application.
 | Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle, les droits et l'extension `hstore` | Sortie `initialization_jobs` |
 | Stockage objet | Aucun — Miniflux conserve chaque octet de son état dans PostgreSQL (l'output `storage_buckets` est vide) | s.o. |
 | Paramètres de base | Définit l'environnement Miniflux de référence : migrations de schéma au démarrage, création de l'administrateur, adresse d'écoute, URL de base | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité par défaut ciblant `/healthcheck` | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité (readiness) par défaut ciblant `/healthcheck` | §Observabilité dans les guides des plateformes |
 
 ---
 

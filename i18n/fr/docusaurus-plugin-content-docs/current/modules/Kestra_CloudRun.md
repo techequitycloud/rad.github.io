@@ -192,7 +192,7 @@ par défaut — activez-le pour la surveillance en production).
   le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et
   l'utilisateur Kestra, accorde les privilèges et réinitialise le schéma public
   afin que Flyway puisse appliquer proprement toutes les migrations sur une
-  instance Cloud SQL neuve. Une fois terminée, la tâche signale au proxy de
+  instance Cloud SQL neuve. Une fois terminé, le job signale au proxy de
   s'arrêter proprement.
 - **Migrations Flyway au démarrage.** Kestra exécute des migrations de schéma
   basées sur Flyway à chaque démarrage. Le paramètre
@@ -343,7 +343,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. Fournissez une liste non vide pour la remplacer entièrement. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Fournissez une liste non vide pour le remplacer entièrement. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run complémentaires déployés aux côtés du service Kestra principal. |
 
@@ -394,7 +394,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration initiale. |
+| `initialization_jobs` | Noms des jobs de configuration initiale. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -415,7 +415,7 @@ d'explorer les ressources en cours d'exécution.
 | `db_name` | `kestra` — défini une fois pour toutes | Critique | Immuable après le premier déploiement ; le modifier connecte Kestra à une base de données vide, ce qui fait perdre tous les flux, l'historique des exécutions, les déclencheurs et les espaces de noms. |
 | `application_name` | `kestra` — défini une fois pour toutes | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne leur recréation complète avec perte de données. |
 | `KESTRA_BASICAUTH_ENABLED` (injecté à `true`) | laissez la valeur injectée | Critique | Le passer à `false` expose l'intégralité de l'interface et de l'API REST de Kestra sans authentification. Ne le désactivez que derrière un proxy d'authentification de confiance (IAP, Cloud Armor). |
-| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false`, sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `max_instance_count` | `1` | Élevé | Plusieurs instances provoquent des conflits de verrouillage de la file d'attente PostgreSQL et la double attribution de tâches dans la Community Edition. |
 | `min_instance_count` | `1` | Élevé | La valeur `0` fait manquer des déclencheurs planifiés pendant les périodes de démarrage à froid. |
 | `memory_limit` | `4Gi` | Élevé | Des valeurs inférieures à 2 Gio provoquent des OutOfMemoryError de la JVM sous une charge d'exécutions concurrentes. |

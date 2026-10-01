@@ -48,7 +48,7 @@ données à l'exécution, puis passe la main au point d'entrée propre à Forgej
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le seul moteur qui fonctionne réellement.** `database_type`
-  vaut `POSTGRES_15` par défaut ; le script de la tâche `db-init` est entièrement
+  vaut `POSTGRES_15` par défaut ; le script du job `db-init` est entièrement
   écrit pour `psql`, si bien que choisir MySQL ou `NONE` casse la configuration
   de la base de données, même si les métadonnées de la variable les proposent.
 - **Cloud SQL est joint par défaut en TCP direct sur IP privée, et non par un socket.**
@@ -68,10 +68,10 @@ données à l'exécution, puis passe la main au point d'entrée propre à Forgej
   Kubernetes (Cloud Run n'a pas de concept équivalent — une nouvelle révision ne
   reçoit du trafic qu'une fois ses vérifications de santé réussies, après quoi
   les instances de la révision précédente sont drainées).
-- **Pas de tâche de migration distincte.** `GITEA__security__INSTALL_LOCK = "true"`
+- **Pas de job de migration distinct.** `GITEA__security__INSTALL_LOCK = "true"`
   court-circuite l'assistant d'installation web de Forgejo ; l'image
   `forgejo/forgejo` crée et migre son propre schéma au démarrage du conteneur,
-  dans la base de données vide préparée par la tâche `db-init`.
+  dans la base de données vide préparée par le job `db-init`.
 - **Aucun compte administrateur n'est amorcé par Terraform.** Aucun job
   d'initialisation ne crée d'utilisateur administrateur Forgejo — consultez la
   [section 3](#3-forgejo-application-behaviour) pour les options côté opérateur.
@@ -267,16 +267,16 @@ tests de disponibilité et des règles d'alerte en option.
 
 ## 3. Comportement de l'application Forgejo {#3-forgejo-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche Cloud
-  Run `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que
+- **Configuration de la base de données au premier déploiement.** Le job Cloud
+  Run `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que
   Cloud SQL accepte les connexions, crée de manière idempotente (ou redéfinit le
   mot de passe de) le rôle applicatif avec `CREATEDB`, crée la base de données
   appartenant à ce rôle et accorde tous les privilèges sur la base de données et
   sur le schéma `public` (PG15+). Le script n'installe aucune extension
   Postgres — les propres migrations de Forgejo créent tout ce dont il a besoin.
-  La tâche peut être relancée sans risque (`execute_on_apply = true`,
+  Le job peut être relancé sans risque (`execute_on_apply = true`,
   `max_retries = 3`).
-- **Pas de tâche de migration distincte — la création du schéma a lieu au démarrage du conteneur.**
+- **Pas de job de migration distinct — la création du schéma a lieu au démarrage du conteneur.**
   Avec `GITEA__security__INSTALL_LOCK = "true"`, l'assistant d'installation web
   de Forgejo est ignoré ; le point d'entrée d'origine `forgejo/forgejo` crée et
   migre le schéma dans la base de données vide au premier démarrage, puis
@@ -321,7 +321,7 @@ tests de disponibilité et des règles d'alerte en option.
   `timeout_seconds=5`, `period_seconds=20`, `failure_threshold=10` ; sonde de
   vivacité `initial_delay_seconds=15`, `timeout_seconds=5`, `period_seconds=30`,
   `failure_threshold=3`.
-- **Inspecter l'exécution des tâches et la configuration en cours :**
+- **Inspecter l'exécution des jobs et la configuration en cours :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <db-init-job-name> --project "$PROJECT" --region "$REGION"
@@ -460,7 +460,7 @@ aucun SQL personnalisé. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Non utilisée — Forgejo n'a par défaut aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -520,7 +520,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -543,7 +543,7 @@ d'explorer les ressources en cours d'exécution.
 | `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et l'utilisateur et rend orphelins tous les dépôts, tickets et PR stockés sous l'ancien rôle. |
 | `SECRET_KEY` / `INTERNAL_TOKEN` (générés automatiquement) | Ne jamais modifier | Critique | Leur rotation invalide les données chiffrées 2FA/OAuth ainsi que l'authentification de l'API interne de Forgejo, ce qui casse les opérations Git et d'API. |
 | `enable_nfs` | `true` | Critique | La désactiver rend éphémères les dépôts, les objets LFS et les pièces jointes — ils sont perdus lorsque l'instance de conteneur est remplacée. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `enable_cloudsql_volume` | `false` (par défaut) ou `true` | Élevé | Par défaut, la connexion se fait en TCP direct sur IP privée avec SSL obligatoire — assurez-vous que `vpc_egress_setting` et les règles de pare-feu l'autorisent. Définir `true` bascule vers le socket Unix ; la sélection du mode SSL par le point d'entrée suppose le mode réellement actif. |
 | `public_domain` / `public_url` | Le véritable nom d'hôte externe | Élevé | Valent par défaut `localhost` / `http://localhost/`, ce qui produit des URL de clonage Git erronées et des liens cassés tant qu'elles ne sont pas remplacées. |
 | `GITEA__service__DISABLE_REGISTRATION` (via `environment_variables`) | `true` pour les instances non publiques | Élevé | L'inscription libre est ouverte par défaut et aucun compte administrateur n'est créé automatiquement — toute personne joignant le service peut s'inscrire. |

@@ -64,7 +64,7 @@ ensemble ciblé de services Google Cloud :
   immuable après le premier démarrage.
 - **Le port du conteneur et toutes les sondes doivent être sur 8008.** L'écouteur client
   + fédération de Synapse est réglé sur `8008` dans la configuration générée ; le port du
-  conteneur et les sondes Kubernetes de démarrage/liveness/readiness doivent tous cibler
+  conteneur et les sondes Kubernetes de démarrage/liveness/disponibilité (readiness) doivent tous cibler
   `8008`, sinon le pod ne devient jamais Ready alors même que le homeserver est en bonne
   santé.
 - **Au moins 1 réplica est maintenu.** GKE ne descend pas à zéro, ce qui convient à un
@@ -221,7 +221,7 @@ d'alerte optionnels sont disponibles.
   `matrix.local`) ; modifier ultérieurement la valeur sous-jacente invalide chaque
   identifiant utilisateur, chaque session d'appareil et chaque relation de fédération.
 - **Le port du conteneur et les sondes doivent être sur 8008.** Le port du conteneur du
-  Deployment et les sondes de démarrage/liveness/readiness ciblent tous `8008` ; une
+  Deployment et les sondes de démarrage/liveness/disponibilité ciblent tous `8008` ; une
   incohérence signifie que la sonde frappe un port mort et que le pod ne devient jamais
   Ready.
 - **Chemin de santé.** Les sondes ciblent par défaut `/` sur 8008 — Synapse y sert une

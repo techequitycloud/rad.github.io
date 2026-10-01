@@ -203,13 +203,13 @@ des règles d'alerte en option.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via l'IP privée de Cloud SQL et crée de manière idempotente la base de données
-  applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
-  réexécutée sans risque.
+  applicative et l'utilisateur, puis accorde les privilèges. Le job peut être
+  réexécuté sans risque.
 - **Les migrations du schéma s'exécutent à chaque démarrage.** Le `CMD` de l'image
   de base de Linkwarden exécute `prisma migrate deploy` avant de démarrer les
   processus web et worker ; la mise à niveau de la version de l'application applique
-  donc automatiquement les modifications du schéma — il n'existe pas de tâche de
-  migration distincte.
+  donc automatiquement les modifications du schéma — il n'existe pas de job de
+  migration distinct.
 - **`NEXTAUTH_SECRET` est immuable après le premier démarrage.** Il est généré une
   seule fois et écrit dans Secret Manager. Sa rotation invalide toutes les sessions
   actives et oblige tous les utilisateurs à se reconnecter.
@@ -227,7 +227,7 @@ des règles d'alerte en option.
   sonde de démarrage accorde une fenêtre généreuse (délai initial de 60 s, seuil de
   30 échecs) pour absorber le démarrage à froid de Next.js ainsi que
   l'initialisation de Chrome headless/Playwright.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -306,7 +306,7 @@ avec leur comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. Linkwarden exécute ses propres migrations Prisma au démarrage — aucune tâche de migration distincte n'est nécessaire. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Linkwarden exécute ses propres migrations Prisma au démarrage — aucun job de migration distinct n'est nécessaire. |
 | `cron_jobs` | `[]` | Non utilisé par défaut. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -341,7 +341,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 

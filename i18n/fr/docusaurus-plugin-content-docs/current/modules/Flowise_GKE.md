@@ -312,7 +312,7 @@ Pertinent uniquement lorsque `workload_type = "StatefulSet"`.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de Flowise. |
 
@@ -433,8 +433,8 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des tâches de configuration. |
-| `db_import_job` | Nom de la tâche d'import (facultative). |
+| `initialization_jobs` | Noms des jobs de configuration. |
+| `db_import_job` | Nom du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -456,7 +456,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `database_type` | `POSTGRES_15` | Critique | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
 | `enable_cloudsql_volume` | `true` | Critique | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
 | `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
 | `flowise_username` | remplacer `admin` | Élevé | Le nom d'utilisateur par défaut est connu de tous ; associé à un mot de passe deviné, il donne un accès complet à tous les flows d'IA. |
 | `FLOWISE_SECRETKEY_OVERWRITE` | ne pas le définir après le premier déploiement | Élevé | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API de LLM et tous les identifiants de vector stores stockés. |

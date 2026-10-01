@@ -236,7 +236,7 @@ facultatifs sont disponibles.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation se connecte à Cloud SQL via le socket Unix de l'Auth Proxy, crée la base
   de données PostgreSQL `n8n_db` et l'utilisateur `n8n_user`, accorde tous les privilèges,
-  puis arrête proprement le proxy. La tâche est idempotente et peut être relancée sans
+  puis arrête proprement le proxy. Le job est idempotent et peut être relancé sans
   risque.
 - **Clé de chiffrement.** `N8N_ENCRYPTION_KEY` est générée automatiquement au premier
   déploiement et stockée dans Secret Manager. **Sauvegardez ce secret avant de détruire le
@@ -396,7 +396,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | Jobs Cloud Run planifiés pour les exportations de workflows ou la maintenance. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -461,7 +461,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
@@ -483,7 +483,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `application_name` | `n8nai` — défini une seule fois | Critique | Immuable après le premier déploiement ; un renommage recrée toutes les ressources GCP avec perte de données. |
 | `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; un renommage fait pointer n8n vers une nouvelle base de données vide, avec perte de tous les workflows. |
 | `database_type` | `POSTGRES_15` | Critique | n8n requiert PostgreSQL ; passer à MySQL ou NONE empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation et bloque le démarrage. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation et bloque le démarrage. |
 | `enable_qdrant` | `true` | Élevé | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est supprimé. |
 | `enable_ollama` | `true` | Élevé | Les workflows utilisant le nœud LLM local échouent ; ne le désactivez que si vous utilisez exclusivement des fournisseurs d'IA externes. |
 | `enable_redis` | `true` | Élevé | Sans Redis, plusieurs instances entrent en conflit sur l'état des workflows ; une exécution en split-brain corrompt les exécutions. |

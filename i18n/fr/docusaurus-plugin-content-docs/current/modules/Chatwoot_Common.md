@@ -33,7 +33,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Amorçage de la base de données | Définit deux jobs chaînés de premier déploiement (`db-init` → `chatwoot-prepare`) qui créent la base de données, l'utilisateur, les droits, `pgvector`/les autres extensions et le schéma Rails | Sortie `initialization_jobs` |
 | Stockage objet | Déclare un bucket **Cloud Storage** suffixé `storage` | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit l'environnement de base de Rails/Chatwoot : `RAILS_ENV`, journalisation vers stdout, dimensionnement du pool de la base, valeur par défaut de l'inscription libre | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit la sonde de disponibilité par défaut (ainsi que les valeurs par défaut transmises des sondes de démarrage et de vivacité) ciblant `/` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Fournit la sonde de disponibilité (readiness) par défaut (ainsi que les valeurs par défaut transmises des sondes de démarrage et de vivacité) ciblant `/` | §Observabilité dans les guides de plateforme |
 
 ---
 

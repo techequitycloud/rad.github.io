@@ -29,7 +29,7 @@ guides de plateforme ([Langfuse_GKE](Langfuse_GKE.md),
 | Secrets cryptographiques | Génère `NEXTAUTH_SECRET` (50 caractères) et `SALT` (24 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `langfuse/langfuse:2` (v2, PostgreSQL uniquement) avec un point d'entrée cloud ; construite via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les droits | Sortie `initialization_jobs` |
 | Migrations de schéma | Délègue au démarrage propre de Langfuse, qui exécute `prisma migrate deploy` à chaque démarrage du conteneur | §Comportement de l'application dans les guides de plateforme |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Langfuse : télémétrie désactivée, inscription ouverte pour que le premier utilisateur devienne propriétaire, port 3000 | Comportement de l'application dans les guides de plateforme |
@@ -75,7 +75,7 @@ Consultez [App_Common](App_Common.md) pour le modèle partagé de secrets et de 
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Langfuse nécessite **PostgreSQL** ; ce module fixe **PostgreSQL 15**, le moteur est imposé,
-et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploiement, une tâche ponctuelle
+et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploiement, un job ponctuel
 (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy (ou l'hôte à IP privée) et le mappe pour
@@ -86,12 +86,12 @@ et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploi
 4. Crée la base de données applicative (`langfuse`) si elle n'existe pas,
 5. Accorde tous les droits sur la base de données et sur le schéma `public` (PostgreSQL 15 n'accorde plus
    `CREATE` sur `public` par défaut),
-6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod de la tâche se termine.
+6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod du job se termine.
 
 **`db-init` crée uniquement le rôle et la base de données — jamais les tables.** Langfuse exécute ses propres
 migrations de schéma (`prisma migrate deploy`) à chaque démarrage du conteneur ; le schéma est donc
-créé et maintenu à jour par l'application elle-même. Il n'y a délibérément aucune tâche de migration
-distincte. La tâche `db-init` peut être relancée sans risque.
+créé et maintenu à jour par l'application elle-même. Il n'y a délibérément aucun job de migration
+distinct. Le job `db-init` peut être relancé sans risque.
 
 Inspectez directement la base de données avec :
 

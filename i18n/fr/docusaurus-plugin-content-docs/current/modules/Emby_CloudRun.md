@@ -51,7 +51,7 @@ ensemble ciblé de services Google Cloud :
 - **Il n'y a pas de base de données externe.** Emby stocke l'intégralité de sa
   bibliothèque — bases de données SQLite, configuration, métadonnées, illustrations,
   plugins, cache de transcodage et journaux — dans un unique répertoire `/config`.
-  Aucune instance Cloud SQL, aucune tâche `db-init` ni aucun Redis n'est provisionné
+  Aucune instance Cloud SQL, aucun job `db-init` ni aucun Redis n'est provisionné
   (`database_type = NONE`).
 - **`/config` doit persister d'une révision à l'autre.** Sur Cloud Run, le chemin
   `/config` est adossé à un bucket Cloud Storage monté via **GCS FUSE**
@@ -448,7 +448,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (vide pour un déploiement Emby par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (vide pour un déploiement Emby par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -469,7 +469,7 @@ d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | Bucket GCS `/config` | Ne jamais le supprimer ni le faire pointer ailleurs | Critique | Le bucket `/config` contient la bibliothèque SQLite, les utilisateurs et les métadonnées ; le supprimer efface l'ensemble du serveur. |
 | `max_instance_count` | `1` | Critique | Plusieurs réplicas écrivent dans un même fichier SQLite via FUSE et corrompent la bibliothèque. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas monter GCS FUSE ; `/config` ne persiste donc jamais. |
 | `min_instance_count` | `1` | Élevé | Les démarrages à froid liés à la mise à l'échelle jusqu'à zéro interrompent les diffusions en cours et rechargent la bibliothèque. |
 | `memory_limit` | `1Gi` (à augmenter pour les grandes bibliothèques) | Élevé | Une mémoire insuffisante provoque l'arrêt OOM du serveur pendant l'analyse ou le transcodage d'une grande bibliothèque. |

@@ -98,7 +98,7 @@ d'entrée cloud. En conséquence :
 
 - `database_type = "NONE"` — aucune instance Cloud SQL, aucune base de données
   ni aucun utilisateur n'est créé pour Radicale.
-- Il n'existe **aucune tâche `db-init`**, de quelque nature que ce soit.
+- Il n'existe **aucun job `db-init`**, de quelque nature que ce soit.
 - Aucune extension PostgreSQL, aucun plugin MySQL et aucun Redis ne sont
   impliqués (`enable_redis` est forcé à `false` par les deux modules
   applicatifs).
@@ -179,26 +179,26 @@ crée un « Default Calendar » et un « Default Address Book » pour l'utilisat
 administrateur en écrivant l'arborescence des répertoires et le fichier de
 métadonnées `.Radicale.props` **directement sur le volume de stockage** — un
 simple conteneur avec un accès direct au système de fichiers, sans aucune
-couche HTTP/GFE. Vérifié en conditions réelles : après l'exécution de cette
-tâche, un `PROPFIND` sur le principal de l'utilisateur administrateur liste
+couche HTTP/GFE. Vérifié en conditions réelles : après l'exécution de ce
+job, un `PROPFIND` sur le principal de l'utilisateur administrateur liste
 correctement les deux collections amorcées avec les bons resourcetypes
 CalDAV/CardDAV, et un véritable événement d'agenda (`VEVENT`) peut être envoyé
 par `PUT` puis récupéré par `GET` avec succès.
 
-**La réserve GKE + PVC.** La tâche d'amorçage est une tâche du module Common
-partagée entre Cloud Run et GKE et ne monte que le bucket GCS `storage`
-(`mount_gcs_volumes = ["storage"]`) — elle ne peut pas s'attacher au PVC bloc
+**La réserve GKE + PVC.** Le job d'amorçage est un job du module Common
+partagé entre Cloud Run et GKE et ne monte que le bucket GCS `storage`
+(`mount_gcs_volumes = ["storage"]`) — il ne peut pas s'attacher au PVC bloc
 d'un StatefulSet (un Job Kubernetes ne peut pas monter un PVC `ReadWriteOnce`
 déjà détenu par un Pod en cours d'exécution). Ainsi, sur `Radicale_GKE` avec
 `stateful_pvc_enabled = true` (le paramètre recommandé en production), les
-écritures de la tâche d'amorçage aboutissent dans le bucket GCS par ailleurs
+écritures du job d'amorçage aboutissent dans le bucket GCS par ailleurs
 inutilisé, et les collections par défaut n'apparaissent **pas**
 automatiquement. C'est sans conséquence (aucune erreur, aucun plantage) — cela
 signifie simplement que les opérateurs GKE+PVC doivent créer leur premier
 agenda via un véritable client CalDAV ou un appel direct `curl -X MKCOL`
 (dont le fonctionnement est confirmé) au lieu de compter sur les collections
 pré-amorcées. Sur GKE **sans** PVC (mode Deployment adossé à GCS — qui n'est
-pas la configuration de production recommandée), les écritures de la tâche
+pas la configuration de production recommandée), les écritures du job
 d'amorçage aboutissent dans le même bucket que celui utilisé par
 l'application, si bien que les collections par défaut y apparaissent
 également.
@@ -236,7 +236,7 @@ Un unique bucket **Cloud Storage** est déclaré ici et provisionné par le socl
   `stateful_pvc_enabled = true`, auquel cas un véritable PVC bloc prend le
   relais sur le même chemin de montage (`enable_gcs_storage_volume` est
   automatiquement défini sur `false` pour éviter un double montage) et le
-  bucket GCS n'est plus utilisé comme montage (même si la tâche d'amorçage
+  bucket GCS n'est plus utilisé comme montage (même si le job d'amorçage
   peut encore y écrire — voir le §5).
 
 ```bash

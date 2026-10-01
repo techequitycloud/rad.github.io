@@ -167,7 +167,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 ## 3. Comportement de l'application Meilisearch {#3-meilisearch-application-behaviour}
 
 - **Aucun job d'initialisation.** Meilisearch gère son propre stockage et ne nécessite aucun
-  amorçage de base de données ; aucune tâche `db-init` ne s'exécute donc. La première requête qui crée un
+  amorçage de base de données ; aucun job `db-init` ne s'exécute donc. La première requête qui crée un
   index initialise à la demande le répertoire `/meili_data`.
 - **Le mode production exige la clé maître.** Avec `MEILI_ENV = production`,
   Meilisearch ne démarre pas tant que `MEILI_MASTER_KEY` ne fait pas au moins 16 octets.
@@ -308,7 +308,7 @@ héritées de [App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucun job d'initialisation par défaut ; ne fournissez des tâches que pour un chargement de données personnalisé. |
+| `initialization_jobs` | `[]` | Meilisearch ne nécessite aucun job d'initialisation par défaut ; ne fournissez des jobs que pour un chargement de données personnalisé. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (par exemple, snapshots de dumps). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Meilisearch. |
 
@@ -402,7 +402,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

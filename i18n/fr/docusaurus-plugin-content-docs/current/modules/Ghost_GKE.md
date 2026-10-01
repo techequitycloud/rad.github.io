@@ -154,7 +154,7 @@ La sortie stdout/stderr des pods est envoyée vers Cloud Logging ; les métrique
 - **Connexion à la base de données.** Le point d'entrée associe automatiquement les variables `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD` et `DB_PORT` du socle aux paramètres `database__connection__*` de Ghost. Lorsque `DB_HOST` commence par `/`, il est traité comme un chemin de socket Unix.
 - **SMTP pour les e-mails.** Ghost nécessite SMTP pour les inscriptions des membres, les réinitialisations de mot de passe et l'envoi des newsletters. Les `environment_variables` sont pré-remplies (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM`) — configurez-les avant d'inviter des membres.
 - **Connexion administrateur.** Le panneau d'administration de Ghost se trouve à `<url>/ghost`. Au premier démarrage, Ghost crée un utilisateur administrateur de manière interactive.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent `/`, qui renvoie HTTP 200 lorsque Ghost est entièrement initialisé.
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/`, qui renvoie HTTP 200 lorsque Ghost est entièrement initialisé.
 
 ---
 

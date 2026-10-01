@@ -30,7 +30,7 @@ les guides des plateformes ([FireflyIII_GKE](FireflyIII_GKE.md),
 | Secrets cryptographiques | Génère l'`APP_KEY` Laravel (`base64:<44-char base64>`) et un `STATIC_CRON_TOKEN` de 32 caractères, et les stocke dans **Secret Manager** | Injectés automatiquement en tant que `APP_KEY` / `STATIC_CRON_TOKEN` ; récupérables via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Utilise directement l'image officielle préconstruite `fireflyiii/core:<version>` — sans Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`DB_CONNECTION = pgsql`) comme seul moteur | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les droits | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les droits | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** des téléversements | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Firefly III : connexion, mode SSL, proxys de confiance, URL de l'application, environnement | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit les sondes de démarrage (TCP) / d'activité (`/health`) par défaut | §Observabilité dans les guides des plateformes |
@@ -77,8 +77,8 @@ partagé des secrets et de Workload Identity.
 
 Firefly III nécessite **PostgreSQL 15** ; le moteur est imposé
 (`database_type = "POSTGRES_15"`, `DB_CONNECTION = "pgsql"`) et MySQL ou les autres
-moteurs ne sont pas utilisés par ce module. Lors du premier déploiement, une tâche
-ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
+moteurs ne sont pas utilisés par ce module. Lors du premier déploiement, un job
+ponctuel (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière
 idempotente :
 
 1. Résout l'hôte de la base de données — une IP privée Cloud SQL (Cloud Run) ou
@@ -93,11 +93,11 @@ idempotente :
    rôle applicatif, et transfère la propriété du schéma `public` (Postgres 15
    n'accorde plus `CREATE` sur `public` par défaut).
 
-Il n'existe **aucune tâche de migration séparée**. L'image `fireflyiii/core`
+Il n'existe **aucun job de migration séparé**. L'image `fireflyiii/core`
 exécute `php artisan migrate --force` et `firefly-iii:upgrade-database` au démarrage
 du conteneur ; le schéma est donc créé et mis à niveau au premier démarrage, une
-fois que `db-init` a provisionné la base de données et le rôle. La tâche `db-init`
-peut être réexécutée sans risque. Inspectez directement la base de données avec :
+fois que `db-init` a provisionné la base de données et le rôle. Le job `db-init`
+peut être réexécuté sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

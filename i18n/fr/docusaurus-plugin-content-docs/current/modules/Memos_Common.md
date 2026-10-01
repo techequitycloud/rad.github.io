@@ -30,7 +30,7 @@ les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets applicatifs | **Aucun.** Memos n'a ni variable d'environnement d'amorçage administrateur, ni clé de chiffrement, ni secret JWT — le premier compte créé via l'interface web devient hôte/administrateur | sans objet |
 | Image de conteneur | Encapsule l'image officielle `ghcr.io/usememos/memos` avec un script de point d'entrée personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Stockage d'objets | Aucun — aucun bucket GCS n'est déclaré pour les pièces jointes | Sortie `storage_buckets` (vide) |
 | Paramètres principaux | Calcule `MEMOS_DSN`/`MEMOS_DRIVER` au démarrage du conteneur à partir des variables `DB_*` de la plateforme ; définit le port 5230 et le mode prod | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/de vivacité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
@@ -62,7 +62,7 @@ partagé de secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Memos requiert **PostgreSQL** dans le câblage de ce module ; le moteur est fixé. Lors
-du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
+du premier déploiement, un job ponctuel (`db-init`) s'exécute avec
 `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy et le mappe pour l'accès `psql`,
@@ -73,10 +73,10 @@ du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
 6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement.
 
 Memos applique ensuite son **propre schéma interne** via l'auto-migration GORM à
-chaque démarrage de l'application — aucune tâche de migration distincte ne
+chaque démarrage de l'application — aucun job de migration distinct ne
 s'exécute au niveau de la plateforme.
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données avec :
+Le job peut être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

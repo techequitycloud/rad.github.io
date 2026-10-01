@@ -24,7 +24,7 @@ Pour l'infrastructure qui provisionne et exécute réellement AFFiNE, consultez 
 | Secrets | **Aucun, par conception** — la clé de signature est conservée dans PostgreSQL ; `secret_ids` est vide | Seul le secret du mot de passe de la base de données du socle existe |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Environnement de base | `NODE_ENV=production`, `AFFINE_SERVER_HOST/PORT`, `AFFINE_CONFIG_PATH`, `AFFINE_INDEXER_ENABLED=false` | Environnement du conteneur du service en cours d'exécution |
-| Contrôles de santé | Démarrage (`/`, délai de 60 s, 30 échecs), vivacité (`/`, délai de 60 s), disponibilité (`/`, délai de 30 s) | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Démarrage (`/`, délai de 60 s, 30 échecs), vivacité (`/`, délai de 60 s), disponibilité (readiness ; `/`, délai de 30 s) | §Observabilité dans les guides de plateforme |
 
 ---
 

@@ -222,7 +222,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
   seule fois et écrit dans Secret Manager. Le faire tourner invalide tous les cookies
   de session signés, obligeant chaque utilisateur à se reconnecter. Ne le faites
   tourner que pendant une fenêtre de maintenance planifiée.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness)
   ciblent `/up` — le point de terminaison de santé intégré de Rails, qui renvoie un
   `200` non authentifié dès que l'application est prête. Les sondes s'exécutent sur le
   port 3000 ; comme GKE n'injecte pas `PORT`, `container_port` et le port des sondes

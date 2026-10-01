@@ -33,7 +33,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 | Fonctionnalité | Service Google Cloud | Remarques |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Flask/Gunicorn, 1 vCPU / 512 MiB par défaut, mise à l'échelle automatique en fonction des requêtes |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire ; la tâche `db-init` crée le schéma au premier déploiement |
+| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire ; le job `db-init` crée le schéma au premier déploiement |
 | Fichiers partagés | Filestore (NFS) | Activé par défaut ; volume partagé monté sur `/mnt/nfs` (nécessite l'environnement d'exécution gen2) |
 | Stockage d'objets | Cloud Storage | Un unique bucket `data` provisionné par défaut |
 | Cache et sessions | Redis | Facultatif (`enable_redis = false` par défaut) ; lorsqu'il est activé, un service interne `redis:alpine` est déployé |
@@ -44,8 +44,8 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 
 - **PostgreSQL 15 est imposé.** Le moteur de base de données est fixé à `POSTGRES_15` par
   `Sample_Common` et ne peut pas être remplacé par MySQL ni par `NONE` dans ce module.
-- **Une tâche `db-init` s'exécute au premier déploiement** pour créer la base de données
-  PostgreSQL, l'utilisateur et le schéma. Elle est idempotente et peut être relancée sans
+- **Un job `db-init` s'exécute au premier déploiement** pour créer la base de données
+  PostgreSQL, l'utilisateur et le schéma. Il est idempotent et peut être relancé sans
   risque.
 - **Redis est désactivé par défaut.** Lorsque `enable_redis = true`, un service Cloud Run
   interne `redis:alpine` est déployé. Contrairement à la variante GKE, il n'existe pas de
@@ -334,8 +334,8 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée de `Sample_Common`. |
-| `cron_jobs` | `[]` | Cloud Run Jobs récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré de `Sample_Common`. |
+| `cron_jobs` | `[]` | Cloud Run Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -386,7 +386,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -406,9 +406,9 @@ d'explorer les ressources en cours d'exécution.
 | `database_type` (via `Sample_Common`) | PostgreSQL 15 (imposé) | Critique | Le script `db-init` utilise des commandes propres à PostgreSQL ; un autre moteur casse la configuration de la base de données. |
 | `application_database_name` / `_user` | défini une seule fois | Critique | Immuable après le premier déploiement ; un renommage recrée la base de données / l'utilisateur et détruit les données. |
 | `application_name` | défini une seule fois | Critique | Intégré au nom du service Cloud Run, au dépôt Artifact Registry et aux identifiants des secrets Secret Manager. Le modifier rend orphelins les secrets existants. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `container_port` | `8080` | Critique | Une incohérence fait échouer la sonde de démarrage TCP — la révision ne devient jamais saine. |
-| `enable_cloudsql_volume` | `true` | Critique | `false` avec PostgreSQL : toutes les connexions à la base de données échouent au démarrage. La tâche `db-init` échoue également. |
+| `enable_cloudsql_volume` | `true` | Critique | `false` avec PostgreSQL : toutes les connexions à la base de données échouent au démarrage. Le job `db-init` échoue également. |
 | `execution_environment` | `gen2` | Élevé | `gen1` avec `enable_nfs = true` : le montage NFS échoue au démarrage du conteneur. |
 | `enable_redis` | `false` (par défaut) | Élevé | `true` sans `redis_host` défini : `REDIS_HOST` est vide et l'application Flask ne peut pas se connecter à Redis. |
 | `memory_limit` | `512Mi` ou plus | Élevé | Une mémoire insuffisante entraîne l'arrêt de l'application Flask pour dépassement de mémoire (OOM) au démarrage. |

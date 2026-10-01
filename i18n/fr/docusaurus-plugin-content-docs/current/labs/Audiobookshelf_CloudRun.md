@@ -193,7 +193,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas d'une version d'Audi
   (`gcloud storage buckets list --filter="name~audiobookshelf"`). Les signalements de perte d'état
   signifient généralement que le bucket a été recréé, et non que SQLite a échoué.
 - **Échec du job d'initialisation :** ce module n'injecte aucun job d'initialisation par défaut ; les échecs
-  à ce niveau ne concernent donc que les tâches personnalisées que vous avez ajoutées :
+  à ce niveau ne concernent donc que les jobs personnalisés que vous avez ajoutés :
   ```bash
   gcloud run jobs executions list --project="$PROJECT" --region="$REGION"
   ```

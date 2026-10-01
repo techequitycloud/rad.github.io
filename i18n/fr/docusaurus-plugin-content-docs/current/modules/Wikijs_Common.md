@@ -30,7 +30,7 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Image de conteneur | Fixe `requarks/wiki:2` et construit une image personnalisée à partir de `scripts/` via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Extension PostgreSQL | Déclare `enable_postgres_extensions = true` et `postgres_extensions = ["pg_trgm"]` pour la recherche en texte intégral de Wiki.js | Étape d'installation du socle au moment du déploiement |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Stockage objet | Déclare le **bucket Cloud Storage `wikijs-storage`** pour le stockage persistant des ressources | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Wiki.js (`DB_TYPE`, `DB_PORT`, `DB_USER`, `DB_NAME`, `DB_SSL`, `HA_STORAGE_PATH`) | Variables d'environnement de l'application |
 | Contrôles de santé | Fournit la sonde par défaut de démarrage/d'activité ciblant `/healthz` avec un délai initial de 60 secondes | §Observabilité dans les guides des plateformes |
@@ -55,17 +55,17 @@ reproductibilité du build.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Wiki.js nécessite **PostgreSQL 15** ; le moteur est fixe et MySQL n'est pas pris en
-charge. Lors du premier déploiement, une tâche ponctuelle `db-init` exécute l'image
+charge. Lors du premier déploiement, un job ponctuel `db-init` exécute l'image
 `postgres:15-alpine` et se connecte à Cloud SQL via l'Auth Proxy. De manière
-idempotente, elle :
+idempotente, il :
 
 1. Crée l'utilisateur `wikijs` (ou met à jour son mot de passe s'il existe déjà),
 2. Accorde à l'utilisateur les rôles nécessaires,
 3. Crée la base de données `wikijs` appartenant à cet utilisateur (si elle est absente),
 4. Accorde à l'utilisateur tous les droits sur la base de données et le schéma public.
 
-La tâche signale ensuite au sidecar Cloud SQL Proxy de s'arrêter afin que le Job se
-termine proprement. La tâche peut être réexécutée sans risque. Inspectez directement
+Le job signale ensuite au sidecar Cloud SQL Proxy de s'arrêter afin que le Job se
+termine proprement. Le job peut être réexécuté sans risque. Inspectez directement
 la base de données avec :
 
 ```bash
@@ -131,7 +131,7 @@ expose comme un point de terminaison léger reflétant l'état en direct de
 l'application et de la connexion à la base de données. Les sondes comportent un
 **délai initial de 60 secondes** sur les deux variantes afin de laisser le temps :
 
-- Au premier lancement : à la tâche `db-init` de se terminer, puis à Wiki.js de se
+- Au premier lancement : au job `db-init` de se terminer, puis à Wiki.js de se
   connecter et d'exécuter sa propre migration interne du schéma avant d'accepter des
   requêtes.
 - En régime établi : au processus Node.js de charger tous les modules avant que le pod

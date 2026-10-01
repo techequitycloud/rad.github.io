@@ -9,7 +9,7 @@ description: "Référence de configuration pour déployer Healthchecks sur GKE A
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Healthchecks_GKE.png" alt="Healthchecks sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Healthchecks est un service open source et auto-hébergé de supervision des tâches
+Healthchecks est un service open source et auto-hébergé de supervision des jobs
 cron et des signaux de vie (heartbeat) : les tâches planifiées lui envoient un
 « ping » en cas de succès, et il vous alerte par e-mail, Slack, SMS ou via plus de
 100 autres intégrations lorsqu'un ping est en retard ou manquant. Ce module

@@ -61,7 +61,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
   les valeurs chiffrées de la base de données indéchiffrables.
 - **L'image exécute automatiquement `php artisan migrate --force` au démarrage** ; le
   schéma est donc créé au premier démarrage, une fois que `db-init` a provisionné la
-  base de données et l'utilisateur — il n'y a pas de tâche de migration distincte.
+  base de données et l'utilisateur — il n'y a pas de job de migration distinct.
 - **Pas de stockage par défaut.** Speedtest Tracker stocke tous les résultats et la
   configuration dans Cloud SQL — `create_cloud_storage` et `enable_nfs` sont
   désactivés par défaut.
@@ -196,12 +196,12 @@ règles d'alerte facultatifs sont disponibles.
   Cloud SQL ou le point de terminaison TCP, attend que MySQL soit joignable, crée la
   base de données et l'utilisateur de l'application, accorde les privilèges, vérifie
   que l'utilisateur de l'application peut se connecter et arrête proprement le sidecar
-  Cloud SQL Auth Proxy. La tâche est idempotente et peut être relancée sans risque
+  Cloud SQL Auth Proxy. Le job est idempotent et peut être relancé sans risque
   (`max_retries = 3`).
 - **Migration automatique du schéma au démarrage.** L'image LinuxServer de Speedtest
   Tracker exécute automatiquement `php artisan migrate --force` à chaque démarrage du
   conteneur ; le schéma est donc créé au premier démarrage et mis à niveau lors des
-  démarrages suivants — il n'y a **pas de tâche de migration distincte**.
+  démarrages suivants — il n'y a **pas de job de migration distinct**.
 - **`APP_KEY` est immuable après le premier démarrage.** La clé d'application Laravel
   est générée une seule fois et écrite dans Secret Manager. Sa rotation rend toutes les
   valeurs chiffrées de la base de données définitivement indéchiffrables. N'effectuez
@@ -223,7 +223,7 @@ règles d'alerte facultatifs sont disponibles.
 - **Configuration au premier lancement.** L'interface web de Speedtest Tracker guide la
   création du compte lors de la première visite — il n'existe aucun compte
   administrateur par défaut préchargé à modifier.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -340,7 +340,7 @@ avec leur comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Pour des tâches de maintenance sans rapport — la planification des tests de débit de Speedtest Tracker s'exécute dans le processus via `SPEEDTEST_SCHEDULE`. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Speedtest Tracker. |
 
@@ -464,7 +464,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -487,7 +487,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend toutes les valeurs chiffrées de la base de données définitivement indéchiffrables. |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `database_type` | `MYSQL_8_0` | Critique | Speedtest Tracker requiert MySQL dans ce module ; tout autre moteur empêche le démarrage. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers sans unité sont interprétés en octets et bloquent la planification de tous les pods de l'espace de noms. |
 | `max_instance_count` | `1` | Élevé | Dépasser 1 avec un `speedtest_schedule` actif risque de déclencher des tests de débit en double au même déclenchement de la planification — le planificateur Laravel ne dispose d'aucun verrouillage entre pods. |

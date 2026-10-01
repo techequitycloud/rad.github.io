@@ -182,7 +182,7 @@ est utilisé pour le test de disponibilité provisionné lorsque le service est 
   `TOLGEE_AUTHENTICATION_INITIAL_USERNAME` (par défaut `admin@techequity.cloud`) avec le
   mot de passe généré stocké dans Secret Manager. Modifiez le mot de passe et configurez des fournisseurs
   d'authentification supplémentaires (Google/OAuth2/SSO) depuis l'interface de Tolgee avant la mise en service.
-- **Chemin de santé.** Les sondes de disponibilité, de démarrage et de vivacité ciblent **`/actuator/health`**,
+- **Chemin de santé.** Les sondes de disponibilité (readiness), de démarrage et de vivacité ciblent **`/actuator/health`**,
   qui ne renvoie un `200` non authentifié qu'une fois les migrations Liquibase terminées. Prévoyez
   plusieurs minutes au premier démarrage (délai initial de 60 secondes plus une large fenêtre d'échecs) —
   Spring Boot et les migrations du premier lancement démarrent plus lentement qu'une application Node typique.

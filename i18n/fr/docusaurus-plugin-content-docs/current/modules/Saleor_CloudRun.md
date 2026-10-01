@@ -209,7 +209,7 @@ disponibilité et des règles d'alerte facultatifs.
   (`postgres:15-alpine`) crée de manière idempotente la base de données et le rôle de
   l'application. `db-migrate` (l'image de l'application,
   `depends_on_jobs = ["db-init"]`) exécute ensuite
-  `python3 manage.py migrate --noinput`. Les deux tâches peuvent être relancées sans
+  `python3 manage.py migrate --noinput`. Les deux jobs peuvent être relancés sans
   risque.
 - **Extensions toujours installées.** `pg_trgm`, `unaccent`, `hstore` et `citext` sont
   installées sans condition par la configuration assemblée de `Saleor_Common` — les
@@ -240,7 +240,7 @@ disponibilité et des règles d'alerte facultatifs.
   s'agit d'une chaîne calculée (l'URL de service prévue de l'API principale +
   `/graphql/`), sûre pour la planification `for_each` puisqu'elle n'est pas connue
   seulement après l'apply.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -354,7 +354,7 @@ d'Artifact Registry — consultez [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser la paire intégrée `db-init` → `db-migrate`. |
-| `cron_jobs` | `[]` | Tâches récurrentes (par exemple, commandes de gestion Saleor) via Cloud Scheduler. |
+| `cron_jobs` | `[]` | Jobs récurrents (par exemple, commandes de gestion Saleor) via Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -401,7 +401,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image de l'API déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches `db-init`/`db-migrate`. |
+| `initialization_jobs` | Noms des jobs `db-init`/`db-migrate`. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

@@ -193,8 +193,8 @@ permanence.
   `kopia repository connect gcs --bucket=... --prefix=repository/`, avec repli sur
   `kopia repository create gcs ...` si le dépôt n'existe pas encore. Cette logique
   idempotente remplace entièrement ce que ferait sinon le job d'initialisation
-  d'une application à base de données — il n'existe pas de tâche de
-  migration/initialisation distincte pour Kopia.
+  d'une application à base de données — il n'existe pas de job de
+  migration/initialisation distinct pour Kopia.
 - **Utilisateur stocké dans le dépôt + ACL, provisionnés à chaque démarrage.**
   `kopia server users
   add/set "${ADMIN_USERNAME}@kopia" --user-password="${REPO_PASSWORD}"` suivi de
@@ -271,7 +271,7 @@ groupe.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `cpu_limit` | `1000m` | Les envois et restaurations de snapshots sont limités par le CPU (compression, chiffrement, hachage) — augmentez pour des tâches de sauvegarde volumineuses ou fréquentes. |
+| `cpu_limit` | `1000m` | Les envois et restaurations de snapshots sont limités par le CPU (compression, chiffrement, hachage) — augmentez pour des jobs de sauvegarde volumineux ou fréquents. |
 | `memory_limit` | `1Gi` | L'empreinte propre de Kopia est modeste ; une marge supplémentaire profite au cache de contenu sur les dépôts comportant de nombreux snapshots ou des snapshots volumineux. |
 | `min_instance_count` | `0` | La mise à zéro est sans risque — le dépôt réside dans Cloud Storage. |
 | `max_instance_count` | `1` | Gardez `1` — la maintenance du dépôt de Kopia suppose qu'un seul serveur en est propriétaire. |

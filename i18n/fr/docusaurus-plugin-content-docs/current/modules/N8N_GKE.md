@@ -209,7 +209,7 @@ sont disponibles.
 - **Fonctionnement en mode file d'attente.** Avec `enable_redis = true` (valeur par défaut),
   n8n démarre en mode file d'attente. Le pod principal gère l'enregistrement des webhooks,
   l'interface de l'éditeur et la coordination des exécutions ; les réplicas supplémentaires
-  servent de workers qui prennent les tâches dans la file Bull.
+  servent de workers qui prennent les jobs dans la file Bull.
 - **Stabilité de l'URL des webhooks.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont définis sur
   l'URL prévue du service avant le déploiement. Si l'IP externe ou le domaine personnalisé
   change, ces valeurs doivent être mises à jour et la charge de travail redéployée.
@@ -217,7 +217,7 @@ sont disponibles.
   d'écrire les fichiers binaires (pièces jointes, téléchargements) sur le système de fichiers
   monté en NFS plutôt que dans la base de données, ce qui est requis pour les déploiements
   multi-réplicas.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent la racine de n8n
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent la racine de n8n
   (`/`), qui ne renvoie HTTP 200 qu'une fois l'application et la connexion à la base de données
   entièrement initialisées. La sonde de démarrage accorde 120 secondes à la configuration du
   premier démarrage.
@@ -326,7 +326,7 @@ défaut standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job de configuration de base de données `db-init` intégré. |
-| `cron_jobs` | `[]` | CronJobs planifiés. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes (scripts de maintenance, tâches de données personnalisées). |
+| `cron_jobs` | `[]` | CronJobs planifiés. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes (scripts de maintenance, jobs de données personnalisés). |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de n8n. |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}

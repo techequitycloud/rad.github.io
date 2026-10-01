@@ -34,11 +34,11 @@ les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secret cryptographique | Génère un `SECRET_KEY_BASE` Phoenix stable de 64 octets et le stocke dans **Secret Manager** | Injecté automatiquement comme variable d'environnement secrète ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Enveloppe l'image officielle `ghcr.io/azimuttapp/azimutt` avec un point d'entrée cloud léger ; construite via Cloud Build et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche de premier déploiement (`db-init`) qui crée le rôle, la base de données et les droits | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job de premier déploiement (`db-init`) qui crée le rôle, la base de données et les droits | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base d'Azimutt : `PHX_SERVER`, `FILE_STORAGE_ADAPTER`, port fixe 4000 | Comportement de l'application dans les guides de plateforme |
 | Câblage de la base de données à l'exécution | Le point d'entrée cloud compose `DATABASE_URL`, `DATABASE_ENABLE_SSL` et `PHX_HOST` au démarrage du conteneur | §Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit la sonde de disponibilité par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Fournit la sonde de disponibilité (readiness) par défaut ciblant `/` | §Observabilité dans les guides de plateforme |
 
 ---
 
@@ -74,7 +74,7 @@ et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Azimutt exige **PostgreSQL 15** ; le moteur est fixe (`database_type = POSTGRES_15`)
-et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploiement, une tâche ponctuelle
+et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploiement, un job ponctuel
 (`db-init`) s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
 1. Attend que PostgreSQL soit joignable (boucle de nouvelles tentatives `psql`),
@@ -87,11 +87,11 @@ et MySQL ou d'autres moteurs ne sont pas pris en charge. Lors du premier déploi
    exécute ses propres migrations Ecto au démarrage sous ce rôle et Postgres 15 n'accorde plus
    `CREATE` sur `public` par défaut,
 5. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter (`/quitquitquit`) afin que le pod
-   de la tâche (Job) GKE se termine.
+   du Job GKE se termine.
 
-La tâche **ne provisionne que le rôle, la base de données et les droits** — Azimutt exécute lui-même les
-migrations de schéma (`/app/bin/migrate`) à chaque démarrage du conteneur. La tâche peut être
-réexécutée sans risque. Inspectez directement la base de données avec :
+Le job **ne provisionne que le rôle, la base de données et les droits** — Azimutt exécute lui-même les
+migrations de schéma (`/app/bin/migrate`) à chaque démarrage du conteneur. Le job peut être
+réexécuté sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

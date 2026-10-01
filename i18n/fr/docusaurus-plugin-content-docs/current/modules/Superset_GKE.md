@@ -217,7 +217,7 @@ défaut).
   utilisent Redis comme broker et backend de résultats. Sans Redis, les requêtes
   asynchrones et les rapports planifiés sont indisponibles. Configurez
   `enable_redis = true` et renseignez `redis_host` en production.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent `/health`,
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/health`,
   qui renvoie HTTP 200 lorsque le pool de workers Gunicorn est prêt.
 - **Connexion administrateur.** Les identifiants administrateur sont définis par les
   variables d'environnement `SUPERSET_ADMIN_USERNAME`, `SUPERSET_ADMIN_EMAIL` et

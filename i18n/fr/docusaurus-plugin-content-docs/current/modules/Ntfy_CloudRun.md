@@ -163,7 +163,7 @@ le chemin de cache résolu au démarrage.
 
 - **Aucune configuration de base de données au premier déploiement.** ntfy n'a ni base de données externe ni
   étape de migration. Le point d'entrée prépare le répertoire du cache SQLite et lance immédiatement
-  `ntfy serve` via exec. Il n'y a pas de tâche `db-init` par défaut.
+  `ntfy serve` via exec. Il n'y a pas de job `db-init` par défaut.
 - **Cache éphémère avec repli automatique.** Le point d'entrée crée le répertoire de
   `NTFY_CACHE_FILE` ; sur le rootfs en lecture seule de Cloud Run, il se rabat sur
   `/tmp/ntfy` et journalise un avertissement. Cela maintient en bonne santé un déploiement de base (sans NFS).
@@ -302,7 +302,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

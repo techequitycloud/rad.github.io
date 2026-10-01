@@ -153,10 +153,10 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 
 - **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute
   `create-db-and-user.sh` à l'aide de `postgres:15-alpine`. Il se connecte via le Cloud
-  SQL Auth Proxy et crée de manière idempotente le rôle et la base de données applicatifs. La
-  tâche peut être réexécutée sans risque.
+  SQL Auth Proxy et crée de manière idempotente le rôle et la base de données applicatifs. Le
+  job peut être réexécuté sans risque.
 - **Migrations de schéma au démarrage.** Memos applique sa propre configuration de schéma interne par
-  auto-migration GORM à chaque démarrage — aucune tâche de migration distincte n'est nécessaire, et
+  auto-migration GORM à chaque démarrage — aucun job de migration distinct n'est nécessaire, et
   la mise à niveau de `application_version` applique automatiquement les modifications de schéma.
 - **Aucun identifiant d'amorçage administrateur à récupérer.** Le premier compte créé via le
   formulaire d'inscription de l'interface web devient l'hôte/administrateur. Il n'y a rien à récupérer dans
@@ -170,7 +170,7 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` — la page publique de
   connexion/d'accueil de Memos, accessible sans authentification. Aucun point de terminaison `/health` ou
   `/healthz` dédié n'est documenté en amont.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -299,7 +299,7 @@ Memos n'utilise pas NFS. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laisser vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Non utilisé — Memos n'a aucune tâche récurrente planifiée par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -347,7 +347,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (inclut `db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (inclut `db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -374,7 +374,7 @@ ressources en cours d'exécution.
 | Premier compte créé par inscription | Le créer immédiatement après le déploiement | Critique | Le **premier** compte inscrit devient l'hôte/administrateur — si l'inscription reste ouverte, le premier visiteur qui atteint l'URL s'approprie ce rôle. |
 | Auto-inscription publique | La désactiver après le premier administrateur | Élevé | Memos est livré avec l'inscription ouverte par défaut ; la laisser activée permet à quiconque dispose de l'URL de créer un compte. |
 | `container_image_source` | `custom` (défaut) | Élevé | `"prebuilt"` déploie directement l'image officielle, mais cette image ne contient aucune logique pour calculer `MEMOS_DSN` à partir des variables `DB_*` de la plateforme — elle doit être raccordée manuellement via `environment_variables`, sinon l'application ne parvient pas à se connecter à la base de données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
 | `memory_limit` | `512Mi` (la valeur par défaut suffit) | Moyen | L'empreinte de Memos est faible ; l'augmenter affecte surtout le coût, pas le bon fonctionnement. |
 | `min_instance_count` | `0` (défaut) | Faible | La mise à l'échelle à zéro ajoute un bref démarrage à froid (binaire Go, démarrage rapide) à la première requête après une période d'inactivité — bien plus court que pour les applications JVM/Node.js de ce catalogue. |
 | `gcs_volumes` pour les pièces jointes | À ajouter explicitement si nécessaire | Moyen | Sans lui, les pièces jointes binaires téléversées résident sur le système de fichiers éphémère de Cloud Run et ne survivent pas à un redémarrage de révision — les notes textuelles dans PostgreSQL ne sont pas affectées. |

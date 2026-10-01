@@ -51,7 +51,7 @@ assemble un ensemble ciblé de services Google Cloud :
   pendant le traitement d'un appel. Si vous vous appuyez sur des **abonnements/pulses
   planifiés ou des analyses périodiques de synchronisation de bases de données**, ce
   travail s'exécute sans requête entrante et se trouve bridé avec la facturation à la
-  requête — définissez `cpu_always_allocated = true` pour que les tâches planifiées
+  requête — définissez `cpu_always_allocated = true` pour que les jobs planifiés
   aboutissent réellement.
 - **Les sondes de santé ciblent `/api/health`** (HTTP), qui ne renvoie 200 qu'une fois
   la JVM complètement démarrée. La sonde de démarrage utilise un délai initial de
@@ -160,7 +160,7 @@ avec des tests de disponibilité et des règles d'alerte facultatifs.
   `postgres:15-alpine` pour se connecter à Cloud SQL et créer de manière idempotente la
   base de données et l'utilisateur de l'application. Il peut être relancé sans risque.
 - **Aucune migration automatique au démarrage.** Metabase applique les migrations dans le
-  cadre de son propre processus de démarrage — la tâche `db-init` doit d'abord réussir
+  cadre de son propre processus de démarrage — le job `db-init` doit d'abord réussir
   pour que la base de données et l'utilisateur existent déjà lorsque Metabase démarre.
 - **Prudence lors des mises à niveau.** Les migrations de Metabase sont à sens unique.
   Revenir à une version antérieure après l'exécution d'une migration corrompt le schéma.
@@ -302,8 +302,8 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -351,7 +351,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -372,7 +372,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` | Critique | Le désactiver casse toutes les connexions à la base de données (le sidecar Auth Proxy est requis). |
 | `memory_limit` | `4Gi` | Critique | En dessous de 2 GiB, la JVM plante avec une OutOfMemoryError au démarrage. |
 | `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'application. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `application_version` | à incrémenter avec prudence | Critique | Les migrations de Metabase sont à sens unique ; revenir à une version antérieure corrompt le schéma. |
 | `startup_probe.failure_threshold` | `15` (≥ 15) | Élevé | Le réduire provoque l'arrêt prématuré du conteneur avant que la JVM n'ait terminé son démarrage. |
 | `min_instance_count` | `1` en production | Élevé | `0` entraîne des démarrages à froid de 60 à 120s ; échecs de la sonde de démarrage à la première requête. |

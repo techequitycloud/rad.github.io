@@ -29,7 +29,7 @@ les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)).
 | Image de conteneur | Fixe `n8nio/n8n` et la configuration Cloud Build qui l'étend | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
 | Port du conteneur | Code en dur le port **5678** | Transmis sous la forme `container_port` dans l'output `config` |
-| Amorçage de la base de données | Définit la tâche `db-init` qui crée la base de données, l'utilisateur et les droits | `initialization_jobs` dans l'output `config` |
+| Amorçage de la base de données | Définit le job `db-init` qui crée la base de données, l'utilisateur et les droits | `initialization_jobs` dans l'output `config` |
 | Stockage d'objets | Déclare le bucket de données d'IA **Cloud Storage** (suffixe de nom `data`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement n8n de base (port, protocole, Redis, type de base de données, URL des webhooks, diagnostics) | Comportement de l'application dans les guides des plateformes |
 | Services d'IA compagnons | Configure Qdrant et Ollama comme services supplémentaires dans l'output `config` | Transmis au module socle sous la forme `additional_services` |
@@ -77,15 +77,15 @@ de son secret figure dans les outputs du déploiement de la plateforme
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 n8n requiert **PostgreSQL 15** ; le moteur est fixe et MySQL n'est pas pris en charge.
-Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à Cloud SQL via
+Lors du premier déploiement, un job ponctuel `db-init` se connecte à Cloud SQL via
 l'Auth Proxy et, de manière idempotente :
 
 1. crée la base de données n8n (par défaut : `n8n_db`),
 2. crée l'utilisateur de l'application (par défaut : `n8n_user`) avec le mot de passe généré,
 3. accorde à l'utilisateur tous les privilèges sur cette base de données.
 
-La tâche utilise l'image `postgres:15-alpine`, exécute `scripts/db-init.sh` et se termine
-par un arrêt propre du proxy. Elle peut être relancée sans risque.
+Le job utilise l'image `postgres:15-alpine`, exécute `scripts/db-init.sh` et se termine
+par un arrêt propre du proxy. Il peut être relancé sans risque.
 
 Inspectez directement la base de données avec :
 

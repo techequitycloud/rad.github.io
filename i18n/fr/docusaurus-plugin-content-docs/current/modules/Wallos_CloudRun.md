@@ -42,7 +42,7 @@ détermine plusieurs des valeurs par défaut ci-dessous :
 | Cache et file d'attente | Aucun | Wallos n'utilise pas Redis |
 | Secrets | Secret Manager | Aucun secret applicatif généré ; les utilisateurs résident dans la base SQLite |
 | Entrée | URL Cloud Run / Cloud Load Balancing | L'entrée par défaut est **`all`** — le service est joignable publiquement dès l'installation |
-| Tâches en arrière-plan | Démon cron dans le conteneur | 8 tâches planifiées intégrées (actualisation des taux de change, notifications de renouvellement, une interrogation de vérification d'e-mail toutes les 2 minutes, etc.) — non modélisées comme un Cloud Run Job ; elles s'exécutent en continu dans le conteneur principal |
+| Jobs en arrière-plan | Démon cron dans le conteneur | 8 tâches planifiées intégrées (actualisation des taux de change, notifications de renouvellement, une interrogation de vérification d'e-mail toutes les 2 minutes, etc.) — non modélisées comme un Cloud Run Job ; elles s'exécutent en continu dans le conteneur principal |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
@@ -72,8 +72,8 @@ détermine plusieurs des valeurs par défaut ci-dessous :
   `ingress_settings = "internal"` (VPC uniquement) ou
   `internal-and-cloud-load-balancing`, ou placez-le derrière l'équilibreur de
   charge HTTPS (`enable_cloud_armor = true` + `application_domains`).
-- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
-  tâche `db-init` ne s'exécute ; l'application est prête dès que le conteneur
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucun
+  job `db-init` ne s'exécute ; l'application est prête dès que le conteneur
   démarre.
 - **Port du conteneur 80.** Wallos sert du HTTP/1.1 simple sur le port 80
   (`container_protocol = http1`).
@@ -177,7 +177,7 @@ conteneur — il n'existe pas de Cloud Run Job distinct à inspecter.
 ## 3. Comportement de l'application Wallos {#3-wallos-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a ni
-  tâche `db-init` ni instance Cloud SQL. Au premier démarrage, Wallos crée sa base
+  job `db-init` ni instance Cloud SQL. Au premier démarrage, Wallos crée sa base
   SQLite dans `/var/www/html/db/wallos.db` (sur le montage NFS) si elle n'existe
   pas déjà et crée l'utilisateur par défaut `admin`/`admin`.
 - **Persistance de l'état.** Les abonnements, catégories, paramètres et
@@ -304,8 +304,8 @@ compatibilité avec le socle.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut. Ne fournissez des tâches que pour un chargement ou une migration de données personnalisés. |
-| `cron_jobs` | `[]` | Tâches Cloud Scheduler + Cloud Run supplémentaires — distinctes des 8 tâches planifiées propres à Wallos dans le conteneur. |
+| `initialization_jobs` | `[]` | Aucun job d'initialisation par défaut. Ne fournissez des jobs que pour un chargement ou une migration de données personnalisés. |
+| `cron_jobs` | `[]` | Jobs Cloud Scheduler + Cloud Run supplémentaires — distincts des 8 tâches planifiées propres à Wallos dans le conteneur. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 

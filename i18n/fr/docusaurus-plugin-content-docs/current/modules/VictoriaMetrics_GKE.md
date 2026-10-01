@@ -350,7 +350,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `false` | VictoriaMetrics utilise un PVC de type bloc pour le stockage — activez NFS uniquement pour des tâches personnalisées nécessitant un système de fichiers partagé. |
+| `enable_nfs` | `false` | VictoriaMetrics utilise un PVC de type bloc pour le stockage — activez NFS uniquement pour des jobs personnalisés nécessitant un système de fichiers partagé. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
 | `network_tags` | `["nfsserver"]` | Tags réseau des nœuds/pods GKE ; `nfsserver` est requis lorsque NFS est activé. |
 
@@ -439,7 +439,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD. |

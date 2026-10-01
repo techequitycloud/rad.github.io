@@ -30,7 +30,7 @@ les guides des plateformes ([SparkyFitness_GKE](SparkyFitness_GKE.md),
 | Secrets cryptographiques | Génère `SPARKY_FITNESS_API_ENCRYPTION_KEY` (64 caractères hexadécimaux), `BETTER_AUTH_SECRET` et `SPARKY_FITNESS_APP_DB_PASSWORD`, tous stockés dans **Secret Manager** | Injectés automatiquement ; récupérables via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Build personnalisé minimal (`image_source = "custom"`) FROM l'image officielle `codewithcj/sparkyfitness_server`, qui modifie ses trois constructeurs `pg.Pool` pour activer SSL — sans wrapper de point d'entrée | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`), qui crée uniquement le rôle d'administration et la base de données | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`), qui crée uniquement le rôle d'administration et la base de données | Sortie `initialization_jobs` |
 | Paramètres principaux | Définit l'environnement de base du backend : niveau de journalisation, fuseau horaire, CORS, amorçage de l'administrateur, désactivation de l'inscription, SMTP | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/de vivacité par défaut ciblant HTTP `GET /api/health` sur le port 3010 | §Observabilité dans les guides des plateformes |
 
@@ -72,7 +72,7 @@ déploiement de la plateforme (`database_password_secret`). Consultez
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 SparkyFitness requiert **PostgreSQL 15** ; le moteur est fixe et aucun autre moteur
-n'est pris en charge. Lors du premier déploiement, une tâche ponctuelle (`db-init`)
+n'est pris en charge. Lors du premier déploiement, un job ponctuel (`db-init`)
 s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 
 1. Attend que PostgreSQL soit joignable (via le Cloud SQL Auth Proxy),
@@ -82,7 +82,7 @@ s'exécute avec `postgres:15-alpine` et, de manière idempotente :
 5. Signale au Cloud SQL Auth Proxy de s'arrêter proprement (GKE uniquement).
 
 Contrairement à la plupart des modules Common de ce catalogue, il n'existe **pas de
-seconde tâche de migration**. Le backend de SparkyFitness exécute lui-même ses
+second job de migration**. Le backend de SparkyFitness exécute lui-même ses
 migrations de schéma et, séparément, **répare automatiquement un second rôle
 PostgreSQL à privilèges limités** (`app_db_user`) à l'aide des identifiants du rôle
 d'administration — à chaque démarrage du conteneur, et pas seulement au premier. Il

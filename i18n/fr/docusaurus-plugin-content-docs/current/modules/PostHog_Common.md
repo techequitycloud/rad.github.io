@@ -31,7 +31,7 @@ plateforme ([PostHog_GKE](PostHog_GKE.md)) et le guide du socle ([App_GKE](App_G
 | Image de conteneur | Build personnalisé léger `FROM posthog/posthog` ajoutant un point d'entrée cloud et une surcharge de `docker-boot.sh` ; construit via Cloud Build avec l'ARG de build propre à l'application `POSTHOG_VERSION` | Sortie `container_image` du déploiement de plateforme |
 | Résolution de version | `application_version = "latest"` est utilisé tel quel — `posthog/posthog` publie un tag `latest` réellement à jour qui suit master, contrairement à plusieurs applications de ce catalogue qui nécessitent une substitution de tag glissant | Tag de l'image sur le conteneur déployé |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) — ne contient que les métadonnées applicatives de Django (utilisateurs, équipes, feature flags, tableaux de bord) ; aucune donnée analytique | §Base de données du guide de plateforme |
-| Initialisation de la base de données | Définit la tâche `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits. Aucune extension — tout le stockage analytique est dans ClickHouse | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits. Aucune extension — tout le stockage analytique est dans ClickHouse | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un unique bucket Cloud Storage, atteint via le **client natif compatible S3** de PostHog sur l'API d'interopérabilité S3 de GCS — un compte de service dédié + une paire de clés HMAC, PAS un montage GCS FUSE | Sortie `storage_buckets`, sortie `storage_sa_email` |
 | Secrets | Génère `SECRET_KEY` (clé de signature Django) et une paire de clés d'accès/secrète HMAC d'interopérabilité S3 ; transmet éventuellement un `CLICKHOUSE_PASSWORD` externe | Secret Manager, via la sortie `secret_ids` |
 | Paramètres principaux | `CLICKHOUSE_DATABASE`/`USER`/`SECURE`/`VERIFY`, `OBJECT_STORAGE_*`, `IS_BEHIND_PROXY`, `DISABLE_SECURE_SSL_REDIRECT` | Comportement de l'application dans le guide de plateforme |
@@ -69,7 +69,7 @@ CMD » ; seul `CMD` est donc remplacé :
 PostHog n'a besoin de **PostgreSQL** que pour les métadonnées de sa propre application
 Django — `PostHog_Common` épingle `POSTGRES_15`. **Chaque événement analytique, fiche de
 personne et index d'enregistrement de session réside dans ClickHouse, et non dans
-Postgres.** Lors du premier déploiement, une tâche ponctuelle (`db-init`,
+Postgres.** Lors du premier déploiement, un job ponctuel (`db-init`,
 `postgres:15-alpine`, délai d'expiration de 600s) exécute `scripts/db-init.sh`, qui, de
 manière idempotente :
 
@@ -80,7 +80,7 @@ manière idempotente :
 5. Accorde tous les privilèges sur la base de données et sur le schéma `public`.
 
 Aucune extension PostgreSQL n'est installée — contrairement à de nombreuses applications
-de ce catalogue, PostHog n'en a besoin d'aucune. La tâche peut être réexécutée sans risque.
+de ce catalogue, PostHog n'en a besoin d'aucune. Le job peut être réexécuté sans risque.
 Inspectez directement la base de données avec :
 
 ```bash
@@ -186,7 +186,7 @@ point de terminaison protégé renverrait 401/403 et bloquerait le déploiement 
 
 | Sortie | Type | Description |
 |---|---|---|
-| `config` | `object` | Configuration applicative complète (image + configuration de build, port, contrat de base de données, variables d'environnement, tâche `db-init`, sondes). |
+| `config` | `object` | Configuration applicative complète (image + configuration de build, port, contrat de base de données, variables d'environnement, job `db-init`, sondes). |
 | `secret_ids` | `map(string)` | `SECRET_KEY`, `OBJECT_STORAGE_ACCESS_KEY_ID`, `OBJECT_STORAGE_SECRET_ACCESS_KEY` et (si défini) `CLICKHOUSE_PASSWORD`. |
 | `secret_values` | `map(string)` | `{}` (sensible). |
 | `storage_buckets` | `list(object)` | Un unique bucket (`name_suffix = "storage"`). |

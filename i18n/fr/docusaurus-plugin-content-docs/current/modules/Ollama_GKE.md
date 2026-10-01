@@ -173,7 +173,7 @@ de disponibilité et des règles d'alerte facultatifs sont disponibles.
   `OLLAMA_HOST` (`0.0.0.0:11434`) et `OLLAMA_KEEP_ALIVE` (`24h`) sont injectées
   automatiquement. Ne remplacez pas les deux premières ; la troisième peut être remplacée.
 - **Point de terminaison de santé.** Le chemin racine d'Ollama (`/`) répond `"Ollama is running"` une fois
-  le serveur prêt. Les sondes de disponibilité et de vivacité ciblent ce chemin.
+  le serveur prêt. Les sondes de disponibilité (readiness) et de vivacité ciblent ce chemin.
 - **Réglages supplémentaires.** Utilisez `environment_variables` pour définir `OLLAMA_NUM_PARALLEL` (par défaut
   `1`, à augmenter pour des appelants simultanés), `OLLAMA_ORIGINS` (restreindre le CORS) et d'autres variables
   d'environnement Ollama.

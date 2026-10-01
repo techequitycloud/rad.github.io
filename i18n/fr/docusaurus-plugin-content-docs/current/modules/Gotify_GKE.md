@@ -179,10 +179,10 @@ disponibilité sur `/health` et des règles d'alerte facultatives.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de
-  données et le rôle de l'application, puis accorde les privilèges. La tâche peut être
-  relancée sans risque.
+  données et le rôle de l'application, puis accorde les privilèges. Le job peut être
+  relancé sans risque.
 - **Schéma par auto-migration GORM.** Gotify crée et migre ses propres tables à chaque
-  démarrage — il n'existe pas de tâche de migration distincte. La mise à niveau de la
+  démarrage — il n'existe pas de job de migration distinct. La mise à niveau de la
   version de l'application applique automatiquement les modifications de schéma.
 - **Le compte administrateur n'est initialisé qu'une fois.**
   `GOTIFY_DEFAULTUSER_NAME = admin` et le secret `GOTIFY_DEFAULTUSER_PASS` créent
@@ -303,7 +303,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires aux côtés de Gotify. |
 
@@ -420,7 +420,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `max_instance_count` | `1` | Critique | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres pods (bus de messages interne au processus). |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers seuls sont interprétés en octets et bloquent la planification de tous les pods de l'espace de noms. |
 | `container_port` | `80` | Élevé | Gotify écoute sur le port 80 ; un port différent fait échouer la sonde de démarrage et le pod ne devient jamais Ready. |
 | `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par un garde-fou au moment du plan lorsque `database_type` est défini. |

@@ -32,7 +32,7 @@ Keycloak s'exécute comme un conteneur JVM (Quarkus) sur Cloud Run v2, construit
 
 - **PostgreSQL 15 est obligatoire.** `database_type = "POSTGRES_15"` est fixé par `Keycloak_Common` ; MySQL n'est pas pris en charge.
 - **La connexion à la base de données passe en TCP par le VPC privé, et non par le socket Cloud SQL.** `enable_cloudsql_volume` vaut `false` par défaut car le **pilote JDBC PostgreSQL** fourni avec Keycloak **ne peut pas utiliser les sockets Unix** — le point d'entrée assemble `KC_DB_URL = jdbc:postgresql://<private-ip>:5432/<db>` à l'exécution et, si un socket est un jour monté, bascule automatiquement d'un chemin de socket vers `DB_IP`.
-- **Une tâche `db-init` s'exécute à chaque apply** (`postgres:15-alpine`) pour créer de manière idempotente la base de données et le rôle Keycloak.
+- **Un job `db-init` s'exécute à chaque apply** (`postgres:15-alpine`) pour créer de manière idempotente la base de données et le rôle Keycloak.
 - **L'identifiant de l'administrateur d'amorçage est généré automatiquement.** Nom d'utilisateur `admin` (`KC_BOOTSTRAP_ADMIN_USERNAME`), mot de passe aléatoire stocké dans Secret Manager et injecté sous la forme `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 - **La santé est exposée sur le port de gestion 9000, et non 8080.** Keycloak 25+ sert `/health`, `/health/ready` et `/metrics` sur un port de gestion distinct que la plateforme ne sonde pas — la **sonde de démarrage est donc en TCP sur 8080** ; la sonde de vivacité cible HTTP `/`.
 - **Mise à l'échelle jusqu'à zéro par défaut** (`min_instance_count = 0`). Les démarrages à froid de la JVM prennent 60 à 120 secondes — définissez `1` pour un IdP de production.
@@ -241,8 +241,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (`postgres:15-alpine`, 3 nouvelles tentatives). |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (`postgres:15-alpine`, 3 nouvelles tentatives). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -290,7 +290,7 @@ Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de l
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

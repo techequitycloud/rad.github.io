@@ -268,7 +268,7 @@ disponibilité et le raccordement des règles d'alerte.
   {/* TODO: could not confirm the exact first-run onboarding route/behaviour from the wiring files alone; verified against general Chatwoot self-hosted conventions, not this repo's source. */}
 - **Chemin de santé.** Les sondes de démarrage et de vivacité sont des requêtes
   **HTTP** `GET /` (la page de connexion/d'accueil renvoie 200 sans authentification) ;
-  la sonde de disponibilité définie par le module Common
+  la sonde de disponibilité (readiness) définie par le module Common
   (`initial_delay_seconds = 30`) cible également `/`. Prévoyez du temps au premier
   démarrage — `chatwoot-prepare` doit se terminer avant même que le conteneur de
   l'application ne démarre.

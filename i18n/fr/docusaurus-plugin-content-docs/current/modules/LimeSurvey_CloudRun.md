@@ -47,8 +47,8 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   couche applicative partagée (`database_type = MYSQL_8_0`). InnoDB est forcé car
   Cloud SQL désactive MyISAM — la valeur par défaut MyISAM de l'image ferait sinon
   échouer la création des tables au premier démarrage.
-- **Le schéma est créé au premier démarrage du conteneur**, et non par une tâche de
-  migration. La tâche `db-init` provisionne uniquement une base de données vide et un
+- **Le schéma est créé au premier démarrage du conteneur**, et non par un job de
+  migration. Le job `db-init` provisionne uniquement une base de données vide et un
   utilisateur ; l'installateur en console de LimeSurvey (upstream) construit ensuite
   le schéma au démarrage de l'application. Prévoyez un délai de démarrage généreux
   lors du premier déploiement.
@@ -104,7 +104,7 @@ LimeSurvey stocke toutes les données applicatives (enquêtes, questions, répon
 utilisateurs, paramètres globaux) dans une instance gérée Cloud SQL for MySQL 8.0.
 Par défaut, le service se connecte en **TCP sur IP privée**
 (`enable_cloudsql_volume = false`) ; aucune IP publique n'est exposée. Lors du
-premier déploiement, la tâche `db-init` crée la base de données applicative et
+premier déploiement, le job `db-init` crée la base de données applicative et
 l'utilisateur ; le schéma est ensuite construit par l'installateur propre à
 LimeSurvey au démarrage du conteneur.
 
@@ -223,10 +223,10 @@ des règles d'alerte en option.
   d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Il se connecte via
   le socket Cloud SQL (s'il est monté) ou, à défaut, en TCP sur IP privée, puis crée
   de manière idempotente la base de données applicative et l'utilisateur, accorde les
-  privilèges et vérifie que l'utilisateur de l'application peut se connecter. La
-  tâche peut être réexécutée sans risque.
-- **Schéma créé au démarrage du conteneur.** Il n'existe pas de tâche de migration
-  distincte. Une fois que `db-init` a provisionné une base de données vide, le point
+  privilèges et vérifie que l'utilisateur de l'application peut se connecter. Le
+  job peut être réexécuté sans risque.
+- **Schéma créé au démarrage du conteneur.** Il n'existe pas de job de migration
+  distinct. Une fois que `db-init` a provisionné une base de données vide, le point
   d'entrée upstream `martialblog/limesurvey` exécute l'installateur en console /
   `updatedb` de LimeSurvey au démarrage pour construire (ou mettre à niveau) le
   schéma. Si le conteneur se déclare sain mais que chaque page renvoie une erreur 500
@@ -261,7 +261,7 @@ des règles d'alerte en option.
 - **Fichiers téléversés.** Ils sont conservés sous `/var/www/html/upload` via le
   montage NFS. Sans NFS, les ressources téléversées sont perdues lorsque l'instance
   est recyclée.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -354,7 +354,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `cicd_configuration` | État et détails du CI/CD. |
@@ -377,7 +377,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_type` | `MYSQL_8_0` | Critique | LimeSurvey nécessite MySQL ; passer à Postgres/None empêche le démarrage. |
 | `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; un renommage recrée la base de données et l'utilisateur et détruit toutes les données d'enquête. |
 | `ADMIN_PASSWORD` (généré automatiquement) | À récupérer dans Secret Manager | Critique | Le conteneur se termine avec le code 1 sans lui ; le modifier recrée le super-administrateur au démarrage suivant. |
-| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans URI de sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans URI de sauvegarde valide fait échouer le job d'import. |
 | `enable_nfs` | `true` | Élevé | Sans NFS, les ressources téléversées sous `/var/www/html/upload` sont perdues lorsque l'instance est recyclée. |
 | `max_instance_count` | `1` | Élevé | Plusieurs instances sans NFS partagé ni gestion des sessions confirmés entraînent un état incohérent des téléversements. |
 | `execution_environment` | `gen2` | Élevé | Les montages NFS/GCS nécessitent gen2 ; `gen1` échoue à la validation au moment du plan. |

@@ -292,7 +292,7 @@ Listmonk expose un point de terminaison dédié `/api/health`, mais depuis Listm
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité au démarrage (TCP). Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
+| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité (readiness) au démarrage (TCP). Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
 | `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. Désactivée par défaut ; la sonde de démarrage TCP couvre la disponibilité. |
 | `uptime_check_config` | 14 | `{ enabled=false, path="/api/health" }` | Test de disponibilité Cloud Monitoring. Désactivé par défaut — activez-le pour que les alertes notifient `support_users` en cas d'indisponibilité. |
 | `alert_policies` | 14 | `[]` | Règles d'alerte sur les métriques Cloud Monitoring. |

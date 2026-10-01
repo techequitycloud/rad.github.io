@@ -181,9 +181,9 @@ sont disponibles.
 
 ## 3. Comportement de l'application PocketBase {#3-pocketbase-application-behaviour}
 
-- **Pas de tâche de base de données au premier déploiement.** PocketBase crée lui-même sa
+- **Pas de job de base de données au premier déploiement.** PocketBase crée lui-même sa
   base de données SQLite, ses collections système et son schéma au premier démarrage, sous
-  `/pb_data`. Il n'y a aucune tâche `db-init` à exécuter ni à surveiller.
+  `/pb_data`. Il n'y a aucun job `db-init` à exécuter ni à surveiller.
 - **Les migrations s'appliquent automatiquement au démarrage.** PocketBase exécute lui-même
   les migrations de schéma en attente à chaque démarrage ; la mise à niveau de
   `application_version` applique donc les changements de schéma sans étape de migration
@@ -318,7 +318,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (aucun par défaut). |
 | `statefulset_name` | Nom du StatefulSet PocketBase. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

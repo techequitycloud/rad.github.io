@@ -296,7 +296,7 @@ comportement et leurs valeurs par défaut standard.
 | `workload_type` | `null` → `StatefulSet` | Résolu automatiquement en StatefulSet parce que `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Routage round-robin ; sans effet avec un seul réplica, mais à laisser inchangé puisque `max_instance_count` doit rester à 1. |
 
-### Groupe 13 — Système de fichiers (NFS) et tâches planifiées {#group-13--filesystem-nfs--scheduled-jobs}
+### Groupe 13 — Système de fichiers (NFS) et jobs planifiés {#group-13--filesystem-nfs--scheduled-jobs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|

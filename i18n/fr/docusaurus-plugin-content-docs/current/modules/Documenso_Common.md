@@ -30,7 +30,7 @@ guides de plateforme ([Documenso_GKE](Documenso_GKE.md),
 | Secrets cryptographiques | Génère `NEXTAUTH_SECRET`, `NEXT_PRIVATE_ENCRYPTION_KEY` et `NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY` (chacun une chaîne aléatoire de 40 caractères), ainsi que — uniquement lorsque `smtp_host` est défini — `NEXT_PRIVATE_SMTP_PASSWORD`, et une paire de clés d'accès/secrète HMAC pour le transport de téléversement S3 facultatif. Tous stockés dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `documenso/documenso` avec un point d'entrée personnalisé (`docker-entrypoint.sh`) ; construite via Cloud Build (Kaniko) | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Déclare `POSTGRES` comme sa propre valeur par défaut de `database_type` ; non imposé par une précondition au moment du plan, ni à ce niveau ni à aucun autre | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle applicatif et la base de données, définit la propriété et accorde les droits sur le schéma | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle applicatif et la base de données, définit la propriété et accorde les droits sur le schéma | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `uploads` (CORS activé) et un compte de service de stockage dédié doté d'une paire de clés HMAC | Sorties `storage_buckets` / `storage_sa_email` |
 | Paramètres principaux | Définit les valeurs provisoires `NEXTAUTH_URL`/`NEXT_PUBLIC_WEBAPP_URL`, `NEXT_PRIVATE_SIGNING_TRANSPORT=local`, `NEXT_PUBLIC_UPLOAD_TRANSPORT=database` et (lorsque `smtp_host` est défini) les variables d'environnement `NEXT_PRIVATE_SMTP_*` | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Déclare des valeurs par défaut pour `startup_probe`/`liveness_probe`, bien que les deux variantes de plateforme fournissent et transmettent plutôt les leurs (voir §6) | §Observabilité dans les guides de plateforme |
@@ -100,12 +100,12 @@ défaut ; mais passer `database_type` à MySQL ou SQL Server franchit `tofu plan
 erreur et ne casse l'application qu'à l'exécution — le schéma Prisma de Documenso et
 l'assemblage de l'URL `postgresql://` par le point d'entrée supposent tous deux Postgres.
 
-Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
+Lors du premier déploiement, un job ponctuel (`db-init`) s'exécute avec
 `postgres:15-alpine` (`scripts/documenso/db-init.sh`) et, de façon idempotente :
 
 1. Installe `curl` s'il est absent (au mieux, sans être bloquant),
 2. Si `DB_SSL=false` et que `DB_HOST` n'est pas déjà un chemin de socket Unix, force
-   `DB_HOST=127.0.0.1` et supprime `DB_IP` — faisant passer la tâche par le sidecar
+   `DB_HOST=127.0.0.1` et supprime `DB_IP` — faisant passer le job par le sidecar
    Cloud SQL Auth Proxy plutôt que par une IP directe,
 3. Attend que PostgreSQL accepte les connexions, en s'authentifiant en tant que
    superutilisateur `postgres` via la variable d'environnement secrète `ROOT_PASSWORD`,
@@ -117,12 +117,12 @@ Lors du premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
 6. Accorde à `DB_USER` tous les privilèges sur `DB_NAME` et sur son schéma `public`,
 7. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement (`POST
    http://localhost:9091/quitquitquit`, avec nouvelles tentatives pendant 60 secondes au
-   maximum) afin que la tâche puisse se terminer.
+   maximum) afin que le job puisse se terminer.
 
-La tâche peut être relancée sans risque (`execute_on_apply = true`, `max_retries = 3`,
-`timeout_seconds = 600`). Contrairement au `db-init` d'Activepieces, cette tâche
+Le job peut être relancé sans risque (`execute_on_apply = true`, `max_retries = 3`,
+`timeout_seconds = 600`). Contrairement au `db-init` d'Activepieces, ce job
 n'installe **aucune** extension Postgres — `enable_postgres_extensions` vaut `false` par
-défaut, car le schéma Prisma de Documenso n'en a besoin d'aucune — et elle n'exécute
+défaut, car le schéma Prisma de Documenso n'en a besoin d'aucune — et il n'exécute
 **pas** les migrations de schéma ; celles-ci ont lieu à chaque démarrage du conteneur
 (voir §4).
 
@@ -188,7 +188,7 @@ propre à l'image officielle**, et non dans ce point d'entrée.
   `http://localhost:3000` (ou est vide) au démarrage du conteneur, le point d'entrée
   remplace `NEXT_PUBLIC_WEBAPP_URL` et `NEXTAUTH_URL` par celle des variables
   `CLOUDRUN_SERVICE_URL` (Cloud Run) ou `GKE_SERVICE_URL` (GKE) qui est présente.
-  `NEXT_PRIVATE_INTERNAL_WEBAPP_URL` (utilisée par les tâches en arrière-plan) reçoit par
+  `NEXT_PRIVATE_INTERNAL_WEBAPP_URL` (utilisée par les jobs en arrière-plan) reçoit par
   défaut la même valeur résolue si elle n'est pas définie.
 - **Provisionner un certificat de signature.** Lorsque
   `NEXT_PRIVATE_SIGNING_TRANSPORT=local` (la valeur par défaut), le point d'entrée

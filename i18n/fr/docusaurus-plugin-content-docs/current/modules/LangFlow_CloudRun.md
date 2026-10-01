@@ -192,7 +192,7 @@ règles d'alerte facultatives.
   accorde les privilèges sur la base. Il peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** LangFlow exécute ses **migrations Alembic à
   chaque démarrage du conteneur** ; les tables sont donc créées et mises à niveau par
-  l'application elle-même — la tâche `db-init` ne gère que le rôle, la base et les
+  l'application elle-même — le job `db-init` ne gère que le rôle, la base et les
   droits. Prévoyez un délai supplémentaire au premier démarrage.
 - **`LANGFLOW_SECRET_KEY` est immuable après le premier démarrage.** Il est généré
   une seule fois et écrit dans Secret Manager. Le modifier casse définitivement
@@ -216,7 +216,7 @@ règles d'alerte facultatives.
   serveur est opérationnel. La sonde de démarrage par défaut accorde un délai initial
   de 60 secondes plus une fenêtre d'échec de 60 × 10 s (600 s) pour couvrir le
   chargement des composants et les migrations Alembic du premier démarrage.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -366,7 +366,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[{ name = "db-init", image = "postgres:15-alpine", script_path = "scripts/db-init.sh", execute_on_apply = true }]` | Tâche intégrée qui crée le rôle applicatif, la base de données et les droits au premier déploiement. Remplacez-la par une liste non vide pour exécuter d'autres tâches. |
+| `initialization_jobs` | `[{ name = "db-init", image = "postgres:15-alpine", script_path = "scripts/db-init.sh", execute_on_apply = true }]` | Job intégré qui crée le rôle applicatif, la base de données et les droits au premier déploiement. Remplacez-le par une liste non vide pour exécuter d'autres jobs. |
 | `cron_jobs` | `[]` | Jobs Cloud Run planifiés (aucun n'est requis par LangFlow). |
 | `additional_services` | `[]` | Services sidecar/auxiliaires déployés aux côtés de LangFlow. |
 
@@ -426,7 +426,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -448,7 +448,7 @@ d'explorer les ressources en cours d'exécution.
 | `LANGFLOW_SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Sa rotation casse définitivement chaque identifiant stocké intégré dans un flux — ceux-ci ne peuvent plus être déchiffrés et doivent être ressaisis. |
 | `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit tous les flux et identifiants. |
 | `database_type` | `POSTGRES_15` | Critique | LangFlow requiert PostgreSQL 15 ; tout autre moteur empêche le démarrage. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'importation. |
 | `LANGFLOW_SUPERUSER_PASSWORD` (généré automatiquement) | Le récupérer dans Secret Manager | Élevé | C'est l'identifiant de connexion de l'administrateur ; le perdre signifie qu'il est impossible de se connecter tant qu'il n'est pas réinitialisé. |
 | `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1 GiB exposent l'environnement d'exécution Python à des arrêts OOM sous charge. |
 | `max_instance_count` | `1` | Élevé | LangFlow conserve un état de session et de flux en mémoire de processus ; dépasser 1 répartit l'état entre les instances et provoque un comportement incohérent. |

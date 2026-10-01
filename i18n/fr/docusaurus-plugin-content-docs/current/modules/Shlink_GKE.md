@@ -58,7 +58,7 @@ fichiers à gérer.
   dehors de la base de données.
 - **Les migrations de base de données s'exécutent automatiquement au démarrage du conteneur.**
   L'image officielle `shlinkio/shlink` exécute ses propres migrations de schéma
-  au démarrage ; il n'existe pas de tâche de migration distincte (seulement
+  au démarrage ; il n'existe pas de job de migration distinct (seulement
   `db-init`, qui crée le rôle/la base de données).
 - **`INITIAL_API_KEY` est généré automatiquement** et stocké dans Secret
   Manager, puis injecté comme variable d'environnement secrète du conteneur
@@ -115,7 +115,7 @@ Shlink stocke toutes les données de l'application (URL courtes, enregistrements
 de visites, tags et clés d'API) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods la joignent via le sidecar **Cloud SQL Auth Proxy** sur
 `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier
-déploiement, la tâche `db-init` (avec `postgres:15-alpine`) crée de manière
+déploiement, le job `db-init` (avec `postgres:15-alpine`) crée de manière
 idempotente le rôle et la base de données de l'application, accorde la
 propriété et les privilèges, puis arrête son propre sidecar de proxy via le
 point de terminaison `quitquitquit`.
@@ -188,16 +188,16 @@ disponibilité et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application Shlink {#3-shlink-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que
   PostgreSQL soit joignable, puis, de manière idempotente, crée (`CREATE`) ou
   modifie (`ALTER`) le rôle et la base de données de l'application, accorde la
-  propriété et `ALL PRIVILEGES`, et accorde `ALL ON SCHEMA public`. La tâche
-  peut être relancée sans risque (`execute_on_apply = true`). Elle
+  propriété et `ALL PRIVILEGES`, et accorde `ALL ON SCHEMA public`. Le job
+  peut être relancé sans risque (`execute_on_apply = true`). Il
   s'authentifie en tant que `postgres` avec le même secret que le propre
   `DB_PASSWORD` de l'application (`ROOT_PASSWORD` et `DB_PASSWORD` référencent
   tous deux `database_password_secret`). {/* TODO: verify ROOT_PASSWORD vs DB_PASSWORD sharing the same secret is intentional */}
-- **Les migrations de base de données s'exécutent au démarrage, sans tâche de migration distincte.**
+- **Les migrations de base de données s'exécutent au démarrage, sans job de migration distinct.**
   L'image officielle `shlinkio/shlink` exécute ses propres migrations de schéma
   au démarrage du conteneur sur la base de données vide créée par `db-init` ;
   il n'y a aucune étape de migration `execute_on_apply` à attendre au-delà de
@@ -334,7 +334,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

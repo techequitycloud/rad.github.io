@@ -53,7 +53,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 - **`STATIC_CRON_TOKEN` est généré automatiquement.** Firefly n'effectue aucune
   planification en arrière-plan par lui-même ; un appelant doit interroger
   `GET /api/v1/cron/<STATIC_CRON_TOKEN>` pour exécuter les transactions récurrentes,
-  les rappels de factures et les budgets automatiques. Configurez une tâche Cloud
+  les rappels de factures et les budgets automatiques. Configurez un job Cloud
   Scheduler pour le faire chaque jour.
 - **La mise à l'échelle à zéro est activée par défaut** (`min_instance_count = 0`).
   Les démarrages à froid ajoutent 10–30 secondes de latence à la première requête
@@ -157,9 +157,9 @@ Firefly III n'exécute les transactions récurrentes, les rappels de factures et
 budgets automatiques que lorsqu'un appelant interroge son point de terminaison cron.
 Il n'existe aucun planificateur intégré au processus.
 
-- Configurez une tâche **Cloud Scheduler** qui appelle
-  `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>` chaque jour (définissez-la via
-  l'entrée `cron_jobs` ou créez-la dans la console).
+- Configurez un job **Cloud Scheduler** qui appelle
+  `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>` chaque jour (définissez-le via
+  l'entrée `cron_jobs` ou créez-le dans la console).
 - **CLI :**
   ```bash
   # Read the token, then trigger the cron manually to verify:
@@ -202,10 +202,10 @@ disponibilité et des règles d'alerte.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il crée de
   manière idempotente le rôle et la base de données de l'application et accorde les
-  privilèges sur la base de données et le schéma `public`. La tâche peut être
-  réexécutée sans risque.
-- **Schéma créé au démarrage du conteneur.** Il n'existe **aucune tâche de
-  migration séparée**. L'image `fireflyiii/core` exécute
+  privilèges sur la base de données et le schéma `public`. Le job peut être
+  réexécuté sans risque.
+- **Schéma créé au démarrage du conteneur.** Il n'existe **aucun job de
+  migration séparé**. L'image `fireflyiii/core` exécute
   `php artisan migrate --force` et `firefly-iii:upgrade-database` à chaque
   démarrage ; la mise à niveau d'`application_version` applique donc automatiquement
   les modifications de schéma une fois que `db-init` a provisionné la base de
@@ -229,7 +229,7 @@ disponibilité et des règles d'alerte.
   terminaison JSON non authentifié `/status` de Firefly III (HTTP 200, sans
   connexion, délai initial de 300s). Prévoyez une fenêtre généreuse au premier
   démarrage pendant l'exécution des migrations.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -351,7 +351,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Définissez un appel quotidien Cloud Scheduler → job Cloud Run vers `/api/v1/cron/<STATIC_CRON_TOKEN>`. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -400,7 +400,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -421,9 +421,9 @@ d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
 | `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `PGSQL_SSL_MODE` (`require` automatique) | Laisser tel quel | Élevé | Cloud SQL refuse le TCP non chiffré sur IP privée ; `disable` coupe la connexion. |
-| `STATIC_CRON_TOKEN` / tâche cron | Planifier un appel quotidien | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
+| `STATIC_CRON_TOKEN` / job cron | Planifier un appel quotidien | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
 | `enable_nfs` | `true` | Élevé | Le désactiver place les pièces jointes sur un disque éphémère — les fichiers téléversés disparaissent lors d'un démarrage à froid ou d'une nouvelle révision. |
 | `memory_limit` | `2Gi` | Élevé | Une valeur inférieure à 512Mi est refusée en gen2 ; une mémoire insuffisante provoque l'arrêt OOM de PHP pendant les imports. |
 | `enable_iap` | à activer pour des données privées | Élevé | Firefly III contient des données financières ; le laisser accessible publiquement les expose à quiconque dispose de l'URL. |

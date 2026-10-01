@@ -32,7 +32,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Modèle d'état | Tout l'état réside dans le répertoire de données du conteneur `/data` (documents CouchDB + magasin d'objets MinIO), chiffré avec les secrets générés | §Persistance dans les guides de plateforme |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) provisionné par le socle | Sortie `storage_buckets` |
 | Paramètres essentiels | Définit l'environnement Budibase de base : mode production auto-hébergé, utilisateur administrateur CouchDB, niveau de journalisation, port `80` | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité par défaut ciblant le chemin racine non authentifié `/` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Fournit les sondes de démarrage/vivacité/disponibilité (readiness) par défaut ciblant le chemin racine non authentifié `/` | §Observabilité dans les guides de plateforme |
 
 ---
 

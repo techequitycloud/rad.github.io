@@ -74,7 +74,7 @@ déploiement — reportez-vous au
   ne soit considérée comme prête** : `db-init` → `medusa-migrate` → `medusa-verify` →
   `medusa-admin-create`, chacune dépendant de la précédente.
 - **`MEDUSA_WORKER_MODE = "shared"`** — un seul pod traite à la fois les requêtes API
-  et les tâches/abonnés/workflows en arrière-plan de Medusa, car la topologie
+  et les jobs/abonnés/workflows en arrière-plan de Medusa, car la topologie
   serveur/worker séparée officiellement recommandée par Medusa ne se transpose pas sur
   une charge de travail GKE unique.
 - **`enable_gcs_storage = false` par défaut.** Medusa se rabat sur le stockage local
@@ -196,10 +196,10 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
    installe, dans la mesure du possible, les extensions `uuid-ossp`/`postgis`.
 2. **`medusa-migrate`** — exécute `npx medusa db:migrate` sur l'image construite (2
    vCPU / 2Gi, jusqu'à 30 minutes, 3 nouvelles tentatives).
-3. **`medusa-verify`** — une tâche de garde qui se connecte après `medusa-migrate` et
-   **fait échouer l'apply** si le schéma `public` ne contient aucune table. Elle existe
+3. **`medusa-verify`** — un job de garde qui se connecte après `medusa-migrate` et
+   **fait échouer l'apply** si le schéma `public` ne contient aucune table. Il existe
    parce que le paramètre `execute_on_apply` d'`App_GKE` détermine seulement si Terraform
-   *attend* une tâche, et non si le pod Kubernetes sous-jacent est planifié avant le
+   *attend* un job, et non si le pod Kubernetes sous-jacent est planifié avant le
    démarrage de la charge de travail principale — et un échec de job d'initialisation
    ne fait pas échouer l'apply par défaut. Sans `medusa-verify`, une migration en
    concurrence ou en échec pourrait livrer silencieusement un pod apparemment sain
@@ -231,7 +231,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "http://<external-ip>/health"
 ### `MEDUSA_WORKER_MODE = "shared"` {#medusa_worker_mode--shared}
 
 Un seul pod exécute à la fois le serveur API et les
-tâches/abonnés/workflows en arrière-plan de Medusa — la topologie serveur/worker
+jobs/abonnés/workflows en arrière-plan de Medusa — la topologie serveur/worker
 séparée officiellement recommandée par Medusa ne se transpose pas sur une charge de
 travail GKE unique, de sorte que ce module fonctionne toujours en mode partagé.
 Concrètement : chaque réplica en cours d'exécution traite à la fois les requêtes *et*
@@ -359,7 +359,7 @@ du comportement standard du socle sans surcharge propre à l'application.
 |---|---|---|---|
 | Build à partir des sources (`container_image_source = "custom"`) | Aucune action nécessaire — c'est le seul mode valide | Élevé | Toute modification du Dockerfile, de `entrypoint.sh` ou des arguments de build dans `Medusa_Common` nécessite une véritable reconstruction Cloud Build (~10 minutes pour la seule étape de build) avant de prendre effet. Forcez une reconstruction avec `tofu taint 'module.medusa_app.module.app_build.null_resource.build_and_push_application_image[0]'` si le déclencheur basé sur le hachage du contenu manque une modification. |
 | `enable_redis` | `true` | Critique | Medusa journalise `"redisUrl not found. A fake redis instance will be used."` et démarre quand même — ce message d'apparence anodine signale une solution de repli pour le développement et les tests, pas un mode de production pris en charge. Le cache, les sessions, le bus d'événements, le moteur de workflows et le verrouillage dépendent tous de Redis ; le désactiver dans un déploiement de production durable n'est pas pris en charge. |
-| Job d'initialisation `medusa-verify` | La laisser dans la chaîne par défaut | Critique | Cette tâche existe précisément parce qu'un échec de job d'initialisation ne fait **pas** échouer l'apply du module, et `execute_on_apply` sur GKE ne contrôle que l'*attente*, pas l'ordre de planification par rapport au démarrage de la charge de travail principale. Supprimer `medusa-verify` (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'elle devait éliminer. |
+| Job d'initialisation `medusa-verify` | Le laisser dans la chaîne par défaut | Critique | Ce job existe précisément parce qu'un échec de job d'initialisation ne fait **pas** échouer l'apply du module, et `execute_on_apply` sur GKE ne contrôle que l'*attente*, pas l'ordre de planification par rapport au démarrage de la charge de travail principale. Supprimer `medusa-verify` (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'elle devait éliminer. |
 | Isolation de l'espace de travail pnpm (leçon pour réutiliser ce modèle de Dockerfile) | N/A — à titre informatif | Élevé | Si vous reprenez ce modèle de build à partir des sources pour une autre application basée sur un espace de travail pnpm/npm, n'oubliez pas que la sortie de build produite *à l'intérieur* d'un monorepo cloné reste imbriquée sous le `pnpm-workspace.yaml` de ce monorepo. Exécuter `pnpm install --prod` directement sur cette sortie la réinstalle silencieusement comme partie de l'espace de travail englobant et peut n'écrire **aucun** `node_modules` — confirmé ici par `sh: medusa: not found` à l'exécution. Copiez toujours la sortie de build autonome dans un répertoire sans `pnpm-workspace.yaml` ancêtre avant d'installer ses dépendances de production. |
 | `admin_email` / mot de passe administrateur initial | Le récupérer dans Secret Manager après le déploiement | Élevé | Aucun identifiant administrateur préalimenté n'est visible ailleurs que dans Secret Manager (sortie `admin_password_secret_id`) — le perdre de vue oblige à récupérer l'accès en exécutant manuellement `npx medusa user` contre la base de données en service. |
 | `container_resources.memory_limit` | `1Gi` par défaut | Moyen | Inférieur aux 2Gi par défaut de la variante CloudRun alors que le même processus en mode worker partagé s'exécute ; augmentez-le si les pods subissent une pression mémoire sous une charge combinée API + workflows en arrière-plan. |

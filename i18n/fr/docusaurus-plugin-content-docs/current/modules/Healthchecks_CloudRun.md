@@ -9,7 +9,7 @@ description: "Référence de configuration pour déployer Healthchecks sur Googl
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Healthchecks_CloudRun.png" alt="Healthchecks sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Healthchecks est un service open source et auto-hébergé de supervision des tâches
+Healthchecks est un service open source et auto-hébergé de supervision des jobs
 cron et des signaux de vie (heartbeat) : les tâches planifiées lui envoient un
 « ping » en cas de succès (ou une tâche le pingue périodiquement et Healthchecks
 surveille l'absence de ping), et il vous alerte par e-mail, Slack, SMS ou via
@@ -65,7 +65,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   auto-réparation. Un job d'initialisation `admin-bootstrap` exécute les
   migrations et crée le superutilisateur (`admin_email` / un mot de passe Secret
   Manager généré) via la commande Django standard `createsuperuser --noinput`.
-  Relancer la tâche est une opération sans effet et sans risque si le compte
+  Relancer le job est une opération sans effet et sans risque si le compte
   existe déjà.
 - **L'e-mail sortant est un espace réservé par défaut.** `DEFAULT_FROM_EMAIL` vaut
   `healthchecks@example.org` par défaut. Configurez de vrais `EMAIL_HOST`/`EMAIL_HOST_USER`/

@@ -219,7 +219,7 @@ et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application LibreChat {#3-librechat-application-behaviour}
 
-- **Aucune tâche de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
+- **Aucun job de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
   aucun job d'initialisation distinct n'est nécessaire.
 - **Service auxiliaire `mongo:7` dans l'espace de noms par défaut, et non Firestore.** `mongodb_uri` vaut `""` par défaut,
   mais `main.tf` le remplace par l'URI calculée d'un service auxiliaire `mongo:7` dans l'espace de noms avant même
@@ -353,7 +353,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide — LibreChat migre automatiquement MongoDB au démarrage. Ajoutez des tâches de configuration personnalisées si nécessaire. |
-| `cron_jobs` | `[]` | CronJobs Kubernetes planifiées pour les tâches périodiques (nettoyage des données, préchauffage du cache, etc.). |
+| `cron_jobs` | `[]` | CronJobs Kubernetes planifiés pour les tâches périodiques (nettoyage des données, préchauffage du cache, etc.). |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
@@ -460,7 +460,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration exécutées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration exécutés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |

@@ -27,7 +27,7 @@ socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_
 | Image de conteneur | Épingle l'image officielle `cyclos/cyclos` et la configuration de build qui l'encapsule | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Extensions PostgreSQL | Déclare les six extensions requises installées par `db-init` | Sortie `initialization_jobs` |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui crée l'utilisateur, la base de données et installe les extensions | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement qui crée l'utilisateur, la base de données et installe les extensions | Sortie `initialization_jobs` |
 | Stockage de fichiers GCS | Définit `cyclos.storedFileContentManager = gcs` et dérive le nom du bucket du préfixe de ressource | Sortie `storage_buckets` ; variables d'environnement injectées automatiquement |
 | Environnement principal | Injecte `DB_HOST`, `DB_PORT`, `CYCLOS_HOME` et le nom du bucket GCS | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage et de vivacité (HTTP `/api` avec des délais JVM étendus) | §Observabilité dans les guides des plateformes |
@@ -37,7 +37,7 @@ socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md), [App_Common](App_
 ## 2. Moteur de base de données et amorçage {#2-database-engine-and-bootstrap}
 
 Cyclos exige **PostgreSQL 15** ; le moteur est fixe et MySQL n'est pas pris en charge.
-Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à Cloud SQL avec le
+Lors du premier déploiement, un job ponctuel `db-init` se connecte à Cloud SQL avec le
 superutilisateur `postgres` et, de manière idempotente :
 
 1. Crée l'utilisateur de base de données Cyclos (`cyclos`) avec le mot de passe généré depuis Secret
@@ -48,7 +48,7 @@ superutilisateur `postgres` et, de manière idempotente :
    objets.
 5. Signale au Cloud SQL Proxy (lorsqu'il est présent) de s'arrêter proprement.
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données avec :
+Le job peut être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=cyclos --database=cyclos --project "$PROJECT"
@@ -73,7 +73,7 @@ Les extensions suivantes sont installées automatiquement avant le démarrage de
 | `postgis` | Prise en charge complète des requêtes géospatiales |
 | `unaccent` | Recherche textuelle insensible aux accents Unicode |
 
-Ces extensions doivent être créées par le superutilisateur PostgreSQL — la tâche `db-init` s'en charge
+Ces extensions doivent être créées par le superutilisateur PostgreSQL — le job `db-init` s'en charge
 automatiquement. Vous n'avez pas besoin de définir `enable_postgres_extensions = true` dans le
 module de la plateforme.
 

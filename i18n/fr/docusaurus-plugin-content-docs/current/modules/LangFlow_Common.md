@@ -30,7 +30,7 @@ guides de plateforme ([LangFlow_GKE](LangFlow_GKE.md),
 | Secrets cryptographiques | Génère `LANGFLOW_SECRET_KEY` (32 octets aléatoires, base64url) et `LANGFLOW_SUPERUSER_PASSWORD` (mot de passe de 32 caractères) et les stocke dans **Secret Manager** | Injectés automatiquement comme variables d'environnement secrètes du conteneur ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `langflowai/langflow` avec un point d'entrée shell léger ; construite via Cloud Build (`image_source = "custom"`, tag de base épinglé sur `1.10.2` lorsque `application_version = "latest"`) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** (`database_type = "POSTGRES_15"`) comme seul moteur pris en charge | Section base de données des guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits à l'aide de `postgres:15-alpine` | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données, le rôle et les droits à l'aide de `postgres:15-alpine` | Sortie `initialization_jobs` |
 | Stockage d'objets | **Aucun** — LangFlow conserve les flux et les identifiants dans Postgres ; `storage_buckets` est donc vide | Sortie `storage_buckets` (`[]`) |
 | Paramètres de base | Définit l'environnement LangFlow de référence : port `7860`, hôte `0.0.0.0`, `LANGFLOW_AUTO_LOGIN = "false"`, nom d'utilisateur du superutilisateur | Comportement de l'application dans les guides de plateforme |
 | Vérifications de santé | Fournit la sonde de démarrage/vivacité par défaut ciblant `/health` | Section observabilité des guides de plateforme |
@@ -76,7 +76,7 @@ partagé de secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 LangFlow requiert **PostgreSQL 15** ; le moteur est imposé, et MySQL ou d'autres
-moteurs ne sont pas pris en charge. Au premier déploiement, une tâche ponctuelle
+moteurs ne sont pas pris en charge. Au premier déploiement, un job ponctuel
 (`db-init`) s'exécute avec `postgres:15-alpine` (`create-db-and-user.sh`) et, de
 manière idempotente :
 
@@ -87,10 +87,10 @@ manière idempotente :
    le propriétaire),
 5. Accorde tous les privilèges sur la base de données et sur le schéma `public`,
 6. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement
-   (`POST /quitquitquit`) afin que la tâche puisse se terminer correctement sur GKE.
+   (`POST /quitquitquit`) afin que le job puisse se terminer correctement sur GKE.
 
-La tâche peut être relancée sans risque. LangFlow exécute lui-même ses **migrations
-de schéma Alembic à chaque démarrage du conteneur** ; la tâche `db-init` ne gère donc
+Le job peut être relancé sans risque. LangFlow exécute lui-même ses **migrations
+de schéma Alembic à chaque démarrage du conteneur** ; le job `db-init` ne gère donc
 que le rôle, la base et les droits — les tables sont créées et mises à niveau par
 l'application. Inspectez directement la base de données avec :
 

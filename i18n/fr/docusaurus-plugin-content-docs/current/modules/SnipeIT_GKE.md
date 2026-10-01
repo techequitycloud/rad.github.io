@@ -113,8 +113,8 @@ Snipe-IT stocke toutes les données de l'application (actifs, licences,
 accessoires, consommables, utilisateurs, piste d'audit) dans une instance gérée
 Cloud SQL for MySQL 8.0. Les pods la joignent via le sidecar **Cloud SQL Auth
 Proxy** sur `127.0.0.1:3306` ; aucune IP publique n'est exposée. Lors du premier
-déploiement, la tâche `db-init` crée la base de données, l'utilisateur et les
-autorisations de l'application ; la tâche `migrate` exécute ensuite
+déploiement, le job `db-init` crée la base de données, l'utilisateur et les
+autorisations de l'application ; le job `migrate` exécute ensuite
 `artisan migrate --force` de Laravel pour créer le schéma.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions,
@@ -203,11 +203,11 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application Snipe-IT {#3-snipe-it-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
+- **Configuration de la base de données au premier déploiement.** Le job
   `db-init` s'exécute sur `mysql:8.0-debian` et crée de manière idempotente la
-  base de données, l'utilisateur et les autorisations de l'application (elle
-  peut être relancée sans risque — `execute_on_apply = true`, `max_retries = 3`).
-- **Tâche de migration explicite, et non une migration automatique au démarrage.**
+  base de données, l'utilisateur et les autorisations de l'application (il
+  peut être relancé sans risque — `execute_on_apply = true`, `max_retries = 3`).
+- **Job de migration explicite, et non une migration automatique au démarrage.**
   Contrairement à certaines applications Laravel qui effectuent leurs
   migrations au démarrage du conteneur, Snipe-IT exécute ici un job
   d'initialisation `migrate` explicite (`php /var/www/html/artisan migrate --force`,
@@ -225,7 +225,7 @@ disponibilité et des règles d'alerte facultatifs sont disponibles
   "3306"` est défini par `SnipeIT_Common`.
 - **Persistance des sessions, du cache et de la file d'attente.** `SnipeIT_Common` définit
   `SESSION_DRIVER = "database"`, `CACHE_DRIVER = "file"` et `QUEUE_DRIVER =
-  "database"` afin que les sessions et les tâches en file d'attente survivent
+  "database"` afin que les sessions et les jobs en file d'attente survivent
   aux redémarrages de pods.
 - **`APP_URL` est dérivé automatiquement.** `SnipeIT_Common` définit `APP_URL` à
   partir de l'URL prévue du service GKE lorsqu'elle est connue ; remplacez-la
@@ -338,7 +338,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`, `migrate`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `migrate`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

@@ -64,7 +64,7 @@ déploiement assemble un ensemble restreint et ciblé de services Google Cloud :
 - **MKCOL est bloqué en périphérie sur Cloud Run — lisez le §3 avant de
   déployer.** La création d'un *nouvel* agenda ou carnet d'adresses nécessite
   normalement la méthode WebDAV `MKCOL`, que le frontal Cloud Run de Google
-  rejette avant même qu'elle n'atteigne le conteneur. Une tâche d'amorçage par
+  rejette avant même qu'elle n'atteigne le conteneur. Un job d'amorçage par
   défaut contourne ce problème — voir ci-dessous.
 
 ---
@@ -128,7 +128,7 @@ l'état de Radicale.
 ## 3. Comportement de l'application Radicale {#3-radicale-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a
-  pas de tâche `db-init` — Radicale n'a aucune base de données à initialiser.
+  pas de job `db-init` — Radicale n'a aucune base de données à initialiser.
 - **`seed-default-collections` s'exécute au moment du déploiement.** Un Job
   d'initialisation ponctuel (`execute_on_apply = true`) écrit un « Default
   Calendar » et un « Default Address Book » directement sur le volume de
@@ -144,7 +144,7 @@ l'état de Radicale.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` — la
   redirection `302` non authentifiée de Radicale vers son interface web,
   considérée comme saine par les deux types de sondes.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
   ```

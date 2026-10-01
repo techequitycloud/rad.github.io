@@ -109,7 +109,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 
 ## 3. Comportement de l'application Grocy {#3-grocy-application-behaviour}
 
-- **Aucune initialisation de base de données au premier déploiement.** Grocy n'a ni base de données externe ni tâche `db-init` — il crée et migre son propre schéma SQLite embarqué sous `/config` au premier démarrage.
+- **Aucune initialisation de base de données au premier déploiement.** Grocy n'a ni base de données externe ni job `db-init` — il crée et migre son propre schéma SQLite embarqué sous `/config` au premier démarrage.
 - **La durabilité de `/config` dépend du montage NFS, pas d'une base de données gérée.** Comme tout l'état de Grocy (base de données, configuration, téléversements, sauvegardes) réside dans des fichiers sur `/config`, la fiabilité du montage NFS *est* la fiabilité du déploiement. Vérifiez que le montage est sain avant de vous fier aux données qui y sont écrites.
 - **Aucun identifiant administrateur n'est généré ni injectable.** L'image amont est livrée avec les identifiants par défaut `admin` / `admin`. Connectez-vous avec ceux-ci au premier accès et changez immédiatement le mot de passe via Users → admin → Edit dans l'interface de Grocy — aucune variable d'environnement ni valeur Secret Manager ne le définit à votre place.
 - **Chemin de santé.** Les sondes de démarrage et de disponibilité envoient toutes deux une requête HTTP `GET /`, qui renvoie la page de connexion de Grocy (`200`) sans authentification. Ce n'est pas un point de terminaison de santé dédié — Grocy n'en a pas — mais cela indique de façon fiable que la pile nginx + php-fpm répond.

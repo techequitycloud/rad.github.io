@@ -29,7 +29,7 @@ plateformes ([Dify_GKE](Dify_GKE.md), [Dify_CloudRun](Dify_CloudRun.md)) et les 
 | Image de conteneur | Définit `langgenius/dify-api` comme image de base et l'encapsule avec supervisord (API + Celery dans un seul conteneur) | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
 | Extension pgvector | Active l'extension PostgreSQL `vector` afin que l'instance Cloud SQL serve aussi de base vectorielle | `VECTOR_STORE=pgvector` sans base vectorielle distincte |
-| Amorçage de la base de données | Définit la tâche du premier déploiement qui crée l'utilisateur et la base de données | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée l'utilisateur et la base de données | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`, p. ex. `gcs-dify<resource-prefix>-storage`) | Sortie `storage_buckets` |
 | Environnement de base | Définit toutes les variables d'environnement de base de Dify (adresse d'écoute, paramètres gunicorn, URL Redis, pilote de stockage, connexion pgvector, CORS, URL des services) | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit le comportement par défaut des sondes HTTP de démarrage et de vivacité (toutes deux ciblent `/health`) | §Observabilité dans les guides des plateformes |
@@ -68,7 +68,7 @@ permet à Dify d'utiliser la même base de données à la fois comme magasin app
 vectorielle (`VECTOR_STORE=pgvector`) — aucun service Weaviate, Qdrant ou autre service vectoriel
 distinct n'est nécessaire dans la configuration par défaut.
 
-Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à Cloud SQL via l'Auth
+Lors du premier déploiement, un job ponctuel `db-init` se connecte à Cloud SQL via l'Auth
 Proxy et, de manière idempotente :
 
 1. crée l'utilisateur de l'application (ou met à jour son mot de passe),
@@ -76,7 +76,7 @@ Proxy et, de manière idempotente :
 3. crée la base de données Dify (si elle est absente), détenue par cet utilisateur,
 4. accorde à l'utilisateur tous les privilèges sur la base de données.
 
-La tâche utilise l'image `postgres:15-alpine` et peut être relancée sans risque. Inspectez
+Le job utilise l'image `postgres:15-alpine` et peut être relancé sans risque. Inspectez
 directement la base de données avec :
 
 ```bash

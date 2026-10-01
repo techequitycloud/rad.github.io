@@ -202,7 +202,7 @@ export REGION="us-central1"           # the region you deploy into
 
 Des techniques durables pour les modes de défaillance que vous rencontrerez le plus probablement.
 
-- **Pod non prêt / CrashLoopBackOff :** inspectez les événements et les journaux. La sonde de disponibilité
+- **Pod non prêt / CrashLoopBackOff :** inspectez les événements et les journaux. La sonde de disponibilité (readiness)
   cible `/ready` — un échec à ce niveau signifie presque toujours que l'étape de génération de la configuration
   dans le point d'entrée a échoué (vérifiez que `LOKI_GCS_BUCKET` s'est résolu en un véritable nom
   de bucket) plutôt qu'une lente migration au premier démarrage (il n'y en a pas).

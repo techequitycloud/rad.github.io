@@ -54,7 +54,7 @@ de services Google Cloud :
   les clés d'API. Leur rotation invalide les sessions / les clés d'API stockées.
 - **Les migrations Prisma s'exécutent à chaque démarrage.** Le point d'entrée cloud
   compose `DATABASE_URL` à partir des variables `DB_*` injectées, puis passe la main
-  au démarrage propre de Langfuse, qui exécute `prisma migrate deploy`. La tâche
+  au démarrage propre de Langfuse, qui exécute `prisma migrate deploy`. Le job
   `db-init` ne crée que le rôle et la base de données.
 - **Le premier utilisateur à s'inscrire devient le propriétaire.**
   `AUTH_DISABLE_SIGNUP = "false"` est injecté ; il n'existe aucun identifiant
@@ -191,7 +191,7 @@ règles d'alerte facultatives.
   d'initialisation exécute `db-init.sh` à l'aide de `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente le rôle
   applicatif et la base de données, puis accorde les privilèges. Il ne crée **pas**
-  les tables — la tâche peut être relancée sans risque.
+  les tables — le job peut être relancé sans risque.
 - **Migrations Prisma au démarrage.** Le point d'entrée cloud compose `DATABASE_URL`,
   puis délègue au démarrage propre de Langfuse, qui exécute `prisma migrate deploy`
   avant de lancer le serveur. Mettre à niveau la version de l'application applique
@@ -219,7 +219,7 @@ règles d'alerte facultatives.
   et un délai initial de 60 s) afin que les migrations Prisma se terminent ; envisagez
   de remplacer `path` par `/api/public/health` pour un signal de disponibilité plus
   précis.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -351,8 +351,8 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
-| `cron_jobs` | `[]` | Tâches planifiées Cloud Scheduler + Cloud Run Jobs. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
+| `cron_jobs` | `[]` | Jobs planifiés Cloud Scheduler + Cloud Run Jobs. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -401,7 +401,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -424,7 +424,7 @@ d'explorer les ressources en cours d'exécution.
 | `SALT` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Sa rotation invalide définitivement toutes les clés d'API existantes — chaque client SDK qui les utilise reçoit `401` jusqu'à l'attribution de nouvelles clés. |
 | `db_name` / `db_user` | Définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base et l'utilisateur et détruit toutes les données de traces. |
 | `application_version` | `2` (branche v2) | Critique | Indiquer un tag v3 fait pointer le build vers une image nécessitant ClickHouse + Redis + S3, que ce module ne provisionne pas — le service ne démarre pas. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer le job d'importation. |
 | `memory_limit` | `4Gi` (≥ 2Gi) | Élevé | En dessous de 2 GiB, le serveur Next.js de Langfuse est tué (OOM) pendant les migrations du premier démarrage ou sous la charge d'ingestion. |
 | `ingress_settings` | `all` | Élevé | La valeur `internal` bloque tous les appels d'ingestion SDK externes. |
 | `enable_iap` | uniquement lorsque l'ingestion SDK n'est pas nécessaire | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris l'ingestion des traces par les SDK. |

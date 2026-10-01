@@ -33,7 +33,7 @@ les guides des plateformes ([Chibisafe_GKE](Chibisafe_GKE.md),
 | Secrets cryptographiques / identifiants | Génère en option un `ADMIN_PASSWORD` aléatoire de 24 caractères dans **Secret Manager**, contrôlé par `enable_api_key` (par défaut `false`) | Injecté automatiquement lorsqu'il est activé ; récupérable via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Regroupe les trois conteneurs amont — le backend `chibisafe/chibisafe-server` (image de base), le front-end Next.js `chibisafe/chibisafe` et un reverse proxy Caddy — dans **une seule image personnalisée** dotée d'un point d'entrée de relocalisation et de supervision ; construite via Cloud Build avec un argument de build `CHIBISAFE_VERSION` propre à l'application | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe `database_type = "NONE"` — Chibisafe ne dépend **d'aucun Cloud SQL** ; l'état réside entièrement dans SQLite sur le volume monté | §Base de données dans les guides des plateformes (toutes les variables `database_*`/`db_*` sont inertes) |
-| Amorçage de la base de données | Aucun — aucune tâche `db-init` n'est injectée ; `initialization_jobs` n'est accepté que pour des tâches personnalisées fournies par l'utilisateur | Sortie `initialization_jobs` (vide sauf si fournie par l'utilisateur) |
+| Amorçage de la base de données | Aucun — aucun job `db-init` n'est injecté ; `initialization_jobs` n'est accepté que pour des jobs personnalisés fournis par l'utilisateur | Sortie `initialization_jobs` (vide sauf si fournie par l'utilisateur) |
 | Stockage d'objets | Déclare le bucket Cloud Storage `storage`, toujours présent, qui sous-tend l'unique montage `/data` | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base de Chibisafe : `NODE_ENV=production` ; retient volontairement `PORT` (les `HOST`/`PORT` par processus sont définis par le point d'entrée) ; le port de conteneur `8000` est celui du proxy Caddy (interface web à `/`, API sous `/api`, référence OpenAPI à `/docs`, fichiers téléversés par leur nom) | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Déclare des sondes de démarrage et d'activité par défaut au niveau de Common (`path = "/api/health"`, via le proxy) — les deux variantes de plateforme déclarent leurs propres variables `startup_probe`/`liveness_probe` avec le même chemin, et ce sont elles qui sont déployées | §Observabilité dans les guides des plateformes |
@@ -94,9 +94,9 @@ Chibisafe ne nécessite **aucune base de données externe**. `Chibisafe_Common`
 code en dur `database_type = "NONE"` (ainsi que `db_name = ""`, `db_user = ""`
 et `enable_cloudsql_volume = false`) directement dans sa sortie `config` — ces
 valeurs ne proviennent d'aucune variable, si bien que rien de ce qu'un opérateur
-définit ne peut activer une instance Cloud SQL pour cette application. Aucune
-tâche `db-init` n'est jamais injectée ; `initialization_jobs` se contente de
-transmettre les tâches personnalisées que fournit l'appelant (utile uniquement
+définit ne peut activer une instance Cloud SQL pour cette application. Aucun
+job `db-init` n'est jamais injecté ; `initialization_jobs` se contente de
+transmettre les jobs personnalisés que fournit l'appelant (utile uniquement
 pour un chargement de données sur mesure, jamais pour la mise en place du
 schéma).
 

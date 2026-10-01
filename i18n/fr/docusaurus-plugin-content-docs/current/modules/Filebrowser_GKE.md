@@ -57,8 +57,8 @@ bien que le déploiement assemble un petit ensemble de services Google Cloud :
   SQLite ne tolère pas les écritures concurrentes — conservez un seul réplica.
 - **L'identifiant par défaut est `admin` / `admin`.** Filebrowser le crée au premier
   démarrage ; modifiez-le dans l'interface web immédiatement après le déploiement.
-- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucune
-  tâche `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
+- **Pas de Redis, pas de job d'initialisation.** `enable_redis = false` et aucun
+  job `db-init` ne s'exécute ; le pod est prêt dès que le conteneur démarre.
 - **Port du conteneur 80.** Filebrowser sert du HTTP/1.1 simple sur le port 80.
 - **Le domaine personnalisé est activé par défaut.** `enable_custom_domain = true`
   et `reserve_static_ip = true` ; renseignez `application_domains` pour servir un nom
@@ -166,7 +166,7 @@ d'alerte facultatifs sont disponibles.
 ## 3. Comportement de l'application Filebrowser {#3-filebrowser-application-behaviour}
 
 - **Aucune configuration de base de données au premier déploiement.** Il n'y a ni
-  tâche `db-init` ni instance Cloud SQL. Au premier démarrage, le binaire Filebrowser
+  job `db-init` ni instance Cloud SQL. Au premier démarrage, le binaire Filebrowser
   crée sa base de données SQLite à `/database/filebrowser.db` si elle n'existe pas
   encore et crée l'utilisateur par défaut `admin`/`admin`.
 - **Persistance de l'état.** Les utilisateurs, les paramètres et les liens de

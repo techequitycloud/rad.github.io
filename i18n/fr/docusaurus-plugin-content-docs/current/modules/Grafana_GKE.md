@@ -237,9 +237,9 @@ vivacité, et éventuellement par un test de disponibilité Cloud Monitoring.
 - **Point de terminaison de santé.** Les sondes de démarrage et de vivacité ciblent
   toutes deux `/api/health`, qui renvoie HTTP 200 lorsque Grafana et sa connexion à la
   base de données sont opérationnels.
-- **Aucune tâche planifiée requise.** Contrairement aux applications pilotées par des
-  campagnes, Grafana n'a aucun CronJob obligatoire. Des tâches cron facultatives (par
-  ex. export d'instantanés, nettoyage) peuvent être ajoutées via `cron_jobs`.
+- **Aucun job planifié requis.** Contrairement aux applications pilotées par des
+  campagnes, Grafana n'a aucun CronJob obligatoire. Des jobs cron facultatifs (par
+  ex. export d'instantanés, nettoyage) peuvent être ajoutés via `cron_jobs`.
 
 ---
 
@@ -462,7 +462,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -483,7 +483,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `GF_AUTH_ANONYMOUS_ENABLED` (via `environment_variables`) | `false` (par défaut) | Critique | La valeur `"true"` expose tous les tableaux de bord sans authentification. |
 | `database_type` | `POSTGRES_15` | Critique | PostgreSQL est obligatoire ; le remplacer par SQLite entraîne une perte de données à chaque redémarrage de pod. |
 | `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Des entiers seuls sont interprétés en octets et bloquent toute planification. |
 | `GF_SERVER_ROOT_URL` (via `environment_variables`) | URL publique | Élevé | Sans elle, les redirections OAuth, les liens des e-mails et les iframes pointent vers la mauvaise origine. |
 | `enable_iap` | `true` pour un usage interne | Élevé | Sans IAP, la page de connexion de Grafana est accessible publiquement depuis Internet. |

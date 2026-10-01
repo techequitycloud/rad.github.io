@@ -31,7 +31,7 @@ guides de plateforme ([ToolJet_GKE](ToolJet_GKE.md),
 | Secrets cryptographiques | Génère `SECRET_KEY_BASE`, `LOCKBOX_MASTER_KEY` (64 caractères hexadécimaux) et `PGRST_JWT_SECRET` et les stocke dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `tooljet/tooljet-ce` avec un script `cloud-entrypoint.sh` personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Deux bases de données | Définit la tâche `db-init` du premier déploiement qui crée la base de métadonnées **et** la seconde « ToolJet Database », accorde le rôle partagé `CREATEROLE` et réinitialise le schéma `postgrest` | Sortie `initialization_jobs` |
+| Deux bases de données | Définit le job `db-init` du premier déploiement qui crée la base de métadonnées **et** la seconde « ToolJet Database », accorde le rôle partagé `CREATEROLE` et réinitialise le schéma `postgrest` | Sortie `initialization_jobs` |
 | Stockage d'objets | Ne déclare **aucun** bucket de données — ToolJet stocke les applications, les sources de données et les fichiers téléversés dans PostgreSQL | Sortie `storage_buckets` (`[]`) |
 | Paramètres principaux | Définit l'environnement de base de ToolJet : `SERVE_CLIENT`, port 80, `TOOLJET_DB`, état de l'inscription, télémétrie | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Déclare un chemin par défaut `/api/health` pour la sonde de démarrage/d'activité, mais `ToolJet_CloudRun` comme `ToolJet_GKE` transmettent toujours explicitement leurs propres variables `startup_probe`/`liveness_probe` (par défaut `path = "/"`) à l'appel de ce module ; cette valeur par défaut de la couche Common n'est donc jamais réellement utilisée | §Observabilité dans les guides de plateforme |
@@ -91,7 +91,7 @@ même instance Cloud SQL** :
    exposée aux requêtes des applications par un processus **PostgREST** dans le
    conteneur.
 
-Au premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
+Au premier déploiement, un job ponctuel (`db-init`) s'exécute avec
 `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy (ou se rabat sur l'IP privée) et
@@ -116,7 +116,7 @@ Au premier déploiement, une tâche ponctuelle (`db-init`) s'exécute avec
    profit de l'application est sûre et idempotente,
 6. Demande au Cloud SQL Auth Proxy de s'arrêter proprement.
 
-La tâche peut être réexécutée sans risque. Inspectez directement les bases de
+Le job peut être réexécuté sans risque. Inspectez directement les bases de
 données avec :
 
 ```bash
@@ -174,7 +174,7 @@ démarre correctement dès le premier lancement :
   par le même processus NestJS ; il n'y a donc pas de service nginx/client séparé.
   L'unique conteneur écoute sur le **port 80**.
 - **Nom de la ToolJet Database** — `TOOLJET_DB = "tooljet_db"` nomme la seconde base
-  de données que crée la tâche `db-init` et que sert PostgREST.
+  de données que crée le job `db-init` et que sert PostgREST.
 - **Environnement** — `NODE_ENV = "production"`.
 - **Inscription** — `DISABLE_SIGNUPS = "true"` par défaut. Une nouvelle installation
   n'est pas ouverte à l'inscription en libre-service ; les opérateurs modifient ce

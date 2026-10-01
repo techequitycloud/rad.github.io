@@ -63,7 +63,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour l'autoscaling, la concurrence, le
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Directus stocke toutes les données applicatives dans une instance gérée Cloud SQL for PostgreSQL 15. Les instances se connectent par défaut en **TCP** (connecteur Cloud SQL, sans socket Unix par défaut sur Cloud Run). Une tâche `db-init` s'exécute à chaque apply (de manière idempotente) : elle crée la base de données et l'utilisateur de l'application, accorde les privilèges et installe l'extension `uuid-ossp`.
+Directus stocke toutes les données applicatives dans une instance gérée Cloud SQL for PostgreSQL 15. Les instances se connectent par défaut en **TCP** (connecteur Cloud SQL, sans socket Unix par défaut sur Cloud Run). Un job `db-init` s'exécute à chaque apply (de manière idempotente) : il crée la base de données et l'utilisateur de l'application, accorde les privilèges et installe l'extension `uuid-ossp`.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -148,7 +148,7 @@ Les sorties stdout/stderr des conteneurs sont envoyées vers Cloud Logging. Les 
 
 ## 3. Comportement de l'application Directus {#3-directus-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche `db-init` s'exécute à chaque apply (`execute_on_apply = true`). Elle crée l'utilisateur de base de données Directus avec le mot de passe généré, crée la base de données `directus`, installe l'extension `uuid-ossp` et accorde tous les privilèges. La tâche est idempotente.
+- **Configuration de la base de données au premier déploiement.** Un job `db-init` s'exécute à chaque apply (`execute_on_apply = true`). Il crée l'utilisateur de base de données Directus avec le mot de passe généré, crée la base de données `directus`, installe l'extension `uuid-ossp` et accorde tous les privilèges. Le job est idempotent.
 - **Amorçage au premier démarrage.** `BOOTSTRAP = "true"` crée l'utilisateur administrateur initial et les collections système de Directus au premier démarrage. L'adresse e-mail de l'administrateur vaut par défaut `admin@example.com` — **remplacez-la via `environment_variables = { ADMIN_EMAIL = "you@example.com" }` avant le premier déploiement.**
 - **Migrations à chaque démarrage.** `AUTO_MIGRATE = "true"` fait exécuter `database migrate:latest` par Directus à chaque démarrage d'instance, de sorte que la mise à niveau de `application_version` applique automatiquement les changements de schéma.
 - **Sonde de santé.** La sonde de démarrage cible `/server/ping` avec un délai initial de 30 secondes et un seuil d'échec généreux (`failure_threshold = 10`, `period_seconds = 20`) pour laisser le temps à la configuration de la base de données au premier démarrage. La sonde de vivacité cible également `/server/ping`.
@@ -268,7 +268,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — consultez [A
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` fournie par `Directus_Common`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` fourni par `Directus_Common`. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents (p. ex. purge du cache, synchronisation des données). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -320,7 +320,7 @@ Ces valeurs sont renvoyées lorsqu'un déploiement réussit et constituent le mo
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État du monitoring, canaux et tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |

@@ -252,7 +252,7 @@ facultatifs sont disponibles.
   `/v1/health` avec un délai initial de 120 secondes et 60 tentatives en cas d'échec
   afin de laisser largement le temps nécessaire. La sonde de vivacité passe à
   `/v1/health` une fois le démarrage réussi.
-- **Points de terminaison de santé.** Les sondes de disponibilité et de vivacité
+- **Points de terminaison de santé.** Les sondes de disponibilité (readiness) et de vivacité
   utilisent `/v1/health` et `/v1/system/version`. Ils ne renvoient HTTP 200 que lorsque
   l'application est entièrement initialisée et que tous les services sont joignables.
 - **Affinité de session.** `session_affinity = "ClientIP"` achemine les requêtes d'un
@@ -304,7 +304,7 @@ par défaut standard.
 | `max_instance_count` | `5` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `container_port` | `80` | Le frontal Nginx de RAGFlow écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
-| `termination_grace_period_seconds` | `60` | À augmenter pour les tâches de traitement de documents en cours. |
+| `termination_grace_period_seconds` | `60` | À augmenter pour les jobs de traitement de documents en cours. |
 | `deployment_timeout` | `1800` | Secondes pendant lesquelles Terraform attend le déploiement progressif — valeur généreuse pour tenir compte du chargement des modèles. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisse Autopilot ajuster automatiquement les demandes de ressources. |
 
@@ -364,7 +364,7 @@ Ces paramètres ne s'appliquent que lorsque `workload_type = "StatefulSet"` ou `
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | Tâches planifiées récurrentes déployées comme CronJobs Kubernetes. |
 | `additional_services` | `[]` | Deployments Kubernetes complémentaires supplémentaires (par ex. Elasticsearch intégré pour le développement). |
 
@@ -486,7 +486,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD. |
@@ -510,7 +510,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `database_type` | `MYSQL_8_0` | Critique | RAGFlow exige MySQL ; PostgreSQL/`NONE` empêche le démarrage. |
 | `enable_cloudsql_volume` | `true` | Critique | RAGFlow se connecte via un socket Unix ; désactiver le sidecar proxy provoque un échec de connexion à la base de données au démarrage. |
 | `db_name` / `db_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données ou l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
 | `redis_host` | IP Memorystore explicite ou `""` (repli sur NFS) | Élevé | Un hôte Redis injoignable ou erroné interrompt silencieusement tous les workers de documents asynchrones. |
 | `min_instance_count` | `1` | Élevé | `0` entraîne une mise à l'échelle à zéro ; les démarrages à froid prennent 2 à 3 minutes et les requêtes expirent. |

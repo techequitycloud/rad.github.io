@@ -165,9 +165,9 @@ sont envoyées à Cloud Monitoring, avec un test de disponibilité facultatif su
 ## 3. Comportement de l'application Chroma {#3-chroma-application-behaviour}
 
 - **Aucun amorçage de base de données.** Chroma gère son propre stockage intégré
-  et ne nécessite aucun job d'initialisation de base de données. Aucune tâche
+  et ne nécessite aucun job d'initialisation de base de données. Aucun job
   `db-init` n'est injecté. Si vous fournissez des `initialization_jobs`
-  personnalisées, elles s'exécutent en tant que Cloud Run Jobs avant la mise à
+  personnalisés, ils s'exécutent en tant que Cloud Run Jobs avant la mise à
   jour du service.
 - **Chargement des index au démarrage à froid.** Lorsqu'une nouvelle instance
   démarre (après une mise à l'échelle à zéro ou une nouvelle révision), elle charge
@@ -330,8 +330,8 @@ ignorées : `database_type` (fixée à
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Chroma ne nécessite aucun job d'initialisation par défaut. Fournissez des tâches uniquement pour un chargement de données personnalisé. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler (par exemple, instantanés des collections). |
+| `initialization_jobs` | `[]` | Chroma ne nécessite aucun job d'initialisation par défaut. Fournissez des jobs uniquement pour un chargement de données personnalisé. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler (par exemple, instantanés des collections). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -367,7 +367,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |

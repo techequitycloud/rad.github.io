@@ -41,7 +41,7 @@ ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Cyclos exige six extensions PostgreSQL précises
   (`pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`, `postgis`, `unaccent`). MySQL et
   SQL Server ne sont pas pris en charge.
-- **Les extensions PostgreSQL sont installées automatiquement** par la tâche `db-init` avant le
+- **Les extensions PostgreSQL sont installées automatiquement** par le job `db-init` avant le
   démarrage de Cyclos — vous n'avez pas besoin de les activer manuellement.
 - **Le stockage de fichiers GCS est obligatoire.** Cyclos utilise Google Cloud Storage comme gestionnaire
   de contenu de fichiers (`cyclos.storedFileContentManager = gcs`). Le nom du bucket est injecté
@@ -124,7 +124,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les montages GCS Fuse et CMEK.
 ### D. Secret Manager {#d-secret-manager}
 
 Le mot de passe de la base de données Cyclos et celui du superutilisateur PostgreSQL (`ROOT_PASSWORD`) sont stockés dans
-Secret Manager et injectés dans le service à l'exécution. La tâche `db-init` utilise
+Secret Manager et injectés dans le service à l'exécution. Le job `db-init` utilise
 `ROOT_PASSWORD` pour installer les extensions ; Cyclos utilise `DB_PASSWORD` pour se connecter à l'exécution.
 
 - **Console :** Security → Secret Manager.
@@ -168,12 +168,12 @@ Monitoring, avec des tests de disponibilité et des règles d'alerte facultatifs
 
 ## 3. Comportement de l'application Cyclos {#3-cyclos-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init` s'exécute en tant que superutilisateur PostgreSQL et,
+- **Configuration de la base de données au premier déploiement.** Le job `db-init` s'exécute en tant que superutilisateur PostgreSQL et,
   de manière idempotente : crée l'utilisateur de base de données `cyclos`, crée la base de données de l'application,
   installe les six extensions requises (`pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`,
-  `postgis`, `unaccent`) et accorde les privilèges nécessaires. Elle peut être relancée sans risque.
+  `postgis`, `unaccent`) et accorde les privilèges nécessaires. Il peut être relancé sans risque.
 
-  Inspectez la tâche et ses exécutions :
+  Inspectez le job et ses exécutions :
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -328,7 +328,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (crée les extensions, l'utilisateur et la base de données). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (crée les extensions, l'utilisateur et la base de données). |
 | `cron_jobs` | `[]` | Cloud Run Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -370,7 +370,7 @@ ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

@@ -38,7 +38,7 @@ socle ([App_GKE](App_GKE.md), [App_Common](App_Common.md)).
 | Secrets cryptographiques | **Aucun.** Filebrowser stocke ses utilisateurs et l'identifiant administrateur initial dans sa propre base de données SQLite embarquée ; aucune variable d'environnement Secret Manager n'est générée | Les sorties `secret_ids` / `secret_values` sont volontairement vides |
 | Image de conteneur | Encapsule finement l'image officielle `filebrowser/filebrowser` au moyen d'un Dockerfile de deux lignes ; construite avec Cloud Build (Kaniko) et mise en miroir dans Artifact Registry | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose `database_type = "NONE"` — Filebrowser utilise un fichier **SQLite embarqué**, pas Cloud SQL | §Persistance dans les guides des plateformes |
-| Initialisation de la base de données | **Aucune.** Aucune tâche `db-init` n'est injectée ; `initialization_jobs` est vide, sauf si l'opérateur fournit des tâches personnalisées | Sortie `initialization_jobs` |
+| Initialisation de la base de données | **Aucune.** Aucun job `db-init` n'est injecté ; `initialization_jobs` est vide, sauf si l'opérateur fournit des jobs personnalisés | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (suffixe `storage`) qui contient le montage persistant `/database` (la base SQLite) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit `FB_DATABASE = /database/filebrowser.db` et `FB_ROOT = /srv`, et fixe le conteneur sur le port 80 | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la sonde de démarrage/d'activité par défaut ciblant `/health` | §Observabilité dans les guides des plateformes |
@@ -92,9 +92,9 @@ FROM filebrowser/filebrowser:${FILEBROWSER_VERSION}
 ## 4. Initialisation de la base de données — aucune {#4-database-initialization--none}
 
 Filebrowser gère son propre stockage et ne nécessite **aucune initialisation de base
-de données**. Aucune tâche `db-init` n'est injectée, et `database_type` est fixé à
+de données**. Aucun job `db-init` n'est injecté, et `database_type` est fixé à
 `NONE`. L'entrée `initialization_jobs` n'est prise en compte que si l'opérateur
-fournit des tâches personnalisées (par exemple pour alimenter l'arborescence servie
+fournit des jobs personnalisés (par exemple pour alimenter l'arborescence servie
 en fichiers) — sinon elle reste vide.
 
 Au premier démarrage, le binaire Filebrowser crée sa base de données SQLite à

@@ -111,7 +111,7 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriq
 
 ## 3. Comportement de l'application Hasura {#3-hasura-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement.** Un job d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. La tâche peut être réexécutée sans risque.
+- **Initialisation de la base de données au premier déploiement.** Un job d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et l'utilisateur de l'application, puis accorde les privilèges. Le job peut être réexécuté sans risque.
 - **Catalogue de métadonnées au démarrage.** Hasura installe et migre son propre schéma de catalogue de métadonnées dans Postgres au démarrage ; la mise à niveau de la version de l'image applique donc les modifications du catalogue sans étape de migration distincte. Les métadonnées des tables suivies persistent dans la base de données lors des redémarrages de pods et des mises à jour progressives.
 - **Deux URL de connexion, assemblées dans le conteneur.** Le point d'entrée construit à la fois `HASURA_GRAPHQL_DATABASE_URL` et `HASURA_GRAPHQL_METADATA_DATABASE_URL` à partir des variables `DB_*` injectées. Comme le sidecar Auth Proxy écoute sur `127.0.0.1`, le DSN est un loopback simple sans SSL.
 - **Le secret administrateur est la frontière de sécurité.** Envoyez-le dans l'en-tête `x-hasura-admin-secret` :
@@ -122,7 +122,7 @@ Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriq
     -H 'Content-Type: application/json' \
     -d '{"query":"{ __schema { queryType { name } } }"}'
   ```
-- **Chemin de santé.** Les sondes de démarrage et de disponibilité ciblent `/healthz` — le point de terminaison public, sans authentification, qui renvoie 200 dès que le moteur est démarré et connecté à Postgres. Ne redirigez pas les sondes vers `/v1/graphql` ou `/console` (les deux renvoient 401 sans le secret administrateur), sinon les pods ne deviennent jamais Ready.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/healthz` — le point de terminaison public, sans authentification, qui renvoie 200 dès que le moteur est démarré et connecté à Postgres. Ne redirigez pas les sondes vers `/v1/graphql` ou `/console` (les deux renvoient 401 sans le secret administrateur), sinon les pods ne deviennent jamais Ready.
 - **Accès à la console.** Accédez à la console sur `http://<external-ip>/console` (ou sur le domaine personnalisé) et collez le secret administrateur pour suivre des tables et exécuter des requêtes GraphQL.
 
 ---
@@ -217,7 +217,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe_config` | HTTP `/healthz`, `failure_threshold=30` | Sonde de démarrage. |
-| `health_check_config` | HTTP `/healthz`, `failure_threshold=3` | Sonde de disponibilité (liveness). |
+| `health_check_config` | HTTP `/healthz`, `failure_threshold=3` | Sonde de vivacité. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Règles d'alerte sur les métriques facultatives. |
 
@@ -225,7 +225,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Hasura. |
 
@@ -324,7 +324,7 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs d'initialisation et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs d'initialisation et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -347,7 +347,7 @@ Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent 
 |---|---|---|---|
 | `HASURA_GRAPHQL_ADMIN_SECRET` (généré automatiquement) | À conserver dans Secret Manager ; rotation délibérée | Critique | C'est la seule protection des API GraphQL/métadonnées et de la console — l'exposer accorde un accès complet en lecture/écriture à toutes les tables suivies. |
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelins le catalogue de métadonnées et toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés en octets et bloquent la planification de tous les pods dans l'espace de noms. |
 | Chemin de `startup_probe_config` / `health_check_config` | `/healthz` | Élevé | Faire pointer une sonde vers `/v1/graphql` ou `/console` renvoie 401 — les pods ne deviennent jamais Ready alors que le moteur a démarré. |
 | `container_image_source` | `custom` | Élevé | `prebuilt` ignore le point d'entrée qui assemble les deux valeurs `*_DATABASE_URL` — le moteur démarre sans base de données et chaque requête échoue. |

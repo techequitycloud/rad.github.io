@@ -214,7 +214,7 @@ règles d'alerte facultatifs sont disponibles.
   kubectl get cronjobs -n "$NAMESPACE"
   kubectl get jobs -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp
   ```
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité utilisent la page de
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité utilisent la page de
   connexion de Mautic, qui ne renvoie HTTP 200 que lorsque l'application est
   entièrement initialisée.
 - **Connexion administrateur.** Le nom d'utilisateur et l'adresse e-mail de

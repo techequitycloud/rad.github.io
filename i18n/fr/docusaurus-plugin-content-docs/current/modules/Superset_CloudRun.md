@@ -206,7 +206,7 @@ disponibles.
   utilisent Redis comme broker et backend de résultats. Sans Redis, les requêtes
   asynchrones et les rapports planifiés sont indisponibles. Configurez
   `enable_redis = true` et renseignez `redis_host` en production.
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent `/health`,
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/health`,
   qui renvoie HTTP 200 lorsque le pool de workers Gunicorn est prêt.
 - **Inspecter les jobs en cours d'exécution :**
   ```bash

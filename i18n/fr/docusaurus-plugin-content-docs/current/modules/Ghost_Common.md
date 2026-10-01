@@ -23,7 +23,7 @@ Pour l'infrastructure qui provisionne et exécute effectivement Ghost, consultez
 | Amorçage de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données avec le jeu de caractères `utf8mb4`, crée l'utilisateur et accorde les privilèges | Sortie `initialization_jobs` |
 | Stockage objet | Déclare un bucket **Cloud Storage** (suffixe `content`) | Sortie `storage_buckets` |
 | Contrôles de santé | Fournit le comportement par défaut des sondes de démarrage (`/`, délai initial de 90s, 10 échecs) et de vivacité (`/`, délai de 60s) | §Observabilité dans les guides des plateformes |
-| Sonde de disponibilité | HTTP `/`, délai initial de 30s, période de 10s, 3 échecs | Appliquée au conteneur en cours d'exécution |
+| Sonde de disponibilité (readiness) | HTTP `/`, délai initial de 30s, période de 10s, 3 échecs | Appliquée au conteneur en cours d'exécution |
 
 ---
 

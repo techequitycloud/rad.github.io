@@ -199,7 +199,7 @@ tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application LibreChat {#3-librechat-application-behaviour}
 
-- **Aucune tâche de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
+- **Aucun job de migration de la base de données.** LibreChat migre automatiquement son schéma MongoDB au premier démarrage ;
   aucun job d'initialisation distinct n'est nécessaire.
 - **Sidecar MongoDB dans le pod par défaut.** `mongodb_uri` vaut par défaut
   `mongodb://127.0.0.1:27017/LibreChat` et pointe vers un conteneur officiel `mongo:7` ajouté comme
@@ -362,7 +362,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide — LibreChat migre automatiquement MongoDB au démarrage. Ajoutez des tâches de configuration personnalisées si nécessaire. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler (nettoyage des données, préchauffage du cache, etc.). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler (nettoyage des données, préchauffage du cache, etc.). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -408,7 +408,7 @@ en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration exécutées. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration exécutés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |

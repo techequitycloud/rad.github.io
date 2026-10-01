@@ -172,7 +172,7 @@ disponibles.
   applications, Metabase n'exécute pas de migrations de schéma à chaque démarrage. Les
   migrations s'exécutent dans le cadre du processus applicatif Metabase au premier
   démarrage, sur une base de données déjà initialisée — d'où l'importance de la réussite
-  préalable de la tâche `db-init`.
+  préalable du job `db-init`.
 - **Prudence lors des mises à niveau.** Les migrations de Metabase sont à sens unique.
   Revenir à une version antérieure après l'exécution d'une migration corrompt le schéma.
   Testez toujours les mises à niveau dans un environnement de préproduction avant de les
@@ -288,7 +288,7 @@ Non recommandé pour Metabase — l'application est sans état. Consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init` (création de la base de données PostgreSQL et de l'utilisateur). |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés pour toute tâche récurrente. |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
@@ -396,7 +396,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'importation (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -418,7 +418,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` | Critique | Le désactiver casse toutes les connexions à la base de données (le sidecar Auth Proxy est requis). |
 | `container_resources.memory_limit` | `4Gi` | Critique | En dessous de 2 GiB, la JVM plante avec une OutOfMemoryError au démarrage. |
 | `db_name` / `db_user` | à définir une seule fois | Critique | Ce sont eux qui contrôlent le nom/l'utilisateur **réels** de la base de données (transmis à `Metabase_Common`) ; immuables après le premier déploiement — les renommer recrée la base de données/l'utilisateur et détruit toutes les données de l'application. `application_database_name`/`application_database_user` sont les entrées génériques d'App_GKE, mais elles sont masquées/sans effet pour ce module (App_GKE dérive le nom réel de la configuration `db_name` du module) ; les modifier n'a donc aucun effet. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `application_version` | à incrémenter avec prudence | Critique | Les migrations de Metabase sont à sens unique ; revenir à une version antérieure corrompt le schéma. Testez toujours les mises à niveau en préproduction. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification. |
 | `startup_probe_config.failure_threshold` | `18` (≥ 18) | Élevé | Le réduire provoque l'arrêt prématuré des pods avant que la JVM n'ait terminé son démarrage. |

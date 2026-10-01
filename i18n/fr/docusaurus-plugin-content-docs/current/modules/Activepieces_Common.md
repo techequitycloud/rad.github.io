@@ -30,7 +30,7 @@ les guides de plateforme ([Activepieces_GKE](Activepieces_GKE.md),
 | Secrets cryptographiques | Génère `AP_ENCRYPTION_KEY` (32 caractères hexadécimaux) et `AP_JWT_SECRET` (32 caractères alphanumériques) et les stocke dans **Secret Manager** | Injectés automatiquement ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `activepieces/activepieces` avec un script de point d'entrée personnalisé ; construite via Cloud Build | Sortie `container_image` du déploiement de plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides de plateforme |
-| Amorçage de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée la base de données et l'utilisateur, accorde les droits et installe `pgvector` | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et l'utilisateur, accorde les droits et installe `pgvector` | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket de données **Cloud Storage** | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement de base d'Activepieces : mode de file d'attente, port, télémétrie, mode d'exécution, état de l'inscription | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Fournit la sonde de démarrage/de vivacité par défaut ciblant `/api/v1/flags` | §Observabilité dans les guides de plateforme |
@@ -73,7 +73,7 @@ partagé de secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Activepieces nécessite **PostgreSQL 15** ; le moteur est imposé et MySQL ou d'autres
-moteurs ne sont pas pris en charge. Lors du premier déploiement, une tâche ponctuelle
+moteurs ne sont pas pris en charge. Lors du premier déploiement, un job ponctuel
 (`db-init`) s'exécute à l'aide de `postgres:15-alpine` et, de façon idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy et le mappe pour l'accès `psql`,
@@ -87,7 +87,7 @@ moteurs ne sont pas pris en charge. Lors du premier déploiement, une tâche pon
    utilisent la recherche de similarité vectorielle,
 7. Signale au Cloud SQL Auth Proxy de s'arrêter proprement.
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données
+Le job peut être relancé sans risque. Inspectez directement la base de données
 avec :
 
 ```bash

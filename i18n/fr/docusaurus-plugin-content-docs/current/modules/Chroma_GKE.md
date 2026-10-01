@@ -402,7 +402,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les jobs d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour un chargement de données ou des migrations personnalisés. |
+| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les tâches d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour un chargement de données ou des migrations personnalisés. |
 | `cron_jobs` | _(défini)_ | Liste des CronJobs à déployer à côté de Chroma (p. ex. pour des instantanés de collections ou des tâches de maintenance). |
 | `additional_services` | _(défini)_ | Liste de services Kubernetes supplémentaires à déployer à côté de Chroma (p. ex. sidecars, services d'appoint). |
 

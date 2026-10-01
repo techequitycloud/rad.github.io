@@ -193,8 +193,8 @@ règles d'alerte en option.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte
   via le sidecar cloud-sql-proxy et crée de manière idempotente la base de données
-  applicative et l'utilisateur, puis accorde les privilèges. La tâche peut être
-  réexécutée sans risque.
+  applicative et l'utilisateur, puis accorde les privilèges. Le job peut être
+  réexécuté sans risque.
 - **Les migrations du schéma s'exécutent à chaque démarrage.** Le `CMD` de l'image
   de base de Linkwarden exécute `prisma migrate deploy` avant de démarrer les
   processus web et worker ; la mise à niveau de la version de l'application applique
@@ -213,7 +213,7 @@ règles d'alerte en option.
   — Linkwarden ne dispose d'aucun point de terminaison de santé dédié confirmé. La
   sonde de démarrage accorde une fenêtre généreuse pour le démarrage à froid de
   Next.js ainsi que l'initialisation de Chrome headless/Playwright.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -325,7 +325,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via l'Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `kubernetes_ready` | Indique si le cluster et la charge de travail sont prêts. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |

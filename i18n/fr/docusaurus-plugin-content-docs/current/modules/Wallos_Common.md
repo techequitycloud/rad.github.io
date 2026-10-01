@@ -30,7 +30,7 @@ et les guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md)
 | Secrets cryptographiques | **Aucun.** Wallos stocke ses utilisateurs dans sa propre base SQLite embarquée ; aucune variable d'environnement Secret Manager n'est générée | Les outputs `secret_ids` / `secret_values` sont volontairement vides |
 | Image de conteneur | Récupère `bellamy/wallos` **directement** — une véritable image tierce précompilée, sans Dockerfile ni étape Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe `database_type = "NONE"` — Wallos utilise un fichier **SQLite embarqué** ; il est confirmé qu'aucune prise en charge de MySQL/Postgres n'existe dans l'application | §Persistance dans les guides des plateformes |
-| Amorçage de la base de données | **Aucun.** Aucune tâche `db-init` n'est injectée ; `initialization_jobs` reste vide sauf si l'opérateur fournit des tâches personnalisées | Sortie `initialization_jobs` |
+| Amorçage de la base de données | **Aucun.** Aucun job `db-init` n'est injecté ; `initialization_jobs` reste vide sauf si l'opérateur fournit des jobs personnalisés | Sortie `initialization_jobs` |
 | Stockage objet | Déclare **deux** buckets Cloud Storage : `db` (le fichier SQLite) et `uploads` (logos de fournisseurs téléversés par les utilisateurs) | Sortie `storage_buckets` |
 | Paramètres principaux | Fixe le conteneur sur le port 80 ; aucune variable d'environnement ne permet de déplacer l'un ou l'autre répertoire persistant | Comportement de l'application dans les guides des plateformes |
 | Travail en arrière-plan | Un **véritable démon cron toujours actif** dans le conteneur (8 tâches planifiées intégrées) | §Contraintes de mise à l'échelle dans les guides des plateformes |
@@ -75,9 +75,9 @@ Dockerfile ni étape Cloud Build :
 ## 4. Initialisation de la base de données — aucune {#4-database-initialization--none}
 
 Wallos gère son propre stockage et ne nécessite **aucune initialisation de base de
-données**. Aucune tâche `db-init` n'est injectée, et `database_type` est fixé à
+données**. Aucun job `db-init` n'est injecté, et `database_type` est fixé à
 `NONE`. L'entrée `initialization_jobs` n'est prise en compte que si l'opérateur
-fournit des tâches personnalisées — sinon elle reste vide.
+fournit des jobs personnalisés — sinon elle reste vide.
 
 Au premier démarrage, Wallos crée sa base SQLite dans
 `/var/www/html/db/wallos.db` si le fichier n'existe pas encore et crée l'utilisateur

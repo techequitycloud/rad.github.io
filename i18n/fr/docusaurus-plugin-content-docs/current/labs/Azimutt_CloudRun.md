@@ -94,7 +94,7 @@ export REGION="us-central1"          # the region you deploy into
 ## Tâche 2 — Accéder et vérifier [Manuel] {#task-2--access--verify-manual}
 
 1. Confirmez que le service est sain et connecté à sa base de données. Azimutt n'a pas de
-   point de terminaison JSON de santé dédié — les sondes de démarrage et de disponibilité ciblent la
+   point de terminaison JSON de santé dédié — les sondes de démarrage et de disponibilité (readiness) ciblent la
    racine Phoenix `/`, qui ne renvoie `200` qu'une fois le serveur démarré,
    ses migrations appliquées et la connexion à Postgres établie :
 
@@ -123,7 +123,7 @@ export REGION="us-central1"          # the region you deploy into
 2. **Mettez à l'échelle** en modifiant les paramètres de nombre minimal/maximal d'instances et en cliquant sur **Update** sur
    la page de détails du déploiement — le module possède la spécification du service ; la mise à l'échelle est donc
    une modification de configuration, et non une modification manuelle via `gcloud` (une modification manuelle serait
-   annulée lors du prochain apply). Contrairement aux applications dotées d'une file de tâches en mémoire, Azimutt
+   annulée lors du prochain apply). Contrairement aux applications dotées d'une file de jobs en mémoire, Azimutt
    utilise PostgreSQL (Oban) pour le travail en arrière-plan ; passer à plus d'une instance
    ne nécessite donc pas de Redis. Notez que `min_instance_count = 0` (la valeur par défaut) active
    la réduction à zéro ; définissez `1` pour éviter les quelques secondes de latence de démarrage à froid après

@@ -20,11 +20,11 @@ Pour l'infrastructure qui provisionne et exécute réellement Keycloak, consulte
 | Image de conteneur | Épingle `quay.io/keycloak/keycloak` et construit une variante personnalisée **optimisée pour la production** (`kc.sh build` → `start --optimized`) via un Dockerfile multi-étapes | Sortie `container_image` du déploiement de la plateforme |
 | Point d'entrée personnalisé | Mappe les variables d'environnement `DB_*` injectées par le socle sur les variables `KC_DB_*` de Keycloak, assemble l'URL JDBC `KC_DB_URL` et détecte automatiquement l'URL publique pour `KC_HOSTNAME` | Comportement de l'application dans les guides des plateformes |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme unique moteur pris en charge | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche `db-init` du premier déploiement qui crée le rôle et la base de données et accorde les privilèges sur le schéma (idempotente, adaptée à PostgreSQL 15+) | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job `db-init` du premier déploiement qui crée le rôle et la base de données et accorde les privilèges sur le schéma (idempotent, adapté à PostgreSQL 15+) | Sortie `initialization_jobs` |
 | Secrets | Crée le secret du **mot de passe de l'administrateur d'amorçage** dans Secret Manager (`KC_BOOTSTRAP_ADMIN_PASSWORD`) | Sortie `secret_ids` |
 | Environnement de base | Injecte `KC_DB=postgres`, `KC_PROXY_HEADERS=xforwarded`, `KC_HTTP_ENABLED`, `KC_HEALTH_ENABLED`, `KC_METRICS_ENABLED`, `KC_BOOTSTRAP_ADMIN_USERNAME=admin` | §Environnement dans les guides des plateformes |
 | Stockage objet | **Aucun** — Keycloak stocke tout son état dans PostgreSQL (`storage_buckets = []`) | Sortie `storage_buckets` |
-| Contrôles de santé | Fournit les valeurs par défaut des sondes de démarrage TCP (délai de 30 s, 30 échecs) et de disponibilité TCP (délai de 60 s) sur le port 8080 — le `/health` de Keycloak se trouve sur le port de gestion 9000 non exposé | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit les valeurs par défaut des sondes de démarrage TCP (délai de 30 s, 30 échecs) et de disponibilité (readiness) TCP (délai de 60 s) sur le port 8080 — le `/health` de Keycloak se trouve sur le port de gestion 9000 non exposé | §Observabilité dans les guides des plateformes |
 
 ---
 
@@ -71,7 +71,7 @@ gcloud run services logs read <service-name> --project "$PROJECT" --region "$REG
 
 ## 4. Moteur de base de données et amorçage {#4-database-engine-and-bootstrap}
 
-Keycloak nécessite **PostgreSQL** ; le moteur est fixé à `POSTGRES_15` dans `Keycloak_Common`. À chaque apply, une tâche ponctuelle `db-init` (`postgres:15-alpine`, jusqu'à 3 nouvelles tentatives) effectue de manière idempotente les opérations suivantes :
+Keycloak nécessite **PostgreSQL** ; le moteur est fixé à `POSTGRES_15` dans `Keycloak_Common`. À chaque apply, un job ponctuel `db-init` (`postgres:15-alpine`, jusqu'à 3 nouvelles tentatives) effectue de manière idempotente les opérations suivantes :
 
 1. Crée le rôle applicatif (ou met à jour son mot de passe s'il existe) et l'accorde à `postgres` afin que le superutilisateur puisse gérer ses objets.
 2. Crée la base de données Keycloak appartenant à ce rôle (ou corrige le propriétaire si elle existe).

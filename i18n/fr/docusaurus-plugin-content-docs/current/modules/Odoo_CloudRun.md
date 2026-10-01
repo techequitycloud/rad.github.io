@@ -89,7 +89,7 @@ le nombre minimal/maximal d'instances et les paramètres de concurrence.
 
 Odoo stocke toutes les données de l'ERP (contacts, factures, stocks, commandes) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les instances du service s'y connectent en privé via le sidecar **Cloud SQL Auth
-Proxy** sur un socket Unix ; aucune IP publique n'est donc exposée. Au premier déploiement, la tâche `db-init`
+Proxy** sur un socket Unix ; aucune IP publique n'est donc exposée. Au premier déploiement, le job `db-init`
 crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
@@ -208,7 +208,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
     `/mnt/extra-addons` avec la propriété `101:101` (l'utilisateur du processus Odoo). Doit réussir
     avant le démarrage d'Odoo.
   - `db-init` — s'exécute après `nfs-init` et crée de manière idempotente la base de données PostgreSQL et
-    l'utilisateur de l'application. Les deux tâches peuvent être relancées sans risque.
+    l'utilisateur de l'application. Les deux jobs peuvent être relancés sans risque.
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job nfs-init --project "$PROJECT" --region "$REGION"
@@ -280,7 +280,7 @@ d'[App_CloudRun](App_CloudRun.md) avec leur comportement et leurs valeurs par d�
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` / `memory_limit` | `1000m` / `1Gi` | Limites de CPU et de mémoire de l'instance. **Augmentez à ≥ 2 vCPU / 4 GiB pour la production.** |
-| `cpu_always_allocated` | `false` | Lorsque la valeur est `true`, la CPU est allouée en permanence (facturation à l'instance) au lieu de l'être uniquement pendant le traitement d'une requête. Odoo utilise par défaut la facturation à la requête, mais il exécute aussi un cron interne au processus (`max_cron_threads`) pour les actions planifiées — définissez `true` si vous en dépendez (factures récurrentes/relances) ; sinon, la CPU est bridée entre les requêtes et les tâches cron se bloquent. |
+| `cpu_always_allocated` | `false` | Lorsque la valeur est `true`, la CPU est allouée en permanence (facturation à l'instance) au lieu de l'être uniquement pendant le traitement d'une requête. Odoo utilise par défaut la facturation à la requête, mais il exécute aussi un cron interne au processus (`max_cron_threads`) pour les actions planifiées — définissez `true` si vous en dépendez (factures récurrentes/relances) ; sinon, la CPU est bridée entre les requêtes et les jobs cron se bloquent. |
 | `min_instance_count` | `0` | Nombre minimal d'instances. Définissez `1` pour éviter les démarrages à froid pour les utilisateurs actifs. |
 | `max_instance_count` | `1` | Nombre maximal d'instances. Ne dépassez pas `1` sans activer Redis. |
 | `container_port` | `8069` | Port d'écoute d'Odoo. Ne le modifiez pas, sauf si le serveur Odoo est reconfiguré. |
@@ -359,7 +359,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `nfs-init` + `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `nfs-init` + `db-init`. |
 | `cron_jobs` | `[]` | Tâches planifiées définies par l'utilisateur (Cloud Scheduler → Cloud Run Jobs). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -413,7 +413,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux et tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

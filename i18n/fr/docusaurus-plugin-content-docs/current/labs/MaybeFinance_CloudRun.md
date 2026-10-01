@@ -37,7 +37,7 @@ le temps.
 - Accéder au service en cours d'exécution et le vérifier, y compris ses dépendances obligatoires PostgreSQL
   et Redis.
 - Effectuer les opérations du jour 2 — inspecter, mettre à l'échelle, mettre à jour, et gérer les secrets et les sauvegardes.
-- Comprendre pourquoi la mise à l'échelle à zéro affecte le worker de tâches d'arrière-plan Sidekiq colocalisé,
+- Comprendre pourquoi la mise à l'échelle à zéro affecte le worker de jobs d'arrière-plan Sidekiq colocalisé,
   et comment le maintenir en fonctionnement continu.
 - Observer le service avec Cloud Logging et Cloud Monitoring.
 - Diagnostiquer et résoudre les problèmes de déploiement et d'exécution les plus courants.
@@ -79,8 +79,8 @@ export REGION="us-central1"          # the region you deploy into
    base de données Cloud SQL (PostgreSQL 15), monte le volume NFS Filestore partagé
    sur `/opt/maybefinance/storage` (également la source par défaut de l'hôte
    Redis), crée le secret `SECRET_KEY_BASE` dans Secret Manager, provisionne
-   un bucket de données `storage`, et exécute deux jobs ponctuels enchaînées — `db-init`
-   (crée la base de données, l'utilisateur et les droits, et précrée `pgcrypto`) suivie de
+   un bucket de données `storage`, et exécute deux jobs ponctuels enchaînés — `db-init`
+   (crée la base de données, l'utilisateur et les droits, et précrée `pgcrypto`) suivi de
    `maybefinance-migrate` (`rails db:prepare`). Les premiers déploiements prennent environ
    **20 à 35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
@@ -142,7 +142,7 @@ export REGION="us-central1"          # the region you deploy into
    `cpu_always_allocated = false` (priorité au coût) : le worker Sidekiq colocalisé
    ne s'exécute que lorsqu'une instance se trouve être active ; la synchronisation des comptes,
    le traitement des imports et les notifications cessent donc silencieusement de se déclencher pendant
-   les périodes de mise à l'échelle à zéro. Pour un traitement continu des tâches d'arrière-plan, définissez
+   les périodes de mise à l'échelle à zéro. Pour un traitement continu des jobs d'arrière-plan, définissez
    `min_instance_count = 1` et `cpu_always_allocated = true`, comme les
    valeurs par défaut de la variante GKE.
 
@@ -222,7 +222,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   gcloud run jobs executions list --job="${SERVICE}-maybefinance-migrate" \
     --project="$PROJECT" --region="$REGION"
   ```
-- **Les tâches d'arrière-plan (synchronisation des comptes, imports, notifications) ne se déclenchent pas :**
+- **Les jobs d'arrière-plan (synchronisation des comptes, imports, notifications) ne se déclenchent pas :**
   cela signifie généralement que Sidekiq n'a jamais démarré — vérifiez que `REDIS_URL` a été résolu
   avec une valeur non vide dans l'environnement du conteneur, et que l'instance n'est pas redescendue à
   zéro entre les requêtes (voir la tâche 3, point 2).
@@ -261,5 +261,5 @@ sont gérées séparément et ne sont pas supprimées ici.
 | 2 — Accéder et vérifier | Manuel | La vérification de santé `/up` réussit ; enregistrer le compte administrateur initial dans l'interface ; confirmer que Sidekiq a démarré |
 | 3 — Exploiter | Manuel | Inspecter les révisions, mettre à l'échelle (en tenant compte du compromis Sidekiq/mise à l'échelle à zéro), mettre à jour la version, gérer secrets/sauvegardes, accéder à la base de données |
 | 4 — Observer | Manuel | Interroger Cloud Logging ; examiner les métriques Cloud Monitoring et le test de disponibilité (facultatif) |
-| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données (mode SSL), de job d'initialisation/de migration, de tâches d'arrière-plan, de build et d'IAM |
+| 5 — Dépanner | Manuel | Diagnostiquer les problèmes de révision, de base de données (mode SSL), de job d'initialisation/de migration, de jobs d'arrière-plan, de build et d'IAM |
 | 6 — Démanteler | Automatisé | Delete (Trash) supprime toutes les ressources du module ; le NFS/Redis partagé et l'hôte Cloud SQL ne sont pas touchés |

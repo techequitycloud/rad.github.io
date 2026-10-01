@@ -392,7 +392,7 @@ d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés. |
 | `cron_jobs` | Noms des CronJobs créés. |
 | `statefulset_name` | Nom du StatefulSet (lorsque `workload_type = "StatefulSet"`). |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -412,7 +412,7 @@ d'explorer les ressources en cours d'exécution.
 | `anthropic_api_key` | Définie au premier déploiement | Critique | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
 | Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critique | Effectuer la rotation du jeton dans Secret Manager sans redémarrer les pods entraîne le rejet de toutes les requêtes clientes jusqu'au recyclage des pods. |
 | `quota_memory_requests` / `quota_memory_limits` | unités binaires | Critique | Des entiers nus sont interprétés comme des octets et bloquent l'ordonnancement de tous les pods. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | Élevé | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |
 | `telegram_webhook_secret` / `slack_signing_secret` | définis lorsque l'intégration est activée | Élevé | Une valeur vide désactive la vérification des signatures, ce qui permet l'injection de faux webhooks. |
 | `min_instance_count` | `1` | Élevé | `0` signifie que les événements de webhook Telegram/Slack sont perdus pendant un démarrage à froid (généralement 30 à 60 s pour l'initialisation d'un pod GKE). |

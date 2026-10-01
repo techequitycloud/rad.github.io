@@ -67,7 +67,7 @@ un ensemble restreint et ciblé de services Google Cloud :
   builds et clés de signature auto-générées — réside dans PostgreSQL.
   `enable_nfs` et `enable_redis` valent tous deux `false` par défaut et ne sont
   pas nécessaires au fonctionnement normal.
-- **Aucune tâche de migration distincte.** Coder exécute ses propres migrations
+- **Aucun job de migration distinct.** Coder exécute ses propres migrations
   de schéma au démarrage ; le seul job d'initialisation est `db-init`, qui
   crée la base de données vide et le rôle.
 - **Mise à l'échelle horizontale par défaut.** `min_instance_count = 1`,
@@ -115,7 +115,7 @@ Coder stocke tout — espaces de travail, modèles, utilisateurs, journaux d'aud
 sessions et ses propres clés de signature — dans une instance gérée Cloud SQL
 for PostgreSQL 15. Les pods s'y connectent via le side-car **Cloud SQL Auth
 Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Au premier
-déploiement, la tâche `db-init` crée la base de données et le rôle de
+déploiement, le job `db-init` crée la base de données et le rôle de
 l'application ; le moteur de migration propre à Coder crée ensuite le schéma au
 démarrage du serveur.
 
@@ -208,14 +208,14 @@ disponibilité et des règles d'alerte sont disponibles en option
 
 ## 3. Comportement de l'application Coder {#3-coder-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement, sans tâche de
-  migration distincte.** La tâche `db-init` exécute `db-init.sh` avec
-  `postgres:15-alpine`. Elle attend le side-car Cloud SQL Auth Proxy, crée de
+- **Configuration de la base de données au premier déploiement, sans job de
+  migration distinct.** Le job `db-init` exécute `db-init.sh` avec
+  `postgres:15-alpine`. Il attend le side-car Cloud SQL Auth Proxy, crée de
   manière idempotente le rôle et la base de données `coder`, accorde les
   privilèges et réattribue la propriété du schéma `public`, puis signale au
   side-car du proxy de s'arrêter (`--quitquitquit`) afin que le pod du Job se
   termine. Coder exécute ensuite ses propres migrations de schéma au démarrage du
-  serveur — il n'existe pas de tâche de migration dédiée, contrairement aux
+  serveur — il n'existe pas de job de migration dédié, contrairement aux
   applications dotées d'une étape `db-migrate` distincte.
 - **Aucun compte administrateur n'est pré-provisionné.** Le premier utilisateur
   qui atteint l'interface web après un démarrage réussi effectue la
@@ -244,7 +244,7 @@ disponibilité et des règles d'alerte sont disponibles en option
   toutes deux **HTTP `GET /health`** avec un délai initial de 60 secondes ; la
   sonde de démarrage tolère jusqu'à 30 échecs avec une période de 15 secondes
   pour absorber la migration de schéma du premier démarrage de Coder. La sonde de
-  disponibilité fournie par Common (utilisée par le raccordement
+  disponibilité (readiness) fournie par Common (utilisée par le raccordement
   `additional_services`/disponibilité du socle) cible séparément `GET /healthz`.
 - **La télémétrie est désactivée par défaut** (`CODER_TELEMETRY_ENABLE = "false"`),
   et `CODER_VERBOSE = "false"`.
@@ -357,7 +357,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms de la tâche de configuration (`db-init`) et de la tâche d'importation (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

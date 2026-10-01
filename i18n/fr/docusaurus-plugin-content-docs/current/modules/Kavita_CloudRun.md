@@ -186,13 +186,13 @@ d'alerte facultatifs.
 ## 3. Comportement de l'application Kavita {#3-kavita-application-behaviour}
 
 - **Aucune initialisation de base de données au premier déploiement.** Kavita n'a
-  pas de tâche `db-init` — il n'y a aucune base de données externe à amorcer.
-  `initialization_jobs` est par défaut une liste vide ; seules les tâches
-  personnalisées que vous fournissez sont exécutées.
+  pas de job `db-init` — il n'y a aucune base de données externe à amorcer.
+  `initialization_jobs` est par défaut une liste vide ; seuls les jobs
+  personnalisés que vous fournissez sont exécutés.
 - **Aucune étape de migration.** Kavita crée et migre lui-même son schéma SQLite
   interne au premier démarrage ; la mise à niveau d'`application_version` (suivie
   d'une reconstruction) applique automatiquement les modifications de schéma sans
-  tâche de migration distincte.
+  job de migration distinct.
 - **Aucun secret immuable généré automatiquement.** Contrairement à la plupart
   des modules d'application, aucune clé de chiffrement, aucun jeton
   administrateur ni secret JWT n'est créé dans Secret Manager. Le `TokenKey` JWT
@@ -369,7 +369,7 @@ déploiement Kavita.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide — Kavita n'a pas de tâche `db-init` ni de migration ; il gère lui-même son schéma SQLite au premier démarrage. |
+| `initialization_jobs` | `[]` | Laissez vide — Kavita n'a pas de job `db-init` ni de migration ; il gère lui-même son schéma SQLite au premier démarrage. |
 | `cron_jobs` | `[]` | Inutilisé par défaut ; ajoutez au besoin des tâches planifiées personnalisées (par exemple des instantanés de collections). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -414,7 +414,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés que vous avez fournies (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés que vous avez fournis (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

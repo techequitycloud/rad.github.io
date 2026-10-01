@@ -34,7 +34,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 |---|---|---|
 | Calcul | GKE Autopilot | Pod serveur Node.js sur le port 3010, 2 vCPU / 4 GiB par défaut |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le moteur est fixé à `POSTGRES_15` |
-| Collaboration en temps réel | Redis (co-hébergé sur la VM NFS partagée) | Pub/sub de synchronisation des documents Yjs et file de tâches en arrière-plan |
+| Collaboration en temps réel | Redis (co-hébergé sur la VM NFS partagée) | Pub/sub de synchronisation des documents Yjs et file de jobs en arrière-plan |
 | Persistance des fichiers | Cloud Filestore (NFS) | Les blobs téléversés persistent sous `/root/.affine/storage`, partagés entre les pods |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` provisionné automatiquement (sauvegardes/stockage auxiliaire) |
 | Secrets | Secret Manager | Uniquement le mot de passe de base de données généré automatiquement — la clé de signature d'AFFiNE réside dans PostgreSQL |
@@ -56,7 +56,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
   défaut ; la VM NFS partagée co-héberge également Redis, c'est pourquoi la
   description indique explicitement de conserver `enable_nfs = true` sauf si
   un `redis_host` externe est fourni. Sans Redis, la synchronisation des
-  documents en temps réel et la file de tâches ne fonctionnent pas.
+  documents en temps réel et la file de jobs ne fonctionnent pas.
 - **NFS est activé par défaut** (`enable_nfs = true`, monté sur
   `/root/.affine/storage`) afin que les blobs téléversés persistent et
   puissent être partagés entre les pods — et parce qu'il héberge l'instance
@@ -138,7 +138,7 @@ les sauvegardes automatiques et la rotation du mot de passe.
 
 ### C. Redis — collaboration en temps réel {#c-redis--real-time-collaboration}
 
-Le pub/sub de synchronisation des documents Yjs et la file de tâches en
+Le pub/sub de synchronisation des documents Yjs et la file de jobs en
 arrière-plan d'AFFiNE nécessitent Redis. `enable_redis = true` par défaut ;
 lorsque `redis_host` est laissé vide, le socle injecte l'IP du serveur NFS
 partagé (la VM NFS co-héberge Redis). Le point d'entrée cloud fait
@@ -255,7 +255,7 @@ et des règles d'alerte facultatifs sont disponibles.
   définit par défaut `AFFINE_SERVER_EXTERNAL_URL` sur l'URL du service injectée
   par la plateforme, afin que les liens d'invitation et de partage se résolvent
   correctement.
-- **Chemin de santé.** Les sondes de démarrage, de liveness et de readiness
+- **Chemin de santé.** Les sondes de démarrage, de liveness et de disponibilité (readiness)
   sont toutes des requêtes **HTTP** `GET /`, qui renvoient 200 dès que le
   serveur est prêt et ne nécessitent aucune authentification. Sonde de
   démarrage : délai initial de 60 s, période de 15 s, seuil de 30 échecs
@@ -326,7 +326,7 @@ défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Obligatoire en production — la synchronisation en temps réel Yjs et la file de tâches passent par Redis. |
+| `enable_redis` | `true` | Obligatoire en production — la synchronisation en temps réel Yjs et la file de jobs passent par Redis. |
 | `redis_host` | `""` | Laissez vide pour utiliser l'IP du serveur NFS partagé. |
 | `redis_port` | `6379` | Port TCP de Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis, si nécessaire. |
@@ -397,7 +397,7 @@ d'exécution.
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critique | Choisir un moteur autre que PostgreSQL casse `self-host-predeploy` et toutes les requêtes. |
 | `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `enable_redis` | `true` | Critique | La synchronisation des documents en temps réel et la file de tâches d'AFFiNE dépendent de Redis ; le désactiver sans alternative casse la collaboration et les tâches en arrière-plan. |
+| `enable_redis` | `true` | Critique | La synchronisation des documents en temps réel et la file de jobs d'AFFiNE dépendent de Redis ; le désactiver sans alternative casse la collaboration et les jobs en arrière-plan. |
 | `enable_nfs` | `true` (sauf si un `redis_host` externe est fourni) | Critique | La VM NFS partagée co-héberge également Redis — désactiver NFS sans Redis externe supprime silencieusement la connexion Redis d'AFFiNE, et pas seulement la persistance des blobs. |
 | `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
 | `container_resources.memory_limit` | `4Gi` | Élevé | Le seul job d'initialisation `affine-migrate` demande 2Gi ; sous-dimensionner le conteneur serveur expose à un OOM sous la charge de la collaboration en temps réel. |

@@ -32,7 +32,7 @@ guides des socles ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets applicatifs | **Aucun** — Logto génère et stocke ses clés de signature OIDC dans la base de données (amorcées au premier démarrage), si bien qu'aucun secret applicatif externe n'est créé | La sortie `secret_ids` est vide `{}` |
 | Stockage d'objets | Déclare un bucket **Cloud Storage** (`storage`) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit `TRUST_PROXY_HEADER = "1"` et dérive `ENDPOINT` / `ADMIN_ENDPOINT` de l'URL du service injectée | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit les sondes de démarrage / de vivacité / de disponibilité par défaut ciblant `/api/status` | Section Observabilité des guides de plateforme |
+| Contrôles de santé | Fournit les sondes de démarrage / de vivacité / de disponibilité (readiness) par défaut ciblant `/api/status` | Section Observabilité des guides de plateforme |
 
 ---
 

@@ -21,7 +21,7 @@ Formbricks est une plateforme open source de gestion des enquêtes et de l'expé
 *   **Calcul** : Cloud Run v2 (Gen2), conteneur Next.js sur le port 3000, 1 vCPU / 2 Gi par défaut (2 vCPU / 2 Gi recommandés en production). Mise à l'échelle à zéro (`min_instance_count = 0`) avec `max_instance_count = 1`.
 *   **Persistance des données** : Cloud SQL **PostgreSQL 15**. NFS (VM GCE ou Filestore) activé par défaut. Un bucket GCS `uploads` est provisionné automatiquement par `Formbricks Common` pour le stockage de fichiers compatible S3 via des identifiants HMAC GCS.
 *   **Sécurité** : hérite de Cloud Armor WAF, IAP, Binary Authorization et VPC Service Controls depuis `App CloudRun`. Plusieurs secrets applicatifs générés automatiquement (clé NextAuth, clé de chiffrement, jeton cron, clés HMAC) sont provisionnés dans Secret Manager par `Formbricks Common`.
-*   **Cache** : Redis **activé par défaut** (`enable_redis = true`) — Formbricks utilise Redis pour le cache et les files de tâches en arrière-plan.
+*   **Cache** : Redis **activé par défaut** (`enable_redis = true`) — Formbricks utilise Redis pour le cache et les files de jobs en arrière-plan.
 *   **CI/CD** : pipeline d'image personnalisée Cloud Build par défaut ; livraison progressive Cloud Deploy en option.
 *   **Sondes de santé** : la sonde de démarrage est **TCP** sur le port du conteneur, par conception, et non HTTP `/api/v2/health` — ce point de terminaison ne renvoie un code 2xx qu'une fois que Formbricks signale une disponibilité COMPLÈTE (base de données + Redis + dépendances), si bien qu'une sonde de démarrage HTTP ne réussit jamais, alors que Next.js écoute déjà (« Ready » dans les journaux, mais le service n'est jamais créé). La sonde de vivacité est **désactivée par défaut** pour la même raison : la vivacité Cloud Run ne peut pas utiliser de socket TCP, et le point de terminaison HTTP `/api/v2/health` provoquerait une boucle de redémarrage d'un conteneur sain avant qu'il n'atteigne la disponibilité complète. La sonde de démarrage TCP suffit à conditionner le routage.
 
@@ -55,7 +55,7 @@ Formbricks est une plateforme open source de gestion des enquêtes et de l'expé
 |---|---|---|
 | `NEXTAUTH_SECRET` | `NEXTAUTH_SECRET` | Clé de chiffrement des sessions NextAuth.js (32 caractères aléatoires). |
 | `ENCRYPTION_KEY` | `ENCRYPTION_KEY` | Clé de chiffrement des données Formbricks. |
-| `CRON_SECRET` | `CRON_SECRET` | Jeton d'authentification des tâches cron. |
+| `CRON_SECRET` | `CRON_SECRET` | Jeton d'authentification des jobs cron. |
 | `HUB_API_KEY` | `HUB_API_KEY` | Clé API de Formbricks Hub. |
 | `CUBEJS_API_SECRET` | `CUBEJS_API_SECRET` | Secret d'analytique Cube.js. |
 | `S3_ACCESS_KEY` | `S3_ACCESS_KEY` | Clé d'accès HMAC GCS pour les téléversements compatibles S3. |
@@ -300,7 +300,7 @@ Formbricks expose `/api/v2/health` — un point de terminaison de santé dédié
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/v2/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Sonde de disponibilité au démarrage. **TCP par conception** — voir l'explication ci-dessus. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
+| `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/v2/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Sonde de disponibilité (readiness) au démarrage. **TCP par conception** — voir l'explication ci-dessus. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
 | `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/v2/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. **Désactivée par défaut** — voir l'explication ci-dessus. Ne l'activez que si vous comprenez le risque de boucle de redémarrage sur `/api/v2/health` avant la disponibilité complète. |
 | `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | Sonde de démarrage du service au niveau App_CloudRun, indépendante de la `startup_probe` propre à Formbricks ci-dessus. |
 | `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | Sonde de vivacité du service au niveau App_CloudRun, indépendante de la `liveness_probe` propre à Formbricks ci-dessus. |
@@ -327,7 +327,7 @@ Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation des mots
 
 ### A. Cache Redis {#a-redis-cache}
 
-Redis est **activé par défaut** (`enable_redis = true`). Formbricks utilise Redis pour mettre en cache les réponses d'API, limiter le débit et gérer les files de tâches en arrière-plan. Lorsque Redis est activé et que `redis_host` n'est pas fourni, le module utilise par défaut l'IP du serveur NFS comme hôte Redis (une instance Redis légère colocalisée sur la VM GCE NFS). Pour les déploiements de production, faites pointer `redis_host` vers une instance dédiée Google Cloud Memorystore for Redis.
+Redis est **activé par défaut** (`enable_redis = true`). Formbricks utilise Redis pour mettre en cache les réponses d'API, limiter le débit et gérer les files de jobs en arrière-plan. Lorsque Redis est activé et que `redis_host` n'est pas fourni, le module utilise par défaut l'IP du serveur NFS comme hôte Redis (une instance Redis légère colocalisée sur la VM GCE NFS). Pour les déploiements de production, faites pointer `redis_host` vers une instance dédiée Google Cloud Memorystore for Redis.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|

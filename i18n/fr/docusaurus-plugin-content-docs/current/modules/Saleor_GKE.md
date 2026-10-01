@@ -217,7 +217,7 @@ terminaison accessible publiquement).
   (`postgres:15-alpine`) crée de manière idempotente la base de données et le rôle de
   l'application. `db-migrate` (l'image de l'application,
   `depends_on_jobs = ["db-init"]`) exécute ensuite
-  `python3 manage.py migrate --noinput`. Les deux tâches peuvent être relancées sans
+  `python3 manage.py migrate --noinput`. Les deux jobs peuvent être relancés sans
   risque.
 - **Extensions toujours installées.** `pg_trgm`, `unaccent`, `hstore` et `citext` sont
   installées sans condition par la configuration assemblée de `Saleor_Common` — les
@@ -385,7 +385,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image de l'API déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |

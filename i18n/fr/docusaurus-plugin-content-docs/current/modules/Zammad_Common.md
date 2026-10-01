@@ -32,7 +32,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données, l'utilisateur et les privilèges | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `zammad-attachments` | Sortie `storage_buckets` |
 | Paramètres principaux | Définit les variables d'environnement de base de Zammad (`RAILS_ENV`, `POSTGRESQL_PORT`, `ZAMMAD_RAILSSERVER_*`, `RAILS_TRUSTED_PROXIES`) | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit les configurations par défaut des sondes de démarrage, de vivacité et de disponibilité (HTTP, chemin `/`) | Section Observabilité des guides des plateformes |
+| Contrôles de santé | Fournit les configurations par défaut des sondes de démarrage, de vivacité et de disponibilité (readiness) (HTTP, chemin `/`) | Section Observabilité des guides des plateformes |
 | Aucun secret généré automatiquement | Renvoie `secret_ids = {}` — Zammad gère ses propres clés de signature internes à l'exécution | Section des secrets de la plateforme |
 
 ---

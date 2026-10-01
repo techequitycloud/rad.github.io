@@ -23,7 +23,7 @@ Pour l'infrastructure qui provisionne et exécute réellement Zitadel, consultez
 | Amorçage de la base de données | Définit le job du premier déploiement (`db-init`) qui crée la base de données et le rôle avec `CREATEDB`/`CREATEROLE` et accorde les privilèges sur le schéma | Sortie `initialization_jobs` |
 | Stockage objet | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres principaux | Définit l'environnement Zitadel de base : domaine externe/mode TLS, port, amorçage de l'organisation de la première instance et de l'administrateur humain | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Fournit les sondes de démarrage / de vivacité / de disponibilité par défaut ciblant `/debug/healthz` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Fournit les sondes de démarrage / de vivacité / de disponibilité (readiness) par défaut ciblant `/debug/healthz` | §Observabilité dans les guides de plateforme |
 
 Zitadel stocke **la totalité** de son état — organisations, utilisateurs, projets, applications, sessions, clés — dans PostgreSQL. Il n'y a ni Redis, ni file d'attente, ni persistance sur fichiers pour les données applicatives ; cette couche ne câble donc ni cache ni montage NFS.
 

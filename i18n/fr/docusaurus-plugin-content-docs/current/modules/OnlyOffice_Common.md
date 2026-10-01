@@ -33,7 +33,7 @@ guides des plateformes ([OnlyOffice_GKE](OnlyOffice_GKE.md),
 | Cache | Requiert un **Redis externe** (`REDIS_SERVER_HOST`) pour l'état partagé d'édition et de session ; le RabbitMQ embarqué reste interne, sur localhost | §Redis dans les guides des plateformes |
 | Stockage objet | Déclare un bucket **Cloud Storage** (suffixe `storage`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement de base de Document Server : signature JWT, type de base de données, WOPI désactivé | Comportement de l'application dans les guides des plateformes |
-| Contrôles de santé | Fournit la sonde par défaut de démarrage/vivacité/disponibilité ciblant `/healthcheck` | §Observabilité dans les guides des plateformes |
+| Contrôles de santé | Fournit la sonde par défaut de démarrage/vivacité/disponibilité (readiness) ciblant `/healthcheck` | §Observabilité dans les guides des plateformes |
 
 ---
 

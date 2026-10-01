@@ -175,7 +175,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
 
 ## 3. Comportement de l'application LobeChat {#3-lobechat-application-behaviour}
 
-- **Aucune configuration de base de données au premier déploiement.** Il n'y a ni tâche `db-init` ni schéma — la
+- **Aucune configuration de base de données au premier déploiement.** Il n'y a ni job `db-init` ni schéma — la
   sortie `initialization_jobs` est vide. Le premier démarrage lance simplement le serveur Next.js.
 - **Aucune migration.** Sans base de données côté serveur dans le mode par défaut, la mise à niveau de
   `application_version` déploie simplement une nouvelle image ; il n'y a aucun schéma à migrer.
@@ -194,7 +194,7 @@ Des tests de disponibilité et des règles d'alerte facultatifs sont disponibles
   # verify it reached the running pod:
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- env | grep ACCESS_CODE
   ```
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/` — le serveur
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent `/` — le serveur
   Next.js de LobeChat y renvoie HTTP 200 une fois démarré, sans authentification. Laissez la fenêtre de
   démarrage par défaut pour le démarrage à froid de `next-server`.
 - **Port fixe 3210.** L'image personnalisée épingle `PORT=3210` ; `container_port` doit rester
@@ -282,7 +282,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des jobs d'initialisation (vide — LobeChat n'en a aucune). |
+| `initialization_jobs` | Noms des jobs d'initialisation (vide — LobeChat n'en a aucun). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

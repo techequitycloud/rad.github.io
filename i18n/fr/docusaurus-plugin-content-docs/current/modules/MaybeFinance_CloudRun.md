@@ -30,7 +30,7 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 ## 1. Vue d'ensemble {#1-overview}
 
 Maybe s'exécute sous forme d'un unique conteneur Rails/Puma sur Cloud Run v2, avec
-un processus de tâches d'arrière-plan Sidekiq démarré à ses côtés dans le même
+un processus de jobs d'arrière-plan Sidekiq démarré à ses côtés dans le même
 conteneur par le point d'entrée cloud. Le déploiement assemble un ensemble ciblé
 de services Google Cloud :
 
@@ -38,7 +38,7 @@ de services Google Cloud :
 |---|---|---|
 | Calcul | Cloud Run v2 | Rails/Puma sur le port 3000, 2 vCPU / 4 GiB par défaut ; Sidekiq s'exécute comme processus d'arrière-plan dans le même conteneur |
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — une garde au moment du plan n'accepte que `POSTGRES_13`/`14`/`15` (ou `NONE`) ; MySQL est rejeté |
-| Tâches d'arrière-plan et interface temps réel | Redis (via la VM NFS partagée, ou un hôte explicite) | Obligatoire — une précondition fait échouer le plan si `enable_redis = false` ; alimente Sidekiq (synchronisation des comptes, traitement des imports, notifications) |
+| Jobs d'arrière-plan et interface temps réel | Redis (via la VM NFS partagée, ou un hôte explicite) | Obligatoire — une précondition fait échouer le plan si `enable_redis = false` ; alimente Sidekiq (synchronisation des comptes, traitement des imports, notifications) |
 | Persistance des fichiers | Cloud Filestore (NFS) | Les pièces jointes persistent sous `/opt/maybefinance/storage` ; c'est aussi la source par défaut de l'adresse IP de l'hôte Redis |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` est provisionné automatiquement par `MaybeFinance_Common` ; la variable `storage_buckets` par défaut ajoute un bucket `data` |
 | Secrets | Secret Manager | `SECRET_KEY_BASE` généré automatiquement (clé de session/chiffrement Rails) ; mot de passe de la base de données |
@@ -70,7 +70,7 @@ de services Google Cloud :
   `cpu_always_allocated = false`).** C'est un choix privilégiant le coût, mais
   cela signifie que le worker Sidekiq co-localisé ne s'exécute que lorsqu'une
   instance se trouve être active — définissez `min_instance_count = 1` et
-  `cpu_always_allocated = true` pour que les tâches d'arrière-plan
+  `cpu_always_allocated = true` pour que les jobs d'arrière-plan
   (synchronisation des comptes, traitement des imports, notifications)
   s'exécutent en continu, comme avec les valeurs par défaut de la variante GKE.
 - **Conteneur web + worker combiné, et non un sidecar.** Le point d'entrée cloud
@@ -83,8 +83,8 @@ de services Google Cloud :
   stocké dans Secret Manager, partagé à l'identique par les processus web et
   Sidekiq. Rails l'utilise pour signer les sessions/cookies et pour dériver la clé
   qui chiffre les colonnes chiffrées par ActiveRecord.
-- **Le schéma est créé par un job d'initialisation, pas au démarrage.** La
-  tâche `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
+- **Le schéma est créé par un job d'initialisation, pas au démarrage.** Le
+  job `maybefinance-migrate` exécute `rails db:prepare` pendant l'apply ; le
   point d'entrée d'exécution n'exécute jamais les migrations.
 - **`container_image_source = "custom"`.** Cloud Build construit une image
   d'enveloppe légère `FROM ghcr.io/maybe-finance/maybe:<version>`.
@@ -130,7 +130,7 @@ utilisateurs) dans une instance Cloud SQL for PostgreSQL 15 gérée. Contraireme
 service Cloud Run se connecte via l'**IP privée de l'instance avec
 `sslmode=require`** — `enable_cloudsql_volume` vaut par défaut `false` parce que
 Rails ne sait pas analyser le DSN de type socket que le proxy présenterait sinon.
-Au premier déploiement, la tâche `db-init` crée la base de données et
+Au premier déploiement, le job `db-init` crée la base de données et
 l'utilisateur de l'application, accorde au rôle applicatif `cloudsqlsuperuser`
 (afin que la propre migration de Maybe puisse créer des extensions Postgres sans
 accès superutilisateur) et crée au préalable l'extension `pgcrypto` ;
@@ -238,17 +238,17 @@ Monitoring, avec en option des tests de disponibilité et des règles d'alerte.
 
 ## 3. Comportement de l'application Maybe Finance {#3-maybe-finance-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle se connecte en
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte en
   TCP sur IP privée (`sslmode=require`), crée de manière idempotente la base de
   données et l'utilisateur de l'application, accorde les privilèges, accorde au
   rôle applicatif `cloudsqlsuperuser` (les utilisateurs applicatifs de Cloud SQL
   ne sont pas de vrais superutilisateurs, ce qui permet donc à la propre migration
   de Maybe de créer des extensions Postgres) et crée au préalable `pgcrypto` par
-  mesure de précaution supplémentaire. La tâche peut être réexécutée sans risque.
+  mesure de précaution supplémentaire. Le job peut être réexécuté sans risque.
 - **La migration du schéma est un job d'initialisation distinct.**
   `maybefinance-migrate` exécute `bundle exec rails db:prepare` sur l'image Maybe
-  construite (`image = null` dans la spécification de la tâche, elle réutilise
+  construite (`image = null` dans la spécification du job, elle réutilise
   donc l'image et la chaîne d'outils construites pour l'application), dépend de
   l'achèvement préalable de `db-init` et effectue jusqu'à 3 nouvelles tentatives
   (`max_retries = 3`, `timeout_seconds = 1200`, `memory_limit = 2Gi`).
@@ -273,21 +273,21 @@ Monitoring, avec en option des tests de disponibilité et des règles d'alerte.
 - **Raccordement de Redis.** `REDIS_URL` est construit à partir des variables
   injectées `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` s'il n'est pas déjà défini. Si
   `REDIS_URL` finit vide (Redis injoignable), le point d'entrée renonce
-  entièrement à démarrer Sidekiq — les tâches d'arrière-plan cessent
+  entièrement à démarrer Sidekiq — les jobs d'arrière-plan cessent
   silencieusement de s'exécuter au lieu de faire planter le conteneur.
-- **Les tâches d'arrière-plan nécessitent une instance toujours active.** Comme
+- **Les jobs d'arrière-plan nécessitent une instance toujours active.** Comme
   Sidekiq est démarré dans le processus par le point d'entrée, il ne s'exécute que
   tant qu'une instance de conteneur est active. Avec les valeurs par défaut
   CloudRun (`min_instance_count = 0`, `cpu_always_allocated = false`), les
   périodes de mise à l'échelle à zéro et la limitation du CPU entre les requêtes
-  interrompent toutes deux le traitement des tâches d'arrière-plan.
+  interrompent toutes deux le traitement des jobs d'arrière-plan.
 - **Chemin de santé.** La sonde de démarrage est une sonde **HTTP** `GET /up` avec
   une marge généreuse pour un premier démarrage lent (`initial_delay_seconds = 60`,
   `period_seconds = 15`, `failure_threshold = 30` — environ 8 minutes de marge).
   La sonde de vivacité est également une sonde **HTTP** `GET /up`
   (`initial_delay_seconds = 60`, `period_seconds = 30`,
   `failure_threshold = 3`).
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <db-init-job-name> --project "$PROJECT" --region "$REGION"
@@ -436,7 +436,7 @@ un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init` + `maybefinance-migrate`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init` + `maybefinance-migrate`. |
 | `cron_jobs` | `[]` | Non transmis — Maybe n'a aucune tâche récurrente planifiée par la plateforme ; son propre travail d'arrière-plan s'exécute dans le processus via Sidekiq. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -488,7 +488,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`, `maybefinance-migrate`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`, `maybefinance-migrate`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -515,7 +515,7 @@ d'explorer les ressources en cours d'exécution.
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` (ou `13`/`14`) | Critique | Un moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse l'installateur et toutes les requêtes. |
-| `enable_redis` | `true` | Critique | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de tâches d'arrière-plan fonctionnelle. |
+| `enable_redis` | `true` | Critique | La précondition au moment du plan bloque purement et simplement `false` — sans Redis, Maybe n'a aucune file de jobs d'arrière-plan fonctionnelle. |
 | `db_name` / `db_user` | À définir une fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
 | `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais le faire tourner après le premier démarrage | Critique | Le faire tourner invalide toutes les sessions et rend illisibles les colonnes chiffrées par ActiveRecord. |
 | `enable_cloudsql_volume` | `false` (Cloud Run) | Critique | L'activer transforme `DB_HOST` en un répertoire de socket que Rails ne sait pas analyser directement ; le point d'entrée se rabat sur `DB_IP`, mais une valeur erronée `database_type = "NONE"` combinée à `enable_cloudsql_volume = true` est bloquée au moment du plan, car le sidecar proxy n'aurait aucune instance à laquelle se connecter. |

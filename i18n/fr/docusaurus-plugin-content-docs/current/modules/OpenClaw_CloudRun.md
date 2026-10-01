@@ -327,7 +327,7 @@ en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
-| `initialization_jobs` | Noms des éventuelles jobs d'initialisation personnalisés. |
+| `initialization_jobs` | Noms des éventuels jobs d'initialisation personnalisés. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Dépôt GitHub connecté. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
@@ -343,7 +343,7 @@ en cours d'exécution.
 |---|---|---|---|
 | `anthropic_api_key` | Définie au premier déploiement | Critique | Sans clé valide, l'agent démarre mais toutes les requêtes IA échouent avec des erreurs 401. |
 | Cohérence de `gateway_token` | Généré automatiquement ou défini une seule fois | Critique | Effectuer la rotation du jeton dans Secret Manager sans redéployer le service entraîne le rejet de toutes les requêtes clientes jusqu'au redéploiement du service. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `execution_environment` | `gen2` | Élevé | Gen1 ne prend pas en charge GCS Fuse ; le montage de l'espace de travail échoue silencieusement. |
 | `cpu_always_allocated` | `true` | Élevé | La limitation du CPU casse les connexions WebSocket et les opérations asynchrones des agents. |
 | `telegram_bot_token` / `slack_bot_token` | définis lorsque l'intégration est activée | Élevé | Un jeton vide fait échouer tous les appels d'API ; les messages sont perdus. |

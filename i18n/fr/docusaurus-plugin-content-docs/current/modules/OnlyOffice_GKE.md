@@ -107,8 +107,8 @@ Consultez [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'éch
 
 OnlyOffice stocke les métadonnées des documents, les versions et l'état de l'application dans une instance
 Cloud SQL for PostgreSQL 15 gérée. Les pods la joignent via le sidecar **Cloud SQL Auth
-Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier déploiement, la
-tâche `db-init` crée le rôle applicatif, la base de données et les droits — le Document
+Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier déploiement, le
+job `db-init` crée le rôle applicatif, la base de données et les droits — le Document
 Server installe ensuite son propre schéma au premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour voir les connexions, les sauvegardes, les flags et les métriques.
@@ -211,16 +211,16 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 
 ## 3. Comportement de l'application OnlyOffice {#3-onlyoffice-application-behaviour}
 
-- **Initialisation de la base de données au premier déploiement, sans tâche de migration distincte.** La tâche `db-init` s'exécute
-  avec `postgres:15-alpine`. Elle résout l'hôte Cloud SQL (sidecar proxy sur
+- **Initialisation de la base de données au premier déploiement, sans job de migration distinct.** Le job `db-init` s'exécute
+  avec `postgres:15-alpine`. Il résout l'hôte Cloud SQL (sidecar proxy sur
   `127.0.0.1`, avec repli sur l'IP privée de l'instance), attend que PostgreSQL soit
   joignable, crée/met à jour le rôle applicatif (`LOGIN CREATEDB`) avec le
   mot de passe généré, crée la base de données applicative (appartenant à `postgres`, car
   le superutilisateur Cloud SQL ne peut pas faire `SET ROLE` vers les rôles applicatifs), accorde tous les
   privilèges sur la base de données et le schéma `public`, puis signale à l'Auth Proxy de
-  s'arrêter afin que le pod de la tâche se termine. Elle ne provisionne que le rôle, la base de données et les droits —
-  le Document Server installe son propre schéma au premier démarrage. La tâche peut être
-  réexécutée sans risque (`execute_on_apply = true`).
+  s'arrêter afin que le pod du job se termine. Il ne provisionne que le rôle, la base de données et les droits —
+  le Document Server installe son propre schéma au premier démarrage. Le job peut être
+  réexécuté sans risque (`execute_on_apply = true`).
 - **Utilisation du secret JWT.** `JWT_ENABLED = "true"`, `JWT_HEADER = "Authorization"`,
   `JWT_IN_BODY = "true"` sont définis par `OnlyOffice_Common` ; la valeur de `JWT_SECRET`
   elle-même est injectée depuis Secret Manager (générée une seule fois, 48 caractères). Chaque
@@ -362,7 +362,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

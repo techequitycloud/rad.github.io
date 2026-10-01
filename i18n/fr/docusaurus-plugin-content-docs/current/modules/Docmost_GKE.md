@@ -43,7 +43,7 @@ Le déploiement assemble un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
   couche applicative partagée ; choisir un autre moteur empêche le démarrage.
 - **Redis est obligatoire et activé par défaut.** Docmost utilise Redis pour l'édition
-  collaborative en temps réel et les files d'attente de tâches en arrière-plan.
+  collaborative en temps réel et les files d'attente de jobs en arrière-plan.
   `enable_redis = true` est la valeur par défaut ; laisser `redis_host` vide place Redis
   sur la VM du serveur NFS.
 - **NFS est activé par défaut** (`enable_nfs = true`, `nfs_mount_path = /app/data/storage`).
@@ -124,7 +124,7 @@ rotation du mot de passe, consultez [App_GKE](App_GKE.md).
 ### C. Redis (collaboration en temps réel et files d'attente) {#c-redis-real-time-collaboration--queues}
 
 Redis est **activé par défaut** et est indispensable à l'éditeur collaboratif en temps
-réel de Docmost et au traitement des tâches en arrière-plan. Lorsque `redis_host` est
+réel de Docmost et au traitement des jobs en arrière-plan. Lorsque `redis_host` est
 laissé vide et que `enable_nfs` vaut true, l'IP de la VM du serveur NFS sert de point de
 terminaison Redis ; définissez `redis_host` (et éventuellement `redis_auth`) pour
 pointer plutôt vers une instance Redis gérée/externe.
@@ -211,7 +211,7 @@ d'alerte facultatifs sont disponibles.
   d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via le
   Cloud SQL Auth Proxy et, de façon idempotente, crée la base de données et l'utilisateur
   de l'application et accorde les privilèges, puis signale au sidecar du proxy de
-  s'arrêter afin que le Job puisse se terminer. La tâche peut être relancée sans risque.
+  s'arrêter afin que le Job puisse se terminer. Le job peut être relancé sans risque.
 - **Les migrations s'exécutent automatiquement au démarrage.** Docmost exécute ses
   propres migrations de schéma à chaque démarrage via sa commande par défaut `pnpm start`,
   si bien qu'une mise à niveau de la version de l'application applique les changements de
@@ -393,7 +393,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

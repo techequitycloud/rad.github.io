@@ -337,7 +337,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laissez vide pour utiliser le job de configuration de base de données `db-init` intégré. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. Le planificateur intégré de n8n gère les déclencheurs de workflows ; utilisez-les pour des opérations externes. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 

@@ -191,7 +191,7 @@ raccordement de la connexion.
   idempotente le rôle applicatif (`LOGIN CREATEDB`) et la base de données, accorde les
   privilèges et transfère la propriété du schéma `public` au rôle applicatif afin que
   Focalboard puisse exécuter ses migrations. Aucune extension Postgres n'est installée.
-  La tâche peut être relancée sans risque.
+  Le job peut être relancé sans risque.
 - **Le véritable mot de passe du rôle est un secret dédié, uniquement alphanumérique, et
   non `database_password_secret`.** Le mot de passe de base de données standard du socle,
   commun à toute la flotte (jeu de caractères `_%@`), peut contenir un `%` qui fait
@@ -213,7 +213,7 @@ raccordement de la connexion.
   écrit `/opt/focalboard/config.json` à partir des variables `DB_*` injectées à chaque
   démarrage. Sur Cloud Run, il se connecte via l'IP privée avec `sslmode=require` (en
   privilégiant `DB_IP`, car le socket Cloud SQL n'apparaît pas toujours).
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent
   `/` — l'interface web, qui renvoie 200 dès que le serveur s'est lié à son port et a
   terminé les migrations. Prévoyez jusqu'à ~7–8 minutes au premier démarrage (délai
   initial de démarrage de 60 secondes + une fenêtre de 15 s×30 tentatives).
@@ -225,7 +225,7 @@ raccordement de la connexion.
   les fichiers téléversés sont écrits dans le bucket monté via gcsfuse sur `/data`. Si le
   montage du bucket est absent, les téléversements échouent mais l'édition des tableaux
   continue de fonctionner.
-- **Inspecter la configuration et les tâches en cours d'exécution :**
+- **Inspecter la configuration et les jobs en cours d'exécution :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -277,7 +277,7 @@ leur comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -318,7 +318,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

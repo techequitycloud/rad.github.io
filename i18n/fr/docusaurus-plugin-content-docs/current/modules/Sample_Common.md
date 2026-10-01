@@ -29,7 +29,7 @@ consultez les guides des plateformes ([Sample_GKE](Sample_GKE.md),
 | Clé secrète Flask | Génère un `SECRET_KEY` aléatoire de 32 caractères et le stocke dans **Secret Manager** | Injecté en tant que variable d'environnement `SECRET_KEY` à l'exécution |
 | Image de conteneur | Construit une image personnalisée **Python 3.11-slim / Gunicorn** à partir du Dockerfile fourni, via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job `db-init` du premier déploiement, qui crée la base de données, l'utilisateur et les droits | Sortie `initialization_jobs` |
 | Stockage d'objets | Ne déclare aucun bucket GCS supplémentaire (`storage_buckets = []`) | Aucun bucket supplémentaire au-delà de ceux que vous configurez dans le module de plateforme |
 | Paramètres de base | Définit `container_port = 8080`, `FLASK_ENV = production`, ainsi que des sondes de démarrage et de vivacité pointant vers `/healthz` | Comportement de l'application dans les guides des plateformes |
 | Sidecar Redis | Lorsque `enable_redis = true`, ajoute un service `redis:alpine` à `additional_services` | Un service Redis interne déployé aux côtés de l'application Flask |
@@ -59,7 +59,7 @@ le modèle partagé de secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 L'application Sample nécessite **PostgreSQL 15** ; le moteur est fixé à `POSTGRES_15` et
-MySQL n'est pas pris en charge. Au premier déploiement, une tâche ponctuelle `db-init`
+MySQL n'est pas pris en charge. Au premier déploiement, un job ponctuel `db-init`
 exécute `db-init.sh` avec l'image `postgres:15-alpine` et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy sous `/cloudsql` et le fait
@@ -73,7 +73,7 @@ exécute `db-init.sh` avec l'image `postgres:15-alpine` et, de manière idempote
 6. Accorde tous les privilèges sur la base de données à l'utilisateur de l'application.
 7. Signale au Cloud SQL Auth Proxy de s'arrêter via `POST http://127.0.0.1:9091/quitquitquit`.
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données avec :
+Le job peut être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"

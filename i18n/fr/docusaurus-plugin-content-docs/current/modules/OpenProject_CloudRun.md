@@ -209,7 +209,7 @@ règles d'alerte en option.
   `400 Invalid host_name` à toute requête dont l'en-tête `Host` n'est pas
   `OPENPROJECT_HOST__NAME`, y compris les sondes de santé HTTP (qui utilisent l'adresse IP
   du pod). La sonde de démarrage est donc en TCP et la sonde de vivacité est désactivée ;
-  la sonde de disponibilité interroge `/health_checks/default`, où la plateforme définit
+  la sonde de disponibilité (readiness) interroge `/health_checks/default`, où la plateforme définit
   correctement le `Host`.
 - **La première connexion se fait avec `admin` / `admin`.** Ce compte est créé par
   `rake db:seed`. OpenProject impose un changement de mot de passe à la première connexion.

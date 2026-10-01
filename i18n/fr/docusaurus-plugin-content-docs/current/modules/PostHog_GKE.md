@@ -301,11 +301,11 @@ gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace
   démarrage du conteneur) lance la migration du schéma ClickHouse dans un sous-shell *en
   arrière-plan* qui s'exécute en parallèle de la migration Postgres au premier plan — et
   atteint sa vérification des migrations asynchrones (`run_async_migrations`, qui interroge
-  ClickHouse sur des tables que la tâche en arrière-plan est peut-être encore en train de
-  créer) *avant* même d'attendre cette tâche en arrière-plan. Sur une base de données neuve,
+  ClickHouse sur des tables que le job en arrière-plan est peut-être encore en train de
+  créer) *avant* même d'attendre ce job en arrière-plan. Sur une base de données neuve,
   cela plante avec `IndexError: list index out of range` à chaque démarrage, indéfiniment —
   redémarrer ne permet pas à ClickHouse de « rattraper son retard », car `bin/migrate`
-  reproduit toujours la même course à partir d'un démarrage à froid. La tâche
+  reproduit toujours la même course à partir d'un démarrage à froid. Le job
   `clickhouse-migrate` de ce module exécute au préalable
   `bin/migrate --scope=clickhouse` jusqu'à son terme, sans rien d'autre en concurrence pour
   le même budget de temps, ce qui évite entièrement la course.
@@ -418,7 +418,7 @@ S'applique uniquement lorsque `workload_type = "StatefulSet"` ou
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser les tâches intégrées `db-init` + `clickhouse-migrate`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser les jobs intégrés `db-init` + `clickhouse-migrate`. |
 | `additional_services` | `[]` | Uniquement les services supplémentaires fournis par l'opérateur — le broker Redpanda intégré et la solution de repli ClickHouse facultative intégrée au module sont injectés automatiquement et NE font PAS partie de cette liste. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
@@ -499,7 +499,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via l'Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés (stockage d'objets par interopérabilité S3). |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `initialization_jobs` | Noms des tâches `db-init` et `clickhouse-migrate`. |
+| `initialization_jobs` | Noms des jobs `db-init` et `clickhouse-migrate`. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. `false` lors du premier apply d'un nouveau cluster inline — relancez l'apply pour terminer le déploiement. |
@@ -516,7 +516,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_redis` | `true` (ne peut pas être désactivé) | Critique | Le broker Celery, le pub/sub du plugin-server et le cache Django de PostHog nécessitent tous Redis ; le serveur refuse de démarrer sans lui. |
 | `clickhouse_host` / `enable_inline_clickhouse` | l'un des deux doit être résolu | Critique | Sans point de terminaison ClickHouse joignable, l'ensemble du pipeline d'événements analytiques de PostHog ne peut pas fonctionner — ni événements, ni insights, ni relecture de session. |
 | `kafka_hosts` / `enable_inline_kafka` | l'un des deux doit être résolu (par défaut : intégré) | Critique | Sans Kafka, les événements ingérés n'ont nulle part où être mis en file d'attente — le pipeline se bloque. |
-| `max_instance_count` | `1` (validé, ne peut pas être dépassé) | Critique | L'ordonnanceur Celery beat colocalisé déclenche chaque tâche périodique une fois par réplica ; N réplicas signifient N exécutions en double des tâches planifiées. |
+| `max_instance_count` | `1` (validé, ne peut pas être dépassé) | Critique | L'ordonnanceur Celery beat colocalisé déclenche chaque tâche périodique une fois par réplica ; N réplicas signifient N exécutions en double des jobs planifiés. |
 | `enable_inline_clickhouse` | `false` en production | Critique | La solution de repli intégrée au module n'a pas de volume persistant — chaque redémarrage du pod perd toutes les données analytiques (événements, relectures de session, insights). |
 | `enable_inline_kafka` | `true` acceptable dans la plupart des cas, `false` + broker externe pour une file d'attente durable | Élevé | Le Redpanda intégré n'a pas de volume persistant — une replanification du pod perd les événements non consommés (acceptable pour une ingestion renvoyée, pas pour une file d'attente durable). |
 | `redis_host` | hôte explicite, ou laisser `""` avec `enable_nfs=true` | Critique | Si aucun des deux n'est défini, `REDIS_HOST` est vide et PostHog échoue immédiatement au démarrage avec une erreur claire. |

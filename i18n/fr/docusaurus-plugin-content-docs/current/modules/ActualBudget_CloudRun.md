@@ -30,7 +30,7 @@ ActualBudget s'exécute sous forme d'un unique conteneur Node.js sur Cloud Run v
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **Pas de base de données externe.** ActualBudget conserve tout sous forme de fichiers SQLite sous `/data` ; il n'y a ni instance Cloud SQL, ni tâche `db-init`, ni Redis (`enable_redis = false`), ni sidecar Cloud SQL Auth Proxy.
+- **Pas de base de données externe.** ActualBudget conserve tout sous forme de fichiers SQLite sous `/data` ; il n'y a ni instance Cloud SQL, ni job `db-init`, ni Redis (`enable_redis = false`), ni sidecar Cloud SQL Auth Proxy.
 - **Un bucket GCS `storage` est provisionné automatiquement** par `ActualBudget_Common` et monté sur `/data` via GCS FUSE (`enable_gcs_storage_volume = true`). `ACTUAL_SERVER_FILES = /data/server-files` et `ACTUAL_USER_FILES = /data/user-files` font pointer les deux arborescences de persistance vers ce montage, afin que rien n'aboutisse sur le disque éphémère du conteneur.
 - **Instance unique par conception.** `min_instance_count = 1` et `max_instance_count = 1` — le serveur sert un seul ensemble partagé de fichiers SQLite depuis un seul volume ; exécuter plusieurs réplicas expose à des conflits d'écriture.
 - **L'entrée vaut `all` (public) par défaut, associée à une clé d'API obligatoire.** `ingress_settings = "all"` est la valeur par défaut du module — nécessaire pour atteindre directement l'interface web — et `validation.tf` impose une précondition au moment du plan (`ingress_settings != "all" || enable_api_key`) qui rejette une entrée publique à moins que `enable_api_key` ne vaille aussi `true`. Comme `enable_api_key` vaut également `true` par défaut, les valeurs par défaut seules passent la validation et le déploiement est accessible publiquement avec une protection par jeton d'API déjà provisionnée. Passez plutôt à `ingress_settings = "internal"` pour un accès limité au VPC.
@@ -231,8 +231,8 @@ Toutes les autres entrées de ce groupe sont transmises par souci de compatibili
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche par défaut. Fournissez la vôtre uniquement pour un chargement ou une migration de données personnalisés. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Aucun job par défaut. Fournissez le vôtre uniquement pour un chargement ou une migration de données personnalisés. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -265,7 +265,7 @@ Renvoyées après un déploiement réussi — le moyen le plus rapide de localis
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

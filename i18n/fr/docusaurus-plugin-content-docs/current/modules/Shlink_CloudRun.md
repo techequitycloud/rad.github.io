@@ -31,7 +31,7 @@ Shlink s'exécute sous forme de conteneur PHP (RoadRunner) sur Cloud Run v2. Le 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le moteur pris en charge** (`database_type = "POSTGRES_15"`, `DB_DRIVER = "postgres"`). Shlink se connecte via le socket Unix du Cloud SQL Auth Proxy — libpq accepte le répertoire du socket comme hôte, aucune configuration TCP/SSL n'est donc nécessaire.
-- **`DB_USER` / `DB_NAME` sont injectés par le socle** avec des noms propres au tenant et ne sont volontairement *pas* définis par le module — la tâche `db-init` crée ce même utilisateur et cette même base de données, si bien que tout concorde automatiquement.
+- **`DB_USER` / `DB_NAME` sont injectés par le socle** avec des noms propres au tenant et ne sont volontairement *pas* définis par le module — le job `db-init` crée ce même utilisateur et cette même base de données, si bien que tout concorde automatiquement.
 - **`INITIAL_API_KEY` est généré automatiquement** (32 caractères), stocké dans Secret Manager et injecté comme variable d'environnement secrète. Shlink le lit au premier démarrage pour amorcer sa première clé d'API REST — vous ne créez jamais de clé à la main.
 - **Les migrations s'exécutent automatiquement au démarrage du conteneur.** L'image officielle gère l'installation et les mises à niveau du schéma ; il n'existe pas d'étape de migration distincte.
 - **Mise à l'échelle à zéro par défaut.** Shlink est une application requête/réponse sans état (redirections + API REST) ; elle ne coûte rien lorsqu'elle est inactive. La contrepartie est un démarrage à froid d'environ 5–15 s sur la première requête après une période d'inactivité.
@@ -61,7 +61,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurr
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Shlink stocke tout — URL courtes, enregistrements de visites, tags, domaines et clés d'API — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP publique). Lors du premier déploiement, une tâche `db-init` crée la base de données et l'utilisateur de l'application.
+Shlink stocke tout — URL courtes, enregistrements de visites, tags, domaines et clés d'API — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP publique). Lors du premier déploiement, un job `db-init` crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -126,7 +126,7 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de C
 
 ## 3. Comportement de l'application Shlink {#3-shlink-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Une tâche `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL via le socket de l'Auth Proxy et crée de manière idempotente l'utilisateur et la base de données de l'application, accorde les privilèges (y compris `GRANT <user> TO postgres` afin que la propriété puisse être définie), puis signale au sidecar du proxy de s'arrêter pour que la tâche se termine. La tâche s'exécute à chaque apply et peut être relancée sans risque.
+- **Configuration de la base de données au premier déploiement.** Un job `db-init` (image `postgres:15-alpine`) se connecte à Cloud SQL via le socket de l'Auth Proxy et crée de manière idempotente l'utilisateur et la base de données de l'application, accorde les privilèges (y compris `GRANT <user> TO postgres` afin que la propriété puisse être définie), puis signale au sidecar du proxy de s'arrêter pour que le job se termine. Le job s'exécute à chaque apply et peut être relancé sans risque.
 - **Migrations au démarrage.** L'image officielle de Shlink exécute automatiquement ses migrations de base de données à chaque démarrage du conteneur — le premier démarrage installe le schéma, les mises à niveau appliquent les changements de schéma sans étape manuelle. La sonde de démarrage accorde jusqu'à ~300 s (`failure_threshold = 30` × 10 s) aux migrations du premier démarrage.
 - **API d'abord — pas de page d'accueil.** Shlink est un serveur headless : `/` renvoie **404 par conception**. Tout se pilote via l'API REST (`/rest/v3/...`) avec l'en-tête `X-Api-Key`, ou via une interface [shlink-web-client](https://app.shlink.io/) hébergée séparément et pointée vers ce serveur.
 - **Accès au premier lancement.** Récupérez la clé d'API d'amorçage dans Secret Manager (voir §2C) et utilisez-la immédiatement :
@@ -233,8 +233,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (`postgres:15-alpine`). |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (`postgres:15-alpine`). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -279,7 +279,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

@@ -134,7 +134,7 @@ Les pods joignent la base de données de manière privée via le sidecar
   déploiement.
 - **Chemin de santé.** Les sondes de démarrage et d'activité ciblent
   `/api/app/about`.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>

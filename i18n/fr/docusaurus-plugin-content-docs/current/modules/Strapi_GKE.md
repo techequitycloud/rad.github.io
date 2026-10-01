@@ -359,7 +359,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de Strapi. |
 
@@ -478,7 +478,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -500,7 +500,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `enable_nfs` | `true` | Critique | Sans stockage partagé, les médias téléversés sont perdus au redémarrage d'un pod et ne sont pas partagés entre réplicas. |
 | `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP et Kubernetes, ce qui déclenche une recréation complète et une perte de données. |
 | `application_database_name` / `application_database_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer conduit Strapi à se connecter à une base de données vide, avec perte de tout le contenu et de tous les utilisateurs. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
 | `quota_memory_requests` / `quota_memory_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
 | `enable_cloudsql_volume` | `true` | Élevé | Requis pour la connectivité PostgreSQL ; bloqué au moment du plan lorsqu'il est désactivé avec un type de base de données autre que `NONE`. |
 | `memory_limit` | `512Mi` minimum | Élevé | Strapi est une application Node.js ; une mémoire insuffisante provoque des arrêts OOM lors des opérations du panneau d'administration. Portez-la à `1Gi` ou plus en production. |

@@ -132,7 +132,7 @@ TCP** (`enable_cloudsql_volume = false`), et non via le socket Unix du Cloud SQL
 Auth Proxy utilisé par la plupart des autres modules App_CloudRun. Lors du
 premier déploiement, le job d'initialisation `db-init` crée la base de données
 et l'utilisateur de l'application (en essayant d'abord le chemin du socket, puis
-en se rabattant sur TCP vers `DB_IP`), suivie de la tâche `migrate`, qui exécute
+en se rabattant sur TCP vers `DB_IP`), suivi du job `migrate`, qui exécute
 `artisan migrate --force` de Laravel.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions,
@@ -243,8 +243,8 @@ disponibilité et des règles d'alerte facultatifs (désactivés par défaut).
   l'application peut réellement se connecter (ce qui préchauffe également le
   cache d'authentification `caching_sha2_password` côté serveur de MySQL 8).
   Il peut être relancé sans risque.
-- **Tâche de migration explicite, et pas seulement une migration automatique au démarrage.**
-  Une tâche `migrate` distincte exécute `php /var/www/html/artisan migrate --force`
+- **Job de migration explicite, et pas seulement une migration automatique au démarrage.**
+  Un job `migrate` distinct exécute `php /var/www/html/artisan migrate --force`
   (`depends_on_jobs = ["db-init"]`, `max_retries = 2`) afin que le schéma
   existe avant que la première révision ne serve du trafic. La migration
   automatique au démarrage de l'image officielle, si elle existe, constitue un
@@ -267,7 +267,7 @@ disponibilité et des règles d'alerte facultatifs (désactivés par défaut).
   l'ancienne clé.
 - **Persistance des sessions, du cache et de la file d'attente.** `SnipeIT_Common` définit `SESSION_DRIVER =
   "database"`, `CACHE_DRIVER = "file"` et `QUEUE_DRIVER = "database"` afin que
-  les sessions et les tâches en file d'attente survivent aux redémarrages
+  les sessions et les jobs en file d'attente survivent aux redémarrages
   d'instances, même avec `max_instance_count = 1`.
 - **`APP_URL` est dérivé automatiquement.** L'URL prévue du service Cloud Run
   (construite à partir de `module.deployment_id.service_name` — le nom propre à
@@ -293,7 +293,7 @@ disponibilité et des règles d'alerte facultatifs (désactivés par défaut).
   conventions de l'interface, mais ne sont jamais référencées par la
   configuration de `SnipeIT_Common` — l'image préconstruite conserve ses propres
   paramètres PHP intégrés, quelles que soient ces valeurs.
-- **Inspectez l'exécution des tâches et la configuration en cours :**
+- **Inspectez l'exécution des jobs et la configuration en cours :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -431,7 +431,7 @@ Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la chaîne de tâches intégrée `db-init` → `migrate`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser la chaîne de jobs intégrée `db-init` → `migrate`. |
 | `cron_jobs` | `[]` | Transmis au socle ; vide par défaut, car Snipe-IT n'a pas de tâche de maintenance planifiée intégrée. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -484,7 +484,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration (`db-init`, `migrate`). |
+| `initialization_jobs` | Noms des jobs de configuration (`db-init`, `migrate`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -514,7 +514,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_type` | `MYSQL_8_0` (fixe) | Critique | Snipe-IT nécessite MySQL ; `SnipeIT_Common` ignore les autres valeurs. |
 | `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et rend orphelines toutes les données. |
 | `APP_KEY` (généré automatiquement) | Ne jamais le modifier après le premier démarrage | Critique | Le régénérer invalide toutes les sessions actives et toutes les données chiffrées avec l'ancienne clé. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `enable_cloudsql_volume` | `false` (TCP) | Élevé | C'est la valeur par défaut testée pour le client Laravel/MySQL de Snipe-IT ; passer à `true` monte à la place le chemin du socket, mais cela n'a pas été vérifié avec la configuration de base de données Laravel de Snipe-IT pour ce module. |
 | `enable_nfs` | `true` | Élevé | Le désactiver rend éphémères les images d'actifs, signatures et codes-barres téléversés — isolés par instance et perdus lors d'un démarrage à froid. |
 | `max_instance_count` | `1` | Élevé | Dépasser 1 sans comportement vérifié du NFS partagé et du pilote de sessions expose à des incohérences dans les fichiers téléversés et la gestion des sessions. |

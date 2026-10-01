@@ -39,7 +39,7 @@ délibéré est la caractéristique déterminante de la couche.
 | Stockage d'objets | **Aucun** — `storage_buckets` est vide ; la démo est sans état | Sortie `storage_buckets` (liste vide) |
 | Secrets | **Aucun** — `secret_ids` / `secret_values` sont des maps vides | Secret Manager (rien de propre à l'application) |
 | Paramètres principaux | Port `3000`, aucune injection de configuration à l'exécution, bornes d'autoscaling, limites de ressources | Comportement de l'application dans les guides de plateforme |
-| Contrôles de santé | Sondes de démarrage / de vivacité / de disponibilité ciblant le chemin racine `/` | §Observabilité dans les guides de plateforme |
+| Contrôles de santé | Sondes de démarrage / de vivacité / de disponibilité (readiness) ciblant le chemin racine `/` | §Observabilité dans les guides de plateforme |
 
 ---
 

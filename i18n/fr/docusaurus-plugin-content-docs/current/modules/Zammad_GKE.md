@@ -34,7 +34,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 | Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Zammad ne prend pas en charge MySQL |
 | Stockage des pièces jointes | Filestore (NFS) | Pièces jointes des tickets dans `/opt/zammad/storage`, partagées entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket `zammad-attachments` dédié, toujours provisionné |
-| Cache et file de tâches | Redis | Activé par défaut ; requis pour le pub/sub WebSocket d'ActionCable et pour Sidekiq |
+| Cache et file de jobs | Redis | Activé par défaut ; requis pour le pub/sub WebSocket d'ActionCable et pour Sidekiq |
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
 | Entrée | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré en option |
 
@@ -43,7 +43,7 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixe ; MySQL
   n'est pas pris en charge et est rejeté lors du plan.
 - **Redis est obligatoire.** Zammad utilise Redis pour les mises à jour des tickets en
-  temps réel (ActionCable) et le traitement des tâches en arrière-plan (Sidekiq). Sans
+  temps réel (ActionCable) et le traitement des jobs en arrière-plan (Sidekiq). Sans
   lui, Zammad ne démarre pas.
 - **Une image personnalisée est construite via Cloud Build.** `container_image_source = "custom"`
   est la valeur par défaut — Cloud Build enveloppe l'image officielle `zammad/zammad`
@@ -137,13 +137,13 @@ accordé au compte de service de la charge de travail.
 Consultez [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options
 CMEK.
 
-### D. Cache Redis et file de tâches {#d-redis-cache-and-job-queue}
+### D. Cache Redis et file de jobs {#d-redis-cache-and-job-queue}
 
 Redis est obligatoire pour Zammad et remplit deux rôles essentiels :
 
 1. **Pub/sub ActionCable** — transmet les mises à jour des tickets en temps réel aux
    agents répartis sur plusieurs pods.
-2. **Sidekiq** — traite les tâches en arrière-plan (envoi d'e-mails, notifications de
+2. **Sidekiq** — traite les jobs en arrière-plan (envoi d'e-mails, notifications de
    SLA, synchronisation LDAP, tâches du planificateur).
 
 Lorsqu'aucun `redis_host` externe n'est configuré et que NFS est activé, l'adresse IP
@@ -229,7 +229,7 @@ des règles d'alerte sont disponibles en option.
   ce port — la négociation WebSocket du navigateur ne peut pas l'atteindre.
   L'interface se rabat proprement sur l'interrogation périodique, la même limitation
   que celle documentée pour Cloud Run dans `Zammad_Common/scripts/entrypoint.sh`.
-  `enable_redis = true` reste obligatoire en production, car Sidekiq (tâches en
+  `enable_redis = true` reste obligatoire en production, car Sidekiq (jobs en
   arrière-plan) en dépend, que ActionCable soit joignable ou non.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent toutes deux `/`
   par défaut, qui ne renvoie HTTP 200 que lorsque Zammad est entièrement initialisé
@@ -379,7 +379,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 | `storage_buckets` / `gcs_volumes` | _(définies)_ | Buckets supplémentaires / montages GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
-### Groupe 15 — Cache Redis et file de tâches {#group-15--redis-cache--job-queue}
+### Groupe 15 — Cache Redis et file de jobs {#group-15--redis-cache--job-queue}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|

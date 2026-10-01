@@ -315,7 +315,7 @@ Pertinent uniquement lorsque `workload_type = "StatefulSet"` ou `stateful_pvc_en
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Fournissez une liste non vide pour la remplacer entièrement. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. Fournissez une liste non vide pour le remplacer entièrement. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour des tâches auxiliaires planifiées (par ex. sauvegardes). |
 | `additional_services` | `[]` | Services GKE sidecar ou auxiliaires déployés aux côtés de Kestra. |
 

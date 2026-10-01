@@ -40,7 +40,7 @@ services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Cyclos exige six extensions PostgreSQL précises
   (`pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`, `postgis`, `unaccent`). MySQL et SQL
   Server ne sont pas pris en charge.
-- **Les extensions PostgreSQL sont installées automatiquement** par la tâche `db-init` avant le
+- **Les extensions PostgreSQL sont installées automatiquement** par le job `db-init` avant le
   démarrage de Cyclos — vous n'avez pas besoin de les activer manuellement.
 - **Le stockage de fichiers GCS est obligatoire.** Cyclos utilise Google Cloud Storage comme gestionnaire
   de contenu de fichiers (`cyclos.storedFileContentManager = gcs`). NFS est désactivé pour le conteneur
@@ -126,7 +126,7 @@ Consultez [App_GKE](App_GKE.md) pour les options de montage GCS Fuse et CMEK.
 
 Le mot de passe de la base de données Cyclos et celui du superutilisateur PostgreSQL (`ROOT_PASSWORD`) sont stockés comme
 secrets Secret Manager et injectés dans les pods à l'exécution ; le texte en clair n'apparaît jamais dans la
-configuration. La tâche `db-init` utilise `ROOT_PASSWORD` pour installer les extensions ; Cyclos utilise
+configuration. Le job `db-init` utilise `ROOT_PASSWORD` pour installer les extensions ; Cyclos utilise
 `DB_PASSWORD` pour se connecter à l'exécution.
 
 - **Console :** Security → Secret Manager.
@@ -172,10 +172,10 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
 
 ## 3. Comportement de l'application Cyclos {#3-cyclos-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche `db-init` s'exécute en tant que superutilisateur PostgreSQL et,
+- **Configuration de la base de données au premier déploiement.** Le job `db-init` s'exécute en tant que superutilisateur PostgreSQL et,
   de manière idempotente : crée l'utilisateur de base de données `cyclos`, crée la base de données de l'application,
   installe les six extensions requises (`pg_trgm`, `uuid-ossp`, `cube`, `earthdistance`,
-  `postgis`, `unaccent`) et accorde les privilèges nécessaires. Elle peut être relancée sans risque.
+  `postgis`, `unaccent`) et accorde les privilèges nécessaires. Il peut être relancé sans risque.
 - **Gestion du schéma au démarrage.** Cyclos crée et fait évoluer son propre schéma PostgreSQL
   au démarrage (`cyclos.db.managed = true`). Le démarrage du premier déploiement prend 2 à 5 minutes, le temps
   de construire le schéma. Les démarrages suivants sont plus rapides mais valident toujours le schéma.
@@ -316,7 +316,7 @@ d'[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut stan
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (crée les extensions, l'utilisateur et la base de données). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (crée les extensions, l'utilisateur et la base de données). |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Cyclos. |
 
@@ -330,7 +330,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS n'est pas utilisé par le conteneur Cyclos (GCS sert de stockage de fichiers). Définissez `true` uniquement si vous avez besoin de NFS provisionné pour d'autres tâches. |
+| `enable_nfs` | `false` | NFS n'est pas utilisé par le conteneur Cyclos (GCS sert de stockage de fichiers). Définissez `true` uniquement si vous avez besoin de NFS provisionné pour d'autres jobs. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
@@ -346,7 +346,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES` | Moteur Cloud SQL. Cyclos exige PostgreSQL. Ne le remplacez pas par MySQL ou `NONE`. |
-| `db_name` | `cyclos` | Nom de la base de données PostgreSQL transmis à la tâche `db-init` propre à `Cyclos_Common` et injecté dans la configuration de l'application. **Immuable après le premier déploiement.** |
+| `db_name` | `cyclos` | Nom de la base de données PostgreSQL transmis au job `db-init` propre à `Cyclos_Common` et injecté dans la configuration de l'application. **Immuable après le premier déploiement.** |
 | `db_user` | `cyclos` | Utilisateur de l'application transmis à `Cyclos_Common`. **Immuable après le premier déploiement.** |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
@@ -354,7 +354,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_GKE — consultez
 Remarque : `application_database_name` / `application_database_user` (valeurs par défaut `gkeappdb` /
 `gkeappuser`) forment une paire distincte transmise au provisionnement de base de données propre au socle
 `App_GKE`. La base de données et l'utilisateur réellement utilisés par Cyclos (ceux auxquels l'application se connecte) sont déterminés par
-`db_name` / `db_user` ci-dessus, provisionnés par la tâche `db-init` de `Cyclos_Common` — laissez la
+`db_name` / `db_user` ci-dessus, provisionnés par le job `db-init` de `Cyclos_Common` — laissez la
 paire `application_database_*` à ses valeurs par défaut.
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
@@ -429,7 +429,7 @@ et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'importation. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'importation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

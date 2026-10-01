@@ -205,7 +205,7 @@ d'émetteur.
   ses URL de redirection à partir d'`ENDPOINT` ; le point d'entrée le définit à partir de `GKE_SERVICE_URL`. Mettez-le
   à jour avec l'URL externe du LoadBalancer ou du domaine personnalisé via `environment_variables` dès que
   l'adresse externe est connue.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/api/status` — un
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent `/api/status` — un
   point de terminaison non authentifié qui renvoie `200` dès que le cœur est opérationnel. Le port du conteneur
   et les sondes doivent tous être `3001`. Vérifiez :
   ```bash

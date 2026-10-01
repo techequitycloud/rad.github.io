@@ -55,11 +55,11 @@ qui ne peut pas atteindre l'URL publique, exclusivement HTTPS, d'un service Clou
 
 - **PostgreSQL 15 est obligatoire.** Aucun autre moteur n'est pris en charge.
 - **Deux rôles de base de données, dont un seul géré par Terraform.** `db_user` (par
-  défaut `sparky`) est le rôle d'administration/de migration créé par la tâche
+  défaut `sparky`) est le rôle d'administration/de migration créé par le job
   `db-init` ; `app_db_user` (par défaut `sparky_app`) est un rôle à privilèges limités
   que le **backend crée et entretient lui-même** à chaque démarrage, à l'aide des
   identifiants de `db_user` — il n'existe aucune ressource Terraform pour ce rôle.
-- **Pas de tâche de migration distincte.** Contrairement à de nombreuses applications
+- **Pas de job de migration distinct.** Contrairement à de nombreuses applications
   de ce catalogue, le backend de SparkyFitness exécute ses propres migrations de base
   de données à chaque démarrage du conteneur.
 - **L'image frontend est préconstruite** — `container_image_source = "prebuilt"`, donc le
@@ -167,7 +167,7 @@ pour les isoler.
   `app_db_user` — le backend s'en charge lui-même.
 - **Les migrations s'exécutent à chaque démarrage.** Le backend applique ses propres
   migrations de schéma au démarrage à l'aide des identifiants d'administration de
-  `db_user` — il n'y a aucune tâche de migration distincte à surveiller.
+  `db_user` — il n'y a aucun job de migration distinct à surveiller.
 - **`app_db_user` est autoréparateur.** Le backend crée ou met à jour ce rôle à
   privilèges limités à chaque démarrage ; il survit donc à une recréation complète du
   conteneur sans intervention manuelle.
@@ -194,7 +194,7 @@ pour les isoler.
   backend est donc un build personnalisé minimal qui modifie les trois constructeurs
   `pg.Pool` pour activer SSL vers tout hôte autre que la boucle locale (voir
   [SparkyFitness_Common](SparkyFitness_Common.md) §4).
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job db-init --project "$PROJECT" --region "$REGION"
@@ -257,7 +257,7 @@ avec leur comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (rôle d'administration + base de données uniquement). |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (rôle d'administration + base de données uniquement). |
 
 ### Groupe 16 — Observabilité et santé {#group-16--observability--health}
 

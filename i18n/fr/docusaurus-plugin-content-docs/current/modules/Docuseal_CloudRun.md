@@ -217,7 +217,7 @@ avec des tests de disponibilité et des règles d'alerte facultatifs.
   seule fois et écrit dans Secret Manager. Le faire tourner invalide tous les cookies
   de session signés, obligeant chaque utilisateur à se reconnecter. Ne le faites
   tourner que pendant une fenêtre de maintenance planifiée.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness)
   ciblent `/up` — le point de terminaison de santé intégré de Rails, qui renvoie un
   `200` non authentifié dès que l'application est prête. La sonde de démarrage par
   défaut prévoit un délai initial de 60 secondes et une large fenêtre de nouvelles

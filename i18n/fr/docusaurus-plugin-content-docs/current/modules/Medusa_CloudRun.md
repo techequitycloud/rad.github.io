@@ -75,7 +75,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
   considéré comme prêt** : `db-init` → `medusa-migrate` → `medusa-verify` →
   `medusa-admin-create`, chacune dépendant de la précédente.
 - **`MEDUSA_WORKER_MODE = "shared"`** — une seule instance Cloud Run traite à la fois
-  les requêtes API et les tâches/abonnés/workflows en arrière-plan de Medusa, car
+  les requêtes API et les jobs/abonnés/workflows en arrière-plan de Medusa, car
   la topologie serveur/worker séparée officiellement recommandée par Medusa ne se
   transpose pas sur un service Cloud Run unique.
 - **`enable_gcs_storage = false` par défaut.** Medusa se rabat sur le stockage local
@@ -193,8 +193,8 @@ Consultez [App_CloudRun](App_CloudRun.md) pour les tests de disponibilité et le
    installe, dans la mesure du possible, les extensions `uuid-ossp`/`postgis`.
 2. **`medusa-migrate`** — exécute `npx medusa db:migrate` sur l'image construite (2
    vCPU / 2Gi, jusqu'à 30 minutes, 3 nouvelles tentatives).
-3. **`medusa-verify`** — une tâche de garde qui se connecte après `medusa-migrate` et
-   **fait échouer l'apply** si le schéma `public` ne contient aucune table. Elle existe
+3. **`medusa-verify`** — un job de garde qui se connecte après `medusa-migrate` et
+   **fait échouer l'apply** si le schéma `public` ne contient aucune table. Il existe
    parce que ce socle ne fait **pas** échouer l'apply du module lorsqu'un job
    d'initialisation échoue de lui-même — sans `medusa-verify`, une migration en
    concurrence ou en échec pourrait livrer silencieusement un service Cloud Run
@@ -227,7 +227,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "$SERVICE_URL/health"
 ### `MEDUSA_WORKER_MODE = "shared"` {#medusa_worker_mode--shared}
 
 Une seule instance Cloud Run exécute à la fois le serveur API et les
-tâches/abonnés/workflows en arrière-plan de Medusa — la topologie serveur/worker
+jobs/abonnés/workflows en arrière-plan de Medusa — la topologie serveur/worker
 séparée officiellement recommandée par Medusa ne se transpose pas sur un service
 Cloud Run unique, de sorte que ce module fonctionne toujours en mode partagé.
 Concrètement : chaque instance en cours d'exécution traite à la fois les requêtes
@@ -346,7 +346,7 @@ sans surcharge propre à l'application.
 |---|---|---|---|
 | Build à partir des sources (`container_image_source = "custom"`) | Aucune action nécessaire — c'est le seul mode valide | Élevé | Toute modification du Dockerfile, de `entrypoint.sh` ou des arguments de build dans `Medusa_Common` nécessite une véritable reconstruction Cloud Build (~10 minutes pour la seule étape de build) avant de prendre effet — impossible de simplement « redémarrer » sur de nouvelles sources, contrairement aux applications à build personnalisé dont l'image de base existe déjà. Forcez une reconstruction avec `tofu taint 'module.medusa_app.module.app_build.null_resource.build_and_push_application_image[0]'` si le déclencheur basé sur le hachage du contenu manque une modification. |
 | `enable_redis` | `true` | Critique | Medusa journalise `"redisUrl not found. A fake redis instance will be used."` et démarre quand même — ce message d'apparence anodine signale une solution de repli pour le développement et les tests, pas un mode de production pris en charge. Le cache, les sessions, le bus d'événements, le moteur de workflows et le verrouillage dépendent tous de Redis ; le désactiver dans un déploiement de production durable n'est pas pris en charge. |
-| Job d'initialisation `medusa-verify` | La laisser dans la chaîne par défaut | Critique | Cette tâche existe précisément parce qu'un échec de job d'initialisation ne fait **pas** échouer l'apply du module dans ce socle. La supprimer (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'elle devait éliminer — une `medusa-migrate` en concurrence ou en échec livrerait sinon un service « déployé avec succès » face à un schéma `public` vide, et chaque requête échouerait sans signal évident au moment du déploiement. |
+| Job d'initialisation `medusa-verify` | Le laisser dans la chaîne par défaut | Critique | Ce job existe précisément parce qu'un échec de job d'initialisation ne fait **pas** échouer l'apply du module dans ce socle. Le supprimer (en surchargeant `initialization_jobs`) rouvre exactement le risque de base de données silencieusement vide qu'il devait éliminer — un `medusa-migrate` en concurrence ou en échec livrerait sinon un service « déployé avec succès » face à un schéma `public` vide, et chaque requête échouerait sans signal évident au moment du déploiement. |
 | Isolation de l'espace de travail pnpm (leçon pour réutiliser ce modèle de Dockerfile) | N/A — à titre informatif | Élevé | Si vous reprenez ce modèle de build à partir des sources pour une autre application basée sur un espace de travail pnpm/npm, n'oubliez pas que la sortie de build produite *à l'intérieur* d'un monorepo cloné reste imbriquée sous le `pnpm-workspace.yaml` de ce monorepo. Exécuter `pnpm install --prod` directement sur cette sortie la réinstalle silencieusement comme partie de l'espace de travail englobant et peut n'écrire **aucun** `node_modules` — confirmé ici par `sh: medusa: not found` à l'exécution. Copiez toujours la sortie de build autonome dans un répertoire sans `pnpm-workspace.yaml` ancêtre avant d'installer ses dépendances de production. |
 | `admin_email` / mot de passe administrateur initial | Le récupérer dans Secret Manager après le déploiement | Élevé | Aucun identifiant administrateur préalimenté n'est visible ailleurs que dans Secret Manager (sortie `admin_password_secret_id`) — le perdre de vue oblige à récupérer l'accès en exécutant manuellement `npx medusa user` contre la base de données en service. |
 | `MEDUSA_WORKER_MODE = "shared"` + `cpu_always_allocated = false` (défaut) | Définir `cpu_always_allocated = true` si vous vous appuyez sur des workflows planifiés ou événementiels | Moyen | Le mode worker partagé traite les workflows et abonnés en arrière-plan dans la *même* instance que celle qui sert les requêtes HTTP. La facturation à la requête (par défaut) réduit le CPU quasiment à zéro entre les requêtes entrantes, ce qui peut bloquer le travail en arrière-plan dans le processus — la même catégorie de problème documentée à l'échelle de la flotte pour les applications de type n8n/OpenClaw de ce catalogue. |

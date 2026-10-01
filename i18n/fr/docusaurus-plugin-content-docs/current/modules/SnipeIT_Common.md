@@ -86,7 +86,7 @@ Snipe-IT nécessite **MySQL 8.0** ; `SnipeIT_Common` code en dur
 `database_type = "MYSQL_8_0"` dans sa sortie `config`, quelle que soit la
 valeur transmise par le module Application ou par l'utilisateur — aucun autre
 moteur n'est pris en charge. Sauf si un module Application remplace
-`initialization_jobs`, deux tâches ordonnées s'exécutent à chaque apply :
+`initialization_jobs`, deux jobs ordonnés s'exécutent à chaque apply :
 
 1. **`db-init`** (image `mysql:8.0-debian`, `execute_on_apply = true`,
    `max_retries = 3`, délai d'expiration de 600 s) — exécute
@@ -114,7 +114,7 @@ moteur n'est pris en charge. Sauf si un module Application remplace
      lui accorde tous les privilèges sur celle-ci,
    - **vérifie que l'utilisateur de l'application peut réellement se
      connecter** — ce qui permet à la fois de détecter les problèmes de mot de
-     passe ou d'autorisations au moment de la tâche plutôt qu'au démarrage du
+     passe ou d'autorisations au moment du job plutôt qu'au démarrage du
      pod, et de préchauffer le cache d'authentification
      `caching_sha2_password` côté serveur de MySQL 8, afin que les connexions
      ultérieures de PHP/des clients n'aient pas besoin de l'échange RSA,
@@ -129,13 +129,13 @@ moteur n'est pris en charge. Sauf si un module Application remplace
    trafic. Le socle fusionne automatiquement l'environnement complet et les
    secrets de l'application (`APP_ENV`, `DB_CONNECTION`, `DB_HOST`,
    `DB_DATABASE`, `DB_USERNAME`, `DB_PORT`, `APP_KEY`, `DB_PASSWORD`,
-   `ROOT_PASSWORD`) dans cette tâche ; aucun raccordement de variables
-   d'environnement propre à la tâche n'est donc défini ici. La migration
+   `ROOT_PASSWORD`) dans ce job ; aucun raccordement de variables
+   d'environnement propre au job n'est donc défini ici. La migration
    automatique au démarrage de l'image officielle, si elle existe, constitue un
    filet de sécurité secondaire, et non le chemin principal de création du
    schéma.
 
-Les deux tâches peuvent être relancées sans risque. Inspectez directement la
+Les deux jobs peuvent être relancés sans risque. Inspectez directement la
 base de données avec :
 
 ```bash
@@ -200,7 +200,7 @@ conflit de clés) :
   §4.)
 - **Persistance des sessions, du cache et de la file d'attente** — `SESSION_DRIVER = "database"`,
   `CACHE_DRIVER = "file"`, `QUEUE_DRIVER = "database"` — les sessions et les
-  tâches en file d'attente sont persistées afin de survivre aux redémarrages de
+  jobs en file d'attente sont persistés afin de survivre aux redémarrages de
   conteneurs/de pods, même avec une seule instance en cours d'exécution.
 - **`APP_URL`** — défini à partir de `var.service_url` dès qu'il n'est pas vide
   (le socle exporte toujours une URL de service prévue — `CLOUDRUN_SERVICE_URL`
@@ -236,7 +236,7 @@ ni `SnipeIT_CloudRun` ni `SnipeIT_GKE` ne les remplacent :
 - **Sonde de démarrage** — **TCP** sur le port du conteneur, délai initial de
   30 s, délai d'expiration de 10 s, période de 15 s, seuil d'échec de 20 (une
   fenêtre d'environ 5 minutes) — assez généreux pour couvrir la chaîne de
-  tâches `db-init` → `migrate` et la séquence de démarrage PHP/Apache lors du
+  jobs `db-init` → `migrate` et la séquence de démarrage PHP/Apache lors du
   premier déploiement.
 - **Sonde de vivacité** — **HTTP** `GET /`, délai initial de 300 s, délai
   d'expiration de 60 s, période de 60 s, seuil d'échec de 3. Snipe-IT sert sa

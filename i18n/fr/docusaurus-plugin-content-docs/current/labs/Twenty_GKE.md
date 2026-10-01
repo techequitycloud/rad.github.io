@@ -73,7 +73,7 @@ export REGION="us-central1"           # the region you deploy into
    base de données Cloud SQL (PostgreSQL 15) avec ses secrets Secret Manager, un stockage
    Redis/GCS facultatif, construit l'image du conteneur et exécute trois jobs ponctuels
    d'initialisation à la suite (`db-init`, puis `twenty-migrate`, puis
-   `twenty-verify` — une tâche de garde qui fait échouer le déploiement si le schéma se retrouve vide).
+   `twenty-verify` — un job de garde qui fait échouer le déploiement si le schéma se retrouve vide).
    Les premiers déploiements prennent environ **20–35 minutes** (la création de Cloud SQL en représente l'essentiel).
 
 3. Connectez-vous au cluster et découvrez l'espace de noms avec des filtres indépendants des noms :
@@ -181,7 +181,7 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
 - **Erreurs de connexion à la base de données :** vérifiez que l'instance Cloud SQL est `RUNNABLE`, que le
   secret du mot de passe de la base a bien été matérialisé dans l'espace de noms, que `enable_cloudsql_volume` vaut
   `true` et que les trois jobs d'initialisation (`db-init`, `twenty-migrate`,
-  `twenty-verify`) se sont terminées.
+  `twenty-verify`) se sont terminés.
 - **Échec d'un job d'initialisation :** inspectez les jobs et les journaux de leurs pods :
   ```bash
   kubectl get jobs -n "$NS"
@@ -193,8 +193,8 @@ diagnostics au niveau de la plateforme, qui ne changent pas avec les versions de
   l'échec d'un job d'initialisation ne fait PAS échouer à lui seul l'application du module ; un job
   `twenty-migrate` en situation de concurrence ou en échec sur un nouveau tenant peut donc laisser le pod Ready et servant des requêtes sur une base de données
   **vide** — chaque requête du backend échoue alors avec
-  `relation "core.keyValuePair" does not exist`. C'est précisément le mode de défaillance que la
-  tâche de garde `twenty-verify` est censée détecter (elle fait échouer l'application de manière visible si le schéma `core`
+  `relation "core.keyValuePair" does not exist`. C'est précisément le mode de défaillance que le
+  job de garde `twenty-verify` est censé détecter (il fait échouer l'application de manière visible si le schéma `core`
   ne contient aucune table). Si vous rencontrez malgré tout ce problème — par exemple si la garde a été contournée via une
   surcharge personnalisée de `initialization_jobs` — consultez `kubectl logs -n "$NS" job/twenty-migrate`
   à la recherche d'une situation de concurrence avec Cloud SQL sur une instance tout juste provisionnée, puis relancez-la :

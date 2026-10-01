@@ -55,7 +55,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **Le chemin de stockage des ressources est important.** `HA_STORAGE_PATH=/wiki-storage`
   indique à Wiki.js où écrire les fichiers téléversés. Le volume NFS ou GCS Fuse doit
   être monté sur ce même chemin.
-- **La base de données est amorcée au premier déploiement** par une tâche `db-init`
+- **La base de données est amorcée au premier déploiement** par un job `db-init`
   qui crée l'utilisateur, la base de données et le schéma PostgreSQL. La sonde de
   démarrage utilise `/healthz` avec un délai initial de 60 secondes pour le permettre.
 
@@ -188,8 +188,8 @@ facultatifs.
   d'initialisation (`db-init`) utilise l'image `postgres:15-alpine` pour se connecter
   via le Cloud SQL Auth Proxy, créer de manière idempotente la base de données et
   l'utilisateur `wikijs`, et accorder les droits requis. L'extension PostgreSQL
-  `pg_trgm` est installée dans le cadre de la configuration de `Wikijs_Common`. La
-  tâche peut être réexécutée sans risque.
+  `pg_trgm` est installée dans le cadre de la configuration de `Wikijs_Common`. Le
+  job peut être réexécuté sans risque.
 - **Migration du schéma au premier démarrage.** Wiki.js se connecte à PostgreSQL au
   démarrage et exécute sa propre migration interne du schéma. La sonde de démarrage
   comporte un délai initial de 60 secondes pour le permettre au premier lancement.
@@ -206,7 +206,7 @@ facultatifs.
   de base. Activez-le lorsque vous souhaitez une mise en cache des sessions au niveau
   de l'application.
 
-  Inspectez les tâches et leurs exécutions :
+  Inspectez les jobs et leurs exécutions :
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -332,7 +332,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée de `Wikijs_Common`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré de `Wikijs_Common`. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -383,7 +383,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -403,7 +403,7 @@ d'explorer les ressources en cours d'exécution.
 | `database_type` | `POSTGRES_15` | Critique | Wiki.js nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
 | `db_name` / `DB_NAME` | tous deux `wikijs` | Critique | Non-concordance : `db-init` crée une base de données différente de celle à laquelle Wiki.js se connecte — boucle de plantage. Immuable après le premier déploiement. |
 | `enable_cloudsql_volume` | `true` | Critique | La désactivation supprime le sidecar Auth Proxy — toutes les connexions PostgreSQL échouent. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `db_user` / `DB_USER` | tous deux `wikijs` | Élevé | Non-concordance : les droits sont accordés à un utilisateur mais Wiki.js s'authentifie avec un autre — échec d'authentification. |
 | `enable_nfs` | `true` | Élevé | Sans stockage partagé, les fichiers téléversés écrits par une instance sont invisibles pour les autres. |
 | `nfs_mount_path` + `HA_STORAGE_PATH` | tous deux `/wiki-storage` | Élevé | Si le chemin de montage et `HA_STORAGE_PATH` divergent, Wiki.js écrit sur un disque éphémère. |

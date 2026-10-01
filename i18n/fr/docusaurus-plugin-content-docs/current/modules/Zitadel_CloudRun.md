@@ -230,7 +230,7 @@ résolus.
   domaine personnalisé, définissez `ZITADEL_EXTERNALDOMAIN` (via
   `environment_variables`) sur cet hôte, sinon les connexions et l'échange de jetons
   échoueront.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent
   `/debug/healthz` — un point de terminaison `200` non authentifié. Prévoyez environ 7
   à 8 minutes au premier démarrage (délai initial de 60 secondes plus une fenêtre de
   nouvelles tentatives d'environ 450 secondes) pour la configuration initiale et les

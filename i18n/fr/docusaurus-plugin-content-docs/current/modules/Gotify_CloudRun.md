@@ -185,10 +185,10 @@ facultatives.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de
-  données et le rôle de l'application, puis accorde les privilèges. La tâche peut être
-  relancée sans risque.
+  données et le rôle de l'application, puis accorde les privilèges. Le job peut être
+  relancé sans risque.
 - **Schéma par auto-migration GORM.** Gotify crée et migre ses propres tables à chaque
-  démarrage — il n'existe pas de tâche de migration distincte. La mise à niveau de la
+  démarrage — il n'existe pas de job de migration distinct. La mise à niveau de la
   version de l'application applique automatiquement les modifications de schéma.
 - **Le compte administrateur n'est initialisé qu'une fois.**
   `GOTIFY_DEFAULTUSER_NAME = admin` et le secret `GOTIFY_DEFAULTUSER_PASS` créent
@@ -213,7 +213,7 @@ facultatives.
   point de terminaison public qui renvoie `{"health":"green","database":"green"}` dès
   que PostgreSQL est joignable. La sonde de démarrage par défaut accorde environ
   5 minutes au premier démarrage.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -345,7 +345,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 | `cron_jobs` | `[]` | Cloud Scheduler + Cloud Run Jobs facultatifs. |
 | `additional_services` | `[]` | Services Cloud Run supplémentaires aux côtés de Gotify. |
 
@@ -408,7 +408,7 @@ d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `max_instance_count` | `1` | Critique | Dépasser 1 sans diffusion externe fait perdre des messages aux clients connectés en flux à d'autres instances (bus de messages interne au processus). |
 | `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/le rôle et détruit tous les messages. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans sauvegarde valide fait échouer le job d'import. |
 | `cpu_always_allocated` | `true` | Élevé | Avec une facturation à la requête, le CPU est bridé entre les requêtes et la diffusion des flux WebSocket se bloque pendant l'inactivité. |
 | `container_port` | `80` | Élevé | Gotify écoute sur le port 80 ; un port différent fait échouer la sonde de démarrage et la révision ne sert jamais de trafic. |
 | `memory_limit` | `512Mi` | Élevé | En dessous du minimum gen2 de 512 MiB, le plan est rejeté. |

@@ -353,7 +353,7 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[{ name="db-init", execute_on_apply=true }]` | La tâche intégrée `db-init` s'exécute à chaque apply. Fournissez une liste non vide pour la remplacer. |
+| `initialization_jobs` | `[{ name="db-init", execute_on_apply=true }]` | Le job intégré `db-init` s'exécute à chaque apply. Fournissez une liste non vide pour le remplacer. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | `[]` | Services Cloud Run déployés conjointement (par ex. workers d'arrière-plan). |
 
@@ -405,7 +405,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -427,7 +427,7 @@ d'explorer les ressources en cours d'exécution.
 | `enable_nfs` | `true` | Critique | Sans stockage partagé, les téléversements sont perdus entre instances ou redémarrages. |
 | `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; le modifier renomme toutes les ressources GCP, ce qui entraîne une recréation complète et une perte de données. |
 | `application_database_name` / `application_database_user` | définis une fois | Critique | Immuables après le premier déploiement ; les renommer conduit Strapi à se connecter à une base de données vide. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_file` valide fait échouer le job d'import. |
 | `execution_environment` | `gen2` | Élevé | gen1 ne prend pas en charge les montages NFS ; NFS échouera silencieusement. |
 | `enable_redis` | `false` | Élevé | À activer uniquement lorsque des plugins le requièrent. Un `redis_host` non défini se rabat sur l'IP du serveur NFS (ne fonctionne que lorsque `enable_nfs = true`) ; si NFS est également désactivé, la valeur de repli n'est pas résolue et provoque une erreur de connexion au démarrage. |
 | `memory_limit` | `2Gi` | Élevé | Le runtime Node.js de Strapi et le panneau d'administration requièrent suffisamment de mémoire ; des valeurs inférieures à `512Mi` provoquent des arrêts OOM. |

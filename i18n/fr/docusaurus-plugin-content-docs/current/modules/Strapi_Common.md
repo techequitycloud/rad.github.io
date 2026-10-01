@@ -30,7 +30,7 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Secrets cryptographiques | Génère et stocke cinq secrets Strapi dans **Secret Manager** | Injectés automatiquement comme variables d'environnement à l'exécution |
 | Image de conteneur | Définit un build Node.js 20 en deux étapes (node:20-alpine) avec le panneau d'administration Strapi précompilé | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme moteur requis | §Base de données dans les guides des plateformes |
-| Amorçage de la base de données | Définit la tâche du premier déploiement qui crée la base de données, l'utilisateur et les droits (dont `CREATEDB`) | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job du premier déploiement qui crée la base de données, l'utilisateur et les droits (dont `CREATEDB`) | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** des téléversements (suffixe `strapi-uploads`) | Sortie `storage_buckets` |
 | Paramètres de base | Définit `NODE_ENV = "production"`, le port de Strapi, la configuration du proxy et les variables d'environnement Redis facultatives | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit la configuration par défaut des sondes de démarrage (`/_health`, délai de 30 secondes, seuil de 30 échecs) et de vivacité (`/_health`, délai de 15 secondes) | §Observabilité dans les guides des plateformes |
@@ -74,7 +74,7 @@ Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Strapi requiert **PostgreSQL** ; le moteur est imposé et MySQL n'est pas pris en
-charge. Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à
+charge. Lors du premier déploiement, un job ponctuel `db-init` se connecte à
 Cloud SQL via l'Auth Proxy et, de manière idempotente :
 
 1. Attend que PostgreSQL accepte les connexions (test de connexion complet, pas un
@@ -88,7 +88,7 @@ Cloud SQL via l'Auth Proxy et, de manière idempotente :
 5. Accorde tous les privilèges sur la base de données et sur son schéma public.
 6. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter proprement.
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données
+Le job peut être relancé sans risque. Inspectez directement la base de données
 avec :
 
 ```bash

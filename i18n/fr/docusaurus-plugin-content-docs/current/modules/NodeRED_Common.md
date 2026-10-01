@@ -133,7 +133,7 @@ gcloud run services describe <service-name> --project "$PROJECT" --region "$REGI
 - **Aucun job d'initialisation.** Contrairement aux applications adossées à une
   base de données, Node-RED ne nécessite ni initialisation de schéma, ni création
   d'utilisateur, ni amorçage de données. La liste `initialization_jobs` est vide par
-  défaut ; ne transmettez des tâches personnalisées que pour des opérations
+  défaut ; ne transmettez des jobs personnalisés que pour des opérations
   précises, comme l'import d'une archive de flux ou la préinstallation de nœuds de
   palette.
 

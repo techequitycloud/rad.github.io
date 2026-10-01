@@ -40,7 +40,7 @@ Umami est une plateforme d'analyse web open source, légère et respectueuse de 
 | `application_description` | 3 | `string` | `'Umami Analytics on Cloud Run'` | Description du service Cloud Run. |
 | `application_version` | 3 | `string` | `'postgresql-latest'` | Tag de version de l'image Umami. Utilisez un tag préfixé par `postgresql-` (p. ex. `postgresql-latest`, `postgresql-v2.11.3`). |
 
-**Architecture du wrapper :** `Umami CloudRun` appelle `Umami Common` pour construire un objet `application_config` contenant les variables d'environnement propres à Umami, la configuration des sondes et la définition de la tâche `db-init`. `module_secret_env_vars` transporte `APP_SECRET` depuis `Umami Common`. Le `DATABASE_URL` est construit à l'exécution à partir des variables de plateforme DB_* injectées par `App CloudRun`. `scripts_dir` est résolu en `abspath("${module.umami_app.path}/scripts")` au moment de l'apply.
+**Architecture du wrapper :** `Umami CloudRun` appelle `Umami Common` pour construire un objet `application_config` contenant les variables d'environnement propres à Umami, la configuration des sondes et la définition du job `db-init`. `module_secret_env_vars` transporte `APP_SECRET` depuis `Umami Common`. Le `DATABASE_URL` est construit à l'exécution à partir des variables de plateforme DB_* injectées par `App CloudRun`. `scripts_dir` est résolu en `abspath("${module.umami_app.path}/scripts")` au moment de l'apply.
 
 **Remarque sur PostgreSQL :** Umami exige **PostgreSQL 15**. `database_type = "POSTGRES_15"` est la valeur par défaut et ne doit pas être modifiée.
 
@@ -150,12 +150,12 @@ Un Job Cloud Run `db-init` est provisionné automatiquement par `Umami Common` l
 3. Crée la base de données `umami` si elle n'existe pas.
 4. Accorde à l'utilisateur `umami` tous les privilèges sur la base de données.
 
-Umami exécute lui-même ses propres migrations de base de données basées sur Prisma au premier démarrage — la tâche `db-init` ne fait que pré-créer la base de données et l'utilisateur afin que les migrations d'Umami puissent s'exécuter correctement.
+Umami exécute lui-même ses propres migrations de base de données basées sur Prisma au premier démarrage — le job `db-init` ne fait que pré-créer la base de données et l'utilisateur afin que les migrations d'Umami puissent s'exécuter correctement.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse la tâche `db-init` par défaut. Une liste non vide la remplace entièrement. |
-| `cron_jobs` | 13 | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse le job `db-init` par défaut. Une liste non vide le remplace entièrement. |
+| `cron_jobs` | 13 | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 | `additional_services` | 13 | `[]` | Services Cloud Run supplémentaires déployés aux côtés de l'application principale. |
 
 ---
@@ -291,7 +291,7 @@ Umami expose `/api/heartbeat` comme point de terminaison de santé dédié. Les 
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité au démarrage. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
+| `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=10, failure_threshold=30 }` | Sonde de disponibilité (readiness) au démarrage. Le conteneur ne reçoit aucun trafic tant qu'elle n'a pas réussi. |
 | `liveness_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. Le conteneur est redémarré après `failure_threshold` échecs consécutifs. |
 | `startup_probe_config` | 14 | `{ enabled=true, path="/api/heartbeat", initial_delay_seconds=30 }` | Sonde de démarrage Cloud Run (transmise directement à `App CloudRun`). |
 | `health_check_config` | 14 | `{ enabled=true, path="/api/heartbeat" }` | Sonde de vivacité Cloud Run (transmise directement à `App CloudRun`). |
@@ -304,8 +304,8 @@ Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation des mots
 
 1. Secret Manager émet une notification de rotation à chaque intervalle `secret_rotation_period`.
 2. Eventarc déclenche un Job Cloud Run de rotation.
-3. La tâche génère un nouveau mot de passe, met à jour l'utilisateur Cloud SQL PostgreSQL et écrit une nouvelle version du secret.
-4. Après `rotation_propagation_delay_sec` secondes, la tâche redémarre le service Umami.
+3. Le job génère un nouveau mot de passe, met à jour l'utilisateur Cloud SQL PostgreSQL et écrit une nouvelle version du secret.
+4. Après `rotation_propagation_delay_sec` secondes, le job redémarre le service Umami.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -470,8 +470,8 @@ Les comportements suivants sont appliqués automatiquement par `Umami CloudRun`,
 | **APP_SECRET généré automatiquement** | `random_password` dans `Umami Common` | Secret alphanumérique de 32 caractères, stocké dans Secret Manager, injecté en tant que `APP_SECRET`. |
 | **Aucun bucket de stockage par défaut** | Valeur par défaut `storage_buckets = []` | Umami est sans état — aucun bucket GCS n'est provisionné sauf configuration explicite. |
 | **Copie miroir des images activée par défaut** | `enable_image_mirroring = true` | Copie les images depuis GitHub Container Registry (`ghcr.io`) vers Artifact Registry pour éviter les limitations de débit. |
-| **Tâche db-init par défaut** | Fournie par `Umami Common` lorsque `initialization_jobs = []` | La base de données PostgreSQL et l'utilisateur sont créés automatiquement avant qu'Umami n'exécute ses propres migrations. |
-| **Migrations Prisma au démarrage** | Comportement du conteneur Umami | Umami exécute ses propres migrations de base de données Prisma à chaque démarrage. La tâche `db-init` ne fait que pré-créer la base de données et l'utilisateur. |
+| **Job db-init par défaut** | Fourni par `Umami Common` lorsque `initialization_jobs = []` | La base de données PostgreSQL et l'utilisateur sont créés automatiquement avant qu'Umami n'exécute ses propres migrations. |
+| **Migrations Prisma au démarrage** | Comportement du conteneur Umami | Umami exécute ses propres migrations de base de données Prisma à chaque démarrage. Le job `db-init` ne fait que pré-créer la base de données et l'utilisateur. |
 | **Redis non requis** | Valeur par défaut `enable_redis = false` | Umami n'utilise que PostgreSQL pour le stockage de toutes ses données. Redis n'est pas nécessaire. |
 | **Répertoire des scripts** | `scripts_dir = abspath("${module.umami_app.path}/scripts")` | Les scripts d'initialisation proviennent d'`Umami Common`, et non du répertoire de déploiement. |
 
@@ -565,7 +565,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Umami CloudR
 | `rotation_propagation_delay_sec` | 12 | `90` | Secondes d'attente après la rotation avant le redémarrage du service. |
 | `enable_postgres_extensions` | 12 | `false` | Active l'installation d'extensions PostgreSQL. |
 | `postgres_extensions` | 12 | `[]` | Extensions PostgreSQL à installer. |
-| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse la tâche `db-init` par défaut. |
+| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour qu'`Umami Common` fournisse le job `db-init` par défaut. |
 | `cron_jobs` | 13 | `[]` | Jobs Cloud Run planifiés récurrents. |
 | `additional_services` | 13 | `[]` | Services Cloud Run supplémentaires déployés aux côtés d'Umami. |
 | `startup_probe` | 14 | `{ path="/api/heartbeat", initial_delay_seconds=30, failure_threshold=30 }` | Sonde de démarrage. |

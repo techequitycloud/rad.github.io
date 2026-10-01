@@ -152,7 +152,7 @@ vers Cloud Monitoring.
 
 ## 3. Comportement de l'application Headscale {#3-headscale-application-behaviour}
 
-- **SQLite s'initialise automatiquement au démarrage.** Aucune tâche distincte de
+- **SQLite s'initialise automatiquement au démarrage.** Aucun job distinct de
   configuration de la base de données — au premier démarrage, Headscale crée
   `db.sqlite` sous `/var/lib/headscale` et applique automatiquement ses propres
   migrations de schéma internes.
@@ -295,7 +295,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration personnalisées (vide par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration personnalisés (vide par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |

@@ -201,7 +201,7 @@ facultatifs.
 - **Entièrement sans état.** SearXNG récupère les résultats auprès de moteurs de
   recherche externes au moment de la requête et ne stocke rien localement. Aucune
   migration de base de données ni job d'initialisation ne s'exécute.
-- **Aucune tâche de configuration au premier déploiement.** Comme il n'y a pas de base
+- **Aucun job de configuration au premier déploiement.** Comme il n'y a pas de base
   de données, le déploiement se termine sans étape db-init — le service est prêt dès que
   le conteneur démarre.
 - **`SEARXNG_SECRET` est stable.** La clé de session est générée une seule fois et
@@ -393,7 +393,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |

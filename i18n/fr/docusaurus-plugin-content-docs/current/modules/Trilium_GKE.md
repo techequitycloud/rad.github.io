@@ -147,9 +147,9 @@ d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application Trilium {#3-trilium-application-behaviour}
 
-- **Aucune tâche de configuration de base de données au premier déploiement.**
+- **Aucun job de configuration de base de données au premier déploiement.**
   Trilium crée et migre son propre schéma SQLite lors de la première visite web, via
-  son propre assistant de configuration — il n'existe aucune tâche `db-init` gérée
+  son propre assistant de configuration — il n'existe aucun job `db-init` géré
   par Terraform à inspecter.
 - **Écran « Set Password » au premier lancement.** La première visite de l'URL racine
   affiche un formulaire de définition du mot de passe (aucun administrateur ni nom

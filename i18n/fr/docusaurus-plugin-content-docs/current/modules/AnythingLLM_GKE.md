@@ -241,7 +241,7 @@ activé par défaut.
 - **Chargement des modèles d'IA.** AnythingLLM charge les modèles d'embedding en mémoire
   au premier démarrage. La sonde de démarrage utilise un délai initial de 60 secondes et
   30 périodes d'échec (×10 secondes = 5 minutes au total) pour en tenir compte.
-- **Chemin de santé.** Les sondes de readiness et de liveness ciblent toutes deux
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de liveness ciblent toutes deux
   `/api/ping`, qui ne renvoie HTTP 200 qu'une fois l'application entièrement initialisée.
   Ce point de terminaison fonctionne tout aussi bien sur GKE, où le trafic des sondes
   atteint directement le conteneur sans aucune redirection.

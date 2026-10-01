@@ -208,8 +208,8 @@ disponibles en option.
   sans risque.
 - **Migrations au démarrage.** Chaque pod exécute les migrations de base de données Flask-Migrate
   de Dify au démarrage (`MIGRATION_ENABLED=true`), de sorte que la mise à niveau de la version de
-  l'application applique automatiquement les changements de schéma. Aucune tâche de migration
-  distincte n'est nécessaire.
+  l'application applique automatiquement les changements de schéma. Aucun job de migration
+  distinct n'est nécessaire.
 - **API + worker dans un seul pod.** Le conteneur personnalisé encapsule `langgenius/dify-api`
   avec supervisord. Le serveur d'API gunicorn et le worker Celery s'exécutent dans le même pod —
   ils partagent l'allocation de CPU et de mémoire. Dimensionnez en conséquence : 2 vCPU et 4 GiB
@@ -223,7 +223,7 @@ disponibles en option.
   niveau de l'environnement qui ne peut pas être définie dans l'interface.
 - **CORS.** `WEB_API_CORS_ALLOW_ORIGINS` et `CONSOLE_CORS_ALLOW_ORIGINS` valent `"*"` par défaut.
   En production, limitez-les à votre domaine via `environment_variables`.
-- **Chemin de santé.** Les sondes de préparation (readiness) et de vivacité ciblent `/health` avec un délai
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent `/health` avec un délai
   initial de 30 secondes, afin de laisser au serveur d'API et aux migrations de base de données le
   temps de se terminer au premier démarrage.
 
@@ -316,7 +316,7 @@ défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. Fournissez une liste non vide pour la remplacer entièrement. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. Fournissez une liste non vide pour le remplacer entièrement. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Deployments Kubernetes supplémentaires aux côtés de Dify (le frontal web est relié automatiquement). |
 
@@ -425,7 +425,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État du monitoring et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et de la tâche d'importation (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et du job d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD. |
@@ -448,7 +448,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `enable_cloudsql_volume` | `true` (obligatoire) | Critique | Le sidecar Auth Proxy est le seul chemin vers PostgreSQL ; le désactiver interrompt toute connectivité à la base de données. |
 | `SECRET_KEY` (généré automatiquement) | immuable une fois défini | Critique | Tous les pods doivent partager la même clé ; sa rotation déconnecte tous les utilisateurs et invalide les sessions actives. |
 | `db_name` / `db_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'importation. |
 | `enable_redis` + `enable_nfs` | tous deux `true` en l'absence de Redis externe | Critique | Sans NFS, il n'existe aucun hôte Redis lorsque `redis_host` est vide — Celery ne démarre pas. |
 | `secret_environment_variables` pour les clés LLM | toujours utiliser des références de secrets | Critique | Des variables d'environnement en clair exposent les clés API dans les spécifications des pods, visibles via `kubectl describe pod`. |
 | `enable_redis` + `redis_host` | hôte correct | Élevé | Un `redis_host` incorrect produit une URL de broker Celery mal formée ; toutes les tâches asynchrones restent indéfiniment en file d'attente. |

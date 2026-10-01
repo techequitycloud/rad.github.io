@@ -44,7 +44,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 avec la collation `C` est obligatoire.** `database_type =
   "POSTGRES_15"` est la valeur par défaut, et le `validation.tf` de
   `GoToSocial_GKE` rejette tout `database_type` autre que Postgres au moment
-  du plan. La tâche `db-init` crée en outre la base de données avec
+  du plan. Le job `db-init` crée en outre la base de données avec
   `LC_COLLATE='C' LC_CTYPE='C'` — GoToSocial refuse de démarrer avec toute
   autre collation.
 - **Image préconstruite, et non personnalisée.** `container_image_source = "prebuilt"`
@@ -52,7 +52,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
   wrapper de point d'entrée n'est nécessaire — la configuration passe
   entièrement par des variables d'environnement `GTS_*` distinctes que le
   binaire lit nativement.
-- **Pas de tâche de migration.** GoToSocial crée et met à niveau son propre
+- **Pas de job de migration.** GoToSocial crée et met à niveau son propre
   schéma automatiquement à chaque démarrage ; `db-init` se contente de
   préparer la base de données en collation C et le rôle.
 - **`max_instance_count` est fixé en dur à 1.** Le cache en mémoire de
@@ -78,7 +78,7 @@ déploiement associe un ensemble ciblé de services Google Cloud :
 - **Le compte administrateur est créé automatiquement au mieux, sans
   garantie.** Contrairement à Cloud Run, l'ordonnancement plus souple des
   jobs d'initialisation sur GKE donne à la boucle de nouvelles tentatives
-  de la tâche `admin-create` une réelle chance de gagner la course contre le
+  du job `admin-create` une réelle chance de gagner la course contre le
   démarrage du pod principal — mais elle peut tout de même la perdre. Voir §3.
 
 ---
@@ -111,7 +111,7 @@ scaling et le type de charge de travail (Deployment ou StatefulSet).
 
 GoToSocial stocke toutes les données de l'application (comptes, statuts,
 abonnements, métadonnées des médias) dans une instance gérée Cloud SQL for
-PostgreSQL 15, créée avec la collation `C` obligatoire par la tâche
+PostgreSQL 15, créée avec la collation `C` obligatoire par le job
 `db-init`. Les pods y accèdent via le **sidecar cloud-sql-proxy** sur
 `127.0.0.1` ; aucune IP publique n'est exposée.
 
@@ -151,7 +151,7 @@ options CMEK.
 Le conteneur principal de GoToSocial lit `GTS_STORAGE_S3_ACCESS_KEY` et
 `GTS_STORAGE_S3_SECRET_KEY` sous forme de variables d'environnement adossées
 à des secrets (projetées via le pilote Secret Store CSI) ;
-`SUPERUSER_PASSWORD` n'est utilisé que par la tâche `admin-create`. Le mot de
+`SUPERUSER_PASSWORD` n'est utilisé que par le job `admin-create`. Le mot de
 passe de la base de données est géré séparément par le socle.
 
 - **Console :** Security → Secret Manager.
@@ -204,15 +204,15 @@ et des règles d'alerte facultatifs sont disponibles.
 
 ## 3. Comportement de l'application GoToSocial {#3-gotosocial-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `scripts/db-init.sh` avec `postgres:15-alpine`. Elle
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `scripts/db-init.sh` avec `postgres:15-alpine`. Il
   attend que Cloud SQL accepte les connexions, puis crée de manière
   idempotente le rôle applicatif et la base de données avec
   `LC_COLLATE='C' LC_CTYPE='C'`, accorde les privilèges et signale au sidecar
   cloud-sql-proxy de s'arrêter (`POST
-  http://127.0.0.1:9091/quitquitquit`) afin que la tâche se termine. Peut être
-  réexécutée sans risque (`execute_on_apply = true`, `max_retries = 3`).
-- **Pas de tâche de migration distincte.** GoToSocial migre son propre schéma
+  http://127.0.0.1:9091/quitquitquit`) afin que le job se termine. Peut être
+  réexécuté sans risque (`execute_on_apply = true`, `max_retries = 3`).
+- **Pas de job de migration distinct.** GoToSocial migre son propre schéma
   automatiquement à chaque démarrage du serveur.
 - **Le compte administrateur est créé automatiquement au mieux — vérifiez-le,
   ne le supposez pas.** GoToSocial n'a ni parcours d'inscription web ni point
@@ -221,9 +221,9 @@ et des règles d'alerte facultatifs sont disponibles.
   `NewSignup: instance application not yet created, run the server at least
   once before creating users` tant que le serveur principal n'a pas démarré
   correctement au moins une fois. Sur GKE, `execute_on_apply` contrôle
-  uniquement si **Terraform attend** une tâche (`App_GKE/jobs.tf` :
-  `wait_for_completion = try(execute_on_apply, true)`) — le pod de la tâche
-  sous-jacente est malgré tout planifié immédiatement, en concurrence avec le
+  uniquement si **Terraform attend** un job (`App_GKE/jobs.tf` :
+  `wait_for_completion = try(execute_on_apply, true)`) — le pod du job
+  sous-jacent est malgré tout planifié immédiatement, en concurrence avec le
   premier pod du Deployment principal. `admin-create.sh` effectue jusqu'à 20
   nouvelles tentatives à 15 secondes d'intervalle pour absorber cette course
   et l'emporte souvent pendant le même `apply` — mais ce n'est pas garanti.
@@ -407,7 +407,7 @@ d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`, `admin-create`) et (facultative) d'importation. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `admin-create`) et (facultatif) d'importation. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -434,7 +434,7 @@ d'exécution.
 | Câblage IAM du stockage (`google_storage_bucket_iam_member`) | Laissez tel que livré (référence `module.app_gke.storage_buckets["storage"]`) | Critique | GoToSocial panique au démarrage sans accès S3. Une alternative `depends_on = [module.app_gke]` provoquerait un interblocage du Deployment avec son propre prérequis IAM. |
 | Récupération d'`admin-create` | Appliquez le correctif SQL de la ligne de compte orpheline si une nouvelle tentative panique avec « no rows » | Élevé | Une première tentative partiellement échouée peut laisser une ligne `accounts` orpheline sans ligne `users` correspondante ; les nouvelles tentatives naïves échouent de façon déroutante sans le SQL de nettoyage. |
 | Sondes de santé (`startup_probe`/`liveness_probe`) | Laissez `type = "TCP"` | Élevé | Les `/readyz`/`/livez` de GoToSocial rejettent toute requête sans en-tête `User-Agent` (`418`) ; passer à `type = "HTTP"` fait échouer la sonde indéfiniment, puisque la sonde de Kubernetes n'en envoie jamais. |
-| Résultat de la tâche `admin-create` | Vérifiez, ne supposez pas | Élevé | L'ordonnancement plus souple des tâches sur GKE permet souvent à `admin-create` de gagner automatiquement sa course contre le démarrage du pod, mais pas toujours — vérifiez que le compte existe avant de considérer le déploiement comme pleinement opérationnel. |
+| Résultat du job `admin-create` | Vérifiez, ne supposez pas | Élevé | L'ordonnancement plus souple des jobs sur GKE permet souvent à `admin-create` de gagner automatiquement sa course contre le démarrage du pod, mais pas toujours — vérifiez que le compte existe avant de considérer le déploiement comme pleinement opérationnel. |
 | `reserve_static_ip` | `true` (par défaut) | Moyen | Sans cela, `GKE_SERVICE_URL` peut se rabattre sur un nom d'hôte interne injoignable `*.svc.cluster.local` avant que l'IP éphémère du LoadBalancer ne soit connue — une situation de concurrence documentée sur l'ensemble du parc. |
 | `curl`/contrôles de santé manuels | Passez toujours `-A "<agent>"` | Moyen | Un `curl` nu (et la plupart des clients/moniteurs HTTP par défaut) reçoit `418 I'm a teapot` de la barrière anti-scraping de GoToSocial fondée sur le User-Agent, même sur des points de terminaison « non authentifiés ». |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Des entiers nus sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
@@ -447,7 +447,7 @@ Pour le comportement du socle évoqué tout au long de ce guide — IAM et
 Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor,
 IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
 consultez **[App_GKE](App_GKE.md)**. La configuration applicative propre à
-GoToSocial partagée avec la variante Cloud Run (secrets, tâches
+GoToSocial partagée avec la variante Cloud Run (secrets, jobs
 `db-init`/`admin-create` et compte de service de stockage) est décrite dans
 **[GoToSocial_Common](GoToSocial_Common.md)** (source du module :
 `modules/GoToSocial_Common`).

@@ -32,7 +32,7 @@ les guides des plateformes ([Linkwarden_GKE](Linkwarden_GKE.md),
 | Secrets cryptographiques | Génère `NEXTAUTH_SECRET` (50 caractères) et le stocke dans **Secret Manager** | Injecté automatiquement en tant que variable d'environnement secrète ; à récupérer via Secret Manager (voir ci-dessous) |
 | Image de conteneur | Encapsule l'image officielle `ghcr.io/linkwarden/linkwarden` avec un point d'entrée cloud ; build via Cloud Build | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | §Base de données dans les guides des plateformes |
-| Initialisation de la base de données | Définit la tâche du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les privilèges | Sortie `initialization_jobs` |
+| Initialisation de la base de données | Définit le job du premier déploiement (`db-init`) qui crée le rôle et la base de données et accorde les privilèges | Sortie `initialization_jobs` |
 | Migrations du schéma | Délègue au `CMD` propre à l'image, qui exécute `prisma migrate deploy` à chaque démarrage du conteneur | §Comportement de l'application dans les guides des plateformes |
 | Stockage d'objets | Déclare un bucket **Cloud Storage**, monté par les modules applicatifs sur `/data/data` (le chemin `STORAGE_FOLDER` résolu par Linkwarden) | Sortie `storage_buckets` |
 | Paramètres de base | Définit l'environnement Linkwarden de référence : télémétrie désactivée, taille des lots d'archivage, activation du navigateur | Comportement de l'application dans les guides des plateformes |
@@ -78,7 +78,7 @@ partagé des secrets et de Workload Identity.
 Linkwarden nécessite **PostgreSQL** (ce module fige **PostgreSQL 15**) ; le moteur
 est imposé et MySQL ou les autres moteurs ne sont pas pris en charge — le schéma
 Prisma de Linkwarden code en dur `provider = "postgresql"`. Lors du premier
-déploiement, une tâche ponctuelle (`db-init`) s'exécute avec `postgres:15-alpine`
+déploiement, un job ponctuel (`db-init`) s'exécute avec `postgres:15-alpine`
 et, de manière idempotente :
 
 1. Détecte le socket Unix du Cloud SQL Auth Proxy (ou l'hôte sur IP privée) et le
@@ -89,15 +89,15 @@ et, de manière idempotente :
 4. Crée la base de données applicative (`linkwarden`) si elle n'existe pas,
 5. Accorde tous les privilèges sur la base de données et sur le schéma `public`
    (PostgreSQL 15 n'accorde plus `CREATE` sur `public` par défaut),
-6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod de la
-   tâche se termine.
+6. Signale au Cloud SQL Auth Proxy de s'arrêter proprement afin que le pod du
+   job se termine.
 
 `db-init` crée uniquement le rôle et la base de données — il ne crée **pas** les
 tables. Linkwarden exécute ses propres migrations du schéma
 (`prisma migrate deploy`) à chaque démarrage du conteneur (dans le cadre du `CMD`
 propre à l'image de base) ; le schéma est donc créé et maintenu à jour par
-l'application elle-même, et non par une tâche de migration distincte. La tâche peut
-être réexécutée sans risque.
+l'application elle-même, et non par un job de migration distinct. Le job peut
+être réexécuté sans risque.
 
 Inspectez directement la base de données avec :
 

@@ -35,7 +35,7 @@ Coder s'exécute sous forme d'un binaire Go unique (`coder server`) dans un cont
 - **`cpu_always_allocated = true` et `min_instance_count = 1`.** `coder server` exécute dans son processus des démons de provisionnement intégrés qui interrogent en continu la base de données pour détecter les builds d'espaces de travail en attente et terminent les connexions des agents d'espace de travail — ce travail en arrière-plan se bloque avec la limitation de CPU basée sur les requêtes ou la mise à l'échelle à zéro.
 - **L'URL de connexion est assemblée à l'exécution.** Le point d'entrée personnalisé construit `CODER_PG_CONNECTION_URL` (une URL `postgres://` avec un mot de passe encodé pour URL) à partir des variables `DB_*` injectées par le socle, en privilégiant le chemin TCP par IP privée avec `sslmode=require` sur Cloud Run.
 - **`CODER_ACCESS_URL` est défini automatiquement** à partir de l'URL du service Cloud Run injectée, de sorte que les URL de connexion des espaces de travail et des agents ainsi que les URI de redirection OAuth sont correctes d'emblée.
-- **Une tâche `db-init` s'exécute à chaque apply** pour créer de manière idempotente la base de données et le rôle Coder ; Coder exécute ses propres migrations de schéma au démarrage du serveur.
+- **Un job `db-init` s'exécute à chaque apply** pour créer de manière idempotente la base de données et le rôle Coder ; Coder exécute ses propres migrations de schéma au démarrage du serveur.
 - **Les sondes de santé ciblent `/healthz`** (non authentifié) avec un délai initial de 60 secondes pour la migration de schéma du premier démarrage.
 - Le **mot de passe de la base de données** est généré automatiquement et stocké dans Secret Manager.
 - **`application_version = "latest"` correspond à un tag épinglé** (`v2.24.1`) via l'ARG de build propre à l'application `CODER_VERSION` — les tags GHCR de Coder sont préfixés selon semver.
@@ -64,7 +64,7 @@ Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurr
 
 ### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Coder stocke tout — utilisateurs, organisations, modèles, état des espaces de travail, file d'attente des tâches de provisionnement et ses clés de signature — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte par IP privée avec `sslmode=require` (le DSN sous forme d'URL de Coder ne peut pas contenir le chemin du socket Unix) ; le Job `db-init` crée la base de données et le rôle de l'application au premier déploiement.
+Coder stocke tout — utilisateurs, organisations, modèles, état des espaces de travail, file d'attente des jobs de provisionnement et ses clés de signature — dans une instance gérée Cloud SQL for PostgreSQL 15. Le service s'y connecte par IP privée avec `sslmode=require` (le DSN sous forme d'URL de Coder ne peut pas contenir le chemin du socket Unix) ; le Job `db-init` crée la base de données et le rôle de l'application au premier déploiement.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et les métriques.
 - **CLI :**
@@ -138,14 +138,14 @@ Les journaux du conteneur (structurés, vers STDOUT) sont envoyés à Cloud Logg
 
 ## 3. Comportement de l'application Coder {#3-coder-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job `db-init` (`postgres:15-alpine`) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente, crée le rôle Coder (`LOGIN CREATEDB`), crée la base de données, accorde tous les privilèges et réattribue la propriété du schéma `public` au rôle de l'application (les migrations de Coder y créent tous les objets). La tâche s'exécute à chaque apply et peut être relancée sans risque.
+- **Configuration de la base de données au premier déploiement.** Un Job `db-init` (`postgres:15-alpine`) se connecte en tant que super-utilisateur `postgres` et, de manière idempotente, crée le rôle Coder (`LOGIN CREATEDB`), crée la base de données, accorde tous les privilèges et réattribue la propriété du schéma `public` au rôle de l'application (les migrations de Coder y créent tous les objets). Le job s'exécute à chaque apply et peut être relancé sans risque.
 - **Les migrations s'exécutent au démarrage.** Coder applique ses propres migrations de schéma à chaque démarrage de `coder server` — les mises à niveau de version ne nécessitent aucune étape de migration manuelle. Le premier démarrage sur une base de données vierge prend plus de temps ; la sonde de démarrage accorde jusqu'à ~8 minutes avant d'abandonner.
 - **Assemblage du DSN à l'exécution.** Le point d'entrée cloud construit `CODER_PG_CONNECTION_URL` à partir de `DB_HOST`/`DB_IP`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` : sur Cloud Run, il privilégie l'IP privée avec `sslmode=require` (le chemin du socket Cloud SQL ne peut pas figurer dans la partie autorité d'une URL) ; le mot de passe est encodé en pourcentage afin que les caractères spéciaux ne cassent jamais l'URL. Un `CODER_PG_CONNECTION_URL` fourni explicitement a la priorité.
 - **URL d'accès.** `CODER_ACCESS_URL` est défini à partir de `CLOUDRUN_SERVICE_URL` injecté. Coder en dérive les URL de connexion des espaces de travail et des agents ainsi que les URI de redirection OAuth — si vous placez un domaine personnalisé devant le service, définissez `CODER_ACCESS_URL` sur ce domaine dans `environment_variables`.
 - **Aucun secret applicatif.** Coder génère ses clés de signature et les conserve dans PostgreSQL. La recréation des conteneurs, la mise à l'échelle et les redéploiements sont sans risque ; rien ne se désynchronise.
 - **Configuration initiale.** La première visite de l'URL du service vous invite à créer le compte administrateur initial (propriétaire) — faites-le rapidement, car le point de terminaison reste accessible publiquement jusque-là (`ingress_settings = "all"` par défaut).
 - **Le provisionnement des espaces de travail est une étape post-déploiement.** Le plan de contrôle seul n'exécute aucun espace de travail. Créez un modèle (Terraform) pointant vers une cible de calcul — par exemple un cluster GKE ou des VM GCE — et assurez-vous que le provisionneur dispose d'identifiants pour celle-ci.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/healthz`, que Coder sert sans authentification avec un HTTP 200 dès que le serveur est opérationnel.
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent `/healthz`, que Coder sert sans authentification avec un HTTP 200 dès que le serveur est opérationnel.
 
 Vérification :
 
@@ -250,8 +250,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée (`postgres:15-alpine`). |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré (`postgres:15-alpine`). |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -291,7 +291,7 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -323,7 +323,7 @@ Les validations au moment du plan dans `validation.tf` détectent tôt les pires
 | `enable_nfs` / `nfs_mount_path` | `false` / véritable répertoire | Élevé | NFS est inutile ; s'il est activé, un montage sous `/opt/coder` masque le binaire coder et le conteneur ne peut pas démarrer. |
 | `enable_redis` | `false` | Moyen | Coder ne lit jamais Redis ; l'activer provisionne un point de terminaison que rien n'utilise. |
 | `enable_iap` / `enable_cloud_armor` | à activer pour les équipes privées | Moyen | Tant que le premier compte administrateur n'est pas créé, la page de configuration est accessible publiquement à l'URL `run.app`. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Moyen | L'activer sans `backup_file` valide fait échouer la tâche d'importation. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Moyen | L'activer sans `backup_file` valide fait échouer le job d'importation. |
 | `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
 
 ---

@@ -205,7 +205,7 @@ disponibilité sur `/api/v1/health` et des règles d'alerte.
   d'initialisation (`db-init`) crée la base de données et l'utilisateur NocoDB
   avant le démarrage du service. Il est idempotent.
 - **Migrations autogérées.** NocoDB exécute ses propres migrations de schéma de
-  base de données au démarrage — il est inutile de configurer des tâches de
+  base de données au démarrage — il est inutile de configurer des jobs de
   migration externes.
 - **Secret JWT.** `NC_AUTH_JWT_SECRET` est généré automatiquement et stocké dans
   Secret Manager. N'effectuez pas sa rotation après le premier déploiement ; toutes
@@ -226,7 +226,7 @@ disponibilité sur `/api/v1/health` et des règles d'alerte.
   `NC_PUBLIC_URL` afin que NocoDB génère des URL absolues correctes dans les liens
   de partage, les notifications par e-mail et les rappels de webhooks. Contrôlée par
   `service_url_env_var_name` (par défaut `"NC_PUBLIC_URL"`).
-- **Chemin de santé.** Les sondes de disponibilité et de vivacité ciblent
+- **Chemin de santé.** Les sondes de disponibilité (readiness) et de vivacité ciblent
   `/api/v1/health`, qui renvoie HTTP 200 lorsque NocoDB est prêt à accepter des
   requêtes.
 - **Sessions multi-instances.** Avec plus d'une instance et sans Redis, NocoDB ne
@@ -363,8 +363,8 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
-| `cron_jobs` | `[]` | Tâches récurrentes déclenchées par Cloud Scheduler. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
+| `cron_jobs` | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -414,7 +414,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des tâches de configuration. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -433,7 +433,7 @@ d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `NC_AUTH_JWT_SECRET` | généré automatiquement (immuable) | Critique | Sa rotation après le premier déploiement invalide immédiatement toutes les sessions et tous les jetons d'API. |
 | `application_database_name` / `_user` | définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
 | `enable_cloudsql_volume` | `false` (par défaut) | Critique | Définir `true` n'aide pas NocoDB — son constructeur d'URL rejette les chemins de socket et toutes les connexions à la base de données échouent. |
 | `memory_limit` | `1Gi` | Élevé | Le processus Node.js de NocoDB est tué pour OOM en dessous de 512 Mi ; les charges de travail de production comportant de nombreuses automatisations nécessitent 2 Gi. |
 | `enable_redis` | `true` lorsque >1 instance | Élevé | Plusieurs instances sans Redis provoquent l'invalidation des sessions lorsque les requêtes sont acheminées vers des instances différentes. |

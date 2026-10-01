@@ -198,12 +198,12 @@ Keycloak sert une page d'accueil publique sur `/`, qui est la cible de
   `postgres:15-alpine`. Il attend `pg_isready`, puis crée de manière idempotente
   le rôle applicatif (ou met à jour son mot de passe), accorde ce rôle à
   `postgres` afin que le superutilisateur puisse gérer ses objets, crée la
-  base de données et en devient propriétaire, et accorde les privilèges sur la base de données et sur `SCHEMA public`. Elle
+  base de données et en devient propriétaire, et accorde les privilèges sur la base de données et sur `SCHEMA public`. Il
   se termine en envoyant un `POST /quitquitquit` au sidecar Cloud SQL Proxy
   sur `127.0.0.1:9091` afin que le pod du Job puisse s'arrêter et être marqué Succeeded sur
-  GKE. La tâche peut être relancée sans risque (`execute_on_apply = true`, `max_retries =
+  GKE. Le job peut être relancé sans risque (`execute_on_apply = true`, `max_retries =
   3`).
-- **Pas de tâche de migration distincte — Keycloak migre son propre schéma au premier
+- **Pas de job de migration distinct — Keycloak migre son propre schéma au premier
   démarrage.** L'image personnalisée exécute `kc.sh build` au moment du build (en y intégrant
   `KC_DB=postgres`, la santé et les métriques) et `kc.sh start --optimized` au
   démarrage du conteneur ; le processus d'amorçage propre à Keycloak crée/migre le
@@ -270,7 +270,7 @@ standard.
 | `min_instance_count` / `max_instance_count` | `1` / `5` | Transmises directement au socle, mais **les bornes effectives de réplicas sont codées en dur à 1/5 dans le `main.tf` de ce module**, indépendamment de ces valeurs — voir [§6](#6-configuration-pitfalls--sensible-defaults). |
 | `container_port` | `8080` | Écouteur HTTP de Keycloak. La santé et les métriques sont sur le port de gestion distinct 9000 — la plateforme sonde ce port en TCP, et non en HTTP. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy (TCP en bouclage) — requis sur GKE pour la connectivité JDBC. |
-| `cloudsql_volume_mount_path` | `/cloudsql` | Chemin dans le conteneur où est monté le répertoire du socket Unix de l'Auth Proxy (utilisé par les appels `pg_isready`/`psql` de la tâche `db-init` ; le conteneur Keycloak en cours d'exécution se connecte quant à lui via `127.0.0.1:5432`, et non via ce chemin). |
+| `cloudsql_volume_mount_path` | `/cloudsql` | Chemin dans le conteneur où est monté le répertoire du socket Unix de l'Auth Proxy (utilisé par les appels `pg_isready`/`psql` du job `db-init` ; le conteneur Keycloak en cours d'exécution se connecte quant à lui via `127.0.0.1:5432`, et non via ce chemin). |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -343,7 +343,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux de notification. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'import (optionnelle). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'import (optionnel). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

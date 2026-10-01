@@ -26,13 +26,13 @@ et les guides du socle ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 
 | Domaine | Fourni par Moodle_Common | Où cela apparaît |
 |---|---|---|
-| Identifiant cron | Génère le mot de passe cron de Moodle (32 caractères) et le stocke dans **Secret Manager** | Intégré à l'URL de la tâche Cloud Scheduler provisionnée automatiquement |
+| Identifiant cron | Génère le mot de passe cron de Moodle (32 caractères) et le stocke dans **Secret Manager** | Intégré à l'URL du job Cloud Scheduler provisionné automatiquement |
 | Identifiant SMTP | Génère un mot de passe SMTP initial (24 caractères) et le stocke dans **Secret Manager** | Récupéré et remplacé via Secret Manager après le déploiement |
 | Image de conteneur | Construit une image PHP 8.3/Apache entièrement personnalisée à partir d'Ubuntu 24.04 | Sortie `container_image` du déploiement de la plateforme |
 | Moteur de base de données | Fixe **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge | Section Base de données des guides des plateformes |
-| Extension PostgreSQL | Active `pg_trgm` pour la recherche en texte intégral de Moodle | Appliquée par la tâche `db-init` au premier déploiement |
-| Amorçage de la base de données | Définit la tâche `db-init` qui crée la base de données, l'utilisateur et l'extension | `initialization_jobs` dans les guides des plateformes |
-| Initialisation NFS | Définit la tâche `nfs-init` qui crée les sous-répertoires de `moodledata` avec la bonne propriété | Sortie `nfs_setup_job` des guides des plateformes |
+| Extension PostgreSQL | Active `pg_trgm` pour la recherche en texte intégral de Moodle | Appliquée par le job `db-init` au premier déploiement |
+| Amorçage de la base de données | Définit le job `db-init` qui crée la base de données, l'utilisateur et l'extension | `initialization_jobs` dans les guides des plateformes |
+| Initialisation NFS | Définit le job `nfs-init` qui crée les sous-répertoires de `moodledata` avec la bonne propriété | Sortie `nfs_setup_job` des guides des plateformes |
 | Paramètres de base | Définit le port 8080, la construction de l'image personnalisée et l'environnement Moodle de base | Comportement de l'application dans les guides des plateformes |
 | Contrôles de santé | Fournit `/health.php` comme point de terminaison de sonde par défaut, au démarrage comme pour la vivacité | Section Observabilité des guides des plateformes |
 
@@ -52,7 +52,7 @@ gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT
 
 | Secret | Rôle | Action requise |
 |---|---|---|
-| `<prefix>-cron-password` | Authentifie la tâche cron Cloud Scheduler provisionnée automatiquement qui cible `/admin/cron.php` | Aucune — intégré automatiquement à l'URL de la tâche du planificateur |
+| `<prefix>-cron-password` | Authentifie le job cron Cloud Scheduler provisionné automatiquement qui cible `/admin/cron.php` | Aucune — intégré automatiquement à l'URL du job du planificateur |
 | `<prefix>-smtp-password` | Identifiant SMTP initial injecté sous la forme `MOODLE_SMTP_PASSWORD` | Remplacez la valeur générée par votre véritable identifiant SMTP après le déploiement |
 
 Le mot de passe de la base de données est généré et géré séparément par le socle ; le
@@ -65,7 +65,7 @@ partagé de secrets et de Workload Identity.
 ## 3. Moteur de base de données et amorçage {#3-database-engine-and-bootstrap}
 
 Moodle requiert **PostgreSQL 15** ; le moteur est fixe et MySQL n'est pas pris en
-charge. Lors du premier déploiement, une tâche ponctuelle `db-init` se connecte à
+charge. Lors du premier déploiement, un job ponctuel `db-init` se connecte à
 Cloud SQL via l'Auth Proxy et, de manière idempotente :
 
 1. crée l'utilisateur applicatif Moodle avec les privilèges `CREATEDB`,
@@ -73,7 +73,7 @@ Cloud SQL via l'Auth Proxy et, de manière idempotente :
 3. accorde à l'utilisateur tous les privilèges sur la base de données et le schéma public,
 4. active l'extension `pg_trgm` en tant que superutilisateur (requise pour la recherche en texte intégral de Moodle).
 
-La tâche peut être relancée sans risque. Inspectez directement la base de données avec :
+Le job peut être relancé sans risque. Inspectez directement la base de données avec :
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
@@ -137,7 +137,7 @@ deux plateformes.
 
 **NFS est obligatoire** — le répertoire Moodle `moodledata` doit être un système de
 fichiers partagé, accessible en écriture depuis toutes les instances ou tous les pods.
-Avant le démarrage de l'application, la tâche `nfs-init` crée quatre sous-répertoires
+Avant le démarrage de l'application, le job `nfs-init` crée quatre sous-répertoires
 requis sur le partage NFS :
 
 | Répertoire | Rôle |

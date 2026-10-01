@@ -100,7 +100,7 @@ Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'éc
 Azimutt stocke toutes les données applicatives (schémas, diagrammes, dispositions, utilisateurs, sources) dans une
 instance gérée Cloud SQL for PostgreSQL 15. Les pods l'atteignent via le **sidecar Cloud SQL
 Auth Proxy** sur `127.0.0.1` (TLS terminé par le proxy, d'où
-`DATABASE_ENABLE_SSL=false`). Lors du premier déploiement, une tâche (Job) d'initialisation crée la
+`DATABASE_ENABLE_SSL=false`). Lors du premier déploiement, un job d'initialisation crée la
 base de données applicative et le rôle ; Azimutt exécute ensuite ses propres migrations Ecto au démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, sauvegardes, flags et métriques.
@@ -201,8 +201,8 @@ Monitoring. Des tests de disponibilité et des règles d'alerte facultatifs sont
   `postgres:15-alpine`. Il crée de manière idempotente le rôle applicatif
   (`LOGIN CREATEDB`) et la base de données, accorde `ALL` sur la base de données et le schéma `public`,
   et modifie (`ALTER`) le propriétaire du schéma — Azimutt a besoin de droits DDL complets car il
-  exécute ses propres migrations. La tâche signale ensuite au sidecar Auth Proxy de s'arrêter
-  (`/quitquitquit`) afin que le pod de la tâche se termine. Réexécutable sans risque.
+  exécute ses propres migrations. Le job signale ensuite au sidecar Auth Proxy de s'arrêter
+  (`/quitquitquit`) afin que le pod du job se termine. Réexécutable sans risque.
 - **Les migrations s'exécutent au démarrage.** La commande du conteneur est
   `/app/bin/migrate && /app/bin/server` ; Ecto applique donc les migrations en attente à chaque
   démarrage avant que le point de terminaison Phoenix ne se lie au port. Mettre à niveau `application_version` applique
@@ -316,7 +316,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -333,7 +333,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les tâches d'arrière-plan, et non Redis. |
+| `enable_redis` | `false` | Désactivé par défaut — Azimutt utilise PostgreSQL (Oban) pour les jobs d'arrière-plan, et non Redis. |
 | `redis_host` | `""` | Point de terminaison Redis (uniquement si une fonctionnalité en aval l'exige). |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
@@ -376,7 +376,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et d'import (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

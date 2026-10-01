@@ -134,7 +134,7 @@ variantes d'image, de base et wrapper.
   `replace-placeholder.sh` (~2,5 min) en plus des étapes de migration et d'alimentation
   initiale. La fenêtre de démarrage totale est d'environ 6 minutes.
 
-Une sonde de disponibilité (`/api/auth/session`, `initial_delay=30s`) est également
+Une sonde de disponibilité (readiness) (`/api/auth/session`, `initial_delay=30s`) est également
 codée en dur et n'est pas configurable par l'utilisateur.
 
 ---

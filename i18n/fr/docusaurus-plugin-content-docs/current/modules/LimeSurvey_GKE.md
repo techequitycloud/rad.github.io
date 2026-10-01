@@ -67,8 +67,8 @@ ensemble ciblé de services Google Cloud :
   et les exports soient conservés et partagés entre les pods.
 - **L'affinité de session est `ClientIP`** afin que les requêtes d'un client
   atteignent le même pod.
-- **Installation automatique au premier démarrage (pas de tâche de migration
-  distincte).** Le point d'entrée upstream `martialblog/limesurvey` exécute
+- **Installation automatique au premier démarrage (pas de job de migration
+  distinct).** Le point d'entrée upstream `martialblog/limesurvey` exécute
   l'installateur en console / `updatedb` de LimeSurvey au premier démarrage du
   conteneur, une fois que `db-init` a provisionné la base de données et
   l'utilisateur.
@@ -122,7 +122,7 @@ l'échelle et du type de charge de travail (Deployment ou StatefulSet).
 LimeSurvey stocke toutes les données d'enquête (enquêtes, questions, réponses,
 utilisateurs, paramètres) dans une instance gérée Cloud SQL for MySQL 8.0. Les pods
 la joignent via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:3306` ; aucune
-IP publique n'est exposée. Lors du premier déploiement, la tâche `db-init` crée la
+IP publique n'est exposée. Lors du premier déploiement, le job `db-init` crée la
 base de données applicative, l'utilisateur et les privilèges ; l'installateur en
 console de LimeSurvey crée ensuite le schéma avec le moteur `InnoDB` forcé.
 
@@ -211,16 +211,16 @@ règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application LimeSurvey {#3-limesurvey-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `mysql:8.0-debian`. Elle privilégie un socket
-  Unix Cloud SQL s'il en existe un sous `/cloudsql`, sinon elle se rabat sur le TCP
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `mysql:8.0-debian`. Il privilégie un socket
+  Unix Cloud SQL s'il en existe un sous `/cloudsql`, sinon il se rabat sur le TCP
   via `DB_IP`/`DB_HOST`, crée de manière idempotente la base de données applicative,
   l'utilisateur et les privilèges, vérifie que l'utilisateur de l'application peut
   se connecter, puis arrête le sidecar du proxy via le point de terminaison
-  d'administration `quitquitquit` (avec `SIGKILL` en dernier recours). La tâche peut
-  être réexécutée sans risque (`execute_on_apply = true`, `max_retries = 3`).
-- **Installation automatique au premier démarrage (pas de tâche de migration
-  distincte).** Une fois la base de données provisionnée, le point d'entrée propre à
+  d'administration `quitquitquit` (avec `SIGKILL` en dernier recours). Le job peut
+  être réexécuté sans risque (`execute_on_apply = true`, `max_retries = 3`).
+- **Installation automatique au premier démarrage (pas de job de migration
+  distinct).** Une fois la base de données provisionnée, le point d'entrée propre à
   l'image martialblog génère `application/config/config.php` à partir de
   l'environnement et exécute l'installateur en console / `updatedb` de LimeSurvey au
   premier démarrage du pod, créant le schéma dans la base de données vide avec le
@@ -358,7 +358,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms de la tâche de configuration (`db-init`) et de la tâche d'import (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'import (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -406,7 +406,7 @@ Pour le comportement du socle mentionné tout au long de ce guide — IAM et Wor
 Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
 **[App_GKE](App_GKE.md)**. La configuration applicative propre à LimeSurvey partagée
-avec la variante Cloud Run (génération des secrets, tâche `db-init`, stockage NFS des
+avec la variante Cloud Run (génération des secrets, job `db-init`, stockage NFS des
 téléversements et correspondance des variables d'environnement de base de données)
 est décrite dans **[LimeSurvey_Common](LimeSurvey_Common.md)**.
 

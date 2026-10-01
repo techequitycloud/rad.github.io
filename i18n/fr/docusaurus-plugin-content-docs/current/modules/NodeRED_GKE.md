@@ -331,7 +331,7 @@ comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des tâches personnalisées pour les imports de flux ou les installations de palette. |
+| `initialization_jobs` | `[]` | Node-RED ne nécessite aucun job d'initialisation. Fournissez des jobs personnalisés pour les imports de flux ou les installations de palette. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes pour les opérations de maintenance périodiques. |
 | `additional_services` | `[]` | Deployments Kubernetes complémentaires déployés aux côtés de Node-RED. |
 
@@ -440,7 +440,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration. |
+| `initialization_jobs` | Noms des éventuels jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
@@ -462,7 +462,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `NODE_RED_CREDENTIAL_SECRET` (issu de `database_password_length`) | généré automatiquement | Critique | Chiffre tous les identifiants des flux. Effectuer la rotation de la clé ou la modifier après le déploiement des flux rend les identifiants existants définitivement illisibles. |
 | `enable_auto_password_rotation` | `false` | Critique | La rotation automatique modifie la clé de chiffrement ; tous les identifiants de flux stockés deviennent inaccessibles. Ne l'activez qu'avec une procédure de rechiffrement en place. |
 | `application_name` | défini une seule fois | Critique | Immuable après le premier déploiement ; le renommer recrée toutes les ressources GCP et Kubernetes et déconnecte le partage NFS. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer la tâche de restauration. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_file` valide fait échouer le job de restauration. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers sans unité sont des octets et bloquent toute planification des pods. |
 | `max_instance_count` | `1` | Élevé | Node-RED n'est pas conçu pour une mise à l'échelle active-active. Plusieurs instances sans contexte partagé produisent des états contradictoires. |
 | `session_affinity` | `ClientIP` | Élevé | Sans affinité, la connexion WebSocket de l'éditeur est coupée et les opérations de déploiement échouent. |

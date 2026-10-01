@@ -208,7 +208,7 @@ disponibilité et le câblage des alertes.
 ## 3. Comportement de l'application Chibisafe {#3-chibisafe-application-behaviour}
 
 - **Aucun job d'initialisation ni de migration.** Chibisafe gère son propre
-  stockage SQLite ; `Chibisafe_Common` n'injecte par défaut aucune tâche
+  stockage SQLite ; `Chibisafe_Common` n'injecte par défaut aucun job
   `db-init` ni de migration. La variable `initialization_jobs` n'est disponible
   que pour des tâches de chargement de données personnalisées.
 - **Relocalisation de l'état au premier démarrage.** L'image conserve son état

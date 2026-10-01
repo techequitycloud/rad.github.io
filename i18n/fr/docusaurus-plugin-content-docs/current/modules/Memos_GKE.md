@@ -163,10 +163,10 @@ règles d'alerte facultatifs.
 - **Configuration de la base de données au premier déploiement.** Un job
   d'initialisation exécute `create-db-and-user.sh` avec `postgres:15-alpine`. Il se
   connecte via le sidecar cloud-sql-proxy et crée de manière idempotente le rôle et la
-  base de données de l'application. La tâche peut être relancée sans risque.
+  base de données de l'application. Le job peut être relancé sans risque.
 - **Migrations de schéma au démarrage.** Memos applique sa propre mise en place du
-  schéma par auto-migration GORM à chaque démarrage de pod — aucune tâche de migration
-  distincte n'est nécessaire.
+  schéma par auto-migration GORM à chaque démarrage de pod — aucun job de migration
+  distinct n'est nécessaire.
 - **Aucun identifiant d'amorçage administrateur à récupérer.** Le premier compte créé
   via le formulaire d'inscription de l'interface web devient l'hôte/administrateur.
 - **Le DSN de la base de données est calculé, et non statique.** `memos-entrypoint.sh`
@@ -177,7 +177,7 @@ règles d'alerte facultatifs.
   complète.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` — la page
   publique de connexion/d'accueil de Memos, accessible sans authentification.
-- **Inspecter l'exécution des tâches :**
+- **Inspecter l'exécution des jobs :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<job-name>
@@ -277,7 +277,7 @@ Intégration Cloud Build standard d'App_GKE — consultez [App_GKE](App_GKE.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche intégrée `db-init`. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job intégré `db-init`. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
@@ -316,7 +316,7 @@ rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` | Noms des tâches de configuration (inclut `db-init`). |
+| `initialization_jobs` | Noms des jobs de configuration (inclut `db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `kubernetes_ready` | Indique si la charge de travail Kubernetes a atteint l'état Ready. |

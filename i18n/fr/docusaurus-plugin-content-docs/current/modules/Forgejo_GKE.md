@@ -45,7 +45,7 @@ l'exécution. Le déploiement assemble un ensemble ciblé de services Google Clo
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est le seul moteur qui fonctionne réellement.** `database_type`
-  vaut `POSTGRES_15` par défaut ; le script de la tâche `db-init` est entièrement
+  vaut `POSTGRES_15` par défaut ; le script du job `db-init` est entièrement
   écrit pour `psql`, si bien que choisir MySQL ou `NONE` casse la configuration
   de la base de données, même si les métadonnées de la variable les proposent.
 - **Cloud SQL est joint via le sidecar Auth Proxy en boucle locale.**
@@ -61,10 +61,10 @@ l'exécution. Le déploiement assemble un ensemble ciblé de services Google Clo
 - **NFS est activé par défaut**, monté sur `/mnt/nfs` (`GITEA__server__APP_DATA_PATH`)
   — c'est là que persistent les dépôts, les objets Git LFS et les pièces jointes.
 - **L'affinité de session est `ClientIP`.**
-- **Pas de tâche de migration distincte.** `GITEA__security__INSTALL_LOCK = "true"`
+- **Pas de job de migration distinct.** `GITEA__security__INSTALL_LOCK = "true"`
   court-circuite l'assistant d'installation web de Forgejo ; l'image
   `forgejo/forgejo` crée et migre son propre schéma au démarrage du conteneur,
-  dans la base de données vide préparée par la tâche `db-init`.
+  dans la base de données vide préparée par le job `db-init`.
 - **Aucun compte administrateur n'est amorcé par Terraform.** Aucun job
   d'initialisation ne crée d'utilisateur administrateur Forgejo — consultez la
   [section 3](#3-forgejo-application-behaviour) pour l'étape manuelle.
@@ -123,7 +123,7 @@ Forgejo stocke toutes les métadonnées de l'application (utilisateurs, dépôts
 tickets, pull requests, exécutions Actions) dans une instance gérée Cloud SQL for
 PostgreSQL 15. Les pods la joignent via le sidecar **Cloud SQL Auth Proxy** sur
 `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors du premier déploiement,
-la tâche `db-init` crée le rôle et la base de données de l'application ; Forgejo
+le job `db-init` crée le rôle et la base de données de l'application ; Forgejo
 crée et migre ensuite son propre schéma au premier démarrage du conteneur.
 
 - **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les sauvegardes, les flags et les métriques.
@@ -224,17 +224,17 @@ tests de disponibilité et des règles d'alerte sont disponibles en option.
 
 ## 3. Comportement de l'application Forgejo {#3-forgejo-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** La tâche
-  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Elle attend que Cloud
+- **Configuration de la base de données au premier déploiement.** Le job
+  `db-init` exécute `db-init.sh` avec `postgres:15-alpine`. Il attend que Cloud
   SQL accepte les connexions, crée de manière idempotente (ou redéfinit le mot de
   passe de) le rôle applicatif avec `CREATEDB`, crée la base de données
   appartenant à ce rôle et accorde tous les privilèges sur la base de données et
   sur le schéma `public` (PG15+). Le script lui-même n'installe aucune extension
-  Postgres. La tâche peut être relancée sans risque (`execute_on_apply = true`,
+  Postgres. Le job peut être relancé sans risque (`execute_on_apply = true`,
   `max_retries = 3`) et signale au sidecar Cloud SQL Auth Proxy de s'arrêter
-  (`POST /quitquitquit` sur `localhost:9091`) afin que le conteneur de la tâche
+  (`POST /quitquitquit` sur `localhost:9091`) afin que le conteneur du job
   se termine proprement.
-- **Pas de tâche de migration distincte — la création du schéma a lieu au démarrage du conteneur.**
+- **Pas de job de migration distinct — la création du schéma a lieu au démarrage du conteneur.**
   Avec `GITEA__security__INSTALL_LOCK = "true"`, l'assistant d'installation web
   de Forgejo est ignoré ; le point d'entrée d'origine `forgejo/forgejo` crée et
   migre le schéma dans la base de données vide au premier démarrage, puis
@@ -387,7 +387,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration (`db-init`) et d'importation (facultative). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |

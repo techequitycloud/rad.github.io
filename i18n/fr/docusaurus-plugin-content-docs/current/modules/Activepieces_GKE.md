@@ -44,7 +44,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par
   la couche applicative partagée ; choisir un autre moteur empêche le démarrage.
 - **Le mode de file d'attente en mémoire est la valeur par défaut.**
-  `AP_QUEUE_MODE = MEMORY` signifie que toutes les tâches de workflow s'exécutent
+  `AP_QUEUE_MODE = MEMORY` signifie que tous les jobs de workflow s'exécutent
   dans le processus. Cela fonctionne pour un seul réplica, mais dépasser un pod
   nécessite Redis (`enable_redis = true`).
 - **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont générés automatiquement** et
@@ -58,7 +58,7 @@ assemble un ensemble ciblé de services Google Cloud :
 - **NFS est désactivé par défaut.** Contrairement aux applications centrées sur les
   fichiers, Activepieces stocke tout l'état des workflows dans PostgreSQL. N'activez
   NFS que si vous hébergez Redis sur la VM du serveur NFS.
-- **L'extension `pgvector` est installée automatiquement** lors de la tâche de
+- **L'extension `pgvector` est installée automatiquement** lors du job de
   configuration de la base de données au premier déploiement, ce qui active les
   pièces de workflow alimentées par l'IA.
 - **Un minimum de 1 réplica est maintenu** (GKE ne prend pas en charge la mise à
@@ -205,8 +205,8 @@ des règles d'alerte sont disponibles en option.
   d'initialisation exécute `db-init.sh` à l'aide de `postgres:15-alpine`. Il se
   connecte via le Cloud SQL Auth Proxy et crée de façon idempotente la base de
   données et l'utilisateur de l'application, accorde les privilèges et installe
-  l'extension `pgvector` pour les pièces de flux alimentées par l'IA. La tâche peut
-  être relancée sans risque.
+  l'extension `pgvector` pour les pièces de flux alimentées par l'IA. Le job peut
+  être relancé sans risque.
 - **Migrations de la base de données au démarrage.** Activepieces applique
   automatiquement ses propres migrations de schéma à chaque démarrage ; la mise à
   niveau de la version de l'application applique donc les changements de schéma
@@ -348,7 +348,7 @@ leur comportement et leurs valeurs par défaut standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser la tâche `db-init` intégrée. |
+| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés d'Activepieces. |
 
@@ -472,7 +472,7 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des tâches de configuration et (facultative) d'import. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'import. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
@@ -496,9 +496,9 @@ plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `AP_ENCRYPTION_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation corrompt définitivement tous les identifiants de connexion stockés — ils ne peuvent plus être déchiffrés. |
 | `AP_JWT_SECRET` (généré automatiquement) | Rotation uniquement pendant une fenêtre de maintenance | Critique | Sa rotation invalide toutes les sessions utilisateur actives et oblige tout le monde à se reconnecter immédiatement. |
 | `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer la tâche d'import. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
 | `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | URL du LoadBalancer externe | Critique | Une URL incorrecte casse toutes les intégrations de webhooks et les rappels OAuth. |
-| `max_instance_count` | `1` sauf si Redis est activé | Élevé | Dépasser 1 en mode file d'attente en mémoire répartit la file des tâches entre les pods, ce qui provoque des exécutions en double et des exécutions perdues. |
+| `max_instance_count` | `1` sauf si Redis est activé | Élevé | Dépasser 1 en mode file d'attente en mémoire répartit la file des jobs entre les pods, ce qui provoque des exécutions en double et des exécutions perdues. |
 | `enable_redis` | `true` avant de mettre à l'échelle | Élevé | Sans Redis, chaque pod gère sa propre file d'attente en mémoire — exécution incohérente au-delà d'un réplica. |
 | `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, la chaîne de connexion Redis est vide et l'application ne démarre pas. |
 | `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1 GiB provoquent des arrêts OOM lors d'exécutions de flux concurrentes. |

@@ -33,8 +33,8 @@ consultez les guides de plateforme ([GoToSocial_GKE](GoToSocial_GKE.md),
 | Image de conteneur | Déploie directement l'image officielle `docker.io/superseriousbusiness/gotosocial` — **aucun build personnalisé**. Le projet amont de GoToSocial a migré vers Codeberg, mais le registre de conteneurs reste Docker Hub | Sortie `container_image` ; `image_source = "prebuilt"` |
 | Secrets cryptographiques | Génère `SUPERUSER_PASSWORD` (24 caractères aléatoires), ainsi qu'une paire de clés HMAC d'accès/secrète pour le stockage GCS en interopérabilité S3. Tous sont stockés dans **Secret Manager** | Injectés via le chemin `secret_ids` → `module_secret_env_vars` (voir §2) |
 | Moteur de base de données | Impose **Cloud SQL for PostgreSQL 15** comme seul moteur pris en charge, avec la collation `C` obligatoire | §3 ci-dessous |
-| Amorçage de la base de données | Définit la tâche de premier déploiement (`db-init`) qui crée la base de données avec `LC_COLLATE='C' LC_CTYPE='C'` et le rôle applicatif | Sortie `initialization_jobs` |
-| Amorçage du compte administrateur | Définit la tâche `admin-create`, délibérément **non** exécutée automatiquement — GoToSocial n'a pas de parcours d'inscription web | Sortie `initialization_jobs` |
+| Amorçage de la base de données | Définit le job de premier déploiement (`db-init`) qui crée la base de données avec `LC_COLLATE='C' LC_CTYPE='C'` et le rôle applicatif | Sortie `initialization_jobs` |
+| Amorçage du compte administrateur | Définit le job `admin-create`, délibérément **non** exécuté automatiquement — GoToSocial n'a pas de parcours d'inscription web | Sortie `initialization_jobs` |
 | Stockage d'objets | Déclare le bucket **Cloud Storage** `storage` et un compte de service de stockage dédié doté d'une paire de clés HMAC pour le client natif compatible S3 de GoToSocial | Sorties `storage_buckets` / `storage_sa_email` |
 | Paramètres de base | Définit `GTS_HOST`, `GTS_PROTOCOL=https`, `GTS_PORT=8080`, `GTS_LETSENCRYPT_ENABLED=false`, `GTS_STORAGE_*`, `GTS_TRUSTED_PROXIES`, `GTS_ACCOUNTS_REGISTRATION_OPEN` | Comportement de l'application dans les guides de plateforme |
 | Contrôles de santé | Déclare des valeurs par défaut **TCP** pour `startup_probe`/`liveness_probe` — le HTTP ne fonctionne jamais sur les points de terminaison de GoToSocial (voir §6) | §Observabilité dans les guides de plateforme |
@@ -104,8 +104,8 @@ catalogue reposant sur Postgres n'ont pas : la base de données doit être cré�
 avec **`LC_COLLATE='C'` et `LC_CTYPE='C'`** — il refuse de démarrer avec toute
 autre collation (« Database has incorrect collation ... GoToSocial now
 requires 'C' collation »). L'étape générique `db-create` du socle ne
-définit pas ce paramètre ; `GoToSocial_Common` fournit donc une tâche
-`db-init` dédiée (`scripts/db-init.sh`, image `postgres:15-alpine`) qui, de
+définit pas ce paramètre ; `GoToSocial_Common` fournit donc un job
+`db-init` dédié (`scripts/db-init.sh`, image `postgres:15-alpine`) qui, de
 manière idempotente :
 
 1. Attend que PostgreSQL accepte les connexions,
@@ -117,9 +117,9 @@ manière idempotente :
    puisque cela ne se produit que lors d'un déploiement réellement neuf),
 4. Accorde tous les privilèges sur la base de données au rôle applicatif,
 5. Signale au sidecar Cloud SQL Auth Proxy de s'arrêter (`POST
-   http://127.0.0.1:9091/quitquitquit`) afin que la tâche se termine sur GKE.
+   http://127.0.0.1:9091/quitquitquit`) afin que le job se termine sur GKE.
 
-**Il n'y a pas de tâche de migration.** GoToSocial crée et met à niveau son
+**Il n'y a pas de job de migration.** GoToSocial crée et met à niveau son
 propre schéma automatiquement à chaque démarrage — `db-init` ne fait que
 préparer une base de données vide, avec la bonne collation, et un rôle.
 
@@ -310,26 +310,26 @@ de la base) — sinon elle panique avec
 `NewSignup: instance application not yet created, run the server at least
 once before creating users`.
 
-`GoToSocial_Common` définit la tâche `admin-create` avec `execute_on_apply =
+`GoToSocial_Common` définit le job `admin-create` avec `execute_on_apply =
 false`. C'est délibéré, et non un oubli :
 
 - **Sur Cloud Run**, les jobs d'initialisation s'exécutent toujours
   strictement avant même que la première révision du service n'existe —
   `admin-create` ne peut donc structurellement pas réussir pendant le même
-  `apply` qui crée le service. La ressource de tâche est tout de même créée
-  (afin que la plateforme puisse la déclencher à la demande), mais un
+  `apply` qui crée le service. La ressource de job est tout de même créée
+  (afin que la plateforme puisse le déclencher à la demande), mais un
   opérateur doit l'exécuter manuellement une fois le service confirmé sain —
   consultez le guide de la plateforme CloudRun pour la commande exacte.
 - **Sur GKE**, l'ordonnancement est plus souple : `execute_on_apply` dans
-  `App_GKE` contrôle uniquement si **Terraform attend** la tâche
+  `App_GKE` contrôle uniquement si **Terraform attend** le job
   (`wait_for_completion = try(execute_on_apply, true)`, vérifié dans
-  `App_GKE/jobs.tf`) — le pod de la tâche Kubernetes sous-jacente est malgré
+  `App_GKE/jobs.tf`) — le pod du Job Kubernetes sous-jacent est malgré
   tout planifié immédiatement, en concurrence avec le premier pod du
   Deployment principal. `scripts/admin-create.sh` effectue jusqu'à 20
   nouvelles tentatives à 15 secondes d'intervalle, précisément pour laisser
-  au pod principal une réelle chance de terminer son démarrage d'abord ; la
-  tâche a donc une véritable chance de réussir automatiquement pendant le même
-  `apply` — mais elle n'est pas assurée de gagner cette course à chaque fois.
+  au pod principal une réelle chance de terminer son démarrage d'abord ; le
+  job a donc une véritable chance de réussir automatiquement pendant le même
+  `apply` — mais il n'est pas assuré de gagner cette course à chaque fois.
 
 Une tentative `admin-create` partiellement échouée peut laisser une **ligne
 de compte orpheline** : le flux `NewSignup` de GoToSocial insère d'abord la

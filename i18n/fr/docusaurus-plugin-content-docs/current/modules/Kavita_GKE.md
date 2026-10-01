@@ -68,9 +68,9 @@ données SQLite interne et index de la bibliothèque) se trouve sur le disque so
 - **NFS est désactivé par défaut** (`enable_nfs = false`) — la persistance est
   entièrement assurée par le PVC du StatefulSet, et non par Filestore.
 - **Aucun job d'initialisation de base de données au premier démarrage.**
-  Kavita n'a pas de tâche `db-init` ni de migration ; `initialization_jobs` est
-  par défaut une liste vide, et seules les tâches personnalisées que vous
-  fournissez sont exécutées.
+  Kavita n'a pas de job `db-init` ni de migration ; `initialization_jobs` est
+  par défaut une liste vide, et seuls les jobs personnalisés que vous
+  fournissez sont exécutés.
 - **Aucun secret généré automatiquement.** Contrairement à la plupart des modules
   d'application, Kavita ne crée aucun mot de passe administrateur ni aucune clé
   d'API dans Secret Manager — le compte administrateur est créé via l'assistant
@@ -210,8 +210,8 @@ défaut pour ce module).
 
 ## 3. Comportement de l'application Kavita {#3-kavita-application-behaviour}
 
-- **Aucune tâche d'amorçage de base de données.** Kavita gère entièrement son
-  stockage SQLite à l'exécution ; `Kavita_Common` n'injecte aucune tâche
+- **Aucun job d'amorçage de base de données.** Kavita gère entièrement son
+  stockage SQLite à l'exécution ; `Kavita_Common` n'injecte aucun job
   `db-init` ni de migration, et `initialization_jobs` vaut `[]` par défaut.
 - **Assistant de configuration au premier démarrage.** Il n'existe ni compte
   administrateur pré-créé ni identifiant généré. Ouvrez l'URL du service :

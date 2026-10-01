@@ -211,7 +211,7 @@ d'alerte facultatifs (tous deux désactivés par défaut).
 
 - **Aucun job d'initialisation ne s'exécute par défaut.** `Gokapi_Common` ne
   fournit aucune entrée `initialization_jobs` par défaut — Gokapi gère son propre
-  stockage et n'a aucune base de données à amorcer. Seules les tâches fournies par
+  stockage et n'a aucune base de données à amorcer. Seuls les jobs fournis par
   l'utilisateur (chargement de données ou migration personnalisés) apparaissent
   dans Cloud Run Jobs.
 - **La configuration au premier démarrage est entièrement interactive.** Il n'y a
@@ -325,7 +325,7 @@ avec leur comportement standard.
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
-Les variables standard de tâches de sauvegarde/importation d'`App_CloudRun`
+Les variables standard de jobs de sauvegarde/importation d'`App_CloudRun`
 (`backup_schedule`, `backup_retention_days`, `enable_backup_import`,
 `backup_source`, `backup_uri`, `backup_format`) sont déclarées et transmises, mais
 **sans effet pour Gokapi** — les mécanismes de sauvegarde et d'importation du socle ne fonctionnent que lorsque `database_type` n'est pas `NONE`, et celui de
@@ -386,7 +386,7 @@ variables de base de données associées n'est transmise au socle par
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucune tâche par défaut n'est injectée ; utilisez cette variable uniquement pour des tâches personnalisées de chargement de données ou de migration. |
+| `initialization_jobs` | `[]` | Aucun job par défaut n'est injecté ; utilisez cette variable uniquement pour des jobs personnalisés de chargement de données ou de migration. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents ; Gokapi n'a aucune tâche de maintenance planifiée intégrée. |
 | `backup_file` | `backup.sql` | Sans effet — voir le groupe 7 ; aucune base de données dans laquelle restaurer. |
 
@@ -433,7 +433,7 @@ d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des éventuelles tâches de configuration fournies par l'utilisateur (aucune par défaut). |
+| `initialization_jobs` | Noms des éventuels jobs de configuration fournis par l'utilisateur (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |

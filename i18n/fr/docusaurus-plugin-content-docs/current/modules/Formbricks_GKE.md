@@ -399,7 +399,7 @@ Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_
 
 ## Groupe 12 : Cache Redis {#group-12-redis-cache}
 
-Formbricks utilise Redis pour la mise en cache des réponses de l'API, la limitation de débit et la coordination des tâches en arrière-plan. Redis est **indispensable à la mise à l'échelle horizontale** — sans Redis, plusieurs pods Formbricks ne peuvent pas partager l'état du cache, ce qui entraîne des compteurs de limitation de débit en double et des réponses d'API incohérentes.
+Formbricks utilise Redis pour la mise en cache des réponses de l'API, la limitation de débit et la coordination des jobs en arrière-plan. Redis est **indispensable à la mise à l'échelle horizontale** — sans Redis, plusieurs pods Formbricks ne peuvent pas partager l'état du cache, ce qui entraîne des compteurs de limitation de débit en double et des réponses d'API incohérentes.
 
 > **Remarque :** dans `Formbricks GKE`, les variables Redis se trouvent dans le **groupe 15** du fichier de variables, mais elles sont documentées ici comme groupe 12 par souci de clarté.
 
