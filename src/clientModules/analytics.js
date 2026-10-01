@@ -54,6 +54,31 @@ const COOKIE = 'cookie_consent';
 const COOKIE_DAYS = 365;
 const PRIVACY_URL = 'https://techequity.company/privacy';
 
+// Banner text per locale. Docusaurus sets <html lang> from the active locale, so
+// the table is chosen when the banner is built. The privacy policy lives on
+// techequity.company, which has no French version, so both locales link to it.
+const STRINGS = {
+  en: {
+    ariaLabel: 'Cookie consent',
+    message: 'This site uses analytics cookies to understand which pages are useful. ',
+    learnMore: 'Learn more',
+    accept: 'Accept',
+    decline: 'Decline',
+    privacyUrl: PRIVACY_URL,
+  },
+  fr: {
+    ariaLabel: 'Consentement aux cookies',
+    message: 'Ce site utilise des cookies analytiques pour comprendre quelles pages sont utiles. ',
+    learnMore: 'En savoir plus',
+    accept: 'Accepter',
+    decline: 'Refuser',
+    privacyUrl: PRIVACY_URL,
+  },
+};
+
+const bannerStrings = () =>
+  /^fr\b/i.test(document.documentElement.lang || '') ? STRINGS.fr : STRINGS.en;
+
 let loaded = false;
 let started = false;
 
@@ -128,6 +153,7 @@ function sendPageView(path) {
  */
 function showBanner() {
   if (document.getElementById('cookie-consent-banner')) return;
+  const t = bannerStrings();
 
   const style = document.createElement('style');
   style.textContent = `
@@ -163,18 +189,18 @@ function showBanner() {
   const bar = document.createElement('div');
   bar.id = 'cookie-consent-banner';
   bar.setAttribute('role', 'region');
-  bar.setAttribute('aria-label', 'Cookie consent');
+  bar.setAttribute('aria-label', t.ariaLabel);
 
   // Built with DOM methods rather than innerHTML. Nothing here is user input,
   // so this is not an injection fix -- it just means the banner can never
   // become one if someone later makes any of this text dynamic.
   const text = document.createElement('p');
-  text.append('This site uses analytics cookies to understand which pages are useful. ');
+  text.append(t.message);
   const link = document.createElement('a');
-  link.href = PRIVACY_URL;
+  link.href = t.privacyUrl;
   link.target = '_blank';
   link.rel = 'noopener';
-  link.textContent = 'Learn more';
+  link.textContent = t.learnMore;
   text.append(link, '.');
 
   const button = (id, label, onClick) => {
@@ -188,12 +214,12 @@ function showBanner() {
 
   bar.append(
     text,
-    button('accept-cookie-btn', 'Accept', () => {
+    button('accept-cookie-btn', t.accept, () => {
       setCookie(COOKIE, 'accepted', COOKIE_DAYS);
       bar.remove();
       enable();
     }),
-    button('decline-cookie-btn', 'Decline', () => {
+    button('decline-cookie-btn', t.decline, () => {
       setCookie(COOKIE, 'declined', COOKIE_DAYS);
       bar.remove();
       disable();

@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
+import Translate, {translate} from '@docusaurus/Translate';
 
 import styles from './index.module.css';
 
@@ -17,20 +18,17 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className={styles.heroIntro}>
-          Seven certification study paths align every official exam domain with
-          hands-on deployment labs, built from 190+ open-source applications
-          running on Cloud Run and GKE Autopilot. Each guide is
-          authored by Google Cloud Authorized Trainers who hold certifications
-          in the domains they teach — so you&apos;re learning from people
-          who&apos;ve built and broken the same infrastructure you&apos;re
-          studying. Deploy it, inspect it, break it, fix it — then sit the exam
-          with confidence.
+          {translate({
+            id: 'homepage.hero.intro',
+            message:
+              "Seven certification study paths align every official exam domain with hands-on deployment labs, built from 190+ open-source applications running on Cloud Run and GKE Autopilot. Each guide is authored by Google Cloud Authorized Trainers who hold certifications in the domains they teach — so you're learning from people who've built and broken the same infrastructure you're studying. Deploy it, inspect it, break it, fix it — then sit the exam with confidence.",
+          })}
         </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
             to="/docs/guides/using-rad">
-            Get Started →
+            <Translate id="homepage.hero.getStarted">Get Started →</Translate>
           </Link>
         </div>
       </div>
@@ -42,44 +40,65 @@ const CERTIFICATIONS = [
   {
     code: 'ACE',
     name: 'Associate Cloud Engineer',
-    level: 'Associate',
-    blurb: 'Deploy, monitor, and operate solutions on Google Cloud.',
+    level: translate({id: 'homepage.certifications.level.associate', message: 'Associate'}),
+    blurb: translate({
+      id: 'homepage.certifications.ace.blurb',
+      message: 'Deploy, monitor, and operate solutions on Google Cloud.',
+    }),
   },
   {
     code: 'PCA',
     name: 'Professional Cloud Architect',
-    level: 'Professional',
-    blurb: 'Design, plan, and manage secure cloud solution architecture.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pca.blurb',
+      message: 'Design, plan, and manage secure cloud solution architecture.',
+    }),
   },
   {
     code: 'PCD',
     name: 'Professional Cloud Developer',
-    level: 'Professional',
-    blurb: 'Build and deploy scalable cloud-native applications.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pcd.blurb',
+      message: 'Build and deploy scalable cloud-native applications.',
+    }),
   },
   {
     code: 'PCDE',
     name: 'Professional Cloud Database Engineer',
-    level: 'Professional',
-    blurb: 'Design, manage, and migrate database solutions.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pcde.blurb',
+      message: 'Design, manage, and migrate database solutions.',
+    }),
   },
   {
     code: 'PCNE',
     name: 'Professional Cloud Network Engineer',
-    level: 'Professional',
-    blurb: 'Implement and manage VPC, hybrid, and multicloud networks.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pcne.blurb',
+      message: 'Implement and manage VPC, hybrid, and multicloud networks.',
+    }),
   },
   {
     code: 'PDE',
     name: 'Professional Cloud DevOps Engineer',
-    level: 'Professional',
-    blurb: 'Apply SRE, CI/CD, and observability practices at scale.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pde.blurb',
+      message: 'Apply SRE, CI/CD, and observability practices at scale.',
+    }),
   },
   {
     code: 'PSE',
     name: 'Professional Cloud Security Engineer',
-    level: 'Professional',
-    blurb: 'Configure access, boundary protection, and data security.',
+    level: translate({id: 'homepage.certifications.level.professional', message: 'Professional'}),
+    blurb: translate({
+      id: 'homepage.certifications.pse.blurb',
+      message: 'Configure access, boundary protection, and data security.',
+    }),
   },
 ];
 
@@ -88,11 +107,14 @@ function CertificationPaths() {
     <section className={styles.certSection}>
       <div className="container">
         <Heading as="h2" className="text--center">
-          Certification Study Paths
+          <Translate id="homepage.certifications.title">Certification Study Paths</Translate>
         </Heading>
         <p className={clsx('text--center', styles.sectionLead)}>
-          Each guide maps the official exam sections to RAD deployment labs, so
-          you study every domain hands-on — from Associate to Professional level.
+          {translate({
+            id: 'homepage.certifications.lead',
+            message:
+              'Each guide maps the official exam sections to RAD deployment labs, so you study every domain hands-on — from Associate to Professional level.',
+          })}
         </p>
         <div className="row">
           {CERTIFICATIONS.map((cert) => (
@@ -105,7 +127,9 @@ function CertificationPaths() {
                   {cert.name} ({cert.code})
                 </Heading>
                 <p className={styles.certBlurb}>{cert.blurb}</p>
-                <span className={styles.certCta}>View lab map →</span>
+                <span className={styles.certCta}>
+                  <Translate id="homepage.certifications.cta">View lab map →</Translate>
+                </span>
               </Link>
             </div>
           ))}
@@ -117,9 +141,9 @@ function CertificationPaths() {
 
 function PlatformStats() {
   const stats = [
-    {value: '7', label: 'Google Cloud certifications covered', to: '/docs/certification/ACE_Certification_Guide'},
-    {value: '345+', label: 'hands-on deployment labs', to: '/docs/labs/Services_GCP'},
-    {value: '520+', label: 'module configuration guides', to: '/docs/modules/Services_GCP'},
+    {value: '7', label: translate({id: 'homepage.stats.certifications', message: 'Google Cloud certifications covered'}), to: '/docs/certification/ACE_Certification_Guide'},
+    {value: '345+', label: translate({id: 'homepage.stats.labs', message: 'hands-on deployment labs'}), to: '/docs/labs/Services_GCP'},
+    {value: '520+', label: translate({id: 'homepage.stats.moduleGuides', message: 'module configuration guides'}), to: '/docs/modules/Services_GCP'},
   ];
   return (
     <section className={styles.statsSection}>
@@ -142,8 +166,12 @@ function PlatformStats() {
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="Google Cloud Certification Prep"
-      description="Master Google Cloud certifications with RAD Platform — structured learning modules, hands-on labs, and certification guides from Associate to Professional.">
+      title={translate({id: 'homepage.layout.title', message: 'Google Cloud Certification Prep'})}
+      description={translate({
+        id: 'homepage.layout.description',
+        message:
+          'Master Google Cloud certifications with RAD Platform — structured learning modules, hands-on labs, and certification guides from Associate to Professional.',
+      })}>
       <main>
         <HomepageFeatures />
         <HomepageHeader />
