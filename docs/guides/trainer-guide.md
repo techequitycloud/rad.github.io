@@ -23,7 +23,7 @@ You don't need a separate roster or a special deploy form. Everything happens on
 
 Sign in as any user does; your account is created as an ordinary user. An administrator then grants the **Trainer** role on the **Users** page — it can't be requested from inside RAD, so ask them. Lab sessions must also be switched on for the platform. Once both are true, a **Managed Environments** tab appears on **Solutions**, as its last tab. There is no separate Labs menu entry for trainers. If the tab doesn't appear, ask an administrator.
 
-A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Solution Catalog** (its **All** view) if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
+A trainer is always a user too, so you keep **Solutions**, **Deployments**, **Credits** and **Help**, and you land on **Solutions** when you sign in, like any user: on **Build Solution with AI** if you have purchased credits, otherwise on **Solution Catalog → RAD modules**. **Credits** is where you buy the purchased credits a session you fund is paid from.
 
 Administrators can see and manage every trainer's sessions. When they add credits or participants to your session, the credits still come from **your** purchased credits, and you are told who acted. Finance staff can see every session and can end one to stop its spending, but can't change it.
 
