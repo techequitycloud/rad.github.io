@@ -68,6 +68,8 @@ Everything the project costs is taken from its wallet:
 - **build costs** for each deploy, update and delete;
 - the project's **Google Cloud running costs**, metered hourly.
 
+If RAD's finance team has set a VAT rate for you, every charge from the wallet includes it, at **your** rate, not your client's: you fund the wallet, so you are the customer.
+
 A first build that fails is not charged. Google reports running costs a little late, so the wallet can go **below zero**; your next top-up covers that first.
 
 The wallet balance is shown in the **Client projects** view and on the project's own page. In your credit history, everything to do with a wallet is labelled **Client wallet**: charges paid from it (with no balance of your own beside them), and the credits you put in or take out, where the sign shows the direction.

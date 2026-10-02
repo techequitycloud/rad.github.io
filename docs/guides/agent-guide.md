@@ -24,7 +24,7 @@ An agent's account usually also holds the **User** role, the one every signup st
 
 An administrator grants the role on the **Users** page. It can be granted only while people can pay on the platform, meaning the credit system is on and at least one payment provider (Stripe or Flutterwave) is switched on. With payments off there is nothing for an agent to earn from, so the checkbox stays locked. An existing agent keeps the role if payments are later switched off.
 
-If Agent is your only role, you land on **Credits**, on the **My Commission** tab, when you sign in. If your account also holds the User or Trainer role, you land on **Solutions** like any user, and your commission is one click away on **Credits → My Commission**. Your top navigation includes **Credits** and **Help**, plus the menus of any other role you hold. (**Credits** is hidden while the platform's credit system is switched off.)
+If Agent is your only role, you land on **Credits**, on the **My Commission** tab, when you sign in. If your account also holds the User or Trainer role, you land on **Solutions** like any user, and your commission is one click away on **Credits → My Commission**. Your top navigation includes **Credits**, **Pricing** and **Help**, plus the menus of any other role you hold. (**Credits** is hidden while the platform's credit system is switched off.)
 
 ## Your referral link
 
@@ -32,7 +32,7 @@ Your link and code are on your **Profile** (open the profile menu, top right), i
 
 Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
-**Referral bonus credits.** Each signup through your link adds referral credits to your balance. Ordinary users only get these up to a monthly limit. **Agents have no monthly limit**, so the card shows how many rewards you earned this month with no cap or progress bar. These are *awarded* credits: you can spend them on deployments, but they are not commission and are never paid out.
+**Referral bonus credits.** Each signup through your link adds referral credits to your balance. Ordinary users only get these up to a monthly limit. **Agents have no monthly limit**, so the card shows how many rewards you earned this month with no cap or progress bar, and beneath it your **all-time rewarded referrals**. These are counts only: RAD never shows you who the people you referred are — not their names, not their email addresses. These are *awarded* credits: you can spend them on deployments, but they are not commission and are never paid out.
 
 ## How commission works
 
@@ -49,6 +49,7 @@ You earn a share of the **module fees** your referred users pay **with credits t
 
 - **Rate.** Set by Finance as the *Agent Revenue Share* (15% at the time of writing), fixed on each fee when it is charged. A later change to the rate never changes what you have already earned.
 - **Currency.** Commission is worked out in US dollars from the credits' list price. For example, a 100-credit fee paid with purchased credits, at 10 credits per dollar and 15%, earns **$1.50**.
+- **VAT.** Where a user is charged VAT, commission is worked out on the fee **before** VAT.
 - **Timing.** Only fees charged **after** the person was referred, and **while you held the Agent role**, count. If your role is removed, you keep what you earned while you had it.
 - **Deactivated accounts earn nothing.** If your account is deactivated, no further commission is recorded for you, and commission already recorded is **held back from payouts**. It stays on your statement and is paid only if the account is reactivated.
 
@@ -80,7 +81,7 @@ You don't request payouts yourself. If you think a payout is missing, raise a ti
 
 The Agent role is deliberately narrow. As an agent you cannot:
 
-- See the individual activity, deployments, balances or settings of the users you referred. Your statement shows the fee and the module, never their account.
+- See who the users you referred are, or their activity, deployments, balances or settings. You see how many you referred; your statement shows the fee and the module, never their account.
 - Run or approve payouts, reverse commissions, or see other agents' figures.
 - Publish or manage modules, manage user accounts, or change platform settings.
 - Act on another user's behalf. There is no impersonation anywhere in RAD.

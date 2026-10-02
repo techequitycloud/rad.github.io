@@ -26,9 +26,13 @@ Usage is metered in **credits**: most modules cost a set number of credits to de
 
 The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Admins open on **Users**, Finance on **Billing** and Support on **Help**, because each signs in to do a particular job; so does an agent who holds no other role, on **Credits → My Commission**. Users and trainers open on **Solutions**: on **Build Solution with AI** if you have access to it — purchased credits, from a subscription or a top-up — otherwise on **Solution Catalog → RAD modules**. An agent who is also a user or trainer lands the same way. Partners always have access, so they open on **Build Solution with AI**. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Admins open on **Users** and Finance on **Billing**, because each signs in to do a particular job; so do Support and Agent accounts that hold no other role, on **Help** and on **Credits → My Commission** respectively. A support operator or agent who is also a user, trainer or partner lands like one. Users and trainers open on **Solutions**: on **Build Solution with AI** if you have access to it — purchased credits, from a subscription or a top-up — otherwise on **Solution Catalog → RAD modules**. An agent who is also a user or trainer lands the same way. Partners always have access, so they open on **Build Solution with AI**. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign Out**.
+
+### Language
+
+RAD is available in **English** and **French**. Choose your language from the language selector in the top bar — it is also on the sign-in and pricing pages. RAD reloads the page you are on in that language and remembers the choice, so refreshing a page or following a link keeps it. Module, solution and plan descriptions, the Conversational Assistant and the emails RAD sends you all follow it: emails are written in the language you last used in the console.
 
 ---
 
@@ -37,18 +41,20 @@ To sign out, open the **profile dropdown** in the top-right corner and choose **
 The top navigation bar shows only the items relevant to your role (or roles). Wherever you are, you'll find:
 
 - A **profile dropdown** (top-right) with **Your Profile** and **Sign Out**.
-- A **Contact Us** link in the footer that takes you to the **Help** page, and a **Pricing** link to the public pricing page.
+- A **language selector** in the top bar, beside the light/dark theme control.
+- **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
+- In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radbusiness.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
 
 There is no separate combined dashboard — each item in the top nav is its own page.
 
 After you sign in, RAD takes you to the page that fits your role:
 
-- **User**, **Trainer** → **Solutions**, on **Solution Catalog → All** with purchased credits, otherwise on **Solution Catalog → RAD modules**
+- **User**, **Trainer** → **Solutions**, on **Build Solution with AI** with purchased credits, otherwise on **Solution Catalog → RAD modules**
 - **Partner** → **Solutions**, on **Build Solution with AI**
 - **Admin** → **Users**
 - **Finance** → **Billing**
 - **Agent** → **Credits**, on the **My Commission** tab — unless you are also a user or trainer, in which case you land as they do
-- **Support** → **Help**
+- **Support** → **Help** — unless you are also a user, trainer or partner, in which case you land as they do
 - No role assigned yet → **Help**
 
 ---
@@ -62,7 +68,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **User** | Browse the catalog, deploy and manage their own modules, manage their credits | Solutions |
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Users |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
-| **Agent** | A sales role: earns a cash commission on the module fees paid by users they referred | Credits → My Commission (Solutions if also a User or Trainer) |
+| **Agent** | A sales role: earns a cash commission on the module fees that users they referred pay with purchased credits | Credits → My Commission (Solutions if also a User or Trainer) |
 | **Finance** | Financial reporting and payouts: subscription tiers, credit settings and grants, event codes, revenue, invoices; read-only lab oversight | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Help |
 | **Trainer** | Runs lab sessions from **Solutions → Managed Environments** — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
@@ -94,7 +100,9 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 2. The form opens with a **What will be deployed** panel listing everything the deployment builds — in a RAD-managed project, the Google Cloud project and shared services as well as the app — and whether each is created, updated first, or already exists and is reused for free. A confirmation dialog appears if the module costs credits, has dependencies, or needs special permissions.
 3. Click **Deploy Module**. The deployment is queued and provisioned, and RAD opens the new deployment's own page on its **Build Status** tab so you can watch it run. If you don't have enough credits, RAD shows the module's cost against your balance and prompts you to top up.
 
-On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it. Admins can switch between **All deployments** and **My deployments**; support has no switch and sees only the deployments of the customers whose open tickets are assigned to them, not the whole platform; everyone else sees their own.
+Basic and advanced are about which settings you can reach, not what you pay. A new deployment is always created with the essential settings only, and is charged the module's fee as described under [Credits](#credits). The full set of settings — **advanced mode** — is offered only when you **update** a deployment, and an update never charges a module fee.
+
+On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it. Admins can switch between **All deployments** and **My deployments**; support has no switch and sees only the deployments of the customers whose open tickets are assigned to them, not the whole platform; everyone else sees their own. A **Deleted** deployment stays listed only for someone who can still purge it (or, for support, restore it) — for example, a lab participant does not see the environments their trainer has torn down.
 
 Click a deployment to open its details, which has three tabs:
 
@@ -133,7 +141,7 @@ Usage is metered in credits, held in four separate balances:
 
 Spending draws on awards first, then event credits, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all of them together and is checked before each deployment.
 
-Deploying a module costs that module's fee plus a build cost. The fee is reserved when you confirm and charged when the deployment first succeeds; the build cost is metered from how long each build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only. A solution of three or more modules gets a bundle discount on its module fees — by default 15% for three or four, 20% for five or six, 25% for seven or more.
+Deploying a module costs that module's fee plus a build cost. The fee is reserved when you confirm and charged when the deployment first succeeds; the build cost is metered from how long each build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only. If RAD's finance team has set a VAT rate for your account, it is added to every module fee, build cost and project usage charge, the confirmation dialog shows it as its own **VAT** line, and it must be paid from purchased credits. A solution of three or more modules gets a bundle discount on its module fees — by default 15% for three or four, 20% for five or six, 25% for seven or more.
 
 You choose which emails RAD sends on your **Profile** page. Turning **Deployments** emails off stops every deployment email, including the warning RAD sends before it permanently deletes something — so while they are off, those deletions are held rather than made without warning. See the [User Guide](user-guide.md#email-notifications).
 
@@ -143,7 +151,8 @@ The **Credits** page has:
 
 - A **Credit Transactions** tab — your full history of awards, purchases, and spend, filterable by deployment and date, with **Export CSV**.
 - A **Subscriptions** tab and a **Buy Credits** tab — shown only while the platform is selling credits (see below).
-- Depending on your role, revenue tabs — **My Commission** (agents), **Module Revenue** (partners) — sit here too. There is no separate Revenue page.
+- A **Linked Projects** tab — have RAD pay Google for a Google Cloud project you already own (see [Costs and invoices](#costs-and-invoices)).
+- Depending on your role, revenue tabs — **My Commission** (agents), **Module Revenue** (partners), **My Referral Revenue** (admins and finance) — sit here too. There is no separate Revenue page.
 - A **Calculate ROI** tab, always last — the calculator described below.
 
 To buy credits, choose a currency and amount, pick a payment provider, and complete checkout on the provider's secure page. Your credits are added automatically once the payment confirms.
@@ -166,6 +175,8 @@ The **Calculate ROI** tab on the **Credits** page is an interactive estimator. I
 
 You can see your own spending on the **Credits** page, two ways. **Credit Transactions** lists every award, purchase and charge on your account. **Project Transactions** — shown whenever project credits are enabled — breaks the project side of that down per Google Cloud project, with the credits debited and the underlying cloud cost for each, over a date range you choose. It exists because a project charge reaches the ledger as one combined row covering all your projects at once.
 
+**Linked Projects**, also on the Credits page, lets RAD pay Google for a Google Cloud project you already own and run yourself. You prove you own the project, grant RAD's billing identity two roles that let it attach or detach a billing account (and nothing else — RAD gets no access to your data), cap the project's Gemini API and GPU quotas, and send a request. Once RAD's finance team approves it, RAD pays Google and debits your purchased credits hourly for the project's usage, at Google's list price plus RAD's margin, plus your VAT rate. You must keep a minimum balance of purchased credits; below it, RAD pauses the project by detaching billing (your data is kept) and resumes it when you top up, emailing you before it pauses. You can stop at any time with **Stop**, or by linking your own billing account to the project. See the [User Guide](user-guide.md#linked-projects).
+
 Platform-wide reporting stays an administrator and finance view: the **Module Costs** and **Project Invoices** tabs on the Credits page, and the whole **Billing** page, are limited to those two roles. If you need a formal invoice, ask through the Support form.
 
 ---
@@ -176,7 +187,7 @@ The **Help** page's **Send Message** tab is a contact form that raises a support
 
 Your **referral link** is on your **Profile**, in the **Refer and earn** section — open the profile menu at the top right. It is shown whenever the referral program is on, including when referrals are unlimited (it is never shown to administrators), and the **Credits** page has a **Referral link** button that takes you there. Everyone who signs up through your link is linked to your account.
 
-You can also reach Help from the **Contact Us** link in the footer.
+You can also reach Help from the **Contact Us** link in the footer. To suggest an improvement rather than report a problem, use the **Feedback** link beside it.
 
 ---
 

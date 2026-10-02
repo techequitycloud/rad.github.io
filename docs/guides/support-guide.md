@@ -16,7 +16,7 @@ For help-desk staff who triage support requests and assist users on RAD. New to 
 - Restore a deployment's configuration that the retention policy has marked for removal, when its owner asks you to.
 - Raise a ticket of your own on the **Help** page's **Send Message** tab.
 
-After you sign in you land on the **Help** page. Your top navigation shows **Deployments** and **Help**, plus **Credits** and **Solutions** if your account also holds the User role. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My Tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
+If Support is your only role, you land on the **Help** page when you sign in; if your account also holds the User, Trainer or Partner role, you land on **Solutions** like any user, and the support queue is one click away on **Help**. Your top navigation shows **Deployments**, **Pricing** and **Help**, plus **Credits** and **Solutions** if your account also holds the User role. (**Support Tickets** is a tab inside the Help page, next to **Send Message** and **My Tickets**.) The **Setup Requests** tab is not part of the Support role — it carries partner revenue figures, so it is limited to administrators and Finance.
 
 ## Handling support tickets
 
@@ -51,9 +51,11 @@ A user can also **withdraw** a ticket that isn't closed, to say no further work 
 The **Deployments** page lets you look up deployments when helping a user. You cannot reach the module **Sync** console — module management is for admins and partners.
 
 1. Click **Deployments** in the top navigation bar.
-2. The view is **scoped to your own tickets**: it lists the deployments of the customers whose tickets are assigned to you and still **New** or **In progress**. Claiming a ticket is what gives you sight of that customer's deployments; resolving or closing it takes that access away again, and reopening the ticket restores it. If you need a deployment that belongs to someone else's ticket, ask the agent holding it or an administrator. Your scope covers at most 29 customers at a time; if you hold open tickets for more, resolve or release some to see the rest.
+2. The view is **scoped to your own tickets**: it lists the deployments of the customers whose tickets are assigned to you and still **New** or **In progress**. Claiming a ticket is what gives you sight of that customer's deployments; resolving or closing it takes that access away again, and reopening the ticket restores it. If you need a deployment that belongs to someone else's ticket, ask the agent holding it or an administrator. Your scope covers at most 29 customers at a time; if you hold open tickets for more, resolve or release some to see the rest. If nothing is in scope and Support is your only role, the page says **No deployments** and explains that customers' deployments appear while their open tickets are assigned to you.
 3. Each row shows the module, deployment ID, the star rating, who deployed it, when it was created, how long it took, the status, and the action. There is no project or credits column — open the deployment for its project, and its **Builds** tab for what each build consumed.
 4. Open a deployment to see its overview (with secret values removed), **Build Status** (live logs, with secrets masked), **Builds** (build history) and, for a lab deployment, its lab panel. The **Outputs** tab is not available to you: outputs can carry connection strings and generated credentials, so only the deployment's owner and administrators can read them — as with the deployment's configuration variables and any credentials the module generated. Ask the user for any value you need from there.
+
+A **Deleted** deployment is listed for you only if its configuration is one the retention policy marked for removal — the kind you can restore (see below); other deleted records are left out, as they are for anyone who cannot act on them.
 
 Use the deployment ID a user gives you to find their specific deployment and review its status and logs. Opening another user's deployment status, build logs, or credit history is recorded in the platform audit trail against your account. That's expected while you're working their ticket — it's why the reads are worth keeping to the tickets you hold.
 

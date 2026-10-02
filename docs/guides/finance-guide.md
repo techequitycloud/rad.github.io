@@ -9,7 +9,7 @@ description: "RAD Platform finance guide — pricing and credit settings, credit
 
 This guide is for people with the **Finance** role, who manage RAD's billing setup, run revenue and payout reports, and reconcile cloud costs. New to RAD? Start with [Using RAD](using-rad.md).
 
-Finance is granted by an administrator on top of an ordinary account, so you keep everything a signed-up user has. When you sign in as Finance you land on the **Billing** page. Your navigation bar shows **Billing**, **Labs** and **Audit Log** first, then the everyday items your account also holds — **Credits**, **Deployments** and **Solutions** for an ordinary user account — and **Help** last. (**Labs** appears only while lab sessions are switched on, and **Setup Requests** and **Support Tickets** are tabs inside the Help page.)
+Finance is granted by an administrator on top of an ordinary account, so you keep everything a signed-up user has. When you sign in as Finance you land on the **Billing** page. Your navigation bar shows **Billing**, **Labs** and **Audit Log** first, then the everyday items your account also holds — **Credits**, **Deployments** and **Solutions** for an ordinary user account — and **Pricing** and **Help** last. (**Labs** appears only while lab sessions are switched on, and **Setup Requests** and **Support Tickets** are tabs inside the Help page.)
 
 ## What you can do
 
@@ -17,6 +17,7 @@ Finance is granted by an administrator on top of an ordinary account, so you kee
 - Configure the credit economy — credits-per-unit, fees, discounts and revenue shares (**Credit Settings**).
 - Adjust any other user's credit balance (**Credit Management**).
 - Issue **Event Codes** that give event attendees free credits.
+- Approve or reject customers' requests for RAD to pay for their own Google Cloud projects (**Linked Projects**), set each customer's VAT rate, tax details and billing sub-account (**Customer Billing**), and report the VAT collected (**VAT Report**).
 - Report on **Module Revenue**, and review and pay agent commission (**Agent Revenue**).
 - Review every customer's RAD-managed project costs (**Project Transactions**) and org-wide GCP costs (**Project Invoices**).
 - See per-payee payout totals (**Payout Summary**).
@@ -28,9 +29,9 @@ Finance is granted by an administrator on top of an ordinary account, so you kee
 
 ## The Billing page
 
-Open **Billing** from the navigation bar. It has nine tabs, in this order: **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Event Codes**, **Module Revenue**, **Agent Revenue**, **Project Transactions**, **Project Invoices** and **Payout Summary**. Each is described below.
+Open **Billing** from the navigation bar. It has twelve tabs, in this order: **Subscription Tiers**, **Credit Settings**, **Credit Management**, **Event Codes**, **Linked Projects**, **Customer Billing**, **VAT Report**, **Module Revenue**, **Agent Revenue**, **Project Transactions**, **Project Invoices** and **Payout Summary**. Each is described below.
 
-Which tabs appear depends on two platform switches. Every tab except **Event Codes** needs **Enable Subscription** switched on, and **Project Transactions** and **Project Invoices** also need **Enable Project Credits**. The page always opens on the first tab you can use — with Subscriptions off, that is **Event Codes**, and it is the only tab shown.
+Which tabs appear depends on two platform switches. **Event Codes**, **Linked Projects**, **Customer Billing** and **VAT Report** are always shown; every other tab needs **Enable Subscription** switched on, and **Project Transactions** and **Project Invoices** also need **Enable Project Credits**. The page always opens on the first tab you can use — with Subscriptions off, that is **Event Codes**. **Linked Projects**, **Customer Billing** and **VAT Report** are Finance's alone: administrators do not see them.
 
 ### Subscription Tiers
 
@@ -52,7 +53,7 @@ Configure the global parameters of the credit economy.
 1. Go to **Billing** > **Credit Settings**.
 2. Set the **credits-per-unit** value (how credits map to currency).
 3. Set the **revenue shares** — the percentage of revenue allocated to referring **agents** (Agent Revenue Share) and to module **partners** (Partner Revenue Share).
-4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the **Minimum Top-up** (the smallest one-off purchase in US dollars: $10 by default, between $1 and $1,000), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Refer and earn** section disappears from Profile, along with its shortcut on Credits), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap. **Solution bundle discounts** have no control on this tab: a solution's module fees are discounted 15% for three or four members, 20% for five or six and 25% for seven or more, and changing those tiers is an administrator's settings change (`solutionBundleDiscountTiers`), not a form here.
+4. Set the rest of the economy from the same tab. Each setting is its own small form with its own Save button, so you can change one without touching the others: the free-credit grants (Signup, Monthly, Referral and the referral limit), the **Minimum Top-up** (the smallest one-off purchase in US dollars: $10 by default, between $1 and $1,000), the low-credit trigger, credits-per-hour, the four module fees (CR and GKE, fee and setup fee), the RAD-Managed Module Discount, the deploy credit buffer, the Sandbox/Development/Production/Lab admission floors and monthly project budgets, the project credit margin, the three linked-project settings (**Linked Project Margin**, 10% by default, added to Google's list price for a customer's own linked project; **Linked Project Floor**, 2,500 credits by default; and **Linked Project Floor (days of spend)**, 7 by default — a linked customer must hold the larger of the fixed floor and that many days of their recent spend), the deployment refresh interval, and the starting values for the ROI calculator. The referral limit (**Referral Rewards**) takes three kinds of value: **-1** means unlimited, **0** switches the referral program off (no referral credits, and the **Refer and earn** section disappears from Profile, along with its shortcut on Credits), and a positive number is the monthly number of referrals each referrer earns credits for. Agents are exempt from that monthly cap. **Solution bundle discounts** have no control on this tab: a solution's module fees are discounted 15% for three or four members, 20% for five or six and 25% for seven or more, and changing those tiers is an administrator's settings change (`solutionBundleDiscountTiers`), not a form here.
 5. Decide what a **failed deployment** is charged, on the **Failed Deployments** card. It has two independent switches, and each label states its own outcome ("Build cost charged" / "Build cost not charged", "Module fee charged" / "Module fee not charged"):
    - **Build cost** — whether the metered Cloud Build time of a new deployment that fails or is cancelled is charged.
    - **Module fee** — whether the module fee is charged for that deployment even though it never succeeded.
@@ -107,7 +108,7 @@ The tab has two parts.
 
 **The commission statement.**
 
-1. Go to **Billing** > **Agent Revenue** and pick an agent — current or former, since a demoted agent can still be owed commission. You see their statement exactly as they do: totals (Earned, Reversed, On hold, Payable, In payout, Paid) and one row per commission.
+1. Go to **Billing** > **Agent Revenue** and pick an agent — current or former, since a demoted agent can still be owed commission. You see their statement exactly as they do: totals (Earned, Reversed, On hold, Payable, In payout, Paid) and one row per commission. Above it, **Rewarded referrals this month** and **All-time rewarded referrals** show how many people the agent has referred who earned them referral credits — counts only.
 2. Each commission is **on hold for 30 days** before it becomes payable, so a refunded or disputed fee can be dealt with first.
 3. To take a commission back, for example because its fee was refunded, use **Reverse** on its row and give a reason. The reversal is recorded as a new negative entry, never an edit. If the commission hasn't been paid yet, the pair nets to zero — and if it sits in a payout batch that isn't marked paid yet, that batch's total drops by the same amount. If it has been paid, the amount is deducted from that agent's next payout. The reason is shown to the agent and written to the audit log.
 
@@ -119,6 +120,29 @@ The tab has two parts.
 4. Pay each agent outside RAD, then enter the **Payment reference** and mark the batch paid. The agent's statement then shows those commissions as **Paid**.
 
 Creating a batch, marking it paid and reversing a commission each write an audit-log entry.
+
+### Linked Projects, Customer Billing and VAT
+
+A customer can ask RAD to pay Google for a Google Cloud project they already own (**Credits → Linked Projects** on their side — see the [User Guide](user-guide.md#linked-projects)). RAD then debits their purchased credits hourly for its usage, at Google's list price less any Google credits you pass through to them, plus the **Linked Project Margin**, plus their VAT. These three tabs are where you run that, and where every customer's VAT is set.
+
+**Customer Billing.** Look a customer up by email (customers already configured are listed for you to pick) and set:
+
+- **VAT rate (%)** — 0 to 50. **0** means no VAT and counts as set; leaving it empty clears it, and a customer with no rate cannot be linked. The rate applies to **everything** that customer pays — module fees, build costs and RAD-managed project usage as well as a linked project's usage — and for a lab session or client project it is the rate of whoever funds it (the trainer or the subscriber). It applies from the next charge and is never retroactive: a deployment keeps the rate it was confirmed at.
+- **Country** (two-letter code) and **Tax ID**.
+- **Billing sub-account ID** — optional. It must be open, sit under RAD's reseller billing account and be usable by RAD's service accounts; RAD checks this when you save and names anything missing, and **Re-check** runs the check again. Leave it empty to use RAD's main billing account. A change applies to projects linked or created afterwards, including the RAD-managed projects RAD creates for that customer; existing projects are never moved.
+- **Google credits passed to this customer** — **Free tier**, **Sustained and committed use discounts** and **Promotions**, each off by default (usage is charged at list price). RAD's reseller margin and its negotiated discounts with Google are never passed on.
+
+**Save changes** saves only the fields you changed. The **Change history** beneath lists every change, its old and new value, who made it and when.
+
+**Linked Projects.** Every customer request, awaiting ones first, with the customer, status, billing account and dates.
+
+- **Approve** links the project's billing to RAD straight away, on the customer's billing sub-account or RAD's main account. The dialog shows the customer's VAT rate, purchased credits against the floor, and sub-account, and you must tick **Customer has capped Gemini API and GPU quotas** — check the project's quotas before you do. Approval is refused (the reason is shown in the dialog) until the customer has a VAT rate set and holds at least the floor in purchased credits.
+- **Reject** needs a reason, which the customer sees.
+- **Unlink** detaches RAD's billing account from a linked or paused project. If the customer hasn't linked their own, its services stop (their data is kept). Usage up to then is still charged once metering catches up.
+
+You don't pause projects yourself: RAD pauses a linked project when the customer's purchased balance falls below the floor, after emailing them, and restores it when they top up.
+
+**VAT Report.** VAT collected per customer, per country and per month — VAT charged less VAT returned on refunds — in credits, each charge at the rate snapshotted when it was made, with a US-dollar figure beside it. Choose a date range (**This month** and **Last month** are shortcuts) and a country, switch between **By customer**, **By country** and **By month**, and use **Export CSV**. Movements into and out of a lab escrow or client wallet are left out — VAT is counted when those credits are spent.
 
 ### Project Transactions
 
@@ -190,10 +214,11 @@ Managed-setup requests from users who want RAD to handle a deployment for them a
 
 ## Audit Log
 
-Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, and lab session charges, refunds and settlements — including a place a trainer paid for on a participant's behalf (with the trainer's note about the offline payment, if they left one). Administrators see every action.
+Open **Audit Log** from the navigation bar to see who changed what, and when, on the platform's money. Your view shows the money-related actions only: credit balance changes and bulk adjustments, referral awards, agent commission reversals and payouts, setup-request revenue splits, event codes, lab session charges, refunds and settlements — including a place a trainer paid for on a participant's behalf (with the trainer's note about the offline payment, if they left one) — and customer-billing changes and linked-project requests, approvals, rejections, pauses and unlinks. Administrators see every action.
 
 - The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
 - Select **Show all** on a row to see everything recorded with it, such as the balance before and after a change.
+- Results are paged beneath the table; choose 25, 50, 100 or 200 rows per page.
 - If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
 
 The log is read-only.

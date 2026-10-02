@@ -19,6 +19,7 @@ This guide is for anyone using RAD to deploy and manage cloud modules — the de
 - Estimate your savings with **Calculate ROI**, on the **Credits** page.
 - Get help through the **Send Message** form on **Help**.
 - Invite others with your referral link, from **Profile → Refer and earn**.
+- Have RAD pay Google for a Google Cloud project you already own, from **Credits → Linked Projects**. See [Linked projects](#linked-projects).
 - Run projects for your own clients (starting one needs purchased credits), or accept one someone runs for you, on **Solutions → Managed Environments**. See [Client Projects](#client-projects).
 
 After you sign in you land on **Solutions**: on **Build Solution with AI** if you have purchased credits (a subscription or a top-up), which is what unlocks it, otherwise on **Solution Catalog → RAD modules**. The tabs are, in order: **Build Solution with AI**, **Solution Catalog**, then **Managed Environments**, which holds client projects (while the platform offers them), lab sessions for trainers, finance and admins (while they are enabled), and anything someone else runs for you.
@@ -32,7 +33,7 @@ After you sign in you land on **Solutions**: on **Build Solution with AI** if yo
   - **RAD solutions** — ready-made bundles curated by RAD.
   - **RAD modules** — the full catalog of individual applications.
 
-Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, and **Help**.
+Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, **Pricing** and **Help**, with a language selector (English or French) beside your profile menu.
 
 ## Building a solution from a description
 
@@ -100,7 +101,7 @@ Your own solutions (**Solution Catalog → My solutions**) are composed in conve
 
 Click **Deployments** to see your deployments. Each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed.
 
-Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire.
+Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire. A **Deleted** deployment stays in your list only while you can still purge it; a lab environment your trainer tore down, for example, drops out of your list because only the trainer or an administrator can purge it.
 
 Open a deployment to see its details, which has these tabs:
 
@@ -141,12 +142,15 @@ Deploying a module charges two things. The **module fee** is reserved when you c
 
 Updating a deployment charges the build cost only.
 
+**VAT.** If RAD's finance team has set a VAT rate for your account, it is added to every module fee and build cost you pay, and to the Google Cloud usage of your RAD-managed and linked projects. The confirmation dialog shows the net figures with a separate **VAT** line, and VAT must be paid from purchased credits — the dialog tells you how many more to buy if you are short. A rate change applies from your next deployment; it never re-prices one you have already confirmed.
+
 **Failed deployments.** Whether a deployment that fails is charged is a platform setting rather than a fixed rule: Finance decides, separately for the build cost and the module fee, whether either is taken when a new deployment fails or is cancelled. **In the current release neither is charged — a failed deployment costs you nothing.** A failed update or teardown is not charged either.
 
 The Credits page has these tabs:
 
 - **Credit Transactions** — your full history of awards, purchases, and spend, with an **Awards**, **Top-up**, and **Subscription** balance after each entry. Filter by deployment and by date, and use **Export CSV** to download a report.
 - **Project Transactions** (when project credits are enabled) — what each Google Cloud project cost you, one row per project, with a project search and a date range. A project charge lands on Credit Transactions as a single combined row covering all your projects at once; this tab is the breakdown of that charge.
+- **Linked Projects** — ask RAD to pay Google for a project you already own. See [Linked projects](#linked-projects).
 - **Subscriptions** (only while the platform is selling credits) — subscribe to a recurring credit plan, or cancel or reinstate the one you have.
 - **Buy Credits** (only while the platform is selling credits) — top up your balance.
 - **Calculate ROI** — the ROI calculator described below, always the last tab.
@@ -179,6 +183,26 @@ You can see your own spending two ways on the **Credits** page. **Credit Transac
 
 Platform-wide reporting is still restricted: the **Module Costs** and **Project Invoices** tabs and the whole **Billing** page are limited to administrators and finance users. If you need a formal invoice, ask through the Support form.
 
+## Linked projects
+
+**Credits → Linked Projects** lets RAD pay Google for a Google Cloud project you already own and run yourself. You prepay credits, and RAD debits them hourly for the project's usage. The project keeps its ID, its data and your full control; RAD gets no access to your data or resources.
+
+The tab first states **your terms**: your VAT rate (or that Finance will confirm one before linking), whether any of Google's own credits — free-tier allowances, usage discounts, promotional credits — are passed on to you (by default they are not, and usage is charged at Google's list price plus RAD's margin), and the **floor**: the minimum balance of purchased credits you must keep, shown against what you hold. Awarded and event credits don't count toward it.
+
+To link a project:
+
+1. Enter the **Google Cloud project ID** and choose **Continue**.
+2. **Confirm you own the project** — the same label check used when you deploy into your own project (a project Owner or Editor adds the label). A project you have already verified is offered for you to pick.
+3. **Let RAD manage the project's billing link** — run the two commands shown, as a project Owner. They give RAD's billing identity the **Browser** and **Billing Project Manager** roles: enough to attach or detach a billing account, and nothing more.
+4. **Cap your Gemini API and GPU quotas** in the Google Cloud console, because those can spend faster than your balance can cover. Tick the box confirming you have granted both roles and capped the quotas.
+5. Choose **Request link**. RAD's finance team reviews the request; the list below shows its status (**Awaiting approval**, **Linking**, **Linked**, **Paused**, **Unlinking**, **Unlinked**, **Rejected**, **Withdrawn**), and a rejection shows Finance's reason. You can send a request while below the floor, but it cannot be approved until you hold it.
+
+While a project is linked:
+
+- If your purchased balance falls below the floor, RAD **pauses** the project by detaching billing: its services stop, but your data is kept. RAD emails you before this happens, and buying credits back above the floor resumes it automatically.
+- **Withdraw** cancels a request that has not been approved. **Stop** (behind a confirmation, **Stop RAD paying**) detaches RAD's billing account. If no other billing account is linked, the project's services stop — link your own billing account first if it must keep running. Linking your own billing account to the project also ends RAD's part.
+- Usage up to the moment billing is detached is still charged once Google reports it.
+
 ## Email notifications
 
 Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.) One email ignores these settings: if a build costs more credits than you have, you are always told what you owe, because it explains why your next top-up gives you less.
@@ -203,7 +227,7 @@ When the platform offers it, client projects live on **Solutions → Managed Env
 
 ## Getting help
 
-Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact Us** link in the footer also takes you to the Help page.
+Open **Help** and use the **Send Message** tab to raise a question or report a problem. Fill in the form to send your message — this raises a support ticket and notifies the support team, who follow up with you. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale; without any, the form shows a prompt to buy credits instead. While the platform is not selling credits, anyone can raise a ticket. You can raise up to 5 tickets in 24 hours. A **Contact Us** link in the footer also takes you to the Help page; to suggest an improvement instead, use the **Feedback** link beside it, which opens RAD's public feedback board.
 
 Your tickets are on the **My Tickets** tab, next to **Send Message**, newest first: each shows its status (**New**, **In progress**, **Resolved** or **Closed**), subject and the date you sent it, and expanding one shows its category, priority, module, the date it was resolved and your message. **Refresh** reloads the list. Sending a ticket takes you straight to this tab, so the one you just raised is what you see.
 
@@ -211,4 +235,4 @@ If you no longer need help with a ticket that isn't closed, expand it and choose
 
 ## Inviting others
 
-Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Referral link** button that takes you there). People who sign up through it are linked to your account, and you earn referral credits for them, subject to any monthly limit the platform sets. The section is hidden only when the platform has turned referral rewards off.
+Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Referral link** button that takes you there). People who sign up through it are linked to your account, and you earn referral credits for them, subject to any monthly limit the platform sets. The section shows how many of your referrals earned you credits this month and in total — a count only, never who they are. It is hidden only when the platform has turned referral rewards off.

@@ -50,6 +50,8 @@ You decide when you create the session. **That choice is fixed once the session 
 
 **Participants buy their own place (the default for a new session).** Nothing is reserved from your credits. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
 
+**VAT.** If RAD's finance team has set a VAT rate for whoever pays for a place, that place costs the allowance plus VAT, so the allowance lasts as long as the plan says: your rate for a session you fund or a place you pay for, the participant's own rate for a place they buy.
+
 When does a participant's payment become yours? Only once **that participant's clock starts**, which is the moment they get access to their lab. Until then their payment is held. If they never get access — their environment was never built, or failed to build, or was never started — their payment is returned to them when the session settles.
 
 ### Paying for a participant's place yourself
@@ -98,7 +100,7 @@ If you remove someone before their environment was built, their banner tells the
 
 1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Solution Catalog → My solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
 2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish. Participants who haven't signed up for RAD yet are left out and counted beneath the button ("N waiting to sign up"); provision again once they have.
-3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
+3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you; once every environment in a **By trainer** session is built, the sessions list shows the session as **Ready to start**. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
 
 An environment that is built but never started can't wait for ever: by default, after a week unstarted it is torn down, not started. While any are waiting, **Keep waiting longer** gives them more time, up to the longest wait the platform allows.
@@ -111,7 +113,7 @@ At the end, the environment's billing is switched off, any build still running f
 
 Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 
-Use **End now** to end the whole session at any time. A session nobody provisions is ended automatically after 14 days.
+Use **End now** to end the whole session at any time. It stops the session's spending straight away but moves no money itself: RAD checks every 10 minutes for sessions ready to settle, and settles yours once Google has reported its cloud costs (see [When a session settles](#when-a-session-settles)). If no environment was ever built, there is nothing to wait for, and the refund arrives at the next check. A session nobody provisions is ended automatically after 14 days.
 
 ### Exporting and reusing a session
 

@@ -22,13 +22,13 @@ As an admin you have superuser access. In addition to everything a standard user
 - See all revenue, costs, invoices, and payouts across the platform.
 - Review the **Audit Log**: every recorded action on the platform, who did it and when.
 
-After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is **RAD modules** on the Solutions **Solution Catalog** tab; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
+After you sign in you land on the **Users** page. Your top navigation shows: Deployments, Solutions, Setup, Users, Audit Log, Sync, Pricing and Help, plus **Credits** (first) if your account also holds the User, Partner or Agent role (and credits are switched on). The module catalog is **RAD modules** on the Solutions **Solution Catalog** tab; it no longer has its own menu entry. Setup Requests and Support Tickets are tabs inside the **Help** page rather than top-level navigation items.
 
 ## Managing users
 
 Go to the **Users** page to manage everyone on the platform.
 
-**View and search.** You see a searchable, paginated list of all registered users. Search to find a user by email, then read their row: role badges beside the address, and a column for their active status and for each role (Admin, User, Partner, Agent, Finance, Support, Trainer). Credit balances are not shown here.
+**View and search.** You see a searchable, paginated list of all registered users. Search to find a user by email — the filter stays in place after you save an edit, so the user you changed stays on screen — then read their row: role badges beside the address, and a column for their active status and for each role (Admin, User, Partner, Agent, Finance, Support, Trainer). Credit balances are not shown here.
 
 **Create a user.** Switch on **Private Mode** in **Setup** and two buttons appear above the user list. **Add New User** creates an account directly so that person can sign in. **Restore User** re-admits someone you previously deleted, clearing the record that was blocking their email — they get no fresh sign-up credits. Neither button appears, and neither action is accepted, while the platform is in public mode, because people can register for themselves.
 
@@ -94,7 +94,7 @@ You can see and manage every trainer's sessions, and you alone can force a teard
 Two bulk actions are available to you, and neither is on the Users page:
 
 - **Award credits in bulk** — the **Credit Settings** tab on the **Billing** page. The adjustment applies to *every* user at once; you cannot pick a subset. Enter a positive amount to grant or a negative one to deduct, and choose whether it lands as free award credits or as purchased credits. Amounts of 10,000 or more need a reason and a typed confirmation, and credits must be enabled platform-wide. To change one person's balance instead, use **Credit Management** on the same page.
-- **Message users** — the **Send Message** tab on the **Help** page, which shows you a message form rather than the support form other users see. Send to all users, or search for and select up to 100 recipients; messages are capped at 5,000 characters.
+- **Message users** — the **Send Message** tab on the **Help** page, which shows you a message form rather than the support form other users see. Send to all users, or search for and select up to 100 recipients (the search matches any part of an email address, so a domain finds everyone at it); messages are capped at 5,000 characters.
 
 These are the fastest way to run promotions, top up balances after an outage, or send a platform-wide announcement.
 
@@ -139,7 +139,7 @@ You have platform-wide financial visibility:
 - **Costs and invoices** — **Project Transactions** and **Project Invoices** (actual cloud cost per project per month); both need **Enable Project Credits**. Module costs per deployment are the **Module Costs** tab on the **Credits** page.
 - **Payouts** — **Payout Summary**, per-payee totals for agents and partners. **Mark paid** there records a partner's payout for an ended period, once, at the rate in force; agents are paid through Agent Revenue instead.
 
-Apart from Module Costs, these reports are tabs of the **Billing** page. Two things to know before you go looking for them: your admin navigation has no Billing entry, so either grant yourself the Finance role as well (which adds it) or go to `/billing` directly; and every Billing tab except **Event Codes** requires **Enable Subscription** in **Setup**, so with that switched off the page opens on Event Codes and shows nothing else. Use them to monitor platform health, reconcile partner and agent earnings, and review project spending.
+Apart from Module Costs, these reports are tabs of the **Billing** page. Two things to know before you go looking for them: your admin navigation has no Billing entry, so either grant yourself the Finance role as well (which adds it) or go to `/billing` directly; and every Billing tab except **Event Codes** requires **Enable Subscription** in **Setup**, so with that switched off the page opens on Event Codes and shows nothing else. Three Billing tabs are Finance's alone and are not shown to administrators: **Linked Projects** (approving customers' requests for RAD to pay for their own Google Cloud projects), **Customer Billing** (each customer's VAT rate, tax details and billing sub-account) and **VAT Report** — see the [Finance Guide](finance-guide.md#linked-projects-customer-billing-and-vat). Use them to monitor platform health, reconcile partner and agent earnings, and review project spending.
 
 ## Audit log
 
@@ -147,6 +147,7 @@ Open **Audit Log** from the navigation bar to review what has been done on the p
 
 - The page opens on the last 7 days. Change the dates, pick an **Action**, or type part of an email in **Performed by**, then select **Load**. The range can be up to a year.
 - Select **Show all** on a row to see everything recorded with it. Secret values are never recorded; a changed secret shows as redacted.
+- Results are paged with the standard control beneath the table; choose 25, 50, 100 or 200 rows per page.
 - If a range holds more actions than one load can read, only the most recent are shown and a notice asks you to narrow the dates.
 
 Finance also has an **Audit Log**, limited to the money-related actions. The log is read-only: nobody, admins included, can edit or delete an entry.
