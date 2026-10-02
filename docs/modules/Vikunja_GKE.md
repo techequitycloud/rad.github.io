@@ -33,6 +33,7 @@ Google Cloud services:
 | Database | Cloud SQL for PostgreSQL 15 | Required — Vikunja does not support MySQL in this module |
 | Container build | Cloud Build + Artifact Registry | Wraps the `scratch` upstream image with a grafted busybox |
 | Secrets | Secret Manager | Auto-generated `VIKUNJA_SERVICE_JWTSECRET`; database password |
+| Attachments | Block PVC (StatefulSet) | Per-pod PVC at `/data`, where `VIKUNJA_FILES_BASEPATH` points |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
@@ -52,8 +53,11 @@ Google Cloud services:
   with `session_affinity = None`. Vikunja has no built-in multi-replica coordination.
 - **A PodDisruptionBudget keeps the pod serving** through node upgrades
   (`enable_pod_disruption_budget = true`).
-- **NFS is disabled by default.** Vikunja stores data in PostgreSQL; enable NFS only
-  if you need durable file attachments at `/app/vikunja/files`.
+- **Attachments live on a block PVC.** Tasks, projects and users are in PostgreSQL;
+  file attachments are written to `/data` (`VIKUNJA_FILES_BASEPATH` follows
+  `stateful_pvc_mount_path`), which `stateful_pvc_enabled = true` (default) backs with
+  a per-pod PVC, so the workload resolves to a StatefulSet. `stateful_fs_group = 1000`
+  makes the volume writable by Vikunja's user. NFS is off by default.
 - **A custom domain + static IP are enabled by default** (`enable_custom_domain = true`,
   `reserve_static_ip = true`) so the external address survives redeploys.
 - **A handful of Foundation variables are declared but inert.** `db_host_env_var_name`,
@@ -140,15 +144,15 @@ is managed separately by the foundation.
 The database password secret name is in the [Outputs](#5-outputs). See
 [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 
-### E. Cloud Storage & file attachments (optional)
+### E. File attachments
 
-Vikunja stores file attachments on the pod filesystem at `/app/vikunja/files`.
-Enable NFS (`enable_nfs = true`) and mount it over that path for durable
-attachments; the module declares no dedicated GCS bucket by default
-(`storage_buckets = []`). NFS-backed GKE apps deploy with the `Recreate` strategy
-to avoid two pods contending for the same volume.
+Vikunja writes file attachments to `VIKUNJA_FILES_BASEPATH`, which the module sets to
+`stateful_pvc_mount_path` (`/data`) — the per-pod block PVC — so the app and the volume
+cannot disagree. Without it, attachments would fall back to Vikunja's ephemeral
+`/app/vikunja/files`: the task would still list them after a restart while the
+download failed. The module declares no dedicated GCS bucket (`storage_buckets = []`).
 
-- **Console:** Filestore / Compute Engine (NFS VM) when `enable_nfs = true`.
+- **Console:** Kubernetes Engine → Storage → the Vikunja PVC.
 - **CLI:**
   ```bash
   gcloud storage buckets list --project "$PROJECT"
@@ -261,7 +265,7 @@ this module — `explicit_secret_values` and `scripts_dir`. `credit_cost` defaul
 | `container_port` | `3456` | Port Vikunja's Go server listens on. |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | CPU/memory limits and requests. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar (loopback `127.0.0.1`). |
-| `workload_type` | `Deployment` | Stateless Deployment (StatefulSet not needed — state is in PostgreSQL). |
+| `workload_type` | `null` → `StatefulSet` | Resolves to a StatefulSet because the attachments PVC is enabled. |
 
 Also in this group, following standard App_GKE behaviour: `enable_vertical_pod_autoscaling`
 (`false`), `container_protocol` (`http1`), `timeout_seconds` (`300`),
@@ -309,7 +313,8 @@ pin the inline VPC subnet CIDR on an existing deployment).
 `stateful_pvc_enabled`, `stateful_pvc_size`, `stateful_pvc_mount_path`,
 `stateful_pvc_storage_class`, `stateful_headless_service`,
 `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group` —
-StatefulSet PVC templates. Not recommended for Vikunja; state lives in PostgreSQL.
+StatefulSet PVC templates. On by default for Vikunja: the PVC (`/data`, `fs_group 1000`)
+holds file attachments. Keep `stateful_pvc_enabled = true`.
 
 ### Group 8 — Resource Quota
 
@@ -359,7 +364,7 @@ referenced**.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Enable for durable file attachments at `/app/vikunja/files`. |
+| `enable_nfs` | `false` | Not needed — attachments are on the block PVC. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
 | `nfs_volume_name` | `nfs-data-volume` | Volume name for the mount. |
 | `nfs_instance_name` / `nfs_instance_base_name` | `""` / `app-nfs` | Existing NFS VM to reuse, or the base name for an inline one. |
@@ -480,7 +485,7 @@ locate and explore the running resources.
 | `VIKUNJA_SERVICE_JWTSECRET` (auto-generated) | Never rotate after first boot | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login for everyone. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid backup source/file fails the import job. |
-| `enable_nfs` (for attachments) | `true` if attachments matter | High | Without NFS, file attachments live on the pod's ephemeral disk and are lost on every pod restart. |
+| `stateful_pvc_enabled` | `true` | High | Without the PVC, file attachments live on the pod's ephemeral disk and are lost on every pod restart. |
 | `container_image_source` | `custom` | High | `prebuilt` deploys the raw `scratch` image with no shell/entrypoint mapping — the container cannot map `DB_*` and fails. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity; disabling it is blocked by a plan-time validation guard. |
 | `min_instance_count` | `1` | Medium | The variable's own validation allows `0`–`1000` and there is no plan-time guard rejecting `0` — App_GKE's Deployment logic silently coerces `min_instance_count=0` to a `min_replicas` of `1` at apply time (`local.min_instance_count > 0 ? local.min_instance_count : 1`), so the deployed replica count silently diverges from what was configured rather than failing with an error. |

@@ -339,8 +339,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisions the `storage` bucket that backs `/data`. Leaving this `false` would break Gokapi's only persistence path. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `storage` bucket. |
-| `enable_nfs` | `false` | Off by default. Enabling it provisions Filestore/an NFS VM but does **not** automatically move Gokapi's data there — `GOKAPI_CONFIG_DIR`/`GOKAPI_DATA_DIR` still point at `/data` (the GCS Fuse mount) unless you override them yourself. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container if NFS is enabled — distinct from `/data`. |
+| `enable_nfs` | `true` | Must stay `true` on Cloud Run: Gokapi's SQLite database lands under `/data`, and GCS FUSE cannot host a SQLite database. |
+| `nfs_mount_path` | `/data` | Mount path inside the container if NFS is enabled — distinct from `/data`. |
 | `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts; the `storage` bucket's `/data` mount is always added on top of this list. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 | `enable_redis` | `true` (variable default) | **Inert** — `main.tf` hardcodes `enable_redis = false` to the foundation regardless of this variable's value. Gokapi has no use for Redis. |

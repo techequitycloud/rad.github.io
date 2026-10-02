@@ -247,7 +247,7 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Enable to back the SQLite cache with NFS for **durable message history**. |
-| `nfs_mount_path` | `/mnt/nfs` | NFS mount path; point `NTFY_CACHE_FILE` at it for persistence. |
+| `nfs_mount_path` | `/var/cache/ntfy` | NFS mount path; point `NTFY_CACHE_FILE` at it for persistence. |
 | `storage_buckets` | `[]` | Not required — ntfy uses no object storage. |
 
 ### Group 12 — Database Backend

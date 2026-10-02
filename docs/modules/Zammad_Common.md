@@ -61,6 +61,14 @@ On every container start, `entrypoint.sh` performs the following steps:
    before the railsserver starts. Pending migrations are applied; already-run ones
    are skipped.
 
+5. **Background processes** — starts `zammad-scheduler` (email fetching, ticket
+   escalation, timed events) and `zammad-websocket` (ActionCable on port 6042)
+   in the background, then execs the Rails server. The scheduler gets its own,
+   larger database connection pool (`?pool=20`, overridable with
+   `ZAMMAD_SCHEDULER_DB_POOL`), because its worker threads exhaust Rails' default
+   pool of 5 and the scheduler would otherwise die a few minutes after boot while
+   the web UI kept serving.
+
 Retrieve the image tag deployed from the `container_image` output:
 
 ```bash

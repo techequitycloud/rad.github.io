@@ -99,7 +99,7 @@ gcloud run services logs read <service-name> --project "$PROJECT" --region "$REG
 
 Platform-specific adjustments handled here:
 
-- **Cloud Run** additionally derives `WP_HOME` and `WP_SITEURL` from the `CLOUDRUN_SERVICE_URL` environment variable (always injected by the foundation with the correct URL), so WordPress generates correct absolute links and avoids HTTP→HTTPS redirect loops.
+- **Both platforms** derive `WP_HOME` and `WP_SITEURL` from the platform-injected service URL — `CLOUDRUN_SERVICE_URL` on Cloud Run, `GKE_SERVICE_URL` on GKE, falling back to a `WP_HOME` environment variable — so WordPress generates correct absolute links, avoids HTTP→HTTPS redirect loops, and follows the address the platform currently serves rather than the `siteurl`/`home` rows stored in its database at install time.
 
 ---
 

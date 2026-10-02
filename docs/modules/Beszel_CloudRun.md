@@ -26,14 +26,14 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 Beszel runs as a single Go container on Cloud Run v2, serving its web UI and REST
 API on port 8090. It keeps all state in an embedded SQLite database under
-`/beszel_data`, which is FUSE-mounted from a Cloud Storage bucket. The deployment
+`/beszel_data`, which is mounted from the shared NFS (Filestore) volume. The deployment
 wires together a deliberately small set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Single Go container, 1 vCPU / 1 GiB by default, port 8090 |
 | Database | **None** | Beszel embeds its own PocketBase/SQLite DB — no Cloud SQL is provisioned |
-| Object storage | Cloud Storage | One data bucket, GCS FUSE-mounted at `/beszel_data` for all persistence |
+| File storage | Cloud Filestore (NFS) | Mounted at `/beszel_data` for all persistence; the GCS data volume is switched off while NFS owns that path |
 | Cache & queue | **None** | Beszel does not use Redis; `enable_redis` is forced off |
 | Secrets | Secret Manager | No app secrets injected — the first admin is created in the UI |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL (`ingress_settings = "all"`); optional external HTTPS LB + custom domain |
@@ -43,12 +43,14 @@ wires together a deliberately small set of Google Cloud services:
 - **No database, no Redis.** Beszel is self-contained — `database_type = "NONE"`,
   `enable_cloudsql_volume = false`, and `enable_redis = false`. All state is the
   embedded SQLite database under `/beszel_data`.
-- **Persistence is a GCS FUSE bucket.** The Cloud Storage data bucket is mounted at
+- **Persistence is NFS, not GCS FUSE.** `enable_nfs = true` mounts the NFS share at
   `/beszel_data`, so the SQLite database and historical metrics survive revision
-  replacement and scale events. Deleting the bucket destroys all monitoring history.
+  replacement and scale events. GCS FUSE cannot host Beszel's WAL-mode SQLite
+  databases (it lacks the locking SQLite needs), so the GCS data volume is turned off
+  whenever NFS is mounted at `/beszel_data`. Keep `enable_nfs = true`.
 - **Single instance is deliberate.** `min_instance_count = max_instance_count = 1`.
   Beszel is a single-writer app (one SQLite file); running more than one instance
-  against the same FUSE-mounted database risks lock contention and corruption. Do
+  against the same database risks lock contention and corruption. Do
   **not** raise `max_instance_count`.
 - **`min_instance_count = 1` (no scale-to-zero).** The hub is kept warm so the SQLite
   database stays open and agents can report continuously; this is a monitoring
@@ -90,23 +92,24 @@ instance rather than autoscaling.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution
 environment, and traffic splitting.
 
-### B. Cloud Storage — the `/beszel_data` volume
+### B. NFS — the `/beszel_data` volume
 
-A single Cloud Storage bucket holds Beszel's entire state (the SQLite database,
-uploaded config, and historical metrics). The foundation grants the workload
-service account access and mounts the bucket as a **GCS FUSE** volume at
-`/beszel_data` (requires the `gen2` execution environment, which is the default).
+The shared NFS volume (Cloud Filestore or the Services_GCP NFS server) holds
+Beszel's entire state (the SQLite database, config, and historical metrics). It is
+mounted at `/beszel_data` (requires the `gen2` execution environment, which is the
+default). A Cloud Storage bucket is still created for the deployment, but it is not
+mounted at `/beszel_data` while NFS owns that path — GCS FUSE cannot provide the
+locking SQLite's WAL mode needs.
 
-- **Console:** Cloud Storage → Buckets.
 - **CLI:**
   ```bash
-  gcloud storage buckets list --project "$PROJECT" --filter="name~beszel"
-  gcloud storage ls gs://<data-bucket>/          # bucket name is in the Outputs
+  gcloud run services describe <service-name> --region "$REGION" \
+    --format="yaml(spec.template.spec.volumes)"
   ```
 
-> **Caution:** This bucket **is** the database. Do not delete it or clear its
-> objects — doing so erases all monitoring history and the admin account. See
-> [App_CloudRun](App_CloudRun.md) for GCS FUSE and CMEK options.
+> **Caution:** This volume **is** the database. Do not clear it — doing so erases
+> all monitoring history and the admin account. See [App_CloudRun](App_CloudRun.md)
+> for the NFS options.
 
 ### C. Secret Manager
 
@@ -158,16 +161,16 @@ Beszel watches.)
 - **No init job; schema is self-managed.** Beszel creates and migrates its embedded
   PocketBase/SQLite database automatically on first boot (and on every version
   upgrade). There is no `db-init` job because there is no external database.
-- **State lives in the FUSE bucket.** Everything under `/beszel_data` — the SQLite
-  database, config, and historical metrics — is persisted to the Cloud Storage data
-  bucket. Revisions and restarts reuse the same bucket, so history survives.
+- **State lives on the NFS volume.** Everything under `/beszel_data` — the SQLite
+  database, config, and historical metrics — is persisted to the NFS share.
+  Revisions and restarts reuse the same share, so history survives.
 - **First-run setup is in the UI.** Open the service URL and complete PocketBase's
   first-run superuser (admin) account creation. There is no auto-generated admin
   credential in Secret Manager. After creating the admin, add the systems you want
   to monitor and install the Beszel agent on each (the hub shows the agent install
   command and public key).
-- **Single writer — do not scale out.** With one SQLite file behind a GCS FUSE
-  mount, only one instance may write. `min = max = 1` is enforced by intent; a
+- **Single writer — do not scale out.** With one SQLite file on a shared mount,
+  only one instance may write. `min = max = 1` is enforced by intent; a
   plan-time guard also rejects `min_instance_count > max_instance_count`.
 - **Health path.** Startup and liveness probes target `/api/health`, which returns
   `200` once the hub is ready. Inspect the running revision and its env/mounts:
@@ -204,7 +207,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `min_instance_count` | `1` | Kept at 1 — one SQLite writer, no scale-to-zero. |
 | `max_instance_count` | `1` | **Do not increase.** More than one instance corrupts the shared SQLite database. |
 | `container_port` | `8090` | Beszel's hub listens on 8090. |
-| `execution_environment` | `gen2` | Required for the GCS FUSE `/beszel_data` mount. |
+| `execution_environment` | `gen2` | Required for the NFS `/beszel_data` mount. |
 | `enable_image_mirroring` | `true` | Mirror the Beszel image into Artifact Registry. |
 
 ### Group 5 — Access & Ingress Control
@@ -218,8 +221,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS is off; Beszel persists to the GCS FUSE data bucket, not NFS. |
-| `gcs_volumes` | `[]` | Extra GCS Fuse mounts beyond the `/beszel_data` data bucket (requires gen2). |
+| `enable_nfs` | `true` | Keep on: NFS holds `/beszel_data` (the SQLite database). GCS FUSE cannot host it. |
+| `gcs_volumes` | `[]` | Extra GCS Fuse mounts (requires gen2). Do not mount one at `/beszel_data`. |
 | `create_cloud_storage` | `true` | Provision the declared storage bucket(s). |
 
 ### Group — Database Backend
@@ -259,7 +262,7 @@ running resources.
 | `service_location` | Region the service runs in. |
 | `stage_services` | Stage-specific service URLs (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | External HTTPS load balancer IP / URL (when enabled). |
-| `storage_buckets` | Created Cloud Storage buckets (the `/beszel_data` data bucket). |
+| `storage_buckets` | Created Cloud Storage buckets. |
 | `network_name` / `network_exists` / `regions` | VPC network, presence, regions. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Monitoring status, channels, uptime checks. |
@@ -282,10 +285,10 @@ running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| Storage data bucket | Never delete or clear | Critical | The bucket **is** the SQLite database — deleting it erases all monitoring history and the admin account. |
-| `max_instance_count` | `1` | Critical | Running >1 instance against the shared FUSE-mounted SQLite database causes lock contention and database corruption. |
+| NFS share at `/beszel_data` | Never clear; keep `enable_nfs = true` | Critical | The share **is** the SQLite database — clearing it erases all monitoring history and the admin account. |
+| `max_instance_count` | `1` | Critical | Running >1 instance against the shared SQLite database causes lock contention and database corruption. |
 | `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | High | Beszel has no external DB; enabling Cloud SQL provisions an unused instance and misconfigures startup. |
-| `execution_environment` | `gen2` | High | `gen1` cannot mount the GCS FUSE `/beszel_data` volume, so state is not persisted. |
+| `execution_environment` | `gen2` | High | `gen1` cannot mount the NFS `/beszel_data` volume, so state is not persisted. |
 | `ingress_settings` | `all` | High | `internal` blocks agents outside the VPC from reporting to the hub. |
 | `enable_iap` | only for the UI, never with off-Google agents | High | IAP blocks all unauthenticated requests, including agent metric reporting. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero (`0`) drops the warm SQLite writer and interrupts continuous agent reporting; also blocked by the min/max guard when set above `max`. |

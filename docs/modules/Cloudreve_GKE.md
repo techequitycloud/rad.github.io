@@ -108,7 +108,12 @@ and uploaded files all live under `/cloudreve`, the container's working
 directory. `stateful_pvc_enabled = true` provisions a per-pod block PVC
 (`stateful_pvc_storage_class = standard-rwo` by default, an SSD-backed
 Balanced PD) mounted at that path — a GCS FUSE mount here would break
-SQLite's file-locking semantics, so the block device is mandatory.
+SQLite's file-locking semantics, so the block device is mandatory. Uploads and
+avatars are kept in `/cloudreve/data/` rather than the image's own
+`/cloudreve/uploads` and `/cloudreve/avatar`: the image declares those two as
+VOLUMEs, which GKE backs with ephemeral node storage on top of the PVC, so files
+there would vanish on pod replacement. The entrypoint links them into place and
+migrates anything left at the old location.
 
 - **Console:** Kubernetes Engine → Storage → filter for the Cloudreve PVC;
   Compute Engine → Disks shows the underlying Persistent Disk.

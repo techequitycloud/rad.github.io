@@ -153,14 +153,14 @@ export REGION="us-central1"           # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on
    the deployment details page — the module owns the workload spec, so scaling is
    a configuration change, not a manual `kubectl scale` (a manual edit would be
-   reverted on the next apply). Coder defaults to `min_instance_count = 1`,
-   `max_instance_count = 5`: the stateless control plane can safely scale
-   horizontally against the shared Cloud SQL database. `session_affinity =
+   reverted on the next apply). Coder defaults to `min_instance_count = 1` and
+   `max_instance_count = 1`, and the maximum must stay at 1: running more than one
+   replica is Coder's high-availability mode, a premium-licence feature this
+   deployment does not have. Scale vertically (`cpu_limit` / `memory_limit`)
+   instead. `session_affinity =
    ClientIP` is set by default so a browser's WebSocket-heavy terminal/IDE
    session stays pinned to the same pod — an in-flight session does not migrate
-   between pods if one is drained mid-session. Watch Cloud SQL `max_connections`
-   if you raise `max_instance_count` significantly, since each replica opens its
-   own connection pool.
+   between pods if one is drained mid-session.
 
 3. **Update the application version** by changing the version input in the RAD
    platform and applying it via **Update**; a new image builds and a rolling

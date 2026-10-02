@@ -382,7 +382,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{ name_suffix = "storage" }]` | The auto-provisioned bucket plus any additional buckets. |
 | `enable_nfs` | `true` | On by default for shared media/uploads, and doubles as the default Redis host source. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/var/www/html/storage/app/public` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

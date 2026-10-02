@@ -320,7 +320,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the GCS data bucket. |
 | `enable_nfs` | `true` | Persistent NFS for the data directory (signing key + media). |
-| `nfs_mount_path` | `/opt/synapse/storage` | Mount path inside the container. |
+| `nfs_mount_path` | `/data` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

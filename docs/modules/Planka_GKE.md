@@ -33,7 +33,7 @@ set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Node.js pod, 2 vCPU / 4 GiB by default |
 | Database | Cloud SQL for PostgreSQL 15 | Planka's Knex query builder supports no other engine |
-| Object storage | Cloud Storage | A `storage` bucket is created for attachments, but not auto-mounted |
+| Object storage | Cloud Storage | A `storage` bucket is created and mounted at `/app/data` for attachments, avatars and backgrounds |
 | Cache & queue | none | Planka has no Redis or queue dependency — real-time updates ride Socket.io in-process |
 | Secrets | Secret Manager | `SECRET_KEY` and `DEFAULT_ADMIN_PASSWORD` — both real, functional secrets — plus the database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, reserved static IP, optional custom domain |
@@ -68,9 +68,10 @@ set of Google Cloud services:
   `GKE_SERVICE_URL`; without a reserved static IP, `BASE_URL` can fall back
   to unreachable internal `*.svc.cluster.local` DNS, breaking attachment
   links and email notifications.
-- **Attachments are not persisted by default.** A GCS bucket is created but
-  not auto-mounted — add a `gcs_volumes` entry if uploaded
-  attachments/avatars/backgrounds need to survive a pod restart.
+- **Attachments persist by default.** The module mounts the `storage` GCS
+  bucket at Planka's `/app/data` path, which holds every upload type. If you
+  enable a block PVC instead (`stateful_pvc_enabled = true`), the bucket mount
+  is dropped so the two never collide.
 - **No Redis, no NFS.** `enable_redis` and `enable_nfs` both default to
   `false` — Planka needs neither a cache/queue backend nor POSIX filesystem
   sharing.
@@ -204,8 +205,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `storage_buckets` | one `storage` bucket | Created but not auto-mounted. |
-| `gcs_volumes` | `[]` | Add an entry mounted at `/app/data` for persistent attachment storage. |
+| `storage_buckets` | one `storage` bucket | Created and auto-mounted at `/app/data` (unless a block PVC is enabled). |
+| `gcs_volumes` | `[]` | Not needed for uploads — the module already mounts its bucket at `/app/data`. |
 
 ### Group 16 — Database Configuration
 
@@ -266,7 +267,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | `reserve_static_ip` | `true` (already the module default) | High | `false` can leave `BASE_URL` pointed at unreachable internal `*.svc.cluster.local` DNS, breaking attachment links and email notifications. |
 | `DEFAULT_ADMIN_PASSWORD` (generated secret) | Log in and change it immediately after first deploy | **Critical** | Planka does not force a password reset — anyone who obtains the seeded password can log in as admin indefinitely until it's changed. |
 | `DATABASE_URL` / SSL config | Never hand-edit — controlled by the cloud entrypoint via `PGSSLMODE`/`KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE` env vars, NOT a `?sslmode=` query param | **Critical** | Planka has two independent DB connection paths with different SSL mechanisms, confirmed by tracing the actual dependency chain: (1) the migration CLI (`server/db/knexfile.js`) reads `KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE`; (2) the running server's Sails ORM (`sails-postgresql` → `machinepack-postgresql`) parses `DATABASE_URL` with Node's legacy `url.parse()`, which silently **drops every query parameter** including `?sslmode=` — so a URL-embedded sslmode does nothing for the runtime path. With no explicit `ssl` config, raw `pg` falls back to the `PGSSLMODE` *environment variable*, where `require` means "encrypt AND verify" (not "encrypt only" like classic libpq) — only `PGSSLMODE=no-verify` skips certificate verification. Cloud SQL's self-signed cert isn't in Node's CA bundle, so anything but `no-verify` fails at boot with `UNABLE_TO_VERIFY_LEAF_SIGNATURE` and the Sails `orm` hook never loads. The GKE loopback connection (Cloud SQL Auth Proxy sidecar) needs neither var set — the proxy already terminates TLS. |
-| `gcs_volumes` for attachments | Add explicitly if needed | Medium | Without it, uploaded attachments live on the pod's ephemeral filesystem and do not survive a restart. |
+| `gcs_volumes` at `/app/data` | Leave empty | Medium | The module already mounts its `storage` bucket at `/app/data`; a second mount at the same path conflicts. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 
 ---

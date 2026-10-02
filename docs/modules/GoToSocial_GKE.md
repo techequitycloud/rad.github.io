@@ -322,7 +322,7 @@ Standard `App_GKE` behaviour — see [App_GKE](App_GKE.md).
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Provisions Filestore. **Not used by GoToSocial** — media storage is via the native S3 client, not a mount. |
+| `enable_nfs` | `false` | Provisions Filestore. **Not used by GoToSocial** — media storage is via the native S3 client, not a mount. |
 
 ### Group 14 — Cloud Storage
 
@@ -350,7 +350,7 @@ Standard `App_GKE` behaviour — see [App_GKE](App_GKE.md).
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisions a Gateway by default. |
+| `enable_custom_domain` | `true` | Provisions a Gateway by default. GoToSocial is told HTTPS is in use (`GTS_PROTOCOL=https`, `Secure` cookies) only when `application_domains` is also set; on a bare IP it runs as `http`. |
 | `application_domains` | `[]` | If empty, a `nip.io`-style hostname based on the reserved static IP is used. |
 | `reserve_static_ip` | `true` | **Keep `true`** — see §2E for the internal-DNS race this avoids. |
 
@@ -409,7 +409,7 @@ to locate and explore the running resources.
 | `reserve_static_ip` | `true` (default) | Medium | Without it, `GKE_SERVICE_URL` can fall back to an unreachable internal `*.svc.cluster.local` hostname before the ephemeral LoadBalancer IP is known — a documented fleet-wide race. |
 | Manual `curl`/health checks | Always pass `-A "<agent>"` | Medium | Bare `curl` (and most default HTTP clients/monitors) get `418 I'm a teapot` from GoToSocial's anti-scraper User-Agent gate, even on "unauthenticated" endpoints. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are treated as bytes and block all pod scheduling in the namespace. |
-| `enable_nfs` | `true` (default) or `false` if not needed | Low | Filestore is billed whether or not the app writes to it; GoToSocial does not use the NFS mount at all in its default configuration. |
+| `enable_nfs` | `false` (the default) | Low | GoToSocial does not use the NFS mount in its default configuration, and Filestore is billed whether or not the app writes to it. |
 | `enable_redis` | `false` (default) | Low | GoToSocial has no Redis dependency; leaving this `true` has no functional effect. |
 
 ---

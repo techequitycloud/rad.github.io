@@ -31,7 +31,7 @@ wires together a deliberately small set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Node.js service, 1 vCPU / 1 GiB by default, serverless autoscaling — but see scaling notes below |
 | Database | None (embedded SQLite) | Trilium's entire document store is a single SQLite file, `document.db`, on the persistent volume |
-| Object storage | Cloud Storage | A dedicated data bucket, mounted via GCS FUSE at `/home/node/trilium-data` |
+| Data directory | Cloud Filestore (NFS) | `/home/node/trilium-data` is on the shared NFS volume by default; a GCS FUSE bucket is mounted there only if NFS is turned off |
 | Secrets | Secret Manager | None generated — Trilium has no env-var-driven credential |
 | Ingress | Cloud Run URL | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
 
@@ -50,10 +50,13 @@ wires together a deliberately small set of Google Cloud services:
   unauthenticated `200 {"status":"ok"}` — confirmed live via local container testing.
 - **The data directory is everything.** `/home/node/trilium-data` holds the SQLite
   database, all attachments, revision history, and settings. Losing this volume
-  loses everything; it is persisted via a GCS FUSE-mounted bucket by default.
-- **`mount_options` set `uid=1000,gid=1000`.** Trilium's container runs as the
-  `node` user (confirmed via `docker run ... id node`); without matching mount
-  options, GCS FUSE mounts the directory root-owned and the app fails to boot.
+  loses everything. It is on the NFS volume by default (`enable_nfs = true`,
+  `nfs_mount_path = /home/node/trilium-data`). Keep it there: Trilium runs SQLite in WAL
+  mode, which needs shared-memory locking that GCS FUSE cannot provide, so on GCS FUSE
+  recent writes are silently lost when the container is replaced.
+- **`mount_options` set `uid=1000,gid=1000`** on the GCS FUSE fallback. Trilium's
+  container runs as the `node` user; without matching mount options, GCS FUSE mounts
+  the directory root-owned and the app fails to boot.
 
 ---
 
@@ -79,11 +82,14 @@ revision health and cold-start behaviour.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution
 environment, and traffic splitting.
 
-### B. Cloud Storage — the Trilium data directory
+### B. The Trilium data directory
 
 The entire application state (SQLite `document.db`, attachments, revision history,
-settings) lives in a dedicated Cloud Storage bucket, mounted via GCS FUSE at
-`/home/node/trilium-data`.
+settings) lives in `/home/node/trilium-data`, which is the NFS mount path by default.
+A dedicated Cloud Storage bucket is also provisioned; it is mounted at that path via
+GCS FUSE only when `enable_nfs = false` or `nfs_mount_path` points elsewhere, so the
+directory always has exactly one owner. Avoid that fallback — GCS FUSE cannot hold a
+WAL-mode SQLite database safely.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -183,7 +189,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `1Gi` | Memory per instance; Trilium is lightweight, raise only for very large note collections. |
 | `min_instance_count` / `max_instance_count` | `1` / `1` | **Keep both at 1** — no multi-writer support on the embedded SQLite database. |
 | `container_port` | `8080` | Trilium's default HTTP port. |
-| `execution_environment` | `gen2` | Gen2 required for GCS Fuse mounts. |
+| `execution_environment` | `gen2` | Gen2 required for NFS and GCS Fuse mounts. |
 | `enable_image_mirroring` | `true` | Mirror the Trilium image into Artifact Registry. |
 
 ### Group 5 — Access & Ingress Control
@@ -240,7 +246,8 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `max_instance_count` | `1` | Critical | Raising it risks concurrent writers corrupting the embedded SQLite database — there is no query-layer protection against this. |
-| Data bucket / `gcs_volumes` mount_options | `uid=1000,gid=1000` | Critical | Wrong uid/gid mounts the data directory root-owned; the non-root Trilium process fails to boot with a permission error. |
+| `enable_nfs` / `nfs_mount_path` | `true` / `/home/node/trilium-data` (the defaults) | Critical | Turning NFS off or moving the mount puts `document.db` on GCS FUSE, where WAL writes are silently lost on container replacement. |
+| Data bucket / `gcs_volumes` mount_options (GCS FUSE fallback only) | `uid=1000,gid=1000` | Critical | Wrong uid/gid mounts the data directory root-owned; the non-root Trilium process fails to boot with a permission error. |
 | First-visit "Set Password" step | Complete immediately | Critical | An un-set-password Trilium instance left on a public URL is reachable by anyone until the password is set. |
 | `startup_probe` / `liveness_probe` path | `/api/health-check` | High | Pointing probes at `/` gets a 302 redirect, which most HTTP health checks treat as a failure, blocking the revision from ever becoming Ready. |
 | `ingress_settings` | `internal` for private use | Medium | `all` (default) makes the (initially unauthenticated, pre-Set-Password) instance reachable from the public internet. |

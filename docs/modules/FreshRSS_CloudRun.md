@@ -29,7 +29,7 @@ together a focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | PHP/Apache service on port 80, 1 vCPU / 2 GiB by default, serverless autoscaling; scale-to-zero enabled |
+| Compute | Cloud Run v2 | PHP/Apache service on port 80, 1 vCPU / 2 GiB by default, one instance kept warm (`min_instance_count = 1`) |
 | Database | Cloud SQL for PostgreSQL 15 | Required — the entrypoint installs with `--db-type pgsql` |
 | Persistent storage | NFS (Filestore / self-managed) | Mounted at `/var/www/FreshRSS/data`; holds config, per-user state, feed cache. No GCS bucket |
 | Cache | Redis (optional) | Off by default; FreshRSS does not require it |
@@ -48,11 +48,10 @@ together a focused set of Google Cloud services:
 - **`FRESHRSS_ADMIN_PASSWORD` is generated automatically** and stored in Secret
   Manager. It seeds the default `admin` account (and its API password for mobile
   clients) on first install.
-- **Scale-to-zero is enabled by default** (`min_instance_count = 0`,
-  `max_instance_count = 1`). Cold starts add a few seconds of latency to the first
-  request after idle.
-- **Feed refresh runs as an in-container cron** (`CRON_MIN = */15`). While the
-  service is scaled to zero, that cron does not fire — see the pitfalls table.
+- **One instance is kept warm by default** (`min_instance_count = 1`,
+  `max_instance_count = 1`). It must stay at least 1: feed refresh runs as an
+  in-container cron (`CRON_MIN = */15`) that exists only while an instance does —
+  see the pitfalls table.
 - **`max_instance_count = 1`.** A single instance owns the in-container refresh
   cron and the file-based session/cache state; running more than one without care
   duplicates feed refreshes.
@@ -193,15 +192,18 @@ Monitoring, with optional uptime checks and alert policies.
   idempotent — it is skipped once `data/config.php` exists on the NFS volume.
 - **Feed refresh cron.** The upstream image starts an in-container cron
   (`CRON_MIN = */15`) that actualizes subscribed feeds every 15 minutes. This runs
-  only while an instance is alive — under scale-to-zero (`min_instance_count = 0`)
-  refreshes pause until the next request wakes the service.
+  only while an instance is alive — which is why `min_instance_count` defaults to
+  `1`. At `0`, Cloud Run reaps the idle instance and refreshes stop until the next
+  request wakes the service.
 - **Admin credential.** The default login is `admin` with the generated
   `FRESHRSS_ADMIN_PASSWORD`; the same value is set as the API password used by
   Google Reader / Fever API mobile clients. Change it in the FreshRSS UI after first
   login — rotating the Secret Manager value alone will not re-set an
   already-installed account.
 - **Health path.** The startup probe is a TCP check on port 80; the liveness probe
-  is an HTTP GET on `/` (200). FreshRSS also serves an unauthenticated `/status`
+  is an HTTP GET on `/i/`, which returns a literal `200` and renders from the
+  database (`/` answers with a 302 redirect, which a load-balancer health check
+  rejects). FreshRSS also serves an unauthenticated `/status`
   JSON endpoint suitable for uptime checks. Allow a generous first-boot window while
   the installer creates the schema.
 - **Base URL.** `BASE_URL` is set to the predicted Cloud Run URL at plan time and
@@ -241,7 +243,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | `container_image_source` | `custom` | FreshRSS ships a thin custom build; use `prebuilt` only with an external `container_image`. |
 | `cpu_limit` | `1000m` | CPU per instance (1 vCPU). |
 | `memory_limit` | `2Gi` | Memory per instance; keep ≥ 512Mi. |
-| `min_instance_count` | `0` | `0` enables scale-to-zero; set `1` to keep the feed-refresh cron running. |
+| `min_instance_count` | `1` | Keep `1` so the feed-refresh cron keeps running; `0` enables scale-to-zero and stops refreshes while idle. |
 | `max_instance_count` | `1` | Keep at 1 — a single instance owns the refresh cron and file-based state. |
 | `container_port` | `80` | FreshRSS/Apache listens on port 80. |
 | `execution_environment` | `gen2` | Gen2 required for NFS mounts. |
@@ -287,7 +289,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP `/` 30s delay, threshold 20 | Startup probe; the high threshold allows first-boot install time. |
-| `liveness_probe` | HTTP `/` 300s delay | Liveness probe; `/status` is an alternative unauthenticated JSON endpoint. |
+| `liveness_probe` | HTTP `/i/` 300s delay | Liveness probe; `/status` is an alternative unauthenticated JSON endpoint. |
 | `uptime_check_config` | disabled, path `/` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Metric alert policies. |
 
@@ -350,7 +352,7 @@ running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `container_port` | `80` | High | FreshRSS/Apache listens on 80; a wrong port fails the startup probe and the service never becomes ready. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy socket avoids the SSL requirement of direct private-IP TCP to Cloud SQL Postgres; disabling it can break connectivity. |
-| `min_instance_count` | `1` for reliable refresh | High | With `0` (scale-to-zero) the in-container feed-refresh cron pauses while idle; feeds only update when a request wakes the service. |
+| `min_instance_count` | `1` (the default) for reliable refresh | High | With `0` (scale-to-zero) the in-container feed-refresh cron pauses while idle; feeds only update when a request wakes the service. |
 | `max_instance_count` | `1` | High | Running more than one instance duplicates the in-container refresh cron and splits file-based session/cache state. |
 | `enable_iap` | only for private deploys | High | IAP blocks all unauthenticated requests, including mobile clients using the Google Reader / Fever API. |
 | `FRESHRSS_ADMIN_PASSWORD` (auto-generated) | Change in the UI after first login | Medium | Rotating the secret alone does not re-set an already-installed account; the first password remains valid until changed in-app. |

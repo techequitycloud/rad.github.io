@@ -208,7 +208,9 @@ Monitoring. Optional uptime checks and alert policies are available.
   `RollingUpdate`) so two pods never write the shared data dir simultaneously — a
   rolling update on this stateful app would deadlock on the file/DB locks.
 - **Health path.** The startup probe is a TCP check on port 80; the liveness probe
-  is an HTTP GET on `/` (200). FreshRSS also serves an unauthenticated `/status`
+  is an HTTP GET on `/i/`, which returns a literal `200` and renders from the
+  database (`/` answers with a 302 redirect, which a load-balancer health check
+  rejects). FreshRSS also serves an unauthenticated `/status`
   JSON endpoint suitable for uptime checks. Allow a generous first-boot window while
   the installer creates the schema.
 - **Set the external URL after the IP is known.** Confirm the LoadBalancer IP /
@@ -277,7 +279,7 @@ All other inputs follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP `/` 30s delay, threshold 20 | Startup probe; the high threshold allows first-boot install time. |
-| `liveness_probe` | HTTP `/` 300s delay | Liveness probe; `/status` is an alternative unauthenticated JSON endpoint. |
+| `liveness_probe` | HTTP `/i/` 300s delay | Liveness probe; `/status` is an alternative unauthenticated JSON endpoint. |
 | `uptime_check_config` | `{enabled=false, path="/"}` | Cloud Monitoring uptime check; disabled by default. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 

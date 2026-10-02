@@ -57,9 +57,10 @@ deployment wires together a focused set of Google Cloud services:
   implications.
 - **Public ingress by default.** `ingress_settings = "all"` exposes the `run.app` URL.
   Enabling IAP places Google sign-in in front of the whole service, including its API.
-- **No NFS, and the default GCS bucket is unmounted.** All application state lives in
-  PostgreSQL; NFS is off by default, and the auto-provisioned `data` bucket is not
-  mounted into the container (`gcs_volumes = []`) — it exists for you to wire up only
+- **NFS holds uploads, and the default GCS bucket is unmounted.** Flows, users and
+  credentials live in PostgreSQL; NFS is on by default (`enable_nfs = true`, mounted at
+  `/data` as LangFlow's config directory, where uploaded files are kept) and must stay
+  on, while the auto-provisioned `data` bucket is not mounted into the container (`gcs_volumes = []`) — it exists for you to wire up only
   if a custom component needs object storage.
 - **`LANGFLOW_DATABASE_URL` is composed at runtime** by the container entrypoint from
   the injected `DB_*` variables (TCP DSN, `sslmode=require` on Cloud Run) — you do not
@@ -319,8 +320,8 @@ All other inputs follow standard App_CloudRun behaviour.
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | One `data` bucket is declared by default; extend the list for custom components. |
-| `enable_nfs` | `false` | NFS is off by default; LangFlow keeps state in PostgreSQL. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container (when NFS is enabled). |
+| `enable_nfs` | `true` | Must stay `true` on Cloud Run: the mount is LangFlow's config directory, where uploaded files live. Flows, users and credentials are in Cloud SQL either way. |
+| `nfs_mount_path` | `/data` | Mount path inside the container (when NFS is enabled). |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

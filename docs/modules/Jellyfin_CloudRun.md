@@ -31,7 +31,7 @@ together a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | .NET media server, 1 vCPU / 1 GiB by default, pinned to a single warm instance |
-| Persistence | Cloud Storage + GCS FUSE | The `/config` directory (SQLite databases, metadata, plugins) is backed by a GCS bucket |
+| Persistence | Cloud Filestore (NFS) | The `/config` directory (SQLite databases, metadata, plugins) is on the NFS share by default; GCS FUSE only if NFS is turned off |
 | Database | Internal SQLite (embedded) | No Cloud SQL — Jellyfin keeps all state in SQLite files under `/config` |
 | Secrets | Secret Manager | Optional auto-generated API key; no mandatory cryptographic secrets |
 | Ingress | Cloud Run URL / Cloud Load Balancing | `internal` by default; optional external HTTPS load balancer + custom domain |
@@ -44,8 +44,9 @@ together a focused set of Google Cloud services:
   logs — under a single `/config` directory. No Cloud SQL instance, no `db-init`
   job, and no Redis are provisioned (`database_type = NONE`).
 - **`/config` must persist across revisions.** On Cloud Run the `/config` path is
-  backed by a Cloud Storage bucket mounted via **GCS FUSE**
-  (`enable_gcs_storage_volume = true`). Without a persistent `/config`, every new
+  backed by the shared **NFS** volume (`enable_nfs = true`, `nfs_mount_path = /config`).
+  Keep NFS on: with it off, `/config` falls back to a GCS FUSE bucket, which cannot
+  host SQLite (no POSIX locking). Without a persistent `/config`, every new
   revision starts with an empty library and re-runs the first-run wizard.
 - **The container listens on port 8096.** Cloud Run routes HTTP traffic to Jellyfin's
   default web/API port. The web UI and first-run setup wizard are served at `/web`
@@ -57,7 +58,7 @@ together a focused set of Google Cloud services:
   server warm (avoiding cold-start latency mid-stream) and `max_instance_count = 1`
   keeps a single shared SQLite library on a single volume. **Do not run multiple
   replicas** — concurrent writers against one SQLite file corrupt the library.
-- **Cloud Run is best for light/demo use.** GCS FUSE latency plus Cloud Run's
+- **Cloud Run is best for light/demo use.** Network-storage latency plus Cloud Run's
   stateless, request-timeout execution model make this variant well-suited to
   evaluation and light personal use — but **not** heavy transcoding or many
   concurrent streams. For a real media library, deploy [Jellyfin_GKE](Jellyfin_GKE.md)
@@ -67,9 +68,9 @@ together a focused set of Google Cloud services:
   created in-app under **Dashboard → API Keys**.
 
 > **Cloud Run vs GKE — pick the right home for your library.**
-> **Cloud Run (this module)** mounts `/config` from a GCS bucket over FUSE. It is
+> **Cloud Run (this module)** mounts `/config` from the shared NFS volume. It is
 > simple, scales to a single warm instance, and is ideal for a demo or a small
-> personal library with occasional direct-play streaming. FUSE I/O latency and the
+> personal library with occasional direct-play streaming. Network-storage latency and the
 > per-request timeout model make it a poor fit for live transcoding or busy
 > multi-user streaming. **[Jellyfin_GKE](Jellyfin_GKE.md)** runs as a StatefulSet
 > with a real **block PVC** at `/config`, giving correct filesystem semantics for
@@ -112,8 +113,8 @@ and no initialization Job to create a schema; Jellyfin creates and migrates its 
 SQLite databases on first start.
 
 Because everything important is a file under `/config`, persisting that directory
-**is** persisting the whole server. On Cloud Run it is backed by a Cloud Storage
-bucket (see below).
+**is** persisting the whole server. On Cloud Run it is backed by the NFS share
+(`enable_nfs = true`, the default).
 
 - **Inspect the mounted config on the running revision:**
   ```bash
@@ -124,8 +125,9 @@ bucket (see below).
 ### C. Cloud Storage — the `/config` bucket
 
 A dedicated **Cloud Storage** bucket (name suffix `storage`) is provisioned
-automatically and mounted at `/config` via **GCS FUSE**
-(`enable_gcs_storage_volume = true`, gen2 execution environment). The bucket is
+automatically. It is mounted at `/config` via **GCS FUSE** only when `enable_nfs = false`
+— with NFS on (the default) the NFS share holds `/config` instead, because two volumes
+cannot share a mount path and GCS FUSE cannot host SQLite. The bucket is
 `STANDARD` class, `force_destroy = true`, versioning off, with
 `public_access_prevention = enforced`. Additional buckets can be declared via
 `storage_buckets`.
@@ -221,9 +223,9 @@ with optional uptime checks and alert policies.
   creating the administrator account and adding libraries. Until it is completed the
   server has no users and no content.
 - **`/config` is the single source of truth — persist it.** All library state is on
-  the GCS-backed `/config` volume. Deleting or repointing that bucket wipes the
-  library, plugins, and users. Because GCS FUSE is not a true POSIX filesystem,
-  keep Cloud Run to light/demo use and move a real library to the GKE block-PVC
+  the NFS-backed `/config` volume. Turning NFS off moves `/config` onto GCS FUSE,
+  which cannot host SQLite; deleting the share wipes the library, plugins, and users.
+  Keep Cloud Run to light/demo use and move a real library to the GKE block-PVC
   variant.
 - **Custom image is a thin wrapper.** The Dockerfile is
   `ARG JELLYFIN_VERSION=10.10.3` / `FROM jellyfin/jellyfin:${JELLYFIN_VERSION}`, so
@@ -352,9 +354,9 @@ retained for foundation compatibility. Also hosts `nfs_instance_name` /
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision the Jellyfin `/config` bucket (created automatically) and any extras. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `storage` bucket. |
-| `enable_nfs` | `false` | Provision Cloud Filestore (NFS); enable for large shared media libraries. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
-| `gcs_volumes` | `[]` | Additional GCS FUSE volume mounts (the `/config` bucket is added automatically). |
+| `enable_nfs` | `true` | Mounts the shared NFS volume at `/config`, which holds Jellyfin's SQLite databases. Keep it on — with it off, `/config` falls back to GCS FUSE, which cannot host SQLite. |
+| `nfs_mount_path` | `/config` | Mount path inside the container. |
+| `gcs_volumes` | `[]` | Additional GCS FUSE volume mounts (the `/config` bucket is added automatically when `enable_nfs = false`). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
 ### Group 12 — Database Backend
@@ -429,14 +431,14 @@ running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `/config` GCS bucket | Never delete/repoint | Critical | The `/config` bucket holds the SQLite library, users, and metadata; removing it wipes the entire server. |
-| `max_instance_count` | `1` | Critical | Multiple replicas write to one SQLite file over FUSE and corrupt the library. |
+| `enable_nfs` | `true` (the default) | Critical | The NFS share holds `/config` — the SQLite library, users, and metadata. Turning it off moves `/config` onto GCS FUSE, which cannot host SQLite; removing the share wipes the entire server. |
+| `max_instance_count` | `1` | Critical | Multiple replicas write to one SQLite file and corrupt the library. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `execution_environment` | `gen2` | High | Gen1 cannot mount GCS FUSE, so `/config` never persists. |
+| `execution_environment` | `gen2` | High | Gen1 cannot mount NFS or GCS FUSE, so `/config` never persists. |
 | `min_instance_count` | `1` | High | Scale-to-zero cold-starts interrupt in-progress streams and re-load the library. |
 | `memory_limit` | `1Gi` (raise for large libraries) | High | Too little memory OOM-kills the server while scanning or transcoding a large library. |
 | `cpu_limit` | `1000m` (raise for transcoding) | High | Live transcoding on Cloud Run (no GPU) saturates CPU; prefer direct-play. |
-| Heavy transcoding / many streams | Use [Jellyfin_GKE](Jellyfin_GKE.md) | High | GCS FUSE latency and Cloud Run request timeouts make Cloud Run a poor fit for busy streaming. |
+| Heavy transcoding / many streams | Use [Jellyfin_GKE](Jellyfin_GKE.md) | High | Network-storage latency and Cloud Run request timeouts make Cloud Run a poor fit for busy streaming. |
 | `enable_api_key` | Leave `false`; not currently functional | Medium | The generated secret is injected as `QDRANT__SERVICE__API_KEY` (a Qdrant_Common copy-paste leftover) — Jellyfin never reads it, so it only creates an orphaned Secret Manager secret. Create API keys in-app under Dashboard → API Keys instead. |
 | `ingress_settings` | `internal` unless public | Medium | `all` exposes the media server to the internet — pair with IAP or Cloud Armor. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short to recover an older library snapshot. |

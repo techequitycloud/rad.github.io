@@ -283,8 +283,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision the attachments bucket. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional buckets. |
-| `enable_nfs` | `false` | Optional Filestore NFS volume. Not required for Vaultwarden in Cloud Run (data is in Cloud SQL and GCS). |
-| `nfs_mount_path` | `/mnt/nfs` | NFS mount path inside the container. |
+| `enable_nfs` | `true` | Optional Filestore NFS volume. Not required for Vaultwarden in Cloud Run (data is in Cloud SQL and GCS). |
+| `nfs_mount_path` | `/data` | NFS mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

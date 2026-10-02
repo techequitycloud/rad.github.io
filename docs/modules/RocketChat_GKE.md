@@ -263,7 +263,7 @@ specific to or notable for Rocket.Chat are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | **Set `true` (required).** MongoDB's WiredTiger engine needs block storage — `gcsfuse` corrupts it. Auto-selects StatefulSet. |
+| `stateful_pvc_enabled` | `true` | **Set `true` (required).** MongoDB's WiredTiger engine needs block storage — `gcsfuse` corrupts it. Auto-selects StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; size to hold the MongoDB data set. Cannot be decreased. |
 | `stateful_pvc_mount_path` | `/data/db` | **Must equal `MONGO_DBPATH`** so the PVC holds the MongoDB data set. |
 | `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (Balanced PD) or `premium-rwo` (higher IOPS for MongoDB). |

@@ -54,9 +54,9 @@ backend, the deployment wires together only a minimal set of Google Cloud servic
   features are inert for this app — enabling them provisions unused infrastructure.
 - **External LoadBalancer by default** so the whiteboard is browser-reachable; a
   reserved static IP keeps the address stable across redeploys.
-- **Vestigial `homeserver_url` / `homeserver_name` inputs.** Carried over from the
-  Element template and injected as `HOMESERVER_URL` / `HOMESERVER_NAME`; the Excalidraw
-  static SPA ignores them. Leave them at their defaults.
+- **Legacy `homeserver_url` / `homeserver_name` inputs.** Carried over from the
+  Element template and still injected as `HOMESERVER_URL` / `HOMESERVER_NAME`, which the
+  static SPA ignores. They are hidden from the deploy form.
 
 ---
 
@@ -114,8 +114,10 @@ gcloud secrets list --project "$PROJECT" --filter="name~excalidraw"          # (
 gcloud storage buckets list --project "$PROJECT" --filter="name~excalidraw"  # (none)
 ```
 
-Multi-user real-time collaboration (a live shared canvas) requires a separate
-`excalidraw-room` WebSocket server, which this module does **not** deploy.
+Live collaboration works, but through Excalidraw's own hosted room server
+(`oss-collab.excalidraw.com`, end-to-end encrypted), not a service in your project —
+see the defaults above. Hosting collaboration yourself would need a source build of the
+frontend and a separate `excalidraw-room` server, which this module does **not** deploy.
 
 ### D. Networking & ingress
 
@@ -159,9 +161,15 @@ uptime check is a natural health signal for the static frontend.
 - **Pods are interchangeable.** Every replica serves the identical static bundle, so
   requests need no session affinity and scaling out requires no coordination — unlike
   the stateful application modules.
-- **Real-time collaboration is not included.** The live "shareable link" collaboration
-  feature depends on a separate `excalidraw-room` WebSocket service that this module
-  does not deploy. Single-user editing works out of the box.
+- **Some optional features use Excalidraw's own hosted services.** The upstream bundle
+  wires live collaboration (`oss-collab.excalidraw.com` and Firebase), "Export to link"
+  (`json.excalidraw.com`), the AI text-to-diagram and diagram-to-code features
+  (`oss-ai.excalidraw.com`) and the shape-library browser (`libraries.excalidraw.com`)
+  to Excalidraw's servers, not to anything in your project. Nothing is contacted on a
+  plain page load — only when a user invokes the feature — and collaboration is
+  end-to-end encrypted, but that content does leave the project. The URLs are compiled
+  into the frontend at build time, so this module cannot redirect them; self-hosting
+  collaboration would need a source build plus an `excalidraw-room` server.
 - **Health path.** Startup and liveness probes target the root `/`, which nginx answers
   with `200` immediately. Verify from inside the cluster or via the LoadBalancer IP:
   ```bash
@@ -191,7 +199,7 @@ specific to or notable for Excalidraw are listed; every other input is inherited
 |---|---|---|
 | `application_name` | `excalidraw` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Excalidraw image tag. Unlike DokuWiki/EspoCRM, `latest` does **not** resolve to a pinned known-good tag — `Excalidraw_Common`'s `pinned_excalidraw_version` local is itself `"latest"`, so the build always tracks Docker Hub's rolling `excalidraw/excalidraw:latest` tag. Set an explicit tag (e.g. `v1.11.86`) to actually pin a production release. |
-| `homeserver_url` / `homeserver_name` | `""` | **Vestigial** Element carry-over — ignored by the Excalidraw SPA. Leave blank. |
+| `homeserver_url` / `homeserver_name` | `""` | Legacy Element carry-over, hidden from the form — ignored by the Excalidraw SPA. |
 
 All other inputs follow standard App_GKE behaviour.
 
@@ -200,7 +208,7 @@ All other inputs follow standard App_GKE behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_image_source` | `custom` | Keep `custom` — the thin build mirrors the static image into Artifact Registry. |
+| `container_image_source` | `custom` | Keep `custom` — the thin build mirrors the static image into Artifact Registry. With `custom`, `container_image` is ignored; it is read only with `prebuilt`. |
 | `container_port` | `80` | nginx listener port; baked into the image — do not change. |
 | `container_resources` | `cpu_limit=500m`, `memory_limit=512Mi` | A static file server needs little; the request drives Autopilot billing. |
 | `min_instance_count` | `1` | Forced to `1` by the wrapper — GKE has no scale-to-zero; keeps the whiteboard reachable. |

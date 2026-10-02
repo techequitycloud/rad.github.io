@@ -134,8 +134,10 @@ comes up correctly on first boot:
 - **Database connection** — `DB_CONNECTION = "mysql"`, `DB_PORT = "3306"`; the
   Laravel-native `DB_USERNAME` / `DB_PASSWORD` / `DB_DATABASE` and `DB_HOST` are
   injected by the foundation (see §4).
-- **Application URL** — `APP_URL` is set from the predicted service URL so links,
-  assets, and login redirects resolve to the real address.
+- **Application URL** — `APP_URL` is the public service URL so links, assets, and
+  login redirects resolve to the real address: the predicted `run.app` URL on Cloud
+  Run, and on GKE the `$(GKE_SERVICE_URL)` placeholder, which the foundation resolves
+  to the load-balancer address at deploy time (never the in-cluster DNS name).
 - **Redis (optional)** — when Redis is enabled via the platform deployment settings,
   `REDIS_HOST` and `REDIS_PORT` are injected so BookStack can use Redis for cache and
   sessions; otherwise BookStack uses its local drivers.

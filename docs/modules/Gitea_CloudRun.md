@@ -234,7 +234,7 @@ Standard App_CloudRun behaviour — see [App_CloudRun](App_CloudRun.md). Gitea-n
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | **Keep enabled** — repositories, LFS, and attachments live on the NFS share. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path; also becomes `GITEA__server__APP_DATA_PATH`. |
+| `nfs_mount_path` | `/data` | Mount path; also becomes `GITEA__server__APP_DATA_PATH`. |
 | `storage_buckets` | one `data` bucket | Foundation-provisioned GCS bucket. |
 | `application_domains` | `[]` | Custom hostnames for the external LB — keep in sync with `public_domain`. |
 

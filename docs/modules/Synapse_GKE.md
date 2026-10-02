@@ -339,7 +339,7 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Persistent NFS for the data directory (signing key + media). |
-| `nfs_mount_path` | `/opt/synapse/storage` | Mount path inside the container. |
+| `nfs_mount_path` | `/data` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

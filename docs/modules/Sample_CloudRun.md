@@ -235,7 +235,7 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_image_source` | `prebuilt` | `"prebuilt"` deploys an existing image; `"custom"` builds via Cloud Build. |
+| `container_image_source` | `custom` | `"prebuilt"` deploys an existing image; `"custom"` builds via Cloud Build. |
 | `container_image` | `us-docker.pkg.dev/cloudrun/container/hello` | Image URI when `container_image_source = "prebuilt"`. |
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `512Mi` | Memory per instance. |

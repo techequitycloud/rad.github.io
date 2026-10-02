@@ -46,8 +46,9 @@ a focused set of Google Cloud services:
   into the namespace via the Secret Store CSI driver. This Laravel key encrypts
   sensitive fields and **must never be rotated after first boot**.
 - **`STATIC_CRON_TOKEN` is generated automatically.** Firefly does no background
-  scheduling on its own; hit `GET /api/v1/cron/<STATIC_CRON_TOKEN>` daily (a Kubernetes
-  CronJob or Cloud Scheduler) to run recurring transactions, bills, and auto-budgets.
+  scheduling on its own; something must hit `GET /api/v1/cron/<STATIC_CRON_TOKEN>` to run
+  recurring transactions, bills, and auto-budgets. The module ships a built-in
+  `firefly-cron` Kubernetes CronJob that does this daily at 03:00 UTC.
 - **Exposed via an external LoadBalancer** with `session_affinity = ClientIP` so a
   user's session stays on one pod.
 - **Set `APP_URL` to the external host.** The URL is not known at plan time; set
@@ -138,9 +139,9 @@ See [App_GKE](App_GKE.md) for the Secret Store CSI integration and rotation.
 Firefly III runs recurring transactions, bill reminders, and auto-budgets only when a
 caller hits its cron endpoint. There is no in-process scheduler.
 
-- Schedule a daily **Kubernetes CronJob** (or Cloud Scheduler) that runs
-  `curl -s https://<host>/api/v1/cron/<STATIC_CRON_TOKEN>` — define it via the
-  `cron_jobs` input.
+- A built-in **`firefly-cron`** Kubernetes CronJob (`curlimages/curl`, `0 3 * * *`) calls
+  the cron endpoint daily. Any `cron_jobs` entries you define are appended to it rather
+  than replacing it.
 
 ### F. Networking & ingress
 
@@ -192,8 +193,9 @@ Monitoring. Optional uptime checks and alert policies are available.
   Or set `application_domains` / `environment_variables` before deploying.
 - **First run is `/register`.** Create the owner account, then disable further
   registration in **Administration → Settings**.
-- **Cron endpoint drives recurring items.** Schedule a daily
-  `GET <host>/api/v1/cron/<STATIC_CRON_TOKEN>`.
+- **Cron endpoint drives recurring items.** The built-in `firefly-cron` CronJob calls
+  `GET <host>/api/v1/cron/<STATIC_CRON_TOKEN>` daily; check it with
+  `kubectl get cronjobs -n "$NAMESPACE"`.
 - **Health path.** The startup probe is TCP on port 8080. The liveness probe is HTTP
   on Firefly III's unauthenticated `/status` JSON endpoint (HTTP 200, no login).
 
@@ -288,7 +290,7 @@ specific to or notable for Firefly III are listed; every other input is inherite
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job. |
-| `cron_jobs` | `[]` | Define a daily CronJob hit to `/api/v1/cron/<STATIC_CRON_TOKEN>`. |
+| `cron_jobs` | `[]` | Extra CronJobs. The daily `firefly-cron` call to `/api/v1/cron/<STATIC_CRON_TOKEN>` is built in and always added alongside these. |
 | `additional_services` | `[]` | Sidecar or helper services deployed alongside Firefly III. |
 
 ### Group 13 — Filesystem (NFS)
@@ -296,7 +298,7 @@ specific to or notable for Firefly III are listed; every other input is inherite
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Persist attachments and runtime data at `/var/lib/fireflyiii`. |
-| `nfs_mount_path` | `/var/lib/fireflyiii` | Mount path inside the container. |
+| `nfs_mount_path` | `/var/www/html/storage/upload` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -419,7 +421,7 @@ locate and explore the running resources.
 | `PGSQL_SSL_MODE` (auto `prefer`) | Leave as set | High | Forcing `require` against the plaintext Auth Proxy loopback fails ("SSL is not enabled on the server"). |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for loopback connectivity to Cloud SQL. |
 | `APP_URL` | External LoadBalancer / domain URL | High | An unset or wrong URL breaks absolute links, redirects, and OAuth callbacks. |
-| `STATIC_CRON_TOKEN` / cron job | Schedule a daily hit | High | Without a scheduled cron call, recurring transactions, bills, and auto-budgets never fire. |
+| `STATIC_CRON_TOKEN` / cron job | Leave the built-in `firefly-cron` job in place | High | Without a scheduled cron call, recurring transactions, bills, and auto-budgets never fire. |
 | `enable_nfs` | `true` | High | Disabling it puts attachments on ephemeral pod storage — files vanish on pod restart. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, session state can route to different pods and disrupt the UI. |
 | `enable_iap` | enable for private data | High | Firefly III holds financial data; leaving it publicly reachable exposes it. |

@@ -92,6 +92,11 @@ The bundled Flask application (`app.py`) demonstrates all integration patterns:
   visits via Redis if `enable_redis = true` and `REDIS_HOST` is set.
 - **`GET /healthz`** — returns `{"status": "healthy"}` immediately without a database
   query. Used by both startup and liveness probes.
+- **`GET /whoami`** — echoes the request as the container sees it: `remote_addr`,
+  `X-Forwarded-For`, `X-Real-IP`, `X-Forwarded-Proto`, `Forwarded`, and the header
+  *names* (never values) the platform's front end delivers. Unauthenticated and
+  read-only; useful for checking whether an app-level IP allowlist or rate limiter can
+  see the real client address.
 - **`GET /db`** — executes `SELECT version()` and returns the PostgreSQL version string.
   Useful for verifying end-to-end database connectivity after deploy.
 

@@ -276,7 +276,7 @@ defaults.
 |---|---|---|
 | `stateful_pvc_enabled` | `true` | Provisions a per-pod block PVC — required so Netdata's dbengine files get real block-device semantics (GCS FUSE corrupts them). |
 | `stateful_pvc_size` | `20Gi` | Size to hold your collection retention window plus overhead. |
-| `stateful_pvc_mount_path` | `/var/lib/netdata` | Where Netdata persists its metrics DB, alarm log, and config. |
+| `stateful_pvc_mount_path` | `/var/cache/netdata` | Where Netdata persists its metrics DB, alarm log, and config. |
 | `stateful_pvc_storage_class` | `standard-rwo` (SSD) | Balanced-PD, SSD-backed. Draws the `SSD_TOTAL_GB` quota — override to `standard` (HDD) if quota-constrained; Netdata's write pattern does not require SSD IOPS. |
 | `stateful_fs_group` | `3000` | Makes the PVC group-writable; Netdata runs as UID 1000 / GID 2000. |
 

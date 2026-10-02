@@ -140,6 +140,12 @@ and keeps its work minimal:
 - **Hands off to the upstream `/usr/local/bin/entrypoint.sh`**, which generates
   `application/config/config.php` from the environment, provisions/updates the
   schema, and finally execs `apache2-foreground`.
+- **Keeps PHP sessions in MySQL** — just before Apache starts, it enables the
+  database session handler (`DbHttpSession`, which LimeSurvey ships commented out in
+  the generated `config.php`). By default sessions would sit in the container's
+  ephemeral `/tmp`; for a survey without save-and-resume, the session holds the
+  respondent's unsubmitted answers, so a scale-to-zero or pod replacement would
+  otherwise lose them.
 
 ---
 

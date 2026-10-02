@@ -290,7 +290,7 @@ All other inputs follow standard App_CloudRun behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Provisions and mounts a Filestore NFS share at `nfs_mount_path` (`/opt/azimutt/storage`). With the default `FILE_STORAGE_ADAPTER = local`, Azimutt still writes uploads to its own ephemeral working directory rather than this mount. |
+| `enable_nfs` | `false` | Provisions and mounts a Filestore NFS share at `nfs_mount_path` (`/opt/azimutt/storage`). With the default `FILE_STORAGE_ADAPTER = local`, Azimutt still writes uploads to its own ephemeral working directory rather than this mount. |
 | `gcs_volumes` | `[]` | Optional GCS Fuse volume mounts (requires gen2). |
 
 All other inputs follow standard App_CloudRun behaviour.

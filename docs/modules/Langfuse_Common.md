@@ -177,8 +177,8 @@ accommodates the Prisma migrations that run on first boot (and on any version up
 
 A dedicated **Cloud Storage** bucket is declared here and provisioned by the foundation,
 which also grants the workload service account access. Langfuse v2 keeps all trace and
-observability data in PostgreSQL; the bucket (and the optionally-mounted NFS share at
-`/opt/langfuse/storage`) are available for exports and media rather than primary state. List
+observability data in PostgreSQL; the bucket is available for exports and media rather
+than primary state. Langfuse has no filesystem storage mode, so no NFS share is used. List
 it with:
 
 ```bash

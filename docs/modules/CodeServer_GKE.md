@@ -32,7 +32,7 @@ Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Single pod on port **8080**; 1 vCPU / 1 GiB by default |
-| Persistent workspace | Cloud Storage (GCS FUSE) **or** Persistent Disk (block PVC) | Mounted at `/home/coder`; block PVC when `stateful_pvc_enabled = true` |
+| Persistent workspace | Persistent Disk (block PVC) **or** Cloud Storage (GCS FUSE) | Mounted at `/home/coder`; block PVC by default (`stateful_pvc_enabled = true`) |
 | Database | _None_ | `database_type = NONE` — code-server has no SQL database |
 | Cache & queue | _None_ | Redis is explicitly disabled (`enable_redis = false`) |
 | Secrets | Secret Manager | Auto-generated editor `PASSWORD` (when `enable_password = true`), delivered via SecretSync |
@@ -45,10 +45,11 @@ Cloud services:
 - **Service type is `ClusterIP` by default.** The workload is reachable only inside
   the cluster out of the box. Set `service_type = LoadBalancer` (or enable a custom
   domain) for external browser access.
-- **Two workspace storage modes.** By default the workspace is a **GCS FUSE** volume
-  at `/home/coder`. Setting `stateful_pvc_enabled = true` switches to a **StatefulSet
-  block PVC** at `/home/coder` (lower-latency I/O for large workspaces); the wrapper
-  then automatically disables the GCS volume to avoid a double-mount.
+- **Two workspace storage modes.** By default (`stateful_pvc_enabled = true`) the
+  workspace is a **StatefulSet block PVC** at `/home/coder`, and the wrapper disables
+  the GCS volume to avoid a double-mount. Keep it on: installing an extension fails on
+  GCS FUSE, because code-server renames a directory into place and gcsfuse cannot
+  rename directories.
 - **A random editor `PASSWORD` is generated automatically** and stored in Secret
   Manager, delivered into the pod via SecretSync as the `PASSWORD` env var. `PASSWORD`
   is a valid SecretSync `targetKey` (no `__`/consecutive separators).
@@ -70,8 +71,8 @@ identifiers are reported in the deployment [Outputs](#5-outputs).
 
 ### A. GKE Autopilot — the code-server workload
 
-code-server runs as a single pod on Autopilot (a Deployment by default, or a
-StatefulSet when `stateful_pvc_enabled = true` / `workload_type = StatefulSet`).
+code-server runs as a single pod on Autopilot (a StatefulSet by default, because
+`stateful_pvc_enabled = true`; a Deployment when the PVC is turned off).
 Autopilot bills for the CPU/memory the pod actually requests.
 
 - **Console:** Kubernetes Engine → Workloads → select the code-server workload to see
@@ -91,11 +92,11 @@ See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type
 
 The single stateful resource, mounted at `/home/coder`:
 
-- **GCS FUSE (default).** A dedicated **Cloud Storage** bucket is provisioned and
-  mounted via the CSI driver at `/home/coder`.
-- **Block PVC (`stateful_pvc_enabled = true`).** A per-pod **Persistent Disk** PVC
-  (`standard-rwo` by default, `20Gi`) is mounted at `/home/coder` instead, and the GCS
+- **Block PVC (default, `stateful_pvc_enabled = true`).** A per-pod **Persistent Disk**
+  PVC (`standard-rwo` by default, `20Gi`) is mounted at `/home/coder`, and the GCS
   volume is disabled to avoid a double-mount.
+- **GCS FUSE (`stateful_pvc_enabled = false`).** A dedicated **Cloud Storage** bucket is
+  mounted via the CSI driver at `/home/coder` instead. Extension installs fail on it.
 
 ```bash
 # GCS FUSE workspace bucket:
@@ -252,7 +253,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Set `true` to mount a block PVC at `/home/coder` (recommended for large workspaces); auto-selects StatefulSet and disables the GCS volume. |
+| `stateful_pvc_enabled` | `true` | Set `true` to mount a block PVC at `/home/coder` (recommended for large workspaces); auto-selects StatefulSet and disables the GCS volume. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; hold all workspace files plus overhead. |
 | `stateful_pvc_mount_path` | `/home/coder` | Workspace mount path. |
 | `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD default; use `premium-rwo` for higher IOPS. |

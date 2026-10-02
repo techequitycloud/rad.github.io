@@ -34,7 +34,7 @@ Plane's upstream self-host stack is multi-service: `web` / `space` / `admin` (fr
 - **RabbitMQ is mandatory and runs as an in-pod sidecar.** Plane's `start.sh` exits non-zero if `AMQP_URL` is empty. AMQP (TCP 5672) is a non-HTTP protocol that Cloud Run service-to-service networking cannot carry, so the broker shares the pod at `127.0.0.1:5672`. Broker state is **ephemeral** (queue durability is a documented TODO).
 - **Custom build.** A thin wrapper Dockerfile layers a platform entrypoint on the AIO image; the entrypoint composes the `DATABASE_URL` / `REDIS_URL` / `AMQP_URL` connection strings Plane expects from the discrete `DB_*` / `REDIS_*` / `RABBITMQ_*` values the foundation injects.
 - **`application_version` defaults to `stable`.** The upstream image has no `latest` tag — a `latest` input is automatically mapped to `stable` at build time.
-- **Cold-start by default.** `cpu_always_allocated = false` and `min_instance_count = 0` (request-based billing, scale-to-zero). Celery notifications, webhooks, and exports defer until the next request wakes an instance — set `cpu_always_allocated = true` and `min_instance_count = 1` for continuous background processing.
+- **One instance kept alive, CPU on request.** `min_instance_count = 1` by default, because the instance also runs Plane's Celery worker and beat — at `0` it is reaped about 15 minutes after the last request and every periodic task stops. `cpu_always_allocated = false` (request-based billing) still throttles that instance's CPU between requests, so set `cpu_always_allocated = true` for continuous background processing.
 - **Two application secrets are auto-generated** in Secret Manager: Django `SECRET_KEY` (50 chars) and `LIVE_SERVER_SECRET_KEY` (40 chars, real-time collaboration auth).
 - **A `db-init` job runs on every apply** to idempotently create the Plane database and user; schema migrations are run by the AIO image's own `migrator` step on startup.
 - **File uploads are a TODO.** Plane needs an S3-compatible endpoint; the GCS `storage` bucket exists but GCS S3-interop HMAC keys are not yet wired. Issues, projects, and cycles work without it — attachments and avatars do not.
@@ -142,7 +142,7 @@ Container logs (including supervisord output from every bundled sub-service and 
 - **RabbitMQ is mandatory.** Plane's `start.sh` validates `AMQP_URL` and exits if it is empty. The sidecar's broker state is ephemeral — queued Celery tasks are lost on instance recycle (documented hardening TODO).
 - **First-run setup — God Mode.** Open `<web_url>/god-mode/` to create the instance admin and configure the instance (the entrypoint patches the internal Caddyfile with a 308 redirect from `/god-mode` to `/god-mode/`, working around a Remix SPA basename issue). Then sign up at the root URL and create your first workspace.
 - **File uploads fail until S3 storage is wired.** Everything else (issues, projects, cycles, modules) works; attachments and avatars need real S3 credentials (see §2D).
-- **Cold-start trade-off.** Under the default `cpu_always_allocated = false` + `min = 0`, background Celery work (notifications, webhooks, exports) runs only while an instance is awake. For teams relying on timely notifications, flip to `cpu_always_allocated = true` + `min_instance_count = 1`.
+- **Background-work trade-off.** Under the default `cpu_always_allocated = false` + `min = 1`, the instance stays alive but its CPU is throttled between requests, so background Celery work (notifications, webhooks, exports) may lag. For teams relying on timely notifications, set `cpu_always_allocated = true`; never lower `min_instance_count` to `0`.
 - **Health path.** Startup and liveness probes and the uptime check target `/health` on port 80 (the internal Caddy proxy).
 - **Verification:**
   ```bash
@@ -190,8 +190,8 @@ All other inputs follow standard App_CloudRun behaviour.
 |---|---|---|
 | `cpu_limit` | `2000m` | The AIO image runs many processes (api, workers, frontends, Caddy); 2 vCPU minimum. |
 | `memory_limit` | `4Gi` | 4 GiB recommended — raise if the migrator or worker OOMs. |
-| `cpu_always_allocated` | `false` | Cold-start / request-based billing. Celery notifications, webhooks, and exports defer until the next request; set `true` (with `min ≥ 1`) for continuous background processing. |
-| `min_instance_count` | `0` | Scale-to-zero. Set `1` to avoid cold starts and keep background tasks flowing. |
+| `cpu_always_allocated` | `false` | Request-based billing: CPU is throttled between requests, so Celery notifications, webhooks, and exports may lag; set `true` for continuous background processing. |
+| `min_instance_count` | `1` | Keep `1`: the instance hosts Celery worker and beat, so at `0` periodic tasks stop once it is reaped. |
 | `max_instance_count` | `3` | Cost ceiling. |
 | `container_port` | `80` | The internal Caddy proxy port — the only port the AIO container exposes. |
 | `enable_cloudsql_volume` | `true` | Mounts the Cloud SQL socket volume (the entrypoint still connects over private-IP TCP). |
@@ -322,7 +322,7 @@ Plan-time validations catch several of these; the rest surface only at runtime.
 | `enable_redis` | `true` | High | Without Redis, Celery and caching have no backend; workers fail to start. |
 | `enable_nfs` | `true` (when `redis_host` empty) | High | The default Redis lives on the NFS VM; disabling NFS with no external `redis_host` leaves Plane without a Redis endpoint. |
 | `startup_probe` failure window | ≥ 30 × 10 s | High | The first-boot migrator can take minutes; a tight probe kills the instance mid-migration. |
-| `cpu_always_allocated` / `min_instance_count` | `true` / `1` for notification-critical teams | Medium | Under the cold-start default, Celery notifications/webhooks/exports run only while an instance is awake. |
+| `cpu_always_allocated` / `min_instance_count` | `true` / `1` for notification-critical teams | Medium | Under the default (`false` / `1`), the instance's CPU is throttled between requests, so Celery notifications/webhooks/exports may lag. |
 | Object storage (`AWS_*`) | real S3 credentials before relying on uploads | Medium | File uploads (attachments, avatars) fail until HMAC keys or an external S3 endpoint are supplied — the rest of Plane works. |
 | `application_domains` + URL env vars | keep in sync | Medium | A custom domain that doesn't match `WEB_URL`/`CORS_ALLOWED_ORIGINS`/`DOMAIN_NAME` breaks sign-in redirects and email links. |
 | `memory_limit` | `4Gi` | Medium | The AIO image runs many processes; undersizing OOMs the migrator or Celery worker. |

@@ -106,7 +106,9 @@ connection model, backups, and password rotation.
 ### C. Filestore (NFS) and Cloud Storage
 
 Nextcloud user file data is written to a **Filestore (NFS)** share mounted into every
-instance. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all
+instance. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data` (`/mnt/nfs/nextcloud-data`
+by default; the wrapper passes the same `nfs_mount_path` to the entrypoint as
+`NFS_MOUNT_PATH`, so the mount and the data directory cannot disagree) so all
 instances share the same user files. `config.php` is **not** stored on NFS — it is
 reconstructed locally on every instance from Secret Manager secrets (see §3
 "Post-install config secrets" below). A **Cloud Storage** `nc-data` bucket is also
@@ -313,7 +315,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Provision the `nc-data` bucket. |
 | `storage_buckets` | `[]` | Additional GCS buckets to provision. |
 | `enable_nfs` | `true` | Shared Filestore volume for Nextcloud config and data. **Requires gen2.** |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. User data goes to `<nfs_mount_path>/nextcloud-data`. |
 | `nfs_instance_name` / `nfs_instance_base_name` | _(set)_ | Existing NFS instance / base name for an inline one. |
 | `gcs_volumes` | `[]` | GCS buckets to mount via GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |

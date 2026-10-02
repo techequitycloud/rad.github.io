@@ -29,7 +29,7 @@ guide ([PostHog_GKE](PostHog_GKE.md)) and the foundation guide ([App_GKE](App_GK
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** (`POSTGRES_15`) — holds only Django's own app metadata (users, teams, feature flags, dashboards); no analytics data | §Database in the platform guide |
 | Database bootstrap | Defines the first-deploy `db-init` job that creates the database, user, and grants. No extensions — all analytics storage is in ClickHouse | `initialization_jobs` output |
 | Object storage | Declares a single Cloud Storage bucket, reached via PostHog's **native S3-compatible client** against GCS's S3-interop API — a dedicated service account + HMAC key pair, NOT a GCS FUSE mount | `storage_buckets` output, `storage_sa_email` output |
-| Secrets | Generates `SECRET_KEY` (Django signing key) and an S3-interop HMAC access/secret key pair; optionally passes through an external `CLICKHOUSE_PASSWORD` | Secret Manager, via `secret_ids` output |
+| Secrets | Generates `SECRET_KEY` (Django signing key) and an S3-interop HMAC access/secret key pair; passes through an external `CLICKHOUSE_PASSWORD`, or generates one when `generate_clickhouse_password = true` (set by `PostHog_GKE` for its inline ClickHouse) | Secret Manager, via `secret_ids` output |
 | Core settings | `CLICKHOUSE_DATABASE`/`USER`/`SECURE`/`VERIFY`, `OBJECT_STORAGE_*`, `IS_BEHIND_PROXY`, `DISABLE_SECURE_SSL_REDIRECT` | Application behaviour in the platform guide |
 | Health checks | Supplies the default startup/liveness probes targeting `/_readyz` and `/_livez` | §Observability in the platform guide |
 | Explicitly NOT provided here | ClickHouse/Kafka endpoint resolution and the bundled Redpanda/ClickHouse `additional_services` — these need GKE-local Service DNS names only known at the `PostHog_GKE` variant | See `PostHog_GKE`'s own wiring |
@@ -173,7 +173,7 @@ Both are unauthenticated — probes run unauthenticated, so an auth-gated endpoi
 | Output | Type | Description |
 |---|---|---|
 | `config` | `object` | Full application configuration (image + build config, port, database contract, env vars, `db-init` job, probes). |
-| `secret_ids` | `map(string)` | `SECRET_KEY`, `OBJECT_STORAGE_ACCESS_KEY_ID`, `OBJECT_STORAGE_SECRET_ACCESS_KEY`, and (when set) `CLICKHOUSE_PASSWORD`. |
+| `secret_ids` | `map(string)` | `SECRET_KEY`, `OBJECT_STORAGE_ACCESS_KEY_ID`, `OBJECT_STORAGE_SECRET_ACCESS_KEY`, and `CLICKHOUSE_PASSWORD` (when an external secret is set or one is generated). |
 | `secret_values` | `map(string)` | `{}` (sensitive). |
 | `storage_buckets` | `list(object)` | A single bucket (`name_suffix = "storage"`). |
 | `resolved_version` | `string` | Image tag actually deployed — equals `application_version` unchanged. |

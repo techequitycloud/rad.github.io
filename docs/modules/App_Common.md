@@ -303,8 +303,9 @@ App Common creates Cloud Monitoring alert policies for each application. By defa
 
 - A **CPU utilization alert** — fires when CPU usage exceeds 90% for 60 seconds.
 - A **memory utilization alert** — fires when memory usage exceeds 90% for 60 seconds.
+- A **5xx error-rate alert** (`SERVICE_NAME-5xx-error-rate-alert`) — fires when a Cloud Run service returns more than 5 server errors in 5 minutes. The utilization alerts cannot see a service that is down (a broken container burns no CPU), but request counts are emitted per request, so a container answering 503 is caught. A service that receives no traffic at all raises nothing. It watches Cloud Run request metrics; set `error_rate_alert_enabled = false` to suppress it where 5xx responses are expected.
 
-Both alerts notify the email addresses designated as support users for the deployment and re-notify every 30 minutes while the condition persists. Applications can also define additional custom alert policies with their own filters, thresholds, and aggregation periods.
+All three alerts notify the email addresses designated as support users for the deployment and re-notify every 30 minutes while the condition persists. Applications can also define additional custom alert policies with their own filters, thresholds, and aggregation periods.
 
 ### Uptime Checks
 

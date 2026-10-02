@@ -198,8 +198,9 @@ service domain) works fine. The probes are therefore configured as follows:
 
 OpenProject stores work-package attachments on the local filesystem by default, which
 is ephemeral on Cloud Run. For **durable** attachments, both variants default to
-`enable_nfs = true` and mount Cloud Filestore at `/opt/openproject/storage`
-(`OPENPROJECT_ATTACHMENTS__STORAGE__PATH`). Alternatively, configure fog/S3 against a
+`enable_nfs = true`, mount Cloud Filestore at `/opt/openproject/storage`, and set
+`OPENPROJECT_ATTACHMENTS__STORAGE__PATH` to that mount path (only while NFS is on, so
+the app is never pointed at an unmounted path). Alternatively, configure fog/S3 against a
 GCS-compatible endpoint via `OPENPROJECT_FOG_*` environment variables. No dedicated
 data bucket is created by this layer.
 

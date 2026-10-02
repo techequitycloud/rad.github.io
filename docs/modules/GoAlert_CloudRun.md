@@ -66,8 +66,11 @@ notification history, users) lives in PostgreSQL.
   passes `public_url = var.public_url != "" ? var.public_url :
   "https://${service_name}-${project_number}.${region}.run.app"` into
   `GoAlert_Common`, so `GOALERT_PUBLIC_URL` (used for OIDC/CSRF-referer validation
-  and links in outgoing notifications) is correct out of the box — a convenience
-  the GKE variant does not have.
+  and links in outgoing notifications) is correct out of the box. Use the
+  `service_url` output: reaching the service by Cloud Run's other hostname (the
+  hash form shown in the Cloud Run console) fails the first login's CSRF-referer
+  check — a browser is redirected to the canonical URL, but an API client
+  hardcoded to the console URL breaks.
 
 ---
 

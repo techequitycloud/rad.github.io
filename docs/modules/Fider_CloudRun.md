@@ -31,7 +31,7 @@ focused set of Google Cloud services:
 | Compute | Cloud Run v2 | Single Go binary, 2 vCPU / 4 GiB by default, serverless autoscaling |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Fider does not support MySQL or other engines |
 | Object storage | Cloud Storage | A dedicated `storage` bucket provisioned automatically |
-| File storage | Cloud Filestore (NFS) | Enabled by default for attachment storage |
+| File storage | None by default | Fider stores attachments as blobs in PostgreSQL; the optional NFS mount (`enable_nfs`) is off by default and unused |
 | Secrets | Secret Manager | Auto-generated `JWT_SECRET`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS LB + custom domain |
 
@@ -52,8 +52,9 @@ focused set of Google Cloud services:
 - **No Redis.** Fider uses a PostgreSQL-backed queue and cache (empty `VALKEY_URL`),
   so `enable_redis` defaults to `false`. Leave it off unless you deliberately
   externalise to Redis.
-- **NFS is enabled by default** (`enable_nfs = true`) to provide a Cloud Filestore
-  mount for Fider attachment storage.
+- **NFS is off by default** (`enable_nfs = false`). Fider stores attachments as
+  blobs in PostgreSQL (its default), and this module never switches it to
+  filesystem mode, so an NFS share would receive nothing.
 - **The container listens on port 3000.** The entrypoint exports `PORT = 3000`;
   Cloud Run also auto-injects `PORT = <container_port>`.
 - **Schema migrations run on boot.** The custom entrypoint runs `./fider migrate`
@@ -125,9 +126,10 @@ See [App_CloudRun](App_CloudRun.md) for GCS Fuse and CMEK options.
 
 ### D. Cloud Filestore (NFS)
 
-NFS is **enabled by default** (`enable_nfs = true`) to give Fider a Cloud Filestore
-mount for attachment storage. The shared NFS server VM (managed by `Services_GCP`)
-must be `RUNNING` before the app deploys.
+NFS is **off by default** (`enable_nfs = false`): Fider keeps attachments as blobs
+in PostgreSQL, so it needs no shared filesystem. If you enable it anyway, the shared
+NFS server VM (managed by `Services_GCP`) must be `RUNNING` before the app deploys,
+and the share stays empty unless you also switch Fider to filesystem blob storage.
 
 - **Console:** Filestore → Instances.
 - **CLI:**
@@ -285,7 +287,7 @@ specific to or notable for Fider are listed; every other input is inherited from
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the GCS buckets defined in `storage_buckets`. |
-| `enable_nfs` | `true` | Cloud Filestore mount for Fider attachment storage. |
+| `enable_nfs` | `false` | Leave off — Fider stores attachments in PostgreSQL, not on a filesystem. |
 | `nfs_mount_path` | `/opt/fider/storage` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 
@@ -362,7 +364,7 @@ running resources.
 | `container_port` | `3000` | High | A mismatched port makes probes hit a dead port and the revision never becomes Ready. |
 | `application_version` | pin a SHA tag; `latest` → `stable` | High | `getfider/fider` has no `:latest` tag; the module pins `latest` to `stable`, but pin explicitly for reproducible upgrades. |
 | `memory_limit` | `4Gi` (default) | Medium | Undersizing risks OOM under load; Fider itself is lightweight. |
-| `enable_nfs` | `true` (default) | Medium | Disable only if you do not need attachment storage; the shared NFS VM must be `RUNNING` before deploy. |
+| `enable_nfs` | `false` (default) | Medium | Fider stores attachments in PostgreSQL, so enabling NFS adds a boot dependency on the shared NFS VM (which must be `RUNNING`) and stores nothing. |
 | `min_instance_count` / `cpu_always_allocated` | `1` / `true` (default) | Low | Fider has no background worker — `0` / `false` is data-safe and cheaper, at the cost of cold starts. |
 | SMTP (`EMAIL_SMTP_*`) | Configure for real mail | Medium | Left as placeholders, sign-up / invite links only appear in the logs — no email is sent. |
 | `enable_iap` | only when public access not needed | High | IAP blocks all unauthenticated requests, including anonymous browsing of the board. |

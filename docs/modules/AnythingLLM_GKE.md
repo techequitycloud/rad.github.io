@@ -232,10 +232,10 @@ Monitoring. An uptime check targeting `/api/ping` is enabled by default.
   after any change to the embedding engine.
 - **Fixed environment variables.** `SERVER_PORT=3001`, `UID=1000`, and `GID=1000` are set
   automatically by `AnythingLLM_Common`. Do not override them. `AnythingLLM_Common` also
-  sets `STORAGE_DIR=/app/server/storage` as its own default, but `AnythingLLM_GKE`
-  overrides it to the NFS mount path (`nfs_mount_path`, default `/mnt/nfs`) whenever
-  `enable_nfs = true` — the platform default — so a deployment actually runs with
-  `STORAGE_DIR=/mnt/nfs` unless `enable_nfs` is explicitly disabled (see Section E).
+  sets `STORAGE_DIR=/app/server/storage` as its own default; `AnythingLLM_GKE`
+  sets it to the NFS mount path (`nfs_mount_path`, default `/app/server/storage`)
+  whenever `enable_nfs = true` — the default — so the vector index and documents
+  persist on the NFS share at the image's own storage path (see Section E).
 
 ---
 
@@ -352,7 +352,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Filestore (NFS) is mounted by default — required so AnythingLLM's LanceDB vector index (under `STORAGE_DIR`) survives pod restarts/redeploys instead of living on ephemeral disk. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/app/server/storage` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

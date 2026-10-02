@@ -281,7 +281,7 @@ from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Enable to back the SQLite cache with NFS for durable history (alternative to a PVC). |
-| `nfs_mount_path` | `/mnt/nfs` | NFS mount path. |
+| `nfs_mount_path` | `/var/cache/ntfy` | NFS mount path. |
 | `storage_buckets` | `[]` | Not required — ntfy uses no object storage. |
 
 ### Group 16 — Database Backend

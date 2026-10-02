@@ -41,9 +41,10 @@ Google Cloud services:
 
 - **State lives in an embedded SQLite file at `/database`.** Filebrowser has no Cloud
   SQL database. Its users, settings, and share links are stored in
-  `/database/filebrowser.db`. By default `/database` is a Cloud Storage bucket mounted
-  via GCS FUSE; enabling a StatefulSet swaps it for a block PVC (see below).
-- **GCS FUSE vs. block PVC.** With `stateful_pvc_enabled = true` the workload becomes
+  `/database/filebrowser.db`. By default `/database` is a block PVC on a StatefulSet;
+  only with `stateful_pvc_enabled = false` is it a Cloud Storage bucket mounted via
+  GCS FUSE (see below).
+- **GCS FUSE vs. block PVC.** With `stateful_pvc_enabled = true` (the default) the workload becomes
   a **StatefulSet** with a persistent block PVC (default `20Gi`) mounted at
   `/database`, and the GCS FUSE volume is automatically disabled to avoid a
   double-mount at the same path. A block PVC gives SQLite proper POSIX file locking
@@ -70,8 +71,8 @@ identifiers are reported in the deployment [Outputs](#5-outputs).
 
 ### A. GKE Autopilot — the Filebrowser workload
 
-Filebrowser runs as a single-replica Deployment (or a StatefulSet when
-`stateful_pvc_enabled = true`) scheduled on Autopilot, which bills for the CPU/memory
+Filebrowser runs as a single-replica StatefulSet (`stateful_pvc_enabled = true`, the
+default; a Deployment when it is `false`) scheduled on Autopilot, which bills for the CPU/memory
 the pod actually requests.
 
 - **Console:** Kubernetes Engine → Workloads → select the Filebrowser workload to see
@@ -92,11 +93,12 @@ type (Deployment vs StatefulSet) are managed.
 Filebrowser has no Cloud SQL database. Its embedded SQLite database
 (`/database/filebrowser.db`) is stored on the `/database` mount:
 
-- **Default (Deployment):** a dedicated **Cloud Storage** bucket mounted via GCS FUSE
-  through the CSI driver.
-- **StatefulSet (`stateful_pvc_enabled = true`):** a block **PersistentVolumeClaim**
+- **Default — StatefulSet (`stateful_pvc_enabled = true`):** a block **PersistentVolumeClaim**
   (default `20Gi`, StorageClass `standard-rwo`) mounted at `/database`; the GCS FUSE
-  volume is disabled to avoid a double-mount.
+  volume is disabled to avoid a double-mount. Keep it on: Filebrowser's database is
+  bbolt, which writes at arbitrary offsets that GCS FUSE rejects.
+- **Deployment (`stateful_pvc_enabled = false`):** a dedicated **Cloud Storage** bucket
+  mounted via GCS FUSE through the CSI driver.
 
 - **Console:** Cloud Storage → Buckets; or Kubernetes Engine → Storage → PVCs.
 - **CLI:**
@@ -228,7 +230,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Set `true` to store `/database` on a block PVC instead of GCS FUSE (recommended for SQLite file locking). |
+| `stateful_pvc_enabled` | `true` | Set `true` to store `/database` on a block PVC instead of GCS FUSE (recommended for SQLite file locking). |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC storage size. |
 | `stateful_pvc_mount_path` | `/database` | Mount path — must match `FB_DATABASE`'s directory. |
 | `stateful_pvc_storage_class` | `standard-rwo` | StorageClass (`standard-rwo` Balanced PD; `premium-rwo` for higher IOPS). |
@@ -269,7 +271,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Inherited from App_GKE and **not** overridden by this module. Filebrowser uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
+| `enable_redis` | `false` | Inherited from App_GKE and **not** overridden by this module. Filebrowser uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
 
 ### Group 16 — Database Backend
 

@@ -50,6 +50,9 @@ small set of Google Cloud services:
   `/app/data` (the container path is fixed — do not change it). Without the
   NFS volume, the SQLite database and all monitor history are ephemeral and
   lost on pod recreation.
+  Alternatively, `stateful_pvc_enabled = true` (off by default) moves the same
+  `/app/data` path onto a per-pod block PVC, the stronger backing for SQLite;
+  the NFS mount is then dropped, because one path cannot have two volume mounts.
 - **No Redis, no application secrets.** `UptimeKuma_Common` outputs
   `secret_ids = {}`; there is nothing to inject from Secret Manager.
 - **Custom build patches SQLite for NFS safety.** `container_image_source =
@@ -193,7 +196,8 @@ Kuma.
   account — there are no default or auto-generated credentials to retrieve
   from Secret Manager.
 - **Health path.** Both the default startup and liveness probes are **HTTP**
-  `GET /` on port `3001` (startup: 30 s initial delay, 10 s period, failure
+  `GET /api/entry-page` on port `3001` — `/` is always a 302, which the Gateway's
+  health check treats as unhealthy (startup: 30 s initial delay, 10 s period, failure
   threshold 30; liveness: 30 s initial delay, 30 s period, failure threshold
   3). The optional Cloud Monitoring uptime check also targets `GET /`.
 - **Single-writer SQLite over NFS.** Running more than one replica against
@@ -245,8 +249,8 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe_config` | `{ enabled=true, path="/" }` (HTTP, port 3001) | Startup probe. |
-| `health_check_config` | `{ enabled=true, path="/" }` (HTTP, port 3001) | Liveness probe. |
+| `startup_probe_config` | `{ enabled=true, path="/api/entry-page" }` (HTTP, port 3001) | Startup probe. |
+| `health_check_config` | `{ enabled=true, path="/api/entry-page" }` (HTTP, port 3001) | Liveness probe. Must return a literal 200 — it is mirrored into the Gateway health check. |
 | `uptime_check_config` | `{ enabled=false, path="/" }` | Cloud Monitoring uptime check on the service itself (not an Uptime Kuma monitor). |
 
 ### Group 13 — NFS

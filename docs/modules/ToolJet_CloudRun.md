@@ -32,7 +32,7 @@ port 80. The deployment wires together a focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Node.js service, 2 vCPU / 4 GiB by default; `min_instance_count = 1` keeps the in-process worker warm |
 | Database | Cloud SQL for PostgreSQL 15 | Required — **two** databases on one instance (metadata + ToolJet Database) |
-| ToolJet Database | In-container PostgREST | Serves the second DB (`tooljet_db`) to app queries; signed with `PGRST_JWT_SECRET` |
+| ToolJet Database | PostgREST (in-pod sidecar) | Serves the second DB (`<service_name>_tjdb`) to app queries; signed with `PGRST_JWT_SECRET` |
 | Cache & queue | Redis | Enabled by default; backs ToolJet's BullMQ queues; NFS VM co-hosts Redis when `redis_host` is empty |
 | Secrets | Secret Manager | Auto-generated `SECRET_KEY_BASE`, `LOCKBOX_MASTER_KEY`, `PGRST_JWT_SECRET`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -42,7 +42,7 @@ port 80. The deployment wires together a focused set of Google Cloud services:
 - **PostgreSQL 15 is mandatory.** The database engine is fixed by the shared
   application layer; selecting any other engine breaks startup.
 - **Two databases are created.** The first-deploy `db-init` job creates the metadata
-  database (`tooljet`) and the second "ToolJet Database" (`tooljet_db`), and grants
+  database and the second "ToolJet Database" (`<service_name>_tjdb`), and grants
   the shared application role the **`CREATEROLE`** attribute (ToolJet creates a role
   per workspace for PostgREST access).
 - **Schema migrations run on start.** The container entrypoint runs
@@ -91,7 +91,7 @@ and traffic splitting.
 
 ToolJet stores all application data — apps, datasource configs, users, workspaces,
 sessions — in a managed Cloud SQL for PostgreSQL 15 instance, and uses a **second
-database** (`tooljet_db`) on the same instance for the built-in ToolJet Database
+database** (`<service_name>_tjdb`) on the same instance for the built-in ToolJet Database
 feature. The service connects privately through the **Cloud SQL Auth Proxy** over a
 Unix socket; no public IP is exposed. On first deploy an initialization Job creates
 both databases, the shared `CREATEROLE` role, the `pgcrypto` extension, and an
@@ -103,7 +103,7 @@ app-owned `postgrest` schema.
   gcloud sql instances list --project "$PROJECT"
   gcloud sql instances describe <instance-name> --project "$PROJECT"
   gcloud sql connect <instance-name> --user=<db-user> --database=tooljet --project "$PROJECT"
-  gcloud sql connect <instance-name> --user=<db-user> --database=tooljet_db --project "$PROJECT"
+  gcloud sql connect <instance-name> --user=<db-user> --database=<service_name>_tjdb --project "$PROJECT"
   ```
 
 The instance name, database, user, and password secret are in the
@@ -208,7 +208,7 @@ Monitoring, with optional uptime checks and alert policies.
   lands you in the app builder. There is no pre-seeded admin credential in Secret
   Manager.
 - **The ToolJet Database feature.** Apps can query a built-in no-code database
-  (`tooljet_db`) exposed through an in-container PostgREST process. It reconfigures a
+  (`<service_name>_tjdb`) exposed through a **PostgREST** sidecar container (`postgrest/postgrest`) in the same Cloud Run instance. It reconfigures a
   `postgrest` schema on every start as the app user — which is why `db-init` resets
   that schema to be app-owned.
 - **Health path.** Startup, liveness, and readiness probes target `/` — a
@@ -423,7 +423,7 @@ running resources.
 | Schema migrations (entrypoint) | Leave as provisioned | High | Skipping `db:migrate:prod` leaves the metadata DB empty — the app boots and answers the `/` health probe but every DB-backed action fails. |
 | `min_instance_count` | `1` | High | Setting `0` lets the in-process background worker be throttled to zero between requests, stalling queued jobs. |
 | `cpu_always_allocated` | `true` | High | Request-based billing throttles the background worker between requests. |
-| `memory_limit` | `4Gi` | High | ToolJet + PostgREST + worker under load can OOM below ~2 GiB. |
+| `memory_limit` | `4Gi` | High | The ToolJet server and its worker can OOM below ~2 GiB under load. |
 | `ingress_settings` | `all` | High | `internal` blocks the builder UI and any external app callbacks. |
 | `enable_redis` | `true` | Medium | With Redis off, BullMQ falls back and background features degrade. |
 | `redis_host` | `""` (NFS) or explicit | Medium | Redis on but NFS off and no host set leaves `REDIS_HOST` blank. |

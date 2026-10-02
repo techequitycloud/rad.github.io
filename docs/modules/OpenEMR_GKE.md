@@ -300,7 +300,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `container_image_source` / `container_image` / `container_build_config` | _(Foundation defaults)_ | Foundation-mirrored image sourcing. **Not referenced** — `OpenEMR_Common` always builds a custom image. |
 | `enable_image_mirroring` | `true` | Mirror the OpenEMR image into Artifact Registry to avoid Docker Hub rate limits. |
-| `container_port` | `8080` | Foundation-mirrored container port. **Not referenced** — `main.tf` hardcodes port `80`. |
+| `container_port` | `80` | Foundation-mirrored container port. **Not referenced** — `main.tf` hardcodes port `80`. |
 | `container_protocol` | `http1` | Foundation-mirrored HTTP protocol. **Not referenced.** |
 | `container_resources` | _(Foundation defaults)_ | Foundation-mirrored CPU/memory object. **Not referenced** — use `cpu_limit`/`memory_limit`/`ephemeral_storage_limit` instead. |
 | `cpu_limit` | `2000m` | CPU per pod; 2 vCPU recommended for concurrent clinical workloads. |
@@ -436,7 +436,7 @@ the policy).
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES` | Foundation-mirrored DB engine selector. **Not referenced** — `OpenEMR_Common` always sets `MYSQL_8_0`. |
+| `database_type` | `MYSQL_8_0` | Foundation-mirrored DB engine selector. **Not referenced** — `OpenEMR_Common` always sets `MYSQL_8_0`. |
 | `sql_instance_name` / `sql_instance_base_name` | `""` / `app-sql` | Foundation-mirrored Cloud SQL instance targeting. **Not referenced.** |
 | `application_database_name` / `application_database_user` | `gkeappdb` / `gkeappuser` | Foundation-mirrored DB name/user. **Not referenced** — use `db_name` / `db_user` instead. |
 | `db_name` | `openemr` | MySQL database name. Immutable after first deploy. |

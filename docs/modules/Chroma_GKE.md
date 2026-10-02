@@ -30,7 +30,7 @@ a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | StatefulSet or Deployment pods, 1 vCPU / 1 GiB by default |
-| Data persistence | StatefulSet PVC (recommended) or GCS FUSE | PVC-backed for production; GCS FUSE for development or lower-cost deployments |
+| Data persistence | StatefulSet PVC (default) or GCS FUSE | PVC-backed by default; GCS FUSE only when `stateful_pvc_enabled = false` |
 | Object storage | Cloud Storage | Auto-provisioned `<prefix>-data` bucket; used as primary store when PVC is not enabled |
 | Auth token | Secret Manager | Optional API token — `CHROMA_SERVER_AUTHN_CREDENTIALS` injected at runtime |
 | Ingress | Cloud Load Balancing | `ClusterIP` by default (internal cluster access); optional `LoadBalancer` with IAP or auth token |
@@ -46,7 +46,7 @@ a focused set of Google Cloud services:
 - **Single-instance recommended.** `max_instance_count = 1` is the default. Multiple
   Chroma pods sharing a single PVC are not supported — concurrent writes would corrupt
   collections.
-- **StatefulSet PVC for production.** Setting `stateful_pvc_enabled = true` automatically
+- **StatefulSet PVC by default.** `stateful_pvc_enabled = true` (the default) automatically
   resolves the workload type to `StatefulSet` and disables the GCS FUSE volume at `/data`
   to prevent a double-mount conflict.
 - **Auth token is optional but recommended** for any deployment reachable outside the pod
@@ -94,7 +94,7 @@ type (Deployment vs StatefulSet) are managed.
 Chroma stores its embedded SQLite database, HNSW index files, and collection metadata
 in a persistent volume at `/data`. Two storage backends are available:
 
-**StatefulSet PVC (recommended for production):** A Kubernetes PersistentVolumeClaim
+**StatefulSet PVC (default):** A Kubernetes PersistentVolumeClaim
 backed by a Balanced PD (`standard-rwo`) or SSD (`premium-rwo`) is provisioned per pod,
 providing low-latency local-disk access for index reads and writes.
 
@@ -105,7 +105,7 @@ providing low-latency local-disk access for index reads and writes.
   kubectl describe pvc -n "$NAMESPACE" <pvc-name>
   ```
 
-**GCS FUSE (default when PVC is not enabled):** A Cloud Storage bucket (`<prefix>-data`)
+**GCS FUSE (only when `stateful_pvc_enabled = false`):** A Cloud Storage bucket (`<prefix>-data`)
 is provisioned and mounted at `/data` via the GCS FUSE CSI driver.
 
 - **Console:** Cloud Storage → Buckets — look for the bucket whose name ends in `-data`.
@@ -331,7 +331,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable Persistent Volume Claim for StatefulSet. Recommended for Chroma to avoid GCS FUSE I/O overhead for large collections. When true without explicit workload_type, automatically resolves to 'StatefulSet'. (e.g., false) |
+| `stateful_pvc_enabled` | `true` | Enable Persistent Volume Claim for StatefulSet. Recommended for Chroma to avoid GCS FUSE I/O overhead for large collections. When true without explicit workload_type, automatically resolves to 'StatefulSet'. (e.g., false) |
 | `stateful_pvc_size` | `20Gi` | Storage size for each PVC provisioned by the StatefulSet. Size the PVC to hold all Chroma collections plus overhead. (e.g., '20Gi', '50Gi') |
 | `stateful_pvc_mount_path` | `/data` | Filesystem path inside the Chroma container where the per-pod PVC is mounted. (e.g., '/data') |
 | `stateful_pvc_storage_class` | `standard-rwo` | Kubernetes StorageClass for the StatefulSet PVCs. 'standard-rwo' (Balanced PD) is the default for GKE Autopilot. Use 'premium-rwo' for higher IOPS. (e.g., 'standard-rwo', 'premium-rwo') |
@@ -438,7 +438,7 @@ All other inputs in this group follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Enables Redis configuration for the application by injecting REDIS_HOST and REDIS_PORT environment variables into the GKE deployment. If true and redis_host is left blank, the module defaults to using the NFS server IP as the Redis host. Set redis_host explicitly to connect to a dedicated Redis instance such as Memorystore. |
+| `enable_redis` | `false` | Enables Redis configuration for the application by injecting REDIS_HOST and REDIS_PORT environment variables into the GKE deployment. If true and redis_host is left blank, the module defaults to using the NFS server IP as the Redis host. Set redis_host explicitly to connect to a dedicated Redis instance such as Memorystore. |
 | `redis_host` | `` | Hostname or IP address of the Redis server injected as the REDIS_HOST environment variable. Only used when enable_redis is true. Leave blank to default to the NFS server IP address. (e.g., '10.0.0.5', 'redis.internal.example.com') |
 | `redis_port` | `6379` | TCP port of the Redis server injected as the REDIS_PORT environment variable. Only used when enable_redis is true. (e.g., '6379') |
 | `redis_auth` | `` | Redis authentication password. Not applicable to Chroma. Forwarded to foundation module for compatibility. |

@@ -126,9 +126,10 @@ export REGION="us-central1"          # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the deployment details page —
    the module owns the service spec, so scaling is a configuration change, not a
    manual `gcloud` edit (a manual edit would be reverted on the next apply). The
-   default is scale-to-zero (`min = 0`, `cpu_always_allocated = false`); if your team
-   relies on timely Celery notifications/webhooks/exports, set
-   `cpu_always_allocated = true` and `min_instance_count = 1`.
+   defaults are `min_instance_count = 1` (keep it: the instance runs Celery worker and
+   beat, so at `0` every periodic task stops once it scales to zero) and
+   `cpu_always_allocated = false`; if your team relies on timely Celery
+   notifications/webhooks/exports, also set `cpu_always_allocated = true`.
 
 3. **Update the application version** by changing the version input via **Update**
    on the deployment details page; a new image builds (the wrapper Dockerfile pins

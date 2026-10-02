@@ -32,7 +32,7 @@ platform guides ([GoToSocial_GKE](GoToSocial_GKE.md),
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database with `LC_COLLATE='C' LC_CTYPE='C'` and the application role | `initialization_jobs` output |
 | Admin account bootstrap | Defines the `admin-create` job, deliberately **not** auto-executed — GoToSocial has no web sign-up flow | `initialization_jobs` output |
 | Object storage | Declares the **Cloud Storage** `storage` bucket and a dedicated storage service account with an HMAC key pair for GoToSocial's native S3-compatible client | `storage_buckets` / `storage_sa_email` outputs |
-| Core settings | Sets `GTS_HOST`, `GTS_PROTOCOL=https`, `GTS_PORT=8080`, `GTS_LETSENCRYPT_ENABLED=false`, `GTS_STORAGE_*`, `GTS_TRUSTED_PROXIES`, `GTS_ACCOUNTS_REGISTRATION_OPEN` | Application behaviour in the platform guides |
+| Core settings | Sets `GTS_HOST`, `GTS_PROTOCOL` (`https` when real TLS is terminated, else `http`), `GTS_PORT=8080`, `GTS_LETSENCRYPT_ENABLED=false`, `GTS_STORAGE_*`, `GTS_TRUSTED_PROXIES`, `GTS_ACCOUNTS_REGISTRATION_OPEN` | Application behaviour in the platform guides |
 | Health checks | Declares **TCP** `startup_probe`/`liveness_probe` defaults — HTTP never works against GoToSocial's endpoints (see §6) | §Observability in the platform guides |
 
 ---
@@ -155,10 +155,14 @@ asymmetry this aliasing runs into).
   boot** — same risk class as Synapse's `server_name` or Outline's `URL`.
 - **`GTS_ACCOUNT_DOMAIN`** — optional separate vanity domain for account
   handles; defaults to `GTS_HOST` when empty. Same immutability risk.
-- **`GTS_PROTOCOL = "https"`** — must stay `https` even though the container
-  only ever speaks plain HTTP internally; Cloud Run/GKE terminate the real
-  public HTTPS connection at their own edge. GoToSocial's own docs warn that
-  switching this value later permanently breaks already-generated URIs.
+- **`GTS_PROTOCOL`** — `https` when `enable_custom_domain = true` (the platform
+  terminates real HTTPS at its edge), `http` otherwise. Cloud Run always terminates
+  TLS, so the Cloud Run wrapper keeps the default `true`. On GKE the wrapper passes `true` only
+  when `application_domains` is set — a bare-IP LoadBalancer has no certificate, and
+  claiming `https` there makes GoToSocial issue `Secure` session cookies that the
+  browser drops, breaking sign-in. GoToSocial's own docs warn that switching this
+  value after first boot permanently breaks already-generated URIs, so set the
+  domain before the first deploy.
 - **`GTS_PORT = "8080"`**, **`GTS_BIND_ADDRESS = "0.0.0.0"`**.
 - **`GTS_LETSENCRYPT_ENABLED = "false"`** — mandatory; the platform's own
   edge already terminates TLS, and GoToSocial's built-in ACME client would
@@ -303,7 +307,12 @@ false`. This is deliberate, not an oversight:
   `scripts/admin-create.sh` retries up to 20 times at 15-second intervals
   specifically to give the main pod a real chance to finish booting first,
   so it has a genuine chance of succeeding automatically during the same
-  `apply` — but it is not guaranteed to win that race every time.
+  `apply` — but it is not guaranteed to win that race every time. Before its
+  first `create` attempt it waits for schema migrations to settle (probing with
+  the read-only `admin account list`), because a `create` interrupted by a
+  concurrent migration can leave a half-created account that `create` then
+  reports as "already in use" and `promote` cannot find — a state retries cannot
+  repair.
 
 A partially-failed `admin-create` attempt can leave an **orphaned account
 row**: GoToSocial's `NewSignup` flow inserts the account row first, then

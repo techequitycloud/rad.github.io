@@ -61,8 +61,9 @@ export REGION="us-central1"           # the region you deploy into
 2. The platform builds a thin wrapper image over `codercom/code-server` (mirrored
    into Artifact Registry via Cloud Build) and schedules a single pod onto the GKE
    Autopilot cluster (port 8080, 1 vCPU / 1 GiB by default). By default the workspace
-   is a **GCS FUSE** volume mounted at `/home/coder`; setting `stateful_pvc_enabled =
-   true` switches to a **StatefulSet with a block PVC** instead. A random editor
+   is a **StatefulSet with a block PVC** mounted at `/home/coder`
+   (`stateful_pvc_enabled = true`); keep it, because installing an extension fails on
+   the GCS FUSE alternative. A random editor
    `PASSWORD` is generated and stored in Secret Manager. There is **no Cloud SQL
    instance and no Redis** — code-server has no database. First deploys typically
    take **10–20 minutes** (the image build and pod scheduling dominate; there is no
@@ -161,10 +162,10 @@ export REGION="us-central1"           # the region you deploy into
    the deployment details page, not manual `kubectl edit` (a manual edit would be
    reverted on the next apply).
 
-3. **Choose your workspace storage mode deliberately.** GCS FUSE (default) is
-   simplest and needs no PVC quota; `stateful_pvc_enabled = true` mounts a per-pod
-   block PVC (`standard-rwo`, `20Gi` by default) for lower-latency I/O on large
-   workspaces, auto-selects `StatefulSet`, and sets `stateful_fs_group = 3000` so the
+3. **Keep the default block-PVC workspace.** `stateful_pvc_enabled = true` (the
+   default) mounts a per-pod block PVC (`standard-rwo`, `20Gi` by default) — required,
+   because code-server installs extensions by renaming a directory, which GCS FUSE
+   cannot do — auto-selects `StatefulSet`, and sets `stateful_fs_group = 3000` so the
    volume is group-writable by the code-server process (UID 1000 / GID 2000).
    Switching modes is a one-way infrastructure change — plan a data copy if you need
    to migrate an existing workspace between the two.

@@ -31,7 +31,7 @@ Google Cloud services:
 | Compute | GKE Autopilot | Single Go binary, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Fider does not support MySQL or other engines |
 | Object storage | Cloud Storage | A dedicated `storage` bucket provisioned automatically |
-| File storage | Cloud Filestore (NFS) | Enabled by default for attachment storage |
+| File storage | PostgreSQL (attachments) | Fider stores attachments in PostgreSQL; the optional NFS mount is off by default and unused |
 | Secrets | Secret Manager | Auto-generated `JWT_SECRET`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
@@ -49,10 +49,10 @@ Google Cloud services:
   support scale-to-zero).
 - **No Redis.** Fider uses a PostgreSQL-backed queue and cache (empty `VALKEY_URL`),
   so `enable_redis` defaults to `false`.
-- **NFS is enabled by default** (`enable_nfs = true`) to provide a Cloud Filestore
-  mount for attachment storage. Because the pod is NFS-backed, App_GKE deploys it with
-  the `Recreate` strategy rather than `RollingUpdate` (two pods on the same NFS volume
-  can deadlock on updates).
+- **NFS is off by default** (`enable_nfs = false`). Fider stores attachments in
+  PostgreSQL and this module never switches it to filesystem mode, so an NFS share
+  would receive nothing. If you do enable it, App_GKE deploys the pod with the
+  `Recreate` strategy rather than `RollingUpdate`.
 - **The container listens on port 3000.** On GKE the `PORT` env is **not** auto-injected,
   so the entrypoint exports `PORT = 3000`; `container_port` and the Kubernetes probes
   must both be 3000 or the pod never becomes Ready even though the app is healthy.
@@ -127,10 +127,10 @@ See [App_GKE](App_GKE.md) for CMEK options and GCS Fuse mounts.
 
 ### D. Cloud Filestore (NFS)
 
-NFS is **enabled by default** (`enable_nfs = true`) to give Fider a Cloud Filestore
-mount for attachment storage. The shared NFS server VM (managed by `Services_GCP`) must
-be `RUNNING` before the app deploys, and NFS-backed pods use the `Recreate` update
-strategy.
+NFS is **off by default** (`enable_nfs = false`): Fider keeps attachments in
+PostgreSQL, so the mount is unused. If you enable it, the shared NFS server VM (managed
+by `Services_GCP`) must be `RUNNING` before the app deploys, and NFS-backed pods use the
+`Recreate` update strategy.
 
 - **Console:** Filestore → Instances.
 - **CLI:**
@@ -215,7 +215,7 @@ disabled, sign-up / invite links appear in the pod logs.
 - **Health path.** Startup and liveness probes target `/_health` — an unauthenticated
   endpoint returning `200`. The `container_port` and probe port must both be **3000**
   (the entrypoint exports `PORT = 3000`; GKE does not auto-inject it).
-- **NFS-backed updates use `Recreate`.** A rolling update would briefly run two pods
+- **NFS-backed updates use `Recreate`** (only when `enable_nfs = true`). A rolling update would briefly run two pods
   against the same NFS volume and shared database; App_GKE therefore sets the strategy
   to `Recreate` for NFS-backed apps.
 - **Inspect job execution:**
@@ -263,7 +263,7 @@ specific to or notable for Fider are listed; every other input is inherited from
 | Variable | Default | Description |
 |---|---|---|
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
-| `workload_type` | `null` | Resolves to `Deployment` (the module's built-in logic); Fider is stateless (state lives in PostgreSQL / NFS). |
+| `workload_type` | `null` | Resolves to `Deployment` (the module's built-in logic); Fider is stateless (state lives in PostgreSQL). |
 | `session_affinity` | `ClientIP` | Sticky routing (default). |
 | `container_protocol` | `http1` | Fider serves standard HTTP/1.1. |
 
@@ -271,13 +271,13 @@ specific to or notable for Fider are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Defaults to the module's built-in logic. Fider stores state in PostgreSQL and NFS, so per-pod PVCs are not required. |
+| `stateful_pvc_enabled` | `null` | Defaults to the module's built-in logic. Fider stores state in PostgreSQL, so per-pod PVCs are not required. |
 
 ### Group 13 — Filesystem (NFS)
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Cloud Filestore mount for Fider attachment storage. NFS-backed pods deploy with `Recreate`. |
+| `enable_nfs` | `false` | Leave off: Fider stores attachments in PostgreSQL and never writes to the mount. NFS-backed pods deploy with `Recreate`. |
 | `nfs_mount_path` | `/opt/fider/storage` | Mount path inside the container. |
 
 ### Group 15 — Redis Cache & Queue
@@ -350,7 +350,7 @@ and explore the running resources.
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity on GKE. |
 | `application_version` | pin a SHA tag; `latest` → `stable` | High | `getfider/fider` has no `:latest` tag; the module pins `latest` to `stable`, but pin explicitly for reproducible upgrades. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
-| `enable_nfs` | `true` (default) | Medium | The shared NFS VM must be `RUNNING` before deploy; NFS-backed pods use `Recreate`, so a rollout briefly takes the pod down. |
+| `enable_nfs` | `false` (default) | Medium | Fider does not use the mount. If enabled, the shared NFS VM must be `RUNNING` before deploy, and NFS-backed pods use `Recreate`, so a rollout briefly takes the pod down. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | SMTP (`EMAIL_SMTP_*`) | Configure for real mail | Medium | Left as placeholders, sign-up / invite links only appear in the logs — no email is sent. |
 | `enable_iap` | only when public access not needed | High | IAP blocks all unauthenticated requests, including anonymous browsing of the board. |

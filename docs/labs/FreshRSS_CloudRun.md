@@ -127,10 +127,10 @@ export REGION="us-central1"          # the region you deploy into
 2. **Scale** by changing the min/max instance inputs and clicking **Update** on the
    deployment details page — the module owns the service spec, so scaling is a
    configuration change, not a manual `gcloud` edit (a manual edit would be reverted
-   on the next apply). By default `min_instance_count = 0` (scale-to-zero) and
-   `max_instance_count = 1`. The in-container feed-refresh cron (`CRON_MIN = */15`)
-   only fires while an instance is alive, so if you need feeds to refresh on a
-   fixed schedule rather than on next request, set `min_instance_count = 1`. Keep
+   on the next apply). By default `min_instance_count = 1` and
+   `max_instance_count = 1`. Keep the minimum at `1`: the in-container feed-refresh
+   cron (`CRON_MIN = */15`) only fires while an instance is alive, so at `0` feeds
+   stop refreshing once the idle service scales to zero. Keep
    `max_instance_count` at `1` — a single instance owns the refresh cron and the
    file-based session/cache state on the NFS volume.
 
@@ -205,8 +205,8 @@ platform-level diagnostics and do not change with FreshRSS releases.
   `nfs_mount_path = /var/www/FreshRSS/data`; without the NFS volume, `config.php`
   and per-user state live on ephemeral disk and are lost on every cold start.
 - **Feeds not refreshing:** the in-container cron only runs while an instance is
-  alive — with `min_instance_count = 0` refreshes pause until the next request
-  wakes the service. Set `min_instance_count = 1` for a reliably ticking refresh.
+  alive — if `min_instance_count` was lowered to `0`, refreshes pause until the next
+  request wakes the service. Restore the default `min_instance_count = 1`.
 - **Image build failed:** review Cloud Build history for the failed build's log.
 - **403 / permission errors:** verify the runtime service account's IAM roles.
 

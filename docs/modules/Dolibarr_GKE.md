@@ -253,7 +253,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is on by default so uploaded documents persist and are shared. |
-| `nfs_mount_path` | `/var/lib/dolibarr` | Where Dolibarr stores documents/PDFs. |
+| `nfs_mount_path` | `/var/www/documents` | Where Dolibarr stores documents/PDFs. |
 
 ### Group 16 — Database Backend
 

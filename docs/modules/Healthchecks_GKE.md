@@ -237,7 +237,7 @@ defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | Fixed; MySQL/SQLite are not wired through this module. |
+| `database_type` | `POSTGRES` | Fixed; MySQL/SQLite are not wired through this module. |
 | `application_database_name` | `healthchecks_db` | Immutable after first deploy. |
 | `application_database_user` | `healthchecks_user` | Immutable after first deploy. |
 

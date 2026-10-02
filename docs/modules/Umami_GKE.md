@@ -183,7 +183,7 @@ environment_variables = {
 | `enable_multi_cluster_service` | `false` | Registers the service with GKE Multi Cluster Services. |
 | `configure_service_mesh` | `false` | Injects Anthos Service Mesh (Istio) sidecar proxies. |
 | `termination_grace_period_seconds` | `30` | Seconds Kubernetes waits for the pod to terminate before force-killing. |
-| `deployment_timeout` | `600` | Maximum seconds to wait for the GKE deployment to reach a healthy state. |
+| `deployment_timeout` | `1800` | Maximum seconds to wait for the GKE deployment to reach a healthy state. |
 | `gke_cluster_selection_mode` | `"primary"` | Strategy for choosing the target cluster. |
 
 ---

@@ -50,6 +50,7 @@ gcloud secrets versions access latest --secret=<encryption-key-name> --project "
 |---|---|---|
 | `*-nextauth-secret` | `NEXTAUTH_SECRET` | NextAuth.js session signing and encryption |
 | `*-encryption-key` | `CALENDSO_ENCRYPTION_KEY` | Cal.diy data-at-rest encryption |
+| `*-cron-api-key` | `CRON_API_KEY` | Authenticates calls to `/api/cron/*` (reminders). Created only when `cron_api_key` is set. |
 
 A 30-second pause is inserted after secret creation to prevent race conditions when
 the container first reads these secrets at startup.

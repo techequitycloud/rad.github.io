@@ -28,7 +28,7 @@ platform guides ([Headscale_GKE](Headscale_GKE.md),
 |---|---|---|
 | Container image | Wraps `headscale/headscale:<version>-debug` (a `ko`-built base) with a baked `config.yaml` and entrypoint; builds via Cloud Build | `container_image` output of the platform deployment |
 | Database engine | Fixes `database_type = "NONE"` — Headscale is entirely embedded-SQLite | §Database in the platform guides |
-| Storage | Declares the `storage` GCS bucket and the `/var/lib/headscale` mount (GCS Fuse on Cloud Run; conditionally on GKE) | `storage_buckets` output |
+| Storage | Declares the `storage` GCS bucket and the `/var/lib/headscale` mount, which each variant turns off when it supplies its own store (NFS on Cloud Run, a block PVC on GKE) | `storage_buckets` output |
 | Single-instance enforcement | Hardcodes `max_instance_count = 1` in the assembled `config` — the caller's variable value is never read | Runtime & Scaling in the platform guides |
 | Core config | Baked `config.yaml`: SQLite backend, disabled embedded DERP, disabled MagicDNS, the `noise.private_key_path`/`dns` fields Headscale 0.26.1 requires | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness probe targeting `/health` | §Observability in the platform guides |
@@ -53,7 +53,7 @@ backend is supported by this module. Headscale keeps its entire persistent
 state in a single SQLite file:
 
 ```
-/var/lib/headscale/db.sqlite              # + -wal / -shm sidecars (WAL mode)
+/var/lib/headscale/db.sqlite              # + -wal / -shm sidecars when WAL mode is on
 /var/lib/headscale/noise_private.key      # Noise protocol (Tailscale v2) key, auto-generated
 ```
 
@@ -150,20 +150,20 @@ requirement.
 Headscale's SQLite database needs real POSIX file locking for its WAL/journal
 files:
 
-- **Cloud Run:** `enable_gcs_storage_volume = true` always — `/var/lib/headscale`
-  is mounted via GCS Fuse. This is a real, live-confirmed trade-off: gcsfuse
-  does not reliably support the file locking SQLite's WAL mode needs
-  (confirmed via repeated `BufferedWriteHandler.OutOfOrderError` log entries
-  for `db.sqlite`/`db.sqlite-wal`/`db.sqlite-shm`, falling back to a slower
-  legacy write path). It is only acceptable here because `max_instance_count`
-  is hard-pinned to `1` — no fix is available on Cloud Run itself (no
-  block-volume alternative exists there).
+- **Cloud Run:** `Headscale_CloudRun` mounts the shared **NFS** volume at
+  `/var/lib/headscale` (`enable_nfs = true` by default) and passes
+  `enable_gcs_storage_volume = !var.enable_nfs`, so the GCS Fuse mount is used only if
+  NFS is turned off. GCS Fuse cannot host SQLite at all — it provides neither POSIX
+  nor shared-memory locking, and a database written there is corrupt on arrival
+  while `/health` still passes. NFS supplies POSIX locking but not the shared-memory
+  mapping WAL needs, so the Cloud Run variant also sets `sqlite_write_ahead_log = false`
+  (exported as `HEADSCALE_DATABASE_SQLITE_WRITE_AHEAD_LOG`).
 - **GKE:** `Headscale_GKE` defaults `stateful_pvc_enabled = true`, mounting a
   real block-storage PVC at the same path instead. `Headscale_GKE`'s
   `main.tf` sets `enable_gcs_storage_volume = !coalesce(var.stateful_pvc_enabled, false)`
   when calling this module, so the PVC and the GCS Fuse mount are mutually
-  exclusive — never double-mounted. Confirmed live: GKE's logs are
-  completely free of the gcsfuse write errors seen on Cloud Run.
+  exclusive — never double-mounted. WAL stays on there
+  (`sqlite_write_ahead_log = stateful_pvc_enabled`), because a block device supports it.
 
 ---
 

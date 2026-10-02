@@ -140,7 +140,7 @@ Two secrets are generated automatically: `NEXTAUTH_SECRET` and
   through the web UI becomes the admin.
 - **Search depends on the sidecar being reachable.** If the Meilisearch Service
   fails to start, search silently stops working; bookmarking continues.
-- **Health path.** Startup and liveness probes target `/`.
+- **Health path.** The startup probe targets `/`; the liveness probe (`health_check_config`) targets `/api/health`, which returns a literal 200. `/` redirects to `/signin` (307), and the liveness path is mirrored into the Gateway health check, which treats a redirect as unhealthy.
 
 ---
 

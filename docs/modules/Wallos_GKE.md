@@ -299,7 +299,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Inherited from App_GKE and **not** overridden by this module. Wallos uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
+| `enable_redis` | `false` | Inherited from App_GKE and **not** overridden by this module. Wallos uses no Redis, so set it to `false` when deploying — leaving it on wires an unused dependency. |
 
 ### Group 16 — Database Backend
 

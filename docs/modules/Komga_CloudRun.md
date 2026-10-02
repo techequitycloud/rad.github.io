@@ -32,7 +32,8 @@ a minimal set of Google Cloud services — there is no external database:
 |---|---|---|
 | Compute | Cloud Run v2 | JVM (Spring Boot) container, 1 vCPU / 1 GiB by default; single instance |
 | Database | None | Komga uses an embedded SQLite database under `/config` — no Cloud SQL instance is created |
-| Object storage | Cloud Storage | A dedicated `storage` bucket mounted at `/config` via GCS FUSE |
+| Shared storage | Filestore (NFS) | Mounted at `/config` (`enable_nfs = true`); holds the SQLite databases and index |
+| Object storage | Cloud Storage | A `storage` bucket, mounted at `/config` via GCS FUSE only if NFS is not |
 | Secrets | Secret Manager | None generated — Komga has no injectable service secret |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
 
@@ -51,7 +52,7 @@ a minimal set of Google Cloud services — there is no external database:
 - **`/config` is the single source of truth.** The SQLite database
   (`database.sqlite`, WAL mode), Lucene search index, thumbnail cache, and task
   queue all live under `/config` (set via the image's `KOMGA_CONFIGDIR`), backed by
-  a GCS-FUSE-mounted Cloud Storage bucket on Cloud Run.
+  the NFS share on Cloud Run.
 - **No generated secrets.** The admin account is created interactively through
   Komga's first-run setup wizard at `/` — there is no master key or JWT secret to
   seed ahead of time.
@@ -61,8 +62,10 @@ a minimal set of Google Cloud services — there is no external database:
 - **JVM heap sizing is optional.** `jvm_heap_max` (blank by default) sets `-Xmx` via
   `JAVA_TOOL_OPTIONS`; leave blank to let JVM ergonomics size the heap relative to
   `memory_limit`.
-- **GCS FUSE has real latency for SQLite.** For heavier or production libraries,
-  prefer `Komga_GKE`, which can mount a real block PVC instead.
+- **`/config` must not be on GCS FUSE.** gcsfuse lacks the file locking and
+  shared-memory file SQLite's WAL mode needs, and both databases are lost there. The
+  default keeps `/config` on NFS; Komga's own startup checks refuse a database on any network filesystem (they test the filesystem type, not whether locking works); the module sets `KOMGA_DATABASE_CHECKLOCALFILESYSTEM` and `KOMGA_TASKSDB_CHECKLOCALFILESYSTEM` to `false` only while `/config` is on NFS.
+  `Komga_GKE` uses a block PVC instead.
 
 ---
 
@@ -90,9 +93,11 @@ environment, and traffic splitting.
 
 ### B. Cloud Storage — Komga's persistent state
 
-A dedicated **Cloud Storage** bucket is mounted at `/config` via GCS FUSE. It holds
-the embedded SQLite database, Lucene search index, thumbnail cache, and logs —
-everything Komga persists.
+By default `/config` is the **Filestore (NFS)** share (`enable_nfs = true`,
+`nfs_mount_path = "/config"`). It holds the embedded SQLite databases, Lucene search
+index, thumbnail cache, and logs — everything Komga persists. A `storage` bucket is
+also created; it is mounted at `/config` via GCS FUSE only if NFS is turned off or
+mounted elsewhere, and that configuration does not keep the SQLite databases.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -271,8 +276,8 @@ variables are declared for convention parity only.
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `storage` bucket. |
-| `enable_nfs` | `false` | NFS is off by default. |
-| `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts — e.g. a separate read-mostly comics/books library bucket, mounted read-only. The `storage` bucket is added automatically at `/config`. |
+| `enable_nfs` | `true` | Provisions a Cloud Filestore (NFS) instance mounted into the service. Requires the gen2 execution environment. |
+| `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts — e.g. a separate read-mostly comics/books library bucket, mounted read-only. The `storage` bucket is mounted at `/config` only when NFS is not. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
 ### Group 12 — Database Backend
@@ -345,12 +350,11 @@ running resources.
 |---|---|---|---|
 | `max_instance_count` | `1` (never increase) | Critical | Multiple instances writing the same SQLite file concurrently risks database corruption. |
 | Health probe path | `/actuator/health` | Critical | `/api/v1/actuator/health` is auth-gated (401) — using it as the probe path means the revision/pod never becomes Ready even though Komga is fully healthy. |
-| `enable_gcs_storage_volume` (Common-level) | `true` on Cloud Run | Critical | Disabling it with no replacement mount means `/config` is not persisted — all library state is lost on every cold start. |
+| `enable_nfs` / `nfs_mount_path` | `true` / `/config` | Critical | Moving `/config` off NFS puts it on GCS FUSE (or ephemeral disk), where the SQLite databases are not persisted. |
 | First-run setup wizard | Complete promptly after deploy | High | An unclaimed setup wizard leaves the instance without an admin account; anyone who reaches the URL first can claim it. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero adds cold-start latency including a Lucene index rebuild on every cold boot. |
 | `memory_limit` | `1Gi`, raise for large libraries | Medium | Undersized memory can OOM-kill during a large library scan (Lucene index + thumbnail cache held in the JVM heap). |
 | `container_image_source` | `prebuilt` | Medium | Switching to `custom` with no Dockerfile in `Komga_Common/scripts` fails the build — Komga needs no custom build. |
-| GCS FUSE for `/config` | Fine for light use; prefer GKE PVC for production | Low | SQLite WAL files under gcsfuse have higher latency and weaker consistency than block storage. |
 
 ---
 

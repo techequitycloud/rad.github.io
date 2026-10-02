@@ -203,12 +203,14 @@ problems.
   redirect URLs from `ENDPOINT`; the entrypoint sets it from `GKE_SERVICE_URL`. Update
   it to the external LoadBalancer or custom-domain URL via `environment_variables` once
   the external address is known.
-- **Health path.** Startup, liveness, and readiness probes target `/api/status` — an
-  unauthenticated endpoint that returns `200` once the core is up. The container port
-  and probes must all be `3001`. Verify:
+- **Health path.** The startup probe targets `/api/status`; the liveness and readiness
+  probes target `/oidc/.well-known/openid-configuration`. The liveness path must return a
+  literal `200` because App_GKE mirrors it into the Gateway health check, and
+  `/api/status` returns `204`, which the load balancer treats as unhealthy (the Gateway
+  would serve 503). The container port and probes must all be `3001`. Verify:
   ```bash
   kubectl port-forward -n "$NAMESPACE" deploy/<service-name> 3001:3001 &
-  curl -s http://localhost:3001/api/status
+  curl -s http://localhost:3001/oidc/.well-known/openid-configuration
   ```
 - **Inspect init-job execution:**
   ```bash
@@ -276,7 +278,7 @@ specific to or notable for Logto are listed; every other input is inherited from
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/api/status`, wide first-boot window | Allows time for the seed step. |
-| `liveness_probe` | HTTP `/api/status` | Liveness probe. |
+| `liveness_probe` | HTTP `/oidc/.well-known/openid-configuration` | Liveness/readiness probe. Must return a literal `200` — it is mirrored into the Gateway health check, and `/api/status` returns `204`. |
 | `uptime_check_config` | disabled — `/` | Optional Cloud Monitoring uptime check against the LoadBalancer host; disabled by default. |
 
 ### Group 11 — Jobs & Scheduled Tasks

@@ -54,8 +54,10 @@ together a focused set of Google Cloud services:
   Vikunja has no built-in coordination for multiple concurrent instances.
 - **Public ingress by default.** `ingress_settings = "all"` so the UI and API are
   reachable. Enable IAP to require Google sign-in.
-- **NFS is disabled by default.** Vikunja stores data in PostgreSQL; enable NFS only
-  if you need durable file attachments at `/app/vikunja/files`.
+- **NFS is enabled by default, and must stay on.** Tasks, projects and users live
+  in PostgreSQL; task attachments are files, and the wrapper points Vikunja at the
+  NFS mount (`VIKUNJA_FILES_BASEPATH` = `nfs_mount_path`, `/data`) so they survive
+  restarts.
 - **`VIKUNJA_SERVICE_PUBLICURL` is set at runtime** from the actual
   `CLOUDRUN_SERVICE_URL`, so links and the frontend always use the real service URL.
 
@@ -131,12 +133,12 @@ is managed separately by the foundation.
 
 See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 
-### E. Cloud Storage & file attachments (optional)
+### E. Cloud Storage & file attachments
 
-Vikunja stores file attachments on the container filesystem at
-`/app/vikunja/files`, which is ephemeral on Cloud Run. Enable NFS and mount it over
-that path for durable attachments; the module declares no dedicated GCS bucket by
-default.
+Vikunja's own default attachment directory (`/app/vikunja/files`) is ephemeral on
+Cloud Run, so the module mounts NFS at `nfs_mount_path` (`/data`) and sets
+`VIKUNJA_FILES_BASEPATH` to that path; attachments are durable by default. The module
+declares no dedicated GCS bucket by default.
 
 - **Console:** Filestore / Compute Engine (NFS VM) when `enable_nfs = true`.
 - **CLI:**
@@ -306,8 +308,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[]` | Vikunja declares no bucket by default. |
-| `enable_nfs` | `false` | Enable for durable file attachments at `/app/vikunja/files`. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `enable_nfs` | `true` | Must stay `true`: attachments are written to the NFS mount (`VIKUNJA_FILES_BASEPATH`). |
+| `nfs_mount_path` | `/data` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -386,7 +388,7 @@ running resources.
 | `VIKUNJA_SERVICE_JWTSECRET` (auto-generated) | Never rotate after first boot | Critical | Rotating it invalidates all active user sessions, forcing immediate re-login for everyone. |
 | `application_database_name` / `application_database_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
-| `enable_nfs` (for attachments) | `true` if attachments matter | High | Without NFS, file attachments live on ephemeral disk and are lost on every revision/restart. |
+| `enable_nfs` | `true` (default) | High | Without NFS, file attachments live on ephemeral disk and are lost on every revision/restart. |
 | `memory_limit` | `512Mi` (gen2 floor) | High | Values below 512Mi are rejected at plan time on gen2. |
 | `cpu_always_allocated` | `true` | Medium | Flipping to `false` pauses the in-process reminder scheduler while the instance is idle — reminders won't fire until the next request. |
 | `container_image_source` | `custom` | High | `prebuilt` deploys the raw `scratch` image with no shell/entrypoint mapping — the container cannot map `DB_*` and fails to connect. |

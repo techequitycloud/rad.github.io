@@ -47,9 +47,9 @@ Google Cloud services:
   a combination this module's default configuration never produces. Set `mongodb_uri`
   explicitly (to an external MongoDB, Atlas, or Firestore host) to move off the default helper.
 - **The default MongoDB helper requires NFS.** Its `/data/db` data directory is mounted from
-  the shared Filestore (NFS) volume, but `enable_nfs` defaults to `false` on GKE (unlike
-  `LibreChat_CloudRun`, where the equivalent sidecar's NFS requirement is `true` by default).
-  Set `enable_nfs = true` unless you override `mongodb_uri` to an external MongoDB.
+  the shared Filestore (NFS) volume, so `enable_nfs` defaults to `true`. Keep it on unless
+  you override `mongodb_uri` to an external MongoDB — with NFS off, the helper has no volume
+  to mount and LibreChat crash-loops.
 - **A Firestore database (when opted into) is never deleted on destroy.** The database is
   retained to prevent data loss; delete it manually if no longer needed.
 - **JWT and credential secrets are auto-generated** on first deploy and stored in Secret Manager.
@@ -363,7 +363,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Provision a Filestore NFS volume shared across all replicas. |
+| `enable_nfs` | `true` | Provision a Filestore NFS volume shared across all replicas. Required by the default MongoDB helper. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
@@ -489,7 +489,7 @@ explore the running resources.
 | `timeout_seconds` | `600` | High | SSE streaming for long AI responses can exceed several minutes. Insufficient timeout truncates responses mid-stream. |
 | `min_instance_count` | `1` | High | Scale-to-zero drops all in-flight SSE streams and causes cold-start latency on wakeup. |
 | `JWT_SECRET` (auto-generated) | set once | High | Rotating invalidates all active sessions simultaneously. Plan rotation during a maintenance window. |
-| `enable_nfs` | `true` with the default MongoDB helper | High | Defaults to `false`. The in-namespace `mongo:7` helper (the default database backend) mounts its data directory (`/data/db`) from the NFS volume — leaving `enable_nfs` at its default with the helper active means it has no volume to mount. Also needed for multi-replica deployments so uploaded files are not pod-local. |
+| `enable_nfs` | `true` (the default) with the default MongoDB helper | High | The in-namespace `mongo:7` helper (the default database backend) mounts its data directory (`/data/db`) from the NFS volume — turning `enable_nfs` off with the helper active leaves it with no volume to mount. Also needed for multi-replica deployments so uploaded files are not pod-local. |
 | `backup_schedule` | set for production | High | Without backups, conversation history and user data in MongoDB/Firestore have no GCS-level snapshots. |
 | `application_version` | pinned release | Medium | `latest` can introduce breaking MongoDB schema changes or API incompatibilities on unplanned upgrades. |
 | `enable_iap` / `enable_cloud_armor` | enable for production | Medium | LibreChat is otherwise directly reachable from the public internet with only application-level login protecting it. |

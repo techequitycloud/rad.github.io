@@ -252,7 +252,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `2Gi` | Memory per instance; do not shrink below 2Gi — LiteLLM OOM-crashes on startup below that. |
 | `cpu_always_allocated` | `false` | Request-based billing by default — LiteLLM is a stateless proxy with no in-process background work. |
-| `min_instance_count` | `0` | Minimum instances. Defaults to scale-to-zero; set ≥ 1 to eliminate cold starts on the API gateway. |
+| `min_instance_count` | `1` | Must stay ≥ 1. LiteLLM's scheduled jobs (including the budget reset) run only while an instance is alive; at 0 they stop when Cloud Run scales the service down. |
 | `max_instance_count` | `3` | Maximum instances. |
 | `container_port` | `4000` | LiteLLM's native port. |
 | `execution_environment` | `gen2` | Cloud Run execution generation; gen2 is required for NFS and Direct VPC Egress. |
@@ -411,7 +411,7 @@ running resources.
 | `LITELLM_MASTER_KEY` | auto-generated | High | Treat as a credential; rotating it breaks all existing integrations holding the key until they are updated. |
 | `enable_redis` | `true` for multi-instance | High | Without Redis, rate-limit counters are per-instance and not shared; quotas are not enforced across replicas. |
 | `redis_host` | set when Redis enabled | High | An empty host with `enable_redis = true` causes connection errors on every request. |
-| `min_instance_count` | `1` | High | Cold starts add 20–40 s latency and queue all dependent services. |
+| `min_instance_count` | `1` | High | At `0`, budget resets and LiteLLM's other scheduled jobs stop when the instance is reaped; cold starts also add 20–40 s latency for dependent services. |
 | `timeout_seconds` | `600` | High | Large language model inference can take minutes; too-short timeout causes 504 errors on slow models. |
 | `enable_iap` | `false` for API endpoints | High | IAP blocks all direct programmatic API calls; only use IAP if accessing the Admin UI exclusively. |
 | `execution_environment` | `gen2` | High | NFS mounts and Direct VPC Egress are gen2-only; downgrading breaks networking. |

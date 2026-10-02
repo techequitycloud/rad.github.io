@@ -63,8 +63,8 @@ of Google Cloud services:
 - **Minimum 1 replica is maintained** (GKE does not support scale-to-zero) with
   `max_instance_count = 5`; a static external IP is reserved by default so the address
   survives redeploys.
-- **NFS is enabled by default but unused by the app.** Zitadel keeps all state in
-  PostgreSQL; you can set `enable_nfs = false` unless another reason requires it.
+- **NFS is off by default.** Zitadel keeps all state in PostgreSQL and never writes
+  to the mount (`enable_nfs = false`).
 
 ---
 
@@ -323,7 +323,7 @@ specific to or notable for Zitadel are listed; every other input is inherited fr
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Enabled by default but **unused** — Zitadel keeps all state in PostgreSQL; safe to set `false`. |
+| `enable_nfs` | `false` | Off by default: Zitadel is entirely PostgreSQL-backed and never writes to the mount. |
 | `nfs_mount_path` | `/opt/zitadel/storage` | Mount path inside the container (unused). |
 
 ### Group 14 — Cloud Storage & Artifact Registry
@@ -454,7 +454,7 @@ and explore the running resources.
 | `container_port` | `8080` | High | Zitadel listens on 8080; a mismatched port makes the workload never become Ready. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `application_version` | Pin a release | High | `latest` maps to a pinned tag today, but pinning explicitly avoids surprise migrations on redeploy. |
-| `enable_nfs` | `false` (unused) | Low | Enabled by default but Zitadel stores no state on disk; leaving it on wastes an NFS mount. |
+| `enable_nfs` | `false` (unused) | Low | Off by default; Zitadel stores no state on disk, so turning it on only wastes an NFS mount. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict all pods simultaneously during maintenance. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention of identity data. |
 

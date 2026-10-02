@@ -207,9 +207,12 @@ Monitoring. Optional uptime checks and alert policies are available.
   `EMAIL_FROM` in `environment_variables` and store `SMTP_PASSWORD` as a
   `secret_environment_variables` reference before going live.
 
-- **No scheduled tasks required.** Unlike traditional queue-based apps, Cal.diy does
-  not require separately scheduled background jobs — bookings and reminders are
-  handled by Next.js API routes triggered by calendar webhooks and client interactions.
+- **Reminders need an external cron call.** Bookings work without scheduled jobs, but
+  cal.com sends booking and Workflow reminders only when something calls its
+  `/api/cron/*` endpoints with the shared `CRON_API_KEY`. With no key those calls are
+  rejected (401) and no reminder ever fires, while the app otherwise looks healthy.
+  To enable reminders, set `cron_api_key` (stored in Secret Manager) **and** add a
+  `cron_jobs` entry that calls the endpoint.
 
 ---
 
@@ -248,7 +251,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_image_source` | `prebuilt` | `prebuilt` uses the official Cal.diy image; `custom` builds via Cloud Build. |
+| `container_image_source` | `custom` | `custom` builds the wrapper image via Cloud Build; `prebuilt` uses the official Cal.diy image. Keep it the same as the Cloud Run variant: both publish to the same image tag, so a `prebuilt` variant would overwrite the `custom` build. |
 | `container_image` | `""` | Override container image URI. Leave empty to use default. |
 | `container_resources` | `{ cpu_limit="2000m", memory_limit="2Gi" }` | CPU and memory limits; raise `memory_limit` to `4Gi` for production multi-user load. |
 | `container_port` | `3000` | Cal.diy's native Next.js port. Do not change. |
@@ -313,7 +316,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init`, `db-migrate`, and `seed-app-store` jobs. |
-| `cron_jobs` | `[]` | Recurring Kubernetes CronJobs. Cal.diy does not require scheduled tasks by default. |
+| `cron_jobs` | `[]` | Recurring Kubernetes CronJobs. Needed for reminders: add one that calls `/api/cron/*` with `CRON_API_KEY` (see `cron_api_key`). |
 | `additional_services` | `[]` | Sidecar or helper services to run alongside the main container. |
 
 ### Group 12 — CI/CD & GitHub Integration

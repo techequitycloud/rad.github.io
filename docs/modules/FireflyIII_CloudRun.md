@@ -46,8 +46,9 @@ wires together a focused set of Google Cloud services:
   — rotating it makes previously encrypted data unreadable.
 - **`STATIC_CRON_TOKEN` is generated automatically.** Firefly does no background
   scheduling on its own; a caller must hit `GET /api/v1/cron/<STATIC_CRON_TOKEN>` to
-  run recurring transactions, bill reminders, and auto-budgets. Wire a Cloud Scheduler
-  job to do this daily.
+  run recurring transactions, bill reminders, and auto-budgets. The module ships a
+  built-in `firefly-cron` job that does this daily at 03:00 UTC; any `cron_jobs` you
+  add run alongside it.
 - **Scale-to-zero is enabled by default** (`min_instance_count = 0`). Cold starts add
   10–30 seconds of latency to the first request after idle. Set `min_instance_count = 1`
   to keep the service warm.
@@ -142,8 +143,9 @@ See [App_CloudRun](App_CloudRun.md) for injection and rotation details.
 Firefly III runs recurring transactions, bill reminders, and auto-budgets only when a
 caller hits its cron endpoint. There is no in-process scheduler.
 
-- Wire a **Cloud Scheduler** job to `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>`
-  daily (define it via the `cron_jobs` input or create it in the Console).
+- A built-in **`firefly-cron`** scheduled job (`curlimages/curl`, `0 3 * * *`) calls
+  `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>` daily. It is always added, and any
+  `cron_jobs` entries you define are appended to it rather than replacing it.
 - **CLI:**
   ```bash
   # Read the token, then trigger the cron manually to verify:
@@ -306,7 +308,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional buckets beyond the auto-provisioned uploads bucket. |
 | `enable_nfs` | `true` | Persist attachments and runtime data at `/var/lib/fireflyiii`. |
-| `nfs_mount_path` | `/var/lib/fireflyiii` | Mount path inside the container. |
+| `nfs_mount_path` | `/var/www/html/storage/upload` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -325,7 +327,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job. |
-| `cron_jobs` | `[]` | Define a daily Cloud Scheduler → Cloud Run Job hit to `/api/v1/cron/<STATIC_CRON_TOKEN>`. |
+| `cron_jobs` | `[]` | Extra scheduled jobs. The daily `firefly-cron` call to `/api/v1/cron/<STATIC_CRON_TOKEN>` is built in and always added alongside these. |
 
 ### Group 14 — Observability & Health
 
@@ -396,7 +398,7 @@ running resources.
 | `db_name` / `db_user` | Set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys all data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `PGSQL_SSL_MODE` (auto `require`) | Leave as set | High | Cloud SQL rejects unencrypted private-IP TCP; `disable` breaks the connection. |
-| `STATIC_CRON_TOKEN` / cron job | Schedule a daily hit | High | Without a scheduled cron call, recurring transactions, bills, and auto-budgets never fire. |
+| `STATIC_CRON_TOKEN` / cron job | Leave the built-in `firefly-cron` job in place | High | Without a scheduled cron call, recurring transactions, bills, and auto-budgets never fire. |
 | `enable_nfs` | `true` | High | Disabling it puts attachments on ephemeral disk — uploaded files vanish on cold start / new revision. |
 | `memory_limit` | `2Gi` | High | Below 512Mi is rejected on gen2; low memory OOM-kills PHP during imports. |
 | `enable_iap` | enable for private data | High | Firefly III holds financial data; leaving it publicly reachable exposes it to anyone with the URL. |

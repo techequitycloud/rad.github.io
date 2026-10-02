@@ -32,7 +32,7 @@ compiled client are served from the same process (`SERVE_CLIENT = "true"`) on po
 |---|---|---|
 | Compute | GKE Autopilot | Node.js pods, 2 vCPU / 4 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — **two** databases on one instance (metadata + ToolJet Database) |
-| ToolJet Database | In-container PostgREST | Serves the second DB (`tooljet_db`) to app queries; signed with `PGRST_JWT_SECRET` |
+| ToolJet Database | PostgREST (`additional_services` Deployment) | Serves the second DB (`<service_name>_tjdb`) to app queries; signed with `PGRST_JWT_SECRET` |
 | Cache & queue | Redis | Enabled by default; backs ToolJet's BullMQ queues; NFS VM co-hosts Redis when `redis_host` is empty |
 | Secrets | Secret Manager | Auto-generated `SECRET_KEY_BASE`, `LOCKBOX_MASTER_KEY`, `PGRST_JWT_SECRET`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -42,7 +42,7 @@ compiled client are served from the same process (`SERVE_CLIENT = "true"`) on po
 - **PostgreSQL 15 is mandatory.** The database engine is fixed by the shared
   application layer; selecting any other engine breaks startup.
 - **Two databases are created.** The first-deploy `db-init` job creates the metadata
-  database (`tooljet`) and the second "ToolJet Database" (`tooljet_db`), and grants
+  database and the second "ToolJet Database" (`<service_name>_tjdb`), and grants
   the shared application role the **`CREATEROLE`** attribute.
 - **Schema migrations run on start.** The container entrypoint runs
   `npm run db:migrate:prod` (TypeORM) **before** launching the server.
@@ -94,7 +94,7 @@ See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type
 
 ToolJet stores all application data — apps, datasource configs, users, workspaces,
 sessions — in a managed Cloud SQL for PostgreSQL 15 instance, and uses a **second
-database** (`tooljet_db`) on the same instance for the built-in ToolJet Database
+database** (`<service_name>_tjdb`) on the same instance for the built-in ToolJet Database
 feature. Pods reach it privately through the **Cloud SQL Auth Proxy** sidecar over a
 loopback TCP endpoint (`127.0.0.1`); no public IP is exposed. On first deploy an
 initialization Job creates both databases, the shared `CREATEROLE` role, `pgcrypto`,
@@ -107,7 +107,7 @@ and an app-owned `postgrest` schema.
   gcloud sql instances list --project "$PROJECT"
   gcloud sql instances describe <instance-name> --project "$PROJECT"
   gcloud sql connect <instance-name> --user=<db-user> --database=tooljet --project "$PROJECT"
-  gcloud sql connect <instance-name> --user=<db-user> --database=tooljet_db --project "$PROJECT"
+  gcloud sql connect <instance-name> --user=<db-user> --database=<service_name>_tjdb --project "$PROJECT"
   ```
 
 The instance name, database name, user, and the Secret Manager secret holding the
@@ -321,7 +321,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init` job. |
 | `cron_jobs` | `[]` | Scheduled Kubernetes CronJobs. |
-| `additional_services` | `[]` | Sidecar or helper services deployed alongside ToolJet. |
+| `additional_services` | `[]` | Extra helper services, appended to the module's own PostgREST service. |
 
 ### Group 12 — CI/CD & GitHub Integration
 
@@ -464,7 +464,7 @@ locate and explore the running resources.
 | `PORT` (entrypoint default 80) | Leave as provisioned | High | If the pod binds 3000 while the Service targets 80, it never becomes Ready. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, WebSocket reconnections route to different pods, disrupting multiplayer editing. |
 | `min_instance_count` | `1` | High | GKE requires min ≥ 1; the validation guard rejects invalid values. |
-| `memory_limit` | `4Gi` | High | ToolJet + PostgREST + worker can OOM below ~2 GiB under load. |
+| `memory_limit` | `4Gi` | High | The ToolJet server and its worker can OOM below ~2 GiB under load (PostgREST runs as its own Deployment). |
 | `enable_redis` | `true` | Medium | With Redis off, BullMQ falls back and background features degrade. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
 | `DISABLE_SIGNUPS` (auto-injected `"true"`) | Keep on after first admin | High | Opening sign-up lets anyone with the URL create an account. |

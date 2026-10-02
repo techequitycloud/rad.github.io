@@ -251,7 +251,7 @@ Standard App_GKE Cloud Build integration — see [App_GKE](App_GKE.md).
 | Variable | Default | Description |
 |---|---|---|
 | `storage_buckets` | `[]` | No bucket provisioned by default. |
-| `enable_nfs` | `false` | Not used — Memos keeps no state outside PostgreSQL in this module's wiring. |
+| `enable_nfs` | `true` | Not used — Memos keeps no state outside PostgreSQL in this module's wiring. |
 | `stateful_pvc_enabled` | `null` | Unset, so `App_GKE`'s own resolution logic applies (no PVC). Memos is stateless at the pod level; no block PVC needed. |
 | `gcs_volumes` | `[]` | Add an entry here (mounted at Memos's data directory) if attachment persistence is required. |
 
@@ -259,7 +259,7 @@ Standard App_GKE Cloud Build integration — see [App_GKE](App_GKE.md).
 
 | Variable | Default | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | Fixed by `Memos_Common`. |
+| `database_type` | `POSTGRES` | Fixed by `Memos_Common`. |
 | `application_database_name` | `memos` | PostgreSQL database name. Immutable after first deploy. |
 | `application_database_user` | `memos` | Application database user. Password auto-generated in Secret Manager. |
 

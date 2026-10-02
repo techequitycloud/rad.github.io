@@ -30,8 +30,8 @@ wires together a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Qdrant pods, 1 vCPU / 1 GiB by default, horizontally autoscaled |
-| Persistent storage (recommended) | Persistent Disk via StatefulSet PVC | Low-latency RWO disk at `/qdrant/storage`; `standard-rwo` (Balanced PD) or `premium-rwo` |
-| Persistent storage (alternative) | Cloud Storage via GCS FUSE | Default when PVC is not enabled; `/qdrant/storage` mounted from the `<prefix>-storage` bucket |
+| Persistent storage (default) | Persistent Disk via StatefulSet PVC | Low-latency RWO disk at `/qdrant/storage`; `standard-rwo` (Balanced PD) or `premium-rwo` |
+| Persistent storage (not recommended) | Cloud Storage via GCS FUSE | Used only if `stateful_pvc_enabled = false`; Qdrant's startup check rejects FUSE-backed storage; `/qdrant/storage` mounted from the `<prefix>-storage` bucket |
 | Secrets | Secret Manager | Optional API key (`QDRANT__SERVICE__API_KEY`) |
 | Ingress | Cloud Load Balancing | `ClusterIP` by default; `LoadBalancer` or custom domain when external access is needed |
 
@@ -42,10 +42,10 @@ wires together a focused set of Google Cloud services:
 - **Single-instance by default.** `max_instance_count = 1` is strongly
   recommended. Qdrant is a single-writer store — multiple pods against the same
   storage path corrupt collections.
-- **StatefulSet PVC strongly recommended for production.** GCS FUSE is the
-  default when `stateful_pvc_enabled` is not set, but WAL and HNSW I/O are
-  latency-sensitive; a PVC provides significantly lower latency. Set
-  `stateful_pvc_enabled = true` for any production deployment.
+- **StatefulSet with a block PVC by default.** `stateful_pvc_enabled = true` is
+  the default and should stay on: Qdrant's own startup check rejects FUSE-backed
+  storage (it warns of data corruption), and WAL and HNSW I/O need real POSIX
+  semantics and low latency.
 - **`ClusterIP` by default.** Qdrant should not be exposed publicly without API
   key protection. Change `service_type` to `LoadBalancer` only when needed.
 - **Two distinct health endpoints.** Startup uses `/readyz`; liveness uses
@@ -90,13 +90,14 @@ type (Deployment vs StatefulSet) are managed.
 Qdrant persists its WAL, collection data, HNSW index files, and metadata at
 `/qdrant/storage`. Two storage backends are supported:
 
-**StatefulSet PVC (recommended for production):** A Persistent Disk volume is
+**StatefulSet PVC (the default):** A Persistent Disk volume is
 bound to the pod via a PersistentVolumeClaim. The storage class is
 `standard-rwo` (Balanced PD) by default, or `premium-rwo` for higher IOPS.
 
-**GCS FUSE (default when PVC not enabled):** A Cloud Storage bucket named
-`<prefix>-storage` is provisioned and mounted at `/qdrant/storage` via the GCS
-FUSE CSI driver.
+**GCS FUSE (only if `stateful_pvc_enabled = false`; not recommended):** A Cloud
+Storage bucket named `<prefix>-storage` is mounted at `/qdrant/storage` via the
+GCS FUSE CSI driver. Qdrant's own startup filesystem check rejects FUSE-backed
+storage as a data-corruption risk.
 
 - **Console (PVC):** Kubernetes Engine → Storage → PersistentVolumeClaims.
   Compute Engine → Disks to see the underlying Persistent Disk.
@@ -266,7 +267,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable PVC for StatefulSet. Strongly recommended for production. Setting `true` auto-selects StatefulSet. |
+| `stateful_pvc_enabled` | `true` | Enable PVC for StatefulSet (the default; keep it on — Qdrant rejects FUSE-backed storage). Auto-selects StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size. Size to hold all collections, HNSW indexes, and WAL with headroom. |
 | `stateful_pvc_mount_path` | `/qdrant/storage` | Container path for the PVC. Must match `QDRANT__STORAGE__STORAGE_PATH`. |
 | `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (Balanced PD) or `premium-rwo` for higher IOPS. Cannot be changed after PVC creation. |
@@ -413,7 +414,7 @@ locate and explore the running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `enable_api_key` | `true` (any external deployment) | Critical | Without an API key, any caller who can reach the service can read, modify, or delete all collections. |
-| `stateful_pvc_enabled` | `true` for production | Critical | Without a PVC, data lives in the ephemeral pod filesystem; any restart erases all collections permanently. |
+| `stateful_pvc_enabled` | `true` (default) | Critical | Without a PVC, data lives in the ephemeral pod filesystem; any restart erases all collections permanently. |
 | `stateful_pvc_mount_path` | `/qdrant/storage` (default) | Critical | Must match `QDRANT__STORAGE__STORAGE_PATH`. A mismatch stores data in the ephemeral layer and loses it on restart. |
 | `application_name` | set once | Critical | Immutable after first deploy; changing recreates the namespace and storage, losing all collections. |
 | `max_instance_count` | `1` | High | Multiple Qdrant pods sharing a single PVC (RWO) or GCS bucket corrupt collections. Scale vertically, not horizontally. |

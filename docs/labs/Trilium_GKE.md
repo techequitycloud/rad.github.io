@@ -71,9 +71,9 @@ export REGION="us-central1"           # the region you deploy into
 2. The platform builds a thin wrapper image over `triliumnext/notes` (mirrored into
    Artifact Registry via Cloud Build) and schedules a single pod onto the GKE
    Autopilot cluster (port 8080, 1 vCPU / 1 GiB by default), exposed via an external
-   **LoadBalancer** Service by default. The data directory is a **GCS FUSE** volume
-   mounted at `/home/node/trilium-data`; setting `stateful_pvc_enabled = true`
-   switches to a **StatefulSet with a block PVC** instead. There is **no Cloud SQL
+   **LoadBalancer** Service by default. The data directory is a **StatefulSet block
+   PVC** mounted at `/home/node/trilium-data` by default (`stateful_pvc_enabled =
+   true`); setting it to `false` falls back to a GCS FUSE volume. There is **no Cloud SQL
    instance and no Redis** — Trilium's document store is entirely an embedded
    SQLite database on the mounted volume. First deploys typically take **5–10
    minutes** (the image build and pod scheduling dominate; there is no database to
@@ -151,9 +151,8 @@ export REGION="us-central1"           # the region you deploy into
    Resource changes go through **Update** on the deployment details page, not
    manual `kubectl edit` (a manual edit would be reverted on the next apply).
 
-3. **Choose your storage mode deliberately.** GCS FUSE (default) is simplest and
-   needs no PVC quota planning; `stateful_pvc_enabled = true` mounts a per-pod block
-   PVC (`standard`/HDD, `20Gi` by default) for real POSIX file locking on the
+3. **Keep the default storage mode.** `stateful_pvc_enabled = true` (the default)
+   mounts a per-pod block PVC (`standard`/HDD, `20Gi` by default) for real POSIX file locking on the
    embedded SQLite database, auto-selects `StatefulSet`, and sets
    `stateful_fs_group = 1000` so the volume is writable by Trilium (uid/gid 1000).
    Switching modes is a one-way infrastructure change — plan a data copy if you need

@@ -57,9 +57,12 @@ together a focused set of Google Cloud services:
 - **A single pod by default** (`min_instance_count = 1`, `max_instance_count = 1`).
   GKE does not scale to zero; LangFlow's in-process state means a single replica is the
   safe default.
-- **Application state lives in PostgreSQL; NFS is off by default.** A `data` Cloud
-  Storage bucket is provisioned by default (`storage_buckets`), but LangFlow itself
-  keeps flows, components, and credentials in the database.
+- **Flows and credentials live in PostgreSQL; uploaded files live on a block PVC.**
+  `stateful_pvc_enabled = true` (the default) runs LangFlow as a StatefulSet with a
+  per-pod PVC at `/data`, which the wrapper passes to LangFlow as `LANGFLOW_CONFIG_DIR` —
+  the directory holding uploaded files. `stateful_fs_group = 1000` makes the PVC writable
+  by LangFlow's non-root user. NFS is off by default. A `data` Cloud Storage bucket is
+  also provisioned (`storage_buckets`).
 
 ---
 
@@ -275,7 +278,7 @@ All other inputs follow standard App_GKE behaviour.
 |---|---|---|
 | `gke_cluster_name` | `""` (auto-discovered) | Target Autopilot cluster (from Services_GCP). |
 | `namespace_name` | `""` (auto-generated) | Kubernetes namespace for the workload. |
-| `workload_type` | `null` | Resolves to `Deployment` (default); `StatefulSet` when a PVC is enabled. |
+| `workload_type` | `null` | Resolves to `StatefulSet`, because `stateful_pvc_enabled` defaults to `true`. |
 | `service_type` | `LoadBalancer` | How the Kubernetes Service is exposed. |
 | `session_affinity` | `ClientIP` | Sticky routing for in-process flow-editor state. |
 | `termination_grace_period_seconds` | `30` | Seconds to wait after SIGTERM before SIGKILL. |
@@ -287,8 +290,8 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable PVC templates. Not needed — LangFlow stores all state in PostgreSQL. |
-| `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | _(set)_ | Per-pod PVC sizing and mount (only if enabled). |
+| `stateful_pvc_enabled` | `true` | Keep on — the PVC at `stateful_pvc_mount_path` (`/data`) is LangFlow's config directory, where uploaded files live. |
+| `stateful_pvc_size` / `stateful_pvc_mount_path` / `stateful_pvc_storage_class` | _(set)_ | Per-pod PVC sizing and mount; the mount path (default `/data`) is also passed as `LANGFLOW_CONFIG_DIR`. |
 | `stateful_headless_service` / `stateful_pod_management_policy` / `stateful_update_strategy` | _(set)_ | StatefulSet behaviour (only if enabled). |
 
 All other inputs follow standard App_GKE behaviour.
@@ -344,7 +347,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS is off by default; LangFlow keeps state in PostgreSQL. |
+| `enable_nfs` | `false` | NFS is off by default; uploaded files are on the block PVC. |
 | `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container (when NFS is enabled). |
 
 All other inputs follow standard App_GKE behaviour.

@@ -31,7 +31,7 @@ together a deliberately small set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Node.js pod, 1 vCPU / 1 GiB by default — but see scaling notes below |
 | Database | None (embedded SQLite) | Trilium's entire document store is a single SQLite file, `document.db`, on the persistent volume |
-| Object storage | Cloud Storage (default) or block PVC | GCS FUSE volume, or a StatefulSet PVC for larger note collections |
+| Persistent storage | Block PVC (default) | StatefulSet PVC at `/home/node/trilium-data`; set `stateful_pvc_enabled = false` to fall back to a GCS FUSE volume |
 | Secrets | Secret Manager | None generated — Trilium has no env-var-driven credential |
 | Ingress | Cloud Load Balancing | External LoadBalancer by default (Trilium is a browser-facing web UI) |
 
@@ -51,9 +51,9 @@ together a deliberately small set of Google Cloud services:
 - **Health probe is `/api/health-check`, not `/`.** The root path (`/`) returns a
   302 redirect to the setup/login screen. Only `/api/health-check` returns an
   unauthenticated `200 {"status":"ok"}` — confirmed live via local container testing.
-- **Block PVC recommended for larger note collections.** Set
-  `stateful_pvc_enabled = true` to avoid GCS FUSE I/O overhead/locking quirks on the
-  embedded SQLite file. The `stateful_pvc_storage_class` default is `"standard"`
+- **Block PVC by default.** `stateful_pvc_enabled = true` (the default) keeps the
+  embedded SQLite file, which runs in WAL mode, off GCS FUSE — SQLite does not
+  support WAL on a network filesystem. The `stateful_pvc_storage_class` default is `"standard"`
   (HDD `pd-standard`) — Trilium needs no SSD IOPS, and HDD draws from the much
   larger `DISKS_TOTAL_GB` quota instead of the tight `SSD_TOTAL_GB` quota.
 - **`fsGroup`/`mount_options` set to 1000.** Trilium's container runs as the `node`
@@ -71,8 +71,8 @@ identifiers are reported in the deployment [Outputs](#5-outputs).
 
 ### A. GKE Autopilot — the Trilium workload
 
-Trilium runs as a single pod (Deployment by default, or a StatefulSet when
-`stateful_pvc_enabled = true`). Because it must stay at exactly one replica, there
+Trilium runs as a single pod (a StatefulSet by default, because
+`stateful_pvc_enabled = true`; a Deployment if you turn the PVC off). Because it must stay at exactly one replica, there
 is no meaningful horizontal autoscaling to observe.
 
 - **Console:** Kubernetes Engine → Workloads → select the Trilium workload for
@@ -90,9 +90,9 @@ See [App_GKE](App_GKE.md) for Autopilot scaling and the workload type
 ### B. Cloud Storage / block PVC — the Trilium data directory
 
 The entire application state (SQLite `document.db`, attachments, revision history,
-settings) lives under `/home/node/trilium-data`, mounted either via GCS FUSE
-(default) or a StatefulSet block PVC (`stateful_pvc_enabled = true`, recommended
-for larger note collections).
+settings) lives under `/home/node/trilium-data`, on a StatefulSet block PVC by
+default (`stateful_pvc_enabled = true`), or on a GCS FUSE volume if the PVC is
+turned off.
 
 - **Console:** Cloud Storage → Buckets (GCS FUSE mode); Kubernetes Engine → Storage
   (PVC mode).
@@ -145,10 +145,10 @@ Optional uptime checks and alert policies are available.
   returns `200 {"status":"ok"}` once the HTTP server is listening.
 - **Single-writer constraint.** Never raise `max_instance_count` above `1` — the
   embedded SQLite database is not safe for concurrent writers from multiple pods.
-- **PVC vs GCS FUSE trade-off.** GCS FUSE (default) is simplest and needs no extra
-  quota planning; a StatefulSet block PVC gives real POSIX file locking and lower
-  I/O overhead for larger collections, at the cost of consuming regional disk
-  quota (mitigated here by defaulting to HDD, not SSD).
+- **PVC vs GCS FUSE trade-off.** The block PVC (default) gives real POSIX file
+  locking and the shared-memory mapping SQLite's WAL mode needs, at the cost of
+  consuming regional disk quota (mitigated here by defaulting to HDD, not SSD).
+  GCS FUSE needs no disk quota but is not a supported filesystem for SQLite WAL.
 
 ---
 
@@ -187,7 +187,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Recommended `true` for larger note collections — real POSIX file locking on the SQLite document.db. |
+| `stateful_pvc_enabled` | `true` | Keep `true` — real POSIX file locking and WAL support for the SQLite document.db. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size. |
 | `stateful_pvc_mount_path` | `/home/node/trilium-data` | Container mount path. |
 | `stateful_pvc_storage_class` | `standard` | HDD by default — no SSD IOPS need; keeps deployments off the tight `SSD_TOTAL_GB` quota. |

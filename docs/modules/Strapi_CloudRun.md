@@ -247,7 +247,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `2Gi` | Memory per instance; Strapi needs headroom for Node.js and admin panel. |
 | `min_instance_count` | `0` | Minimum instances (0 = scale-to-zero). Set to `1` to eliminate cold starts. |
 | `max_instance_count` | `1` | Maximum instances; increase after validating NFS shared state. |
-| `container_port` | `8080` | Port the Cloud Run service routes traffic to (Cloud Run default). |
+| `container_port` | `1337` | Port the Cloud Run service routes traffic to (Cloud Run default). |
 | `execution_environment` | `gen2` | gen2 is required for NFS mounts. |
 | `timeout_seconds` | `300` | Max request duration; increase for long media processing. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for socket connections. |

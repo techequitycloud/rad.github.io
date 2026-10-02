@@ -30,8 +30,8 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Networking & Network Policies | §3.D Networking & Network Policies | Identical. |
 | Initialization Jobs & CronJobs | §3.E Initialization Jobs & CronJobs | `db-init` PostgreSQL job supplied automatically by `Mattermost Common`; see [Group 8: Jobs & Scheduled Tasks](#group-8-jobs--scheduled-tasks). |
 | Additional Services | §3.F Additional Services | Identical. |
-| Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `false`; see [Group 9: Storage & Filesystem — NFS](#group-9-storage--filesystem--nfs). |
-| Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | GCS Fuse volumes preferred for `/mattermost/data`; see [Group 10: Storage & Filesystem — GCS](#group-10-storage--filesystem--gcs). |
+| Storage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` defaults to `true` (uploads live on the NFS share); see [Group 9: Storage & Filesystem — NFS](#group-9-storage--filesystem--nfs). |
+| Storage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Optional alternative to NFS for `/mattermost/data`; see [Group 10: Storage & Filesystem — GCS](#group-10-storage--filesystem--gcs). |
 | Database Configuration | §3.B Database (Cloud SQL) | **PostgreSQL 15 required**; see [Group 11: Database Configuration](#group-11-database-configuration). |
 | Backup Schedule & Retention | §3.B Database (Cloud SQL) | Identical. |
 | Custom SQL Scripts | §3.E Initialization Jobs & CronJobs | Identical. |
@@ -51,7 +51,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 11: Database Configuration](#group-11-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `false`; recommended for multi-replica; see [Group 15: Redis Cache](#group-15-redis-cache). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `false`; see [Group 15: Redis Cache](#group-15-redis-cache). |
 | Backup Import | §8.B Backup Import | Exposes both `backup_uri` (full GCS URI or Drive ID) and `backup_file` (filename in module backup bucket); see [Group 6: Backup & Maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
@@ -66,11 +66,11 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 2. **A `db-init` job runs on first deployment.** `Mattermost Common` supplies a default `db-init` Kubernetes Job that creates the Mattermost PostgreSQL database and user. Mattermost then runs its own schema migrations on first startup — no manual schema setup is needed.
 3. **No pre-populated environment variables.** Unlike Ghost, Mattermost does not require SMTP defaults injected by the module. Key settings — site URL, edition, Redis — are controlled by dedicated top-level variables (`site_url`, `edition`, `enable_redis`).
 4. **Edition selection controls the container image.** Setting `edition = "enterprise"` automatically switches the container image to `mattermost/mattermost-enterprise-edition`. The default (`"team"`) uses `mattermost/mattermost-team-edition`. Enterprise Edition requires a paid licence key provided via `environment_variables`.
-5. **GCS Fuse is preferred over NFS for file storage.** `enable_nfs` defaults to `false`. Mattermost file uploads and attachments are stored on GCS volumes mounted via the CSI GCS Fuse driver at `/mattermost/data`. This provides durable, multi-replica-safe storage without provisioning a Filestore instance.
+5. **Uploads live on the NFS share.** `enable_nfs` defaults to `true`. Mattermost stores file uploads and attachments on local disk (`MM_FILESETTINGS_DRIVERTYPE = local`) under `/mattermost/data`, which is where the NFS volume is mounted, so uploads survive pod restarts. Turn NFS off only if you point `MM_FILESETTINGS_*` at S3-compatible storage.
 6. **Resource defaults are sized for Mattermost.** The default `cpu_limit` (2 vCPU) and `memory_limit` (4 Gi) accommodate Mattermost's concurrent WebSocket handling, channel caching, and message indexing.
-7. **Redis is optional but recommended for multi-replica deployments.** `enable_redis` defaults to `false`. Enabling Redis provides distributed session and cache storage, which is required for correct behaviour across more than one pod replica.
+7. **Redis is optional.** `enable_redis` defaults to `false`. It does not by itself make more than one replica safe: Team Edition has no HA clustering, so `max_instance_count` defaults to `1`; multiple replicas need Enterprise Edition with a licence.
 8. **Health probes use Mattermost's dedicated ping endpoint.** Both `startup_probe` and `liveness_probe` default to `path = "/api/v4/system/ping"` — Mattermost's built-in health endpoint that returns HTTP 200 when the server is ready to accept connections.
-9. **`site_url` must be set for correct link generation.** Mattermost uses `MM_SERVICESETTINGS_SITEURL` for notification emails, in-app link generation, and OAuth redirects. The `site_url` variable sets this automatically.
+9. **SiteURL is never empty.** Mattermost uses `MM_SERVICESETTINGS_SITEURL` for notification emails, in-app link generation, and OAuth redirects. `site_url` sets it explicitly; left empty, the entrypoint derives it at boot from the load-balancer URL (`GKE_SERVICE_URL`).
 
 ---
 
@@ -83,7 +83,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 | Variable | Default | Description |
 |---|---|---|
 | `region` | `"us-central1"` | GCP region for resource deployment. Used as a fallback when VPC subnet discovery cannot determine the region. Also used as the default location for GCS buckets provisioned for Mattermost file storage. |
-| `site_url` | `""` | The public URL where Mattermost is accessible (e.g., `"https://chat.example.com"`). Sets `MM_SERVICESETTINGS_SITEURL`. Required for correct link generation in notification emails, OAuth redirects, and in-app deep links. Leave empty only for initial infrastructure provisioning before a domain is assigned. |
+| `site_url` | `""` | The public URL where Mattermost is accessible (e.g., `"https://chat.example.com"`). Sets `MM_SERVICESETTINGS_SITEURL`. Left empty, it is derived at boot from the load-balancer URL; set it when you use a custom domain. |
 | `edition` | `"team"` | Mattermost edition. `"team"` deploys the free Team Edition. `"enterprise"` deploys Enterprise Edition and requires a licence key supplied via `environment_variables`. Changing this value after initial deployment replaces the container image on the next apply. |
 
 ---
@@ -114,7 +114,7 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.
 | `container_port` | `8065` | `8080` | Mattermost's native HTTP port. Do not change unless your custom Dockerfile binds Mattermost to a different port. |
 | `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Mattermost handles concurrent WebSocket connections, channel caching, and message indexing. 2 vCPU and 4 Gi are the recommended production minimums. |
 | `min_instance_count` | `1` | `0` | Mattermost maintains persistent WebSocket connections. Scale-to-zero drops active user sessions. Keep at `1` or higher for any deployment with active users. |
-| `max_instance_count` | `5` | `3` | Higher ceiling to accommodate traffic spikes during large team communication bursts. |
+| `max_instance_count` | `1` | `3` | Team Edition has no HA clustering, so a second replica would not share WebSocket state. Raise it only with Enterprise Edition and a licence. |
 | `container_image_source` | `"custom"` | `"custom"` | `Mattermost Common` supplies a Dockerfile-based build by default. Set to `"prebuilt"` to deploy a pre-built image URI directly. |
 | `enable_cloudsql_volume` | `false` | `true` | Mattermost GKE connects to Cloud SQL over a private TCP connection rather than via a Unix socket sidecar by default. Set to `true` to inject the Cloud SQL Auth Proxy sidecar. |
 | `timeout_seconds` | `300` | `300` | For WebSocket-heavy deployments, increase to `3600` to prevent active WebSocket connections from being severed by the backend timeout. |
@@ -254,7 +254,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-st
 
 | Variable | Default | Notes |
 |---|---|---|
-| `enable_nfs` | `false` | NFS storage is **disabled** by default for Mattermost. GCS Fuse volumes are the preferred storage backend for `/mattermost/data` because they are durable and multi-replica-safe without the overhead of a Filestore instance. Enable NFS if your deployment requires POSIX filesystem semantics not supported by GCS Fuse (e.g., file locking). |
+| `enable_nfs` | `true` | NFS is **enabled** by default for Mattermost: uploads are written to local disk at `/mattermost/data`, and without this mount they are lost when the pod is replaced. Set `false` only if you point `MM_FILESETTINGS_*` at S3-compatible storage. |
 | `nfs_mount_path` | `"/mattermost/data"` | The path where the NFS volume is mounted inside the Mattermost container. Matches Mattermost's default data directory. |
 
 ---
@@ -265,7 +265,7 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE
 
 **Mattermost-specific behaviour:**
 
-Mattermost stores team uploads, file attachments, and plugin data under `/mattermost/data`. The recommended approach for Mattermost GKE is to provision a GCS bucket and mount it via the GCS Fuse CSI driver:
+Mattermost stores team uploads, file attachments, and plugin data under `/mattermost/data`. The default NFS mount already makes that path durable; as an alternative you can provision a GCS bucket and mount it via the GCS Fuse CSI driver:
 
 ```
 create_cloud_storage = true
@@ -461,9 +461,9 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
-Setting `stateful_pvc_enabled = true` automatically resolves `workload_type` to `"StatefulSet"`. This provides each Mattermost pod with its own dedicated PVC for local storage, as an alternative to GCS Fuse volumes. For most Mattermost deployments, GCS Fuse is preferred over StatefulSet PVCs because GCS provides durability and cross-pod access without size constraints.
+Setting `stateful_pvc_enabled = true` automatically resolves `workload_type` to `"StatefulSet"`. This provides each Mattermost pod with its own dedicated PVC for local storage, as an alternative to the default NFS volume.
 
-Available variables: `stateful_pvc_enabled`, `stateful_pvc_size` (default `"10Gi"`), `stateful_pvc_mount_path` (default `"/data"`), `stateful_pvc_storage_class` (default `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group`.
+Available variables: `stateful_pvc_enabled`, `stateful_pvc_size` (default `"10Gi"`), `stateful_pvc_mount_path` (default `"/mattermost/data"`), `stateful_pvc_storage_class` (default `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group`.
 
 ---
 
@@ -581,7 +581,7 @@ gcloud secrets list \
 | `database_type` | `"POSTGRES_15"` | **Critical** | Mattermost only supports PostgreSQL. Setting to `MYSQL_8_0` or `NONE` causes the `db-init` job to fail and Mattermost to crash at startup. |
 | `application_database_name` | `"mattermost"` | **Critical** | Immutable after deployment — changing this recreates the database and destroys all Mattermost data (channels, messages, users). |
 | `application_database_user` | `"mattermost"` | **Critical** | Immutable after deployment — changing this recreates the user, invalidates credentials, and breaks Mattermost's database connection. |
-| `site_url` | `""` | **High** | An empty `site_url` prevents Mattermost from generating correct notification email links, OAuth redirects, and mobile deep links. Configure before inviting users. |
+| `site_url` | `""` (derived from the LB URL) | **High** with a custom domain | Empty is derived at boot from the load-balancer URL; on a custom domain, set it before inviting users or links and OAuth redirects will use the LB address. |
 | `edition` | `"team"` | **High** | Setting `"enterprise"` without a valid licence key causes Mattermost to start in an unlicensed state and disables enterprise features silently. Provide the key via `environment_variables`. |
 | `enable_redis` | `false` | **High** | Safe for single-replica deployments. For `min_instance_count > 1`, in-process session caching causes intermittent authentication failures when requests are load-balanced across pods. Enable Redis for any multi-replica deployment. |
 | `min_instance_count` | `1` | **High** | Setting `0` allows scale-to-zero. Cold starts drop active WebSocket connections, causing users to see disconnection banners and miss real-time messages until reconnection. Keep at `1` for production. |
@@ -589,7 +589,7 @@ gcloud secrets list \
 | `session_affinity` | `"ClientIP"` | **High** | Without Redis and without session affinity, admin and user sessions are not shared across pods. Users are effectively logged out on every request that routes to a different replica. |
 | `container_port` | `8065` | **Critical** | Mattermost listens on `8065`. Changing this without matching the container's bound port causes all health probes to fail and the pod to enter a restart loop. |
 | `timeout_seconds` | `300` | **Medium** | Mattermost WebSocket connections are long-lived. A 300-second backend timeout causes active connections to be severed regularly. Set to `3600` for WebSocket-heavy deployments. |
-| `enable_nfs` | `false` | **Medium** | NFS is off by default. If `gcs_volumes` is also not configured, Mattermost file uploads are stored inside the container's ephemeral filesystem and lost on pod restart. Configure GCS Fuse volumes for durable file storage. |
+| `enable_nfs` | `true` | **Medium** | NFS is on by default and holds uploads. If you turn it off without configuring S3-compatible storage or `gcs_volumes`, Mattermost file uploads are stored inside the container's ephemeral filesystem and lost on pod restart. |
 | `create_cloud_storage` | `false` | **Medium** | No GCS bucket is provisioned automatically by this module. Without `create_cloud_storage = true` and a `gcs_volumes` entry, uploaded files are not durable across pod restarts. |
 | `stateful_pvc_size` | `"10Gi"` | **Medium** | For teams actively sharing files and media, `10Gi` fills quickly. Provision 50–100 Gi for active teams. PVC size can be expanded but not reduced. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critical** (GKE-specific) | Must use binary suffixes (`Gi`, `Mi`) when set. Bare integers are treated as bytes and prevent all pods from being scheduled. |

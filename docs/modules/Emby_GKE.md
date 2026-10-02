@@ -50,11 +50,11 @@ deployment wires together a focused set of Google Cloud services:
   plugins, transcode cache, and logs — under `/config`. No Cloud SQL instance, no
   `db-init` job, and no Redis is used (`database_type = NONE`; the foundation Redis
   variables are inert for Emby).
-- **A block PVC at `/config` is the best fit.** `stateful_pvc_enabled = true`
-  resolves the workload to a **StatefulSet** with a per-pod PVC mounted at `/config`,
+- **A block PVC at `/config` is the default, and should stay on.** `stateful_pvc_enabled = true`
+  (the default) resolves the workload to a **StatefulSet** with a per-pod PVC mounted at `/config`,
   and the GCS storage volume auto-disables to avoid a double mount. Real block
   storage gives the correct filesystem semantics SQLite and the transcode cache
-  need — the recommended configuration for a media server.
+  need; GCS FUSE cannot host Emby's SQLite databases.
 - **The container listens on port 8096.** Emby's web/API port is set by
   Emby_Common. The web UI and first-run setup wizard are served at `/web` (and
   `/`). Unlike Jellyfin, Emby has **no confirmed, documented unauthenticated HTTP
@@ -326,7 +326,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable the PVC template. **Recommended `true` for Emby** — auto-resolves to StatefulSet. |
+| `stateful_pvc_enabled` | `true` | Enable the PVC template. **Keep `true`** — Emby's SQLite databases cannot run on GCS FUSE; auto-resolves to StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; size to hold `/config` (SQLite, metadata, transcode cache). |
 | `stateful_pvc_mount_path` | `/config` | Container mount path for the PVC (Emby's config/persistence dir). |
 | `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD (SSD); use `premium-rwo` for higher IOPS, or `standard` (HDD `pd-standard`) on a quota-constrained project — see the pitfalls table below. |

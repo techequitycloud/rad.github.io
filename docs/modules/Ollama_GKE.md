@@ -228,7 +228,7 @@ specific to or notable for Ollama are listed; every other input is inherited fro
 | `session_affinity` | `None` | Session affinity for the Kubernetes Service. `ClientIP` improves multi-turn context continuity but skews load distribution. |
 | `enable_image_mirroring` | `true` | Mirror `ollama/ollama` to Artifact Registry to avoid Docker Hub rate limits. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
-| `container_image_source` | `prebuilt` | `"prebuilt"` uses `ollama/ollama` directly; `"custom"` triggers a Cloud Build. |
+| `container_image_source` | `prebuilt` | Not forwarded — `main.tf` pins `"prebuilt"`, so `ollama/ollama:<application_version>` is always mirrored and never built. |
 | `container_image` | `ollama/ollama` | Full image URI when `container_image_source = "prebuilt"`. |
 | `enable_cloudsql_volume` | `false` | Not needed for Ollama (no database). |
 
@@ -316,7 +316,7 @@ setting.
 | `namespace_name` | `""` | Kubernetes namespace; auto-generated from the application name when empty. |
 | `enable_pod_disruption_budget` | `true` | Protect availability during node upgrades. |
 | `pdb_min_available` | `1` | Ensure `max_instance_count ≥ 2` when using a PDB so rolling upgrades can proceed. |
-| `deployment_timeout` | `600` | Seconds Terraform waits for the Deployment rollout. Increase to `1200` for large models (13B+). |
+| `deployment_timeout` | `1800` | Seconds Terraform waits for the Deployment rollout. Increase to `1200` for large models (13B+). |
 
 ### Group 17 — StatefulSet
 

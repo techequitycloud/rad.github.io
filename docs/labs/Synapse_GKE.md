@@ -234,10 +234,9 @@ platform-level diagnostics and do not change with Synapse releases.
 - **Federation broken / device sessions lost after a redeploy:** the signing key was
   regenerated because the data directory was not persistent. Either use a StatefulSet PVC
   (`stateful_pvc_mount_path` already defaults to `/data`), or keep `enable_nfs = true`
-  (the default) **and set `nfs_mount_path = "/data"`** — its default is
-  `/opt/synapse/storage`, which does not match the entrypoint's data directory
-  (`SYNAPSE_DATA_DIR = "/data"`), so the signing key would not land on the persistent
-  mount and would not survive pod restarts.
+  and `nfs_mount_path = "/data"` (both the defaults) — any other mount path does not
+  match the entrypoint's data directory (`SYNAPSE_DATA_DIR = "/data"`), so the signing
+  key would not land on the persistent mount and would not survive pod restarts.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB
   password secret materialised into the namespace, and the init job completed.
 - **Pending pod / no external IP:** check `kubectl describe pod` events for resource or

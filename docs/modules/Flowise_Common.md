@@ -24,6 +24,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Area | Provided by Flowise_Common | Where it surfaces |
 |---|---|---|
 | Admin credential | Generates the Flowise admin password and stores it in **Secret Manager** as `FLOWISE_PASSWORD` | Retrieve via Secret Manager (see below) |
+| Credential-encryption key | Generates the key Flowise encrypts stored credentials with and injects it as `FLOWISE_SECRETKEY_OVERWRITE`, so saved credentials stay readable after a container is replaced | Secret Manager (`secret-<resource_prefix>-flowise-encryption-key`) |
 | Container image | Pins the `flowiseai/flowise` base image and the custom Dockerfile that extends it with `flowise-entrypoint.sh` | `container_image` output of the platform deployment |
 | Database engine | Defaults to **Cloud SQL for PostgreSQL 15**; sets `DATABASE_TYPE=postgres` and `DATABASE_PORT=5432` | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job that creates the database, user, and grants privileges using `postgres:15-alpine` | `initialization_jobs` output |
@@ -49,6 +50,11 @@ The secret ID is formatted as `secret-<resource_prefix>-flowise-password`. The d
 password is generated and managed separately by the foundation; its secret name is
 reported in the platform deployment outputs (`database_password_secret`). See
 [App_Common](App_Common.md) for the shared secret and Workload Identity model.
+
+A second secret, `secret-<resource_prefix>-flowise-encryption-key`, holds the key Flowise
+uses to encrypt the API keys and other credentials it stores. It is injected as
+`FLOWISE_SECRETKEY_OVERWRITE`; without it Flowise would generate a new key on every
+container replacement and could no longer decrypt credentials saved earlier.
 
 ---
 

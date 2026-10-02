@@ -264,13 +264,13 @@ specific to or notable for WriteFreely are listed; every other input is inherite
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP, 30s delay | Ready as soon as port 8080 is bound. |
-| `liveness_probe` | HTTP `/`, 300s delay | Restarts the container if the home page stops responding. |
+| `liveness_probe` | HTTP `/`, 30s delay | Restarts the container if the home page stops responding. The TCP startup probe already covers slow boots. |
 
 ### Group 21 — Redis (inert for WriteFreely)
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | **Not consumed** — WriteFreely stores all state in MySQL. Scaffold leftover. |
+| `enable_redis` | `false` | **Not consumed** — WriteFreely stores all state in MySQL. Scaffold leftover. |
 
 All other inputs follow standard App_CloudRun behaviour.
 

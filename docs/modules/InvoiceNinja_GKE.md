@@ -289,7 +289,7 @@ Available variables: `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_l
 | Variable | Default | Notes |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is enabled by default. Invoice Ninja writes uploaded documents, client logos, and generated PDFs to the container filesystem. Without NFS, files are isolated per pod and lost on pod restart or re-schedule. |
-| `nfs_mount_path` | `"/mnt/nfs"` | Container path where the NFS volume is mounted. |
+| `nfs_mount_path` | `"/var/www/app/public/storage"` | Container path where the NFS volume is mounted. |
 | `nfs_volume_name` | `"nfs-data-volume"` | Kubernetes volume name for the NFS mount. |
 | `nfs_instance_name` | `""` | Name of an existing NFS GCE VM. Leave empty to auto-discover. |
 | `nfs_instance_base_name` | `"app-nfs"` | Base name for inline NFS VM. Deployment ID is appended. |

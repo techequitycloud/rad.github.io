@@ -31,7 +31,7 @@ services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | GKE Autopilot | Rust binary, 1 vCPU / 1 GiB by default, single replica (single-writer) |
-| Persistent storage | Persistent Disk PVC or Cloud Storage (GCS FUSE) | `MEILI_DB_PATH` is fixed at `/meili_data`, and GCS FUSE mounts there automatically; the StatefulSet PVC's `stateful_pvc_mount_path` defaults to a different path (`/meilisearch/storage`) — override it to `/meili_data` to align the two |
+| Persistent storage | Persistent Disk PVC or Cloud Storage (GCS FUSE) | `MEILI_DB_PATH` is fixed at `/meili_data`; the StatefulSet PVC (on by default) mounts there (`stateful_pvc_mount_path` default), and GCS FUSE is used only when the PVC is disabled |
 | Database | None | Meilisearch is self-contained — no Cloud SQL, no external database |
 | Cache & queue | None | Meilisearch has no Redis or queue dependency |
 | Secrets | Secret Manager → native K8s Secret | Auto-generated `MEILI_MASTER_KEY` (the search admin credential) |
@@ -46,10 +46,10 @@ services:
   (`MEILI_ENV = production`), which refuses to start without a ≥16-byte
   `MEILI_MASTER_KEY`. The module generates a 32-character key, stores it in Secret
   Manager, and injects it as a **native Kubernetes Secret** (`explicit_secret_values`).
-- **StatefulSet PVC recommended.** Set `stateful_pvc_enabled = true` for a
-  Persistent Disk PVC (`stateful_pvc_size = "20Gi"` default) — the lower-latency,
-  production-grade storage option. Its mount path defaults to `/meilisearch/storage`,
-  which does **not** match the fixed `MEILI_DB_PATH` (`/meili_data`) — set
+- **StatefulSet PVC by default.** `stateful_pvc_enabled = true` gives a
+  Persistent Disk PVC (`stateful_pvc_size = "20Gi"` default) — required in practice,
+  because Meilisearch's LMDB store writes at arbitrary offsets that GCS FUSE does not
+  support. Its mount path defaults to `/meili_data`, the fixed `MEILI_DB_PATH` — keep
   `stateful_pvc_mount_path = "/meili_data"` explicitly so the PVC actually backs
   Meilisearch's data directory. Without the PVC, the storage bucket is mounted via
   GCS FUSE at `/meili_data`. Setting the PVC skips the FUSE mount to avoid a
@@ -96,10 +96,9 @@ See [App_GKE](App_GKE.md) for how Autopilot, scaling, and the workload type
 ### B. Persistent storage — PVC or Cloud Storage
 
 Meilisearch data lives at `/meili_data` (`MEILI_DB_PATH`, fixed). With
-`stateful_pvc_enabled = true` this is a Persistent Disk PVC (`standard-rwo` by
-default) — but only if `stateful_pvc_mount_path` is set to `/meili_data`; its
-default (`/meilisearch/storage`) does not match, so override it explicitly.
-Otherwise it is the `storage` Cloud Storage bucket mounted via GCS FUSE, which does
+`stateful_pvc_enabled = true` (the default) this is a Persistent Disk PVC
+(`standard-rwo` by default) mounted at `stateful_pvc_mount_path`, which defaults to
+`/meili_data` — do not change it. With the PVC disabled it is the `storage` Cloud Storage bucket mounted via GCS FUSE, which does
 use `/meili_data` automatically. Either way, this volume is the source of
 truth for all indexes and documents — there is no separate database.
 
@@ -191,9 +190,8 @@ Optional uptime checks and alert policies are available against `/health`.
   expiring keys with `POST /keys` (using the master key) limited to specific indexes
   and actions (e.g. search-only), and distribute those.
 - **PVC path must match `MEILI_DB_PATH`.** `stateful_pvc_mount_path` defaults to
-  `/meilisearch/storage`, which does **not** match the fixed `MEILI_DB_PATH`
-  (`/meili_data`). Set `stateful_pvc_mount_path = "/meili_data"` explicitly when
-  enabling the PVC, or writes land on a volume Meilisearch never reads from.
+  `/meili_data`, the fixed `MEILI_DB_PATH`. Do not change it, or writes land on a
+  volume Meilisearch never reads from.
 - **Health path.** Startup and liveness probes target `/health`, which returns
   `{"status":"available"}` when the engine is ready:
   ```bash
@@ -269,9 +267,9 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Set `true` for a Persistent Disk PVC (recommended). Auto-selects StatefulSet. |
+| `stateful_pvc_enabled` | `true` | Set `true` for a Persistent Disk PVC (recommended). Auto-selects StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; cannot be decreased after creation. |
-| `stateful_pvc_mount_path` | `/meilisearch/storage` | Container mount path. Default does **not** match the fixed `MEILI_DB_PATH` (`/meili_data`) — set this to `/meili_data` explicitly when using the PVC. |
+| `stateful_pvc_mount_path` | `/meili_data` | Filesystem path inside the Meilisearch container where the per-pod PVC is mounted. Must match MEILI_DB_PATH (/meili_data); Meilisearch stores its entire index there and mounting anywhere else leaves the index on ephemeral storage. |
 | `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (Balanced PD) or `premium-rwo` (higher IOPS). |
 | `stateful_fs_group` | `3000` | fsGroup GID for PVC write access. |
 | `stateful_headless_service` / `stateful_pod_management_policy` / `stateful_update_strategy` | `null` | Foundation defaults for stable identities, ordered restarts, rolling updates. |
@@ -423,7 +421,7 @@ locate and explore the running resources.
 |---|---|---|---|
 | `enable_api_key` | `true` | Critical | Disabling it removes the master key; in production mode Meilisearch refuses to start, and if it did run, anyone reaching the Service could read or delete every index. |
 | `max_instance_count` | `1` | Critical | More than one pod sharing the RWO PVC or GCS bucket corrupts the index. |
-| `stateful_pvc_mount_path` | set to `/meili_data` | Critical | Defaults to `/meilisearch/storage`, which does not match the fixed `MEILI_DB_PATH`; left at the default, the PVC never receives the index data and it appears empty. |
+| `stateful_pvc_mount_path` | leave at `/meili_data` | Critical | Must match the fixed `MEILI_DB_PATH`; mounted anywhere else, the PVC never receives the index data and it appears empty. |
 | `stateful_pvc_size` | size to dataset | Critical | Cannot be decreased after creation; too small and the PVC fills, halting writes. |
 | `workload_type` vs `stateful_pvc_enabled` | let `stateful_pvc_enabled` drive it | Critical | `workload_type = "Deployment"` with `stateful_pvc_enabled = true` is rejected at plan time; the PVC needs a StatefulSet. |
 | `MEILI_MASTER_KEY` (auto-generated) | Rotate only with client updates | High | Rotating the key without updating clients breaks all authenticated search and admin calls. |

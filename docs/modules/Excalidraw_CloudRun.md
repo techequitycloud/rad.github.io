@@ -58,9 +58,9 @@ services:
 - **Public ingress by default.** `ingress_settings = "all"` so the whiteboard is
   reachable from a browser. Front it with IAP or Cloud Armor if you need to restrict
   access.
-- **Vestigial `homeserver_url` / `homeserver_name` inputs.** Carried over from the
-  Element template and injected as `HOMESERVER_URL` / `HOMESERVER_NAME`; the Excalidraw
-  static SPA ignores them. Leave them at their defaults.
+- **Legacy `homeserver_url` / `homeserver_name` inputs.** Carried over from the
+  Element template and still injected as `HOMESERVER_URL` / `HOMESERVER_NAME`, which the
+  static SPA ignores. They are hidden from the deploy form.
 
 ---
 
@@ -117,9 +117,10 @@ gcloud secrets list --project "$PROJECT" --filter="name~excalidraw"          # (
 gcloud storage buckets list --project "$PROJECT" --filter="name~excalidraw"  # (none)
 ```
 
-If you need multi-user real-time collaboration (a live shared canvas), Excalidraw
-requires a separate `excalidraw-room` WebSocket server, which this module does **not**
-deploy.
+Live collaboration works, but through Excalidraw's own hosted room server
+(`oss-collab.excalidraw.com`, end-to-end encrypted), not a service in your project —
+see the defaults above. Hosting collaboration yourself would need a source build of the
+frontend and a separate `excalidraw-room` server, which this module does **not** deploy.
 
 ### D. Networking & ingress
 
@@ -160,9 +161,15 @@ uptime check is a natural health signal for the static frontend.
   authentication and stores nothing server-side. Each user's drawings live in **their
   own browser's local storage**; clearing browser data loses local drawings. Use
   **Export** (`.excalidraw`, PNG, or SVG) to save or share work.
-- **Real-time collaboration is not included.** The live "shareable link" collaboration
-  feature depends on a separate `excalidraw-room` WebSocket service that this module
-  does not deploy. Single-user editing works out of the box.
+- **Some optional features use Excalidraw's own hosted services.** The upstream bundle
+  wires live collaboration (`oss-collab.excalidraw.com` and Firebase), "Export to link"
+  (`json.excalidraw.com`), the AI text-to-diagram and diagram-to-code features
+  (`oss-ai.excalidraw.com`) and the shape-library browser (`libraries.excalidraw.com`)
+  to Excalidraw's servers, not to anything in your project. Nothing is contacted on a
+  plain page load — only when a user invokes the feature — and collaboration is
+  end-to-end encrypted, but that content does leave the project. The URLs are compiled
+  into the frontend at build time, so this module cannot redirect them; self-hosting
+  collaboration would need a source build plus an `excalidraw-room` server.
 - **Health path.** Startup and liveness probes target the root `/`, which nginx answers
   with `200` immediately. Verify from a browser or:
   ```bash
@@ -190,7 +197,7 @@ specific to or notable for Excalidraw are listed; every other input is inherited
 |---|---|---|
 | `application_name` | `excalidraw` | Base name for resources. Do not change after first deploy. |
 | `application_version` | `latest` | Excalidraw image tag. Unlike some sibling modules, `latest` does **not** resolve to a pinned known-good tag — `Excalidraw_Common`'s `pinned_excalidraw_version` local is itself `"latest"`, so the build tracks Docker Hub's rolling `excalidraw/excalidraw:latest` tag. Pin a specific release (e.g. `v1.11.86`) in production. |
-| `homeserver_url` / `homeserver_name` | `""` | **Vestigial** Element carry-over — ignored by the Excalidraw SPA. Leave blank. |
+| `homeserver_url` / `homeserver_name` | `""` | Legacy Element carry-over, hidden from the form — ignored by the Excalidraw SPA. |
 
 All other inputs follow standard App_CloudRun behaviour.
 
@@ -199,7 +206,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
-| `container_image_source` | `custom` | Keep `custom` — the thin build mirrors the static image into Artifact Registry. |
+| `container_image_source` | `custom` | Keep `custom` — the thin build mirrors the static image into Artifact Registry. With `custom`, `container_image` is ignored; it is read only with `prebuilt`. |
 | `cpu_limit` | `1000m` | CPU per instance; a static file server needs little. |
 | `memory_limit` | `512Mi` | Memory per instance. Gen2 imposes a 512 MiB floor; the static bundle uses far less. |
 | `cpu_always_allocated` | `false` | Request-based billing — correct for a static server with no background work. |

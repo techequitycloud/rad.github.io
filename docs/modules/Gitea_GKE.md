@@ -282,7 +282,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is on by default so repositories, LFS objects, and attachments persist and are shared. |
-| `nfs_mount_path` | `/mnt/nfs` | GKE-variant default mount path. Note this differs from `Gitea_Common`'s own internal default of `/data` — whichever value is passed wins and is also what `GITEA__server__APP_DATA_PATH` is set to, so the effective data directory always matches the mount. |
+| `nfs_mount_path` | `/data` | Mount path for the NFS share (matches `Gitea_Common`'s own default). The value passed is also what `GITEA__server__APP_DATA_PATH` is set to, so the effective data directory always matches the mount. |
 
 ### Group 16 — Database Backend
 

@@ -31,7 +31,7 @@ deployment wires together a focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Next.js pods, 2 vCPU / 4 GiB by default, horizontally autoscaled |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Langfuse v2 does not support MySQL or other engines |
-| Object storage | Cloud Storage | A dedicated bucket provisioned automatically; optional NFS share for exports |
+| Object storage | Cloud Storage | A dedicated bucket provisioned automatically; no NFS share (Langfuse has no filesystem storage mode) |
 | Secrets | Secret Manager | Auto-generated `NEXTAUTH_SECRET` and `SALT`; database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
 
@@ -106,7 +106,8 @@ and password rotation, see [App_GKE](App_GKE.md).
 
 A dedicated **Cloud Storage** bucket is provisioned automatically; the workload service
 account is granted access. Langfuse v2 keeps all trace and observability data in PostgreSQL;
-the bucket (and the optionally-mounted NFS share) are available for exports and media.
+the bucket is available for exports and media. Langfuse has no filesystem storage mode,
+so an NFS share would never be written to.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -317,7 +318,7 @@ inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `enable_
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Mount an NFS share at `/opt/langfuse/storage` for optional exports/media. |
+| `enable_nfs` | `false` | Leave off: Langfuse has no filesystem storage mode, so the share is never used, and an unreachable NFS server would block startup. |
 | `nfs_mount_path` | `/opt/langfuse/storage` | Mount path inside the container. |
 | `nfs_volume_name` | `nfs-data-volume` | Volume name for the NFS mount. |
 

@@ -69,13 +69,12 @@ gcloud container clusters get-credentials <cluster-name> --region "$REGION" --pr
    documents every input by group, with defaults. **Set
    `application_display_name = "Radicale"` explicitly** (the module's
    default currently carries a stale value inherited from its clone source),
-   and **set `stateful_pvc_enabled = true`** for a production-style
-   deployment with real block storage. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment
+   and **keep `stateful_pvc_enabled = true`** (the default): creating a
+   calendar or address book fails on the GCS FUSE alternative. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment
    status page with real-time logs.
 
-2. The platform provisions the Kubernetes workload (a StatefulSet when
-   `stateful_pvc_enabled = true`, otherwise a Deployment backed by GCS
-   FUSE), a Secret Manager secret holding a generated `ADMIN_PASSWORD`, and
+2. The platform provisions the Kubernetes workload (a StatefulSet with a
+   block PVC by default), a Secret Manager secret holding a generated `ADMIN_PASSWORD`, and
    runs the `seed-default-collections` initialization Job. First deploys
    typically take **5–10 minutes**.
 

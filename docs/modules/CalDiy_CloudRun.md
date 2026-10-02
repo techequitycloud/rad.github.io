@@ -200,8 +200,12 @@ Monitoring, with optional uptime checks and alert policies.
   `EMAIL_FROM` in `environment_variables` and store `SMTP_PASSWORD` as a
   `secret_environment_variables` reference before going live.
 
-- **No scheduled tasks required.** Cal.diy does not require separately scheduled
-  background jobs — bookings and reminders are handled by Next.js API routes.
+- **Reminders need an external cron call.** Bookings work without scheduled jobs, but
+  cal.com sends booking and Workflow reminders only when something calls its
+  `/api/cron/*` endpoints with the shared `CRON_API_KEY`. With no key those calls are
+  rejected (401) and no reminder ever fires, while the app otherwise looks healthy.
+  To enable reminders, set `cron_api_key` (stored in Secret Manager) **and** add a
+  `cron_jobs` entry that calls the endpoint.
 
 - **Scheduled-flow reliability gap (no `cpu_always_allocated` override).** The
   repository-wide `cpu_always_allocated` audit (CLAUDE.md, 2026-07-10 OPEN CAVEAT)
@@ -342,7 +346,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in `db-init`, `db-migrate`, and `seed-app-store` jobs. |
-| `cron_jobs` | `[]` | Recurring Cloud Run Jobs triggered by Cloud Scheduler. Cal.diy does not require scheduled tasks by default. |
+| `cron_jobs` | `[]` | Recurring Cloud Run Jobs triggered by Cloud Scheduler. Needed for reminders: add one that calls `/api/cron/*` with `CRON_API_KEY` (see `cron_api_key`). |
 
 ### Group 14 — Observability & Health
 

@@ -98,8 +98,8 @@ the custom Dockerfile is multi-stage:
   impossible because there is no shell or user database to resolve.
 - **Pre-creates the attachments dir** `/app/vikunja/files` owned by uid 1000
   (`COPY --chown=1000:0`), because the app runs as uid 1000 under a root-owned
-  WORKDIR and cannot `mkdir` it at boot. For durable attachments, mount NFS over
-  this path.
+  WORKDIR and cannot `mkdir` it at boot. That is only Vikunja's fallback: the module
+  sets `VIKUNJA_FILES_BASEPATH` (`files_basepath`) to the variant's durable mount instead.
 - Builds with an app-specific `VIKUNJA_VERSION` build ARG — **not** the generic
   `APP_VERSION`, which the foundation injects into `build_args` and would otherwise
   win the merge and resolve `vikunja:latest` (a non-existent tag). `"latest"` maps
@@ -166,9 +166,11 @@ first boot.
 ## 7. Object storage
 
 Vikunja stores its data in PostgreSQL and its file attachments on the local
-filesystem (`/app/vikunja/files`). `Vikunja_Common` therefore declares **no**
-dedicated Cloud Storage bucket (`storage_buckets = []`). For durable attachments,
-enable NFS in the platform variant and mount it over the attachments path.
+filesystem. `Vikunja_Common` declares **no** dedicated Cloud Storage bucket
+(`storage_buckets = []`); instead it exports `VIKUNJA_FILES_BASEPATH` from
+`files_basepath` (default `/data`), and each variant passes its own durable mount — the
+NFS `nfs_mount_path` on Cloud Run, the PVC `stateful_pvc_mount_path` on GKE. Without
+it, Vikunja would write to the ephemeral `/app/vikunja/files`.
 
 ---
 

@@ -30,7 +30,7 @@ a focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | FrankenPHP/Caddy pods on port 8080, 1 vCPU / 2 GiB by default |
 | Database | Cloud SQL for MySQL 8.0 | Required — the engine is fixed at `MYSQL_8_0`; Castopod does not support PostgreSQL |
-| File persistence | Cloud Filestore (NFS) | Podcast media (audio, artwork) persists under `/var/lib/castopod`, shared across pods |
+| File persistence | Cloud Filestore (NFS) | Podcast media (audio, artwork) persists on NFS mounted at Castopod's media directory, `/var/www/html/public/media` |
 | Object storage | Cloud Storage | Two buckets are provisioned by default (suffixes `data` and `media`) — neither is mounted into the pod unless `gcs_volumes` is configured |
 | Cache | Redis (optional) | Castopod defaults to a filesystem cache (`CP_CACHE_HANDLER = file`); Redis is opt-in |
 | Secrets | Secret Manager | Auto-generated `CP_ANALYTICS_SALT`; database password |
@@ -56,7 +56,7 @@ a focused set of Google Cloud services:
 - **Single replica by default.** `min_instance_count = 1`, `max_instance_count = 1`.
   The NFS-backed workload deploys with the `Recreate` strategy, so do not scale beyond
   1 without verifying shared-storage behaviour for media uploads and the object cache.
-- **NFS is enabled by default** (`enable_nfs = true`, mounted at `/var/lib/castopod`) so
+- **NFS is enabled by default** (`enable_nfs = true`, mounted at `/var/www/html/public/media`) so
   uploaded episode audio and artwork persist across pod restarts and are shared across
   replicas — Castopod stores media on the filesystem, not in the database.
 - **Session affinity is `ClientIP`** so a client's requests reach the same pod.
@@ -132,8 +132,9 @@ model, automated backups, and password rotation.
 `data` bucket (the App_GKE foundation default) and a Castopod-specific `media` bucket
 declared by `Castopod_Common`. Neither is mounted into the pod filesystem unless
 `gcs_volumes` is explicitly configured; instead, Castopod's actual media directory
-(`/var/www/castopod/public/media`) is persisted via **NFS (Cloud Filestore)** mounted
-at `/var/lib/castopod`, shared across pods.
+(`/var/www/html/public/media`) is itself the **NFS (Cloud Filestore)** mount. A fresh
+share mounts empty, so the entrypoint re-seeds the media tree (`persons/`, `podcasts/`,
+`site/`) and hands it to `www-data` on every start.
 
 - **Console:** Cloud Storage → Buckets; Filestore → Instances.
 - **CLI:**
@@ -258,7 +259,7 @@ Monitoring. Optional uptime checks and alert policies are available.
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
-  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- cat /var/www/castopod/.env
+  kubectl exec -n "$NAMESPACE" deploy/<service-name> -- cat /var/www/html/.env
   ```
 
 ---
@@ -311,7 +312,7 @@ defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is on by default so uploaded episode audio/artwork persist and are shared. |
-| `nfs_mount_path` | `/var/lib/castopod` | Where Castopod's shared media state is mounted. |
+| `nfs_mount_path` | `/var/www/html/public/media` | Where Castopod's shared media state is mounted. |
 
 ### Group 15 — Redis Cache
 

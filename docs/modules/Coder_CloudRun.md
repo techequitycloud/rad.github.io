@@ -193,7 +193,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | `cpu_limit` | `2000m` | CPU per instance. |
 | `memory_limit` | `4Gi` | Memory per instance; Coder requires at least 2Gi for reliable operation. |
 | `min_instance_count` | `1` | Keep ≥ 1 — the in-process provisioner daemons must stay warm to pick up workspace builds. |
-| `max_instance_count` | `5` | Cost ceiling. |
+| `max_instance_count` | `1` | Keep at 1 — more than one instance is Coder's high-availability mode, which needs a premium licence. |
 | `cpu_always_allocated` | `true` | Instance-based billing. Keep `true` — provisioner polling and agent connections stall under request-based throttling. Set `false` only for a UI-only evaluation. |
 | `container_port` | `3000` | Coder's HTTP port (`CODER_HTTP_ADDRESS = 0.0.0.0:3000`). |
 | `container_image_source` | `custom` | Required — the upstream image lacks the entrypoint that assembles the DB connection URL and access URL. |

@@ -163,6 +163,12 @@ from `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` at startup — this is
 self-healing regardless of whether `redis_host` was set explicitly or left
 blank.
 
+> **Sidekiq needs Redis 6.2 or newer, and the NFS-hosted Redis is 6.0.** The shared Redis on the
+> NFS VM runs 6.0.16, and Sidekiq 7 refuses to start against it. The web UI still serves (the
+> entrypoint backgrounds Sidekiq), so the deployment looks healthy while no background job runs.
+> Point `redis_host` at a Redis 6.2+ instance — for example Memorystore, via `create_redis = true`
+> in Services_GCP, which provisions Redis 7.2.
+
 - **Console:** Memorystore → Redis (if using a dedicated instance).
 - **CLI:**
   ```bash

@@ -21,7 +21,8 @@ For the infrastructure that actually provisions and runs the agent, see
 
 | Area | Provided by DataAnalyst_Common | Where it surfaces |
 |---|---|---|
-| No credential of any kind | Declares no Secret Manager secret — Vertex AI auth is the Cloud Run service's own runtime service account | No secret appears in the deployment at all |
+| No backend credential | Vertex AI auth is the Cloud Run service's own runtime service account — no API key, no database password | The only secret is the optional visitor access key below |
+| Visitor access key | When an access key is required (`access_control`, default `auto`: on a RAD-managed project while publicly reachable), generates a 32-character key — or takes one you supply — into Secret Manager and exposes it as the `ACCESS_KEY` secret env var (the wrapper sets `ACCESS_CONTROL=key`); the server then refuses `/upload` and `/ws/chat` without it, failing closed | `secret_ids`, `access_key_required`, `generated_access_key` outputs |
 | No database, no bucket | Sets `database_type = NONE` and provisions no GCS bucket | No Cloud SQL instance, init job, or bucket appears in the deployment |
 | Container image | Builds a custom image (Python, FastAPI + Google ADK) from the `Dockerfile` in `scripts/` | `container_image` output of the platform deployment |
 | Sandboxed code execution | Hosts the ADK agent, its tools (`list_uploaded_files`, `inspect_file`, `execute_code`), and the sandbox-launcher execution wrapper | Application behaviour in the platform guide |
@@ -39,8 +40,8 @@ general sandboxed data-analysis agent — a better fit for Cloud Run's sandbox l
 real value is isolating **arbitrary code execution**, not read-only file search. Two
 consequences that explain choices you'll see elsewhere in these docs:
 
-- **No GCS bucket, no Secret Manager secret, no git-clone step remain.** The previous design
-  needed all three (a repo-cache bucket, a GitHub PAT, a runtime `git clone`); none of that
+- **No GCS bucket and no git-clone step remain, and the old GitHub PAT secret is gone.** The
+  previous design needed all three (a repo-cache bucket, a GitHub PAT, a runtime `git clone`); none of that
   applies to a module whose only "data" is whatever a user uploads.
 - **`public_access` defaults to `true`.** The previous design defaulted it `false`, because a
   self-serve deploy into a project the *end user* administers would have made the cached,

@@ -211,7 +211,10 @@ Monitoring. Optional uptime checks and alert policies are available.
   create the initial administrator/owner account, then configure at least one connected
   calendar. Self-hosted Cal.com allows self-service sign-up by default — restrict it
   (or front the service with IAP) if the instance should not be public.
-- **Health path.** Startup and liveness probes target `/`. The generous startup window
+- **Health path.** The startup probe targets `/` (a 307 redirect, which the kubelet
+  accepts); the liveness probe targets `/api/auth/providers`, which returns a literal 200.
+  The liveness probe is mirrored into the Gateway health check, which requires 200, so
+  pointing it at `/` leaves the Gateway serving 503. The generous startup window
   (0-second initial delay, up to a 30×30s retry window ≈ 15 minutes) accommodates
   first-boot Prisma migrations.
 

@@ -232,7 +232,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is on by default so uploaded documents persist. |
-| `nfs_mount_path` | `/var/lib/dolibarr` | Where Dolibarr stores documents/PDFs. |
+| `nfs_mount_path` | `/var/www/documents` | Where Dolibarr stores documents/PDFs. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional bucket beyond the auto-provisioned `dolibarr-documents` bucket, which the Common layer injects via `module_storage_buckets`. |
 
 ### Group 12 — Database Backend

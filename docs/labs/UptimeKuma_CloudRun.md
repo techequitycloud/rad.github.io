@@ -117,11 +117,11 @@ export REGION="us-central1"          # the region you deploy into
    gcloud run revisions list --service="$SERVICE" --project="$PROJECT" --region="$REGION"
    ```
 
-2. **Scale — the setting that matters most for this app.** With the default
-   `min_instance_count = 0`, the service scales to zero when idle and **no checks
-   run while it is down**. For genuine 24/7 monitoring, set
-   `min_instance_count = 1` and `max_instance_count = 1` (SQLite is single-writer)
-   and click **Update** on the deployment details page — the module owns the
+2. **Scale — the setting that matters most for this app.** The defaults are
+   `min_instance_count = 1` and `max_instance_count = 1` (SQLite is single-writer);
+   keep them. At `min_instance_count = 0` the service scales to zero when idle and
+   **no checks run while it is down**. Any change goes through **Update** on the
+   deployment details page — the module owns the
    service spec, so scaling is a configuration change, not a manual `gcloud` edit
    (a manual edit would be reverted on the next apply). Keep
    `cpu_always_allocated = true`: without allocated CPU the in-process scheduler

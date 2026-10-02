@@ -102,8 +102,9 @@ automated backups, and password rotation, see
 ### C. Filestore (NFS) and Cloud Storage
 
 Uploaded media is written to a **Filestore (NFS)** share mounted into every pod so
-all replicas see the same files. A dedicated **Cloud Storage** bucket is also
-provisioned for media; the workload service account is granted access automatically.
+all replicas see the same files. A **Cloud Storage** `media` bucket is also
+provisioned, but nothing mounts or writes to it — it is kept only because removing it
+from an existing deployment trips a Terraform dependency cycle.
 
 - **Console:** Filestore → Instances for the NFS share; Cloud Storage → Buckets for
   the media bucket.
@@ -185,15 +186,21 @@ Monitoring. Optional uptime checks and alert policies are available.
   startup, so upgrading the application version applies schema changes automatically.
 - **Scheduled commands (essential).** Mautic's campaigns, email queue, and segment
   updates are driven by scheduled commands. Without them, campaigns never fire and
-  no email is sent. Configure them as scheduled tasks; the commands Mautic expects:
+  no email is sent. Mautic has no in-process scheduler, so they run as Kubernetes
+  CronJobs:
 
-  | Command | Purpose | Typical cadence |
+  | Command | Purpose | Cadence |
   |---|---|---|
-  | `mautic:segments:update` | Refresh segment membership | every 15 min |
-  | `mautic:campaigns:trigger` | Fire scheduled campaign events | every 15 min |
-  | `mautic:campaigns:messages` | Send queued campaign messages | every 15 min |
-  | `mautic:queue:process` | Process the email send queue | every 5 min |
-  | `mautic:maintenance:cleanup` | Purge old data | weekly |
+  | `mautic:segments:update` | Refresh segment membership | every 15 min (`:00`, `:15`, …) |
+  | `mautic:campaigns:update` | Rebuild campaign membership | every 15 min (`:05`, `:20`, …) |
+  | `mautic:campaigns:trigger` | Fire scheduled campaign events | every 15 min (`:10`, `:25`, …) |
+
+  These three are scheduled by the module itself, staggered so they never overlap,
+  and run through `mautic-cron.sh` (which maps the database settings the way the web
+  container does and waits for the Cloud SQL proxy). Anything else Mautic offers —
+  for example `mautic:queue:process` if you queue email, or
+  `mautic:maintenance:cleanup` — is added through `cron_jobs`, which is appended to
+  the built-in three.
 
   Inspect scheduled tasks and their runs:
   ```bash
@@ -294,7 +301,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in database setup job. |
-| `cron_jobs` | `[]` | **Configure the Mautic scheduled commands in §3** — required for campaigns/email. |
+| `cron_jobs` | `[]` | Extra scheduled jobs, appended to the three Mautic commands the module schedules itself (§3). |
 
 ### Group 11 — CI/CD & GitHub Integration
 
@@ -307,7 +314,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for Mautic media (keep enabled for multi-replica). |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/var/www/html/docroot/media/files` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 
@@ -433,7 +440,7 @@ locate and explore the running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Mautic requires MySQL; PostgreSQL/`NONE` breaks startup. |
-| `cron_jobs` | configured (§3) | Critical | No campaigns fire and no email is sent without the scheduled commands. |
+| Built-in scheduled commands (§3) | leave in place | Critical | No campaigns fire without them; add email-queue processing via `cron_jobs` if you queue email. |
 | `enable_nfs` | `true` | Critical | Without shared storage, uploads are lost on restart and not shared across replicas. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |

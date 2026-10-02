@@ -18,7 +18,10 @@ diagrams. The self-hosted distribution is a **static single-page application ser
 by nginx** — there is no backend, no database, no user accounts, and no server-side
 persistence. Drawings live in the visitor's own browser (local storage) and are
 exported/imported as `.excalidraw` files. This makes the module unusually thin: no
-secrets, no Cloud SQL, no object storage, and no cache.
+secrets, no Cloud SQL, no object storage, and no cache. Several optional features —
+live collaboration, "Export to link", the AI diagram features and the shape-library
+browser — call Excalidraw's own hosted services when a user invokes them; those URLs are
+compiled into the upstream bundle and cannot be redirected by this module.
 
 For the infrastructure that actually provisions and runs Excalidraw, see the platform
 guides ([Excalidraw_GKE](Excalidraw_GKE.md),

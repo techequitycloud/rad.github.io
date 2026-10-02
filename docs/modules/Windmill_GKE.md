@@ -130,7 +130,7 @@ Pod stdout/stderr flow to Cloud Logging in structured JSON format (`JSON_FMT=tru
 
 ## 3. Windmill Application Behaviour
 
-- **First-deploy database setup.** An initialization Job (`db-init`) runs on first deploy using `postgres:16-alpine`. It idempotently creates the `windmill_admin` and `windmill_user` roles, the application user, and the application database, then grants full privileges. The job is safe to re-run.
+- **First-deploy database setup.** An initialization Job (`db-init`) runs on first deploy using `postgres:16-alpine`. It idempotently creates the `windmill_admin` and `windmill_user` roles, the application user, and the application database, then grants full privileges and membership in both roles (Windmill needs to `SET ROLE windmill_admin`). The job is safe to re-run.
 - **Automatic schema migrations.** Windmill runs its own database migrations on startup, so upgrading the `application_version` applies schema changes automatically.
 - **Combined server+worker mode.** Each pod runs both the Windmill API/scheduler and `NUM_WORKERS=3` script execution workers. Workers execute Python, TypeScript, Bash, Go, and SQL scripts in isolated subprocesses. The `WORKER_GROUP=default` assignment means all flows and scripts route to these pods by default.
 - **`BASE_URL` and `BASE_INTERNAL_URL`.** The `entrypoint.sh` shim constructs `DATABASE_URL` from platform-injected `DB_*` variables at start time. When `GKE_SERVICE_URL` is set (injected by App_GKE once the LoadBalancer IP is allocated), `BASE_URL` is updated automatically so OAuth callbacks and webhook URLs resolve correctly.

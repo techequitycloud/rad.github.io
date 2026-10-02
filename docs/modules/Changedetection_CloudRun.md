@@ -50,6 +50,8 @@ no database and no cache:
   risks concurrent-write corruption. Keep `max_instance_count = 1`.
 - **`min_instance_count = 1` (no scale-to-zero).** The single instance is kept warm so
   the fetch scheduler continues to run watch checks even with no inbound web traffic.
+  CPU stays request-based (`cpu_always_allocated = false`), which is enough for plain
+  HTTP checks; set it to `true` for browser/Playwright fetches or heavy filters.
 - **Public ingress by default.** `ingress_settings = "all"` so the web dashboard is
   reachable from a browser. The UI ships with **no login** — set a password in
   **Settings → General** immediately, and/or enable IAP.
@@ -241,6 +243,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | `cpu_limit` | `1000m` | CPU per instance. |
 | `memory_limit` | `1Gi` | Memory per instance (gen2 floor is 512Mi). |
 | `min_instance_count` | `1` | Keeps one instance warm so the fetch scheduler keeps running. |
+| `cpu_always_allocated` | `false` | Request-based CPU is enough for the built-in scheduler's lightweight checks. Set `true` when watches use the browser/Playwright fetcher or heavy filters, which are throttled between requests otherwise. |
 | `max_instance_count` | `1` | **Keep at 1** — multiple instances race on the shared datastore. |
 | `container_port` | `5000` | changedetection.io listens on port 5000. |
 | `execution_environment` | `gen2` | Required for the GCS FUSE datastore mount. |

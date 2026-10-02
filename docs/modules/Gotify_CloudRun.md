@@ -54,8 +54,10 @@ together a focused set of Google Cloud services:
 - **The admin password is generated automatically** and stored in Secret Manager,
   injected as `GOTIFY_DEFAULTUSER_PASS`. The initial admin (`admin`) is created on the
   first database initialisation only.
-- **No object storage is provisioned** (`storage_buckets = []`, `enable_nfs = false`).
-  Messages, applications, and tokens live in PostgreSQL.
+- **No object storage bucket is provisioned** (`storage_buckets = []`). Messages,
+  applications, and tokens live in PostgreSQL; uploaded application images and
+  plugins live on the NFS share at `/app/data` (`enable_nfs = true`, which must stay
+  on — otherwise they vanish on every new revision or cold start).
 - **The image is custom-built.** `container_image_source = "custom"` builds a wrapper
   around `ghcr.io/gotify/server` that maps the platform `DB_*` variables onto Gotify's
   `GOTIFY_DATABASE_*` (GORM) configuration; `latest` pins to base `2.9.1`.
@@ -303,7 +305,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[]` | Empty — Gotify needs no file storage. Add buckets only for custom needs. |
-| `enable_nfs` | `false` | Off by default; enable only to persist Gotify's on-disk image/plugin store. |
+| `enable_nfs` | `true` | Must stay `true` on Cloud Run: uploaded application images and plugins live under `/app/data` and otherwise vanish on every new revision or cold start. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

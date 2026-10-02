@@ -62,10 +62,12 @@ that image to compose the connection strings Plane expects (`DATABASE_URL`,
   validates `AMQP_URL` and exits non-zero if it is empty, so the `mq`
   additional service is always appended in `Plane_GKE/plane.tf`'s
   `additional_services` list — it cannot be disabled via a variable.
-- **RabbitMQ credentials are static, in-code defaults** (`plane` /
-  `plane` / vhost `plane`), not Secret-Manager-backed, and RabbitMQ storage
-  is ephemeral (no PVC/NFS attached) — a pod restart drops queued jobs.
-  {/* TODO: verify whether this is an accepted risk or a hardening gap */}
+- **The RabbitMQ password is generated per deployment** and stored in
+  Secret Manager (`secret-<prefix>-<app>-rabbitmq-password`); both the app
+  (`RABBITMQ_PASSWORD`) and the broker (`RABBITMQ_DEFAULT_PASS`) read it by
+  secret reference. The user and vhost are `plane`. RabbitMQ storage is
+  ephemeral (no PVC/NFS attached) — a pod restart drops queued jobs, and the
+  broker re-applies the password on every start.
 - **Redis is NFS-VM-hosted by default**, exactly like other RAD apps that
   set `enable_redis = true` with no `redis_host` — the NFS server co-hosts
   Redis and its IP is injected via the `$(NFS_SERVER_IP)` runtime

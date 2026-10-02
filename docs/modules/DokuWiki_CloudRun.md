@@ -50,9 +50,9 @@ together a deliberately small set of Google Cloud services:
   served by the [GKE variant](DokuWiki_GKE.md), which uses a block PVC.
 - **Scale-to-zero is always in effect** (`min_instance_count` is hardcoded to `0` in
   `dokuwiki.tf`, regardless of the variable's value). Cold starts add a few seconds to the
-  first request after idle. Because there is no shared lock coordinator, keep
-  `max_instance_count` conservative — concurrent writers across instances can race on
-  the same gcsfuse-backed files.
+  first request after idle. `max_instance_count` defaults to `1` and must stay there:
+  DokuWiki's edit safety depends on `.lock` files, which the shared GCS FUSE bucket cannot
+  honour, so a second instance would race page writes. Scale vertically instead.
 - **Request-based billing by default** (`cpu_always_allocated = false`). DokuWiki is a
   pure request/response wiki with no in-process background work, so CPU is billed only
   while serving a request.
@@ -209,7 +209,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 | `cpu_limit` | `1000m` | CPU per instance. Gen2 with always-on CPU requires ≥ 1 vCPU; DokuWiki is lightweight. |
 | `memory_limit` | `512Mi` | Memory per instance; DokuWiki needs ≥ 256 MiB, 512 MiB recommended. |
 | `min_instance_count` | `0` | Hardcoded to `0` in `dokuwiki.tf` regardless of this variable's value — DokuWiki always scales to zero. |
-| `max_instance_count` | `3` | Cost ceiling. Keep modest — concurrent writers across instances race on the shared gcsfuse files. |
+| `max_instance_count` | `1` | Cost ceiling. Keep modest — concurrent writers across instances race on the shared gcsfuse files. |
 | `cpu_always_allocated` | `false` | Request-based billing — DokuWiki does no in-process background work. |
 | `execution_environment` | `gen2` | Gen2 required for gcsfuse volume mounts. |
 | `container_port` | `8080` | Apache listens on 8080. |
@@ -281,7 +281,7 @@ running resources.
 | `database_type` | `NONE` | Critical | Any other value fails the plan-time guard; if bypassed it provisions an unused Cloud SQL instance and cost. |
 | `install.php` after setup | Remove / block once admin exists | High | Anyone who reaches `/install.php` before you finish setup can claim the admin account. |
 | `execution_environment` | `gen2` | High | `gen1` cannot mount the gcsfuse `/storage` volume — the container has nowhere to persist wiki data. |
-| `max_instance_count` | Keep modest (e.g. `3`) | High | High concurrency across instances races on the same gcsfuse-backed files; DokuWiki's file locks are only eventually consistent on object storage. |
+| `max_instance_count` | Keep at `1` (the default) | High | Every instance mounts the same GCS FUSE bucket, which cannot provide the locking DokuWiki's `.lock` files assume — concurrent instances race page writes. Scale with `cpu_limit` / `memory_limit` instead. |
 | `ingress_settings` | `all` (or IAP) | High | Left public with sign-up/ACLs misconfigured, anyone can edit; lock down via ACLs in the wiki and/or IAP. |
 | `memory_limit` | `512Mi` | Medium | Below 256 MiB the PHP/Apache process can OOM under load. |
 | `min_instance_count` | N/A — hardcoded to `0` | Low | `dokuwiki.tf` always forces `min_instance_count = 0`; setting this variable to `1` has no effect. Scale-to-zero adds a few seconds of cold-start latency on the first request after idle. |

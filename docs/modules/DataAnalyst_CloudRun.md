@@ -38,9 +38,9 @@ than repeating them here.
 
 **Sensible defaults worth knowing up front:**
 
-- **No credential of any kind.** The agent has no Secret Manager secret, no API key, and no
-  database password — Vertex AI authentication is entirely the Cloud Run service's own
-  runtime identity. There is nothing secret in this deployment to leak.
+- **No backend credential.** The agent has no API key and no database password — Vertex AI
+  authentication is entirely the Cloud Run service's own runtime identity. The one Secret
+  Manager secret it can hold is the visitor access key described below.
 - **`public_access` defaults to `true`.** Unlike most catalogue modules, this one has no
   proprietary reference material to protect (it started life as a reference-catalogue chat
   advisor and was later re-purposed into a general-purpose sandboxed code-execution agent —
@@ -199,8 +199,20 @@ dependency involved.
 - **Abuse/cost guards.** A per-connection message-length cap and rate limit, plus a
   per-instance cap on messages per minute across every connection (`INSTANCE_MAX_MESSAGES_PER_MINUTE`,
   default 120, `0` to disable), bound how much Vertex AI billing (and how many `execute_code`
-  runs) an unauthenticated caller can drive if `enable_iap` is left off. The per-connection limit
+  runs) one caller can drive. The per-connection limit
   alone is defeated by opening another connection; the per-instance one is not.
+- **An access key on a RAD-managed project.** With `access_control = "auto"` (default), a
+  RAD-managed project (billed to RAD) requires a per-deployment **access key** whenever the
+  service is publicly reachable (no `enable_iap`, ingress not `internal`); a project you own is
+  left unchanged. Visitors see a sign-in box; after the key is entered once the server sets a
+  signed, `HttpOnly`, `Secure`, `SameSite=Strict` session cookie (12 hours). Until then `/upload`
+  and `/ws/chat` answer 401, and a misconfigured service with no usable key answers 503 — it fails
+  closed. Leave `access_key` empty and a 32-character key is generated and shown as the
+  **`access_key` output** (owner and administrators only); set your own (16+ characters) to keep it
+  off the Outputs tab. Changing it rolls a new revision and signs everyone out. The key is shared,
+  not per-user. A deployer cannot turn it off on a RAD-managed project; only an administrator can.
+  Scripts send it as an `X-Access-Key` header, or `POST /auth` with `{"key": "..."}`;
+  `/docs`, `/redoc` and `/openapi.json` are not served.
 - **An open service on a RAD-managed project is scale-bounded.** IAP cannot be the default (it
   needs an OAuth consent screen in the project, which a freshly created RAD-managed project does
   not have and can no longer be given by API), so while `enable_iap = false` and
@@ -242,7 +254,7 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `application_name` | `dataanalyst` | Base name for the Cloud Run service and Artifact Registry repository. |
 | `application_display_name` | `Data Analyst Agent` | Friendly name shown in the Console. |
 | `application_description` | _(set)_ | Service description. |
-| `application_version` | `1.0.0` | Container image version tag — bump on every code-only redeploy, since the image is referenced by a mutable tag, not a digest. |
+| `application_version` | `1.1.0` | Container image version tag — bump on every code-only redeploy, since the image is referenced by a mutable tag, not a digest. |
 
 ### Group 4 — Runtime & Scaling
 
@@ -263,7 +275,9 @@ from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 |---|---|---|
 | `ingress_settings` | `all` | Which networks may reach the service. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | How outbound traffic is routed through the VPC. |
-| `enable_iap` | `false` | **Strongly recommended `true`:** every message here is a real Vertex AI call AND can trigger code execution, so an unauthenticated endpoint is a meaningful cost/abuse exposure. Not the default because IAP needs an OAuth consent screen in the project; while it is off on a RAD-managed project, scale is bounded (see the abuse/cost guards above). |
+| `enable_iap` | `false` | Every message here is a real Vertex AI call AND can trigger code execution. Not the default because IAP needs an OAuth consent screen in the project; while it is off on a RAD-managed project, an access key is required and scale is bounded (see above). |
+| `access_control` | `auto` | `auto`: an access key is required on a RAD-managed project while the service is publicly reachable, unchanged on your own project; `required`: always; `off`: never (refused on a RAD-managed project). |
+| `access_key` | `""` | Your own key (16+ characters). Empty generates one, shown as the `access_key` output. Change it to rotate. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Who may access through IAP. |
 
 ### Group 6 — Environment Variables & Secrets
@@ -321,6 +335,8 @@ Standard App_CloudRun options (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_r
 |---|---|
 | `service_name` | Cloud Run service name. |
 | `service_url` | Default `run.app` URL — open this to chat with the agent. |
+| `access_key_required` | Whether the agent demands an access key. |
+| `access_key` | The generated access key to enter on the sign-in screen (empty when you chose your own key or none is required). |
 | `service_location` | Region the service runs in. |
 | `sandbox_launcher_enabled` | Whether `--sandbox-launcher` was applied. |
 | `container_image` / `container_registry` | Deployed image and Artifact Registry repo. |
@@ -340,7 +356,7 @@ Standard App_CloudRun options (`enable_vpc_sc`, `vpc_cidr_ranges`, `vpc_sc_dry_r
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `enable_sandbox_launcher` | `true` | Critical | `false` removes the ONLY isolation between LLM-generated code and the rest of the container — the module's entire security model depends on this staying on. |
-| `enable_iap` | `true` for anything beyond a quick test | High | Left `false`, an unauthenticated caller can drive unbounded Vertex AI billing and unlimited code-execution runs, bounded only by the per-connection rate limit. |
+| `enable_iap` / `access_control` | IAP, or an access key, for anything beyond a quick test | High | On your own project with `access_control = "auto"` and IAP off, the service is open: any caller can drive Vertex AI billing and code-execution runs, bounded only by the rate limits. Set `access_control = "required"` or enable IAP. |
 | `execute_code_memory_limit_mb` | comfortably below `memory_limit` | High | Set too close to (or above) `memory_limit`, a single pathological allocation can still threaten the whole instance instead of failing cleanly with `MemoryError`. |
 | `max_concurrent_requests` | `1` for genuinely sensitive data | Medium | Session directories are isolated only by an unguessable name, not an OS-level permission boundary — concurrent sessions on one warm instance can, in principle, read each other's uploaded files. |
 | `application_version` | bump on every code-only change | Medium | The image is referenced by a mutable tag; rebuilding under the same tag creates no new revision, so a "redeploy" silently keeps serving the old container. |

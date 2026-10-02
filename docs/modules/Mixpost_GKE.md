@@ -314,7 +314,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | NFS is on by default for shared media/uploads, and doubles as the default Redis host source. |
-| `nfs_mount_path` | `/mnt/nfs` | Where Mixpost stores media/uploads. |
+| `nfs_mount_path` | `/var/www/html/storage/app/public` | Where Mixpost stores media/uploads. |
 
 ### Group 15 — Redis
 

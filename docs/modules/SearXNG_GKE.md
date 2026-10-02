@@ -223,7 +223,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `min_instance_count` | `1` _(fixed internally)_ | Minimum replicas. Fixed at 1 — GKE does not support scale-to-zero. |
 | `max_instance_count` | `3` | Maximum replicas (autoscaler ceiling). |
 | `container_port` | `8080` | SearXNG's native HTTP port. |
-| `container_image_source` | `prebuilt` | Use the official SearXNG image (`prebuilt`) or build from source (`custom`). |
+| `container_image_source` | `custom` | Use the official SearXNG image (`prebuilt`) or build from source (`custom`). |
 | `enable_image_mirroring` | `true` | Mirror the image into Artifact Registry before deployment. |
 | `enable_vertical_pod_autoscaling` | `false` | Let Autopilot tune resource requests automatically. |
 | `enable_cloudsql_volume` | `false` | **Leave false** — SearXNG does not use a database. |

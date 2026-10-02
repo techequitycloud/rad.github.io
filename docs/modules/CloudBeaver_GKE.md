@@ -43,7 +43,7 @@ deployment wires together a deliberately small set of Google Cloud services:
   keeps its metadata in an embedded H2 store inside the workspace volume. The
   databases it *manages* are added by an operator in the UI after deploy.
 - **Use a block PVC for the workspace, not GCS FUSE.** `stateful_pvc_enabled = true`
-  is strongly recommended: a block Persistent Disk — not GCS FUSE — is the correct
+  is the default and should stay on: a block Persistent Disk — not GCS FUSE — is the correct
   backing store for CloudBeaver's embedded H2 database. When the PVC is enabled the
   module automatically skips the GCS FUSE volume at the same path to avoid a
   double-mount.
@@ -260,7 +260,7 @@ specific to or notable for CloudBeaver are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | **Set `true`** — a block PVC (not GCS FUSE) is the correct store for CloudBeaver's embedded H2 DB. |
+| `stateful_pvc_enabled` | `true` | **Keep `true`** — a block PVC (not GCS FUSE) is the correct store for CloudBeaver's embedded H2 DB. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; hold the workspace plus overhead. |
 | `stateful_pvc_mount_path` | `/opt/cloudbeaver/workspace` | Must be CloudBeaver's workspace directory. |
 | `stateful_pvc_storage_class` | _(set)_ | Kubernetes StorageClass for the PVC. |

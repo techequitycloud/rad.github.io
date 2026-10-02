@@ -38,7 +38,7 @@ wires together a focused set of Google Cloud services:
 | Database | Cloud SQL for MySQL 8.0 | Required — RAGFlow does not support PostgreSQL |
 | Vector search | Elasticsearch (Elasticsearch_GKE) | External dependency — must be deployed first; `elasticsearch_hosts` is mandatory |
 | Task queue | Redis (Memorystore) | Required for document processing workers |
-| Object storage | Cloud Storage | A dedicated `ragflow-documents` bucket |
+| Object storage | External S3-compatible endpoint | RAGFlow stores every uploaded document in S3-compatible storage. On Cloud Run there is no working default: supply an endpoint with `minio_host` / `minio_user` / `minio_password_secret`. A `documents` Cloud Storage bucket is also provisioned, but RAGFlow does not use it |
 | Secrets | Secret Manager | Auto-generated database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional Cloud Armor HTTPS load balancer + custom domain |
 
@@ -48,6 +48,13 @@ wires together a focused set of Google Cloud services:
 - **`elasticsearch_hosts` is required.** RAGFlow cannot index or search documents
   without a reachable Elasticsearch endpoint. This check is skipped only when
   `deploy_application = false`.
+- **Document ingestion needs an S3-compatible endpoint you supply.** RAGFlow keeps
+  uploaded documents in S3-compatible object storage, one bucket per knowledge base. Set
+  `minio_host`, `minio_user` and `minio_password_secret` (a Secret Manager secret name).
+  `enable_inline_minio` (a MinIO sidecar on Filestore) is implemented but defaults to
+  `false`: Cloud Run rejects the `quay.io` MinIO image unless it is first mirrored into
+  Artifact Registry, and two overlapping revisions sharing one MinIO data directory is
+  an unproven risk. For a working default, use [RAGFlow_GKE](RAGFlow_GKE.md).
 - **Redis is required for document processing.** With `enable_redis = true` (default),
   `REDIS_HOST` and `REDIS_PORT` are injected automatically. If `redis_host` is left
   empty, App_CloudRun falls back to the NFS server's IP (the NFS VM co-hosts Redis) —

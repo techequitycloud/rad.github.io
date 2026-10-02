@@ -34,7 +34,7 @@ authentication product.
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database and role | `initialization_jobs` output |
 | Application secrets | **Two real secrets** — `SECRET_KEY` (session/token signing) and `DEFAULT_ADMIN_PASSWORD` (seeds the initial admin account) | `secret_ids` output |
-| Object storage | Declares one **Cloud Storage** bucket (`storage`) for attachments/avatars/backgrounds | `storage_buckets` output |
+| Object storage | Declares one **Cloud Storage** bucket (`storage`) for attachments/avatars/backgrounds and mounts it at `/app/data` via `gcs_volumes` | `storage_buckets` output |
 | Health checks | Supplies the default startup/liveness probes targeting `/` — Planka's real, unauthenticated healthcheck target | §Observability in the platform guides |
 
 ---
@@ -241,10 +241,10 @@ unauthenticated health target.
 A single **Cloud Storage** bucket (suffix `storage`, `STANDARD` class, public
 access prevention `enforced`, no object versioning) is declared here and
 provisioned by the foundation, for item attachments, avatars, and card
-background images — but it is **not** automatically mounted into the
-container. Operators who need uploaded attachments to persist across
-revisions/restarts must add a `gcs_volumes` entry (at the Application Module
-level) mounted at Planka's `/app/data` path. Board/card/list *data* is
+background images, and mounted via GCS FUSE at `/app/data` — Planka's
+uploads base path, under which every upload type lives — with `uid=1000`/`gid=1000`
+so the app's non-root user can write. `enable_gcs_storage_volume = false` drops the
+mount (`Planka_GKE` does so when a block PVC is enabled at the same path). Board/card/list *data* is
 unaffected either way — it's stored in PostgreSQL. List it with:
 
 ```bash

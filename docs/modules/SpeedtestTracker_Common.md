@@ -142,8 +142,10 @@ the application comes up correctly on first boot:
 - **Database connection** — `DB_CONNECTION = "mysql"`, `DB_PORT = "3306"`; the
   Laravel-native `DB_USERNAME` / `DB_PASSWORD` / `DB_DATABASE` and `DB_HOST` are
   injected by the foundation (see §4).
-- **Application URL** — `APP_URL` is set from the predicted service URL so links,
-  assets, and redirects resolve to the real address.
+- **Application URL** — `APP_URL` is the public service URL so links in
+  notifications and redirects resolve to the real address: the predicted `run.app`
+  URL on Cloud Run, and on GKE the `$(GKE_SERVICE_URL)` placeholder, which the
+  foundation resolves to the load-balancer address at deploy time.
 - **Speed test schedule** — `SPEEDTEST_SCHEDULE` (default `"0 * * * *"`, hourly)
   drives Speedtest Tracker's in-process Laravel scheduler, which fires an automated
   speed test independent of any inbound HTTP request. This is why the Cloud Run

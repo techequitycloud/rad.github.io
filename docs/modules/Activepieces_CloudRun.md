@@ -47,9 +47,9 @@ together a focused set of Google Cloud services:
   in Secret Manager. These keys must never be rotated after first boot without a
   maintenance window — rotating `AP_ENCRYPTION_KEY` corrupts all stored connection
   credentials, and rotating `AP_JWT_SECRET` invalidates all active user sessions.
-- **Scale-to-zero is enabled by default** (`min_instance_count = 0`). Cold starts
-  add 5–15 seconds of latency to the first request after idle. Set
-  `min_instance_count = 1` to avoid cold starts on time-sensitive webhook flows.
+- **One instance is kept warm by default** (`min_instance_count = 1`), because
+  Activepieces' scheduler runs in-process. Setting it to `0` enables scale-to-zero,
+  which adds 5–15 seconds of cold-start latency after idle.
 - **Public ingress is required for webhooks.** `ingress_settings = "all"` is the
   default so external services can POST to Activepieces webhook endpoints. Enabling
   IAP will block these external calls.
@@ -60,16 +60,13 @@ together a focused set of Google Cloud services:
 - **`AP_FRONTEND_URL` and `AP_WEBHOOK_URL_PREFIX` are set from the predicted service
   URL at plan time and corrected at runtime** by the container entrypoint, ensuring
   webhook and OAuth redirect URLs always reflect the actual Cloud Run service URL.
-- **Scheduled/triggered flows silently won't fire at the default scaling.** This
-  module defaults to request-based billing with `min_instance_count = 0`.
+- **Scheduled/triggered flows need a warm instance — keep `min_instance_count = 1`.**
   Activepieces ships its own scheduler/worker/cron/queue-style trigger components,
-  which only run while an instance is warm — enabling Activepieces' own scheduled
-  flows on a scaled-to-zero service means those triggers silently never fire. The
-  documented workaround is `cpu_always_allocated = true` + `min_instance_count = 1`
-  (same rationale as n8n), but **this module does not expose `cpu_always_allocated`**
-  — it is not declared in `variables.tf` or forwarded to the foundation. Set
-  `min_instance_count = 1` to keep an instance warm; safe as-is for webhook-only or
-  interactive use.
+  which only run while an instance exists, so on a scaled-to-zero service (`0`)
+  scheduled flows silently never fire. The module therefore defaults to
+  `min_instance_count = 1`. Note **this module does not expose
+  `cpu_always_allocated`** — it is not declared in `variables.tf` or forwarded to
+  the foundation. Lower the minimum to `0` only for webhook-only or interactive use.
 
 ---
 
@@ -269,7 +266,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `cpu_limit` | `2000m` | CPU per instance; 2 vCPU recommended. |
 | `memory_limit` | `2Gi` | Memory per instance; minimum 1 GiB. |
-| `min_instance_count` | `0` | `0` enables scale-to-zero; set `1` to avoid cold starts on webhooks. |
+| `min_instance_count` | `1` | `0` enables scale-to-zero; set `1` to avoid cold starts on webhooks. |
 | `max_instance_count` | `1` | **Only increase when `enable_redis = true`.** |
 | `container_port` | `8080` | Activepieces listens on port 8080. |
 | `execution_environment` | `gen2` | Gen2 required for NFS and GCS Fuse mounts. |
@@ -436,7 +433,7 @@ running resources.
 | `ingress_settings` | `all` | High | Setting to `internal` blocks all external webhook callbacks. |
 | `enable_iap` | only when webhooks not needed | High | IAP blocks all unauthenticated requests, including external webhook callbacks. |
 | `AP_SIGN_UP_ENABLED` (auto-injected `"true"`) | Disable after first admin | High | Leaving sign-up open allows anyone with the URL to create an account. |
-| `min_instance_count` | `1` for production | Medium | Scale-to-zero (`0`) adds 5–15 second cold-start delays on incoming webhooks after idle. |
+| `min_instance_count` | `1` (the default) | Medium | Scale-to-zero (`0`) adds 5–15 second cold-start delays on incoming webhooks after idle. |
 | `min_instance_count` (with Activepieces scheduled/triggered flows enabled) | `1` (no `cpu_always_allocated` override exists) | High | Activepieces' own scheduler/worker/cron components only run while an instance is warm; at `min_instance_count = 0` scheduled flows silently never fire, and this module does not expose `cpu_always_allocated` to force always-on CPU instead. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention. |
 | `enable_cloud_armor` | enable for production | Medium | Webhook endpoints and the admin UI are publicly reachable without WAF protection. |

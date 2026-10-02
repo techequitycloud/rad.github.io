@@ -218,11 +218,13 @@ Monitoring. Optional uptime checks and alert policies are available.
   kubectl get cronjobs -n "$NAMESPACE"
   kubectl get jobs -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp
   ```
-- **Health probes.** The default startup probe targets `GET /` with a 90-second
-  initial delay (to allow first-boot migrations) and the liveness probe targets
-  `GET /` with a 60-second initial delay. Implement a lightweight `/healthz/` view
-  that returns HTTP 200 and set `path = "/healthz/"` in both probe variables for
-  cleaner health signalling.
+- **Health probes.** The default startup probe targets `GET /healthz` with a
+  90-second initial delay (to allow first-boot migrations) and the liveness probe
+  targets `GET /healthz` with a 60-second initial delay. `/healthz` is defined in the
+  project-level `urls.py`, so it keeps returning HTTP 200 after you replace the sample
+  app at `/` — which matters because the probe is mirrored into the Gateway health
+  check, and a root view that redirects to a login would otherwise leave the Gateway
+  serving 503 behind a Ready pod. Keep that route if you restructure `urls.py`.
 - **Session affinity.** Defaults to `ClientIP` so that a given user's requests are
   routed to the same pod. Set `session_affinity = "None"` when all session state is
   externalised to the database or Redis.
@@ -319,8 +321,8 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `startup_probe` | HTTP `GET /`, 90s initial delay | Startup probe passed to `Django_Common`. Increase delay for large migration sets. |
-| `liveness_probe` | HTTP `GET /`, 60s initial delay | Liveness probe passed to `Django_Common`. Use a lightweight `/healthz/` endpoint. |
+| `startup_probe` | HTTP `GET /healthz`, 90s initial delay | Startup probe passed to `Django_Common`. Increase delay for large migration sets. |
+| `liveness_probe` | HTTP `GET /healthz`, 60s initial delay | Liveness probe passed to `Django_Common`. |
 | `startup_probe_config` | TCP, 240s timeout | App_GKE-level infrastructure startup probe. |
 | `health_check_config` | HTTP `GET /`, 1s timeout | App_GKE-level infrastructure liveness probe. |
 | `uptime_check_config` | disabled, path `/` | Optional Cloud Monitoring uptime check; disabled by default. |

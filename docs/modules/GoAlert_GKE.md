@@ -66,12 +66,13 @@ notification history, users) lives in PostgreSQL.
   actually starts — `entrypoint.sh` (and each init-job script) builds it from the
   discrete `DB_*` values the Foundation injects, branching on whether the resolved
   host is the cloud-sql-proxy loopback (`127.0.0.1`, no TLS) or a real socket/IP.
-- **`public_url` has no auto-computed default on GKE.** Unlike `GoAlert_CloudRun`,
-  this module passes `public_url = var.public_url` straight through with no
-  fallback computation — leave it empty and `GOALERT_PUBLIC_URL` falls back to
-  GoAlert's own `http://localhost:8081`, breaking OIDC callbacks and links in
-  outgoing notifications. Set it explicitly once the external LoadBalancer IP or
-  custom domain is known.
+- **`public_url` is resolved at boot when left empty.** This module passes
+  `public_url = var.public_url` straight through with no Terraform-side fallback;
+  when it is empty, the entrypoint sets `GOALERT_PUBLIC_URL` from the
+  platform-injected `GKE_SERVICE_URL`. That value drives OIDC/CSRF-referer
+  validation and the integration-key URLs GoAlert hands your monitoring systems,
+  so set `public_url` explicitly only when users reach GoAlert at a different
+  address (for example a custom domain).
 
 ---
 
@@ -239,7 +240,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `application_version` | `latest` | Image tag. `"latest"` maps to a pinned Dockerfile build arg (`GOALERT_VERSION = v0.34.1`). |
 | `admin_username` | `admin` | Username created by the `admin-bootstrap` init job. |
 | `admin_email` | `admin@techequity.cloud` | Email for the initial admin account. |
-| `public_url` | `""` | **No auto-computed default on GKE.** Set explicitly once the external LoadBalancer IP or custom domain is known. |
+| `public_url` | `""` | Left empty, resolved at boot from the platform-injected `GKE_SERVICE_URL`. Set explicitly only if users reach GoAlert at another address (e.g. a custom domain). |
 
 ### Group 4 — Runtime & Scaling
 
@@ -345,7 +346,7 @@ running resources.
 |---|---|---|---|
 | `database_type` | `POSTGRES_17` | Critical | Any other engine breaks GoAlert's schema and startup entirely — `pgcrypto` and the whole `goalert migrate` flow are Postgres-specific. |
 | `initialization_jobs` order (`db-init` → `db-migrate` → `admin-bootstrap`) | Leave `[]` unless you fully understand the dependency chain | Critical | Running `admin-bootstrap` before `db-migrate` fails with `relation "auth_basic_users" does not exist` on a fresh database — `goalert add-user` has no migration logic of its own. On GKE, `execute_on_apply=false` does NOT delay pod scheduling, only Terraform's wait — the ordering guarantee comes entirely from `depends_on_jobs`. |
-| `public_url` | Set explicitly once the LoadBalancer IP/domain is known | High | This module does **not** auto-compute a service URL (unlike the Cloud Run variant) — an unset `public_url` falls back to GoAlert's own `http://localhost:8081`, breaking OIDC auth callbacks and every link in outgoing notification emails. |
+| `public_url` | Leave `""` (resolved at boot from `GKE_SERVICE_URL`) or set the real external URL | High | A wrong `GOALERT_PUBLIC_URL` breaks OIDC auth callbacks, every link in outgoing notifications, and the integration-key URLs your monitoring systems post alerts to. |
 | `min_instance_count` | `1` | High | GoAlert's escalation-timing engine is a continuous in-process loop — at zero replicas, escalations for real alerts are silently missed entirely. |
 | `application_database_name` / `application_database_user` | Confirm actual values (`admin`/`admin` by default, not `goalert`) | Medium | Looking for a database literally named `goalert` in Cloud SQL will not find it under this variant's defaults. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for PostgreSQL connectivity on GKE. |

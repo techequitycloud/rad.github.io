@@ -74,10 +74,13 @@ See [App_Common](App_Common.md) for the shared secret and Workload Identity mode
 ToolJet requires **PostgreSQL 15**; the engine is fixed and MySQL or other engines
 are not supported. ToolJet uses **two databases on the same Cloud SQL instance**:
 
-1. the **metadata database** (`tooljet`) — apps, datasource configs, users,
+1. the **metadata database** — apps, datasource configs, users,
    workspaces, sessions; and
-2. the **ToolJet Database** (`tooljet_db`) — the built-in no-code database, exposed
-   to app queries through an in-container **PostgREST** process.
+2. the **ToolJet Database** — the built-in no-code database, exposed to app queries
+   through **PostgREST**, which each wrapper deploys alongside the app (a sidecar on
+   Cloud Run, an `additional_services` Deployment on GKE). The wrappers name it
+   `<service_name>_tjdb` (hyphens replaced by underscores), so deployments sharing one Cloud SQL
+   instance never share it; `tooljet_db` is only this module's standalone default.
 
 On the first deployment a one-shot job (`db-init`) runs using `postgres:15-alpine`
 and idempotently:
@@ -105,7 +108,7 @@ The job is safe to re-run. Inspect the databases directly with:
 
 ```bash
 gcloud sql connect <instance-name> --user=<db-user> --database=tooljet --project "$PROJECT"
-gcloud sql connect <instance-name> --user=<db-user> --database=tooljet_db --project "$PROJECT"
+gcloud sql connect <instance-name> --user=<db-user> --database=<service_name>_tjdb --project "$PROJECT"
 ```
 
 The instance, database, and user names are in the platform deployment outputs.
@@ -152,8 +155,9 @@ comes up correctly on first boot:
 - **Serve mode** — `SERVE_CLIENT = "true"`: the compiled React client is served from
   the same NestJS process, so there is no separate nginx/client service. The single
   container listens on **port 80**.
-- **ToolJet Database name** — `TOOLJET_DB = "tooljet_db"` names the second database
-  the `db-init` job creates and PostgREST serves.
+- **ToolJet Database name** — `TOOLJET_DB = var.tooljet_db_name` names the second
+  database the `db-init` job creates and PostgREST serves. Both wrappers pass an
+  app-scoped `<service_name>_tjdb`; the `tooljet_db` default is never used by them.
 - **Environment** — `NODE_ENV = "production"`.
 - **Sign-up** — `DISABLE_SIGNUPS = "true"` by default. A fresh install is not opened
   to self-service registration; operators flip this after creating the first admin.

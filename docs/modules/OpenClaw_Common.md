@@ -75,6 +75,7 @@ container starts.
 ARG BASE_IMAGE=ghcr.io/openclaw/openclaw:<application_version>
 FROM ${BASE_IMAGE}
 # adds git, ca-certificates, and entrypoint.sh
+# ENTRYPOINT ["/usr/bin/tini", "-s", "--", "/entrypoint.sh"]  (keeps the base image's tini as PID 1)
 ```
 
 The `BASE_IMAGE` build arg is set at Cloud Build time to
@@ -135,7 +136,10 @@ process:
 2. **Config regeneration.** Writes a fresh `openclaw.json` to `$OPENCLAW_STATE_DIR`. This
    ensures Terraform-managed environment variables always win over stale values previously
    persisted on the GCS volume. Builds the Telegram `channels` block, the agent model and
-   identity, the `approvals.exec.enabled` flag (from `OPENCLAW_EXEC_APPROVALS`, default
+   identity, `gateway.trustedProxies` (the Cloud Run frontend and Google load-balancer ranges
+   `169.254.0.0/16`, `35.191.0.0/16`, `130.211.0.0/22` — override with a comma-separated
+   `OPENCLAW_TRUSTED_PROXIES` in `environment_variables`; a wildcard is rejected by the
+   gateway and makes it refuse every external request), the `approvals.exec.enabled` flag (from `OPENCLAW_EXEC_APPROVALS`, default
    `true`), and `skills.load.extraDirs`.
 3. **Skills repository sync (optional).** When `SKILLS_REPO_URL` is set, performs a shallow
    clone or update into a local directory under `$OPENCLAW_STATE_DIR/skill-library` — kept off
@@ -156,8 +160,11 @@ process:
    into the image, loaded in addition to any cloned repo, needing no runtime git clone or
    token) to `PATH`, so a skill's exec helper (e.g. `agent-bridge`, which posts to n8n
    agent-core approval webhooks) is invocable by name via OpenClaw's `exec` tool.
-6. **Gateway startup.** Runs `node dist/index.js gateway --bind lan --port ${PORT:-8080}
-   --allow-unconfigured`. The `--bind lan` flag is required for Cloud Run — the runtime maps
+6. **Gateway startup.** Returns to the image's working directory and runs
+   `node openclaw.mjs gateway --bind lan --port ${PORT:-8080} --allow-unconfigured` — the
+   base image's own launcher, which validates the Node runtime before starting the gateway.
+   The container's PID 1 is the base image's `tini`, chained in front of `entrypoint.sh`, so
+   processes spawned by OpenClaw's `exec` tool are reaped rather than left as zombies. The `--bind lan` flag is required for Cloud Run — the runtime maps
    the external port to the container's LAN interface.
 
 ---

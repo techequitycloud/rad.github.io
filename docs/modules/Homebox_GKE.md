@@ -55,7 +55,9 @@ small, focused set of Google Cloud services:
   required.
 - **Item photos are persisted by default.** `Homebox_Common` declares a
   `gcs_volumes` entry mounting the `data` GCS bucket at `/data`, so uploaded
-  item photos and attachments survive a pod restart.
+  item photos and attachments survive a pod restart. If you enable the block
+  PVC instead (`stateful_pvc_enabled = true`, mounted at `/data`), the GCS FUSE
+  mount is dropped automatically so the two never collide.
 
 ---
 
@@ -163,7 +165,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `storage_buckets` | one `data` bucket | Created and auto-mounted at `/data`. |
-| `stateful_pvc_enabled` | `null` (auto, disabled) | Not used — Homebox is stateless at the pod level. |
+| `stateful_pvc_enabled` | `null` (auto, disabled) | Optional. Setting `true` mounts a block PVC at `/data` and drops the GCS FUSE mount there; the default bucket mount already persists photos. |
 
 ### Group 12 (16) — Database Backend
 

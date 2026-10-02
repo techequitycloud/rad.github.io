@@ -32,7 +32,7 @@ small, focused set of Google Cloud services:
 |---|---|---|
 | Compute | GKE Autopilot | Single Python process pod, 1 vCPU / 1 GiB by default |
 | Database | none | Radicale stores every collection as plain files — no Cloud SQL instance is created |
-| Object storage | Cloud Storage, or a block PVC | `storage` GCS bucket by default; `stateful_pvc_enabled = true` swaps in a real block PVC (recommended for production) |
+| Object storage | Cloud Storage, or a block PVC | Block PVC by default (`stateful_pvc_enabled = true`); a `storage` GCS bucket is also provisioned and is the mount only if the PVC is turned off |
 | Cache & queue | none | Radicale has no Redis or queue dependency |
 | Secrets | Secret Manager | A real generated `ADMIN_PASSWORD` — Radicale ships with no default admin account at all |
 | Ingress | Cloud Load Balancing | External LoadBalancer, optional custom domain + managed certificate |
@@ -44,10 +44,11 @@ small, focused set of Google Cloud services:
 - **Custom, thin-wrapper build.** `Radicale_Common` layers a cloud entrypoint
   onto the official `ghcr.io/kozea/radicale` image via Cloud Build, then
   mirrors the result into Artifact Registry.
-- **Block-storage PVC recommended.** Set `stateful_pvc_enabled = true` (auto-
-  resolves `workload_type` to `StatefulSet`) so Radicale's collections
-  filesystem gets real POSIX file locking, which GCS FUSE does not reliably
-  support. `stateful_pvc_storage_class` defaults to `standard` (HDD) rather
+- **Block-storage PVC by default, and required.** `stateful_pvc_enabled = true`
+  (auto-resolves `workload_type` to `StatefulSet`) gives Radicale's collections
+  filesystem real POSIX file locking and directory renames. On GCS FUSE, creating
+  a calendar or address book fails, because gcsfuse cannot rename the temporary
+  directory Radicale builds each collection in. `stateful_pvc_storage_class` defaults to `standard` (HDD) rather
   than SSD — collections are small text files with no high-IOPS need.
 - **No default admin account — a real generated secret.** `Radicale_Common`
   generates and injects a real `ADMIN_PASSWORD` on every deployment (see the
@@ -58,7 +59,7 @@ small, focused set of Google Cloud services:
   scale-to-zero is safe and fast.
 - **MKCOL works natively here — but the seed job may not reach a PVC.** GKE's
   plain L4 LoadBalancer Service has no MKCOL restriction (unlike Cloud Run),
-  but with `stateful_pvc_enabled = true` the default seed job's pre-created
+  but with `stateful_pvc_enabled = true` (the default) the seed job's pre-created
   collections may not appear — see §3.
 
 ---
@@ -142,15 +143,14 @@ Cloud-Run/GKE Common-module job and only mounts the shared GCS `storage`
 bucket — it **cannot** attach to a StatefulSet's block PVC (a Kubernetes Job
 can't mount a `ReadWriteOnce` PVC already held by a running Pod). So:
 
-- **With `stateful_pvc_enabled = true`** (the recommended production
-  setting): the seed job's writes land in the otherwise-unused GCS bucket,
+- **With `stateful_pvc_enabled = true`** (the default): the seed job's writes land in the otherwise-unused GCS bucket,
   and the "Default Calendar"/"Default Address Book" will **not** appear on
   the running pod's PVC-backed filesystem. This is harmless — create your
   first calendar via a real CalDAV client, or `curl -X MKCOL` (confirmed
   working), instead of expecting the pre-seeded defaults.
-- **Without a PVC** (GCS-backed Deployment mode — not the recommended
-  production configuration): the seed job's writes land in the same bucket
-  the running pod mounts, so the defaults do appear.
+- **Without a PVC** (GCS-backed Deployment mode): the seed job's writes land in
+  the same bucket the running pod mounts, so the defaults do appear — but
+  creating any further collection fails on GCS FUSE.
 
 ---
 
@@ -180,7 +180,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | **Recommended `true`** for production — gives Radicale's collections filesystem real POSIX file locking. Auto-resolves `workload_type` to `StatefulSet`. |
+| `stateful_pvc_enabled` | `true` | **Keep `true`** — gives Radicale's collections filesystem real POSIX file locking and directory renames; on GCS FUSE, creating a collection fails. Auto-resolves `workload_type` to `StatefulSet`. |
 | `stateful_pvc_mount_path` | `/var/lib/radicale` | Must match the base image's own `VOLUME` declaration. |
 | `stateful_pvc_storage_class` | `standard` | HDD `pd-standard`, not SSD — collections are small text files with no high-IOPS need; avoids the tight `SSD_TOTAL_GB` quota. |
 | `stateful_fs_group` | `3000` | Makes the PVC group-writable; Radicale runs as UID 1000 / GID 2000. |
@@ -229,7 +229,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `stateful_pvc_enabled` | `true` for production | Medium | Without it, `/var/lib/radicale` is GCS FUSE-backed — acceptable given the single-instance cap, but not a real POSIX-locking filesystem. |
+| `stateful_pvc_enabled` | `true` (default) | High | Without it, `/var/lib/radicale` is GCS FUSE-backed, and creating a calendar or address book fails (gcsfuse cannot rename directories). |
 | Expecting default collections on a PVC-backed deployment | Create the first calendar via a real CalDAV client or `curl -X MKCOL` | Medium | The `seed-default-collections` job cannot mount a StatefulSet's `ReadWriteOnce` PVC, so its writes land in the unused GCS bucket instead — the pre-seeded defaults silently don't appear on the running pod's filesystem. |
 | `max_instance_count` | Leave at `1` | **Critical** | Radicale's storage backend is not designed for concurrent multi-instance access; raising this risks data corruption. |
 | `stateful_pvc_storage_class` | Leave at `standard` (HDD) | Low–Medium | Switching to `standard-rwo`/`premium-rwo` (SSD) draws from the far tighter `SSD_TOTAL_GB` quota for no real benefit — Radicale's I/O pattern doesn't need SSD IOPS. |

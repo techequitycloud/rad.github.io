@@ -250,7 +250,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for WordPress `wp-content` (keep enabled). |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. The startup script symlinks `wp-content` here. |
+| `nfs_mount_path` | `/var/www/html/wp-content` | Mount path inside the container. The startup script symlinks `wp-content` here. |
 | `create_cloud_storage` / `storage_buckets` / `gcs_volumes` | _(set)_ | Media bucket / additional buckets / GCS Fuse mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

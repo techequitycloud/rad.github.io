@@ -34,7 +34,7 @@ focused set of Google Cloud services:
 | Compute | GKE Autopilot | Rails/Puma pods on port 3000, 2 vCPU / 4 GiB by default; Sidekiq runs as a background process inside the same container |
 | Database | Cloud SQL for PostgreSQL 15 | Required — a plan-time guard accepts only `POSTGRES_13`/`14`/`15` (or `NONE`); MySQL is rejected |
 | Background jobs & real-time UI | Redis (via the shared NFS VM, or an explicit host) | Mandatory — a plan-time guard fails if disabled; powers Sidekiq (account syncing, import processing, notifications) and ActionCable |
-| File persistence | Cloud Filestore (NFS) | Attachments persist under `/opt/maybefinance/storage`, shared across pods; also the default source for the Redis host IP |
+| File persistence | Cloud Filestore (NFS) | Attachments persist under `/rails/storage`, shared across pods; also the default source for the Redis host IP |
 | Object storage | Cloud Storage | A `storage` bucket is auto-provisioned by `MaybeFinance_Common`; not mounted into pods unless `gcs_volumes` is set |
 | Secrets | Secret Manager | Auto-generated `SECRET_KEY_BASE` (Rails session/encryption key); database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer with a reserved static IP; custom domain + managed certificate enabled by default |
@@ -132,12 +132,18 @@ the connection model, automated backups, and password rotation.
 
 ### C. NFS (Cloud Filestore) & Redis
 
-**Cloud Filestore (NFS)** is mounted at `/opt/maybefinance/storage` so
+**Cloud Filestore (NFS)** is mounted at `/rails/storage` so
 uploaded attachments persist and are shared across pods. Maybe also requires
 **Redis** for Sidekiq (background account syncing, import processing,
 notifications) and ActionCable (real-time UI updates); when `redis_host` is
 left blank, the injected `REDIS_HOST` resolves to the shared NFS server's IP
 (the NFS VM co-hosts Redis in this repo's platform convention).
+
+> **Sidekiq needs Redis 6.2 or newer, and the NFS-hosted Redis is 6.0.** The shared Redis on the
+> NFS VM runs 6.0.16, and Sidekiq 7 refuses to start against it. The web UI still serves (the
+> entrypoint backgrounds Sidekiq), so the deployment looks healthy while no background job runs.
+> Point `redis_host` at a Redis 6.2+ instance — for example Memorystore, via `create_redis = true`
+> in Services_GCP, which provisions Redis 7.2.
 
 - **Console:** Filestore → Instances; Compute Engine → VM instances (the NFS
   VM, if it also runs Redis).
@@ -313,7 +319,7 @@ behaviour and defaults.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Attachments persist and are shared across pods; also the default source for the Redis host IP. |
-| `nfs_mount_path` | `/opt/maybefinance/storage` | Where Maybe stores uploaded attachments. |
+| `nfs_mount_path` | `/rails/storage` | Where Maybe stores uploaded attachments. |
 
 ### Group 15 — Redis
 

@@ -344,7 +344,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Required — Odoo's filestore, sessions, and addons directories must reside on shared storage. |
-| `nfs_mount_path` | `/mnt/nfs` | NFS mount path inside the container as seen by App_GKE. |
+| `nfs_mount_path` | `/mnt` | NFS mount path inside the container as seen by App_GKE. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

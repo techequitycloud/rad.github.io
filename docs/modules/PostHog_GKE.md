@@ -53,7 +53,7 @@ none of them optional:
 | Ingestion backbone | Kafka | **Mandatory.** Bundled single-node Redpanda broker by default (no standalone Kafka module in this catalogue yet) |
 | Cache / broker | Redis | **Mandatory.** Celery broker, plugin-server pub/sub, Django cache — the platform injects the NFS-server co-hosted Redis IP by default |
 | Object storage | Cloud Storage (S3-interop) | Session-replay recordings and data exports, via PostHog's native S3-compatible client — not a GCS FUSE mount |
-| Secrets | Secret Manager | Django `SECRET_KEY`, S3-interop HMAC key pair, DB password, optional external `CLICKHOUSE_PASSWORD` |
+| Secrets | Secret Manager | Django `SECRET_KEY`, S3-interop HMAC key pair, DB password, `CLICKHOUSE_PASSWORD` (external, or generated for the inline fallback) |
 | Ingress | Cloud Load Balancing | External LoadBalancer service; optional custom domain + managed certificate |
 
 **Sensible defaults worth knowing up front:**
@@ -155,8 +155,10 @@ detail. This module does **not** manage a durable ClickHouse instance directly:
   a Secret Manager secret ID (e.g. the output of that deployment) and is injected as
   `CLICKHOUSE_PASSWORD`.
 - **Dev/test fallback:** `enable_inline_clickhouse = true` deploys a single-node
-  ClickHouse instance as a GKE `additional_service` alongside PostHog — **no persistent
-  volume; data is lost on every pod restart.**
+  ClickHouse instance as a GKE `additional_service` alongside PostHog — a single node,
+  with its data directory on a persistent volume (`clickhouse_disk_size`, default `20Gi`).
+  Its `default` user's password is generated per deployment and delivered from Secret
+  Manager.
 
 ```bash
 # Confirm PostHog can reach ClickHouse (native protocol, port 9000):
@@ -172,13 +174,17 @@ The in-module fallback required a genuinely extensive bootstrap to make PostHog'
 migrations succeed against a single node — an embedded ClickHouse Keeper (PostHog's
 migration tracking tables use `ReplicatedMergeTree`, which needs a ZooKeeper-compatible
 coordinator even for one node), cluster/shard/replica macros, ten named clusters (all
-pointed at the same node), named collections for Kafka Engine tables, and a fixed shared
-password (**a blank password disables network access for the `default` user entirely —
+pointed at the same node), named collections for Kafka Engine tables, and a password —
+generated per deployment and read by the app, the migrate job and the ClickHouse pod
+alike (**a blank password disables network access for the `default` user entirely —
 it does not mean "open, unauthenticated,"** confirmed against the official
 `clickhouse/clickhouse-server` entrypoint). PostHog's own ClickHouse migration also needs
 the HTTP interface (port 8123) in addition to the native protocol (port 9000) — this
 module's use of a second port on one `additional_services` entry is what motivated a new
-`extra_ports` field added to `App_GKE` itself (see §3).
+`extra_ports` field added to `App_GKE` itself (see §3). Because PostHog's dictionaries
+store the ClickHouse password in their DDL on the persistent volume, the pod's start
+script rewrites those stored passwords to the current one before the server starts, so a
+password change does not break `dictGet`.
 
 ### D. Kafka — the ingestion backbone
 
@@ -411,8 +417,8 @@ ClickHouse-resident, not local).
 |---|---|---|
 | `clickhouse_database` | `posthog` | ClickHouse database name events are read/written to. |
 | `clickhouse_user` | `default` | ClickHouse username. |
-| `clickhouse_password_secret` | `""` | Secret Manager secret ID holding the ClickHouse password (e.g. from a separately deployed `ClickHouse_GKE`). Leave empty for the in-module fallback's default user. |
-| `enable_inline_clickhouse` | `false` | Single-node ClickHouse as a GKE `additional_service`. **Dev/test only** — no persistent volume. |
+| `clickhouse_password_secret` | `""` | Secret Manager secret ID holding the ClickHouse password (e.g. from a separately deployed `ClickHouse_GKE`). Leave empty for the in-module fallback, which gets a generated per-deployment password in Secret Manager. |
+| `enable_inline_clickhouse` | `false` | Single-node ClickHouse as a GKE `additional_service`. **Dev/test only** — one node, data on a persistent volume (`clickhouse_disk_size`). |
 | `clickhouse_image_tag` | `26.6.1.1193` | Pinned to the exact version PostHog's own `docker-compose.base.yml` uses — a generic recent tag (e.g. `24.12-alpine`) fails a TTL-expression check in one of PostHog's own migrations. |
 | `enable_inline_kafka` | `true` | Single-node Redpanda broker as a GKE `additional_service` — the default. |
 | `kafka_image_tag` | `v25.1.9` | Redpanda image tag. |
@@ -486,7 +492,7 @@ locate and explore the running resources.
 | `clickhouse_host` / `enable_inline_clickhouse` | one must resolve | Critical | Without a reachable ClickHouse endpoint, PostHog's entire analytics event pipeline cannot function — no events, no insights, no session replay. |
 | `kafka_hosts` / `enable_inline_kafka` | one must resolve (default: inline) | Critical | Without Kafka, ingested events have nowhere to queue — the pipeline stalls. |
 | `max_instance_count` | `1` (validated, cannot exceed) | Critical | The co-located Celery beat scheduler fires every periodic task once per replica; N replicas means N-fold duplicate execution of scheduled jobs. |
-| `enable_inline_clickhouse` | `false` for production | Critical | The in-module fallback has no persistent volume — every pod restart loses all analytics data (events, session replays, insights). |
+| `enable_inline_clickhouse` | `false` for production | Critical | The in-module fallback is a single node with no replication — its persistent volume survives a pod restart, but there is no redundancy or managed backup for analytics data (events, session replays, insights). |
 | `enable_inline_kafka` | `true` acceptable for most, `false` + external broker for durable queueing | High | The bundled Redpanda has no persistent volume — a pod reschedule loses unconsumed events (acceptable for re-sent ingestion, not for a durable queue). |
 | `redis_host` | explicit host, or leave `""` with `enable_nfs=true` | Critical | With neither set, `REDIS_HOST` is empty and PostHog fails fast at boot with a clear error. |
 | `db_name` / `db_user` | set once | Critical | Immutable after first deploy; renaming recreates the database/user. Note this only affects app metadata, not analytics data (ClickHouse-resident). |

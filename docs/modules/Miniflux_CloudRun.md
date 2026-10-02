@@ -111,10 +111,9 @@ backups, and password rotation.
 Miniflux needs **no** object storage — it keeps all state in PostgreSQL. The variant's
 `storage_buckets` default still provisions one `data` Cloud Storage bucket (scaffold
 boilerplate), but it is not mounted or referenced by the application; override
-`storage_buckets = []` to skip creating it. The variant also defaults
-`enable_nfs = true` (a Cloud Filestore mount at `/opt/miniflux/storage`) for operators
-who want shared attachment storage, but Miniflux does not require it; disable it to
-save cost if you have no such need.
+`storage_buckets = []` to skip creating it. NFS is off by
+default (`enable_nfs = false`): Miniflux links enclosures rather than downloading
+them, so it has no attachment storage and needs no shared filesystem.
 
 - **Console:** Filestore → Instances (if NFS is enabled); Cloud Storage → Buckets.
 - **CLI:**
@@ -300,7 +299,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{name_suffix="data", location=""}]` | Default `data` bucket is provisioned but unused/unmounted by Miniflux — override to `[]` to skip it. |
-| `enable_nfs` | `true` | Provisions a Filestore NFS mount at `/opt/miniflux/storage`. Optional — Miniflux stores state in PostgreSQL; disable to save cost. |
+| `enable_nfs` | `false` | Provisions a Filestore NFS mount at `/opt/miniflux/storage`. Leave off — Miniflux stores all state in PostgreSQL. |
 | `nfs_mount_path` | `/opt/miniflux/storage` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 

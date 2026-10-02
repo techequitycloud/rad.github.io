@@ -95,33 +95,31 @@ An API enabled by this module (`apis.tf`) but *not* present in the folder's `gcp
 
 `quotas.tf` uses the modern **Cloud Quotas API** (`google_cloud_quotas_quota_preference`) — the older Service Usage consumer-quota-override resource no longer exists in the current `hashicorp/google` provider (`tofu validate` rejects it outright). A quota is identified by a human-readable `quota_id` per service (e.g. `"CpuAllocPerProjectRegion"`), not a metric/unit/limit triple.
 
-Seven self-imposed caps ship as live **sandbox** defaults — Cloud Run regional CPU, Compute Engine regional CPU, project-wide GPUs, Redis regional memory, and three Filestore tiers (standard, premium, high-scale SSD) — each sized from this catalog's own proven-working ceiling rather than a guess. A further **81 Vertex AI accelerator caps are pinned to `0` and merged into every tier** (`local.vertex_accelerator_overrides`), because Vertex bills against its own accelerator quota family rather than Compute Engine's `GPUS-ALL-REGIONS-per-project`. The `development` tier raises several values (Cloud Run 16000→32000 milli-vCPU, Compute 24→48 vCPU, Redis 16→32 GB) and adds a BigQuery `QueryUsagePerDay` cap of `1048576` MiBy (1 TiB/day); `production` inherits development's map wholesale (`local.production_quota_overrides = local.development_quota_overrides`, `quotas.tf:428`).
+Every tier gets a set of self-imposed caps, each sized from this catalog's own proven-working ceiling rather than a guess. `sandbox` and `lab` use the base map (`local.default_quota_overrides`); `development` and `production` share one raised map (`local.production_quota_overrides = local.development_quota_overrides`).
 
-**Most** caps are applied with `dimensions = {}`, making them the project-wide default for that quota **across all regions** rather than only in `var.region`. The one exception is `compute_cpus_per_region`: the Cloud Quotas API *requires* the region dimension on `CPUS-per-project-region` (confirmed live 2026-08-11 — an empty map fails with `Dimension values must be set for all the dimensions ... defined for the quota`, Error 400), so that single cap is set with `{ region = var.region }` and therefore binds in `var.region` only. Every other region falls back to GCP's untuned Compute CPU default; closing that properly needs one preference per region or a `gcp.resourceLocations` policy, which is a product decision rather than a code fix. The five other regional quotas still carry `{}` because they exist and update cleanly today — `quotas info describe` reports `dimensions=[region]` for each, so a genuinely fresh project will likely hit the same error on them.
+| Key | Service | `quota_id` | sandbox / lab | development / production | Scope |
+|---|---|---|---|---|---|
+| `cloud_run_cpu_allocation` | `run.googleapis.com` | `CpuAllocPerProjectRegion` | `16000` milli-vCPU (16 vCPU) | `32000` | all regions |
+| `compute_cpus_per_region` + `compute_cpus_<region>` | `compute.googleapis.com` | `CPUS-per-project-region` | `24` vCPU | `48` | each of the eight permitted regions |
+| `compute_gpus_all_regions` | `compute.googleapis.com` | `GPUS-ALL-REGIONS-per-project` | `0` | `0` | project-wide |
+| `redis_total_memory_per_region` | `redis.googleapis.com` | `TotalCapacityPerProjectPerRegion` | `16` GB | `32` | all regions |
+| `filestore_standard_per_region` | `file.googleapis.com` | `StandardStorageGbPerRegion` | `1024` GB | `1024` | all regions |
+| `filestore_premium_per_region` | `file.googleapis.com` | `PremiumStorageGbPerRegion` | `2560` GB | `2560` | all regions |
+| `filestore_high_scale_ssd_per_region` | `file.googleapis.com` | `HighScaleSSDStorageGibPerRegion` | `0` | `0` | all regions |
+| `bigquery_query_bytes_per_day` | `bigquery.googleapis.com` | `QueryUsagePerDay` | `32768` MiB (32 GiB/day) | `1048576` (1 TiB/day) | global |
+| `compute_disks_total_per_region` / `compute_disks_total_<region>` | `compute.googleapis.com` | `DISKS-TOTAL-GB-per-project-region` | `4096` GB, all regions | `8192` GB, per permitted region | see column |
+| `compute_hyperdisk_balanced_<region>` | `compute.googleapis.com` | `HDB-TOTAL-GB-per-project-region` | `4096` GB | `8192` | per permitted region |
+| `compute_ssd_total_<region>` | `compute.googleapis.com` | `SSD-TOTAL-GB-per-project-region` | `1024` GB | `2048` | per permitted region |
+| Hyperdisk Extreme / ML / Confidential / Throughput, Local SSD | `compute.googleapis.com` | `HDX-…`, `HDML-…`, `HDB-CONFIDENTIAL-…`, `HDT-…`, `LOCAL-SSD-TOTAL-GB-per-project-region` | `0` | `0` | all regions |
 
-This matters because the caps were previously scoped to `var.region`, which was safe
-only while `constraints/gcp.resourceLocations` pinned every sandbox project to
-`us-central1`. That policy was removed on 2026-08-06 so users could escape
-regional resource exhaustion, which left the caps binding in one region and
-every other region on GCP's untuned defaults (250–10,000 vCPU).
+On top of that map, every tier pins three accelerator and token families to `0`, because none of them is reached by the Compute Engine GPU cap: **81 Vertex AI accelerator quotas** (`local.vertex_accelerator_overrides`), the **BigQuery ML generative token** quotas (`GenAiInputTokensPerDay`, `GenAiOutputTokensPerDay`), and **Cloud Run GPUs** (four `Nvidia…GpuAlloc…` quota ids).
 
-`dimensions` is under `lifecycle { ignore_changes }`. A quota preference's
-**location is fixed when it is created** — an empty map creates it at `global`,
-a region dimension creates it at that region — and the Cloud Quotas API has no
-way to move one. Without the exemption, a project created before that change
-would plan a diff Terraform can never apply.
+Points worth knowing before changing any of these:
 
-| Key | Service | `quota_id` | Default | Rationale |
-|---|---|---|---|---|
-| `cloud_run_cpu_allocation` | `run.googleapis.com` | `CpuAllocPerProjectRegion` | `16000` milli-vCPU (= 16 real vCPU), all regions | Matches this catalog's own proven-working Cloud Run regional CPU ceiling. **The unit is milli-vCPU, not vCPU** — a literal `16` is 0.016 vCPU and silently fails every real Cloud Run deploy with `Quota violated: CpuAllocPerProjectRegion requested: 3000 allowed: 16` (unit bug fixed 2026-07-31, confirmed live on a sandbox project). `compute_cpus_per_region` below is *not* affected — `compute.googleapis.com/cpus` is denominated in whole vCPU. The `development` and `production` tiers raise this to `32000`. |
-| `compute_cpus_per_region` | `compute.googleapis.com` | `CPUS-per-project-region` | `24` — **`var.region` only** (this quota requires its region dimension); `48` on development/production | Bounds Compute Engine VM cost, including GKE Autopilot node capacity, which draws from this same regional CPU pool. Unlike every other cap here it cannot use `dimensions = {}` — the Cloud Quotas API rejects a preference on this quota with empty dimensions (Error 400) — so the cap binds only in `var.region`. |
-| `compute_gpus_all_regions` | `compute.googleapis.com` | `GPUS-ALL-REGIONS-per-project` | `0` | No baseline module (`Services_GCP`/`App_CloudRun`/`App_GKE`) uses GPUs — a nonzero default would be pure abuse surface with no corresponding legitimate use |
-| `redis_total_memory_per_region` | `redis.googleapis.com` | `TotalCapacityPerProjectPerRegion` | `16` GB | Bounds Memorystore spend, which is billed on provisioned capacity whether or not the instance is used |
-| `filestore_standard_per_region` | `file.googleapis.com` | `StandardStorageGbPerRegion` | `1024` GB | The shared NFS tier `Services_GCP` actually provisions |
-| `filestore_premium_per_region` | `file.googleapis.com` | `PremiumStorageGbPerRegion` | `2560` GB | Premium has a 2.5 TB minimum instance size, so the cap is one instance |
-| `filestore_high_scale_ssd_per_region` | `file.googleapis.com` | `HighScaleSSDStorageGibPerRegion` | `0` | No module provisions this tier; its minimum instance is very large and very expensive |
-
-Two further caps are **tier-conditional** rather than part of the seven defaults: a BigQuery daily-scan cap (`bigquery_query_bytes_per_day`) applied only on `development`/`production` — sandbox's API allowlist does not permit `bigquery.googleapis.com` at all, so a cap there would have nothing to bind to — and a set of **81 Vertex AI accelerator quotas** (`aiplatform.googleapis.com`), pinned to zero because `aiplatform` is enabled on every project by `Services_GCP` while no baseline module uses an accelerator.
+- **The unit of `cloud_run_cpu_allocation` is milli-vCPU, not vCPU.** A literal `16` is 0.016 vCPU and fails every real Cloud Run deploy with `Quota violated: CpuAllocPerProjectRegion requested: 3000 allowed: 16`. `compute.googleapis.com/cpus` is denominated in whole vCPU.
+- **Some quotas cannot be set without a region.** The Cloud Quotas API rejects an empty `dimensions` map on `CPUS-per-project-region`, `SSD-TOTAL-GB-per-project-region` and `HDB-TOTAL-GB-per-project-region` (and on `DISKS-TOTAL-GB` at the development value), so those caps are written once per permitted region — the eight regions the tier folders' `gcp.resourceLocations` policy allows. The rest use `dimensions = {}`, which applies them in every region.
+- **Hyperdisk Balanced is held equal to the persistent-disk cap**, not zeroed, because GKE Autopilot may back an ordinary `standard-rwo` PVC with either family.
+- **`dimensions` is under `lifecycle { ignore_changes }`.** A quota preference's location is fixed when it is created and the Cloud Quotas API cannot move one, so a project created under an older shape would otherwise plan a diff that can never apply.
 
 Override an existing default's *value* with `quota_value_overrides` (keyed by the same short name, e.g. `{ cloud_run_cpu_allocation = 32000 }` — note **milli**-vCPU, per the unit warning above; `32` here would be 0.032 vCPU), or add an entirely new quota cap with `additional_quota_overrides`. Before adding a new entry:
 

@@ -108,10 +108,9 @@ rotation, see [App_GKE](App_GKE.md).
 ### C. Cloud Storage / NFS
 
 Miniflux needs **no** object storage — it keeps all state in PostgreSQL, so no data
-bucket is provisioned by the application layer. The variant does default
-`enable_nfs = true` (a Cloud Filestore mount at `/opt/miniflux/storage`) for operators
-who want shared attachment storage, but Miniflux does not require it; disable it to
-save cost if you have no such need.
+bucket is provisioned by the application layer. The optional Cloud Filestore mount
+(`enable_nfs`, at `/opt/miniflux/storage`) is off by default, because Miniflux never
+writes to it.
 
 - **Console:** Filestore → Instances (if NFS is enabled); Cloud Storage → Buckets.
 - **CLI:**
@@ -330,7 +329,7 @@ All other inputs follow standard App_GKE behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Provisions a Filestore NFS mount at `/opt/miniflux/storage`. Optional — Miniflux stores state in PostgreSQL; disable to save cost. |
+| `enable_nfs` | `false` | Provisions a Filestore NFS mount at `/opt/miniflux/storage`. Leave off — Miniflux stores state in PostgreSQL and never writes to the mount. |
 | `nfs_mount_path` | `/opt/miniflux/storage` | Mount path inside the container. |
 
 All other inputs follow standard App_GKE behaviour.

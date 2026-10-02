@@ -81,9 +81,11 @@ set to on the platform deployment (those variables are forwarded only for
 Foundation-interface compatibility and are no-ops here).
 
 Cloudreve instead uses an **embedded SQLite database** (`cloudreve.db`)
-alongside a generated `conf.ini` and uploaded files, all stored directly under
-its working directory `/cloudreve` on the persistent volume (GCS FUSE on Cloud
-Run, a block PVC on GKE). There is therefore no `db-init` job either:
+alongside a generated `conf.ini` and uploaded files, all stored under its
+working directory `/cloudreve` (uploads and avatars in `/cloudreve/data/`, which
+the entrypoint links into place because the image declares `/cloudreve/uploads`
+and `/cloudreve/avatar` as VOLUMEs, which GKE backs with ephemeral node disk) on the persistent volume (an NFS share on Cloud
+Run by default, a block PVC on GKE). There is therefore no `db-init` job either:
 
 ```hcl
 # main.tf
@@ -192,9 +194,10 @@ override, and no queue/telemetry toggles:
 Platform-specific adjustment handled here (via the `enable_gcs_storage_volume`
 variable and the `_cloudreve_extra_storage_volumes` local):
 
-- **Cloud Run** always leaves `enable_gcs_storage_volume = true` — Cloud Run
-  has no block-volume option, so the auto-created `storage` bucket is always
-  mounted via GCS FUSE at `/cloudreve`.
+- **Cloud Run** sets `enable_gcs_storage_volume = !enable_nfs`. Cloud Run has
+  no block volume, and GCS FUSE cannot host the SQLite database, so
+  `Cloudreve_CloudRun` defaults `enable_nfs = true` with the NFS share mounted
+  at `/cloudreve`; the GCS FUSE mount is used only if NFS is switched off.
 - **GKE** sets `enable_gcs_storage_volume = false` whenever
   `stateful_pvc_enabled = true` (the GKE variant's default), because the
   block PVC is mounted at the same `/cloudreve` path and a second GCS FUSE
@@ -242,7 +245,7 @@ the `storage_buckets` output and provisioned by the foundation:
 Whether this bucket is actually **mounted** into the running container
 depends on `enable_gcs_storage_volume` (see §5): when `true`, it is added to
 `gcs_volumes` as `{ name = "storage", mount_path = "/cloudreve", read_only =
-false }` and mounted via GCS FUSE — this is always the case on Cloud Run, and
+false }` and mounted via GCS FUSE — on Cloud Run only when NFS is disabled, and
 on GKE only when the block PVC is disabled. When mounted at the same path as
 a GKE block PVC, the two would double-mount and conflict, which is exactly
 why the GKE variant flips this flag off by default.

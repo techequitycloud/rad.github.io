@@ -245,7 +245,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `storage`/`dpkeys` buckets. |
-| `enable_nfs` | `false` | Not used by LubeLogger by default. |
+| `enable_nfs` | `true` | Not used by LubeLogger by default. |
 | `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

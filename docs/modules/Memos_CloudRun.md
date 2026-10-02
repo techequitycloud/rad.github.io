@@ -32,7 +32,7 @@ and no background workers:
 |---|---|---|
 | Compute | Cloud Run v2 | Go service, 1 vCPU / 512 MiB by default, serverless autoscaling, scale-to-zero by default |
 | Database | Cloud SQL for PostgreSQL 15 | Required — this module standardizes on Postgres via a single `MEMOS_DSN` connection URL |
-| Object storage | none | Not provisioned by this module — see the attachments note below |
+| File storage | Cloud Filestore (NFS) | `enable_nfs = true` by default, mounted at Memos's data directory `/var/opt/memos` — see the attachments note below |
 | Cache & queue | none | Memos has no queue or cache dependency |
 | Secrets | Secret Manager | Only the database password (managed by the Foundation); Memos itself has no app-level secret |
 | Ingress | Cloud Run URL | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
@@ -53,11 +53,12 @@ and no background workers:
   `memos-entrypoint.sh` reads the platform-injected `DB_*` variables and builds the
   single `MEMOS_DSN` connection URL Memos expects, branching on whether Cloud Run
   handed it a Unix-socket directory or a TCP host, and URL-encoding the password.
-- **No object storage is provisioned.** This module does not declare a GCS bucket or
-  volume for uploaded file attachments. Text notes persist fully in PostgreSQL, but
-  binary attachments would live on Cloud Run's ephemeral container filesystem and
-  would **not** survive a revision restart. Fine for text-only note-taking; add a
-  `gcs_volumes` entry if attachment persistence is required.
+- **Attachments are on NFS by default.** Memos writes uploaded attachments as files
+  under `/var/opt/memos/assets`, not into PostgreSQL. `enable_nfs = true` mounts the
+  shared Filestore volume at `nfs_mount_path` (`/var/opt/memos`), so attachments
+  survive revisions and scale-to-zero. Keep NFS on unless the deployment is
+  text-only; with it off, attachments live on the ephemeral container filesystem
+  and are lost on every restart.
 - **Public sign-up is open by default**, same as any fresh Memos install. Disable
   self-registration from within the Memos UI after creating the first (admin)
   account, if the deployment should not accept further public sign-ups.
@@ -218,7 +219,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `min_instance_count` | `0` | Scale-to-zero — Memos has no background work to keep warm for. |
 | `max_instance_count` | `1` | Single-instance default; raise for higher concurrent load. |
 | `container_port` | `5230` | Memos's native default port — no remapping performed. |
-| `execution_environment` | `gen2` | Gen2 required for NFS/GCS Fuse mounts (not used by this module, but the platform default). |
+| `execution_environment` | `gen2` | Gen2 is required for the NFS mount that holds attachments. |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |
 | `cpu_always_allocated` | `false` | Request-based billing — Memos does no work between requests. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |
@@ -261,8 +262,8 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 
 `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`
 run SQL from a GCS bucket after provisioning. `nfs_instance_name` /
-`nfs_instance_base_name` are declared for convention parity but not exercised —
-Memos does not use NFS. See [App_CloudRun](App_CloudRun.md).
+`nfs_instance_base_name` select the shared NFS server whose volume holds Memos's
+data directory (see Group 11). See [App_CloudRun](App_CloudRun.md).
 
 ### Group 10 — Load Balancer, CDN & Image Retention
 
@@ -280,8 +281,8 @@ Memos does not use NFS. See [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets` — empty by default, since Memos attachments are not GCS-backed in this module. |
 | `storage_buckets` | `[]` | No bucket provisioned by default. |
-| `enable_nfs` | `false` | Not used — Memos keeps no state outside PostgreSQL in this module's wiring. |
-| `gcs_volumes` | `[]` | Add an entry here (mounted at Memos's data directory) if attachment persistence across revisions is required. |
+| `enable_nfs` | `true` | Mounts the shared NFS volume at `nfs_mount_path` (`/var/opt/memos`), where Memos stores uploaded attachments. Turning it off puts attachments on ephemeral disk. |
+| `gcs_volumes` | `[]` | Not needed for attachments, which are on NFS by default. |
 
 ### Group 12 — Database Backend
 
@@ -375,7 +376,7 @@ running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_file` fails the import job. |
 | `memory_limit` | `512Mi` (default is sufficient) | Medium | Memos's footprint is small; raising this mainly affects cost, not correctness. |
 | `min_instance_count` | `0` (default) | Low | Scale-to-zero adds a brief cold start (Go binary, fast boot) to the first request after idle — much shorter than JVM/Node.js apps in this catalogue. |
-| `gcs_volumes` for attachments | Add explicitly if needed | Medium | Without it, uploaded binary attachments live on Cloud Run's ephemeral filesystem and do not survive a revision restart — text notes in PostgreSQL are unaffected. |
+| `enable_nfs` for attachments | Leave `true` | Medium | With NFS off, uploaded attachments live on Cloud Run's ephemeral filesystem and do not survive a revision restart or scale-to-zero — text notes in PostgreSQL are unaffected. |
 | `enable_cloud_armor` | enable for production | Medium | The login/sign-up form is publicly reachable without WAF protection by default. |
 
 ---

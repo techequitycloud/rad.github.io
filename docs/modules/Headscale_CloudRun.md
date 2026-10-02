@@ -39,7 +39,7 @@ Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Go service, 1 vCPU / 1 GiB by default; hard-pinned to a single instance |
 | Database | Embedded SQLite | No Cloud SQL instance — `database_type = "NONE"` |
-| Persistence | Cloud Storage (GCS Fuse) | The SQLite file, WAL sidecars, and WireGuard/Noise keys live at `/var/lib/headscale` |
+| Persistence | Cloud Filestore (NFS) | The SQLite file and WireGuard/Noise keys live at `/var/lib/headscale`, on the NFS share by default |
 | Secrets | Secret Manager | None — Headscale has no application-level secrets in this module |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; needs to stay public for real Tailscale clients to register |
 
@@ -56,10 +56,11 @@ Google Cloud services:
 - **Scale-to-zero is enabled by default** (`min_instance_count = 0`). Unlike
   apps with a database or search index to warm, Headscale's SQLite file and
   WireGuard key make cold starts fast.
-- **Storage is GCS-Fuse-backed on Cloud Run — a real, documented trade-off.**
-  SQLite's WAL mode needs genuine POSIX file locking, which gcsfuse does not
-  reliably provide. This is acceptable only because concurrent writers are
-  structurally impossible (`max_instance_count` pinned to 1). See
+- **Storage is on NFS, and WAL is off.** Cloud Run has no block device, and GCS Fuse
+  cannot host SQLite (no POSIX or shared-memory locking), so `/var/lib/headscale` is the
+  NFS mount path (`enable_nfs = true` by default) and the GCS Fuse bucket is mounted
+  there only if NFS is turned off. NFS provides POSIX locking but not the shared-memory
+  mapping WAL needs, so this variant runs SQLite with `write_ahead_log` disabled. See
   [Pitfalls](#7-pitfalls--gotchas) below.
 - **Public ingress is required for Tailscale clients to register.**
   `ingress_settings = "all"` is the default so devices anywhere on the
@@ -97,11 +98,13 @@ scale-to-zero and cold starts.
 See [App_CloudRun](App_CloudRun.md) for scaling, concurrency, execution
 environment, and traffic splitting.
 
-### B. Cloud Storage — the SQLite storage volume
+### B. The SQLite storage volume
 
-A dedicated `storage` GCS bucket is provisioned automatically and mounted at
-`/var/lib/headscale` via GCS Fuse. It holds `db.sqlite` (+ `-wal`/`-shm`
-sidecars in WAL mode), `noise_private.key`, and the legacy WireGuard key.
+`/var/lib/headscale` holds `db.sqlite`, `noise_private.key`, and the legacy WireGuard
+key. By default it is the NFS mount path. A dedicated `storage` GCS bucket is also
+provisioned; it is mounted at `/var/lib/headscale` via GCS Fuse only when
+`enable_nfs = false` — avoid that, because a SQLite database written over GCS Fuse is
+corrupt while `/health` still passes.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -222,7 +225,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `min_instance_count` | `0` | Scale-to-zero; cold starts are fast (no DB/index to warm). |
 | `max_instance_count` | `1` | **Hardcoded to `1` downstream regardless of this value** — see [Pitfalls](#7-pitfalls--gotchas). |
 | `container_port` | `8080` | Headscale's native listen port. |
-| `execution_environment` | `gen2` | Required for the GCS Fuse storage mount. |
+| `execution_environment` | `gen2` | Required for the NFS (and GCS Fuse) storage mounts. |
 | `enable_cloudsql_volume` | `false` | Not applicable — no Cloud SQL. |
 | `enable_image_mirroring` | `true` | Mirror the built image into Artifact Registry. |
 
@@ -238,7 +241,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Creates the `storage` bucket backing `/var/lib/headscale`. |
-| `gcs_volumes` | `[]` | Additional GCS Fuse mounts. The `storage` bucket is added automatically. |
+| `gcs_volumes` | `[]` | Additional GCS Fuse mounts. The `storage` bucket is added automatically only when `enable_nfs = false`. |
 | `enable_redis` | `true` (declared) | Not referenced — hardcoded `false` in `main.tf`; Headscale has no use for Redis. |
 
 ### Group 12 — Database Backend
@@ -310,7 +313,7 @@ the running resources.
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| SQLite on GCS Fuse | Accept the trade-off, or use `Headscale_GKE` for production | **Critical** | SQLite's WAL/journal files need real POSIX file locking, which gcsfuse does not reliably provide — confirmed live via repeated `BufferedWriteHandler.OutOfOrderError` log entries for `db.sqlite`/`db.sqlite-wal`/`db.sqlite-shm`. gcsfuse falls back to a slower legacy write path; the app kept working in observed testing, but this is a known SQLite-corruption risk class documented elsewhere in this catalog. **There is no fix available on Cloud Run** — no block-volume alternative exists, only gcsfuse or ephemeral storage. For a production deployment, use [Headscale_GKE](Headscale_GKE.md) with `stateful_pvc_enabled = true` (its default) instead. |
+| `enable_nfs` | `true` (the default) | **Critical** | Turning NFS off moves `/var/lib/headscale` onto GCS Fuse, which cannot host SQLite: the database is corrupt on arrival while `/health` still passes. For a block device and WAL mode, use [Headscale_GKE](Headscale_GKE.md) with `stateful_pvc_enabled = true` (its default). |
 | `max_instance_count` | Leave at `1` (it's hardcoded anyway) | High | The variable is declared but never actually read by `Headscale_Common` — `config.max_instance_count` is a literal `1`. Setting it higher gives a false impression that horizontal scaling is available; it is not, and would corrupt the SQLite file if it were. |
 | `server_url` | Set once, before registering clients | Critical | Baked into every client's registration. Changing it after clients have registered requires re-registering every node against the new URL. |
 | `ingress_settings` | `all` | Critical | Setting `internal` makes the coordination server unreachable to real Tailscale clients on the public internet — the entire point of the deployment breaks. |

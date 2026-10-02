@@ -15,7 +15,7 @@ For the infrastructure that actually provisions and runs Ghost, see the platform
 
 | Area | Provided by Ghost_Common | Where it surfaces |
 |---|---|---|
-| Container image | Pins the official Ghost image and builds a customised variant via a Dockerfile (`curl`, `jq`, `netcat-openbsd`, `default-mysql-client`) | `container_image` output of the platform deployment |
+| Container image | Pins the official Ghost image and builds a customised variant via a Dockerfile (`curl`, `ca-certificates`, `jq`, `netcat-openbsd`, `default-mysql-client`) | `container_image` output of the platform deployment |
 | Custom entrypoint | Installs a startup script that detects the service URL, maps foundation DB env vars to Ghost's `database__connection__*` settings, injects `database__client=mysql`, and self-heals a stale first-boot migration lock | Application behaviour in the platform guides |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy `db-init` job that creates the database with `utf8mb4` charset, creates the user, and grants privileges | `initialization_jobs` output |
@@ -27,7 +27,7 @@ For the infrastructure that actually provisions and runs Ghost, see the platform
 
 ## 2. Container image and custom entrypoint
 
-`Ghost_Common` extends the official `ghost:<version>` Docker Hub image with a custom Dockerfile that installs `curl`, `jq`, `netcat-openbsd`, and `default-mysql-client` (the last one lets the entrypoint release a stale migration lock — see step 5 below), then adds a startup script (`entrypoint.sh`) as `/usr/local/bin/custom-entrypoint.sh`.
+`Ghost_Common` extends the official `ghost:<version>` Docker Hub image with a custom Dockerfile that installs `curl`, `ca-certificates`, `jq`, `netcat-openbsd`, and `default-mysql-client` (the last one lets the entrypoint release a stale migration lock — see step 5 below), then adds a startup script (`entrypoint.sh`) as `/usr/local/bin/custom-entrypoint.sh`.
 
 The startup script performs these actions on every container start:
 

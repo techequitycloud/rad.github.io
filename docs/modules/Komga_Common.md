@@ -124,8 +124,13 @@ boot and write its state to the persistent volume:
 
 Platform-specific mounting of `/config`:
 
-- **Cloud Run** mounts the `storage` Cloud Storage bucket at `/config` via GCS
-  FUSE (`enable_gcs_storage_volume = true`).
+- **Cloud Run** mounts the Filestore (NFS) share at `/config` (`Komga_CloudRun`
+  defaults `enable_nfs = true`, `nfs_mount_path = "/config"`) and sets
+  `enable_gcs_storage_volume = false`. While `/config` is on NFS this module sets
+  `KOMGA_DATABASE_CHECKLOCALFILESYSTEM` and `KOMGA_TASKSDB_CHECKLOCALFILESYSTEM` to
+  `false`: Komga's startup checks reject any network filesystem by type, although NFS
+  provides the locking SQLite needs. The `storage` bucket is mounted at `/config` via
+  GCS FUSE only if NFS is not.
 - **GKE** with `stateful_pvc_enabled = true` (the default) mounts a block PVC at
   `/config` and sets `enable_gcs_storage_volume = false` to avoid a double-mount
   at the same path (gcsfuse's lack of real file locking would also corrupt Komga's
@@ -163,8 +168,8 @@ foundation, which also grants the workload service account access:
 - The bucket `location` is left empty so the foundation resolves it via the
   auto-discovered deployment region (avoiding a force-replace of the
   immutable-location bucket on a cross-region re-apply).
-- On Cloud Run it backs `/config` via GCS FUSE, so it holds Komga's SQLite
-  database, Lucene search index, thumbnail cache, task queue, and logs.
+- It backs `/config` via GCS FUSE only when neither NFS (Cloud Run's default) nor a
+  block PVC (GKE's default) is mounted there.
 
 List it with:
 
@@ -174,10 +179,9 @@ gcloud storage buckets list --project "$PROJECT"
 
 **Note on storage type.** Komga's `/config` holds a SQLite database in WAL mode,
 which needs real file locking to stay consistent — gcsfuse does not provide this.
-On GKE the block PVC (`stateful_pvc_enabled = true`) is the best fit. Cloud Run's
-GCS FUSE mount works but has higher latency and weaker consistency guarantees, and
-is better suited to light libraries; large libraries and frequent metadata scans
-are far happier on the GKE block PVC.
+On GKE the block PVC (`stateful_pvc_enabled = true`) provides it; on Cloud Run the
+NFS share does. On GCS FUSE the databases are not persisted, so do not run `/config`
+there.
 
 ---
 

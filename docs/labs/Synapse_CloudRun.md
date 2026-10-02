@@ -217,10 +217,9 @@ platform-level diagnostics and do not change with Synapse releases.
   database with `LC_COLLATE='C' LC_CTYPE='C'`.
 - **Federation broken / device sessions lost after a redeploy:** the signing key was
   regenerated because the data directory was not persistent. Ensure `enable_nfs = true`
-  (the default) **and set `nfs_mount_path = "/data"`** — its default is
-  `/opt/synapse/storage`, which does not match the entrypoint's data directory
-  (`SYNAPSE_DATA_DIR = "/data"`), so the signing key would not land on the persistent
-  mount. The signing key must never change.
+  and `nfs_mount_path = "/data"` (both the defaults) — any other mount path does not
+  match the entrypoint's data directory (`SYNAPSE_DATA_DIR = "/data"`), so the signing
+  key would not land on the persistent mount. The signing key must never change.
 - **Database connection errors:** confirm the Cloud SQL instance is `RUNNABLE`, the DB
   password secret exists, and the `db-init` job completed successfully.
   ```bash

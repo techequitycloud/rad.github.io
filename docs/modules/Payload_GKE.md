@@ -49,8 +49,10 @@ together a focused set of Google Cloud services:
 - **Health probes target `/admin`, not `/` or an API route.** `/admin` serves Payload's
   login/first-user-creation form and returns an unauthenticated `200`; Payload's REST/GraphQL
   routes require auth and are unsuitable probe targets.
-- **No storage bucket is provisioned.** Uploaded media is written to local container disk and
-  does not survive a pod restart or redeploy.
+- **No storage bucket is provisioned.** By default uploaded media is written to local container
+  disk and does not survive a pod restart or redeploy. Set `stateful_pvc_enabled = true` to keep
+  it on a per-pod block PVC mounted at `/app/media` (where Payload writes uploads, with
+  `stateful_fs_group = 1001`).
 - **`enable_redis` and related Group 21 variables are declared but inert.** They are not forwarded
   to `Payload_Common`, which has no Redis wiring.
 - **`service_type` defaults to `LoadBalancer`.** This deployment's own live verification used
@@ -189,8 +191,9 @@ Optional uptime checks and alert policies are available.
   non-interactively. Visit `$SERVICE_URL/admin` (or `kubectl port-forward` if `ClusterIP`) — with
   an empty `users` collection Payload shows a signup form to create the first administrator. This
   is a manual, one-time operator step.
-- **Media uploads do not persist.** No storage bucket is provisioned; uploaded files are written
-  to local container disk and are lost on the next pod restart or redeploy.
+- **Media uploads do not persist by default.** No storage bucket is provisioned; uploaded files are
+  written to local container disk and are lost on the next pod restart or redeploy unless
+  `stateful_pvc_enabled = true` puts `/app/media` on a block PVC.
 - **`service_type` may need a manual flip.** If exposed as `ClusterIP` due to IP quota
   constraints, the app is reachable only via `kubectl port-forward`/`kubectl exec` until it is
   flipped back to `LoadBalancer` (or a static IP is reserved) and re-applied.

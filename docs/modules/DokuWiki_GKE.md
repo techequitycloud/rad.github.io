@@ -207,7 +207,7 @@ specific to or notable for DokuWiki are listed; every other input is inherited f
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `min_instance_count` | `1` | Minimum replicas; GKE requires ≥ 1. Keep at 1 — StatefulSet PVCs are not shared. |
-| `max_instance_count` | `3` | Cost ceiling. Do not scale past 1 for a shared wiki — each pod gets its own empty PVC. |
+| `max_instance_count` | `1` | Cost ceiling. Do not scale past 1 for a shared wiki — each pod gets its own empty PVC. |
 | `container_port` | `8080` | Apache listens on 8080. |
 | `container_resources` | `{ cpu_limit = "500m", memory_limit = "512Mi" }` | DokuWiki is lightweight. |
 | `enable_cloudsql_volume` | `false` | No database — no Auth Proxy sidecar. |

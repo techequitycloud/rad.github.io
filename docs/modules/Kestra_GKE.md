@@ -346,7 +346,7 @@ but not referenced — only `enable_binary_authorization` is forwarded.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | Declared for Foundation convention parity. **Not referenced** — `main.tf` hardcodes Redis off (`enable_redis = false`) because Kestra standalone mode queues through PostgreSQL, not Redis. |
+| `enable_redis` | `false` | Declared for Foundation convention parity. **Not referenced** — `main.tf` hardcodes Redis off (`enable_redis = false`) because Kestra standalone mode queues through PostgreSQL, not Redis. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `"6379"` / `""` | Also declared but not referenced, for the same reason. |
 
 ### Group 16 — Database Backend

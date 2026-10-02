@@ -61,12 +61,14 @@ together a focused set of Google Cloud services:
   `reserve_static_ip = false` it can fall back to an unreachable internal
   `*.svc.cluster.local` hostname if the ephemeral LoadBalancer IP isn't known yet at
   apply time — confirmed on WriteFreely (see §6).
-- **NFS is enabled by default** (`enable_nfs = true`), which also co-hosts the
-  (unused) Redis endpoint on the NFS server VM.
+- **NFS and Redis are off by default** (`enable_nfs = false`, `enable_redis = false`).
+  WriteFreely needs no shared filesystem: content lives in MySQL and its encryption
+  keys are seeded from Secret Manager on every boot.
 - **No admin account is created automatically.** Registration is closed; create the
   first account as a post-deploy step (see §3).
-- **WriteFreely is Go — Redis and PHP settings are inert.** The `enable_redis` and
-  `php_*` variables come from the module scaffold and are not consumed by WriteFreely.
+- **WriteFreely is Go — Redis and PHP settings are inert.** Turning `enable_redis` on only
+  injects a `REDIS_HOST` WriteFreely ignores, and the `php_*` variables come from the
+  module scaffold and are not consumed by WriteFreely.
 
 ---
 
@@ -276,7 +278,7 @@ specific to or notable for WriteFreely are listed; every other input is inherite
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `true` | NFS is provisioned by default (also co-hosts the unused Redis endpoint). |
+| `enable_nfs` | `false` | Off by default: WriteFreely needs no shared filesystem. Content lives in MySQL and the encryption keys are seeded from Secret Manager on every boot. |
 | `nfs_mount_path` | `/var/lib/writefreely` | Mount path inside the container. |
 
 ### Group 16 — Database Backend
@@ -292,13 +294,13 @@ specific to or notable for WriteFreely are listed; every other input is inherite
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP, 30s delay | Ready as soon as port 8080 is bound. |
-| `liveness_probe` | HTTP `/`, 300s delay | Restarts the pod if the home page stops responding. |
+| `liveness_probe` | HTTP `/`, 30s delay | Also drives readiness and the load-balancer health check, so a long delay keeps the pod out of service; the TCP startup probe already covers slow boots. |
 
 ### Group 15 — Redis (inert for WriteFreely)
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_redis` | `true` | **Not consumed** — WriteFreely stores all state in MySQL. Scaffold leftover. |
+| `enable_redis` | `false` | **Leave off** — WriteFreely cannot use Redis; enabling it only injects an ignored `REDIS_HOST`. |
 
 All other inputs follow standard App_GKE behaviour.
 

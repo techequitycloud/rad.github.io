@@ -39,7 +39,7 @@ focused set of Google Cloud services:
 | Vector search | Elasticsearch (Elasticsearch_GKE) | External dependency — must be deployed first; `elasticsearch_hosts` is mandatory |
 | Task queue | Redis (Memorystore) | Required for document processing workers |
 | Shared files | Filestore (NFS) | Enabled by default for shared document processing storage |
-| Object storage | Cloud Storage | A dedicated `ragflow-documents` bucket |
+| Object storage | MinIO (in-namespace) | RAGFlow stores every uploaded document in S3-compatible storage, one bucket per knowledge base. `enable_inline_minio = true` (the default) runs a single-replica MinIO additional service on a 20 Gi `standard` PVC; set `minio_host` to use an external S3 endpoint instead. A `documents` Cloud Storage bucket is also provisioned |
 | Secrets | Secret Manager | Auto-generated database password |
 | Ingress | Cloud Load Balancing | External LoadBalancer service; optional custom domain + managed certificate |
 
@@ -49,6 +49,12 @@ focused set of Google Cloud services:
   `NONE` breaks startup.
 - **`elasticsearch_hosts` is required.** RAGFlow cannot index or search documents without
   a reachable Elasticsearch endpoint. Deploy `Elasticsearch_GKE` first.
+- **Document storage is an in-namespace MinIO by default.** RAGFlow keeps uploaded
+  documents in S3-compatible storage, creating a bucket per knowledge base, so
+  `enable_inline_minio = true` deploys a single-replica MinIO service with a persistent
+  volume (`minio_storage_size` 20 Gi, `minio_storage_class` `standard`). Its credentials
+  are a generated password in Secret Manager. Without object storage every document
+  parse fails while the pod stays Ready.
 - **Redis is required for document processing.** With `enable_redis = true` (the default),
   `REDIS_HOST` and `REDIS_PORT` are injected automatically. Without Redis, uploaded files
   remain unprocessed indefinitely.

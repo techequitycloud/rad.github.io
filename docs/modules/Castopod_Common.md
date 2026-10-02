@@ -141,8 +141,9 @@ only then delegates to the upstream FrankenPHP/Caddy entrypoint, which serves HT
 - **Discovers and delegates to the upstream entrypoint**, exec'ing the FrankenPHP/Caddy
   server (`frankenphp run --config /etc/frankenphp/Caddyfile`).
 
-The image also pre-creates `/var/www/castopod/public/media` so the media mount target
-exists regardless of the base-image layout.
+The image also pre-creates `/var/www/html/public/media` (the application root is
+`/var/www/html`, not the image's near-empty `/var/www/castopod`), and the entrypoint
+re-seeds the media tree there on start, because a freshly attached volume mounts empty.
 
 ---
 
@@ -179,8 +180,8 @@ has booted and connected to MySQL, so the probes target it directly:
 A dedicated **Cloud Storage** bucket (suffix `media`) is declared here and provisioned
 by the foundation, which also grants the workload service account access. Castopod
 stores podcast episode audio, cover art, and other uploads under
-`/var/www/castopod/public/media`; both platform variants additionally enable a shared
-filesystem (**Cloud Filestore / NFS**, `enable_nfs = true` by default) so those uploads
+`/var/www/html/public/media`; both platform variants additionally enable a shared
+filesystem (**Cloud Filestore / NFS**, `enable_nfs = true` by default, mounted at that path) so those uploads
 survive container restarts and are shared across replicas. List the bucket with:
 
 ```bash

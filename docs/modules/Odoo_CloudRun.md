@@ -340,7 +340,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Provision the addons bucket. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Additional buckets beyond the Odoo-managed `odoo-addons` bucket. |
 | `enable_nfs` | `true` | Required — Odoo's filestore, sessions, and addons directories must reside on shared storage. |
-| `nfs_mount_path` | `/mnt/nfs` | NFS mount path inside the container as seen by App_CloudRun. |
+| `nfs_mount_path` | `/mnt` | NFS mount path inside the container as seen by App_CloudRun. |
 | `gcs_volumes` | `[]` | Additional GCS Fuse mounts. |
 
 ### Group 12 — Database Backend

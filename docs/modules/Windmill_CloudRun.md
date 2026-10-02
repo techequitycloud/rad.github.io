@@ -34,8 +34,8 @@ Windmill runs as a combined server+worker container on Cloud Run v2. The deploym
 - **`BASE_URL` and `BASE_INTERNAL_URL` are constructed at startup** from platform-injected variables so OAuth callbacks and webhook URLs resolve correctly.
 - **Redis is disabled by default.** Windmill operates without Redis for single-instance deployments. Enable Redis for distributed queue behaviour with multiple instances.
 - **An SMTP placeholder secret is provisioned automatically.** Replace the `{prefix}-smtp-password` value in Secret Manager before enabling email notifications.
-- **`min_instance_count` defaults to `0`** (scale-to-zero). Set it to `1` to keep an instance warm so webhook triggers and scheduled flows do not require a cold start.
-- **`cpu_always_allocated` defaults to `false`** — Windmill is one of 12 apps deliberately flipped to cold-start billing in the 2026-07-09 cost-first pass (request-based, paired with `min_instance_count=0`). Scheduled flows and queued executions defer until a request wakes the worker; externalise schedules with Cloud Scheduler, or set `cpu_always_allocated = true` and `min_instance_count >= 1` to restore continuous/always-on operation.
+- **`min_instance_count` defaults to `1`.** The container runs Windmill's server and its worker pool (`MODE=server,worker`), so it is what executes scheduled jobs; at `0` Cloud Run reaps it about 15 minutes after the last request and schedules stop firing.
+- **`cpu_always_allocated` defaults to `true`.** Jobs run on a background worker, and under request-based billing that work is throttled to near zero between requests. Keep both defaults for reliable schedules and webhooks.
 
 ---
 
@@ -127,7 +127,7 @@ Container logs flow to Cloud Logging in structured JSON format (`JSON_FMT=true`)
 
 ## 3. Windmill Application Behaviour
 
-- **First-deploy database setup.** An initialization Job (`db-init`) runs on first deploy using `postgres:16-alpine`. It idempotently creates the `windmill_admin` and `windmill_user` roles, the application user, and the application database, then grants full privileges. The job is safe to re-run.
+- **First-deploy database setup.** An initialization Job (`db-init`) runs on first deploy using `postgres:16-alpine`. It idempotently creates the `windmill_admin` and `windmill_user` roles, the application user, and the application database, then grants full privileges and membership in both roles (Windmill needs to `SET ROLE windmill_admin`). The job is safe to re-run.
 - **Automatic schema migrations.** Windmill runs its own database migrations on startup, so upgrading the `application_version` applies schema changes automatically.
 - **Combined server+worker mode.** Each instance runs both the Windmill API/scheduler and `NUM_WORKERS=3` script execution workers. Workers execute Python, TypeScript, Bash, Go, and SQL scripts in isolated subprocesses. The `WORKER_GROUP=default` assignment means all flows and scripts route to these instances by default.
 - **`BASE_URL` and `DATABASE_URL` construction.** The `entrypoint.sh` shim constructs `DATABASE_URL` from platform-injected `DB_*` variables at start time, handling both Unix socket (Auth Proxy) and TCP connections. `BASE_URL` and `BASE_INTERNAL_URL` are set from the predicted service URL so OAuth callbacks and webhooks resolve correctly.
@@ -179,7 +179,7 @@ Variables are grouped exactly as they appear on the deployment platform. Only se
 | `container_image` | `""` | Override image URI. Leave empty for Cloud Build to manage. |
 | `cpu_limit` | `2000m` | CPU per instance. 2 vCPU is the recommended minimum for combined server+worker mode. |
 | `memory_limit` | `2Gi` | Memory per instance. 4 GiB recommended for production Python/TypeScript workloads. |
-| `min_instance_count` | `0` | Minimum instances. Set ≥ 1 so webhooks and scheduled flows are always available without a cold start. |
+| `min_instance_count` | `1` | Minimum instances. Set ≥ 1 so webhooks and scheduled flows are always available without a cold start. |
 | `max_instance_count` | `3` | Maximum instances. Use Redis when scaling beyond 1 to coordinate job queues. |
 | `container_port` | `8000` | Windmill listens on port 8000. |
 | `execution_environment` | `gen2` | Gen2 required for GCS Fuse mounts and full Linux compatibility. |
@@ -331,8 +331,8 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `cpu_limit` | `2000m` | High | Combined mode runs 3 workers in-process; insufficient CPU throttles all script execution. Each worker needs ~500m. |
 | `memory_limit` | `2Gi` | High | Windmill workers execute arbitrary user scripts; OOM kills mid-execution produce silent failures in the UI. |
-| `min_instance_count` | `0` (default, scale-to-zero) | Medium | Raise to `1` to keep an instance warm and avoid cold starts for webhooks/scheduled flows; increases baseline cost. |
-| `cpu_always_allocated` | `false` (default, cost-first cold-start) | Medium | Scheduled jobs/queued executions defer until a request wakes the worker; externalise with Cloud Scheduler, or set `true` + `min_instance_count >= 1` for continuous operation. |
+| `min_instance_count` | `1` (the default) | High | Lowering to `0` lets Cloud Run reap the instance when idle, and with it the worker pool — scheduled flows stop firing until a request wakes the service. |
+| `cpu_always_allocated` | `true` (the default) | High | Setting `false` throttles the background worker between requests, so scheduled jobs and queued executions run several times slower or stall. |
 | `service_url` / `BASE_URL` | Cloud Run URL or custom domain | High | Empty or incorrect value breaks OAuth callbacks, webhook endpoints, and Windmill UI deep-links. |
 | `execution_environment` | `gen2` | High | Gen1 does not support GCS Fuse mounts; required when `gcs_volumes` is used. |
 | `enable_vpc_sc` | `false` unless needed | High | Requires explicit `organization_id`; without it VPC-SC is silently skipped, giving a false sense of perimeter security. |

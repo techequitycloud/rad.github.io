@@ -66,8 +66,8 @@ export REGION="us-central1"           # the region you deploy into
    documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a
-   PersistentVolumeClaim (when `stateful_pvc_enabled = true`) or a GCS FUSE-backed
-   Cloud Storage bucket as Chroma's persistence backend, builds the container image,
+   PersistentVolumeClaim (the default, `stateful_pvc_enabled = true`) — or a GCS
+   FUSE-backed Cloud Storage bucket if you set it to `false` — as Chroma's persistence backend, builds the container image,
    and optionally creates a Secret Manager auth token. `reserve_static_ip` and
    `enable_custom_domain` both default to `true`, so a static IP is reserved even if
    you never set `application_domains`. Chroma requires no database and no

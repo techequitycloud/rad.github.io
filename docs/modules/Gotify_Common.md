@@ -112,6 +112,9 @@ The entrypoint:
   The `lib/pq` driver accepts the Cloud SQL Auth Proxy socket **directory** as the
   `host=` value, so the same mapping works on Cloud Run (socket dir) and GKE
   (`127.0.0.1` via the proxy sidecar).
+- **Waits for the database endpoint** — Gotify panics on its first refused
+  connection, so on a TCP host (GKE's proxy sidecar) the entrypoint waits for the
+  port to open before starting the server; on Cloud Run's socket path it skips the wait.
 - **Sets the server port** — `GOTIFY_SERVER_PORT=80`.
 - **Sets the default admin user** — `GOTIFY_DEFAULTUSER_NAME=admin` (the password
   comes from the injected `GOTIFY_DEFAULTUSER_PASS` secret).
@@ -161,8 +164,9 @@ token, so they are not used for health checks.
 
 Gotify stores messages, applications, and client tokens in PostgreSQL, so
 **no Cloud Storage bucket is declared** here (`storage_buckets` is empty). Gotify's
-optional on-disk store for uploaded application images and plugins is not persisted
-by default; enable NFS or a GCS Fuse volume at the platform layer if you rely on it.
+on-disk store for uploaded application images and plugins (`/app/data`) is persisted
+by the platform variants: a block PVC on GKE and NFS on Cloud Run, both mounted at
+`/app/data` by default.
 
 ---
 

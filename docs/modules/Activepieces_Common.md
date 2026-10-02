@@ -119,7 +119,7 @@ application comes up correctly on first boot:
 - **Queue mode** — `AP_QUEUE_MODE = "MEMORY"` by default; switches to `"REDIS"` when
   Redis is enabled via the platform deployment settings.
 - **Port** — `AP_PORT = "8080"`; `AP_POSTGRES_PORT = "5432"`.
-- **Environment** — `AP_ENVIRONMENT = "production"`.
+- **Environment** — `AP_ENVIRONMENT = "prod"` (Activepieces accepts only `prod`, `dev` or `test`).
 - **Telemetry** — `AP_TELEMETRY_ENABLED = "false"` (disabled by default; no data
   sent to the Activepieces cloud).
 - **Execution mode** — `AP_EXECUTION_MODE = "UNSANDBOXED"` with `AP_SANDBOX_TYPE = "NO_SANDBOX"`,

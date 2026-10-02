@@ -50,9 +50,8 @@ a focused set of Google Cloud services:
   around).
 - **Cold-start by default.** `min_instance_count = 0` and `cpu_always_allocated =
   false` (request-based billing): the UI and contact tracking work on-request; the
-  marketing cron is externalised as scheduled Cloud Run Jobs (§3). Set
-  `cpu_always_allocated = true` and `min_instance_count >= 1` to restore continuous
-  in-process operation.
+  marketing commands run as separate scheduled Cloud Run Jobs (§3), so scale-to-zero
+  does not stop them.
 - **Database migrations run on each instance start** (idempotent), so version upgrades
   apply automatically.
 - The Mautic **admin password** is generated and stored in Secret Manager.
@@ -104,8 +103,9 @@ connection model, backups, and password rotation.
 ### C. Filestore (NFS) and Cloud Storage
 
 Uploaded media is written to a **Filestore (NFS)** share mounted into the service so
-all instances share the same files. A dedicated **Cloud Storage** bucket is also
-provisioned for media.
+all instances share the same files. A **Cloud Storage** `media` bucket is also
+provisioned, but nothing mounts or writes to it — it is kept only because removing it
+from an existing deployment trips a Terraform dependency cycle.
 
 - **Console:** Filestore → Instances; Cloud Storage → Buckets.
 - **CLI:**
@@ -178,15 +178,21 @@ Monitoring, with optional uptime checks and alert policies.
   upgrading the version applies schema changes automatically.
 - **Scheduled commands (essential).** Mautic's campaigns, email queue, and segment
   updates are driven by scheduled commands; without them campaigns never fire and no
-  email is sent. They run as Cloud Run Jobs invoked on a schedule. The commands:
+  email is sent. Mautic has no in-process scheduler, so they run as scheduled Cloud Run
+  Jobs:
 
-  | Command | Purpose | Typical cadence |
+  | Command | Purpose | Cadence |
   |---|---|---|
-  | `mautic:segments:update` | Refresh segment membership | every 15 min |
-  | `mautic:campaigns:trigger` | Fire scheduled campaign events | every 15 min |
-  | `mautic:campaigns:messages` | Send queued campaign messages | every 15 min |
-  | `mautic:queue:process` | Process the email send queue | every 5 min |
-  | `mautic:maintenance:cleanup` | Purge old data | weekly |
+  | `mautic:segments:update` | Refresh segment membership | every 15 min (`:00`, `:15`, …) |
+  | `mautic:campaigns:update` | Rebuild campaign membership | every 15 min (`:05`, `:20`, …) |
+  | `mautic:campaigns:trigger` | Fire scheduled campaign events | every 15 min (`:10`, `:25`, …) |
+
+  These three are scheduled by the module itself, staggered so they never overlap,
+  and run through `mautic-cron.sh` (which maps the database settings the way the web
+  container does and waits for the Cloud SQL proxy). Anything else Mautic offers —
+  for example `mautic:queue:process` if you queue email, or
+  `mautic:maintenance:cleanup` — is added through `cron_jobs`, which is appended to
+  the built-in three.
 
   Inspect the jobs and their executions:
   ```bash
@@ -239,7 +245,7 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 | `memory_limit` | `4Gi` | Memory per instance. |
 | `min_instance_count` | `0` | Minimum instances. Scale-to-zero by default; set ≥ 1 (with `cpu_always_allocated = true`) for continuous in-process work. |
 | `max_instance_count` | `3` | Maximum instances. |
-| `cpu_always_allocated` | `false` | Request-based billing (cold-start). Set `true` + `min_instance_count >= 1` to run Mautic's in-process cron continuously. |
+| `cpu_always_allocated` | `false` | Request-based billing (cold-start). Mautic runs no in-process scheduler; its commands are scheduled Cloud Run Jobs (§3). |
 | `container_port` | `80` | Mautic/Apache listens on port 80. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy for socket connections. |
 | `execution_environment` | `gen2` | Cloud Run execution generation. |
@@ -300,7 +306,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for Mautic media. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/var/www/html/docroot/media/files` | Mount path inside the container. |
 | `create_cloud_storage` / `storage_buckets` / `gcs_volumes` | _(set)_ | Media bucket / additional buckets / GCS Fuse mounts. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -320,7 +326,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Leave empty to use the built-in database setup job. |
-| `cron_jobs` | `[]` | **Configure the Mautic scheduled commands in §3** — required for campaigns/email. |
+| `cron_jobs` | `[]` | Extra scheduled jobs, appended to the three Mautic commands the module schedules itself (§3). |
 
 ### Group 14 — Observability & Health
 
@@ -397,7 +403,7 @@ running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critical | Mautic requires MySQL; PostgreSQL/`NONE` breaks startup. |
-| `cron_jobs` | configured (§3) | Critical | No campaigns fire and no email is sent without the scheduled commands. |
+| Built-in scheduled commands (§3) | leave in place | Critical | No campaigns fire without them; add email-queue processing via `cron_jobs` if you queue email. |
 | `enable_nfs` | `true` | Critical | Without shared storage, uploads are lost between instances/restarts. |
 | `application_database_name` / `_user` | set once | Critical | Immutable after first deploy; renaming recreates the DB/user and destroys data. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |

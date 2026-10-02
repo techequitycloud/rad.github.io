@@ -59,8 +59,10 @@ Cloud services:
   same pod — important for the PHP session/UI experience.
 - **Minimum 1 replica is maintained** (`min_instance_count = 1`, `max_instance_count = 1`)
   to keep the help-desk endpoint always reachable.
-- **Health is signalled on `GET /`.** There is no dedicated JSON health endpoint;
-  the startup probe is TCP and the liveness probe is `GET /`.
+- **Probes are TCP, not HTTP.** FreeScout rejects any request whose `Host` header
+  does not match `APP_URL` with a 403, and the kubelet probes with the pod IP as
+  `Host` — so no HTTP probe path can pass. Both the startup and liveness probes
+  are TCP, and the Gateway health check follows the liveness probe.
 
 ---
 
@@ -233,7 +235,8 @@ Monitoring. Optional uptime checks and alert policies are available.
   fully stop the old pod before starting the new one, avoiding two pods contending on
   the same NFS volume and shared database.
 - **Health path.** The startup probe is TCP on the container port (30 s delay, 20
-  failures) and the liveness probe is HTTP `GET /` (300 s initial delay). Allow several
+  failures) and the liveness probe is TCP too (300 s initial delay) — an HTTP probe would be
+  rejected by FreeScout's Host check. Allow several
   minutes on first boot while migrations run before the pod reports healthy.
 
 ---
@@ -286,7 +289,7 @@ specific to or notable for FreeScout are listed; every other input is inherited 
 | Variable | Default | Description |
 |---|---|---|
 | `startup_probe` | TCP `/` 30 s delay, 20 failures | Generous window for first-boot migrations. |
-| `liveness_probe` | HTTP `GET /` 300 s delay | `GET /` returns 200 once booted; no dedicated health endpoint. |
+| `liveness_probe` | TCP, 300 s delay | Keep TCP: FreeScout answers an HTTP probe (Host = pod IP) with 403. Also drives the Gateway health check. |
 | `uptime_check_config` | disabled | Optional Cloud Monitoring uptime check. |
 | `alert_policies` | `[]` | Optional metric alert policies. |
 

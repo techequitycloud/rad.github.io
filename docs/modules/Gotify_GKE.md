@@ -38,20 +38,23 @@ focused set of Google Cloud services:
 **Sensible defaults worth knowing up front:**
 
 - **PostgreSQL is mandatory.** `database_type = "POSTGRES"` is the module default;
-  Gotify's SQLite mode is not used, so no per-pod PVC is required.
+  Gotify's SQLite mode is not used.
 - **The container listens on port 80.** `container_port = 80` and the entrypoint sets
   `GOTIFY_SERVER_PORT = 80`.
 - **A single replica is the safe default.** `min = max = 1`. Gotify's message bus is
   in-process, so a client stream only receives messages delivered to the pod it is
   connected to. Scaling beyond one replica without an external fan-out layer drops
   messages for some subscribers.
-- **Stateless Deployment.** `workload_type = "Deployment"` and
-  `session_affinity = "None"` — any pod can serve any request because all messages
-  live in PostgreSQL.
+- **A StatefulSet with a block PVC at `/app/data`.** Messages live in PostgreSQL, but
+  uploaded application images and plugins are written to `/app/data`, so
+  `stateful_pvc_enabled = true` (default) mounts a per-pod PVC there and the workload
+  resolves to a StatefulSet. The PVC uses the `standard` (HDD) storage class — a few
+  small images do not need SSD quota.
 - **The admin password is generated automatically** and stored in Secret Manager,
   injected as `GOTIFY_DEFAULTUSER_PASS`. The initial admin (`admin`) is created on the
   first database initialisation only.
-- **No object storage is provisioned** (`storage_buckets = []`, `enable_nfs = false`).
+- **No object storage or NFS** (`storage_buckets = []`, `enable_nfs = false`) — the PVC
+  holds the on-disk image/plugin store.
 - **The image is custom-built.** `container_image_source = "custom"` wraps
   `ghcr.io/gotify/server` and maps the platform `DB_*` variables onto Gotify's
   `GOTIFY_DATABASE_*` (GORM) configuration; on GKE `DB_HOST` is `127.0.0.1` via the
@@ -230,7 +233,10 @@ specific to or notable for Gotify are listed; every other input is inherited fro
 | `container_port` | `80` | Gotify listens on port 80. |
 | `min_instance_count` | `1` | HPA minReplicas. |
 | `max_instance_count` | `1` | HPA maxReplicas. Keep at 1 — the in-process message bus does not fan out across pods. |
-| `workload_type` | `Deployment` | Stateless Deployment; no StatefulSet needed. |
+| `workload_type` | `null` → `StatefulSet` | Resolves to a StatefulSet because the PVC is enabled. |
+| `stateful_pvc_enabled` | `true` | Per-pod PVC for the uploaded image/plugin store; without it those files are lost on every restart. |
+| `stateful_pvc_mount_path` | `/app/data` | Where Gotify writes images and plugins. |
+| `stateful_pvc_storage_class` | `standard` | HDD; avoids the regional SSD quota. |
 | `timeout_seconds` | `300` | Maximum request duration; raise for long-lived streams. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for connectivity. |
 | `enable_image_mirroring` | `true` | Mirror `ghcr.io/gotify/server` into Artifact Registry. |
@@ -297,8 +303,8 @@ Key inputs: `enable_cicd_trigger`, `github_repository_url`, `github_token`,
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Off by default; enable only to persist Gotify's on-disk image/plugin store. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `enable_nfs` | `false` | Off by default — the block PVC already persists the image/plugin store. |
+| `nfs_mount_path` | `/app/data` | Mount path inside the container. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

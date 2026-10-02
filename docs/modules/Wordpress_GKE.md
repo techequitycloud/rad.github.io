@@ -158,7 +158,7 @@ Pod stdout/stderr flow to Cloud Logging; GKE and Cloud SQL metrics flow to Cloud
 - **PHP configuration baked at build time.** `php_memory_limit`, `upload_max_filesize`, and `post_max_size` are applied to the container image at Cloud Build time. Changing them triggers a new image build and rolling update.
 - **WordPress table prefix.** `WORDPRESS_TABLE_PREFIX` is set to `wp_` automatically. Override via `environment_variables` only when migrating an existing database with a non-standard prefix.
 - **Probe behaviour.** The startup probe uses TCP (port open check) rather than HTTP to avoid failures during WordPress's database initialisation phase. The liveness probe polls `/wp-admin/install.php` — which returns HTTP 200 whether WordPress is freshly installed or already configured — with a 300-second initial delay to allow the `db-init` job to complete. Do not reduce `failure_threshold` below 10 for the startup probe on production deployments.
-- **WP_HOME and WP_SITEURL.** On GKE the service URL is not known at plan time, so these constants are not auto-set. WordPress discovers the site URL from the database on first setup. Set `WP_HOME` via `environment_variables` if you need to force a specific URL before WordPress has been installed.
+- **WP_HOME and WP_SITEURL.** Both constants are set at runtime from the platform-injected `GKE_SERVICE_URL`, so they take precedence over the `siteurl`/`home` rows WordPress stored at install time. If the Gateway address changes, the site follows it instead of redirecting to a stale host.
 - **Scheduled tasks.** WordPress's built-in `wp-cron` pseudo-cron relies on site traffic to trigger. For production sites with consistent uptime requirements, disable `wp-cron` in `wp-config.php` and schedule `wp cron event run --due-now` as a `cron_jobs` entry.
 
   Inspect scheduled tasks:
@@ -280,7 +280,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for WordPress `wp-content` (keep enabled). |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. The startup script symlinks `wp-content` here. |
+| `nfs_mount_path` | `/var/www/html/wp-content` | Mount path inside the container. The startup script symlinks `wp-content` here. |
 
 ### Group 14 — Cloud Storage & Artifact Registry
 

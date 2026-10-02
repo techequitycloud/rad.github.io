@@ -231,9 +231,11 @@ Cloud Monitoring. Optional uptime checks and alert policies are available.
   `REDIS_SERVER_HOST`/`REDIS_SERVER_PORT`/`REDIS_SERVER_PASSWORD`, and
   defaults `AFFINE_SERVER_EXTERNAL_URL` to the platform-injected service URL
   so invite/share links resolve correctly.
-- **Health path.** Startup, liveness, and readiness probes are all **HTTP**
-  `GET /`, which returns 200 once the server is ready and requires no
-  authentication. Startup probe: 60 s initial delay, 15 s period, 30 failure
+- **Health path.** The startup probe is **HTTP** `GET /`; the liveness and
+  readiness probes use `GET /info`, AFFiNE's server-info endpoint. The
+  liveness path must return a literal 200 because App_GKE mirrors it into the
+  Gateway health check — `/` redirects (302), which kubelet accepts but the
+  load balancer treats as unhealthy, so the Gateway would serve 503. Startup probe: 60 s initial delay, 15 s period, 30 failure
   threshold (up to ~510 s from container start). Liveness: 60 s initial
   delay, 30 s period, 3 failure threshold. Because migration runs in the
   separate `affine-migrate` job, the startup window mostly covers Node.js

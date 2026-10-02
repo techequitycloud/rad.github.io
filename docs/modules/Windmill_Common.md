@@ -57,7 +57,8 @@ Windmill requires **PostgreSQL 16**; the engine is fixed and no other database t
 1. creates the `windmill_admin` and `windmill_user` PostgreSQL roles (if absent),
 2. creates the application user with the generated password,
 3. creates the application database owned by the user,
-4. grants the user full privileges on the database and the `public` schema.
+4. grants the user full privileges on the database and the `public` schema, and
+5. grants the user membership in `windmill_admin` and `windmill_user` — Windmill issues `SET ROLE windmill_admin` on privileged queries, which a non-superuser Cloud SQL user can only do as a member of that role.
 
 The job uses `postgres:16-alpine` and is safe to re-run. Inspect the database directly with:
 

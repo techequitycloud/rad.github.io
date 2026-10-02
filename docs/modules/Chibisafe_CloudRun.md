@@ -395,8 +395,8 @@ NONE`).
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisions the always-present `storage` bucket. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned data bucket. |
-| `enable_nfs` | `false` | NFS is off by default; not used by Chibisafe's storage model. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container (only relevant if `enable_nfs` is set). |
+| `enable_nfs` | `true` | Must stay `true` on Cloud Run: Chibisafe's SQLite database, uploads and logs live under `/data`, and GCS FUSE cannot host a SQLite database. |
+| `nfs_mount_path` | `/data` | Mount path inside the container (only relevant if `enable_nfs` is set). |
 | `gcs_volumes` | `[]` | Additional GCS Fuse volume mounts. The Chibisafe `storage` bucket is auto-added at `/data`. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 | `enable_redis` | `true` (mirrored, **inert**) | Declared only for Foundation-convention parity — `main.tf` always forwards `enable_redis = false` to App_CloudRun regardless of this value. Chibisafe has no Redis dependency. |

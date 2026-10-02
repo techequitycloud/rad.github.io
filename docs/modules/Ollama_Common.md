@@ -113,8 +113,9 @@ When `default_model` is set in the platform module and no custom `initialization
 provided, `Ollama_Common` auto-generates a one-shot job named `model-pull` that:
 
 1. Starts a local Ollama server in the background.
-2. Polls `http://localhost:11434/` up to 30 times (3-second interval) until the server is
-   ready.
+2. Polls the local server with `ollama list` up to 30 times (3-second interval) until it is
+   ready. (The `ollama/ollama` image ships no `curl` or `wget`, and the script is run by the
+   image's `/bin/sh`, which is `dash` — so it is written POSIX-sh clean.)
 3. Runs `ollama pull $OLLAMA_MODEL` using the GCS-mounted models directory.
 4. Shuts down the background server and exits cleanly.
 

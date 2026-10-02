@@ -180,10 +180,10 @@ Monitoring, with optional uptime checks and alert policies.
   already-installed database is safe and idempotent.
 - **Health check behaviour.** The startup probe is **TCP** on port 80 — it only
   needs nginx to bind, independent of installer progress. The liveness probe is
-  **HTTP `GET /`**: an unauthenticated request to the root path returns an
-  **HTTP 302 redirect to `/login`**, which Kubernetes' probe semantics treat as
-  a passing response (any 2xx–3xx). Do not expect a bare 200 from `/` — a 302
-  to `/login` is the expected, healthy result.
+  **HTTP `GET /login`**, which returns a plain `200`. It deliberately avoids `/`:
+  the root redirects unauthenticated requests to `/login` (HTTP 302), which
+  Kubernetes would accept but the Gateway's backend health check — mirrored from
+  this probe — does not, since it requires a literal `200`.
   ```bash
   EXTERNAL_IP=$(kubectl get svc -n "$NAMESPACE" -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
   curl -s -o /dev/null -w "%{http_code}\n" "http://${EXTERNAL_IP}/"   # expect 302

@@ -491,7 +491,7 @@ locate and explore the running resources.
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_file` fails the import job. |
 | `database_type` | `MYSQL_8_0` | Critical | BookStack requires MySQL; any other engine breaks startup. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are bytes and block all pod scheduling in the namespace. |
-| `APP_URL` (via `environment_variables`) | External LoadBalancer / custom domain URL | High | A wrong base URL breaks asset loading, links, and login redirects. |
+| `APP_URL` | Leave to the module (resolved to the load-balancer URL at deploy time); override via `environment_variables` only for a custom domain | High | A wrong base URL breaks asset loading, links, and login redirects — BookStack renders unstyled. |
 | `enable_nfs` | `true` | High | Disabling loses all uploaded images and attachments on redeploy or pod reschedule. |
 | `memory_limit` | `2Gi` | High | Lower values risk OOM kills under concurrent editing and full-text indexing. |
 | `enable_cloudsql_volume` | `true` | High | The Auth Proxy sidecar is required for MySQL connectivity on GKE; disabling it breaks DB connectivity (it is not blocked at plan time). |

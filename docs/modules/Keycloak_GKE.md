@@ -78,10 +78,11 @@ Google Cloud services:
   port (8080).** All probes are TCP checks against port 8080 (the HTTP
   listener accepting connections) rather than HTTP checks against `/health`,
   which lives on 9000 and would always fail a probe aimed at 8080.
-- **`KC_HOSTNAME` is auto-detected at runtime.** `entrypoint.sh` queries the
-  GCP metadata server / Cloud Run Admin API first and falls back to the
-  `SERVICE_URL` injected by `App_GKE`; override it via
-  `environment_variables` for a pinned public URL.
+- **`KC_HOSTNAME` is set at runtime.** `entrypoint.sh` exports the
+  `GKE_SERVICE_URL` injected by `App_GKE` (the load-balancer URL, the same
+  value as `service_url`), so the OIDC issuer does not float with whichever
+  address a client used; override it via `environment_variables` for a
+  custom domain.
 
 ---
 

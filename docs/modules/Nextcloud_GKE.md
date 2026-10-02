@@ -108,7 +108,9 @@ automated backups, and password rotation, see [App_GKE](App_GKE.md).
 ### C. Filestore (NFS) and Cloud Storage
 
 Nextcloud user file data is written to a **Filestore (NFS)** share mounted into every
-pod. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data` so all replicas
+pod. `entrypoint.sh` sets `NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data` (`/mnt/nfs/nextcloud-data`
+by default; the wrapper passes the same `nfs_mount_path` to the entrypoint as
+`NFS_MOUNT_PATH`, so the mount and the data directory cannot disagree) so all replicas
 share the same user files. `config.php` is **not** stored on NFS — it is reconstructed
 locally on every pod from Secret Manager secrets (see §3 "Post-install config secrets"
 below). A **Cloud Storage** `nc-data` bucket is also provisioned per deployment and the
@@ -212,7 +214,7 @@ Monitoring. Optional uptime checks and alert policies are available.
   `application_domains`. Requests from unlisted hostnames receive an
   "Access through untrusted domain" error.
 - **NFS user data only.** NFS backs the shared user data directory
-  (`NEXTCLOUD_DATA_DIR=/mnt/nfs/nextcloud-data`) only. `config.php` is not stored on
+  (`NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data`) only. `config.php` is not stored on
   NFS or shared via a symlink — each replica reconstructs it locally from the Secret
   Manager values described above, which is what allows all replicas to converge on
   the same configuration without an NFS dependency for config state.
@@ -345,7 +347,7 @@ Standard App_GKE Cloud Build / Cloud Deploy integration — see
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Shared Filestore volume for Nextcloud config and data. **Required for multi-replica.** |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. User data goes to `<nfs_mount_path>/nextcloud-data`. |
 | `nfs_volume_name` | `nfs-data-volume` | Kubernetes volume name for the NFS mount. |
 | `nfs_instance_name` | `""` | Existing NFS GCE VM name. Auto-discovered when empty. |
 | `nfs_instance_base_name` | `app-nfs` | Base name for inline NFS VM when none exists. |

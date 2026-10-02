@@ -67,9 +67,9 @@ export REGION="us-central1"           # the region you deploy into
    from the **Platform Modules** list to start configuration, choose **Configuration Form** under *How would you like to configure this deployment?* (the form opens on the **Conversational Assistant** if you hold purchased credits or are a partner or administrator), set `project_id`,
    and review the inputs. Configure only what you need — the
    [Configuration Guide](https://docs.radmodules.dev/docs/modules/Filebrowser_GKE)
-   documents every input by group, with defaults. Decide up front whether you want
-   the default GCS FUSE mount for `/database` or a block PVC
-   (`stateful_pvc_enabled = true`) for proper SQLite file locking. Click **Deploy
+   documents every input by group, with defaults. Keep the default block PVC for
+   `/database` (`stateful_pvc_enabled = true`): Filebrowser's bbolt database needs
+   real block storage, not GCS FUSE. Click **Deploy
    Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the
    deployment status page with real-time logs.
 

@@ -55,10 +55,10 @@ a focused set of Google Cloud services:
   container's ephemeral disk and is silently wiped on every cold start or redeploy.
 - **Redis is disabled by default.** It is not required for AnythingLLM's core
   functionality. If enabled, `redis_host` must be set explicitly.
-- **Request-based billing by default.** `cpu_always_allocated = false` — embedding and
-  inference run inside the request that triggers them, so they get full CPU while
-  working regardless of this flag; it only stops paying for CPU during the idle
-  keep-warm tail.
+- **Request-based billing by default.** `cpu_always_allocated = false` — document
+  embedding continues in a background worker after the upload request returns, and
+  it was measured to complete on a throttled, idle instance for a small document.
+  For bulky or continuous ingest, consider `cpu_always_allocated = true`.
 - **`execution_environment = gen2`** is the default and is required when NFS or GCS Fuse
   mounts are enabled.
 - **The `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` env var is set automatically** from the
@@ -214,9 +214,10 @@ policies can be enabled.
 - **Fixed environment variables.** `SERVER_PORT=3001`, `UID=1000`, and `GID=1000` are set
   automatically by `AnythingLLM_Common`. Do not override them. `AnythingLLM_Common` also
   sets `STORAGE_DIR=/app/server/storage` as its own default, but `AnythingLLM_CloudRun`
-  overrides it to the NFS mount path (`nfs_mount_path`, default `/mnt/nfs`) whenever
-  `enable_nfs = true` — the platform default — so a deployment actually runs with
-  `STORAGE_DIR=/mnt/nfs` unless `enable_nfs` is explicitly disabled (see Group 11).
+  overrides it to the NFS mount path (`nfs_mount_path`, default `/app/server/storage`)
+  whenever `enable_nfs = true` — the module default — so the knowledge base's vector
+  index lands on the NFS share. With `enable_nfs = false` it falls back to the
+  container's ephemeral disk and is lost on every cold start (see Group 11).
 
 ---
 
@@ -320,7 +321,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 | `create_cloud_storage` | `true` | Provision the additional data bucket. The `anythingllm-docs` bucket is always created. |
 | `storage_buckets` | `[{ name_suffix="data" }]` | Additional GCS buckets. |
 | `enable_nfs` | `true` | Filestore (NFS) for persistent document/vector storage — required, otherwise the LanceDB vector index lives on ephemeral disk and is wiped on every cold start/redeploy. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `nfs_mount_path` | `/app/server/storage` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

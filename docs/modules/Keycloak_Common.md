@@ -56,7 +56,7 @@ The entrypoint performs these actions on every container start:
 
 1. **JDBC URL assembly.** Builds `KC_DB_URL = jdbc:postgresql://<host>:<port>/<db>` from the platform-injected `DB_HOST`/`DB_PORT`/`DB_NAME`. If `DB_HOST` is a Cloud SQL Unix-socket directory (starts with `/`), it **falls back to `DB_IP`** — the PostgreSQL JDBC driver cannot use Unix sockets, which is also why the Cloud Run variant defaults `enable_cloudsql_volume = false`.
 2. **Credential mapping.** Maps `DB_USER` → `KC_DB_USERNAME` and `DB_PASSWORD` → `KC_DB_PASSWORD`, only when not already set, so operators can override any `KC_DB_*` variable via `environment_variables`.
-3. **Hostname auto-detection.** Queries the Cloud Run metadata/Admin API for the service URL and exports it as `KC_HOSTNAME` (falling back to `SERVICE_URL` on GKE), with `KC_HOSTNAME_STRICT=false` behind the TLS-terminating front end.
+3. **Hostname auto-detection.** Unless `KC_HOSTNAME` is set explicitly, exports the foundation-injected service URL as `KC_HOSTNAME` (`CLOUDRUN_SERVICE_URL` on Cloud Run, else `GKE_SERVICE_URL` on GKE) — the same address the module publishes as `service_url`, so the OIDC issuer matches it, with `KC_HOSTNAME_STRICT=false` behind the TLS-terminating front end.
 4. **Launch.** Prints a configuration summary and `exec`s `kc.sh start --optimized`.
 
 ```bash

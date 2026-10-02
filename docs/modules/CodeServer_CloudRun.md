@@ -32,7 +32,7 @@ services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Single container listening on port **8080**; 1 vCPU / 1 GiB by default |
-| Persistent workspace | Cloud Storage (GCS FUSE) | Workspace bucket mounted at `/home/coder`; provisioned automatically |
+| Persistent workspace | Cloud Filestore (NFS) | `/home/coder` is on the NFS share by default; the workspace bucket is mounted there via GCS FUSE only if NFS is turned off |
 | Database | _None_ | `database_type = NONE` — code-server has no SQL database |
 | Cache & queue | _None_ | Redis is explicitly disabled (`enable_redis = false`) |
 | Secrets | Secret Manager | Auto-generated editor `PASSWORD` (when `enable_password = true`) |
@@ -50,8 +50,9 @@ services:
 - **A random editor `PASSWORD` is generated automatically** and stored in Secret
   Manager. It gates the login page. Disabling `enable_password` serves the editor with
   no authentication — only safe behind `internal` ingress.
-- **The workspace is on GCS FUSE at `/home/coder`.** Settings, extensions, and open
-  projects persist there. Requires the `gen2` execution environment (the default).
+- **The workspace is on NFS at `/home/coder`.** Settings, extensions, and open
+  projects persist there. Keep `enable_nfs = true`: on the GCS FUSE fallback, installing
+  an extension fails, because GCS FUSE cannot rename a directory. Requires the `gen2` execution environment (the default).
 - **Single instance by design.** `min_instance_count = max_instance_count = 1`.
   code-server holds per-session editor state in memory and owns one workspace volume;
   scaling beyond one instance would split sessions and risk concurrent writes to the
@@ -89,10 +90,11 @@ and traffic splitting.
 
 ### B. Cloud Storage — the workspace volume
 
-The single stateful resource. A dedicated **Cloud Storage** bucket is provisioned
-automatically and mounted as a **GCS FUSE** volume at `/home/coder`, holding the
-user's workspace, VS Code settings, and installed extensions. It survives revision
-redeploys and scale events.
+The single stateful location is `/home/coder` — the user's workspace, VS Code settings,
+and installed extensions. By default it is the NFS mount path, which survives revision
+redeploys and scale events. A dedicated **Cloud Storage** bucket is also provisioned;
+it is mounted as a **GCS FUSE** volume at `/home/coder` only when `enable_nfs = false`,
+where extension installs fail.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -101,7 +103,7 @@ redeploys and scale events.
   gcloud storage ls gs://<workspace-bucket>/          # bucket name is in the Outputs
   ```
 
-GCS FUSE requires the `gen2` execution environment (the default). See
+NFS and GCS FUSE both require the `gen2` execution environment (the default). See
 [App_CloudRun](App_CloudRun.md) for GCS FUSE and CMEK options.
 
 ### C. Secret Manager — the editor password
@@ -157,8 +159,8 @@ uptime check to reach the service.
 - **No migrations.** Upgrading the `application_version` simply rolls a new revision
   on the newer image; there is no schema to migrate.
 - **The workspace is the only durable state.** Everything under `/home/coder` — open
-  folders, `settings.json`, keybindings, and every installed extension — persists in
-  the GCS FUSE bucket. Deleting the bucket wipes the workspace.
+  folders, `settings.json`, keybindings, and every installed extension — persists on
+  the NFS share. Deleting it wipes the workspace.
 - **Login is gated by the `PASSWORD` secret.** With `enable_password = true`, the
   editor prompts for the generated password. Retrieve it from Secret Manager (§2C).
   With it disabled, anyone reaching the URL gets an unauthenticated IDE — only run
@@ -243,9 +245,9 @@ inherited from [App_CloudRun](App_CloudRun.md) with its standard behaviour.
 
 | Variable | Default | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS is off by default; the workspace uses GCS FUSE, not NFS. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path if NFS is enabled. |
-| `gcs_volumes` | `[]` | Additional GCS FUSE mounts; the workspace bucket is added automatically at `/home/coder`. |
+| `enable_nfs` | `true` | Must stay `true` on Cloud Run: `/home/coder` holds settings, extensions and projects, and installing an extension fails on GCS FUSE (it cannot rename a directory). |
+| `nfs_mount_path` | `/home/coder` | Mount path if NFS is enabled. |
+| `gcs_volumes` | `[]` | Additional GCS FUSE mounts; the workspace bucket is added automatically at `/home/coder` only when `enable_nfs = false`. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
 ### Group 12 — Database Backend
@@ -313,11 +315,11 @@ running resources.
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
 | `enable_password` | `true` (keep on for public ingress) | Critical | Disabling with `ingress_settings = "all"` exposes a fully unauthenticated IDE — including a terminal — to the internet. |
-| Workspace bucket | Never delete | Critical | The GCS FUSE bucket at `/home/coder` is the only persistent state; deleting it wipes all settings, extensions, and files. |
+| `enable_nfs` | `true` (the default) | Critical | The NFS share at `/home/coder` is the only persistent state. Turning NFS off moves the workspace onto GCS FUSE, where extension installs fail. |
 | `startup_probe` / `liveness_probe` path | `/healthz` | High | Pointing probes at `/health` while a password is set returns `401`; the revision never becomes Ready. |
 | `max_instance_count` | `1` | High | Scaling beyond 1 splits editor sessions across instances and risks concurrent writes to the single workspace volume. |
 | `min_instance_count` | `1` | Medium | Scale-to-zero (`0`) adds cold-start latency and re-mounts the workspace on the next request. |
-| `execution_environment` | `gen2` | High | `gen1` cannot mount GCS FUSE — the workspace volume fails and state is lost on restart. |
+| `execution_environment` | `gen2` | High | `gen1` cannot mount NFS or GCS FUSE — the workspace volume fails and state is lost on restart. |
 | `ingress_settings` | `all` + password (or `internal`) | High | `all` without a password publishes an open IDE; `internal` blocks all browser access from outside the VPC. |
 | `enable_cloudsql_volume` | `false` | Low | code-server has no database; enabling adds an unused Auth Proxy sidecar. |
 | `memory_limit` | `1Gi`+ | Medium | Heavy language servers/extensions can OOM below 1 GiB. |

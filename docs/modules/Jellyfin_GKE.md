@@ -46,8 +46,8 @@ deployment wires together a focused set of Google Cloud services:
   plugins, transcode cache, and logs — under `/config`. No Cloud SQL instance, no
   `db-init` job, and no Redis is used (`database_type = NONE`; the foundation Redis
   variables are inert for Jellyfin).
-- **A block PVC at `/config` is the best fit.** `stateful_pvc_enabled = true`
-  resolves the workload to a **StatefulSet** with a per-pod PVC mounted at `/config`,
+- **A block PVC at `/config` is the default.** `stateful_pvc_enabled = true`
+  (the default) resolves the workload to a **StatefulSet** with a per-pod PVC mounted at `/config`,
   and the GCS storage volume auto-disables to avoid a double mount. Real block
   storage gives the correct filesystem semantics SQLite and the transcode cache
   need — the recommended configuration for a media server.
@@ -71,8 +71,8 @@ deployment wires together a focused set of Google Cloud services:
 > `/config`, giving true POSIX semantics for SQLite and the transcode cache, plus
 > optional **NFS** for large media libraries — the recommended choice for a real,
 > multi-user, transcoding media server. **[Jellyfin_CloudRun](Jellyfin_CloudRun.md)**
-> mounts `/config` from a GCS bucket over FUSE; it is simpler and cheaper for a demo
-> or a small personal library, but FUSE latency and the per-request timeout model
+> mounts `/config` from the shared NFS volume; it is simpler and cheaper for a demo
+> or a small personal library, but network-storage latency and the per-request timeout model
 > make it a poor fit for live transcoding or busy streaming.
 
 ---
@@ -314,10 +314,10 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 
 | Variable | Default | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Enable the PVC template. **Recommended `true` for Jellyfin** — auto-resolves to StatefulSet. |
+| `stateful_pvc_enabled` | `true` | Enable the PVC template. **Recommended `true` for Jellyfin** — auto-resolves to StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Per-pod PVC size; size to hold `/config` (SQLite, metadata, transcode cache). |
 | `stateful_pvc_mount_path` | `/config` | Container mount path for the PVC (Jellyfin's config/persistence dir). |
-| `stateful_pvc_storage_class` | `standard-rwo` | Balanced PD (SSD); use `premium-rwo` for higher IOPS, or `standard` (HDD `pd-standard`) on a quota-constrained project — see the pitfalls table below. |
+| `stateful_pvc_storage_class` | `standard` | HDD `pd-standard`, which keeps the volume off the tight `SSD_TOTAL_GB` quota; use `standard-rwo` (Balanced PD, SSD) or `premium-rwo` for higher IOPS — see the pitfalls table below. |
 | `stateful_headless_service` | `null` | Headless Service for stable pod DNS names. |
 | `stateful_pod_management_policy` | `null` → `OrderedReady` | Safe ordered restarts for Jellyfin. |
 | `stateful_update_strategy` | `null` → `RollingUpdate` | Update strategy. |
@@ -496,7 +496,7 @@ locate and explore the running resources.
 | `enable_api_key` | Leave `false`; not currently functional | Medium | The generated secret is delivered as `QDRANT__SERVICE__API_KEY` (a Qdrant_GKE copy-paste leftover) — Jellyfin never reads it, so it only materialises an unused Kubernetes Secret. Create API keys in-app under Dashboard → API Keys instead. |
 | `enable_pod_disruption_budget` | `true` | Medium | Disabling allows GKE to evict the single pod during maintenance, interrupting streams. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short to recover an older library snapshot. |
-| `stateful_pvc_storage_class` | `standard` (HDD) on quota-constrained projects | Medium | Jellyfin is a media/SQLite app — the default `standard-rwo` draws the tight regional `SSD_TOTAL_GB` quota, and scale-to-zero does NOT release the PVC. A campaign of stateful modules can exhaust SSD quota; override to HDD (`stateful_pvc_storage_class=standard`) since Jellyfin's write pattern doesn't need SSD IOPS. |
+| `stateful_pvc_storage_class` | `standard` (HDD, the default) | Medium | Jellyfin is a media/SQLite app — SSD-backed `standard-rwo` draws the tight regional `SSD_TOTAL_GB` quota, and scale-to-zero does NOT release the PVC. Keep HDD unless you need SSD IOPS. |
 
 ---
 

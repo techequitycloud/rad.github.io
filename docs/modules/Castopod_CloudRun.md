@@ -113,7 +113,7 @@ rotation.
 
 A dedicated **Cloud Storage** `media` bucket is provisioned automatically. Because
 Castopod writes uploaded audio and artwork to the container filesystem under
-`/var/www/castopod/public/media`, **Cloud Filestore (NFS)** is enabled by default
+`/var/www/html/public/media`, **Cloud Filestore (NFS)** is enabled by default
 (`enable_nfs = true`, mounted at `nfs_mount_path`) so those files survive restarts.
 
 - **Console:** Cloud Storage → Buckets; Filestore → Instances.
@@ -287,7 +287,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | Variable | Default | Description |
 |---|---|---|
 | `enable_nfs` | `true` | Provisions Cloud Filestore to persist uploaded media across restarts; required for durable media. |
-| `nfs_mount_path` | `/var/lib/castopod` | Container mount path for the NFS volume. |
+| `nfs_mount_path` | `/var/www/html/public/media` | Container mount path for the NFS volume. |
 | `gcs_volumes` | `[]` | Optional GCS Fuse volume mounts (requires gen2). |
 
 All other inputs follow standard App_CloudRun behaviour.

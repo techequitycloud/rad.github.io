@@ -363,7 +363,7 @@ Standard App_CloudRun custom SQL script execution — see
 | Variable | Default | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets — `gotosocial.tf` supplies the real `storage` bucket via `GoToSocial_Common`'s output, overriding this variable's generic `data` default. |
-| `enable_nfs` | `true` | Provisions Filestore. **Not used by GoToSocial** — media storage is via the native S3 client, not a mount. |
+| `enable_nfs` | `false` | Provisions Filestore. **Not used by GoToSocial** — media storage is via the native S3 client, not a mount. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts. Not used by default. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 

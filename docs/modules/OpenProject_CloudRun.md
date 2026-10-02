@@ -112,7 +112,9 @@ connection model, backups, and password rotation.
 ### C. Cloud Filestore (NFS attachment storage)
 
 Work-package attachments are stored on a **Cloud Filestore** NFS share mounted at
-`/opt/openproject/storage` (`enable_nfs = true` by default). Without it, attachments
+`/opt/openproject/storage` (`enable_nfs = true` by default); the module points
+OpenProject at it by setting `OPENPROJECT_ATTACHMENTS__STORAGE__PATH` to
+`nfs_mount_path` whenever NFS is enabled. Without it, attachments
 land on the container's ephemeral disk and are lost on every revision/redeploy.
 
 - **Console:** Filestore → Instances.

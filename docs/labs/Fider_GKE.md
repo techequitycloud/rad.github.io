@@ -71,8 +71,8 @@ export REGION="us-central1"           # the region you deploy into
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions a
    Cloud SQL (PostgreSQL 15) database with its Secret Manager secrets
-   (`JWT_SECRET` and the database password), a Cloud Storage data bucket, a Cloud
-   Filestore NFS mount for attachments (enabled by default), builds the container
+   (`JWT_SECRET` and the database password), a Cloud Storage data bucket (NFS is off
+   by default — Fider stores attachments in PostgreSQL), builds the container
    image, and runs a one-shot database-initialisation job that creates the
    `fider` role and database. First deploys take roughly **20–35 minutes** (Cloud
    SQL creation dominates).

@@ -256,7 +256,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 |---|---|---|
 | `deploy_application` | `true` | Set `false` to provision infrastructure only. |
 | `min_instance_count` | `1` | Minimum replicas; keep at 1 to ensure webhook endpoints are always reachable. |
-| `max_instance_count` | `3` | Maximum replicas. **Only increase when `enable_redis = true`.** |
+| `max_instance_count` | `1` | Maximum replicas. **Only increase when `enable_redis = true`.** |
 | `timeout_seconds` | `300` | Maximum request duration (0–3600 seconds). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy sidecar for socket connections. |
 | `enable_image_mirroring` | `true` | Mirror the Activepieces image into Artifact Registry before deployment. |

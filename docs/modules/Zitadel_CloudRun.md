@@ -61,8 +61,8 @@ focused set of Google Cloud services:
   including OIDC/machine clients.
 - **The service is kept warm.** `cpu_always_allocated = true` and `min_instance_count = 1`
   (no scale-to-zero), so token endpoints have no cold-start latency; `max_instance_count = 5`.
-- **NFS is enabled by default but unused by the app.** Zitadel keeps all state in
-  PostgreSQL; you can set `enable_nfs = false` unless another reason requires it.
+- **NFS is off by default.** Zitadel keeps all state in PostgreSQL and never writes
+  to an NFS mount, so `enable_nfs = false`.
 
 ---
 
@@ -310,7 +310,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create the declared GCS bucket(s). |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | The auto-provisioned bucket; extend the list for additional buckets. |
-| `enable_nfs` | `true` | Enabled by default but **unused** — Zitadel keeps all state in PostgreSQL; safe to set `false`. |
+| `enable_nfs` | `false` | Off by default: Zitadel is entirely PostgreSQL-backed and never writes to the mount. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -407,7 +407,7 @@ resources.
 | `application_version` | Pin a release | High | `latest` maps to a pinned tag today, but pinning explicitly avoids surprise migrations on redeploy. |
 | `memory_limit` | `4Gi` | Medium | Setting too low risks OOM under load; gen2 also enforces a 512 MiB floor. |
 | `min_instance_count` | `1` | Medium | `0` (scale-to-zero) adds cold-start latency to token/login requests after idle. |
-| `enable_nfs` | `false` (unused) | Low | Enabled by default but Zitadel stores no state on disk; leaving it on wastes an NFS mount. |
+| `enable_nfs` | `false` (default) | Low | Zitadel stores no state on disk; turning it on only adds an unused NFS mount. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention of identity data. |
 | `enable_cloud_armor` | enable for production | Medium | The Console and OIDC endpoints are publicly reachable without WAF protection. |
 

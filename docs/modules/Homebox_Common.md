@@ -133,7 +133,9 @@ A `data` GCS bucket is declared here and provisioned by the foundation, for
 item photo and attachment storage, and this module also declares a
 `gcs_volumes` entry that mounts it (as `gcs-<application_name><tenant-prefix>-data`)
 at Homebox's `/data` path — so uploaded item photos and attachments persist
-across revisions/restarts by default. An operator-supplied `gcs_volumes` list
+across revisions/restarts by default. `enable_gcs_storage_volume = false` drops
+this mount; `Homebox_GKE` sets it whenever `stateful_pvc_enabled = true`, because
+a PVC mounted at the same `/data` path would collide with it. An operator-supplied `gcs_volumes` list
 (at the Application Module level) takes precedence over this module's entry
 when non-empty. Item *metadata* (names, locations, quantities) is
 unaffected either way — it's stored in PostgreSQL.

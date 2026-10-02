@@ -27,7 +27,7 @@ foundation guides ([App_GKE](App_GKE.md), [App_CloudRun](App_CloudRun.md),
 | Container image | Pins the official Mautic image (PHP/Apache) and the build that extends it | `container_image` output of the platform deployment |
 | Database engine | Fixes **Cloud SQL for MySQL 8.0** as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job that creates the database, user, and grants | `initialization_jobs` output |
-| Object storage | Declares the **Cloud Storage** media bucket | `storage_buckets` output |
+| Object storage | Declares the **Cloud Storage** media bucket (provisioned but unused; uploads live on NFS) | `storage_buckets` output |
 | Core settings | Sets the baseline Mautic environment (admin identity, mailer identity, migrations on start, trusted proxies) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness probe behaviour, including the Cloud Run TCP-probe adjustment | §Observability in the platform guides |
 
@@ -116,10 +116,11 @@ for two different reasons:
 
 ## 6. Object storage
 
-A dedicated **Cloud Storage** media bucket is declared here and provisioned by the
-foundation, which also grants the workload service account access. Combined with the
-shared Filestore (NFS) volume, this gives Mautic durable media storage that is
-consistent across all instances. List it with:
+A **Cloud Storage** `media` bucket is declared here and provisioned by the foundation,
+but nothing in the module mounts or writes to it: uploads live on the shared Filestore
+(NFS) volume at `/var/www/html/docroot/media/files`. The bucket is kept only because
+removing it from an existing deployment trips a Terraform dependency cycle. List it
+with:
 
 ```bash
 gcloud storage buckets list --project "$PROJECT"

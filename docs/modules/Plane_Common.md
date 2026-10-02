@@ -91,7 +91,7 @@ gcloud run jobs executions list --project "$PROJECT" --region "$REGION"
 
 ## 5. Message broker contract
 
-Plane's Celery worker and beat require an AMQP broker, and `Plane_Common` encodes the contract: `RABBITMQ_USER` / `RABBITMQ_PASSWORD` / `RABBITMQ_VHOST` default to `plane`, and the host is supplied by the **platform variant** — an in-pod `rabbitmq:3.13-management-alpine` sidecar at `127.0.0.1:5672` on Cloud Run (AMQP is a non-HTTP protocol Cloud Run service-to-service networking cannot carry). Broker state is ephemeral; durable queues are a documented hardening TODO.
+Plane's Celery worker and beat require an AMQP broker, and `Plane_Common` encodes the contract: `RABBITMQ_USER` and `RABBITMQ_VHOST` are `plane`, `RABBITMQ_PASSWORD` is a per-deployment random value in Secret Manager (`secret-<prefix>-<app>-rabbitmq-password`) that the wrapper also hands the broker as `RABBITMQ_DEFAULT_PASS`, and the host is supplied by the **platform variant** — an in-pod `rabbitmq:3.13-management-alpine` sidecar at `127.0.0.1:5672` on Cloud Run (AMQP is a non-HTTP protocol Cloud Run service-to-service networking cannot carry). Broker state is ephemeral; durable queues are a documented hardening TODO.
 
 ---
 

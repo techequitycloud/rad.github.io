@@ -36,7 +36,7 @@ focused set of Google Cloud services:
 
 | Capability | Google Cloud service | Notes |
 |---|---|---|
-| Compute | GKE Autopilot | Go binary on port 3000, 2 vCPU / 4 GiB by default, HPA-scaled 1–5 replicas |
+| Compute | GKE Autopilot | Go binary on port 3000, 2 vCPU / 4 GiB by default, one replica (`max_instance_count = 1`) |
 | Database | Cloud SQL for PostgreSQL 15 | Required — MySQL is rejected at plan time |
 | Object storage | Cloud Storage | A `storage` bucket provisioned automatically by `Coder_Common` |
 | Secrets | Secret Manager | Only the Foundation-managed database password — Coder has no application secret of its own |
@@ -64,10 +64,11 @@ focused set of Google Cloud services:
 - **No separate migration job.** Coder runs its own schema migrations on
   boot; the only initialization job is `db-init`, which creates the empty
   database and role.
-- **Horizontally scalable by default.** `min_instance_count = 1`,
-  `max_instance_count = 5` — the stateless control plane can run multiple
-  replicas against the shared database, unlike single-instance stateful
-  apps.
+- **One replica by default.** `min_instance_count = 1`,
+  `max_instance_count = 1`. Coder's multi-replica mode is its high-availability
+  feature, which requires a premium licence: without it, extra replicas serve the
+  API and UI but never join Coder's relay mesh, so workspace terminal and SSH
+  sessions would depend on which replica the load balancer picks.
 - **`session_affinity = ClientIP`** keeps a browser's WebSocket-heavy
   terminal/IDE traffic pinned to the same pod across the session.
 - **Ingress and a static IP are provisioned out of the box**
@@ -87,7 +88,8 @@ other identifiers are reported in the deployment [Outputs](#5-outputs).
 Coder pods run on Autopilot, billed for the CPU/memory the pods actually
 request. Because the control plane is stateless, the workload runs as a
 standard `Deployment` with a `RollingUpdate` strategy (no NFS-backed
-`Recreate` constraint) and is safe to scale horizontally.
+`Recreate` constraint). Running more than one replica needs Coder's
+licensed high-availability mode (see above).
 
 - **Console:** Kubernetes Engine → Workloads → select the Coder workload for
   pods, revisions, and events. Kubernetes Engine → Services & Ingress shows
@@ -218,9 +220,8 @@ Cloud Monitoring. Optional uptime checks and alert policies are available
   workspace app proxying, and the CLI's `coder ssh`/port-forward all ride
   long-lived WebSocket connections through the control plane. Keep
   `session_affinity = ClientIP` (the default) so a client's connection
-  persists against one pod; scaling `max_instance_count` above 1 is safe for
-  the stateless control plane itself, but an in-flight WebSocket session does
-  not migrate between pods if one is drained mid-session.
+  persists against one pod; `max_instance_count` stays at 1
+  unless you hold a Coder licence with high availability.
 - **Health probe paths.** Startup and liveness probes both target **HTTP
   `GET /health`** with a 60-second initial delay; the startup probe allows up
   to 30 failures at a 15-second period to absorb Coder's first-boot schema
@@ -264,7 +265,7 @@ defaults.
 | `container_image_source` | `custom` | Required — the upstream image cannot be deployed prebuilt; Cloud Build wraps it with the DSN-assembling entrypoint. |
 | `container_port` | `3000` | Coder's `CODER_HTTP_ADDRESS` bind port. |
 | `container_resources` | `cpu_limit=2000m`, `memory_limit=4Gi` | 2 vCPU / 4 GiB default for the control plane. |
-| `min_instance_count` / `max_instance_count` | `1` / `5` | HPA replica bounds — the stateless control plane scales horizontally against the shared database. |
+| `min_instance_count` / `max_instance_count` | `1` / `1` | Replica bounds. More than one replica needs Coder's licensed high-availability mode. |
 | `enable_cloudsql_volume` | `true` | Auth Proxy sidecar (loopback) — required on GKE; a plan-time guard rejects it when `database_type = "NONE"`. |
 | `enable_image_mirroring` | `true` | Always on for Coder — the GHCR-sourced base image is mirrored into Artifact Registry. |
 
@@ -373,7 +374,7 @@ way to locate and explore the running resources.
 | `nfs_mount_path` (if `enable_nfs=true`) | A real directory, e.g. `/home/coder/data` | Critical | Mounting over `/opt/coder` — the `coder` binary itself — hides the executable and the container fails to start. |
 | `session_affinity` | `ClientIP` | High | Without stickiness, an in-flight WebSocket terminal/IDE session can be routed to a different pod mid-session and drop. |
 | `enable_redis` | `false` | Medium | Not needed — enabling it without `redis_host` set or `enable_nfs=true` fails plan-time validation; even correctly configured it adds an unused dependency since Coder keeps all state in PostgreSQL. |
-| `max_instance_count` | `5` (adjust to load) | Medium | Safe to raise for a stateless control plane, but each replica still opens its own DB connection pool — watch Cloud SQL `max_connections` at high replica counts. |
+| `max_instance_count` | `1` | High | Multi-replica Coder is high availability, a premium-licence feature; unlicensed extra replicas never join the relay mesh, so workspace connections break depending on which replica serves them. |
 | `quota_memory_requests` / `_limits` | binary units (`4Gi`, `8192Mi`) | Critical | Bare integers are treated as bytes and block all pod scheduling in the namespace. |
 | `reserve_static_ip` | `true` | Medium | Without it, the external IP can change across redeploys, breaking DNS, `CODER_ACCESS_URL`, and any registered OAuth/OIDC redirect. |
 | `backup_retention_days` | `7` (raise for prod) | Medium | Too short for compliance retention of workspace/template history. |

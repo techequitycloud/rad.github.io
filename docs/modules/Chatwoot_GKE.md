@@ -131,6 +131,12 @@ and the container entrypoint builds `REDIS_URL` from it at startup. Point
 `redis_host`/`redis_port`/`redis_auth` at a dedicated Cloud Memorystore instance for
 a heavier production workload.
 
+> **Sidekiq needs Redis 6.2 or newer, and the NFS-hosted Redis is 6.0.** The shared Redis on the
+> NFS VM runs 6.0.16, and Sidekiq 7 refuses to start against it. The web UI still serves (the
+> entrypoint backgrounds Sidekiq), so the deployment looks healthy while no background job runs.
+> Point `redis_host` at a Redis 6.2+ instance — for example Memorystore, via `create_redis = true`
+> in Services_GCP, which provisions Redis 7.2.
+
 - **Console:** Memorystore → Redis instances (if using a dedicated instance).
 - **CLI:**
   ```bash
@@ -241,9 +247,10 @@ See [App_GKE](App_GKE.md) for uptime check gating and alert policy wiring.
   account interactively at `/installation/onboarding` on first visit — there is no
   auto-generated admin credential secret for this module.
   {/* TODO: could not confirm the exact first-run onboarding route/behaviour from the wiring files alone; verified against general Chatwoot self-hosted conventions, not this repo's source. */}
-- **Health path.** Startup and liveness probes are **HTTP** `GET /` (the login/
-  onboarding page returns 200 with no auth); the readiness probe set by the Common
-  module (`initial_delay_seconds = 30`) also targets `/`. Allow time on first boot —
+- **Health path.** The startup probe is **HTTP** `GET /`; the liveness probe is
+  `GET /health`, because it is mirrored into the Gateway health check, which requires a
+  literal 200 and `/` redirects. The readiness probe set by the Common module
+  (`initial_delay_seconds = 30`) targets `/`. Allow time on first boot —
   `chatwoot-prepare` must finish before the app container even starts.
 - **Cloud SQL proxy shutdown signal.** Both init Jobs `wget`/`curl`-POST to the
   proxy sidecar's `--quitquitquit` endpoint (`127.0.0.1:9091/quitquitquit`) on exit

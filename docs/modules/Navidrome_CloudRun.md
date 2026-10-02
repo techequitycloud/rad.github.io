@@ -31,7 +31,7 @@ together a focused set of Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Go music server, 1 vCPU / 1 GiB by default, pinned to a single warm instance |
-| Persistence | Cloud Storage + GCS FUSE | The `/data` directory (SQLite DB, metadata cache, search index) is backed by a GCS bucket |
+| Persistence | Cloud Filestore (NFS) | The `/data` directory (SQLite DB, metadata cache, search index) is an NFS share |
 | Database | Internal SQLite (embedded) | No Cloud SQL — Navidrome keeps all state in a SQLite file under `/data` |
 | Secrets | Secret Manager | Generated `admin` password (`ND_DEVAUTOCREATEADMINPASSWORD`) when `enable_admin_password = true` |
 | Ingress | Cloud Run URL / Cloud Load Balancing | `internal` by default; optional external HTTPS load balancer + custom domain |
@@ -43,10 +43,12 @@ together a focused set of Google Cloud services:
   database, metadata cache, and search index — under a single `/data` directory. No
   Cloud SQL instance, no `db-init` job, and no Redis are provisioned
   (`database_type = NONE`; `enable_redis = false`).
-- **`/data` must persist across revisions.** On Cloud Run the `/data` path is backed
-  by a Cloud Storage bucket mounted via **GCS FUSE** (`enable_gcs_storage_volume = true`,
-  gen2 execution environment). Without a persistent `/data`, every new revision starts
-  with an empty library and re-runs the first-boot scan and setup.
+- **`/data` must persist across revisions, on NFS.** Cloud Run has no block device, and
+  GCS FUSE cannot host a SQLite database (no POSIX locking; it rejects SQLite's
+  out-of-order writes). So `enable_nfs = true` (default) mounts the shared NFS volume at
+  `/data` (`nfs_mount_path`), and the GCS FUSE mount of the `storage` bucket there is
+  switched off whenever NFS is on. Without a persistent `/data`, every new revision
+  starts with an empty library and re-runs the first-boot scan and setup.
 - **The container listens on port 4533.** Cloud Run routes HTTP traffic to
   Navidrome's default web/API port. `GET /ping` returns `{"status":"ok"}` (200,
   unauthenticated) once the server is up.
@@ -69,10 +71,9 @@ together a focused set of Google Cloud services:
   first-run wizard is open to whoever reaches the URL first.
 
 > **Cloud Run vs GKE — pick the right home for your library.**
-> **Cloud Run (this module)** mounts `/data` from a GCS bucket over FUSE. It is
-> simple, scales to a single warm instance, and is ideal for a demo or a small
-> personal library. FUSE I/O latency makes the SQLite-heavy `/data` directory slower
-> than block storage. **[Navidrome_GKE](Navidrome_GKE.md)** runs as a StatefulSet
+> **Cloud Run (this module)** mounts `/data` from the shared NFS volume. It is
+> simple, runs a single warm instance, and suits a demo or a small personal library;
+> network storage is slower than a block device for the SQLite-heavy `/data` directory. **[Navidrome_GKE](Navidrome_GKE.md)** runs as a StatefulSet
 > with a real **block PVC** at `/data`, giving the correct filesystem semantics the
 > embedded SQLite database needs — the recommended choice for a larger or busier
 > library, with optional NFS for a large music collection.
@@ -111,8 +112,8 @@ There is no Cloud SQL instance, no Auth Proxy, and no initialization Job to crea
 schema; Navidrome creates and migrates its own SQLite database on first start.
 
 Because everything important is a file under `/data`, persisting that directory
-**is** persisting the whole server. On Cloud Run it is backed by a Cloud Storage
-bucket (see below).
+**is** persisting the whole server. On Cloud Run it is the NFS share mounted at
+`/data` (`enable_nfs = true`, `nfs_mount_path = "/data"`).
 
 - **Inspect the mounted volume on the running revision:**
   ```bash
@@ -123,8 +124,9 @@ bucket (see below).
 ### C. Cloud Storage — the `/data` bucket (and music library)
 
 A dedicated **Cloud Storage** bucket (name suffix `storage`) is provisioned
-automatically and mounted at `/data` via **GCS FUSE**
-(`enable_gcs_storage_volume = true`, gen2 execution environment). The bucket is
+automatically. It is mounted at `/data` via **GCS FUSE** only when NFS is disabled
+(`enable_gcs_storage_volume = !enable_nfs`) — not recommended, since SQLite cannot run
+safely on GCS FUSE. The bucket is
 `STANDARD` class, `force_destroy = true`, versioning off, with
 `public_access_prevention = enforced`. The **music library** at `/music` is not
 mounted automatically — declare an additional GCS FUSE volume via `gcs_volumes` (or
@@ -201,10 +203,9 @@ with optional uptime checks and alert policies.
   startup and periodically; a large collection takes time to index into the SQLite
   database and search index under `/data`.
 - **`/data` is the single source of truth — persist it.** All library state is on the
-  GCS-backed `/data` volume. Deleting or repointing that bucket wipes the database,
-  users, playlists, and play counts. Because GCS FUSE is not a true POSIX filesystem,
-  keep Cloud Run to light/personal use and move a larger library to the GKE block-PVC
-  variant.
+  NFS-backed `/data` volume. Changing `nfs_mount_path` or disabling NFS orphans the
+  database, users, playlists, and play counts. Keep Cloud Run to light/personal use
+  and move a larger library to the GKE block-PVC variant.
 - **Custom image is a thin wrapper.** The Dockerfile is
   `ARG NAVIDROME_VERSION=0.54.3` / `FROM deluan/navidrome:${NAVIDROME_VERSION}`, so
   `image_source = "custom"` and the Foundation mirrors it into Artifact Registry
@@ -327,8 +328,8 @@ retained for foundation compatibility. Also hosts `nfs_instance_name` /
 |---|---|---|
 | `create_cloud_storage` | `true` | Provision the Navidrome `/data` bucket (created automatically) and any extras. |
 | `storage_buckets` | `[]` | Additional GCS buckets beyond the auto-provisioned `storage` bucket. |
-| `enable_nfs` | `false` | Provision Cloud Filestore (NFS); enable to mount a large shared music library. |
-| `nfs_mount_path` | `/mnt/nfs` | Mount path inside the container. |
+| `enable_nfs` | `true` | Mounts the shared NFS volume at `/data` for the SQLite database. Keep on — GCS FUSE cannot host SQLite. |
+| `nfs_mount_path` | `/data` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | Additional GCS FUSE mounts — use to mount the music library at `/music`. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |
 
@@ -411,11 +412,11 @@ Manager (`secret-<prefix>-navidrome-admin-password`, see §2 / §4.D).
 
 | Setting | Sensible value | Risk | Consequence if wrong |
 |---|---|---|---|
-| `/data` GCS bucket | Never delete/repoint | Critical | The `/data` bucket holds the SQLite database, users, and playlists; removing it wipes the entire server. |
-| `max_instance_count` | `1` | Critical | Multiple replicas write to one SQLite file over FUSE and corrupt the library. |
+| `enable_nfs` / `nfs_mount_path` | `true` / `/data` | Critical | The NFS share at `/data` holds the SQLite database, users, and playlists; turning NFS off puts the database on GCS FUSE, which corrupts SQLite writes. |
+| `max_instance_count` | `1` | Critical | Multiple replicas write to one SQLite file and corrupt the library. |
 | `enable_backup_import` | `false` unless restoring | Critical | Enabling without a valid `backup_uri` fails the import job. |
 | `ingress_settings = "all"` without `enable_admin_password` | keep admin password on | Critical | Blocked at plan time — a public URL with an open first-run wizard lets a stranger claim the `admin` account. |
-| `execution_environment` | `gen2` | High | Gen1 cannot mount GCS FUSE, so `/data` never persists. |
+| `execution_environment` | `gen2` | High | Gen1 cannot mount NFS, so `/data` never persists. |
 | `min_instance_count` | `1` | High | Scale-to-zero cold-starts interrupt in-progress streams and re-open the library. |
 | `memory_limit` | `1Gi` (raise for large libraries) | High | Navidrome holds its search index in memory; too little OOM-kills the server while scanning. |
 | `ND_MUSICFOLDER` mount | Provide music at `/music` | High | Without a `gcs_volumes`/NFS mount at `/music`, the library is empty — nothing to stream. |

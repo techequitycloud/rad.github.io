@@ -286,7 +286,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `gke_cluster_name` | `""` | Target cluster name. Leave empty for auto-discovery. |
 | `namespace_name` | `""` | Kubernetes namespace. Leave empty to auto-generate. |
 | `enable_network_segmentation` | `false` | Create NetworkPolicy resources to restrict traffic. |
-| `deployment_timeout` | `600` | Seconds Terraform waits for the rollout. The default covers Autopilot node provisioning plus schema initialisation on first deploy. |
+| `deployment_timeout` | `1800` | Seconds Terraform waits for the rollout. The default covers Autopilot node provisioning plus schema initialisation on first deploy. |
 
 ### Group 7 — StatefulSet
 

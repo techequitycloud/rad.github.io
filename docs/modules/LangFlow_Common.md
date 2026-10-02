@@ -29,7 +29,7 @@ platform guides ([LangFlow_GKE](LangFlow_GKE.md),
 | Database engine | Fixes **Cloud SQL for PostgreSQL 15** (`database_type = "POSTGRES_15"`) as the only supported engine | §Database in the platform guides |
 | Database bootstrap | Defines the first-deploy job (`db-init`) that creates the database, role, and grants using `postgres:15-alpine` | `initialization_jobs` output |
 | Object storage | **None** — LangFlow persists flows and credentials in Postgres, so `storage_buckets` is empty | `storage_buckets` output (`[]`) |
-| Core settings | Sets the baseline LangFlow environment: port `7860`, host `0.0.0.0`, `LANGFLOW_AUTO_LOGIN = "false"`, superuser username | Application behaviour in the platform guides |
+| Core settings | Sets the baseline LangFlow environment: port `7860`, host `0.0.0.0`, `LANGFLOW_AUTO_LOGIN = "false"`, superuser username, and `LANGFLOW_CONFIG_DIR` (the caller's mount path, so uploaded files persist) | Application behaviour in the platform guides |
 | Health checks | Supplies the default startup/liveness probe targeting `/health` | §Observability in the platform guides |
 
 ---

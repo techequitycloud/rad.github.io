@@ -280,7 +280,7 @@ inherited from [App_GKE](App_GKE.md) with its standard behaviour and defaults.
 | `gke_cluster_name` | `""` | GKE cluster name; leave empty for auto-discovery. |
 | `namespace_name` | `""` | Kubernetes namespace; leave empty to auto-generate. |
 | `termination_grace_period_seconds` | `60` | Grace period for `mongod` to flush the journal before SIGKILL. |
-| `deployment_timeout` | `600` | Seconds Terraform waits for the StatefulSet rollout (covers node provisioning + PVC attach). |
+| `deployment_timeout` | `1800` | Seconds Terraform waits for the StatefulSet rollout (covers node provisioning + PVC attach). |
 | `enable_network_segmentation` | `false` | Create Kubernetes NetworkPolicy resources to restrict ingress/egress. |
 
 ### Group 7 — StatefulSet & PVC

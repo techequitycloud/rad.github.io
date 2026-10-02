@@ -30,7 +30,7 @@ Uptime Kuma runs as a Node.js container on Cloud Run v2. It is one of the simple
 **Sensible defaults worth knowing up front:**
 
 - **`cpu_always_allocated = true` is the default and is deliberate — the monitoring loop IS the product.** Uptime Kuma polls its monitors from an in-process scheduler with **no inbound request**. Under Cloud Run's request-based billing the CPU is throttled to near-zero between requests, so checks would stall or fire late. Instance-based (always-allocated) CPU keeps the scheduler running at full speed while an instance is alive. Do not set this to `false`.
-- **`min_instance_count` defaults to `0`** — the service can scale to zero when nothing keeps an instance alive, and **monitoring pauses while it is scaled to zero**. For genuine 24/7 monitoring, set `min_instance_count = 1` (a single always-on instance).
+- **`min_instance_count` defaults to `1`, not `0`** — at `0` Cloud Run reaps the instance about 15 minutes after the last request, and **monitoring stops while it is scaled to zero**. `cpu_always_allocated` does not cover this: it governs CPU while an instance is alive, not whether one exists. Keep `1` for genuine 24/7 monitoring.
 - **No external database.** `database_type = "NONE"`, `enable_cloudsql_volume = false`, and there is no `db-init` job. Uptime Kuma creates its embedded SQLite schema automatically on first boot.
 - **NFS persistence is mandatory.** `enable_nfs = true` with `nfs_mount_path = "/app/data"` mounts a Filestore (NFS) volume holding the SQLite database and uploads, so monitors and history survive restarts and revisions. Requires the gen2 execution environment.
 - **Single-writer SQLite.** SQLite over NFS relies on file locking; run a **single instance** in production (`max_instance_count = 1`). The module default is `max_instance_count = 3` for burst headroom on the dashboard — lower it for production.
@@ -112,7 +112,7 @@ Container logs flow to Cloud Logging; Cloud Run metrics flow to Cloud Monitoring
 - **No initialization jobs.** Uptime Kuma creates its embedded SQLite schema automatically on first boot; there is no `db-init` or migration job, and `initialization_jobs` defaults to `[]`.
 - **First-run setup.** On first access, Uptime Kuma presents a setup page asking you to create the admin account — there are no default credentials baked into the image. The account is stored in SQLite on the NFS volume, so it persists across revisions.
 - **The check scheduler runs in-process.** Monitor polling, retries, and notification dispatch all run inside the Node.js process, driven by timers — not by inbound HTTP requests. This is why `cpu_always_allocated = true` is the default and why continuous monitoring additionally requires an instance to be running (`min_instance_count = 1`).
-- **Scale-to-zero pauses monitoring.** With the default `min_instance_count = 0`, Cloud Run stops the last instance when it goes idle. While scaled to zero, no checks execute and no alerts fire; polling resumes when the next request (e.g. opening the dashboard) cold-starts an instance. This is safe for casual/lab use but wrong for production monitoring.
+- **Scale-to-zero pauses monitoring.** If you lower `min_instance_count` to `0`, Cloud Run stops the last instance when it goes idle. While scaled to zero, no checks execute and no alerts fire; polling resumes when the next request (e.g. opening the dashboard) cold-starts an instance. This is safe for casual/lab use but wrong for production monitoring.
 - **Single-writer SQLite.** SQLite is a single-writer database. Multiple concurrent instances writing the same SQLite file over NFS risk lock contention or corruption — keep `max_instance_count = 1` in production.
 - **Health path.** Startup and liveness probes target `/` on port `3001`, which returns HTTP 200 once the app is up. The startup probe allows up to 30 s initial delay plus 30 failures at 10 s intervals.
 - **Verification:**
@@ -165,7 +165,7 @@ All other inputs follow standard App_CloudRun behaviour.
 | `container_image` | `louislam/uptime-kuma` | Official upstream image, mirrored into Artifact Registry. |
 | `enable_image_mirroring` | `true` | Copy the image into Artifact Registry to avoid Docker Hub rate limits. |
 | `cpu_limit` / `memory_limit` | `1000m` / `512Mi` | Ample for dozens of monitors; raise memory for very large monitor counts. |
-| `min_instance_count` | `0` | **Set to `1` for 24/7 monitoring** — while scaled to zero, no checks run. |
+| `min_instance_count` | `1` | **Keep `1` for 24/7 monitoring** — while scaled to zero, no checks run. |
 | `max_instance_count` | `1` | **Keep at `1`** — SQLite is single-writer, so a second instance corrupts the database (see Pitfalls). |
 | `cpu_always_allocated` | `true` | **Keep `true`.** The in-process check scheduler needs CPU between requests; request-based billing throttles it to ~0 and checks stall. |
 | `container_port` | `3001` | Uptime Kuma's native port. |
@@ -276,7 +276,7 @@ Returned on a successful deployment — the quickest way to locate and explore t
 | `cpu_always_allocated` | `true` (default) | Critical | Request-based billing throttles CPU to ~0 between requests — the in-process check scheduler stalls, checks fire late or not at all, and alerts are missed. The monitoring loop IS the product. |
 | `enable_nfs` | `true` (default) | Critical | Without the NFS volume, the SQLite database (monitors, history, admin account) lives on ephemeral disk and is wiped on every restart or new revision. |
 | `nfs_mount_path` | `/app/data` (default) | Critical | Any other path leaves Uptime Kuma writing to ephemeral storage — silent total data loss on restart. |
-| `min_instance_count` | `1` for production monitoring | Critical | With the default `0`, the service scales to zero when idle and **no checks run while it is down** — outages in monitored systems go unnoticed. |
+| `min_instance_count` | `1` (default) | Critical | At `0`, the service scales to zero when idle and **no checks run while it is down** — outages in monitored systems go unnoticed. |
 | `max_instance_count` | `1` for production | High | SQLite is single-writer; multiple instances writing over NFS risk lock contention or database corruption. |
 | `container_port` | `3001` (default) | Critical | Mismatching Uptime Kuma's native port fails all health probes and the revision never becomes ready. |
 | `database_type` | `NONE` (default) | High | Provisioning Cloud SQL wastes money — Uptime Kuma v1 cannot use it. |

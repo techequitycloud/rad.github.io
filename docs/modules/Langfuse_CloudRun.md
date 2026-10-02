@@ -32,7 +32,7 @@ scope. The deployment wires together a focused set of Google Cloud services:
 |---|---|---|
 | Compute | Cloud Run v2 | Next.js service, 2 vCPU / 4 GiB by default, serverless autoscaling |
 | Database | Cloud SQL for PostgreSQL 15 | Required — Langfuse v2 does not support MySQL or other engines |
-| Object storage | Cloud Storage | A dedicated bucket provisioned automatically; optional NFS share for exports |
+| Object storage | Cloud Storage | A dedicated bucket provisioned automatically; no NFS share (Langfuse has no filesystem storage mode) |
 | Secrets | Secret Manager | Auto-generated `NEXTAUTH_SECRET` and `SALT`; database password |
 | Ingress | Cloud Run URL / Cloud Load Balancing | Default `run.app` URL; optional external HTTPS load balancer + custom domain |
 
@@ -107,8 +107,9 @@ The instance name, database, user, and password secret are in the [Outputs](#5-o
 ### C. Cloud Storage
 
 A dedicated **Cloud Storage** bucket is provisioned automatically. Langfuse v2 keeps all
-trace and observability data in PostgreSQL; the bucket (and the optionally-mounted NFS share)
-are available for exports and media rather than primary state.
+trace and observability data in PostgreSQL; the bucket is available for exports and media
+rather than primary state. Langfuse has no filesystem storage mode, so an NFS share would
+never be written to.
 
 - **Console:** Cloud Storage → Buckets.
 - **CLI:**
@@ -296,7 +297,7 @@ Standard App_CloudRun Cloud Build / Cloud Deploy integration — see
 |---|---|---|
 | `create_cloud_storage` | `true` | Create GCS buckets defined in `storage_buckets`. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets to provision. |
-| `enable_nfs` | `true` | Mount an NFS share at `/opt/langfuse/storage` for optional exports/media. |
+| `enable_nfs` | `false` | Leave off: Langfuse has no filesystem storage mode, so the share is never used, and an unreachable NFS server would block startup. |
 | `nfs_mount_path` | `/opt/langfuse/storage` | Mount path inside the container. |
 | `gcs_volumes` | `[]` | GCS Fuse volume mounts (requires gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | CMEK options. |

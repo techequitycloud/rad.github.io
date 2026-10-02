@@ -205,8 +205,11 @@ Optional uptime checks and alert policies are available.
 - **First-run setup.** Budibase self-hosted ships with **no default admin account**.
   Reach the LoadBalancer URL after deploy and create the initial administrator
   (email + password) through the setup screen before use.
-- **Health path.** Startup and liveness probes target the unauthenticated root `/`,
-  which returns `200` once the bundled services are up. Allow up to ~8-9 minutes on
+- **Health path.** The startup probe targets `/`; the liveness probe — which is also
+  mirrored into the Gateway health check — targets `/builder`, because `/` answers with a
+  redirect and the load balancer's backend check needs a literal `200`. `/builder` is
+  served by the same upstream as real user traffic (unlike `/health`, which answers from
+  the worker process even when the app server is down). Allow up to ~8-9 minutes on
   first boot (the startup probe uses a 60-second initial delay plus a 30-retry window
   at a 15-second period) — the pod must start CouchDB, MinIO, Redis, and the app tier.
 - **Single-replica StatefulSet.** Keep `min_instance_count = max_instance_count = 1`;

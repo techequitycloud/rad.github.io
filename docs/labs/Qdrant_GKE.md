@@ -68,8 +68,8 @@ export REGION="us-central1"           # the region you deploy into
    documents every input by group, with defaults. Click **Deploy Module**, review the estimated cost in the **Deployment Confirmation** dialog when it appears and click **Submit** (if the dialog then adds a confirmation step, such as verifying a project you bring, complete it and click **Confirm**), which opens the deployment status page with real-time logs.
 
 2. The platform deploys the workload into the GKE Autopilot cluster, provisions
-   persistent storage (a StatefulSet PVC when `stateful_pvc_enabled = true`, or a
-   GCS FUSE-mounted Cloud Storage bucket otherwise), builds the container image,
+   persistent storage (a StatefulSet PVC by default, `stateful_pvc_enabled = true`;
+   Qdrant's startup check rejects the GCS FUSE alternative), builds the container image,
    and stores an API key in Secret Manager when `enable_api_key = true`. Qdrant
    has no SQL database and no initialization job. First deploys typically take
    **10–20 minutes** (image build and node provisioning dominate).
