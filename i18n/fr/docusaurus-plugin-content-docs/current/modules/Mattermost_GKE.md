@@ -1,78 +1,78 @@
 ---
 title: "Module Mattermost GKE — Guide de configuration"
-description: "Référence de configuration pour déployer Mattermost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Mattermost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mattermost_GKE.md @ 3055034 sha256:71c53e139316 -->
+<!-- translated-from: docs/modules/Mattermost_GKE.md @ 15fd4c7 sha256:75f6016da237 -->
 
 # Module Mattermost GKE — Guide de configuration {#mattermost-gke-module--configuration-guide}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Mattermost_GKE.png" alt="Module Mattermost GKE — Guide de configuration" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ce guide décrit chaque variable de configuration disponible dans le module `Mattermost_GKE`. `Mattermost_GKE` est un **module d'encapsulation** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration applicative partagée [`Mattermost_Common`](./Mattermost_Common) pour déployer [Mattermost](https://mattermost.com/) — une plateforme open source et auto-hébergeable de messagerie et de collaboration d'équipe — sur Google Kubernetes Engine (GKE) Autopilot.
+Ce guide décrit toutes les variables de configuration disponibles dans le module `Mattermost_GKE`. `Mattermost_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Mattermost_Common`](./Mattermost_Common) pour déployer [Mattermost](https://mattermost.com/) — une plateforme de messagerie et de collaboration d'équipe open-source et auto-hébergeable — sur Google Kubernetes Engine (GKE) Autopilot.
 
-La plupart des options de configuration de `Mattermost GKE` correspondent directement aux mêmes options d'`App GKE`. Lorsqu'une variable se comporte de façon identique, ce guide renvoie au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et valeurs par défaut **propres à Mattermost** sont décrites en détail ici.
+La plupart des options de configuration dans `Mattermost GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Mattermost** sont décrites en détail ici.
 
-> **Remarque :** les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
+> **Note :** Les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
 
-> **GKE ou Cloud Run :** Mattermost maintient des connexions WebSocket persistantes pour la distribution des messages en temps réel. GKE Autopilot convient mieux que Cloud Run aux déploiements Mattermost de production, car il prend en charge les connexions de longue durée sans les contraintes de timeout par requête de Cloud Run. Utilisez `Mattermost GKE` pour tout déploiement d'équipe, quelle que soit sa taille, où la fiabilité en temps réel est importante.
+> **GKE vs Cloud Run :** Mattermost maintient des connexions WebSocket persistantes pour la livraison de messages en temps réel. GKE Autopilot est mieux adapté aux déploiements Mattermost en production que Cloud Run car il prend en charge les connexions de longue durée sans les contraintes de délai d'attente par requête de Cloud Run. Utilisez `Mattermost GKE` pour tout déploiement de taille d'équipe où la fiabilité en temps réel est importante.
 
 ---
 
 ## Référence de configuration standard {#standard-configuration-reference}
 
-Les domaines de configuration suivants sont fournis par le module sous-jacent `App_GKE`. Consultez les sections correspondantes du [guide de configuration d'App_GKE](./App_GKE.md) pour la documentation complète.
+Les zones de configuration suivantes sont fournies par le module sous-jacent `App_GKE`. Consultez les sections liées du [Guide de configuration App_GKE](./App_GKE.md) pour une documentation complète.
 
-| Domaine de configuration | Section d'App GKE.md | Remarques propres à Mattermost |
+| Zone de configuration | Section App GKE.md | Notes spécifiques à Mattermost |
 |---|---|---|
-| Projet et identité | §2 IAM & Access Control | Identique. |
-| Identité de l'application | §3.A Compute (GKE Autopilot) | Valeurs par défaut propres à Mattermost ; voir [Groupe 2 : Identité de l'application](#group-2-application-identity). |
-| Exécution et mise à l'échelle | §3.A Compute (GKE Autopilot) | Valeurs par défaut propres à Mattermost pour `container_port`, `container_resources` et `min_instance_count` ; voir [Groupe 3 : Exécution et mise à l'échelle](#group-3-runtime--scaling). |
-| Variables d'environnement et secrets | §3 Core Service Configuration | Aucune variable d'environnement préremplie — Mattermost se configure via `site_url` et `edition` ; voir [Groupe 5 : Variables d'environnement et secrets](#group-5-environment-variables--secrets). |
-| Réseau et règles réseau | §3.D Networking & Network Policies | Identique. |
-| Jobs d'initialisation et CronJobs | §3.E Initialization Jobs & CronJobs | Job PostgreSQL `db-init` fourni automatiquement par `Mattermost Common` ; voir [Groupe 8 : Jobs et tâches planifiées](#group-8-jobs--scheduled-tasks). |
-| Services supplémentaires | §3.F Additional Services | Identique. |
-| Stockage — NFS | §3.C Storage (NFS / GCS / GCS Fuse) | `enable_nfs` vaut `false` par défaut ; voir [Groupe 9 : Stockage et système de fichiers — NFS](#group-9-storage--filesystem--nfs). |
-| Stockage — GCS | §3.C Storage (NFS / GCS / GCS Fuse) | Volumes GCS Fuse à privilégier pour `/mattermost/data` ; voir [Groupe 10 : Stockage et système de fichiers — GCS](#group-10-storage--filesystem--gcs). |
-| Configuration de la base de données | §3.B Database (Cloud SQL) | **PostgreSQL 15 obligatoire** ; voir [Groupe 11 : Configuration de la base de données](#group-11-database-configuration). |
-| Planification et rétention des sauvegardes | §3.B Database (Cloud SQL) | Identique. |
-| Scripts SQL personnalisés | §3.E Initialization Jobs & CronJobs | Identique. |
-| Observabilité et contrôles de santé | §3.A Compute (GKE Autopilot) | Mattermost expose `/api/v4/system/ping` ; voir [Groupe 13 : Observabilité et santé](#group-13-observability--health). |
-| WAF Cloud Armor | §4.A Cloud Armor WAF | Identique. |
+| Projet et identité | §2 IAM et contrôle d'accès | Identique. |
+| Identité de l'application | §3.A Compute (GKE Autopilot) | Valeurs par défaut spécifiques à Mattermost ; voir [Groupe 2 : Identité de l'application](#group-2-application-identity). |
+| Exécution et mise à l'échelle | §3.A Compute (GKE Autopilot) | Valeurs par défaut spécifiques à Mattermost pour `container_port`, `container_resources` et `min_instance_count` ; voir [Groupe 3 : Exécution et mise à l'échelle](#group-3-runtime--scaling). |
+| Variables d'environnement et secrets | §3 Configuration du service principal | Aucune variable d'environnement pré-remplie — Mattermost est configuré via `site_url` et `edition` ; voir [Groupe 5 : Variables d'environnement et secrets](#group-5-environment-variables--secrets). |
+| Réseau et politiques réseau | §3.D Réseau et politiques réseau | Identique. |
+| Jobs d'initialisation et CronJobs | §3.E Jobs d'initialisation et CronJobs | Job PostgreSQL `db-init` fourni automatiquement par `Mattermost Common` ; voir [Groupe 8 : Jobs et tâches planifiées](#group-8-jobs--scheduled-tasks). |
+| Services additionnels | §3.F Services additionnels | Identique. |
+| Stockage — NFS | §3.C Stockage (NFS / GCS / GCS Fuse) | `enable_nfs` utilise par défaut `true` (les téléchargements résident sur le partage NFS) ; voir [Groupe 9 : Stockage et système de fichiers — NFS](#group-9-storage--filesystem--nfs). |
+| Stockage — GCS | §3.C Stockage (NFS / GCS / GCS Fuse) | Alternative facultative à NFS pour `/mattermost/data` ; voir [Groupe 10 : Stockage et système de fichiers — GCS](#group-10-storage--filesystem--gcs). |
+| Configuration de la base de données | §3.B Base de données (Cloud SQL) | **PostgreSQL 15 requis** ; voir [Groupe 11 : Configuration de la base de données](#group-11-database-configuration). |
+| Planification et rétention des sauvegardes | §3.B Base de données (Cloud SQL) | Identique. |
+| Scripts SQL personnalisés | §3.E Jobs d'initialisation et CronJobs | Identique. |
+| Observabilité et vérifications de santé | §3.A Compute (GKE Autopilot) | Mattermost expose `/api/v4/system/ping` ; voir [Groupe 13 : Observabilité et santé](#group-13-observability--health). |
+| Cloud Armor WAF | §4.A Cloud Armor WAF | Identique. |
 | Identity-Aware Proxy | §4.B Identity-Aware Proxy (IAP) | Identique. |
-| Binary Authorization | §4.C Binary Authorization | Identique. |
-| VPC Service Controls | §4.D VPC Service Controls | Identique. |
-| Secrets Store CSI Driver | §4.E Secrets Store CSI Driver | Toujours activé — aucune configuration requise. |
-| Trafic et entrée | §5 Traffic & Ingress | Identique. |
+| Autorisation binaire | §4.C Autorisation binaire | Identique. |
+| Contrôles de service VPC | §4.D Contrôles de service VPC | Identique. |
+| Pilote CSI du magasin de secrets | §4.E Pilote CSI du magasin de secrets | Toujours activé — aucune configuration requise. |
+| Trafic et Ingress | §5 Trafic et Ingress | Identique. |
 | CDN | §5.B CDN | Identique. |
-| Domaine personnalisé et IP statique | §5.C Static IP Reservation | Le `site_url` de Mattermost doit correspondre ; voir [Groupe 16 : Domaine personnalisé et IP statique](#group-16-custom-domain--static-ip). |
-| Déclencheurs Cloud Build | §6.A Cloud Build Triggers | Identique. |
-| Pipeline Cloud Deploy | §6.B Cloud Deploy Pipeline | Identique. |
-| Réplication d'images | §6.C Image Mirroring | Identique. |
-| Pod Disruption Budgets | §7.A Pod Disruption Budgets | Identique. |
-| Contraintes de répartition topologique | §7.B Topology Spread Constraints | Identique. |
-| Quotas de ressources | §7.C Resource Quotas | Identique. |
-| Rotation automatique des mots de passe | §7.D Auto Password Rotation | Voir [Groupe 11 : Configuration de la base de données](#group-11-database-configuration). |
-| Cache Redis | §8.A Redis / Memorystore | `enable_redis` vaut `false` par défaut ; recommandé en multi-réplica ; voir [Groupe 15 : Cache Redis](#group-15-redis-cache). |
-| Import de sauvegarde | §8.B Backup Import | Expose à la fois `backup_uri` (URI GCS complet ou ID Drive) et `backup_file` (nom de fichier dans le bucket de sauvegarde du module) ; voir [Groupe 6 : Sauvegarde et maintenance](#group-6-backup--maintenance). |
+| Domaine personnalisé et IP statique | §5.C Réservation d'IP statique | Mattermost `site_url` doit correspondre ; voir [Groupe 16 : Domaine personnalisé et IP statique](#group-16-custom-domain--static-ip). |
+| Déclencheurs Cloud Build | §6.A Déclencheurs Cloud Build | Identique. |
+| Pipeline Cloud Deploy | §6.B Pipeline Cloud Deploy | Identique. |
+| Mise en miroir d'images | §6.C Mise en miroir d'images | Identique. |
+| Budgets d'interruption de pod | §7.A Budgets d'interruption de pod | Identique. |
+| Contraintes de répartition de topologie | §7.B Contraintes de répartition de topologie | Identique. |
+| Quotas de ressources | §7.C Quotas de ressources | Identique. |
+| Rotation automatique des mots de passe | §7.D Rotation automatique des mots de passe | Voir [Groupe 11 : Configuration de la base de données](#group-11-database-configuration). |
+| Cache Redis | §8.A Redis / Memorystore | `enable_redis` utilise par défaut `false` ; voir [Groupe 15 : Cache Redis](#group-15-redis-cache). |
+| Importation de sauvegarde | §8.B Importation de sauvegarde | Expose à la fois `backup_uri` (URI GCS complet ou ID Drive) et `backup_file` (nom de fichier dans le bucket de sauvegarde du module) ; voir [Groupe 6 : Sauvegarde et maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identique. |
-| Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identique. |
+| Services multi-clusters | §8.D Services multi-clusters (MCS) | Identique. |
 
 ---
 
-## Relation entre Mattermost GKE et App GKE {#how-mattermost-gke-relates-to-app-gke}
+## Comment Mattermost GKE est lié à App GKE {#how-mattermost-gke-relates-to-app-gke}
 
-`Mattermost GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Mattermost Common` qui fournit les valeurs par défaut et la configuration applicative propres à Mattermost. Les principaux effets sont les suivants :
+`Mattermost GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Mattermost Common` qui fournit des valeurs par défaut et une configuration d'application spécifiques à Mattermost. Les principaux effets sont les suivants :
 
-1. **PostgreSQL 15 est obligatoire.** Mattermost nécessite PostgreSQL 13 ou une version ultérieure. La valeur par défaut de `database_type` est `"POSTGRES_15"`.
-2. **Un job `db-init` s'exécute lors du premier déploiement.** `Mattermost Common` fournit un Job Kubernetes `db-init` par défaut qui crée la base de données PostgreSQL et l'utilisateur de Mattermost. Mattermost exécute ensuite ses propres migrations de schéma au premier démarrage — aucune mise en place manuelle du schéma n'est nécessaire.
-3. **Aucune variable d'environnement préremplie.** Contrairement à Ghost, Mattermost n'a pas besoin que le module injecte des valeurs SMTP par défaut. Les paramètres clés — URL du site, édition, Redis — sont contrôlés par des variables dédiées de premier niveau (`site_url`, `edition`, `enable_redis`).
-4. **La sélection de l'édition détermine l'image de conteneur.** Définir `edition = "enterprise"` bascule automatiquement l'image de conteneur vers `mattermost/mattermost-enterprise-edition`. La valeur par défaut (`"team"`) utilise `mattermost/mattermost-team-edition`. L'Enterprise Edition nécessite une clé de licence payante fournie via `environment_variables`.
-5. **GCS Fuse est préféré à NFS pour le stockage des fichiers.** `enable_nfs` vaut `false` par défaut. Les fichiers téléversés et les pièces jointes de Mattermost sont stockés sur des volumes GCS montés via le pilote CSI GCS Fuse sur `/mattermost/data`. Cela fournit un stockage durable et sûr en multi-réplica sans provisionner d'instance Filestore.
-6. **Les ressources par défaut sont dimensionnées pour Mattermost.** Les valeurs par défaut de `cpu_limit` (2 vCPU) et `memory_limit` (4 Gi) absorbent la gestion simultanée des WebSockets, la mise en cache des canaux et l'indexation des messages de Mattermost.
-7. **Redis est facultatif mais recommandé pour les déploiements multi-réplica.** `enable_redis` vaut `false` par défaut. Activer Redis fournit un stockage distribué des sessions et du cache, nécessaire à un comportement correct au-delà d'un seul réplica de pod.
-8. **Les sondes de santé utilisent le point de terminaison ping dédié de Mattermost.** `startup_probe` et `liveness_probe` ont tous deux par défaut `path = "/api/v4/system/ping"` — le point de terminaison de santé intégré de Mattermost, qui renvoie HTTP 200 lorsque le serveur est prêt à accepter des connexions.
-9. **`site_url` doit être défini pour générer correctement les liens.** Mattermost utilise `MM_SERVICESETTINGS_SITEURL` pour les e-mails de notification, la génération de liens dans l'application et les redirections OAuth. La variable `site_url` le définit automatiquement.
+1.  **PostgreSQL 15 est requis.** Mattermost nécessite PostgreSQL 13 ou une version ultérieure. La valeur par défaut `database_type` est définie sur `"POSTGRES_15"`.
+2.  **Un job `db-init` s'exécute lors du premier déploiement.** `Mattermost Common` fournit un job Kubernetes `db-init` par défaut qui crée la base de données et l'utilisateur PostgreSQL de Mattermost. Mattermost exécute ensuite ses propres migrations de schéma lors du premier démarrage — aucune configuration manuelle du schéma n'est nécessaire.
+3.  **Aucune variable d'environnement pré-remplie.** Contrairement à Ghost, Mattermost ne nécessite pas de valeurs par défaut SMTP injectées par le module. Les paramètres clés — URL du site, édition, Redis — sont contrôlés par des variables de niveau supérieur dédiées (`site_url`, `edition`, `enable_redis`).
+4.  **La sélection de l'édition contrôle l'image du conteneur.** La définition de `edition = "enterprise"` bascule automatiquement l'image du conteneur vers `mattermost/mattermost-enterprise-edition`. La valeur par défaut (`"team"`) utilise `mattermost/mattermost-team-edition`. L'édition Enterprise nécessite une clé de licence payante fournie via `environment_variables`.
+5.  **Les téléchargements résident sur le partage NFS.** `enable_nfs` utilise par défaut `true`. Mattermost stocke les téléchargements de fichiers et les pièces jointes sur le disque local (`MM_FILESETTINGS_DRIVERTYPE = local`) sous `/mattermost/data`, où le volume NFS est monté, de sorte que les téléchargements survivent aux redémarrages de pod. Désactivez NFS uniquement si vous pointez `MM_FILESETTINGS_*` vers un stockage compatible S3.
+6.  **Les valeurs par défaut des ressources sont dimensionnées pour Mattermost.** Les valeurs par défaut `cpu_limit` (2 vCPU) et `memory_limit` (4 Gio) prennent en charge la gestion concurrente des WebSockets, la mise en cache des canaux et l'indexation des messages de Mattermost.
+7.  **Redis est facultatif.** `enable_redis` utilise par défaut `false`. Il ne rend pas à lui seul plus d'un réplica sûr : l'édition Team n'a pas de clustering HA, donc `max_instance_count` utilise par défaut `1` ; plusieurs réplicas nécessitent l'édition Enterprise avec une licence.
+8.  **Les sondes de santé utilisent le point de terminaison ping dédié de Mattermost.** `startup_probe` et `liveness_probe` utilisent par défaut `path = "/api/v4/system/ping"` — le point de terminaison de santé intégré de Mattermost qui renvoie HTTP 200 lorsque le serveur est prêt à accepter des connexions.
+9.  **SiteURL n'est jamais vide.** Mattermost utilise `MM_SERVICESETTINGS_SITEURL` pour les e-mails de notification, la génération de liens dans l'application et les redirections OAuth. `site_url` le définit explicitement ; s'il est laissé vide, le point d'entrée le dérive au démarrage de l'URL de l'équilibreur de charge (`GKE_SERVICE_URL`).
 
 ---
 
@@ -80,93 +80,93 @@ Les domaines de configuration suivants sont fournis par le module sous-jacent `A
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#2-iam--access-control).
 
-**Ajouts propres à Mattermost GKE dans ce groupe :**
+**Ajouts spécifiques à Mattermost GKE dans ce groupe :**
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `region` | `"us-central1"` | Région GCP de déploiement des ressources. Utilisée en repli lorsque la découverte du sous-réseau VPC ne permet pas de déterminer la région. Sert aussi d'emplacement par défaut des buckets GCS provisionnés pour le stockage des fichiers de Mattermost. |
-| `site_url` | `""` | L'URL publique à laquelle Mattermost est accessible (par exemple `"https://chat.example.com"`). Définit `MM_SERVICESETTINGS_SITEURL`. Nécessaire pour générer correctement les liens dans les e-mails de notification, les redirections OAuth et les liens profonds dans l'application. Ne la laissez vide que pour le provisionnement initial de l'infrastructure, avant l'attribution d'un domaine. |
-| `edition` | `"team"` | Édition de Mattermost. `"team"` déploie la Team Edition gratuite. `"enterprise"` déploie l'Enterprise Edition et nécessite une clé de licence fournie via `environment_variables`. Modifier cette valeur après le déploiement initial remplace l'image de conteneur lors de l'apply suivant. |
+| `region` | `"us-central1"` | Région GCP pour le déploiement des ressources. Utilisé comme solution de secours lorsque la découverte du sous-réseau VPC ne peut pas déterminer la région. Également utilisé comme emplacement par défaut pour les buckets GCS provisionnés pour le stockage de fichiers Mattermost. |
+| `site_url` | `""` | L'URL publique où Mattermost est accessible (par exemple, `"https://chat.example.com"`). Définit `MM_SERVICESETTINGS_SITEURL`. Si elle est laissée vide, elle est dérivée au démarrage de l'URL de l'équilibreur de charge ; définissez-la lorsque vous utilisez un domaine personnalisé. |
+| `edition` | `"team"` | Édition Mattermost. `"team"` déploie l'édition Team gratuite. `"enterprise"` déploie l'édition Enterprise et nécessite une clé de licence fournie via `environment_variables`. La modification de cette valeur après le déploiement initial remplace l'image du conteneur lors du prochain apply. |
 
 ---
 
 ## Groupe 2 : Identité de l'application {#group-2-application-identity}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot) pour leur description.
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot) pour les descriptions.
 
-**Valeurs par défaut propres à Mattermost :**
+**Valeurs par défaut spécifiques à Mattermost :**
 
-| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Remarques |
+| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
-| `application_name` | `"mattermost"` | `"gkeapp"` | Utilisé comme nom de base de toutes les ressources GCP et Kubernetes. **Ne le modifiez pas après le déploiement.** |
-| `application_display_name` | `"Mattermost"` | `"App GKE Application"` | Affiché dans l'interface de la plateforme et les tableaux de bord. Peut être modifié librement. |
+| `application_name` | `"mattermost"` | `"gkeapp"` | Utilisé comme nom de base pour toutes les ressources GCP et Kubernetes. **Ne pas modifier après le déploiement.** |
+| `application_display_name` | `"Mattermost"` | `"App GKE Application"` | Affiché dans l'interface utilisateur et les tableaux de bord de la plateforme. Peut être modifié librement. |
 | `application_description` | `"Mattermost - Open-source team messaging on GKE Autopilot"` | `"App GKE Custom Application…"` | Libellé descriptif. Peut être modifié librement. |
-| `application_version` | `"9.11.2"` | `"1.0.0"` | La version de Mattermost à construire et à déployer. Incrémenter cette valeur déclenche une nouvelle exécution de Cloud Build. |
+| `application_version` | `"9.11.2"` | `"1.0.0"` | La version de Mattermost à construire et à déployer. L'incrémentation de cette valeur déclenche une nouvelle exécution de Cloud Build. |
 
 ---
 
 ## Groupe 3 : Exécution et mise à l'échelle {#group-3-runtime--scaling}
 
-La plupart des variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
+La plupart des variables se comportent de manière identique à `App_GKE`. Voir [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
-**Valeurs par défaut et comportement propres à Mattermost :**
+**Valeurs par défaut et comportement spécifiques à Mattermost :**
 
-| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Remarques |
+| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
-| `container_port` | `8065` | `8080` | Port HTTP natif de Mattermost. Ne le modifiez pas, sauf si votre Dockerfile personnalisé lie Mattermost à un autre port. |
-| `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Mattermost gère des connexions WebSocket simultanées, la mise en cache des canaux et l'indexation des messages. 2 vCPU et 4 Gi sont les minimums recommandés en production. |
-| `min_instance_count` | `1` | `0` | Mattermost maintient des connexions WebSocket persistantes. La mise à l'échelle à zéro coupe les sessions utilisateur actives. Conservez `1` ou plus pour tout déploiement comptant des utilisateurs actifs. |
-| `max_instance_count` | `5` | `3` | Plafond plus élevé pour absorber les pics de trafic lors de fortes rafales de communication dans les grandes équipes. |
-| `container_image_source` | `"custom"` | `"custom"` | `Mattermost Common` fournit par défaut un build basé sur un Dockerfile. Définissez `"prebuilt"` pour déployer directement l'URI d'une image préconstruite. |
-| `enable_cloudsql_volume` | `false` | `true` | Par défaut, Mattermost GKE se connecte à Cloud SQL via une connexion TCP privée plutôt que via un sidecar à socket Unix. Définissez `true` pour injecter le sidecar Cloud SQL Auth Proxy. |
-| `timeout_seconds` | `300` | `300` | Pour les déploiements faisant un usage intensif des WebSockets, portez cette valeur à `3600` afin d'éviter que le timeout du backend ne coupe les connexions WebSocket actives. |
-| `container_protocol` | `"http1"` | `"http1"` | Mattermost utilise HTTP/1.1 pour la mise à niveau WebSocket. Ne passez pas à `"h2c"`, sauf si votre configuration Mattermost prend explicitement en charge HTTP/2. |
+| `container_port` | `8065` | `8080` | Port HTTP natif de Mattermost. Ne pas modifier sauf si votre Dockerfile personnalisé lie Mattermost à un port différent. |
+| `container_resources` | `{ cpu_limit = "2000m", memory_limit = "4Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Mattermost gère les connexions WebSocket concurrentes, la mise en cache des canaux et l'indexation des messages. 2 vCPU et 4 Gio sont les minimums de production recommandés. |
+| `min_instance_count` | `1` | `0` | Mattermost maintient des connexions WebSocket persistantes. La mise à l'échelle à zéro interrompt les sessions utilisateur actives. Maintenez à `1` ou plus pour tout déploiement avec des utilisateurs actifs. |
+| `max_instance_count` | `1` | `3` | L'édition Team n'a pas de clustering HA, donc un deuxième réplica ne partagerait pas l'état WebSocket. N'augmentez cette valeur qu'avec l'édition Enterprise et une licence. |
+| `container_image_source` | `"custom"` | `"custom"` | `Mattermost Common` fournit une build basée sur Dockerfile par défaut. Définissez sur `"prebuilt"` pour déployer directement une URI d'image pré-construite. |
+| `enable_cloudsql_volume` | `false` | `true` | Mattermost GKE se connecte à Cloud SQL via une connexion TCP privée plutôt que via un sidecar de socket Unix par défaut. Définissez sur `true` pour injecter le sidecar Cloud SQL Auth Proxy. |
+| `timeout_seconds` | `300` | `300` | Pour les déploiements à forte utilisation de WebSocket, augmentez à `3600` pour éviter que les connexions WebSocket actives ne soient interrompues par le délai d'attente du backend. |
+| `container_protocol` | `"http1"` | `"http1"` | Mattermost utilise HTTP/1.1 pour son chemin de mise à niveau WebSocket. Ne pas changer pour `"h2c"` sauf si votre configuration Mattermost prend explicitement en charge HTTP/2. |
 
-Les autres variables d'exécution (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) se comportent comme décrit dans [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
+Les variables d'exécution restantes (`deploy_application`, `container_image`, `container_build_config`, `enable_image_mirroring`, `enable_vertical_pod_autoscaling`, `service_annotations`, `service_labels`, `cloudsql_volume_mount_path`) se comportent comme décrit dans [App_GKE Groupe 3](./App_GKE.md#a-compute-gke-autopilot).
 
 ---
 
 ## Groupe 4 : Accès et réseau {#group-4-access--networking}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress) et [App_GKE](./App_GKE.md#d-networking--network-policies).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress) et [App_GKE](./App_GKE.md#d-networking--network-policies).
 
-> **Remarque :** les variables `ingress_settings` et `vpc_egress_setting` figurent dans les définitions de variables de `Mattermost GKE`, mais ne sont **pas transmises à `App GKE`**. Les définir n'a aucun effet sur l'infrastructure déployée dans l'implémentation actuelle.
+> **Note :** Les variables `ingress_settings` et `vpc_egress_setting` apparaissent dans les définitions de variables de `Mattermost GKE` mais ne sont **pas transmises à `App GKE`**. La définition de ces variables n'a aucun effet sur l'infrastructure déployée dans l'implémentation actuelle.
 
 Les variables réseau suivantes sont disponibles dans `Mattermost GKE` :
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Active l'authentification Identity-Aware Proxy sur l'équilibreur de charge. |
-| `iap_authorized_users` | `[]` | Utilisateurs individuels ou comptes de service autorisés à accéder via IAP. |
-| `iap_authorized_groups` | `[]` | Groupes Google autorisés à accéder via IAP. |
-| `iap_oauth_client_id` | `""` | ID client OAuth pour la configuration d'IAP. |
-| `iap_oauth_client_secret` | `""` | Secret client OAuth pour la configuration d'IAP. |
-| `iap_support_email` | `""` | Adresse e-mail d'assistance affichée sur l'écran de consentement OAuth de Google. |
-| `enable_custom_domain` | `true` | Configure l'Ingress/Gateway pour le routage d'un domaine personnalisé avec des certificats SSL gérés. |
+| `iap_authorized_users` | `[]` | Utilisateurs individuels ou comptes de service ayant accès à IAP. |
+| `iap_authorized_groups` | `[]` | Groupes Google ayant accès à IAP. |
+| `iap_oauth_client_id` | `""` | ID client OAuth pour la configuration IAP. |
+| `iap_oauth_client_secret` | `""` | Secret client OAuth pour la configuration IAP. |
+| `iap_support_email` | `""` | E-mail de support affiché sur l'écran de consentement Google OAuth. |
+| `enable_custom_domain` | `true` | Configure Ingress/Gateway pour le routage de domaine personnalisé avec des certificats SSL gérés. |
 | `application_domains` | `[]` | Noms de domaine personnalisés (par exemple `["chat.example.com"]`). |
 | `reserve_static_ip` | `true` | Réserve une IP statique globale pour l'équilibreur de charge. |
-| `static_ip_name` | `""` | Nom de l'IP réservée ; généré automatiquement s'il est vide. |
-| `network_tags` | `["nfsserver"]` | Tags de pare-feu appliqués aux nœuds du cluster GKE. |
-| `enable_cloud_armor` | `false` | Active une règle de sécurité WAF Cloud Armor. |
-| `admin_ip_ranges` | `[]` | Plages CIDR d'administration autorisées à travers Cloud Armor. |
-| `cloud_armor_policy_name` | `"default-waf-policy"` | Nom de la règle de sécurité Cloud Armor à associer. |
-| `enable_vpc_sc` | `false` | Active l'application du périmètre VPC Service Controls. |
+| `static_ip_name` | `""` | Nom de l'IP réservée ; généré automatiquement si vide. |
+| `network_tags` | `["nfsserver"]` | Balises de pare-feu appliquées aux nœuds du cluster GKE. |
+| `enable_cloud_armor` | `false` | Active une politique de sécurité Cloud Armor WAF. |
+| `admin_ip_ranges` | `[]` | Plages CIDR d'administration autorisées via Cloud Armor. |
+| `cloud_armor_policy_name` | `"default-waf-policy"` | Nom de la politique de sécurité Cloud Armor à attacher. |
+| `enable_vpc_sc` | `false` | Active l'application du périmètre des contrôles de service VPC. |
 
 ---
 
 ## Groupe 5 : Variables d'environnement et secrets {#group-5-environment-variables--secrets}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#3-core-service-configuration).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#3-core-service-configuration).
 
-**Comportement propre à Mattermost :**
+**Comportement spécifique à Mattermost :**
 
-`Mattermost GKE` ne préremplit **pas** `environment_variables` avec des paramètres Mattermost. La configuration de Mattermost est contrôlée par trois mécanismes :
+`Mattermost GKE` ne pré-remplit **pas** `environment_variables` avec les paramètres Mattermost. La configuration de Mattermost est contrôlée par trois mécanismes :
 
-1. **`site_url`** définit automatiquement `MM_SERVICESETTINGS_SITEURL` via `Mattermost Common`.
-2. **`edition`** sélectionne automatiquement l'image de conteneur (`team` ou `enterprise`).
-3. **`environment_variables`** accepte toute variable d'environnement Mattermost supplémentaire (selon la convention du préfixe `MM_`).
+1.  **`site_url`** définit `MM_SERVICESETTINGS_SITEURL` automatiquement via `Mattermost Common`.
+2.  **`edition`** sélectionne l'image du conteneur (`team` ou `enterprise`) automatiquement.
+3.  **`environment_variables`** accepte toutes les variables d'environnement Mattermost supplémentaires (en utilisant la convention de préfixe `MM_`).
 
-**Clé de licence de l'Enterprise Edition :**
+**Clé de licence Enterprise Edition :**
 
 Lorsque `edition = "enterprise"`, fournissez la clé de licence via `environment_variables` :
 
@@ -176,41 +176,41 @@ environment_variables = {
 }
 ```
 
-**Remplacements courants de variables d'environnement Mattermost :**
+**Surcharges courantes des variables d'environnement Mattermost :**
 
-| Variable | Rôle |
+| Variable | Objectif |
 |---|---|
 | `MM_EMAILSETTINGS_SMTPSERVER` | Serveur SMTP pour les notifications par e-mail. |
-| `MM_EMAILSETTINGS_SMTPPORT` | Port SMTP (par exemple `"587"`). |
-| `MM_EMAILSETTINGS_SMTPUSERNAME` | Nom d'utilisateur pour l'authentification SMTP. |
-| `MM_EMAILSETTINGS_SMTPPASSWORD` | Mot de passe pour l'authentification SMTP. |
+| `MM_EMAILSETTINGS_SMTPPORT` | Port SMTP (par exemple, `"587"`). |
+| `MM_EMAILSETTINGS_SMTPUSERNAME` | Nom d'utilisateur d'authentification SMTP. |
+| `MM_EMAILSETTINGS_SMTPPASSWORD` | Mot de passe d'authentification SMTP. |
 | `MM_EMAILSETTINGS_ENABLESMTPAUTH` | `"true"` pour activer l'authentification SMTP. |
-| `MM_EMAILSETTINGS_FEEDBACKEMAIL` | Adresse d'expédition des e-mails de notification. |
-| `MM_SERVICESETTINGS_ENABLEDEVELOPER` | `"false"` en production (désactive le mode développeur). |
+| `MM_EMAILSETTINGS_FEEDBACKEMAIL` | Adresse d'expéditeur pour les e-mails de notification. |
+| `MM_SERVICESETTINGS_ENABLEDEVELOPER` | `"false"` pour la production (désactive le mode développeur). |
 
-Les autres variables de secrets (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) se comportent comme décrit dans [App_GKE](./App_GKE.md#3-core-service-configuration).
+Les variables de secrets restantes (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) se comportent comme décrit dans [App_GKE](./App_GKE.md#3-core-service-configuration).
 
 ---
 
 ## Groupe 6 : Sauvegarde et maintenance {#group-6-backup--maintenance}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
-**Valeurs par défaut propres à Mattermost :**
+**Valeurs par défaut spécifiques à Mattermost :**
 
-| Variable | Valeur par défaut | Remarques |
+| Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `backup_schedule` | `"0 2 * * *"` | Tous les jours à 02:00 UTC. Ajustez selon votre objectif de point de reprise (RPO) et vos profils de trafic. |
-| `backup_retention_days` | `7` | Rétention de 7 jours. Augmentez-la pour les déploiements de production (30–90 jours recommandés). |
+| `backup_schedule` | `"0 2 * * *"` | Quotidiennement à 02:00 UTC. Ajustez pour correspondre à votre objectif de point de récupération et aux modèles de trafic. |
+| `backup_retention_days` | `7` | Rétention de 7 jours. Augmentez pour les déploiements de production (30 à 90 jours recommandés). |
 
-**Import de sauvegarde** — Mattermost GKE permet d'importer une sauvegarde existante lors du premier déploiement :
+**Importation de sauvegarde** — Mattermost GKE prend en charge l'importation d'une sauvegarde existante lors du premier déploiement :
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_backup_import` | `false` | Lorsque `true`, exécute un job d'import ponctuel pendant le déploiement pour restaurer la sauvegarde indiquée par `backup_uri`. Configurez `backup_source`, `backup_uri` et `backup_format` avant de l'activer. |
-| `backup_source` | `"gcs"` | Système source du fichier de sauvegarde. `"gcs"` importe depuis un URI Cloud Storage ; `"gdrive"` importe depuis un ID de fichier Google Drive. |
+| `enable_backup_import` | `false` | Lorsque `true`, exécute un job d'importation unique pendant le déploiement pour restaurer la sauvegarde spécifiée par `backup_uri`. Configurez `backup_source`, `backup_uri` et `backup_format` avant d'activer. |
+| `backup_source` | `"gcs"` | Système source pour le fichier de sauvegarde. `"gcs"` importe à partir d'une URI Cloud Storage ; `"gdrive"` importe à partir d'un ID de fichier Google Drive. |
 | `backup_uri` | `""` | URI GCS complet (`"gs://my-bucket/backups/mattermost.sql"`) ou ID de fichier Google Drive. |
-| `backup_file` | `"backup.sql"` | Nom de fichier d'une sauvegarde stockée dans le bucket GCS de sauvegardes créé automatiquement par le module. Alternative à `backup_uri` pour les sauvegardes déjà placées dans le bucket géré par le module. |
+| `backup_file` | `"backup.sql"` | Nom de fichier d'une sauvegarde stockée dans le bucket GCS de sauvegardes créé automatiquement par le module. Une alternative à `backup_uri` pour les sauvegardes déjà placées dans le bucket géré par le module. |
 | `backup_format` | `"sql"` | Format du fichier de sauvegarde. Valeurs prises en charge : `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
 
 ---
@@ -219,55 +219,55 @@ Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./A
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#6-cicd--delivery).
 
-Les variables CI/CD suivantes sont disponibles : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`, `binauthz_evaluation_mode` (par défaut `"ALWAYS_ALLOW"` ; options : `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`).
+Les variables CI/CD suivantes sont disponibles : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`, `binauthz_evaluation_mode` (valeur par défaut `"ALWAYS_ALLOW"` ; options : `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`).
 
 ---
 
 ## Groupe 8 : Jobs et tâches planifiées {#group-8-jobs--scheduled-tasks}
 
-Ces variables se comportent comme décrit dans [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs), avec un comportement important propre à Mattermost.
+Ces variables se comportent comme décrit dans [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs), avec un comportement important spécifique à Mattermost.
 
 **Job `db-init` par défaut de Mattermost :**
 
-Lorsque `initialization_jobs` conserve sa valeur par défaut (liste vide `[]`), `Mattermost Common` fournit automatiquement un job `db-init` :
+Lorsque `initialization_jobs` est laissé comme valeur par défaut (liste vide `[]`), `Mattermost Common` fournit automatiquement un job `db-init` :
 
 | Champ | Valeur |
 |---|---|
 | Nom du job | `db-init` |
-| Image | Image cliente PostgreSQL |
-| Rôle | Crée la base de données PostgreSQL et l'utilisateur de Mattermost ; Mattermost exécute ensuite ses propres migrations de schéma au premier démarrage |
+| Image | Image client PostgreSQL |
+| Objectif | Crée la base de données et l'utilisateur PostgreSQL de Mattermost ; Mattermost exécute ensuite ses propres migrations de schéma lors du premier démarrage |
 | CPU / Mémoire | `1000m` / `512Mi` |
 
-Remplacez `initialization_jobs` par une liste non vide pour substituer vos propres jobs à ce job par défaut. Chaque job personnalisé doit spécifier au moins l'un des champs `command`, `args` ou `script_path`.
+Remplacez `initialization_jobs` par une liste non vide pour remplacer cette valeur par défaut par vos propres jobs. Chaque job personnalisé doit spécifier au moins l'un des éléments suivants : `command`, `args` ou `script_path`.
 
-**CronJobs et services supplémentaires :**
+**CronJobs et services additionnels :**
 
-Les variables `cron_jobs` et `additional_services` sont disponibles et se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) pour la documentation complète.
+Les variables `cron_jobs` et `additional_services` sont disponibles et se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) pour une documentation complète.
 
-> **Remarque :** le schéma `cron_jobs` de `Mattermost GKE` utilise les champs des CronJobs Kubernetes — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — plutôt que les champs de type Cloud Run utilisés dans `Mattermost CloudRun`. Le champ `secret_env_vars` n'est pas disponible dans les cron jobs GKE ; les secrets sont gérés via `secret_environment_variables` au niveau du module.
+> **Note :** Le schéma `cron_jobs` dans `Mattermost GKE` utilise les champs CronJob de Kubernetes — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — plutôt que les champs de style Cloud Run utilisés dans `Mattermost CloudRun`. Le champ `secret_env_vars` n'est pas disponible dans les cron jobs GKE ; les secrets sont gérés via `secret_environment_variables` au niveau du module.
 
 ---
 
 ## Groupe 9 : Stockage et système de fichiers — NFS {#group-9-storage--filesystem--nfs}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
-**Valeurs par défaut propres à Mattermost :**
+**Valeurs par défaut spécifiques à Mattermost :**
 
-| Variable | Valeur par défaut | Remarques |
+| Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `enable_nfs` | `false` | Le stockage NFS est **désactivé** par défaut pour Mattermost. Les volumes GCS Fuse sont le backend de stockage à privilégier pour `/mattermost/data`, car ils sont durables et sûrs en multi-réplica sans le surcoût d'une instance Filestore. Activez NFS si votre déploiement exige une sémantique de système de fichiers POSIX non prise en charge par GCS Fuse (par exemple le verrouillage de fichiers). |
-| `nfs_mount_path` | `"/mattermost/data"` | Le chemin de montage du volume NFS dans le conteneur Mattermost. Correspond au répertoire de données par défaut de Mattermost. |
+| `enable_nfs` | `true` | NFS est **activé** par défaut pour Mattermost : les téléchargements sont écrits sur le disque local à `/mattermost/data`, et sans ce montage, ils sont perdus lorsque le pod est remplacé. Définissez `false` uniquement si vous pointez `MM_FILESETTINGS_*` vers un stockage compatible S3. |
+| `nfs_mount_path` | `"/mattermost/data"` | Le chemin où le volume NFS est monté à l'intérieur du conteneur Mattermost. Correspond au répertoire de données par défaut de Mattermost. |
 
 ---
 
 ## Groupe 10 : Stockage et système de fichiers — GCS {#group-10-storage--filesystem--gcs}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
-**Comportement propre à Mattermost :**
+**Comportement spécifique à Mattermost :**
 
-Mattermost stocke les fichiers téléversés par l'équipe, les pièces jointes et les données des plugins sous `/mattermost/data`. L'approche recommandée pour Mattermost GKE consiste à provisionner un bucket GCS et à le monter via le pilote CSI GCS Fuse :
+Mattermost stocke les téléchargements d'équipe, les pièces jointes et les données de plugin sous `/mattermost/data`. Le montage NFS par défaut rend déjà ce chemin durable ; comme alternative, vous pouvez provisionner un bucket GCS et le monter via le pilote CSI GCS Fuse :
 
 ```
 create_cloud_storage = true
@@ -291,7 +291,7 @@ gcs_volumes = [
 ]
 ```
 
-Contrairement à Ghost GKE, `Mattermost Common` ne provisionne **pas** automatiquement de bucket GCS. Vous devez définir explicitement `storage_buckets` et `gcs_volumes` si vous souhaitez un stockage des fichiers adossé à GCS.
+Contrairement à Ghost GKE, `Mattermost Common` ne provisionne **pas** automatiquement un bucket GCS. Vous devez définir `storage_buckets` et `gcs_volumes` explicitement si vous souhaitez un stockage de fichiers basé sur GCS.
 
 Les variables `create_cloud_storage`, `storage_buckets` et `gcs_volumes` se comportent comme décrit dans [App_GKE Groupe 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
 
@@ -299,40 +299,40 @@ Les variables `create_cloud_storage`, `storage_buckets` et `gcs_volumes` se comp
 
 ## Groupe 11 : Configuration de la base de données {#group-11-database-configuration}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#b-database-cloud-sql).
 
-**Valeurs par défaut et restrictions propres à Mattermost :**
+**Valeurs par défaut et restrictions spécifiques à Mattermost :**
 
-| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Remarques |
+| Variable | Valeur par défaut Mattermost GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
-| `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | **Mattermost nécessite PostgreSQL 13 ou une version ultérieure.** Ne passez pas à MySQL ou SQL Server — Mattermost ne démarrera pas. |
-| `application_database_name` | `"mattermost"` | `"gkeappdb"` | Nom de la base de données PostgreSQL de Mattermost. Ne le modifiez pas après le déploiement — il est transmis directement à `Mattermost Common` en tant que `db_name`. |
-| `application_database_user` | `"mattermost"` | `"gkeappuser"` | Utilisateur PostgreSQL de Mattermost. Ne le modifiez pas après le déploiement — transmis à `Mattermost Common` en tant que `db_user`. |
+| `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | **Mattermost nécessite PostgreSQL 13 ou une version ultérieure.** Ne pas changer pour MySQL ou SQL Server — Mattermost ne démarrera pas. |
+| `application_database_name` | `"mattermost"` | `"gkeappdb"` | Nom de la base de données PostgreSQL pour Mattermost. Ne pas modifier après le déploiement — ceci est transmis directement à `Mattermost Common` comme `db_name`. |
+| `application_database_user` | `"mattermost"` | `"gkeappuser"` | Utilisateur PostgreSQL pour Mattermost. Ne pas modifier après le déploiement — transmis à `Mattermost Common` comme `db_user`. |
 
-> **Important :** `application_database_name` et `application_database_user` sont transmis à `Mattermost Common` en tant que `db_name` et `db_user`. Contrairement à Ghost GKE, il n'existe pas de variables abrégées distinctes `db_name`/`db_user` dans `Mattermost GKE` — `application_database_name` et `application_database_user` remplissent les deux rôles.
+> **Important :** `application_database_name` et `application_database_user` sont transmis à `Mattermost Common` comme `db_name` et `db_user`. Contrairement à Ghost GKE, il n'y a pas de variables abrégées `db_name`/`db_user` distinctes dans `Mattermost GKE` — `application_database_name` et `application_database_user` servent aux deux fins.
 
-**Découverte de l'instance Cloud SQL :**
+**Découverte d'instance Cloud SQL :**
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `sql_instance_name` | `""` | Nom d'une instance Cloud SQL existante à utiliser. Laissez vide pour découvrir automatiquement une instance gérée par Services GCP ou créer une instance intégrée. |
-| `sql_instance_base_name` | `"app-sql"` | Nom de base de l'instance Cloud SQL intégrée lorsqu'aucune instance existante n'est trouvée. L'ID de déploiement y est ajouté. |
+| `sql_instance_base_name` | `"app-sql"` | Nom de base pour l'instance Cloud SQL intégrée lorsqu'aucune instance existante n'est trouvée. L'ID de déploiement est ajouté. |
 
 **Extensions PostgreSQL :**
 
-Mattermost ne nécessite pas d'extensions PostgreSQL personnalisées par défaut, mais le module expose des variables de gestion des extensions pour les déploiements avancés :
+Mattermost ne nécessite pas d'extensions PostgreSQL personnalisées par défaut, mais le module expose des variables de gestion d'extensions pour les déploiements avancés :
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_postgres_extensions` | `false` | Active l'installation d'extensions PostgreSQL après le provisionnement. |
-| `postgres_extensions` | `[]` | Liste des extensions PostgreSQL à installer (par exemple `["pg_trgm", "btree_gin"]`). |
+| `postgres_extensions` | `[]` | Liste des extensions PostgreSQL à installer (par exemple, `["pg_trgm", "btree_gin"]`). |
 
-La **rotation automatique des mots de passe** est également prise en charge :
+**La rotation automatique des mots de passe** est également prise en charge :
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_auto_password_rotation` | `false` | Déploie un job automatisé de rotation du mot de passe de la base de données. Lorsque `true`, le mot de passe est renouvelé selon la planification définie par `secret_rotation_period` et les pods GKE sont redémarrés pour prendre en compte le nouvel identifiant. |
-| `rotation_propagation_delay_sec` | `90` | Nombre de secondes d'attente après la rotation avant de redémarrer les pods, afin de laisser la réplication de Secret Manager se terminer. |
+| `enable_auto_password_rotation` | `false` | Déploie un job de rotation automatique des mots de passe de base de données. Lorsque `true`, le mot de passe de la base de données est tourné selon le calendrier défini par `secret_rotation_period` et les pods GKE sont redémarrés pour prendre en compte la nouvelle information d'identification. |
+| `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods, pour permettre la réplication de Secret Manager. |
 
 ---
 
@@ -344,82 +344,82 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#e-initialization-jobs--cronj
 
 ## Groupe 13 : Observabilité et santé {#group-13-observability--health}
 
-Ces variables se comportent de façon identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
-**Valeurs par défaut propres à Mattermost :**
+**Valeurs par défaut spécifiques à Mattermost :**
 
-Mattermost expose un point de terminaison de santé dédié à `/api/v4/system/ping`, qui renvoie HTTP 200 et un corps JSON d'état lorsque le serveur est entièrement initialisé et prêt à accepter des connexions. `startup_probe`/`liveness_probe` ciblent ce chemin par défaut.
+Mattermost expose un point de terminaison de santé dédié à `/api/v4/system/ping` qui renvoie HTTP 200 et un corps de statut JSON lorsque le serveur est entièrement initialisé et prêt à accepter des connexions. `startup_probe`/`liveness_probe` utilisent par défaut ce chemin.
 
 ### Routage des sondes de santé {#health-probe-routing}
 
-`Mattermost GKE` déclare **deux jeux** de variables de sonde, mais un seul a réellement un effet :
+`Mattermost GKE` déclare **deux ensembles** de variables de sonde, mais un seul d'entre eux est réellement conséquent :
 
-| Jeu de variables | Transmis à | Configure |
+| Ensemble de variables | Transmis à | Configure |
 |---|---|---|
-| `startup_probe`, `liveness_probe` | Sous-module `Mattermost Common` | La spécification réelle des sondes Kubernetes du conteneur applicatif — c'est ce qu'App_GKE relie au Deployment/StatefulSet déployé (`local.selected_module.startup_probe`/`.liveness_probe`) |
-| `startup_probe_config`, `health_check_config` | `App GKE` directement | **Inopérantes pour Mattermost.** `App_GKE` ne les relie qu'à son propre préréglage interne d'exemple/de repli `gkeapp`, inutilisé (`gkeapp.tf`) — elles n'atteignent jamais le conteneur Mattermost déployé |
+| `startup_probe`, `liveness_probe` | Sous-module `Mattermost Common` | La spécification de sonde Kubernetes réelle du conteneur d'application — c'est ce que App_GKE connecte au déploiement/StatefulSet déployé (`local.selected_module.startup_probe`/`.liveness_probe`) |
+| `startup_probe_config`, `health_check_config` | `App GKE` directement | **Inerte pour Mattermost.** `App_GKE` ne les connecte qu'à son propre préréglage d'échantillon/de secours `gkeapp` interne et inutilisé (`gkeapp.tf`) — elles n'atteignent jamais le conteneur Mattermost déployé |
 
-Ce ne sont pas des alias. Modifier `startup_probe` affecte la sonde réellement déployée ; modifier `startup_probe_config`/`health_check_config` n'a aucun effet sur Mattermost — laissez-les à leurs valeurs par défaut et configurez les contrôles de santé exclusivement via `startup_probe`/`liveness_probe`.
+Ce ne sont pas des alias. La modification de `startup_probe` affecte la sonde réelle déployée ; la modification de `startup_probe_config`/`health_check_config` n'a aucun effet sur Mattermost — laissez-les à leurs valeurs par défaut et configurez la vérification de santé exclusivement via `startup_probe`/`liveness_probe`.
 
 **Sonde de démarrage** (`startup_probe` → `Mattermost Common`) :
 
-| Champ | Valeur par défaut Mattermost | Valeur par défaut App GKE | Remarques |
+| Champ | Valeur par défaut Mattermost | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
 | `path` | `"/api/v4/system/ping"` | `"/healthz"` | Point de terminaison de disponibilité intégré de Mattermost. |
-| `initial_delay_seconds` | `60` | `10` | Mattermost exécute les migrations PostgreSQL au premier démarrage, ce qui peut prendre 30 à 60 secondes pour les bases de données volumineuses. |
-| `failure_threshold` | `30` | `3` | Accorde jusqu'à 7,5 minutes de démarrage (`30 × 15s`). Suffisant pour les nouveaux déploiements avec migration de schéma. |
+| `initial_delay_seconds` | `60` | `10` | Mattermost exécute des migrations PostgreSQL lors du premier démarrage, ce qui peut prendre 30 à 60 secondes pour les grandes bases de données. |
+| `failure_threshold` | `30` | `3` | Permet jusqu'à 7,5 minutes de temps de démarrage (`30 × 15s`). Suffisant pour les nouveaux déploiements avec migration de schéma. |
 | `period_seconds` | `15` | `10` | — |
 
 **Sonde de vivacité** (`liveness_probe` → `Mattermost Common`) :
 
-| Champ | Valeur par défaut Mattermost | Valeur par défaut App GKE | Remarques |
+| Champ | Valeur par défaut Mattermost | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
 | `path` | `"/api/v4/system/ping"` | `"/healthz"` | Identique à la sonde de démarrage. |
-| `initial_delay_seconds` | `60` | `15` | Laisse à Mattermost un délai supplémentaire pour se stabiliser une fois la sonde de démarrage réussie. |
+| `initial_delay_seconds` | `60` | `15` | Donne à Mattermost un temps supplémentaire pour se stabiliser après le passage de la sonde de démarrage. |
 | `period_seconds` | `30` | `30` | — |
 | `failure_threshold` | `3` | `3` | — |
 
-**Variables de sonde inopérantes** (`startup_probe_config`, `health_check_config` → `App GKE`) :
+**Variables de sonde inertes** (`startup_probe_config`, `health_check_config` → `App GKE`) :
 
-| Variable | Valeur par défaut Mattermost | Remarques |
+| Variable | Valeur par défaut Mattermost | Notes |
 |---|---|---|
-| `startup_probe_config` | `{ enabled = true, path = "/", initial_delay_seconds = 120, failure_threshold = 15 }` | Consommée uniquement par le préréglage de repli interne `gkeapp`, inutilisé, d'`App_GKE` — sans effet sur le conteneur Mattermost déployé. Inutile de remplacer `path` ; utilisez plutôt `startup_probe`. |
-| `health_check_config` | `{ enabled = true, path = "/" }` | Comme ci-dessus — inopérante pour Mattermost. Utilisez plutôt `liveness_probe`. |
+| `startup_probe_config` | `{ enabled = true, path = "/", initial_delay_seconds = 120, failure_threshold = 15 }` | Uniquement consommée par le préréglage de secours `App_GKE` interne inutilisé de `gkeapp` — n'a aucun effet sur le conteneur Mattermost déployé. Ne vous embêtez pas à remplacer `path` ; utilisez `startup_probe` à la place. |
+| `health_check_config` | `{ enabled = true, path = "/" }` | Idem ci-dessus — inerte pour Mattermost. Utilisez `liveness_probe` à la place. |
 
-**`uptime_check_config` :** vaut par défaut `{ enabled = false, path = "/" }` — les tests de disponibilité sont désactivés par défaut. Activez-les et définissez `path = "/api/v4/system/ping"` pour la surveillance en production.
+**`uptime_check_config` :** Par défaut à `{ enabled = false, path = "/" }` — les tests de disponibilité sont désactivés par défaut. Activez et définissez `path = "/api/v4/system/ping"` pour la surveillance de production.
 
-**Métriques Prometheus :** Mattermost expose des métriques Prometheus sur le port `8067`. Ce module ne les collecte pas automatiquement, mais Cloud Monitoring peut les consommer au moyen d'un exportateur de métriques personnalisé ou d'une intégration Prometheus vers Cloud Monitoring.
+**Métriques Prometheus :** Mattermost expose les métriques Prometheus sur le port `8067`. Celles-ci ne sont pas récupérées automatiquement par ce module mais peuvent être consommées par Cloud Monitoring à l'aide d'un exportateur de métriques personnalisé ou d'une intégration Prometheus-vers-Cloud-Monitoring.
 
 ---
 
-## Groupe 14 : Règles de fiabilité {#group-14-reliability-policies}
+## Groupe 14 : Politiques de fiabilité {#group-14-reliability-policies}
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
 Variables disponibles : `enable_pod_disruption_budget`, `pdb_min_available`, `enable_topology_spread`, `topology_spread_strict`.
 
-> **Remarque :** `enable_pod_disruption_budget` vaut `false` par défaut dans `Mattermost GKE`. Activez-le pour les déploiements de production où les mises à niveau progressives des nœuds ne doivent pas mettre hors ligne tous les pods Mattermost simultanément.
+> **Note :** `enable_pod_disruption_budget` utilise par défaut `false` dans `Mattermost GKE`. Activez-le pour les déploiements de production où les mises à niveau de nœuds glissantes ne doivent pas mettre tous les pods Mattermost hors ligne simultanément.
 
 ---
 
 ## Groupe 15 : Cache Redis {#group-15-redis-cache}
 
-Ces variables configurent l'intégration Redis facultative de Mattermost. La prise en charge de l'infrastructure Redis sous-jacente est fournie par `App_GKE` (voir [App_GKE](./App_GKE.md#a-redis--memorystore)) ; les variables ci-dessous sont propres à Mattermost. Mattermost utilise Redis comme cache distribué et backend de sessions — nécessaire à un comportement correct au-delà d'un seul réplica de pod.
+Ces variables configurent l'intégration Redis facultative de Mattermost. Le support d'infrastructure Redis sous-jacent est fourni par `App_GKE` (voir [App_GKE](./App_GKE.md#a-redis--memorystore)) ; les variables ci-dessous sont spécifiques à Mattermost. Mattermost utilise Redis comme cache distribué et backend de session — requis pour un comportement correct sur plus d'un réplica de pod.
 
-> **Remarque :** `enable_redis` vaut `false` par défaut dans `Mattermost GKE`. C'est sans risque pour les déploiements à un seul réplica. Pour tout déploiement avec `min_instance_count > 1` ou une mise à l'échelle horizontale, Redis doit être activé.
+> **Note :** `enable_redis` utilise par défaut `false` dans `Mattermost GKE`. Ceci est sûr pour les déploiements à réplica unique. Pour tout déploiement avec `min_instance_count > 1` ou une mise à l'échelle horizontale, Redis doit être activé.
 
 | Variable | Valeur par défaut | Options / Format | Description et implications |
 |---|---|---|---|
-| `enable_redis` | `false` | `true` / `false` | Active Redis comme cache distribué et backend de sessions de Mattermost. Lorsque `false`, Mattermost utilise un cache dans le processus — les requêtes acheminées vers des réplicas de pod différents ne partagent pas l'état de session, ce qui provoque des échecs d'authentification intermittents sous charge. **Obligatoire pour les déploiements multi-réplica.** |
-| `redis_host` | `""` | Nom d'hôte ou adresse IP | Le nom d'hôte ou l'adresse IP du serveur Redis. Laissez vide pour utiliser l'IP du serveur NFS découverte automatiquement (le Redis co-hébergé par défaut de la plateforme). Remplacez-la par une IP ou un nom d'hôte explicite lorsque vous utilisez une instance Redis dédiée, comme Google Cloud Memorystore. Exemple : `"10.128.0.10"`. |
-| `redis_port` | `"6379"` | Chaîne contenant un numéro de port | Port TCP du serveur Redis. La valeur par défaut `6379` est le port Redis standard. Ne la modifiez que si votre instance Redis écoute sur un port non standard. |
-| `redis_auth` | `""` | Chaîne *(sensible)* | Mot de passe d'authentification du serveur Redis. Laissez vide si l'instance Redis n'exige pas d'authentification. Pour les instances Memorystore avec AUTH activé, indiquez la chaîne AUTH de l'instance. Traité comme sensible — non stocké en clair dans l'état Terraform. |
+| `enable_redis` | `false` | `true` / `false` | Active Redis comme cache distribué et backend de session de Mattermost. Lorsque `false`, Mattermost utilise un cache en cours de processus — les requêtes acheminées vers différents réplicas de pod ne partageront pas l'état de session, ce qui entraînera des échecs d'authentification intermittents sous charge. **Requis pour les déploiements multi-réplicas.** |
+| `redis_host` | `""` | Nom d'hôte ou adresse IP | Le nom d'hôte ou l'adresse IP du serveur Redis. Laissez vide pour utiliser l'IP du serveur NFS découverte automatiquement (le Redis co-hébergé par défaut de la plateforme). Remplacez par une IP ou un nom d'hôte explicite lors de l'utilisation d'une instance Redis dédiée telle que Google Cloud Memorystore. Exemple : `"10.128.0.10"`. |
+| `redis_port` | `"6379"` | Chaîne de numéro de port | Port TCP pour le serveur Redis. La valeur par défaut `6379` est le port Redis standard. Ne modifiez que si votre instance Redis est configurée pour écouter sur un port non standard. |
+| `redis_auth` | `""` | Chaîne *(sensible)* | Mot de passe d'authentification pour le serveur Redis. Laissez vide si l'instance Redis ne nécessite pas d'authentification. Pour les instances Memorystore avec AUTH activé, définissez ceci sur la chaîne AUTH de l'instance. Traité comme sensible — non stocké en texte clair dans l'état Terraform. |
 
-### Valider les paramètres du groupe 15 {#validating-group-15-settings}
+### Validation des paramètres du groupe 15 {#validating-group-15-settings}
 
-**Console Google Cloud :**
-- **Instance Memorystore (le cas échéant) :** accédez à **Memorystore → Redis** pour confirmer l'existence de l'instance, son adresse IP, son port et l'état d'AUTH.
-- **État de Redis dans Mattermost :** une fois le déploiement effectué, accédez à la System Console de Mattermost (**Environment → Cache**) ou consultez les journaux du conteneur pour repérer les messages d'initialisation du cache.
+**Google Cloud Console :**
+- **Instance Memorystore (si utilisée) :** Accédez à **Memorystore → Redis** pour confirmer que l'instance existe, son adresse IP, son port et son statut AUTH.
+- **Statut Redis de Mattermost :** Une fois déployé, accédez à la console système de Mattermost (**Environnement → Cache**) ou examinez les journaux du conteneur pour les messages d'initialisation du cache.
 
 **gcloud CLI / kubectl :**
 ```bash
@@ -443,7 +443,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
-> **Configuration du `site_url` de Mattermost :** Mattermost doit connaître son URL publique au démarrage. Lorsque vous utilisez un domaine personnalisé, définissez `site_url` pour qu'il corresponde au domaine indiqué dans `application_domains` (par exemple `site_url = "https://chat.example.com"`). Mattermost utilise cette URL pour les e-mails de notification, les redirections des fournisseurs OAuth et la génération de liens dans l'application — un `site_url` incorrect provoque des liens de notification cassés, des échecs de connexion OAuth et des liens profonds erronés dans l'application mobile.
+> **Configuration `site_url` de Mattermost :** Mattermost doit connaître son URL publique au démarrage. Lorsque vous utilisez un domaine personnalisé, définissez `site_url` pour qu'il corresponde au domaine dans `application_domains` (par exemple, `site_url = "https://chat.example.com"`). Mattermost utilise cette URL pour les e-mails de notification, les redirections de fournisseurs OAuth et la génération de liens dans l'application — un `site_url` incorrect entraîne des liens de notification brisés, des échecs de connexion OAuth et des liens profonds d'applications mobiles incorrects.
 
 ---
 
@@ -451,11 +451,11 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
-Variables disponibles : `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `session_affinity`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds`, `deployment_timeout`, `gke_cluster_selection_mode` (par défaut `"primary"`), `network_name` (par défaut `""` ; découvert automatiquement s'il est vide), `prereq_gke_subnet_cidr` (par défaut `"10.201.0.0/24"`).
+Variables disponibles : `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `session_affinity`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds`, `deployment_timeout`, `gke_cluster_selection_mode` (valeur par défaut `"primary"`), `network_name` (valeur par défaut `""` ; découverte automatique si vide), `prereq_gke_subnet_cidr` (valeur par défaut `"10.201.0.0/24"`).
 
-> **Remarque sur l'affinité de session :** `session_affinity` vaut `"ClientIP"` par défaut. Mattermost utilise des jetons de session côté serveur. Sans affinité de session, les utilisateurs peuvent rencontrer des erreurs d'authentification intermittentes lorsque les requêtes sont acheminées vers des réplicas de pod différents qui ne partagent pas de cache de session en mémoire. Conservez `"ClientIP"`, sauf si Redis est activé avec un backend de sessions partagé.
+> **Note sur l'affinité de session :** `session_affinity` utilise par défaut `"ClientIP"`. Mattermost utilise des jetons de session côté serveur. Sans affinité de session, les utilisateurs peuvent rencontrer des erreurs d'authentification intermittentes lorsque les requêtes sont acheminées vers différents réplicas de pod qui ne partagent pas un cache de session en mémoire. Conservez `"ClientIP"` sauf si Redis est activé avec un backend de session partagé.
 
-> **Type de service :** `service_type` vaut `"LoadBalancer"` par défaut. Cela provisionne un équilibreur de charge externe. Pour les déploiements Mattermost uniquement internes, passez à `"ClusterIP"` et configurez un Ingress séparément.
+> **Type de service :** `service_type` utilise par défaut `"LoadBalancer"`. Cela provisionne un équilibreur de charge externe. Pour les déploiements Mattermost uniquement internes, changez pour `"ClusterIP"` et configurez un Ingress séparément.
 
 ---
 
@@ -463,9 +463,9 @@ Variables disponibles : `gke_cluster_name`, `namespace_name`, `workload_type`, `
 
 Identique à `App_GKE`. Voir la configuration StatefulSet décrite dans [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
 
-Définir `stateful_pvc_enabled = true` résout automatiquement `workload_type` en `"StatefulSet"`. Chaque pod Mattermost dispose alors de son propre PVC dédié pour le stockage local, en alternative aux volumes GCS Fuse. Pour la plupart des déploiements Mattermost, GCS Fuse est préférable aux PVC de StatefulSet, car GCS offre durabilité et accès partagé entre pods sans contrainte de taille.
+La définition de `stateful_pvc_enabled = true` résout automatiquement `workload_type` en `"StatefulSet"`. Cela fournit à chaque pod Mattermost son propre PVC dédié pour le stockage local, comme alternative au volume NFS par défaut.
 
-Variables disponibles : `stateful_pvc_enabled`, `stateful_pvc_size` (par défaut `"10Gi"`), `stateful_pvc_mount_path` (par défaut `"/data"`), `stateful_pvc_storage_class` (par défaut `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group`.
+Variables disponibles : `stateful_pvc_enabled`, `stateful_pvc_size` (valeur par défaut `"10Gi"`), `stateful_pvc_mount_path` (valeur par défaut `"/mattermost/data"`), `stateful_pvc_storage_class` (valeur par défaut `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group`.
 
 ---
 
@@ -475,31 +475,31 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#c-resource-quotas).
 
 Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits`, `quota_max_pods`, `quota_max_services`, `quota_max_pvcs`.
 
-> **Suffixe obligatoire pour les quotas de mémoire :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes d'unités binaires (par exemple `"8Gi"`, `"4096Mi"`). Les entiers sans suffixe sont interprétés comme des octets par Kubernetes et bloquent toute planification de pods.
+> **Exigence de suffixe de quota de mémoire :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes d'unité binaire (par exemple, `"8Gi"`, `"4096Mi"`). Les entiers nus sont traités comme des octets par Kubernetes et bloqueront toute planification de pod.
 
 ---
 
-## Explorer le déploiement {#exploring-the-deployment}
+## Exploration du déploiement {#exploring-the-deployment}
 
-### Console Google Cloud {#google-cloud-console}
+### Google Cloud Console {#google-cloud-console}
 
 **Charges de travail :**
-Accédez à **Kubernetes Engine → Workloads** et filtrez par espace de noms (le nom de l'espace de noms est dérivé de `application_name` et `tenant_id`). Le Deployment ou StatefulSet Mattermost, le Job `db-init` et les éventuels CronJobs configurés y apparaissent.
+Accédez à **Kubernetes Engine → Charges de travail** et filtrez par espace de noms (le nom de l'espace de noms est dérivé de `application_name` et `tenant_id`). Le déploiement ou le StatefulSet Mattermost, le job `db-init` et tous les CronJobs configurés apparaissent ici.
 
 **Services et Ingress :**
-Accédez à **Kubernetes Engine → Services & Ingress** pour trouver le Service Mattermost, son adresse IP externe et les éventuelles ressources Ingress configurées. Si `reserve_static_ip = true`, l'IP réservée apparaît sous **VPC Network → IP Addresses**.
+Accédez à **Kubernetes Engine → Services et Ingress** pour trouver le service Mattermost, son adresse IP externe et toutes les ressources Ingress configurées. Si `reserve_static_ip = true`, l'IP réservée apparaît sous **Réseau VPC → Adresses IP**.
 
 **Stockage :**
-Accédez à **Cloud Storage → Buckets** et recherchez les buckets préfixés par `app` et votre `application_name` pour trouver le bucket de données de Mattermost et le bucket de sauvegardes automatisées.
+Accédez à **Cloud Storage → Buckets** et recherchez les buckets préfixés par `app` et votre `application_name` pour trouver le bucket de données Mattermost et le bucket de sauvegarde automatisée.
 
 **Base de données :**
-Accédez à **SQL** pour trouver l'instance Cloud SQL PostgreSQL 15. Le nom de l'instance suit le modèle `app<name><tenant><id>-sql`. Cliquez sur l'instance pour consulter les connexions, Query Insights et l'historique des sauvegardes.
+Accédez à **SQL** pour trouver l'instance Cloud SQL PostgreSQL 15. Le nom de l'instance suit le modèle `app<name><tenant><id>-sql`. Cliquez sur l'instance pour afficher les connexions, les informations sur les requêtes et l'historique des sauvegardes.
 
 **Secrets :**
-Accédez à **Security → Secret Manager** pour consulter `DB_PASSWORD` et les autres secrets provisionnés par le module. Les noms des secrets suivent le modèle `app<name><tenant><id>-*`.
+Accédez à **Sécurité → Secret Manager** pour afficher le `DB_PASSWORD` et les autres secrets provisionnés par le module. Les noms des secrets suivent le modèle `app<name><tenant><id>-*`.
 
-**Supervision :**
-Accédez à **Monitoring → Dashboards** et **Monitoring → Alerting** pour consulter les tests de disponibilité (si `uptime_check_config.enabled = true`) et les éventuelles règles d'alerte configurées via `alert_policies`.
+**Surveillance :**
+Accédez à **Surveillance → Tableaux de bord** et **Surveillance → Alertes** pour afficher les tests de disponibilité (si `uptime_check_config.enabled = true`) et toutes les politiques d'alerte configurées via `alert_policies`.
 
 ### gcloud CLI et kubectl {#gcloud-cli-and-kubectl}
 
@@ -562,48 +562,48 @@ gcloud secrets list \
 | `deployment_id` | Suffixe de l'ID de déploiement |
 | `namespace` | Espace de noms Kubernetes |
 | `database_instance_name` | Nom de l'instance Cloud SQL |
-| `database_name` | Nom de la base de données applicative |
-| `database_user` | Nom de l'utilisateur de la base de données applicative |
-| `database_password_secret` | Nom du secret Secret Manager contenant le mot de passe de la base de données |
+| `database_name` | Nom de la base de données de l'application |
+| `database_user` | Nom de l'utilisateur de la base de données de l'application |
+| `database_password_secret` | Nom du secret Secret Manager pour le mot de passe de la base de données |
 | `storage_buckets` | Buckets de stockage GCS créés |
 | `container_image` | Image de conteneur utilisée pour le déploiement |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé |
-| `github_repository_url` | URL du dépôt GitHub connecté pour la CI/CD |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est joignable et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré — le cluster est créé mais son point de terminaison n'est pas encore lisible, si bien que les ressources Kubernetes sont ignorées. Le pipeline CI/CD doit relancer l'apply pour terminer le déploiement. |
+| `github_repository_url` | URL du dépôt GitHub connecté pour le CI/CD |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster inline — le cluster est créé mais le point de terminaison n'est pas encore lisible, donc les ressources Kubernetes sont ignorées. Le pipeline CI/CD doit relancer l'apply pour terminer le déploiement. |
 
 ---
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation importante) — **Moyen** (fonctionnement dégradé ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critique** | Aucune valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"POSTGRES_15"` | **Critique** | Mattermost ne prend en charge que PostgreSQL. Définir `MYSQL_8_0` ou `NONE` fait échouer le job `db-init` et planter Mattermost au démarrage. |
-| `application_database_name` | `"mattermost"` | **Critique** | Immuable après le déploiement — le modifier recrée la base de données et détruit toutes les données Mattermost (canaux, messages, utilisateurs). |
-| `application_database_user` | `"mattermost"` | **Critique** | Immuable après le déploiement — le modifier recrée l'utilisateur, invalide les identifiants et rompt la connexion de Mattermost à la base de données. |
-| `site_url` | `""` | **Élevé** | Un `site_url` vide empêche Mattermost de générer correctement les liens des e-mails de notification, les redirections OAuth et les liens profonds mobiles. Configurez-le avant d'inviter des utilisateurs. |
-| `edition` | `"team"` | **Élevé** | Définir `"enterprise"` sans clé de licence valide fait démarrer Mattermost sans licence et désactive silencieusement les fonctionnalités enterprise. Fournissez la clé via `environment_variables`. |
-| `enable_redis` | `false` | **Élevé** | Sans risque pour les déploiements à un seul réplica. Avec `min_instance_count > 1`, la mise en cache des sessions dans le processus provoque des échecs d'authentification intermittents lorsque les requêtes sont réparties entre les pods. Activez Redis pour tout déploiement multi-réplica. |
-| `min_instance_count` | `1` | **Élevé** | Définir `0` autorise la mise à l'échelle à zéro. Les démarrages à froid coupent les connexions WebSocket actives : les utilisateurs voient des bannières de déconnexion et manquent des messages en temps réel jusqu'à la reconnexion. Conservez `1` en production. |
-| `container_resources.memory_limit` | `"4Gi"` | **Élevé** | Mattermost met en cache en mémoire les canaux actifs et les sessions utilisateur. Un sous-dimensionnement (en dessous de `2Gi`) provoque des arrêts OOM sous une charge d'équipe modérée, en particulier lors d'exports massifs de messages ou de l'exécution de plugins. |
-| `session_affinity` | `"ClientIP"` | **Élevé** | Sans Redis et sans affinité de session, les sessions administrateur et utilisateur ne sont pas partagées entre les pods. Les utilisateurs sont de fait déconnectés à chaque requête acheminée vers un autre réplica. |
-| `container_port` | `8065` | **Critique** | Mattermost écoute sur `8065`. Modifier cette valeur sans l'aligner sur le port lié par le conteneur fait échouer toutes les sondes de santé et fait entrer le pod dans une boucle de redémarrage. |
-| `timeout_seconds` | `300` | **Moyen** | Les connexions WebSocket de Mattermost sont de longue durée. Un timeout de backend de 300 secondes coupe régulièrement les connexions actives. Définissez `3600` pour les déploiements faisant un usage intensif des WebSockets. |
-| `enable_nfs` | `false` | **Moyen** | NFS est désactivé par défaut. Si `gcs_volumes` n'est pas non plus configuré, les fichiers téléversés dans Mattermost sont stockés dans le système de fichiers éphémère du conteneur et perdus au redémarrage du pod. Configurez des volumes GCS Fuse pour un stockage durable des fichiers. |
-| `create_cloud_storage` | `false` | **Moyen** | Ce module ne provisionne automatiquement aucun bucket GCS. Sans `create_cloud_storage = true` et une entrée `gcs_volumes`, les fichiers téléversés ne survivent pas aux redémarrages de pods. |
-| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Pour des équipes qui partagent activement des fichiers et des médias, `10Gi` se remplit vite. Provisionnez 50–100 Gi pour les équipes actives. La taille d'un PVC peut être augmentée mais pas réduite. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (propre à GKE) | Doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers sans suffixe sont interprétés comme des octets et empêchent la planification de tous les pods. |
-| `backup_retention_days` | `7` | **Moyen** | Trop court pour des équipes actives. Portez-la à 30 jours ou plus pour disposer d'une fenêtre de reprise utile. |
+| `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
+| `database_type` | `"POSTGRES_15"` | **Critique** | Mattermost ne prend en charge que PostgreSQL. La définition de `MYSQL_8_0` ou `NONE` entraîne l'échec du job `db-init` et le crash de Mattermost au démarrage. |
+| `application_database_name` | `"mattermost"` | **Critique** | Immuable après le déploiement — la modification recrée la base de données et détruit toutes les données Mattermost (canaux, messages, utilisateurs). |
+| `application_database_user` | `"mattermost"` | **Critique** | Immuable après le déploiement — la modification recrée l'utilisateur, invalide les identifiants et rompt la connexion de Mattermost à la base de données. |
+| `site_url` | `""` (dérivé de l'URL du LB) | **Élevé** avec un domaine personnalisé | La valeur vide est dérivée au démarrage de l'URL de l'équilibreur de charge ; sur un domaine personnalisé, définissez-la avant d'inviter des utilisateurs, sinon les liens et les redirections OAuth utiliseront l'adresse du LB. |
+| `edition` | `"team"` | **Élevé** | La définition de `"enterprise"` sans clé de licence valide entraîne le démarrage de Mattermost dans un état sans licence et désactive silencieusement les fonctionnalités d'entreprise. Fournissez la clé via `environment_variables`. |
+| `enable_redis` | `false` | **Élevé** | Sûr pour les déploiements à réplica unique. Pour `min_instance_count > 1`, la mise en cache de session in-process provoque des échecs d'authentification intermittents lorsque les requêtes sont équilibrées entre les pods. Activez Redis pour tout déploiement multi-réplicas. |
+| `min_instance_count` | `1` | **Élevé** | La définition de `0` permet la mise à l'échelle à zéro. Les démarrages à froid interrompent les connexions WebSocket actives, ce qui fait que les utilisateurs voient des bannières de déconnexion et manquent les messages en temps réel jusqu'à la reconnexion. Gardez à `1` pour la production. |
+| `container_resources.memory_limit` | `"4Gi"` | **Élevé** | Mattermost met en cache les canaux actifs et les sessions utilisateur en mémoire. Un sous-provisionnement (inférieur à `2Gi`) provoque des OOM kills sous une charge d'équipe modérée, en particulier lors d'exportations de messages en masse ou d'exécution de plugins. |
+| `session_affinity` | `"ClientIP"` | **Élevé** | Sans Redis et sans affinité de session, les sessions administrateur et utilisateur ne sont pas partagées entre les pods. Les utilisateurs sont effectivement déconnectés à chaque requête qui est acheminée vers un réplica différent. |
+| `container_port` | `8065` | **Critique** | Mattermost écoute sur `8065`. La modification de cela sans faire correspondre le port lié du conteneur entraîne l'échec de toutes les sondes de santé et le pod entre dans une boucle de redémarrage. |
+| `timeout_seconds` | `300` | **Moyen** | Les connexions WebSocket de Mattermost sont de longue durée. Un délai d'attente de 300 secondes du backend entraîne la rupture régulière des connexions actives. Définissez à `3600` pour les déploiements à forte utilisation de WebSocket. |
+| `enable_nfs` | `true` | **Moyen** | NFS est activé par défaut et contient les téléchargements. Si vous le désactivez sans configurer de stockage compatible S3 ou `gcs_volumes`, les téléchargements de fichiers Mattermost sont stockés dans le système de fichiers éphémère du conteneur et perdus lors du redémarrage du pod. |
+| `create_cloud_storage` | `false` | **Moyen** | Aucun bucket GCS n'est provisionné automatiquement par ce module. Sans `create_cloud_storage = true` et une entrée `gcs_volumes`, les fichiers téléchargés ne sont pas durables après les redémarrages de pod. |
+| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Pour les équipes qui partagent activement des fichiers et des médias, `10Gi` se remplit rapidement. Provisionnez 50 à 100 Gi pour les équipes actives. La taille du PVC peut être étendue mais pas réduite. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (spécifique à GKE) | Doit utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'il est défini. Les entiers bruts sont traités comme des octets et empêchent la planification de tous les pods. |
+| `backup_retention_days` | `7` | **Moyen** | Trop court pour les équipes actives. Augmentez à plus de 30 jours pour offrir une fenêtre de récupération significative. |
 | `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, la page de connexion et les points de terminaison de l'API de Mattermost sont exposés aux attaques par force brute et par bourrage d'identifiants. Activez-le pour tout déploiement accessible publiquement. |
-| `enable_pod_disruption_budget` | `false` | **Moyen** | Désactivé par défaut. Sans PDB, les mises à niveau des nœuds GKE peuvent arrêter simultanément tous les pods Mattermost et provoquer une panne complète. Activez-le en production. |
-| `startup_probe.failure_threshold` | `30` | **Élevé** | Mattermost exécute les migrations de schéma PostgreSQL au premier démarrage. Réduire `failure_threshold` en dessous de `20` sur de nouveaux déploiements avec des bases de données volumineuses peut amener Kubernetes à redémarrer le pod avant la fin des migrations, créant une boucle de redémarrage. |
+| `enable_pod_disruption_budget` | `false` | **Moyen** | Désactivé par défaut. Sans PDB, les mises à niveau de nœuds GKE peuvent arrêter tous les pods Mattermost simultanément, provoquant une panne totale. Activez-le pour la production. |
+| `startup_probe.failure_threshold` | `30` | **Élevé** | Mattermost exécute les migrations de schéma PostgreSQL au premier démarrage. La réduction de `failure_threshold` en dessous de `20` sur les nouveaux déploiements avec de grandes bases de données peut entraîner le redémarrage du pod par Kubernetes avant la fin des migrations, créant une boucle de redémarrage. |
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
 - [Lab pratique : Mattermost sur GKE Autopilot](../labs/Mattermost_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Mattermost sur Google Cloud Run](Mattermost_CloudRun.md) — la même application sur Cloud Run, si vous avez besoin de l'autre cible de déploiement.
-- [Mattermost Common — Module de configuration partagée](Mattermost_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Mattermost sur Google Cloud Run](Mattermost_CloudRun.md) — la même application sur Cloud Run, pour lorsque vous avez besoin de l'autre cible de déploiement.
+- [Module de configuration partagée commune de Mattermost](Mattermost_Common.md) — la configuration partagée par les deux cibles de déploiement.

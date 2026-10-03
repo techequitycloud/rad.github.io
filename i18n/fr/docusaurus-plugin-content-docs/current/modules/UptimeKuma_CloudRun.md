@@ -1,55 +1,55 @@
 ---
 title: "Uptime Kuma sur Google Cloud Run"
-description: "Référence de configuration pour déployer Uptime Kuma sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement d'Uptime Kuma sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/UptimeKuma_CloudRun.md @ 3055034 sha256:ce5780a580d9 -->
+<!-- translated-from: docs/modules/UptimeKuma_CloudRun.md @ 15fd4c7 sha256:4473259d7434 -->
 
 # Uptime Kuma sur Google Cloud Run {#uptime-kuma-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/UptimeKuma_CloudRun.png" alt="Uptime Kuma sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Uptime Kuma est un outil de supervision auto-hébergé et élégant qui suit la disponibilité des sites web, des API, des ports TCP, des enregistrements DNS et bien plus, avec un tableau de bord épuré, des pages de statut et plus de 90 canaux de notification. Ce module déploie Uptime Kuma sur **Cloud Run v2** en s'appuyant sur le socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
+Uptime Kuma est un outil de surveillance sophistiqué et auto-hébergé pour suivre la disponibilité des sites web, des API, des ports TCP, des enregistrements DNS, et plus encore, avec un tableau de bord clair, des pages d'état et plus de 90 canaux de notification. Ce module déploie Uptime Kuma sur **Cloud Run v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Uptime Kuma et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité du service, entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud qu'Uptime Kuma utilise et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à chaque application Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Uptime Kuma s'exécute sous forme de conteneur Node.js sur Cloud Run v2. C'est l'un des modules les plus simples du catalogue — il n'y a ni base de données externe, ni cache, ni secret applicatif. Le déploiement assemble un ensemble ciblé de services Google Cloud :
+Uptime Kuma s'exécute comme un conteneur Node.js sur Cloud Run v2. C'est l'un des modules les plus simples du catalogue — il n'y a pas de base de données externe, pas de cache et pas de secret d'application. Le déploiement relie un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 512 MiB par défaut, **CPU toujours allouée** |
-| État persistant | Filestore (NFS) | Base de données SQLite intégrée et fichiers téléversés sous `/app/data` (gen2 requis) |
-| Image de conteneur | Artifact Registry | Build Cloud Build personnalisé (`container_image_source = "custom"`) — une fine couche `FROM louislam/uptime-kuma` qui modifie le mode de journalisation SQLite pour la sécurité sur NFS (voir ci-dessous) |
-| Base de données | — | Aucune — Uptime Kuma v1 utilise SQLite intégré ; `database_type = "NONE"` |
+| Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 512 Mio par défaut, **CPU toujours alloué** |
+| État persistant | Filestore (NFS) | Base de données SQLite embarquée et téléchargements sous `/app/data` (gen2 requis) |
+| Image de conteneur | Artifact Registry | Cloud Build personnalisé (`container_image_source = "custom"`) — une fine couche `FROM louislam/uptime-kuma` qui corrige le mode journal SQLite pour la sécurité NFS (voir ci-dessous) |
+| Base de données | — | Aucune — Uptime Kuma v1 utilise SQLite embarqué ; `database_type = "NONE"` |
 | Cache | — | Aucun — Redis n'est pas requis (`enable_redis = false`) |
-| Secrets | Secret Manager | Aucun secret applicatif (`secret_ids = {}`) ; les identifiants administrateur sont stockés dans SQLite |
-| Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
+| Secrets | Secret Manager | Pas de secrets d'application (`secret_ids = {}`) ; les identifiants d'administrateur résident dans SQLite |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **`cpu_always_allocated = true` est la valeur par défaut, et c'est délibéré — la boucle de supervision EST le produit.** Uptime Kuma interroge ses moniteurs à partir d'un planificateur interne au processus, **sans aucune requête entrante**. Avec la facturation à la requête de Cloud Run, la CPU est bridée quasiment à zéro entre les requêtes, si bien que les vérifications se bloqueraient ou se déclencheraient en retard. La CPU facturée à l'instance (toujours allouée) maintient le planificateur à pleine vitesse tant qu'une instance est active. Ne la définissez pas sur `false`.
-- **`min_instance_count` vaut `0` par défaut** — le service peut descendre à zéro lorsque rien ne maintient une instance active, et **la supervision est suspendue tant qu'il est à zéro**. Pour une véritable supervision 24 h/24 et 7 j/7, définissez `min_instance_count = 1` (une seule instance toujours active).
-- **Pas de base de données externe.** `database_type = "NONE"`, `enable_cloudsql_volume = false`, et il n'y a pas de job `db-init`. Uptime Kuma crée automatiquement son schéma SQLite intégré au premier démarrage.
-- **La persistance NFS est obligatoire.** `enable_nfs = true` avec `nfs_mount_path = "/app/data"` monte un volume Filestore (NFS) contenant la base de données SQLite et les fichiers téléversés, afin que les moniteurs et l'historique survivent aux redémarrages et aux révisions. Nécessite l'environnement d'exécution gen2.
-- **SQLite à écrivain unique.** SQLite sur NFS repose sur le verrouillage de fichiers ; exécutez une **seule instance** en production (`max_instance_count = 1`). La valeur par défaut du module est `max_instance_count = 3` pour absorber les pics sur le tableau de bord — réduisez-la en production.
-- **Le build personnalisé modifie SQLite pour la sécurité sur NFS.** `container_image_source = "custom"` est la valeur par défaut — ne la remplacez pas par `"prebuilt"`. Uptime Kuma définit inconditionnellement `PRAGMA journal_mode = WAL` à chaque démarrage (codé en dur dans `server/database.js`, non configurable par variable d'environnement) ; WAL repose sur un verrouillage par plages d'octets en mémoire partagée entre le fichier de base de données et son fichier annexe `-wal`, que le volume `/app/data` adossé à NFS ne fournit pas de manière fiable, ce qui a provoqué des erreurs `SQLITE_CORRUPT` constatées. L'étape Cloud Build (`UptimeKuma_Common/scripts/Dockerfile`) modifie ce PRAGMA dans le code source pour passer en mode `DELETE`, qui n'a besoin que du verrouillage standard du fichier entier, que NFS gère correctement. `enable_image_mirroring = true` pousse en outre l'image construite dans Artifact Registry afin d'éviter les limites de débit de Docker Hub.
-- **Aucun secret applicatif** — il n'y a rien à injecter depuis Secret Manager. Le compte administrateur est créé de manière interactive lors du premier accès.
+- **`cpu_always_allocated = true` est la valeur par défaut et est délibérée — la boucle de surveillance EST le produit.** Uptime Kuma interroge ses moniteurs à partir d'un ordonnanceur intégré sans **requête entrante**. Avec la facturation basée sur les requêtes de Cloud Run, le CPU est limité à presque zéro entre les requêtes, de sorte que les vérifications stagnent ou se déclenchent en retard. Le CPU basé sur l'instance (toujours alloué) maintient l'ordonnanceur en marche à pleine vitesse tant qu'une instance est active. Ne définissez pas cette valeur sur `false`.
+- **`min_instance_count` est par défaut `1`, pas `0`** — à `0` Cloud Run supprime l'instance environ 15 minutes après la dernière requête, et **la surveillance s'arrête lorsqu'elle est mise à l'échelle à zéro**. `cpu_always_allocated` ne couvre pas cela : il régit le CPU tant qu'une instance est active, pas si elle existe. Gardez `1` pour une surveillance 24h/24 et 7j/7.
+- **Pas de base de données externe.** `database_type = "NONE"`, `enable_cloudsql_volume = false`, et il n'y a pas de job `db-init`. Uptime Kuma crée son schéma SQLite embarqué automatiquement au premier démarrage.
+- **La persistance NFS est obligatoire.** `enable_nfs = true` avec `nfs_mount_path = "/app/data"` monte un volume Filestore (NFS) contenant la base de données SQLite et les téléchargements, de sorte que les moniteurs et l'historique survivent aux redémarrages et aux révisions. Nécessite l'environnement d'exécution gen2.
+- **SQLite à écrivain unique.** SQLite sur NFS repose sur le verrouillage de fichiers ; exécutez une **instance unique** en production (`max_instance_count = 1`). La valeur par défaut du module est `max_instance_count = 3` pour une marge de manœuvre sur le tableau de bord — abaissez-la pour la production.
+- **La build personnalisée corrige SQLite pour la sécurité NFS.** `container_image_source = "custom"` est la valeur par défaut — ne la changez pas en `"prebuilt"`. Uptime Kuma définit inconditionnellement `PRAGMA journal_mode = WAL` à chaque démarrage (codé en dur dans `server/database.js`, non configurable via une variable d'environnement) ; WAL repose sur le verrouillage d'octets par plage de mémoire partagée entre le fichier DB et son fichier auxiliaire `-wal`, ce que le volume `/app/data` basé sur NFS ne fournit pas de manière fiable et a produit des erreurs `SQLITE_CORRUPT` observées. L'étape Cloud Build (`UptimeKuma_Common/scripts/Dockerfile`) corrige cette PRAGMA en mode `DELETE`, qui ne nécessite qu'un verrouillage de fichier entier standard que NFS gère correctement. `enable_image_mirroring = true` pousse en outre l'image construite via Artifact Registry pour éviter les limites de débit de Docker Hub.
+- **Pas de secrets d'application** — il n'y a rien à injecter depuis Secret Manager. Le compte administrateur est créé interactivement lors du premier accès.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définies. Les noms des services et des ressources figurent dans les [sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Uptime Kuma {#a-cloud-run--the-uptime-kuma-service}
 
-Uptime Kuma s'exécute comme un service Cloud Run v2 avec une CPU toujours allouée, afin que son planificateur de vérifications en arrière-plan continue d'interroger les cibles entre les requêtes. Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions pour des déploiements progressifs sûrs.
+Uptime Kuma s'exécute comme un service Cloud Run v2 avec le CPU toujours alloué afin que son ordonnanceur de vérification en arrière-plan continue d'interroger entre les requêtes. Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour consulter les révisions, le trafic, les journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -57,11 +57,11 @@ Uptime Kuma s'exécute comme un service Cloud Run v2 avec une CPU toujours allou
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
 
 ### B. Filestore (NFS) — le volume de données persistant {#b-filestore-nfs--the-persistent-data-volume}
 
-Tout l'état d'Uptime Kuma — la base de données SQLite intégrée, l'historique des moniteurs, les fichiers téléversés et les paramètres (y compris l'utilisateur administrateur) — se trouve sous `/app/data`, que le module monte depuis un partage **Filestore (NFS)**. Sans lui, tout est perdu au redémarrage. L'environnement d'exécution gen2 est requis pour les montages NFS.
+Tout l'état d'Uptime Kuma — la base de données SQLite embarquée, l'historique des moniteurs, les téléchargements et les paramètres (y compris l'utilisateur administrateur) — réside sous `/app/data`, que le module monte à partir d'un partage **Filestore (NFS)**. Sans cela, tout est perdu au redémarrage. L'environnement d'exécution gen2 est requis pour les montages NFS.
 
 - **Console :** Filestore → Instances.
 - **CLI :**
@@ -71,37 +71,37 @@ Tout l'état d'Uptime Kuma — la base de données SQLite intégrée, l'historiq
     --format="yaml(spec.template.spec.volumes)"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de montage NFS et CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour le modèle de montage NFS et CMEK.
 
 ### C. Artifact Registry — l'image mise en miroir {#c-artifact-registry--the-mirrored-image}
 
-Avec `container_image_source = "custom"` (la valeur par défaut), une étape Cloud Build construit une fine image personnalisée `FROM louislam/uptime-kuma`, en appliquant un correctif au code source qui fait passer le `journal_mode` SQLite codé en dur de `WAL` à `DELETE` — le verrouillage en mémoire partagée de WAL n'est pas sûr sur le volume `/app/data` adossé à NFS (voir la [Vue d'ensemble](#1-overview)). Avec `enable_image_mirroring = true` (la valeur par défaut), l'image construite est ensuite poussée dans l'Artifact Registry du projet, ce qui protège les déploiements des limites de débit et des pannes de Docker Hub.
+Avec `container_image_source = "custom"` (la valeur par défaut), une étape Cloud Build construit une image personnalisée légère `FROM louislam/uptime-kuma`, appliquant un correctif source qui modifie le `journal_mode` SQLite codé en dur de `WAL` à `DELETE` — le verrouillage de mémoire partagée de WAL n'est pas sûr sur le volume `/app/data` basé sur NFS (voir [Vue d'ensemble](#1-overview)). Avec `enable_image_mirroring = true` (la valeur par défaut), l'image construite est ensuite poussée vers l'Artifact Registry du projet, isolant les déploiements des limites de débit et des pannes de Docker Hub.
 
-- **Console :** Artifact Registry → Repositories.
+- **Console :** Artifact Registry → Dépôts.
 - **CLI :**
   ```bash
   gcloud artifacts repositories list --project "$PROJECT" --location "$REGION"
   gcloud artifacts docker images list <region>-docker.pkg.dev/$PROJECT/<repo>
   ```
 
-### D. Réseau et entrée {#d-networking--ingress}
+### D. Réseau et ingress {#d-networking--ingress}
 
-Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité. Notez qu'Uptime Kuma établit aussi des connexions **sortantes** — chaque vérification de moniteur est un appel sortant depuis le conteneur.
+Le service est accessible à son URL `run.app` par défaut. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être superposé ; les paramètres d'ingress et le contrôle d'egress VPC contrôlent la connectivité. Notez qu'Uptime Kuma établit également des connexions **sortantes** — chaque vérification de moniteur est un appel d'egress depuis le conteneur.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des règles d'alerte en option. Eh oui — vous pouvez diriger un test de disponibilité Google Cloud vers votre instance Uptime Kuma pour superviser le superviseur.
+Les journaux de conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des politiques d'alerte facultatifs. Oui — vous pouvez pointer un test de disponibilité Google Cloud vers votre instance Uptime Kuma pour surveiller le moniteur.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -111,12 +111,12 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 
 ## 3. Comportement de l'application Uptime Kuma {#3-uptime-kuma-application-behaviour}
 
-- **Aucun job d'initialisation.** Uptime Kuma crée automatiquement son schéma SQLite intégré au premier démarrage ; il n'existe aucun job `db-init` ni de migration, et `initialization_jobs` vaut `[]` par défaut.
-- **Configuration au premier lancement.** Lors du premier accès, Uptime Kuma présente une page de configuration qui vous demande de créer le compte administrateur — aucun identifiant par défaut n'est intégré à l'image. Le compte est stocké dans SQLite sur le volume NFS, il persiste donc d'une révision à l'autre.
-- **Le planificateur de vérifications s'exécute dans le processus.** L'interrogation des moniteurs, les nouvelles tentatives et l'envoi des notifications s'exécutent tous dans le processus Node.js, pilotés par des minuteurs — et non par des requêtes HTTP entrantes. C'est pourquoi `cpu_always_allocated = true` est la valeur par défaut, et pourquoi une supervision continue exige en outre qu'une instance soit en cours d'exécution (`min_instance_count = 1`).
-- **La mise à l'échelle à zéro suspend la supervision.** Avec la valeur par défaut `min_instance_count = 0`, Cloud Run arrête la dernière instance lorsqu'elle devient inactive. Tant que le service est à zéro, aucune vérification ne s'exécute et aucune alerte ne se déclenche ; l'interrogation reprend lorsque la requête suivante (par exemple l'ouverture du tableau de bord) démarre une instance à froid. C'est acceptable pour un usage occasionnel ou de lab, mais inadapté à une supervision de production.
-- **SQLite à écrivain unique.** SQLite est une base de données à écrivain unique. Plusieurs instances simultanées écrivant dans le même fichier SQLite via NFS risquent des conflits de verrouillage ou une corruption — conservez `max_instance_count = 1` en production.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` sur le port `3001`, qui renvoie HTTP 200 une fois l'application démarrée. La sonde de démarrage autorise un délai initial allant jusqu'à 30 s, plus 30 échecs à intervalles de 10 s.
+- **Pas de jobs d'initialisation.** Uptime Kuma crée son schéma SQLite embarqué automatiquement au premier démarrage ; il n'y a pas de job `db-init` ou de migration, et `initialization_jobs` est par défaut `[]`.
+- **Configuration initiale.** Lors du premier accès, Uptime Kuma présente une page de configuration vous demandant de créer le compte administrateur — il n'y a pas d'identifiants par défaut intégrés à l'image. Le compte est stocké dans SQLite sur le volume NFS, il persiste donc entre les révisions.
+- **L'ordonnanceur de vérification s'exécute en interne.** L'interrogation des moniteurs, les tentatives et l'envoi des notifications s'exécutent tous dans le processus Node.js, pilotés par des minuteurs — et non par des requêtes HTTP entrantes. C'est pourquoi `cpu_always_allocated = true` est la valeur par défaut et pourquoi la surveillance continue nécessite en outre qu'une instance soit en cours d'exécution (`min_instance_count = 1`).
+- **La mise à l'échelle à zéro interrompt la surveillance.** Si vous réduisez `min_instance_count` à `0`, Cloud Run arrête la dernière instance lorsqu'elle devient inactive. Lorsqu'elle est mise à l'échelle à zéro, aucune vérification n'est exécutée et aucune alerte n'est déclenchée ; l'interrogation reprend lorsque la prochaine requête (par exemple, l'ouverture du tableau de bord) démarre à froid une instance. C'est sûr pour une utilisation occasionnelle/en laboratoire, mais incorrect pour la surveillance en production.
+- **SQLite à écrivain unique.** SQLite est une base de données à écrivain unique. Plusieurs instances concurrentes écrivant le même fichier SQLite sur NFS risquent des conflits de verrouillage ou une corruption — gardez `max_instance_count = 1` en production.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` sur le port `3001`, qui renvoie HTTP 200 une fois l'application démarrée. La sonde de démarrage autorise jusqu'à 30 secondes de délai initial plus 30 échecs à des intervalles de 10 secondes.
 - **Vérification :**
   ```bash
   SERVICE=$(gcloud run services list --project "$PROJECT" --region "$REGION" \
@@ -130,14 +130,14 @@ Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Clou
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres propres à Uptime Kuma ou notables pour lui sont listés ; toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Uptime Kuma sont listés ; toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
-| `region` | `us-central1` | Région du service et des ressources régionales. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -146,7 +146,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail bénéficiant d'un accès au projet et des alertes de surveillance. |
+| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -154,8 +154,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `uptimekuma` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `application_version` | `1` | Tag de l'image Uptime Kuma — la branche stable v1 (SQLite intégré). |
+| `application_name` | `uptimekuma` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
+| `application_version` | `1` | Tag de l'image Uptime Kuma — la ligne stable v1 (SQLite embarqué). |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -163,13 +163,13 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `container_image_source` | `custom` | Construit via Cloud Build une fine image personnalisée qui fait passer le `journal_mode` codé en dur de SQLite de `WAL` à `DELETE` pour la sécurité sur NFS (voir la Vue d'ensemble). Conservez `custom`. |
+| `container_image_source` | `custom` | Construit une image personnalisée légère via Cloud Build qui corrige le `journal_mode` codé en dur de SQLite de `WAL` à `DELETE` pour la sécurité NFS (voir Vue d'ensemble). Gardez `custom`. |
 | `container_image` | `louislam/uptime-kuma` | Image officielle en amont, mise en miroir dans Artifact Registry. |
-| `enable_image_mirroring` | `true` | Copie l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
-| `cpu_limit` / `memory_limit` | `1000m` / `512Mi` | Largement suffisant pour des dizaines de moniteurs ; augmentez la mémoire pour un très grand nombre de moniteurs. |
-| `min_instance_count` | `0` | **Définissez `1` pour une supervision 24 h/24 et 7 j/7** — tant que le service est à zéro, aucune vérification ne s'exécute. |
-| `max_instance_count` | `1` | **Conservez `1`** — SQLite est à écrivain unique, une seconde instance corrompt donc la base de données (voir les pièges). |
-| `cpu_always_allocated` | `true` | **Conservez `true`.** Le planificateur de vérifications interne au processus a besoin de CPU entre les requêtes ; la facturation à la requête la bride à ~0 et les vérifications se bloquent. |
+| `enable_image_mirroring` | `true` | Copiez l'image dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
+| `cpu_limit` / `memory_limit` | `1000m` / `512Mi` | Amplement suffisant pour des dizaines de moniteurs ; augmentez la mémoire pour un très grand nombre de moniteurs. |
+| `min_instance_count` | `1` | **Gardez `1` pour une surveillance 24h/24 et 7j/7** — lorsqu'il est mis à l'échelle à zéro, aucune vérification n'est exécutée. |
+| `max_instance_count` | `1` | **Gardez à `1`** — SQLite est à écrivain unique, donc une deuxième instance corrompt la base de données (voir Pièges). |
+| `cpu_always_allocated` | `true` | **Gardez `true`.** L'ordonnanceur de vérification intégré a besoin de CPU entre les requêtes ; la facturation basée sur les requêtes le limite à ~0 et les vérifications stagnent. |
 | `container_port` | `3001` | Port natif d'Uptime Kuma. |
 | `execution_environment` | `gen2` | Requis pour le montage NFS. |
 | `enable_cloudsql_volume` | `false` | Inutilisé — pas de base de données externe. |
@@ -180,9 +180,9 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Les pages de statut publiques nécessitent une entrée publique ; utilisez IAP/`internal` pour des tableaux de bord privés. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Achemine le trafic vers les plages privées via le VPC (nécessaire pour superviser des cibles internes). Définissez `ALL_TRAFFIC` pour acheminer toutes les sondes des moniteurs via le VPC (par exemple pour une IP de sortie NAT stable, ou si les sondes publiques échouent). |
-| `enable_iap` | `false` | Place le tableau de bord derrière l'identité Google s'il ne doit pas être public. |
+| `ingress_settings` | `all` | Les pages d'état publiques nécessitent un ingress public ; utilisez IAP/`internal` pour les tableaux de bord privés. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Acheminer le trafic de la plage privée via le VPC (nécessaire pour surveiller les cibles internes). Définissez `ALL_TRAFFIC` pour acheminer toutes les sondes de moniteur via le VPC (par exemple pour une IP d'egress NAT stable ou si les sondes publiques échouent). |
+| `enable_iap` | `false` | Placez le tableau de bord derrière l'identité Google s'il ne doit pas être public. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -190,9 +190,9 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | **Obligatoire.** Provisionne le partage Filestore qui contient tout l'état d'Uptime Kuma. |
-| `nfs_mount_path` | `/app/data` | **Doit rester `/app/data`** — le répertoire de données accessible en écriture d'Uptime Kuma. |
-| `storage_buckets` / `gcs_volumes` | `[]` | Inutile — aucun stockage GCS n'est utilisé. |
+| `enable_nfs` | `true` | **Requis.** Provisionne le partage Filestore contenant tout l'état d'Uptime Kuma. |
+| `nfs_mount_path` | `/app/data` | **Doit rester `/app/data`** — le répertoire de données inscriptible d'Uptime Kuma. |
+| `storage_buckets` / `gcs_volumes` | `[]` | Non nécessaire — aucun stockage GCS n'est utilisé. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -200,8 +200,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `NONE` | **Fixé par conception** — Uptime Kuma v1 utilise SQLite intégré ; aucun Cloud SQL n'est provisionné. |
-| `application_database_name` / `application_database_user` | `uptimekuma` | Déclarées pour respecter la convention ; inutilisées. |
+| `database_type` | `NONE` | **Fixé par conception** — Uptime Kuma v1 utilise SQLite embarqué ; aucun Cloud SQL n'est provisionné. |
+| `application_database_name` / `application_database_user` | `uptimekuma` | Déclaré pour la mise en miroir de conventions ; inutilisé. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -209,7 +209,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Aucun n'est nécessaire — le schéma SQLite est créé au premier démarrage. |
+| `initialization_jobs` | `[]` | Aucun nécessaire — le schéma SQLite est créé au premier démarrage. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -218,9 +218,9 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/`, délai de 30 s, 30 échecs | Transmise via `UptimeKuma_Common`. |
-| `liveness_probe` | HTTP `/`, délai de 30 s, 3 échecs | Transmise via `UptimeKuma_Common`. |
-| `uptime_check_config` | `enabled = false` | Test de disponibilité Cloud Monitoring facultatif sur `/` — la supervision du superviseur. |
+| `startup_probe` | HTTP `/`, 30 s de délai, 30 échecs | Transmis via `UptimeKuma_Common`. |
+| `liveness_probe` | HTTP `/`, 30 s de délai, 3 échecs | Transmis via `UptimeKuma_Common`. |
+| `uptime_check_config` | `enabled = false` | Test de disponibilité Cloud Monitoring facultatif contre `/` — surveillance du moniteur. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -228,7 +228,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Uptime Kuma n'utilise pas Redis ; laissez-le désactivé. |
+| `enable_redis` | `false` | Uptime Kuma n'utilise pas Redis ; laissez désactivé. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -236,8 +236,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC. |
-| `enable_audit_logging` | `false` | Cloud Audit Logs détaillés. |
+| `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC. |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -245,26 +245,26 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
 | `service_location` | Région dans laquelle le service s'exécute. |
-| `stage_services` | URL des services propres à chaque étape (Cloud Deploy). |
+| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
-| `database_instance_name` / `database_name` / `database_user` / `database_password_secret` / `database_host` / `database_port` | Vides/non définies — aucun Cloud SQL n'est provisionné (`database_type = "NONE"`). |
+| `database_instance_name` / `database_name` / `database_user` / `database_password_secret` / `database_host` / `database_port` | Vide/non défini — aucun Cloud SQL n'est provisionné (`database_type = "NONE"`). |
 | `storage_buckets` | Buckets Cloud Storage créés (aucun par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
-| `initialization_jobs` | Noms des jobs de configuration (vide par défaut). |
+| `initialization_jobs` | Noms des jobs de configuration (vides par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `github_repository_url` / `cicd_configuration` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` / `artifact_registry_repository` | État du CI/CD, déclencheur de build et détails du registre. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `github_repository_url` / `cicd_configuration` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` / `artifact_registry_repository` | État CI/CD, déclencheur de build et détails du registre. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
@@ -273,30 +273,30 @@ Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localis
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `cpu_always_allocated` | `true` (par défaut) | Critique | La facturation à la requête bride la CPU à ~0 entre les requêtes — le planificateur de vérifications interne au processus se bloque, les vérifications se déclenchent en retard ou pas du tout, et des alertes sont manquées. La boucle de supervision EST le produit. |
+| `cpu_always_allocated` | `true` (par défaut) | Critique | La facturation basée sur les requêtes limite le CPU à ~0 entre les requêtes — l'ordonnanceur de vérification intégré stagne, les vérifications se déclenchent en retard ou pas du tout, et les alertes sont manquées. La boucle de surveillance EST le produit. |
 | `enable_nfs` | `true` (par défaut) | Critique | Sans le volume NFS, la base de données SQLite (moniteurs, historique, compte administrateur) réside sur un disque éphémère et est effacée à chaque redémarrage ou nouvelle révision. |
-| `nfs_mount_path` | `/app/data` (par défaut) | Critique | Tout autre chemin conduit Uptime Kuma à écrire sur un stockage éphémère — perte totale et silencieuse des données au redémarrage. |
-| `min_instance_count` | `1` pour une supervision de production | Critique | Avec la valeur par défaut `0`, le service descend à zéro lorsqu'il est inactif et **aucune vérification ne s'exécute pendant qu'il est arrêté** — les pannes des systèmes supervisés passent inaperçues. |
-| `max_instance_count` | `1` en production | Élevé | SQLite est à écrivain unique ; plusieurs instances écrivant via NFS risquent des conflits de verrouillage ou une corruption de la base de données. |
-| `container_port` | `3001` (par défaut) | Critique | Un port différent du port natif d'Uptime Kuma fait échouer toutes les sondes de santé, et la révision ne devient jamais prête. |
-| `database_type` | `NONE` (par défaut) | Élevé | Provisionner Cloud SQL est un gaspillage d'argent — Uptime Kuma v1 ne peut pas l'utiliser. |
+| `nfs_mount_path` | `/app/data` (par défaut) | Critique | Tout autre chemin laisse Uptime Kuma écrire sur un stockage éphémère — perte totale et silencieuse de données au redémarrage. |
+| `min_instance_count` | `1` (par défaut) | Critique | À `0`, le service se met à l'échelle à zéro lorsqu'il est inactif et **aucune vérification n'est exécutée lorsqu'il est arrêté** — les pannes des systèmes surveillés passent inaperçues. |
+| `max_instance_count` | `1` pour la production | Élevé | SQLite est à écrivain unique ; plusieurs instances écrivant sur NFS risquent des conflits de verrouillage ou une corruption de la base de données. |
+| `container_port` | `3001` (par défaut) | Critique | Un port natif d'Uptime Kuma non concordant fait échouer toutes les sondes de santé et la révision ne devient jamais prête. |
+| `database_type` | `NONE` (par défaut) | Élevé | Le provisionnement de Cloud SQL gaspille de l'argent — Uptime Kuma v1 ne peut pas l'utiliser. |
 | `execution_environment` | `gen2` (par défaut) | Élevé | Les montages NFS nécessitent gen2 ; gen1 ne peut pas monter Filestore. |
-| `vpc_egress_setting` | selon la portée des cibles | Moyen | `PRIVATE_RANGES_ONLY` n'achemine via le VPC que les sondes vers des plages privées ; définissez `ALL_TRAFFIC` si les sondes des moniteurs vers des cibles externes ont besoin d'une sortie VPC/NAT. |
-| `enable_iap` / `ingress_settings` | IAP ou `internal` pour des tableaux de bord privés | Moyen | Sinon, le tableau de bord (et la page de configuration, au premier déploiement) est accessible publiquement à l'URL `run.app`. Effectuez la configuration administrateur initiale immédiatement après le déploiement. |
-| `enable_image_mirroring` | `true` (par défaut) | Faible | Les téléchargements directs depuis Docker Hub peuvent atteindre les limites de débit et faire échouer les déploiements. |
-| `container_image_source` | `custom` (par défaut) | Critique | Définir `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a provoqué des corruptions de base de données `SQLITE_CORRUPT` constatées. |
+| `vpc_egress_setting` | par portée cible | Moyen | `PRIVATE_RANGES_ONLY` achemine uniquement les sondes de plage privée via le VPC ; définissez `ALL_TRAFFIC` si les sondes de moniteur vers des cibles externes nécessitent un egress VPC/NAT. |
+| `enable_iap` / `ingress_settings` | IAP ou `internal` pour les tableaux de bord privés | Moyen | Le tableau de bord (et la page de configuration, lors du premier déploiement) est autrement accessible publiquement à l'URL `run.app`. Terminez la configuration administrateur initiale immédiatement après le déploiement. |
+| `enable_image_mirroring` | `true` (par défaut) | Faible | Les pulls directs depuis Docker Hub peuvent atteindre des limites de débit et interrompre les déploiements. |
+| `container_image_source` | `custom` (par défaut) | Critique | La définition de `"prebuilt"` ignore l'étape Cloud Build et déploie l'image en amont non corrigée — Uptime Kuma écrit alors SQLite en mode WAL sur NFS, ce qui a produit une corruption de base de données `SQLITE_CORRUPT` observée. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Uptime Kuma partagée avec la variante GKE est décrite dans **[UptimeKuma_Common](UptimeKuma_Common.md)**.
+Pour le comportement de base référencé tout au long — identité de service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Uptime Kuma partagée avec la variante GKE est décrite dans **[UptimeKuma_Common](UptimeKuma_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Uptime Kuma sur Cloud Run](../labs/UptimeKuma_CloudRun.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
-- [Uptime Kuma sur GKE Autopilot](UptimeKuma_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Uptime Kuma Common — Configuration applicative partagée](UptimeKuma_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés de [VictoriaMetrics sur GKE Autopilot](VictoriaMetrics_GKE.md), [Loki sur Google Cloud Run](Loki_CloudRun.md), [Grafana sur Google Cloud Run](Grafana_CloudRun.md), [GlitchTip sur Google Cloud Run](GlitchTip_CloudRun.md) dans la solution **Observability & On-call**.
+- [Lab pratique : Uptime Kuma sur Cloud Run](../labs/UptimeKuma_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Uptime Kuma sur GKE Autopilot](UptimeKuma_GKE.md) — la même application sur Kubernetes, pour lorsque vous avez besoin de l'autre cible de déploiement.
+- [Uptime Kuma Common — Configuration d'application partagée](UptimeKuma_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- Déployé aux côtés de [VictoriaMetrics sur GKE Autopilot](VictoriaMetrics_GKE.md), [Loki sur Google Cloud Run](Loki_CloudRun.md), [Grafana sur Google Cloud Run](Grafana_CloudRun.md), [GlitchTip sur Google Cloud Run](GlitchTip_CloudRun.md) dans la solution **Observabilité et astreinte**.

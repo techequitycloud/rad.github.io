@@ -1,97 +1,94 @@
 ---
 title: "Zitadel sur Google Cloud Run"
-description: "Référence de configuration pour déployer Zitadel sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Zitadel sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ 3055034 sha256:2c54dfaf6d33 -->
+<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ 15fd4c7 sha256:2a36250e7434 -->
 
 # Zitadel sur Google Cloud Run {#zitadel-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Zitadel_CloudRun.png" alt="Zitadel sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Zitadel est une plateforme open source et cloud native de gestion des identités et
-des accès (IAM) qui fournit OpenID Connect, OAuth 2.0, SAML ainsi que la gestion des
-utilisateurs et des organisations. Ce module déploie Zitadel sur **Cloud Run v2** en
-s'appuyant sur le socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+Zitadel est une plateforme open source de gestion des identités et des accès (IAM)
+native du cloud, offrant OpenID Connect, OAuth 2.0, SAML et la gestion des
+utilisateurs/organisations. Ce module déploie Zitadel sur **Cloud Run v2**
+sur la base de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
 l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Zitadel et sur la manière
-de les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité
-du service, entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au
-[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud que Zitadel utilise et sur la manière de
+les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande.
+Pour les mécanismes communs à toutes les applications Cloud Run — identité de service,
+entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor,
+IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
+déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md)
+plutôt que de les répéter ici.
 
 ---
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Zitadel s'exécute sous forme d'un unique conteneur Go sur Cloud Run v2. Le déploiement
+Zitadel s'exécute comme un conteneur Go unique sur Cloud Run v2. Le déploiement
 assemble un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go, 2 vCPU / 4 GiB par défaut ; HTTP/2 (gRPC + REST) sur le port 8080 |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Zitadel ne prend en charge que PostgreSQL ; MySQL est rejeté lors du plan |
-| Stockage d'objets | Cloud Storage | Un bucket provisionné automatiquement (à l'usage de l'opérateur ; l'état principal réside dans Postgres) |
-| Cache et file d'attente | Aucun | Zitadel stocke tout son état dans PostgreSQL — ni Redis, ni file d'attente |
-| Secrets | Secret Manager | `ZITADEL_MASTERKEY` et mot de passe administrateur initial générés automatiquement ; mot de passe de la base de données |
-| Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut (publique) ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Zitadel ne prend en charge que PostgreSQL ; MySQL est rejeté au moment de la planification |
+| Stockage d'objets | Cloud Storage | Un bucket provisionné automatiquement (utilisation par l'opérateur ; l'état principal réside dans Postgres) |
+| Cache et file d'attente | Aucun | Zitadel stocke tout l'état dans PostgreSQL — pas de Redis, pas de file d'attente |
+| Secrets | Secret Manager | `ZITADEL_MASTERKEY` auto-générée et mot de passe administrateur initial ; mot de passe de la base de données |
+| Entrée | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut (publique) ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
-- **PostgreSQL est obligatoire.** `database_type = POSTGRES_15` par défaut ; une
-  validation lors du plan rejette MySQL et tout moteur autre que Postgres. PostgreSQL
-  13/14 sont également acceptés.
-- **`ZITADEL_MASTERKEY` est généré automatiquement et immuable.** Il fait exactement
-  32 octets et chiffre toutes les données sensibles au repos. **Ne le renouvelez
-  jamais après le premier démarrage** — cela rendrait illisibles les données
-  précédemment chiffrées (secrets clients, matériel de clés).
-- **Zitadel exécute lui-même sa configuration initiale et ses migrations.** Le
-  conteneur démarre avec `zitadel start-from-init`, qui crée le schéma et applique les
-  migrations de manière idempotente au premier démarrage — il n'existe pas de job de
-  migration distinct.
-- **Un administrateur de la première instance est créé au premier démarrage.**
-  L'organisation `ZITADEL` et l'administrateur humain `zitadel-admin` sont initialisés
-  avec un mot de passe généré, issu de Secret Manager (`PASSWORDCHANGEREQUIRED = false`),
-  pour que vous puissiez vous connecter immédiatement.
-- **HTTP/2 avec TLS terminé en amont.** `ZITADEL_EXTERNALSECURE = true`,
-  `ZITADEL_EXTERNALPORT = 443`, `ZITADEL_TLS_ENABLED = false`. Zitadel sert du HTTP/2
-  en clair sur 8080 et compte sur Cloud Run pour terminer TLS sur `:443`. Définissez
-  `container_protocol = "h2c"` si vous avez besoin de HTTP/2 de bout en bout pour les
-  clients de l'API gRPC.
+- **PostgreSQL est obligatoire.** `database_type = POSTGRES_15` par défaut ; une validation au
+  moment de la planification rejette MySQL et tout moteur non-Postgres. PostgreSQL 13/14
+  sont également acceptés.
+- **`ZITADEL_MASTERKEY` est générée automatiquement et immuable.** Elle fait
+  exactement 32 octets et chiffre toutes les données sensibles au repos. **Ne la faites
+  jamais pivoter après le premier démarrage** — cela rendrait illisibles les données
+  précédemment chiffrées (secrets client, matériel de clé).
+- **Zitadel exécute sa propre configuration + migrations.** Le conteneur démarre avec
+  `zitadel start-from-init`, qui crée le schéma et applique les migrations de manière
+  idempotente au premier démarrage — il n'y a pas de job de migration séparé.
+- **Un administrateur de première instance est créé au premier démarrage.**
+  L'organisation `ZITADEL` et l'administrateur humain `zitadel-admin` sont
+  initialisés avec un mot de passe généré par Secret Manager (`PASSWORDCHANGEREQUIRED = false`),
+  afin que vous puissiez vous connecter immédiatement.
+- **HTTP/2 avec TLS terminé en amont.** `ZITADEL_EXTERNALSECURE = true`, `ZITADEL_EXTERNALPORT = 443`,
+  `ZITADEL_TLS_ENABLED = false`. Zitadel sert HTTP/2 en clair sur 8080 et fait confiance à Cloud Run
+  pour terminer TLS sur `:443`. Définissez `container_protocol = "h2c"` si vous avez
+  besoin d'HTTP/2 de bout en bout pour les clients API gRPC.
 - **`ZITADEL_EXTERNALDOMAIN` est dérivé de l'URL du service.** Le point d'entrée le
-  définit à partir de l'hôte `run.app` à l'exécution. Derrière un domaine personnalisé,
-  vous devez le remplacer (voir le tableau des pièges), sinon l'émetteur OIDC et les
-  redirections de la console pointeront vers le mauvais hôte.
+  définit à partir de l'hôte `run.app` d'exécution. Derrière un domaine
+  personnalisé, vous devez le remplacer (voir le tableau des pièges) ou l'émetteur OIDC
+  et les redirections de la console pointeront vers le mauvais hôte.
 - **Entrée publique par défaut.** `ingress_settings = "all"` afin que la console et les
-  points de terminaison OIDC soient joignables. Activer IAP place une connexion Google
-  devant tout, y compris les clients OIDC / machine.
-- **Le service est maintenu actif.** `cpu_always_allocated = true` et
-  `min_instance_count = 1` (pas de mise à l'échelle à zéro), si bien que les points de
-  terminaison de jetons ne subissent aucune latence de démarrage à froid ;
-  `max_instance_count = 5`.
-- **NFS est activé par défaut mais inutilisé par l'application.** Zitadel conserve tout
-  son état dans PostgreSQL ; vous pouvez définir `enable_nfs = false`, sauf si une autre
-  raison l'exige.
+  points de terminaison OIDC soient accessibles. L'activation d'IAP place la connexion
+  Google devant tout, y compris les clients OIDC/machine.
+- **Le service est maintenu chaud.** `cpu_always_allocated = true` et `min_instance_count = 1` (pas de
+  mise à l'échelle à zéro), de sorte que les points de terminaison de jeton n'ont pas de
+  latence de démarrage à froid ; `max_instance_count = 5`.
+- **NFS est désactivé par défaut.** Zitadel conserve tout l'état dans PostgreSQL et
+  n'écrit jamais sur un montage NFS, donc `enable_nfs = false`.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis.
+Les noms de service et de ressource sont indiqués dans les [Sorties](#5-outputs) du
+déploiement.
 
 ### A. Cloud Run — le service Zitadel {#a-cloud-run--the-zitadel-service}
 
-Zitadel s'exécute sous forme de service Cloud Run v2 qui se met à l'échelle
-automatiquement selon la charge de requêtes, entre le nombre minimal et le nombre
-maximal d'instances. Chaque déploiement crée une révision immuable ; le trafic peut
-être réparti entre les révisions pour des déploiements progressifs sûrs.
+Zitadel s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement en
+fonction de la charge des requêtes entre le nombre minimum et maximum d'instances. Chaque
+déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions
+pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour consulter les révisions, le
-  trafic, les journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les
+  journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION" \
@@ -103,21 +100,21 @@ maximal d'instances. Chaque déploiement crée une révision immuable ; le trafi
     | grep cloud-entrypoint
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Zitadel stocke toutes les données de l'application (organisations, utilisateurs,
-projets, applications, sessions, clés) dans une instance gérée Cloud SQL for
-PostgreSQL 15. Le service s'y connecte en privé via le **Cloud SQL Auth Proxy** sur un
-socket Unix ; aucune adresse IP publique n'est exposée. Lors du premier déploiement,
-un job d'initialisation crée la base de données de l'application et un rôle doté de
+Zitadel stocke toutes les données d'application (organisations, utilisateurs, projets,
+applications, sessions, clés) dans une instance gérée Cloud SQL pour PostgreSQL 15. Le
+service se connecte en privé via le **proxy d'authentification Cloud SQL** sur un socket
+Unix ; aucune IP publique n'est exposée. Lors du premier déploiement, un job
+d'initialisation crée la base de données de l'application et un rôle avec
 `CREATEDB`/`CREATEROLE` ; Zitadel crée ensuite son propre schéma via
 `start-from-init`.
 
-- **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
-  sauvegardes, les flags et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
+  indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT" --filter="name~zitadel"
@@ -125,15 +122,15 @@ un job d'initialisation crée la base de données de l'application et un rôle d
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md) pour
-le modèle de connexion, les sauvegardes et la rotation du mot de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se
+trouvent dans les [Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le
+modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
 
-Un bucket **Cloud Storage** est provisionné automatiquement (avec la prévention de
-l'accès public appliquée). Zitadel conserve son état principal dans PostgreSQL ; le
-bucket est donc disponible pour l'usage de l'opérateur (exports, ressources). Des
+Un bucket **Cloud Storage** est provisionné automatiquement (prévention de l'accès
+public appliquée). Zitadel conserve son état principal dans PostgreSQL, de sorte que le
+bucket est disponible pour l'utilisation par l'opérateur (exportations, actifs). Des
 buckets supplémentaires peuvent être déclarés via `storage_buckets`.
 
 - **Console :** Cloud Storage → Buckets.
@@ -143,16 +140,16 @@ buckets supplémentaires peuvent être déclarés via `storage_buckets`.
   gcloud storage ls gs://<bucket>/        # bucket name is in the Outputs
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
 ### D. Secret Manager {#d-secret-manager}
 
 Deux secrets sont générés automatiquement et stockés dans Secret Manager :
 `ZITADEL_MASTERKEY` (chiffre toutes les données au repos) et le mot de passe
-administrateur initial (initialise l'utilisateur humain de la première instance au
-démarrage). Le mot de passe de la base de données est géré séparément par le socle.
+administrateur initial (initialise l'utilisateur humain de première instance au
+démarrage). Le mot de passe de la base de données est géré séparément par la fondation.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~zitadel"
@@ -161,37 +158,36 @@ démarrage). Le mot de passe de la base de données est géré séparément par 
     --secret="secret-<resource_prefix>-zitadel-admin-password" --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation,
-et [Zitadel_Common](Zitadel_Common.md) pour le caractère critique de la masterkey.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation, et
+[Zitadel_Common](Zitadel_Common.md) pour la criticité de la clé maîtresse.
 
 ### E. Réseau et entrée {#e-networking--ingress}
 
-Le service est accessible par défaut via son URL `run.app`, ce qui permet l'accès
-public dont la console et les points de terminaison OIDC ont besoin. Un équilibreur de
-charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
-ajouté par-dessus ; les paramètres d'entrée et la sortie VPC contrôlent la
-connectivité. Comme Zitadel sert gRPC + REST sur HTTP/2, définissez
-`container_protocol = "h2c"` pour obtenir HTTP/2 de bout en bout lorsque c'est
-nécessaire.
+Le service est accessible par son URL `run.app` par défaut, ce qui permet
+l'accès public dont la console et les points de terminaison OIDC ont besoin. Un
+équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud
+Armor peuvent être superposés ; les paramètres d'entrée et le contrôle d'égression VPC
+contrôlent la connectivité. Étant donné que Zitadel sert gRPC + REST sur HTTP/2,
+définissez `container_protocol = "h2c"` pour HTTP/2 de bout en bout si nécessaire.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de Cloud
-Run et de Cloud SQL sont envoyées vers Cloud Monitoring, avec des tests de
-disponibilité et des règles d'alerte en option. Les lignes de journal
-`[cloud-entrypoint]` indiquent le mode SSL de la base de données et le domaine externe
-résolus.
+Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run et
+Cloud SQL sont envoyées à Cloud Monitoring, avec des vérifications de disponibilité et
+des politiques d'alerte facultatives. Les lignes de journal `[cloud-entrypoint]`
+affichent le mode SSL de la base de données résolu et le domaine externe.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
+  Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -202,40 +198,40 @@ résolus.
 ## 3. Comportement de l'application Zitadel {#3-zitadel-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via le
-  Cloud SQL Auth Proxy et crée de manière idempotente la base de données de
-  l'application et un rôle doté de `LOGIN CREATEDB CREATEROLE`, puis accorde les
-  privilèges sur la base de données et sur le schéma `public`. Le job peut être relancé
-  sans risque. Il ne crée **pas** le schéma de Zitadel — Zitadel s'en charge lui-même.
-- **Configuration initiale + migrations au démarrage.** Le conteneur exécute
+  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il se
+  connecte via le proxy d'authentification Cloud SQL et crée de manière idempotente la
+  base de données de l'application et un rôle avec `LOGIN CREATEDB CREATEROLE`, puis accorde
+  les privilèges sur la base de données et le schéma `public`. Le job peut être
+  réexécuté en toute sécurité. Il ne crée **pas** le schéma de Zitadel — Zitadel le fait
+  lui-même.
+- **Configuration + migrations au démarrage.** Le conteneur exécute
   `zitadel start-from-init`, qui crée le schéma et applique les migrations de manière
   idempotente à chaque démarrage. La mise à niveau de la version de l'application
-  applique les modifications de schéma sans étape de migration distincte.
-- **`ZITADEL_MASTERKEY` est immuable après le premier démarrage.** Il est généré une
-  seule fois (exactement 32 octets) et écrit dans Secret Manager. Le modifier rend
-  illisibles toutes les données précédemment chiffrées. N'y touchez que dans le cadre
-  d'une migration planifiée et maîtrisée.
-- **Administrateur du premier lancement.** Connectez-vous avec le nom d'utilisateur
-  `zitadel-admin` (par défaut) et le mot de passe issu de Secret Manager :
+  applique les modifications de schéma sans étape de migration séparée.
+- **`ZITADEL_MASTERKEY` est immuable après le premier démarrage.** Elle est générée
+  une seule fois (exactement 32 octets) et écrite dans Secret Manager. La modifier rend
+  toutes les données précédemment chiffrées illisibles. Ne la touchez que lors d'une
+  migration planifiée et comprise.
+- **Administrateur de première exécution.** Connectez-vous avec le nom d'utilisateur
+  `zitadel-admin` (par défaut) et le mot de passe de Secret Manager :
   ```bash
   gcloud secrets versions access latest \
     --secret="secret-<resource_prefix>-zitadel-admin-password" --project "$PROJECT"
   ```
   Créez ensuite un véritable administrateur, désactivez ou restreignez le compte
-  initialisé, puis configurez vos organisations, projets et applications OIDC/SAML dans
-  la console.
-- **Le domaine externe doit correspondre à l'hôte du navigateur.** L'émetteur OIDC et
-  les URI de redirection de la console sont construits à partir de
-  `ZITADEL_EXTERNALDOMAIN`. Le point d'entrée le dérive de l'URL `run.app` ; derrière un
-  domaine personnalisé, définissez `ZITADEL_EXTERNALDOMAIN` (via
-  `environment_variables`) sur cet hôte, sinon les connexions et l'échange de jetons
-  échoueront.
-- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité (readiness) ciblent
-  `/debug/healthz` — un point de terminaison `200` non authentifié. Prévoyez environ 7
-  à 8 minutes au premier démarrage (délai initial de 60 secondes plus une fenêtre de
-  nouvelles tentatives d'environ 450 secondes) pour la configuration initiale et les
+  initialisé, et configurez vos organisations, projets et applications OIDC/SAML dans la
+  console.
+- **Le domaine externe doit correspondre à l'hôte du navigateur.** L'émetteur OIDC et les
+  URI de redirection de la console sont construits à partir de `ZITADEL_EXTERNALDOMAIN`. Le
+  point d'entrée le dérive de l'URL `run.app` ; derrière un domaine
+  personnalisé, définissez `ZITADEL_EXTERNALDOMAIN` (via `environment_variables`) sur cet hôte
+  ou les connexions/échanges de jetons échoueront.
+- **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent
+  `/debug/healthz` — un point de terminaison `200` non authentifié.
+  Prévoyez environ 7 à 8 minutes au premier démarrage (délai initial de 60 secondes plus
+  une fenêtre de nouvelle tentative d'environ 450 secondes) pour la configuration + les
   migrations.
-- **Inspecter la configuration en cours d'exécution / les jobs :**
+- **Inspecter la configuration / les jobs en cours d'exécution :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -248,110 +244,109 @@ résolus.
 ## 4. Variables de configuration {#4-configuration-variables}
 
 Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de
-déploiement. Seuls les paramètres propres à Zitadel ou notables pour lui sont listés ;
-toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur
+déploiement. Seuls les paramètres spécifiques ou notables pour Zitadel sont listés ;
+toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md) avec son
 comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
-| `region` | `us-central1` | Région du service et des ressources régionales. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `zitadel` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `display_name` | `Zitadel` | Nom lisible affiché dans la console. |
-| `application_version` | `latest` | Tag de l'image Zitadel ; associé à un tag épinglé (`v2.71.0`) lorsqu'il vaut `latest`. Épinglez-le explicitement en production. |
+| `application_name` | `zitadel` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
+| `display_name` | `Zitadel` | Nom lisible par l'homme affiché dans la console. |
+| `application_version` | `latest` | Tag d'image Zitadel ; mappé à un tag épinglé (`v2.71.0`) lorsque `latest`. Épinglez explicitement en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `custom` | Zitadel est un build personnalisé léger FROM l'image ghcr — laissez `custom`. |
+| `container_image_source` | `custom` | Zitadel est une construction personnalisée fine À PARTIR de l'image ghcr — laissez comme `custom`. |
 | `cpu_limit` | `2000m` | CPU par instance ; 2 vCPU recommandés. |
 | `memory_limit` | `4Gi` | Mémoire par instance. |
-| `container_port` | `8080` | Zitadel sert gRPC + REST sur HTTP/2 sur le port 8080. |
-| `container_protocol` | `http1` | Définissez `h2c` pour obtenir HTTP/2 de bout en bout vers les clients de l'API gRPC. |
-| `min_instance_count` | `1` | Maintenu actif (pas de mise à l'échelle à zéro) afin que les points de terminaison de jetons ne subissent pas de démarrage à froid. |
-| `max_instance_count` | `5` | Nombre maximal d'instances ; peut être augmenté sans risque — tout l'état réside dans PostgreSQL. |
-| `cpu_always_allocated` | `true` | Facturation basée sur les instances ; garde Zitadel réactif pour le trafic d'authentification. |
-| `enable_cloudsql_volume` | `true` | Connexion par socket via le Cloud SQL Auth Proxy. |
-| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
-| `timeout_seconds` | `300` | Durée maximale d'une requête. |
+| `container_port` | `8080` | Zitadel sert gRPC + REST sur HTTP/2 sur 8080. |
+| `container_protocol` | `http1` | Définissez `h2c` pour HTTP/2 de bout en bout vers les clients API gRPC. |
+| `min_instance_count` | `1` | Maintenu chaud (pas de mise à l'échelle à zéro) afin que les points de terminaison de jeton n'aient pas de démarrage à froid. |
+| `max_instance_count` | `5` | Nombre maximal d'instances ; sûr à augmenter — tout l'état est dans PostgreSQL. |
+| `cpu_always_allocated` | `true` | Facturation basée sur l'instance ; maintient Zitadel réactif pour le trafic d'authentification. |
+| `enable_cloudsql_volume` | `true` | Connexion socket du proxy d'authentification Cloud SQL. |
+| `enable_image_mirroring` | `true` | Mettre en miroir l'image construite dans Artifact Registry. |
+| `timeout_seconds` | `300` | Durée maximale de la requête. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Entrée publique pour la console et les points de terminaison OIDC/OAuth. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'achemine via le VPC que le trafic RFC 1918. |
-| `enable_iap` | `false` | Exige une connexion Google. **Bloque les clients OIDC / machine** — à n'activer que pour des consoles privées. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Acheminer uniquement le trafic RFC 1918 via VPC. |
+| `enable_iap` | `false` | Exiger la connexion Google. **Bloque les clients OIDC/machine** — activer uniquement pour les consoles privées. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres `ZITADEL_*` supplémentaires (par exemple `ZITADEL_EXTERNALDOMAIN`, remplacements de l'organisation / de l'administrateur). Les valeurs principales de base de données / TLS / masterkey sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. |
-| `secret_propagation_delay` | `30` | Nombre de secondes d'attente après la création d'un secret avant de poursuivre. |
-| `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. **N'activez pas la rotation de la masterkey.** |
+| `environment_variables` | `{}` | Paramètres `ZITADEL_*` supplémentaires (par exemple, `ZITADEL_EXTERNALDOMAIN`, remplacements d'organisation/administrateur). Les valeurs principales de la base de données/TLS/clé maîtresse sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage variable d'environnement → nom du secret Secret Manager. |
+| `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
+| `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. **Ne pas activer la rotation de la clé maîtresse.** |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique de Cloud SQL (UTC). |
-| `backup_retention_days` | `7` | Durée de conservation ; augmentez-la pour la production ou la conformité. |
-| `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaure à partir d'une sauvegarde lors du déploiement. |
+| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde Cloud SQL automatisé (UTC). |
+| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
+| `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
 
-Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
-[App_CloudRun](App_CloudRun.md). Entrées principales : `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`,
-`enable_binary_authorization`.
+Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
+[App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`,
+`github_token`, `enable_cloud_deploy`, `enable_binary_authorization`.
 
-### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner Global HTTPS LB + Cloud Armor WAF. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
-| `application_domains` | `[]` | Domaines personnalisés — pensez à définir `ZITADEL_EXTERNALDOMAIN` en conséquence. |
-| `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
-| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(définies)_ | Règle de nettoyage d'Artifact Registry. |
+| `application_domains` | `[]` | Domaines personnalisés — n'oubliez pas de définir `ZITADEL_EXTERNALDOMAIN` pour correspondre. |
+| `enable_cdn` | `false` | Activer Cloud CDN sur le backend HTTPS LB. |
+| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Crée le ou les buckets GCS déclarés. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Le bucket provisionné automatiquement ; complétez la liste pour des buckets supplémentaires. |
-| `enable_nfs` | `true` | Activé par défaut mais **inutilisé** — Zitadel conserve tout son état dans PostgreSQL ; vous pouvez le définir sur `false` sans risque. |
-| `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (requiert gen2). |
+| `create_cloud_storage` | `true` | Créer le(s) bucket(s) GCS déclaré(s). |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Le bucket auto-provisionné ; étendre la liste pour des buckets supplémentaires. |
+| `enable_nfs` | `false` | Désactivé par défaut : Zitadel est entièrement basé sur PostgreSQL et n'écrit jamais sur le montage. |
+| `gcs_volumes` | `[]` | Montages de volume GCS Fuse (nécessite gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | PostgreSQL uniquement (13/14/15). MySQL est rejeté lors du plan. |
+| `database_type` | `POSTGRES_15` | PostgreSQL uniquement (13/14/15). MySQL est rejeté au moment de la planification. |
 | `db_name` | `zitadel` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
-| `db_user` | `zitadel` | Utilisateur de la base de données de l'application (doté de `CREATEDB`/`CREATEROLE`). Immuable après le premier déploiement. |
+| `db_user` | `zitadel` | Utilisateur de la base de données de l'application (autorisé `CREATEDB`/`CREATEROLE`). Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré. |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
@@ -359,31 +354,31 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
-| `cron_jobs` | `[]` | Non utilisé — Zitadel n'a aucune tâche récurrente planifiée par la plateforme. |
+| `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
+| `cron_jobs` | `[]` | Non utilisé — Zitadel n'a pas de tâches récurrentes planifiées par la plateforme. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/debug/healthz`, délai de 60 s | Sonde de démarrage. Prévoyez environ 7 à 8 minutes au premier démarrage. |
-| `liveness_probe` | HTTP `/debug/healthz`, délai de 60 s | Sonde de vivacité. |
-| `uptime_check_config` | _(défini)_ | Test de disponibilité Cloud Monitoring (points de terminaison publics uniquement). |
-| `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
+| `startup_probe` | HTTP `/debug/healthz`, délai de 60s | Sonde de démarrage. Prévoir environ 7 à 8 minutes au premier démarrage. |
+| `liveness_probe` | HTTP `/debug/healthz`, délai de 60s | Sonde de vivacité. |
+| `uptime_check_config` | _(défini)_ | Vérification de disponibilité Cloud Monitoring (points de terminaison publics uniquement). |
+| `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 21 — Redis {#group-21--redis}
 
-Zitadel n'utilise pas Redis (tout l'état réside dans PostgreSQL). `enable_redis` vaut
-`false` par défaut et doit rester désactivé ; les entrées `redis_*` sont sans effet
-pour ce module.
+Zitadel n'utilise pas Redis (tout l'état est dans PostgreSQL). `enable_redis` est
+par défaut `false` et doit être désactivé ; les entrées `redis_*`
+sont inertes pour ce module.
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (requiert `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définies)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
-| `enable_audit_logging` | `false` | Journaux Cloud Audit Logs détaillés. |
+| `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation (dry-run). |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -391,7 +386,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées lorsqu'un déploiement réussit — le moyen le plus rapide de localiser et
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
@@ -399,8 +394,8 @@ d'explorer les ressources en cours d'exécution.
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service (la console Zitadel). |
 | `service_location` | Région dans laquelle le service s'exécute. |
-| `stage_services` | URL des services propres à chaque étape (Cloud Deploy). |
-| `load_balancer_ip` / `load_balancer_url` | Adresse IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
+| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
+| `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
@@ -408,55 +403,62 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
-> **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé)
+> — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée lors du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* lors du plan — un `database_type` autre que Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa
+> configuration via le moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide
+> les valeurs *et les combinaisons* au moment de la planification — un
+> `database_type` non-Postgres, `enable_cloudsql_volume` avec `database_type = NONE`,
+> `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un
+> `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait
+> échouer le **plan** avec une erreur claire et nommée avant la création de toute
+> ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont
+> plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `ZITADEL_MASTERKEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler rend définitivement illisibles toutes les données précédemment chiffrées (secrets clients, matériel de clés). |
-| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL ou tout autre moteur est rejeté lors du plan, et un mauvais moteur empêche le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données / le rôle et détruit toutes les données d'identité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans source de sauvegarde valide fait échouer le job d'import. |
-| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur / à l'hôte | Critique | S'il ne correspond pas à l'hôte qu'atteignent les utilisateurs, l'émetteur OIDC et les redirections de la console sont erronés et chaque connexion ou échange de jetons échoue. Définissez-le explicitement derrière un domaine personnalisé. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le socket de l'Auth Proxy est requis pour la connectivité PostgreSQL ; le désactiver alors qu'une base de données est configurée est bloqué par une vérification lors du plan. |
+| `ZITADEL_MASTERKEY` (auto-générée) | Ne jamais faire pivoter après le premier démarrage | Critique | La faire pivoter rend toutes les données précédemment chiffrées (secrets client, matériel de clé) définitivement illisibles. |
+| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL/autre est rejeté au moment de la planification, et un mauvais moteur bloque le démarrage. |
+| `db_name` / `db_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/le rôle et détruit toutes les données d'identité. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans source de sauvegarde valide fait échouer le job d'importation. |
+| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur/hôte | Critique | S'il ne correspond pas à l'hôte que les utilisateurs atteignent, l'émetteur OIDC et les redirections de la console sont incorrects et chaque connexion/échange de jetons échoue. Définissez-le explicitement derrière un domaine personnalisé. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket du proxy d'authentification est requis pour la connectivité PostgreSQL ; sa désactivation avec une base de données configurée est bloquée par une protection au moment de la planification. |
 | `ingress_settings` | `all` | Élevé | `internal` bloque la console et tous les clients OIDC/OAuth externes. |
-| `enable_iap` | uniquement pour des consoles privées | Élevé | IAP exige une connexion Google pour toutes les requêtes, ce qui bloque les clients OIDC / machine et les points de terminaison de jetons. |
-| `application_version` | Épingler une version | Élevé | `latest` correspond aujourd'hui à un tag épinglé, mais un épinglage explicite évite des migrations inattendues lors d'un redéploiement. |
-| `memory_limit` | `4Gi` | Moyen | Une valeur trop basse expose à des OOM sous charge ; gen2 impose également un plancher de 512 MiB. |
-| `min_instance_count` | `1` | Moyen | `0` (mise à l'échelle à zéro) ajoute une latence de démarrage à froid aux requêtes de jetons / de connexion après une période d'inactivité. |
-| `enable_nfs` | `false` (inutilisé) | Faible | Activé par défaut, mais Zitadel ne stocke aucun état sur disque ; le laisser activé gaspille un montage NFS. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation des données d'identité liées à la conformité. |
-| `enable_cloud_armor` | à activer en production | Moyen | La console et les points de terminaison OIDC sont accessibles publiquement sans protection WAF. |
+| `enable_iap` | uniquement pour les consoles privées | Élevé | IAP nécessite la connexion Google pour toutes les requêtes, bloquant les clients OIDC/machine et les points de terminaison de jetons. |
+| `application_version` | Épingler une version | Élevé | `latest` correspond à un tag épinglé aujourd'hui, mais l'épinglage explicite évite les migrations surprises lors du redéploiement. |
+| `memory_limit` | `4Gi` | Moyen | Un réglage trop bas risque un OOM sous charge ; gen2 impose également un plancher de 512 MiB. |
+| `min_instance_count` | `1` | Moyen | `0` (mise à l'échelle à zéro) ajoute une latence de démarrage à froid aux requêtes de jeton/connexion après l'inactivité. |
+| `enable_nfs` | `false` (par défaut) | Faible | Zitadel ne stocke aucun état sur disque ; l'activer n'ajoute qu'un montage NFS inutilisé. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité des données d'identité. |
+| `enable_cloud_armor` | activer pour la production | Moyen | La console et les points de terminaison OIDC sont accessibles publiquement sans protection WAF. |
 
 ---
 
-Pour le comportement du socle mentionné tout au long de ce guide — identité du
-service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images —
-consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à
-Zitadel, partagée avec la variante GKE, est décrite dans
+Pour le comportement de la fondation référencé tout au long — identité de service, mise à
+l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor, IAP,
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Zitadel
+partagée avec la variante GKE est décrite dans
 **[Zitadel_Common](Zitadel_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Zitadel sur Cloud Run](../labs/Zitadel_CloudRun.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
-- [Zitadel sur GKE Autopilot](Zitadel_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Zitadel Common — configuration applicative partagée](Zitadel_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Labo pratique : Zitadel sur Cloud Run](../labs/Zitadel_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Zitadel sur GKE Autopilot](Zitadel_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
+- [Zitadel Common — Configuration d'application partagée](Zitadel_Common.md) — la configuration partagée par les deux cibles de déploiement.

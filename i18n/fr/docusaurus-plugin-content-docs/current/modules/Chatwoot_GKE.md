@@ -1,82 +1,83 @@
 ---
 title: "Chatwoot sur GKE Autopilot"
-description: "Référence de configuration pour déployer Chatwoot sur GKE Autopilot avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Chatwoot sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chatwoot_GKE.md @ 3055034 sha256:d3ba988b0b15 -->
+<!-- translated-from: docs/modules/Chatwoot_GKE.md @ 15fd4c7 sha256:96fe4a9aa1d1 -->
 
 # Chatwoot sur GKE Autopilot {#chatwoot-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Chatwoot_GKE.png" alt="Chatwoot sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Chatwoot est une plateforme open source de helpdesk multicanal et d'engagement client
-(boîtes de réception e-mail, chat en direct, réseaux sociaux et messageries, suivi des
-SLA et rapports) qui constitue une alternative conforme au RGPD à Zendesk ou Intercom.
-Ce module déploie Chatwoot sur **GKE Autopilot** au-dessus du socle
-[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
-Kubernetes partagée.
+Chatwoot est une plateforme open source multicanal de service client et d'engagement
+(e-mail, chat en direct, boîtes de réception sociales et de messagerie, suivi des SLA et
+reporting) qui constitue une alternative conforme au RGPD à Zendesk ou Intercom. Ce
+module déploie Chatwoot sur **GKE Autopilot** en s'appuyant sur la fondation
+[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google
+Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud qu'utilise Chatwoot et sur la manière de
-les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toute application GKE — Workload Identity,
-ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
-Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide du socle App_GKE](App_GKE.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Chatwoot et sur la manière
+de les explorer et de les exploiter depuis la console Google Cloud et la ligne de
+commande. Pour les mécanismes communs à toutes les applications GKE — Workload
+Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization,
+VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
+[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Chatwoot s'exécute sous la forme d'une unique charge de travail Ruby on Rails qui
-réunit le serveur web et un worker Sidekiq d'arrière-plan dans un même pod. Le
-déploiement assemble un ensemble ciblé de services Google Cloud :
+Chatwoot s'exécute comme une seule charge de travail Ruby on Rails qui combine le
+serveur web et un worker Sidekiq en arrière-plan dans un seul pod. Le déploiement
+relie un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Rails + worker Sidekiq co-localisé sur le port 3000, 2 vCPU / 4 GiB par défaut |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — le moteur est fixé à `POSTGRES_15` ; l'extension `vector` (pgvector) est activée pour les fonctionnalités d'IA et de recherche de Chatwoot |
-| Cache et file d'attente | Redis (VM NFS hébergée sur Cloud Filestore, ou externe) | Sert de support à la file de jobs de Sidekiq et au pub/sub d'ActionCable |
-| Persistance des fichiers | Cloud Filestore (NFS) | Les pièces jointes sont conservées sous `/opt/chatwoot/storage`, partagées entre les pods |
-| Stockage objet | Cloud Storage | Un bucket suffixé `storage` provisionné automatiquement |
-| Secrets | Secret Manager | `SECRET_KEY_BASE` de Rails généré automatiquement ; mot de passe de la base de données |
-| Entrée | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé + certificat géré facultatifs |
+| Calcul | GKE Autopilot | Rails + worker Sidekiq colocalisé sur le port 3000, 2 vCPU / 4 GiB par défaut |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — le moteur est fixé à `POSTGRES_15` ; l'extension `vector` (pgvector) est activée pour les fonctionnalités d'IA/recherche de Chatwoot |
+| Cache et file d'attente | Redis (VM NFS hébergée sur Cloud Filestore, ou externe) | Prend en charge la file d'attente des jobs Sidekiq et le pub/sub ActionCable |
+| Persistance des fichiers | Cloud Filestore (NFS) | Les pièces jointes persistent sous `/opt/chatwoot/storage`, partagées entre les pods |
+| Stockage d'objets | Cloud Storage | Un bucket `storage` avec suffixe provisionné automatiquement |
+| Secrets | Secret Manager | `SECRET_KEY_BASE` Rails auto-généré ; mot de passe de la base de données |
+| Ingress | Cloud Load Balancing | LoadBalancer externe avec une IP statique réservée ; domaine personnalisé optionnel + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** `database_type` vaut `POSTGRES_15` par défaut ; le
-  schéma de Chatwoot et ses fonctionnalités reposant sur pgvector l'exigent.
-- **Image construite sur mesure.** `container_image_source = "custom"` — le module
-  Common effectue un build `FROM chatwoot/chatwoot:${APP_VERSION}` et y ajoute un point
-  d'entrée cloud qui fait correspondre les variables d'environnement `DB_*`/`REDIS_*` du
-  socle à la convention `POSTGRES_*`/`REDIS_URL` de Chatwoot, puis lance Sidekiq
-  en arrière-plan avant d'exécuter (exec) le serveur Rails. L'image s'exécute **en tant
-  que root** — à l'image de l'image amont, dont `/app`/`/app/tmp` appartiennent à root
-  et ne sont pas accessibles en écriture au groupe ; l'étape `create_tmp_directories` de
-  Rails a donc besoin de root pour réussir.
-- **Cloud SQL est joint via le sidecar Auth Proxy sur le loopback.** `enable_cloudsql_volume
-  = true` exécute un sidecar cloud-sql-proxy qui écoute sur `127.0.0.1:5432` ; le point
-  d'entrée fait correspondre les `DB_HOST`/`DB_IP` injectés à `POSTGRES_HOST`.
-- **Deux jobs d'initialisation s'exécutent en séquence.** `db-init` (crée la base de
-  données, le rôle et les droits — y compris un droit `cloudsqlsuperuser` afin que
-  Chatwoot puisse créer lui-même les extensions Postgres) s'exécute en premier, puis
-  `chatwoot-prepare` (`rails db:chatwoot_prepare`) crée ou met à niveau le schéma et
-  initialise les valeurs par défaut. Il n'y a aucune étape de migration dans le
-  conteneur ; la mise en place du schéma se fait entièrement dans ces deux Jobs, avant
-  que le conteneur de l'application n'ait à servir du trafic.
+- **PostgreSQL 15 est obligatoire.** `database_type` est par défaut `POSTGRES_15` ; le
+  schéma de Chatwoot et les fonctionnalités basées sur pgvector l'exigent.
+- **Image personnalisée.** `container_image_source = "custom"` — le module Common construit `FROM chatwoot/chatwoot:${APP_VERSION}`
+  et y ajoute un point d'entrée cloud qui mappe les variables d'environnement
+  `DB_*`/`REDIS_*` de la Fondation sur la convention
+  `POSTGRES_*`/`REDIS_URL` de Chatwoot et lance Sidekiq en arrière-plan avant
+  d'exécuter le serveur Rails. L'image s'exécute **en tant que root** —
+  correspondant à l'image amont, dont `/app`/`/app/tmp` sont détenus par root
+  et non inscriptibles par le groupe, de sorte que l'étape `create_tmp_directories` de Rails
+  nécessite les privilèges root pour réussir.
+- **Cloud SQL est atteint via le sidecar Auth Proxy sur la boucle locale.** `enable_cloudsql_volume
+  = true`
+  exécute un sidecar cloud-sql-proxy écoutant sur `127.0.0.1:5432` ; le point d'entrée
+  mappe les `DB_HOST`/`DB_IP` injectés sur `POSTGRES_HOST`.
+- **Deux jobs d'initialisation s'exécutent séquentiellement.** `db-init` (crée la
+  base de données, le rôle et les autorisations — y compris une autorisation
+  `cloudsqlsuperuser` afin que Chatwoot puisse créer lui-même des extensions Postgres)
+  s'exécute en premier, puis `chatwoot-prepare` (`rails db:chatwoot_prepare`) crée/met à jour le
+  schéma et initialise les valeurs par défaut. Il n'y a pas d'étape de migration
+  dans le conteneur ; la configuration du schéma se fait entièrement dans ces deux
+  Jobs avant que le conteneur de l'application n'ait besoin de servir le trafic.
 - **Redis est activé par défaut** (`enable_redis = true`). Laissez `redis_host` vide pour
-  utiliser l'IP du Redis partagé hébergé sur le serveur NFS, que le socle injecte
+  utiliser l'IP Redis partagée hébergée sur le serveur NFS que la Fondation injecte
   automatiquement.
-- **`SECRET_KEY_BASE` est généré une seule fois et partagé** entre le processus web
-  Rails et le worker Sidekiq (ils s'exécutent ici dans le même conteneur, mais la valeur
-  doit aussi rester stable d'un redémarrage ou redéploiement à l'autre — Rails l'utilise
-  pour signer les sessions et chiffrer les colonnes chiffrées par ActiveRecord).
-- **L'affinité de session est `ClientIP`**, afin que les requêtes d'un client
+- **`SECRET_KEY_BASE` est généré une fois et partagé** entre le processus web Rails
+  et le worker Sidekiq (ils s'exécutent dans le même conteneur ici, mais la valeur
+  doit également rester stable lors des redémarrages/redéploiements — Rails l'utilise
+  pour signer les sessions et chiffrer les colonnes chiffrées d'ActiveRecord).
+- **L'affinité de session est `ClientIP`** afin que les requêtes d'un client
   atteignent le même pod.
-- **Le PodDisruptionBudget est activé par défaut** (`enable_pod_disruption_budget = true`,
-  `pdb_min_available = "1"`).
-- **`ENABLE_ACCOUNT_SIGNUP` vaut `"false"` par défaut** — l'inscription libre des
-  administrateurs/agents est désactivée sur un helpdesk fraîchement déployé ;
-  modifiez-la via `environment_variables` si vous souhaitez une inscription publique.
+- **PodDisruptionBudget est activé par défaut** (`enable_pod_disruption_budget = true`, `pdb_min_available = "1"`).
+- **`ENABLE_ACCOUNT_SIGNUP` est par défaut `"false"`** — l'inscription
+  libre-service administrateur/agent est désactivée sur un service d'assistance
+  fraîchement déployé ; activez-la via `environment_variables` si vous souhaitez une
+  inscription publique.
 
 ---
 
@@ -84,20 +85,20 @@ déploiement assemble un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region "$REGION" --project "$PROJECT"`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants figurent dans les [sorties](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et
+les autres identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Chatwoot {#a-gke-autopilot--the-chatwoot-workload}
 
-Les pods Chatwoot sont planifiés sur Autopilot, qui facture le CPU et la mémoire
-réellement demandés par les pods. Chaque pod exécute à la fois le serveur web Rails et
-un processus worker Sidekiq d'arrière-plan ; la charge de travail ne doit donc pas être
-mise à zéro — c'est Sidekiq qui livre et reçoit les messages des canaux et traite les
-jobs d'arrière-plan.
+Les pods Chatwoot sont planifiés sur Autopilot, qui facture le CPU/la mémoire
+réellement demandés par les pods. Chaque pod exécute à la fois le serveur web Rails
+et un processus worker Sidekiq en arrière-plan, de sorte que la charge de travail
+ne doit pas être mise à l'échelle à zéro — Sidekiq est ce qui livre/reçoit les
+messages de canal et traite les jobs en arrière-plan.
 
-- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail
-  Chatwoot pour voir les pods, les révisions et les événements. Kubernetes Engine →
-  Services & Ingress affiche l'IP externe.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+  travail Chatwoot pour les pods, les révisions et les événements. Kubernetes Engine
+  → Services et Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -105,23 +106,23 @@ jobs d'arrière-plan.
   kubectl describe pod -n "$NAMESPACE" -l app=<service-name>
   ```
 
-Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et
-du type de charge de travail (Deployment ou StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et
+du type de charge de travail (Deployment vs StatefulSet).
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Chatwoot stocke toutes les données applicatives (conversations, contacts, boîtes de
-réception, agents, rapports) dans une instance gérée Cloud SQL for PostgreSQL 15, y
-compris l'extension `vector` utilisée par ses fonctionnalités d'IA et de recherche. Les
-pods y accèdent via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune
-IP publique n'est exposée. Au premier déploiement, le Job `db-init` crée la base de
-données applicative, le rôle et les droits (y compris un droit
-`cloudsqlsuperuser` afin que les appels de création d'extensions de Chatwoot
-réussissent), puis le Job `chatwoot-prepare` exécute `rails db:chatwoot_prepare` pour
+Chatwoot stocke toutes les données de l'application (conversations, contacts, boîtes
+de réception, agents, rapports) dans une instance Cloud SQL pour PostgreSQL 15 gérée,
+y compris l'extension `vector` utilisée par ses fonctionnalités d'IA/recherche.
+Les pods l'atteignent via le sidecar **Cloud SQL Auth Proxy** sur `127.0.0.1:5432` ;
+aucune IP publique n'est exposée. Lors du premier déploiement, le Job `db-init`
+crée la base de données de l'application, le rôle et les autorisations (y compris
+une autorisation `cloudsqlsuperuser` afin que les propres appels de création d'extensions
+de Chatwoot réussissent), puis le Job `chatwoot-prepare` exécute `rails db:chatwoot_prepare` pour
 construire le schéma.
 
-- **Console :** SQL → sélectionnez l'instance pour voir les connexions, les
-  sauvegardes, les flags et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
+  les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -130,36 +131,38 @@ construire le schéma.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret Manager
-contenant le mot de passe figurent tous dans les [sorties](#5-outputs). Consultez
-[App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatisées et la
-rotation des mots de passe.
+contenant le mot de passe sont tous dans les [Sorties](#5-outputs). Voir
+[App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes automatisées et
+la rotation des mots de passe.
 
 ### C. Redis (cache, file d'attente et pub/sub) {#c-redis-cache-queue-and-pubsub}
 
-Sidekiq (la file de jobs d'arrière-plan de Chatwoot) et ActionCable (mises à jour de
-l'interface en temps réel) nécessitent tous deux Redis. `enable_redis = true` par
-défaut ; lorsque `redis_host` est laissé vide, le socle injecte l'IP du Redis
-partagé hébergé sur le serveur NFS en tant que `REDIS_HOST`, et le point d'entrée du
-conteneur en déduit `REDIS_URL` au démarrage. Faites pointer
-`redis_host`/`redis_port`/`redis_auth` vers une instance Cloud Memorystore dédiée pour
-une charge de travail de production plus lourde.
+Sidekiq (la file d'attente des jobs en arrière-plan de Chatwoot) et ActionCable
+(mises à jour de l'interface utilisateur en temps réel) nécessitent tous deux Redis.
+`enable_redis = true` par défaut ; lorsque `redis_host` est laissé vide, la Fondation
+injecte l'IP Redis partagée hébergée sur le serveur NFS en tant que `REDIS_HOST`,
+et le point d'entrée du conteneur construit `REDIS_URL` à partir de celle-ci au
+démarrage. Pointez `redis_host`/`redis_port`/`redis_auth` vers une instance
+Cloud Memorystore dédiée pour une charge de travail de production plus lourde.
 
-- **Console :** Memorystore → Redis instances (si vous utilisez une instance dédiée).
+> **Sidekiq nécessite Redis 6.2 ou plus récent, et le Redis hébergé sur NFS est 6.0.** Le Redis partagé sur la VM NFS exécute la version 6.0.16, et Sidekiq 7 refuse de démarrer avec. L'interface web continue de fonctionner (le point d'entrée exécute Sidekiq en arrière-plan), de sorte que le déploiement semble sain alors qu'aucun job en arrière-plan ne s'exécute. Pointez `redis_host` vers une instance Redis 6.2+ — par exemple Memorystore, via `create_redis = true` dans Services_GCP, qui provisionne Redis 7.2.
+
+- **Console :** Memorystore → Instances Redis (si vous utilisez une instance dédiée).
 - **CLI :**
   ```bash
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- env | grep -E '^REDIS_'
   gcloud redis instances list --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour le raccordement du repli Redis hébergé sur NFS et
-de l'intégration Memorystore.
+Voir [App_GKE](App_GKE.md) pour la façon dont le fallback Redis hébergé sur NFS et
+l'intégration Memorystore sont câblés.
 
 ### D. Cloud Storage et persistance des fichiers (NFS) {#d-cloud-storage--file-persistence-nfs}
 
-Un bucket **Cloud Storage** dédié (suffixe `storage`) est provisionné automatiquement
-et le compte de service de la charge de travail y reçoit l'accès. Par ailleurs, les
-pièces jointes de Chatwoot résident sur **NFS (Cloud Filestore)** sous
-`/opt/chatwoot/storage`, partagées entre les pods.
+Un bucket **Cloud Storage** dédié (suffixe `storage`) est provisionné
+automatiquement et le compte de service de la charge de travail se voit accorder
+l'accès. Séparément, les pièces jointes de Chatwoot résident sur **NFS (Cloud
+Filestore)** à `/opt/chatwoot/storage`, partagées entre les pods.
 
 - **Console :** Cloud Storage → Buckets ; Filestore → Instances.
 - **CLI :**
@@ -169,123 +172,122 @@ pièces jointes de Chatwoot résident sur **NFS (Cloud Filestore)** sous
   kubectl get pvc -n "$NAMESPACE"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
+Voir [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
 ### E. Secret Manager {#e-secret-manager}
 
-Un secret propre à Chatwoot est généré automatiquement et stocké dans Secret
-Manager : `SECRET_KEY_BASE` (la clé de signature des sessions et de chiffrement
-ActiveRecord de Rails, partagée à l'identique entre les processus web et Sidekiq). Le
-mot de passe de la base de données est géré séparément par le socle. Sur GKE, les
-secrets sont projetés dans les pods via le pilote Secret Store CSI.
+Un secret spécifique à Chatwoot est généré automatiquement et stocké dans Secret
+Manager : `SECRET_KEY_BASE` (clé de signature de session / de chiffrement
+ActiveRecord de Rails, partagée de manière identique entre les processus web et
+Sidekiq). Le mot de passe de la base de données est géré séparément par la fondation.
+Sur GKE, les secrets sont projetés dans les pods via le pilote CSI du Secret Store.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~chatwoot"
   gcloud secrets versions access latest --secret=secret-<resource-prefix>-chatwoot-secret-key-base --project "$PROJECT"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour l'intégration Secret Store CSI et la rotation.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation du Secret Store CSI.
 
-### F. Réseau et entrée {#f-networking--ingress}
+### F. Réseau et ingress {#f-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une IP externe Cloud Load Balancing
-(`service_type = LoadBalancer`, `reserve_static_ip = true` afin que l'adresse survive
-aux redéploiements). Un domaine personnalisé avec un certificat géré par Google peut
+Par défaut, la charge de travail est exposée via une IP externe de Cloud Load
+Balancing (`service_type = LoadBalancer`, `reserve_static_ip = true` afin que l'adresse survive aux
+redéploiements). Un domaine personnalisé avec un certificat géré par Google peut
 être activé.
 
-- **Console :** Network services → Load balancing ; VPC network → IP addresses.
+- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails de l'IP statique.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les détails
+des IP statiques.
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods (celles des processus Rails et Sidekiq, puisqu'ils
-partagent un conteneur) sont envoyées vers Cloud Logging ; les métriques de GKE et de
-Cloud SQL vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte
+Le stdout/stderr des pods (les processus Rails et Sidekiq, puisqu'ils partagent un
+conteneur) s'écoulent vers Cloud Logging ; les métriques GKE et Cloud SQL s'écoulent
+vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte
 facultatifs sont disponibles.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
     --project "$PROJECT" --limit 50
   ```
 
-Consultez [App_GKE](App_GKE.md) pour l'activation conditionnelle des tests de
-disponibilité et le raccordement des règles d'alerte.
+Voir [App_GKE](App_GKE.md) pour la gestion des tests de disponibilité et le câblage
+des règles d'alerte.
 
 ---
 
 ## 3. Comportement de l'application Chatwoot {#3-chatwoot-application-behaviour}
 
-- **La configuration de la base de données au premier déploiement s'exécute sous la
-  forme de deux Jobs chaînés.** `db-init` (image
-  `postgres:15-alpine`) se connecte à Cloud SQL, crée de façon idempotente le rôle et la
-  base de données, accorde les privilèges, accorde `cloudsqlsuperuser` au rôle de
-  l'application (nécessaire, car l'utilisateur applicatif de Cloud SQL n'est pas un
-  véritable superutilisateur Postgres et le `schema.rb` de
-  `db:chatwoot_prepare` appelle `enable_extension` pour plusieurs
-  extensions), et pré-crée par précaution `vector`, `pg_stat_statements`, `pg_trgm` et
-  `pgcrypto`. `chatwoot-prepare` dépend ensuite de `db-init` et exécute
-  `bundle exec rails db:chatwoot_prepare` avec **l'image de l'application Chatwoot
-  construite** (et non une image cliente générique), afin que toute la chaîne d'outils
-  et la configuration Rails soient présentes. Les deux jobs s'exécutent avec
-  `execute_on_apply = true`.
-- **Aucune migration dans le conteneur.** La création et la mise à niveau du schéma sont
-  entièrement prises en charge par le Job d'initialisation `chatwoot-prepare` avant que
-  le conteneur de l'application ne soit censé servir du trafic — le point d'entrée
-  d'exécution ne lance pas `rails db:migrate`.
-- **Alias des variables d'environnement de la base de données.** La plateforme injecte
-  `DB_HOST` (le sidecar proxy, `127.0.0.1` sur GKE), `DB_PORT`, `DB_NAME`, `DB_USER`,
-  `DB_PASSWORD` ; le point d'entrée cloud (`cloud-entrypoint.sh`, intégré à l'image) les
-  fait correspondre à la convention
-  `POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_DATABASE`/
-  `POSTGRES_USERNAME`/`POSTGRES_PASSWORD` de Chatwoot.
+- **La configuration de la base de données lors du premier déploiement s'exécute
+  sous forme de deux Jobs chaînés.** `db-init` (image `postgres:15-alpine`) se
+  connecte à Cloud SQL, crée de manière idempotente le rôle et la base de données,
+  accorde les privilèges, accorde `cloudsqlsuperuser` au rôle de l'application (nécessaire
+  car l'utilisateur de l'application Cloud SQL n'est pas un véritable superutilisateur
+  Postgres et `db:chatwoot_prepare`'s `schema.rb` appelle `enable_extension` pour
+  plusieurs extensions), et pré-crée `vector`, `pg_stat_statements`, `pg_trgm`,
+  et `pgcrypto` de manière défensive. `chatwoot-prepare` dépend ensuite de
+  `db-init` et exécute `bundle exec rails db:chatwoot_prepare` en utilisant l'**image de l'application
+  Chatwoot construite** (pas une image client générique) afin que la chaîne
+  d'outils et la configuration Rails complètes soient présentes. Les deux jobs
+  s'exécutent sur `execute_on_apply = true`.
+- **Pas de migrations dans le conteneur.** La création/mise à jour du schéma est
+  entièrement gérée par le Job d'initialisation `chatwoot-prepare` avant que le conteneur
+  de l'application ne soit censé servir le trafic — le point d'entrée d'exécution
+  n'exécute pas `rails db:migrate`.
+- **Alias des variables d'environnement de la base de données.** La plateforme
+  injecte `DB_HOST` (le sidecar proxy, `127.0.0.1` sur GKE), `DB_PORT`,
+  `DB_NAME`, `DB_USER`, `DB_PASSWORD` ; le point d'entrée cloud
+  (`cloud-entrypoint.sh`, intégré à l'image) mappe ceux-ci sur la convention
+  `POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_DATABASE`/`POSTGRES_USERNAME`/`POSTGRES_PASSWORD` de Chatwoot.
   {/* TODO: could not confirm whether App_GKE also forwards db_host_env_var_name / db_user_env_var_name aliasing vars for Chatwoot; the entrypoint does its own mapping regardless, so these Foundation-mirror variables in Group 16 are effectively unused for this app. */}
-- **L'URL Redis s'auto-répare.** Si `REDIS_URL` n'est pas déjà défini, le point
-  d'entrée la construit à partir des `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH` injectés —
-  ce qui couvre à la fois le cas d'un `redis_host` explicite et le cas par défaut du
-  repli sur NFS ; laisser `redis_host` vide produit donc tout de même un `REDIS_URL`
-  fonctionnel au démarrage du conteneur.
-- **Sidekiq s'exécute de manière co-localisée, en arrière-plan.** `cloud-entrypoint.sh`
-  lance `bundle exec sidekiq -C config/sidekiq.yml &` avant d'exécuter (exec) le serveur
-  Rails ; un `trap` sur `TERM`/`INT` arrête Sidekiq en même temps que le conteneur.
-  Comme Sidekiq ne traite les jobs d'arrière-plan (livraison sur les canaux,
-  notifications, rapports) que tant qu'un pod est actif, conservez
+- **L'URL Redis est auto-réparatrice.** Si `REDIS_URL` n'est pas déjà défini, le
+  point d'entrée le construit à partir des `REDIS_HOST`/`REDIS_PORT`/`REDIS_AUTH`
+  injectés — cela couvre à la fois le cas explicite `redis_host` et le cas de
+  fallback NFS par défaut, de sorte que laisser `redis_host` vide produit toujours
+  un `REDIS_URL` fonctionnel au démarrage du conteneur.
+- **Sidekiq s'exécute en colocation, en arrière-plan.** `cloud-entrypoint.sh` démarre
+  `bundle exec sidekiq -C config/sidekiq.yml &` avant d'exécuter le serveur Rails ; un `trap` sur
+  `TERM`/`INT` arrête Sidekiq en même temps que le conteneur.
+  Étant donné que Sidekiq traite les jobs en arrière-plan (livraison de canaux,
+  notifications, rapports) uniquement tant qu'un pod est actif, conservez
   `min_instance_count >= 1` en production.
-- **Compte administrateur / de premier lancement.** L'interface d'accueil de Chatwoot
-  crée le premier compte administrateur de manière interactive sur
-  `/installation/onboarding` lors de la première visite — il n'existe aucun secret
-  d'identifiant administrateur généré automatiquement pour ce module.
+- **Compte administrateur/premier démarrage.** L'interface utilisateur d'intégration
+  de Chatwoot crée le premier compte administrateur de manière interactive à
+  `/installation/onboarding` lors de la première visite — il n'y a pas de secret de
+  compte administrateur auto-généré pour ce module.
   {/* TODO: could not confirm the exact first-run onboarding route/behaviour from the wiring files alone; verified against general Chatwoot self-hosted conventions, not this repo's source. */}
-- **Chemin de santé.** Les sondes de démarrage et de vivacité sont des requêtes
-  **HTTP** `GET /` (la page de connexion/d'accueil renvoie 200 sans authentification) ;
-  la sonde de disponibilité (readiness) définie par le module Common
-  (`initial_delay_seconds = 30`) cible également `/`. Prévoyez du temps au premier
-  démarrage — `chatwoot-prepare` doit se terminer avant même que le conteneur de
-  l'application ne démarre.
-- **Signal d'arrêt du proxy Cloud SQL.** Les deux Jobs d'initialisation envoient, à
-  leur sortie, une requête POST (`wget`/`curl`) au point de terminaison
-  `--quitquitquit` du sidecar proxy (`127.0.0.1:9091/quitquitquit`), afin que le pod du
-  Job se termine au lieu de rester bloqué sur un sidecar actif.
-- **Les mises à jour recréent le pod au lieu de le remplacer progressivement.** Comme
+- **Chemin de santé.** La sonde de démarrage est **HTTP** `GET /` ; la sonde
+  de vivacité est `GET /health`, car elle est mise en miroir dans la vérification
+  de santé de la passerelle, qui nécessite un 200 littéral et `/`
+  redirections. La sonde de disponibilité définie par le module Common
+  (`initial_delay_seconds = 30`) cible `/`. Laissez du temps au premier démarrage —
+  `chatwoot-prepare` doit se terminer avant même que le conteneur de l'application ne
+  démarre.
+- **Signal d'arrêt du proxy Cloud SQL.** Les deux jobs d'initialisation
+  `wget`/`curl`-POST vers le point de terminaison `--quitquitquit`
+  du sidecar proxy (`127.0.0.1:9091/quitquitquit`) à la sortie afin que le pod du Job se
+  termine au lieu de rester bloqué sur un sidecar actif.
+- **Les mises à jour recréent le pod au lieu de le déployer en continu.** Parce que
   `enable_nfs = true` par défaut, `App_GKE` déploie la charge de travail avec la
-  stratégie `Recreate` plutôt que `RollingUpdate` — deux pods se disputant le même
-  volume NFS de pièces jointes et la base de données partagée se bloqueraient
-  mutuellement sur le pod supplémentaire pendant un déploiement progressif (vérifié en
-  conditions réelles lors d'un déploiement progressif de Chatwoot avec NFS). Une montée
-  de version ou une modification de configuration touchant le modèle de pod provoque
-  donc une brève interruption, le temps que l'ancien pod s'arrête avant le démarrage du
-  nouveau, plutôt qu'une bascule sans interruption.
-- **Inspecter les jobs d'initialisation et la configuration en cours :**
+  stratégie `Recreate` plutôt que `RollingUpdate` — deux pods en
+  concurrence pour le même volume de pièce jointe NFS et la base de données partagée
+  se bloqueraient sur le pod de surtension pendant un déploiement (vérifié en direct
+  via un déploiement NFS Chatwoot). Une augmentation de version ou un changement de
+  configuration qui touche le modèle de pod entraîne donc un bref temps d'arrêt
+  pendant que l'ancien pod se termine avant que le nouveau ne démarre, plutôt qu'un
+  déploiement sans interruption.
+- **Inspectez les jobs d'initialisation et la configuration en cours d'exécution :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
   kubectl logs -n "$NAMESPACE" job/<db-init-job-name>
@@ -297,162 +299,161 @@ disponibilité et le raccordement des règles d'alerte.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de
-déploiement. Seuls les paramètres propres à Chatwoot ou importants pour celui-ci sont
-listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md) avec leur
-comportement et leurs valeurs par défaut standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme
+de déploiement. Seuls les paramètres spécifiques ou notables pour Chatwoot sont
+listés ; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son
+comportement standard et ses valeurs par défaut.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `chatwoot` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_version` | `v4.15.1` | Tag d'image `chatwoot/chatwoot` utilisé comme base du build personnalisé. Incrémentez-le pour déclencher un nouveau build. |
+| `application_version` | `v4.15.1` | Tag d'image `chatwoot/chatwoot` utilisé comme base de construction personnalisée. Incrémentez pour déclencher une reconstruction. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `container_resources.cpu_limit` | `2000m` | 2 vCPU — Rails + worker Sidekiq co-localisé. |
-| `container_resources.memory_limit` | `4Gi` | 4 GiB minimum recommandés ; les deux processus partagent le conteneur. |
-| `min_instance_count` | `1` | Conservez 1 afin que le worker Sidekiq (et ActionCable) restent actifs. |
-| `max_instance_count` | `5` | Plafond standard de mise à l'échelle horizontale. |
+| `container_resources.cpu_limit` | `2000m` | 2 vCPU — Rails + worker Sidekiq colocalisé. |
+| `container_resources.memory_limit` | `4Gi` | 4 GiB minimum recommandé ; les deux processus partagent le conteneur. |
+| `min_instance_count` | `1` | Maintenez à 1 pour que le worker Sidekiq (et ActionCable) reste actif. |
+| `max_instance_count` | `5` | Plafond de mise à l'échelle horizontale standard. |
 | `container_port` | `3000` | Port du serveur Rails de Chatwoot. |
-| `container_image_source` | `custom` | Build personnalisé à partir de `chatwoot/chatwoot` ; ne le définissez pas sur `prebuilt`. |
-| `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (loopback) — obligatoire sur GKE. |
+| `container_image_source` | `custom` | Construit sur mesure à partir de `chatwoot/chatwoot` ; ne pas définir sur `prebuilt`. |
+| `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (boucle locale) — requis sur GKE. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | IP externe pour l'interface de Chatwoot. |
-| `workload_type` | `null` → `Deployment` | Deployment standard (aucun PVC nécessaire par défaut). |
-| `session_affinity` | `ClientIP` | Routage persistant afin qu'un client atteigne le même pod. |
+| `service_type` | `LoadBalancer` | IP externe pour l'interface utilisateur de Chatwoot. |
+| `workload_type` | `null` → `Deployment` | Déploiement standard (pas de PVC nécessaire par défaut). |
+| `session_affinity` | `ClientIP` | Routage persistant pour qu'un client atteigne le même pod. |
 
 ### Groupe 9 — Fiabilité {#group-9--reliability}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Limite les évictions volontaires simultanées de pods. |
-| `pdb_min_available` | `"1"` | Maintient au moins un pod (et son worker Sidekiq) disponible pendant les interruptions. |
+| `pdb_min_available` | `"1"` | Maintient au moins un pod (et son worker Sidekiq) disponible pendant les perturbations. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | NFS est activé par défaut afin que les pièces jointes soient conservées et partagées. |
-| `nfs_mount_path` | `/opt/chatwoot/storage` | Emplacement où Chatwoot stocke les pièces jointes téléversées. |
+| `enable_nfs` | `true` | NFS est activé par défaut pour que les pièces jointes persistent et soient partagées. |
+| `nfs_mount_path` | `/opt/chatwoot/storage` | Où Chatwoot stocke les pièces jointes téléchargées. |
 
 ### Groupe 15 — Redis {#group-15--redis}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Requis pour la file d'attente de Sidekiq et le pub/sub d'ActionCable ; transmis au socle sans condition. |
-| `redis_host` | `""` | Vide : utilise l'IP du Redis partagé hébergé sur le serveur NFS, que le socle injecte. |
-| `redis_port` | `6379` | Port TCP de Redis. |
-| `redis_auth` | `""` | Mot de passe Redis AUTH, si l'instance cible en exige un. |
+| `enable_redis` | `true` | Requis pour la mise en file d'attente Sidekiq et le pub/sub ActionCable ; transmis à la fondation sans condition. |
+| `redis_host` | `""` | Vide utilise l'IP Redis partagée hébergée sur le serveur NFS que la Fondation injecte. |
+| `redis_port` | `6379` | Port TCP Redis. |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis, si l'instance cible en requiert un. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | Fixé par la sortie config du module Common (également codé en dur dans le `config.database_type` de Common) ; Chatwoot nécessite PostgreSQL 15+ avec pgvector. |
+| `database_type` | `POSTGRES_15` | Fixé par la sortie de configuration du module Common (également codé en dur dans le `config.database_type` Common) ; Chatwoot nécessite PostgreSQL 15+ avec pgvector. |
 | `application_database_name` | `chatwoot` | Nom de la base de données. Immuable après le premier déploiement. |
-| `application_database_user` | `chatwoot` | Utilisateur de la base de données de l'application ; mot de passe généré automatiquement dans Secret Manager. |
-| `enable_postgres_extensions` | `true` (valeur par défaut de Common) | Active `vector` après le provisionnement ; `db-init.sh` le pré-crée également par précaution. |
+| `application_database_user` | `chatwoot` | Utilisateur de la base de données de l'application ; mot de passe auto-généré dans Secret Manager. |
+| `enable_postgres_extensions` | `true` (valeur par défaut Common) | Active `vector` après le provisionnement ; `db-init.sh` le pré-crée également de manière défensive. |
 
-### Groupe 1 — Recherche et intégrations facultatives {#group-1--search--optional-integrations}
+### Groupe 1 — Recherche et intégrations optionnelles {#group-1--search--optional-integrations}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `elasticsearch_url` | `""` | Point de terminaison Elasticsearch facultatif (par ex. issu de `Elasticsearch_GKE`) pour la recherche plein texte de Chatwoot. Laissez vide pour la désactiver. |
-| `elasticsearch_username` | `""` | Nom d'utilisateur Elasticsearch ; laissez vide lorsque `xpack.security.enabled` vaut false. |
-| `elasticsearch_password_secret` | `""` | ID du secret Secret Manager contenant le mot de passe Elasticsearch ; lorsqu'il est défini, il est injecté en tant que `ELASTICSEARCH_PASSWORD` et `secretAccessor` est accordé. |
+| `elasticsearch_url` | `""` | Point de terminaison Elasticsearch optionnel (par exemple de `Elasticsearch_GKE`) pour la recherche en texte intégral de Chatwoot. Laissez vide pour désactiver. |
+| `elasticsearch_username` | `""` | Nom d'utilisateur Elasticsearch ; laissez vide lorsque `xpack.security.enabled` est faux. |
+| `elasticsearch_password_secret` | `""` | ID du secret Secret Manager contenant le mot de passe Elasticsearch ; lorsqu'il est défini, injecté comme `ELASTICSEARCH_PASSWORD` et accordé `secretAccessor`. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `reserve_static_ip` | `true` | IP externe stable d'un redéploiement à l'autre. |
-| `application_domains` | `[]` | Noms d'hôte personnalisés + certificat géré. |
+| `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
+| `application_domains` | `[]` | Noms d'hôtes personnalisés + certificat géré. |
 
-Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.md).
+Toutes les autres entrées suivent le comportement standard de [App_GKE](App_GKE.md).
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées à l'issue d'un déploiement réussi et constituent le moyen le
+Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le
 plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
-| `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
-| `service_cluster_ip` | ClusterIP interne au cluster. |
-| `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
+| `service_name` | Nom du service Kubernetes. |
+| `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
+| `service_cluster_ip` | ClusterIP intra-cluster. |
+| `stage_service_cluster_ips` | Carte des ClusterIPs pour les services spécifiques à l'étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
-| `service_url` | URL pour accéder à Chatwoot. |
+| `service_url` | URL pour atteindre Chatwoot. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base. |
-| `database_host` / `database_port` | Point de terminaison de la base (127.0.0.1 via l'Auth Proxy) / port. |
+| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via le proxy d'authentification) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État du monitoring et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `chatwoot-prepare`) et du job d'import (facultatif). |
+| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`, `chatwoot-prepare`) et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD (dépôt, déclencheur, registre). |
-| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub de la CI/CD. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
+| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État des journaux d'audit et de CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — paramètres de type de charge de travail et de PVC incohérents, IAP activé sans identités autorisées, `quota_memory_*` fourni sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — paramètres de type de charge de travail/PVC incompatibles, IAP activé sans identités autorisées, `quota_memory_*` donné sous forme d'entiers bruts, un `container_port`/`backup_retention_days` hors de portée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (fixé par Common) | Critique | Le schéma de Chatwoot et sa recherche reposant sur pgvector exigent Postgres 15+ ; tout autre moteur casse `chatwoot-prepare`. |
-| `application_database_name` / `application_database_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et rend toutes les données orphelines. |
-| `SECRET_KEY_BASE` (généré automatiquement) | Ne jamais modifier | Critique | Le renouveler invalide chaque session/cookie signé et rend définitivement illisibles les colonnes chiffrées par ActiveRecord ; Sidekiq ne parviendra pas non plus à déchiffrer les jobs en cours. |
-| `enable_redis` | `true` (transmis sans condition) | Critique | Sidekiq (jobs d'arrière-plan, livraison sur les canaux) et ActionCable (interface en temps réel) nécessitent tous deux Redis ; le désactiver casse silencieusement la livraison des messages alors même que l'interface web se charge. |
-| `min_instance_count` | `1` | Élevé | En dessous de 1, le worker Sidekiq co-localisé ne s'exécute pas entre les requêtes, si bien que les jobs d'arrière-plan (interrogation des canaux, notifications, rapports) sont bloqués entre deux démarrages à froid. |
-| `enable_nfs` | `true` | Élevé | Le désactiver rend les pièces jointes téléversées éphémères — perdues à la recréation du pod. Le laisser activé fait aussi passer la stratégie de déploiement à `Recreate` (brève interruption à chaque mise à jour) au lieu de `RollingUpdate` — c'est attendu, pas un bug. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est indispensable à la connectivité de la base sur GKE. |
-| Ordre du job `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | Élevé | Exécuter la préparation du schéma avant que la base, le rôle et les droits sur les extensions n'existent fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou base/rôle totalement absents). |
-| `container_image_source` | `custom` | Élevé | Chatwoot est une image préconstruite de Docker Hub enveloppée dans un point d'entrée personnalisé (correspondance des variables d'environnement + lancement de Sidekiq) ; passer à `prebuilt` contourne ce wrapper et le conteneur ne fera pas correspondre correctement `DB_*`/`REDIS_*`. |
-| `pdb_min_available` | `"1"` | Moyen | Sinon, une maintenance ou une mise à niveau volontaire des nœuds pourrait évincer le seul pod exécutant Sidekiq et suspendre le traitement en arrière-plan. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Moyen | Sans cela, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS et toutes les URL de rappel de webhook/canal configurées. |
-| `ENABLE_ACCOUNT_SIGNUP` | `"false"` (par défaut) | Moyen | Laisser l'inscription libre publique activée sur un helpdesk exposé à Internet permet à n'importe qui de créer un compte agent/administrateur. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour la conservation réglementaire des données de conversation et des données clients. |
+| `database_type` | `POSTGRES_15` (fixé par Common) | Critique | Le schéma de Chatwoot et la recherche basée sur pgvector nécessitent Postgres 15+ ; tout autre moteur rompt `chatwoot-prepare`. |
+| `application_database_name` / `application_database_user` | Défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et orpheline toutes les données. |
+| `SECRET_KEY_BASE` (auto-généré) | Ne jamais changer | Critique | Sa rotation invalide chaque session/cookie signé et rend les colonnes chiffrées d'ActiveRecord définitivement illisibles ; Sidekiq échouera également à déchiffrer les jobs en cours. |
+| `enable_redis` | `true` (transmis sans condition) | Critique | Sidekiq (jobs en arrière-plan, livraison de canaux) et ActionCable (interface utilisateur en temps réel) nécessitent tous deux Redis ; le désactiver rompt silencieusement la livraison des messages même si l'interface web se charge. |
+| `min_instance_count` | `1` | Élevé | En dessous de 1, le worker Sidekiq colocalisé ne s'exécute pas entre les requêtes, de sorte que les jobs en arrière-plan (interrogation de canaux, notifications, rapports) stagnent entre les démarrages à froid. |
+| `enable_nfs` | `true` | Élevé | Le désactiver rend les pièces jointes téléchargées éphémères — perdues lors de la recréation du pod. Le laisser activé change également la stratégie de déploiement en `Recreate` (bref temps d'arrêt par mise à jour) au lieu de `RollingUpdate` — attendu, pas un bug. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy sur `127.0.0.1:5432` est requis pour la connectivité de la base de données sur GKE. |
+| Ordre des jobs `chatwoot-prepare` | S'exécute après `db-init` (`depends_on_jobs = ["db-init"]`) | Élevé | La préparation du schéma avant l'existence des autorisations de base de données/rôle/extension fait échouer le Job (`must be superuser` sur `CREATE EXTENSION`, ou la base de données/le rôle manquant entièrement). |
+| `container_image_source` | `custom` | Élevé | Chatwoot est une image pré-construite de Docker Hub enveloppée dans un point d'entrée personnalisé (mappage d'env + lancement de Sidekiq) ; passer à `prebuilt` ignore ce wrapper et le conteneur ne mappera pas `DB_*`/`REDIS_*` correctement. |
+| `pdb_min_available` | `"1"` | Moyen | La maintenance/les mises à niveau volontaires des nœuds pourraient autrement évincer le seul pod exécutant Sidekiq, interrompant le traitement en arrière-plan. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont traités comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans cela, l'IP externe peut changer lors des redéploiements, rompant le DNS et toutes les URL de rappel de webhook/canal configurées. |
+| `ENABLE_ACCOUNT_SIGNUP` | `"false"` (par défaut) | Moyen | Laisser l'inscription publique en libre-service activée sur un service d'assistance accessible sur Internet permet à quiconque d'enregistrer un compte agent/administrateur. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité des données de conversation/client. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
+Pour le comportement de la fondation référencé tout au long — IAM et Workload
 Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
-**[App_GKE](App_GKE.md)**. La configuration applicative propre à Chatwoot, partagée
-avec la variante Cloud Run, est décrite dans le module Chatwoot_Common
-(`modules/Chatwoot_Common`) ; consultez
-**[Chatwoot_Common](Chatwoot_Common.md)** pour les secrets, l'amorçage de la base de
-données, l'image de conteneur et son point d'entrée, les sondes de santé et le stockage
-objet.
+Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Chatwoot
+partagée avec la variante Cloud Run est décrite dans le module Chatwoot_Common
+(`modules/Chatwoot_Common`) ; voir **[Chatwoot_Common](Chatwoot_Common.md)** pour les secrets,
+le démarrage de la base de données, l'image/point d'entrée du conteneur, les sondes
+de santé et le stockage d'objets.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Chatwoot sur GKE Autopilot](../labs/Chatwoot_GKE.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Chatwoot sur GKE Autopilot](../labs/Chatwoot_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Chatwoot sur Google Cloud Run](Chatwoot_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Chatwoot Common — Configuration applicative partagée](Chatwoot_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Chatwoot Common — Configuration d'application partagée](Chatwoot_Common.md) — la configuration partagée par les deux cibles de déploiement.

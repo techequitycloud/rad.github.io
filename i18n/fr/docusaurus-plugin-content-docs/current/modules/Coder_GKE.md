@@ -1,82 +1,85 @@
 ---
 title: "Coder sur GKE Autopilot"
-description: "Référence de configuration pour déployer Coder sur GKE Autopilot avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Coder sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Coder_GKE.md @ 3055034 sha256:e53b421d5eef -->
+<!-- translated-from: docs/modules/Coder_GKE.md @ 15fd4c7 sha256:778a3536fdb1 -->
 
 # Coder sur GKE Autopilot {#coder-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Coder_GKE.png" alt="Coder sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Coder est une plateforme open source auto-hébergée qui provisionne des
-environnements de développement distants (« espaces de travail ») définis sous
-forme de code avec Terraform. Elle est fournie sous forme d'un binaire Go unique
-(`coder server`) qui sert l'interface web et l'API du plan de contrôle et relaie
-les connexions WebSocket des IDE dans le navigateur et des sessions de terminal
-vers les espaces de travail en cours d'exécution. Ce module déploie le **plan de
-contrôle** Coder sur **GKE Autopilot** en s'appuyant sur le socle
-[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure Google Cloud et
-Kubernetes partagée. Provisionner de véritables espaces de travail nécessite en
-outre un provisionneur configuré et une cible de calcul (par exemple un cluster
-Kubernetes ou un modèle de VM cloud) mis en place après le déploiement — ce
-module ne met en place que le plan de contrôle.
+Coder est une plateforme open-source auto-hébergée pour le provisionnement
+d'environnements de développement à distance ("espaces de travail") définis
+sous forme de code avec Terraform. Elle se présente sous la forme d'un
+unique binaire Go (`coder server`) qui sert l'interface utilisateur/API du
+plan de contrôle web et proxy les connexions WebSocket pour les IDE de
+navigateur et les sessions de terminal vers les espaces de travail en cours
+d'exécution. Ce module déploie le **plan de contrôle** Coder sur **GKE
+Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui provisionne
+et gère l'infrastructure partagée Google Cloud et Kubernetes. Le
+provisionnement des espaces de travail réels nécessite en outre un
+provisionneur configuré et une cible de calcul (par exemple un cluster
+Kubernetes ou un modèle de VM cloud) configurés après le déploiement — ce
+module ne fait que mettre en place le plan de contrôle.
 
-Ce guide se concentre sur les services cloud utilisés par Coder et sur la
-manière de les explorer et de les exploiter depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
-Workload Identity, entrée, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide du socle App_GKE](App_GKE.md) plutôt que
-de les répéter ici.
+Ce guide se concentre sur les services cloud que Coder utilise et sur la
+façon de les explorer et de les opérer depuis la console Google Cloud et la
+ligne de commande. Pour les mécanismes communs à chaque application GKE —
+Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
+Authorization, VPC Service Controls, sauvegardes et le cycle de vie du
+déploiement — reportez-vous au [guide de la fondation
+App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Le plan de contrôle de Coder est sans état — tout l'état, y compris ses clés de
-signature auto-générées, réside dans PostgreSQL — ; le déploiement assemble donc
-un ensemble restreint et ciblé de services Google Cloud :
+Le plan de contrôle de Coder est sans état — tout l'état, y compris ses clés
+de signature auto-générées, réside dans PostgreSQL — le déploiement relie
+donc un petit ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Binaire Go sur le port 3000, 2 vCPU / 4 GiB par défaut, 1–5 réplicas mis à l'échelle par HPA |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — MySQL est rejeté au moment du plan |
+| Calcul | GKE Autopilot | Binaire Go sur le port 3000, 2 vCPU / 4 GiB par défaut, un réplica (`max_instance_count = 1`) |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — MySQL est rejeté au moment du plan |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` provisionné automatiquement par `Coder_Common` |
-| Secrets | Secret Manager | Uniquement le mot de passe de la base de données géré par le socle — Coder n'a aucun secret applicatif propre |
-| Entrée | Cloud Load Balancing | Ingress Kubernetes avec une IP statique globale réservée ; domaine personnalisé en option |
-| Build du conteneur | Cloud Build + Artifact Registry | Encapsule l'image en amont `ghcr.io/coder/coder` avec un point d'entrée cloud |
+| Secrets | Secret Manager | Seulement le mot de passe de la base de données géré par la Fondation — Coder n'a pas de secret d'application propre |
+| Ingress | Cloud Load Balancing | Ingress Kubernetes avec une IP statique globale réservée ; domaine personnalisé optionnel |
+| Build de conteneur | Cloud Build + Artifact Registry | Encapsule l'image amont `ghcr.io/coder/coder` avec un point d'entrée cloud |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** `database_type` vaut par défaut
-  `POSTGRES_15` ; une validation au moment du plan dans `validation.tf` rejette
-  tout ce qui n'est pas `POSTGRES_13`/`14`/`15`/`NONE` — MySQL n'est pas pris en
-  charge.
-- **`container_image_source = "custom"` est obligatoire, et non facultatif.**
-  L'image en amont `ghcr.io/coder/coder` ne sait pas exploiter seule le
-  raccordement à la base de données fourni par le socle ; Cloud Build l'encapsule
-  avec un point d'entrée cloud qui assemble `CODER_PG_CONNECTION_URL` et
-  `CODER_ACCESS_URL` au démarrage du conteneur.
-- **Cloud SQL est joint via le side-car Auth Proxy sur l'interface de bouclage.**
-  GKE injecte `DB_HOST = 127.0.0.1` ; le point d'entrée construit un DSN
-  `postgres://` avec `sslmode=disable` (le proxy termine déjà le TLS de la
-  connexion) et encode le mot de passe pour URL.
-- **Pas de NFS, pas de Redis et aucun secret applicatif.** Tout l'état de
-  Coder — espaces de travail, modèles, utilisateurs, sessions, file d'attente des
-  builds et clés de signature auto-générées — réside dans PostgreSQL.
-  `enable_nfs` et `enable_redis` valent tous deux `false` par défaut et ne sont
-  pas nécessaires au fonctionnement normal.
-- **Aucun job de migration distinct.** Coder exécute ses propres migrations
-  de schéma au démarrage ; le seul job d'initialisation est `db-init`, qui
-  crée la base de données vide et le rôle.
-- **Mise à l'échelle horizontale par défaut.** `min_instance_count = 1`,
-  `max_instance_count = 5` — le plan de contrôle sans état peut exécuter
-  plusieurs réplicas sur la base de données partagée, contrairement aux
-  applications avec état limitées à une seule instance.
-- **`session_affinity = ClientIP`** maintient le trafic de terminal/IDE d'un
-  navigateur, riche en WebSocket, sur le même pod pendant toute la session.
-- **Une entrée et une IP statique sont provisionnées d'emblée**
+- **PostgreSQL 15 est requis.** `database_type` par défaut à `POSTGRES_15` ; une
+  validation au moment du plan dans `validation.tf` rejette tout ce qui n'est
+  pas `POSTGRES_13`/`14`/`15`/`NONE` — MySQL n'est pas
+  pris en charge.
+- **`container_image_source = "custom"` est requis, pas optionnel.** L'image amont
+  `ghcr.io/coder/coder` ne peut pas analyser le câblage de la base de données de la
+  Fondation par elle-même ; Cloud Build l'encapsule avec un point d'entrée
+  cloud qui assemble `CODER_PG_CONNECTION_URL` et `CODER_ACCESS_URL` au démarrage du
+  conteneur.
+- **Cloud SQL est atteint via le sidecar Auth Proxy sur le loopback.** GKE
+  injecte `DB_HOST = 127.0.0.1` ; le point d'entrée construit un DSN
+  `postgres://` avec `sslmode=disable` (le proxy termine déjà la connexion
+  TLS) et encode le mot de passe en URL.
+- **Pas de NFS, pas de Redis, et pas de secret d'application.** Tout l'état
+  de Coder — espaces de travail, modèles, utilisateurs, sessions, file
+  d'attente de build et clés de signature auto-générées — réside dans
+  PostgreSQL. `enable_nfs` et `enable_redis` par défaut à
+  `false` et ne sont pas nécessaires pour un fonctionnement normal.
+- **Pas de job de migration séparé.** Coder exécute ses propres migrations
+  de schéma au démarrage ; le seul job d'initialisation est `db-init`,
+  qui crée la base de données et le rôle vides.
+- **Un réplica par défaut.** `min_instance_count = 1`, `max_instance_count = 1`. Le mode
+  multi-réplica de Coder est sa fonctionnalité de haute disponibilité, qui
+  nécessite une licence premium : sans elle, des réplicas supplémentaires
+  servent l'API et l'interface utilisateur mais ne rejoignent jamais le maillage
+  de relais de Coder, de sorte que les sessions de terminal et SSH de l'espace
+  de travail dépendraient du réplica choisi par l'équilibreur de charge.
+- **`session_affinity = ClientIP`** maintient le trafic de terminal/IDE riche en WebSocket
+  d'un navigateur épinglé au même pod pendant toute la session.
+- **Ingress et une IP statique sont provisionnés prêts à l'emploi**
   (`enable_custom_domain = true`, `reserve_static_ip = true`).
 
 ---
@@ -85,20 +88,22 @@ un ensemble restreint et ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants figurent dans les [sorties](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de
+noms et les autres identifiants sont rapportés dans les [Sorties](#5-outputs)
+du déploiement.
 
 ### A. GKE Autopilot — la charge de travail du plan de contrôle Coder {#a-gke-autopilot--the-coder-control-plane-workload}
 
-Les pods Coder s'exécutent sur Autopilot, facturés selon le CPU et la mémoire
-qu'ils demandent réellement. Comme le plan de contrôle est sans état, la charge
-de travail s'exécute sous forme d'un `Deployment` standard avec une stratégie
-`RollingUpdate` (sans la contrainte `Recreate` liée à NFS) et peut être mise à
-l'échelle horizontalement sans risque.
+Les pods Coder s'exécutent sur Autopilot, facturés pour le CPU/la mémoire
+réellement demandés par les pods. Comme le plan de contrôle est sans état, la
+charge de travail s'exécute comme un `Deployment` standard avec une
+stratégie `RollingUpdate` (pas de contrainte `Recreate` basée sur NFS).
+L'exécution de plus d'un réplica nécessite le mode haute disponibilité sous
+licence de Coder (voir ci-dessus).
 
-- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge
-  de travail Coder pour les pods, les révisions et les événements. Kubernetes
-  Engine → Services & Ingress affiche l'IP externe.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la
+  charge de travail Coder pour les pods, les révisions et les événements.
+  Kubernetes Engine → Services et Ingress affiche l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc -n "$NAMESPACE"
@@ -106,21 +111,21 @@ l'échelle horizontalement sans risque.
   kubectl get hpa -n "$NAMESPACE"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à
-l'échelle HPA et du type de charge de travail (Deployment ou StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, la mise à l'échelle
+HPA et le type de charge de travail (Deployment vs StatefulSet).
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Coder stocke tout — espaces de travail, modèles, utilisateurs, journaux d'audit,
-sessions et ses propres clés de signature — dans une instance gérée Cloud SQL
-for PostgreSQL 15. Les pods s'y connectent via le side-car **Cloud SQL Auth
-Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Au premier
-déploiement, le job `db-init` crée la base de données et le rôle de
-l'application ; le moteur de migration propre à Coder crée ensuite le schéma au
-démarrage du serveur.
+Coder stocke tout — espaces de travail, modèles, utilisateurs, journaux
+d'audit, sessions et ses propres clés de signature — dans une instance Cloud
+SQL pour PostgreSQL 15 gérée. Les pods l'atteignent via le sidecar **Cloud
+SQL Auth Proxy** sur `127.0.0.1:5432` ; aucune IP publique n'est exposée. Lors
+du premier déploiement, le job `db-init` crée la base de données et le
+rôle de l'application ; le moteur de migration de Coder crée ensuite le
+schéma au démarrage du serveur.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les
-  sauvegardes, les flags et les métriques.
+  sauvegardes, les drapeaux, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -129,17 +134,17 @@ démarrage du serveur.
   ```
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe figurent tous dans les [sorties](#5-outputs).
-Consultez [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes
-automatiques et la rotation du mot de passe.
+Manager contenant le mot de passe sont tous dans les [Sorties](#5-outputs).
+Voir [App_GKE](App_GKE.md) pour le modèle de connexion, les sauvegardes
+automatisées et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
 
 Un bucket **Cloud Storage** dédié (suffixe `storage`) est provisionné
 automatiquement par `Coder_Common` et le compte de service de la charge de
-travail y reçoit un accès. Il n'est actuellement pas monté par défaut dans le
-conteneur Coder — Coder n'a pas besoin d'un système de fichiers partagé, puisque
-l'état réside dans PostgreSQL.
+travail se voit accorder l'accès. Il n'est pas actuellement monté dans le
+conteneur Coder par défaut — Coder ne nécessite pas de système de fichiers
+partagé, car l'état réside dans PostgreSQL.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -147,57 +152,60 @@ l'état réside dans PostgreSQL.
   gcloud storage buckets list --project "$PROJECT" --filter="name~storage"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse
-(`gcs_volumes`) si vous devez en rattacher un pour un workflow personnalisé.
+Voir [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse
+(`gcs_volumes`) si vous avez besoin d'en attacher un pour un workflow
+personnalisé.
 
 ### D. Secret Manager {#d-secret-manager}
 
-Coder se distingue des applications avec état en ne créant **aucun secret
-applicatif propre** — il génère lui-même ses clés de signature et les conserve
-dans la base de données PostgreSQL `coder` au premier démarrage. Le seul
-identifiant que contient Secret Manager est le mot de passe de la base de données
-géré par le socle. Sur GKE, les secrets sont projetés dans les pods via le pilote
-CSI Secret Store.
+Coder est inhabituel parmi les applications avec état en ce qu'il ne crée
+**aucun secret d'application propre** — il auto-génère ses clés de signature
+et les persiste dans la base de données PostgreSQL `coder` au premier
+démarrage. La seule information d'identification que Secret Manager détient
+est le mot de passe de la base de données géré par la Fondation. Sur GKE,
+les secrets sont projetés dans les pods via le pilote CSI Secret Store.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~coder"
   gcloud secrets versions access latest --secret=<db-password-secret-name> --project "$PROJECT"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour l'intégration CSI Secret Store et la
-rotation.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store
+CSI.
 
-### E. Réseau et entrée {#e-networking--ingress}
+### E. Réseau et ingress {#e-networking--ingress}
 
-Par défaut, la charge de travail est exposée via un Ingress Kubernetes adossé à
-une IP statique globale (`reserve_static_ip = true` afin que l'adresse survive
-aux redéploiements). Un domaine personnalisé avec un certificat géré par Google
-peut être activé via `application_domains`. Comme Coder relaie des connexions
-WebSocket de longue durée pour le terminal web et le trafic des applications
-d'espace de travail, conservez `session_affinity = ClientIP` afin que les
-requêtes d'un client aboutissent sur le même pod pendant toute la durée d'une
+Par défaut, la charge de travail est exposée via un Ingress Kubernetes
+soutenu par une IP statique globale (`reserve_static_ip = true` afin que l'adresse
+survive aux redéploiements). Un domaine personnalisé avec un certificat géré
+par Google peut être activé via `application_domains`. Étant donné que Coder
+proxy des connexions WebSocket de longue durée pour le terminal web et le
+trafic d'applications d'espace de travail, maintenez `session_affinity = ClientIP` afin que
+les requêtes d'un client atterrissent sur le même pod pendant la durée d'une
 session.
 
-- **Console :** Network services → Load balancing ; VPC network → IP addresses.
+- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC →
+  Adresses IP.
 - **CLI :**
   ```bash
   kubectl get svc,ingress -n "$NAMESPACE"
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_GKE](App_GKE.md) pour les détails sur les domaines personnalisés,
-Cloud CDN et l'IP statique.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
+détails de l'IP statique.
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods sont envoyées à Cloud Logging ; les métriques
-de GKE et de Cloud SQL sont envoyées à Cloud Monitoring. Des tests de
-disponibilité et des règles d'alerte sont disponibles en option
+Le stdout/stderr des pods est acheminé vers Cloud Logging ; les métriques GKE
+et Cloud SQL sont acheminées vers Cloud Monitoring. Des vérifications de
+disponibilité et des politiques d'alerte optionnelles sont disponibles
 (`uptime_check_config` est désactivé par défaut).
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
+  bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -208,52 +216,51 @@ disponibilité et des règles d'alerte sont disponibles en option
 
 ## 3. Comportement de l'application Coder {#3-coder-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement, sans job de
-  migration distinct.** Le job `db-init` exécute `db-init.sh` avec
-  `postgres:15-alpine`. Il attend le side-car Cloud SQL Auth Proxy, crée de
-  manière idempotente le rôle et la base de données `coder`, accorde les
-  privilèges et réattribue la propriété du schéma `public`, puis signale au
-  side-car du proxy de s'arrêter (`--quitquitquit`) afin que le pod du Job se
-  termine. Coder exécute ensuite ses propres migrations de schéma au démarrage du
-  serveur — il n'existe pas de job de migration dédié, contrairement aux
-  applications dotées d'une étape `db-migrate` distincte.
-- **Aucun compte administrateur n'est pré-provisionné.** Le premier utilisateur
-  qui atteint l'interface web après un démarrage réussi effectue la
-  configuration initiale interactive de Coder (création du compte administrateur
-  initial). Il n'existe aucun secret de mot de passe administrateur généré
-  automatiquement à récupérer.
-- **Le DSN est assemblé au démarrage du conteneur, et non intégré à l'image.**
-  `entrypoint.sh` (dans `Coder_Common/scripts/`) construit
-  `CODER_PG_CONNECTION_URL` à partir des valeurs `DB_*` injectées par le socle,
-  car le pilote Go de Coder attend une URL `postgres://` et ne sait pas analyser
-  la forme à mots-clés de libpq. Sur GKE, `DB_HOST=127.0.0.1` (le side-car Auth
-  Proxy) se traduit par `sslmode=disable` ; le mot de passe est encodé en
-  pourcentage selon la RFC 3986 afin que les caractères spéciaux ne cassent pas
-  l'URL. `CODER_ACCESS_URL` prend par défaut la valeur de `GKE_SERVICE_URL`
-  injectée par le socle.
-- **Le trafic riche en WebSocket nécessite un routage persistant.** Le terminal
-  web, le relais des applications d'espace de travail et les commandes
-  `coder ssh`/redirection de port de la CLI passent tous par des connexions
-  WebSocket de longue durée via le plan de contrôle. Conservez
-  `session_affinity = ClientIP` (la valeur par défaut) afin que la connexion d'un
-  client reste sur un même pod ; porter `max_instance_count` au-dessus de 1 est
-  sans risque pour le plan de contrôle sans état lui-même, mais une session
-  WebSocket en cours ne migre pas d'un pod à l'autre si l'un d'eux est drainé en
-  pleine session.
-- **Chemins des sondes de santé.** Les sondes de démarrage et de vivacité ciblent
-  toutes deux **HTTP `GET /health`** avec un délai initial de 60 secondes ; la
-  sonde de démarrage tolère jusqu'à 30 échecs avec une période de 15 secondes
-  pour absorber la migration de schéma du premier démarrage de Coder. La sonde de
-  disponibilité (readiness) fournie par Common (utilisée par le raccordement
-  `additional_services`/disponibilité du socle) cible séparément `GET /healthz`.
-- **La télémétrie est désactivée par défaut** (`CODER_TELEMETRY_ENABLE = "false"`),
-  et `CODER_VERBOSE = "false"`.
+- **Configuration de la base de données au premier déploiement, pas de job de
+  migration séparé.** Le job `db-init` exécute `db-init.sh` en
+  utilisant `postgres:15-alpine`. Il attend le sidecar Cloud SQL Auth Proxy, crée de
+  manière idempotente le rôle et la base de données `coder`, accorde
+  les privilèges et réaffecte le propriétaire du schéma `public`, puis
+  signale au sidecar proxy de s'arrêter (`--quitquitquit`) afin que le pod du
+  Job se termine. Coder exécute ensuite ses propres migrations de schéma au
+  démarrage du serveur — il n'y a pas de job de migration dédié, contrairement
+  aux applications avec une étape `db-migrate` séparée.
+- **Aucun compte administrateur n'est pré-provisionné.** Le premier
+  utilisateur à atteindre l'interface utilisateur web après un démarrage
+  réussi complète la configuration interactive de première exécution de Coder
+  (création du compte administrateur initial). Il n'y a pas de secret de mot
+  de passe administrateur auto-généré à récupérer.
+- **Assemblage du DSN au démarrage du conteneur, non intégré à l'image.**
+  `entrypoint.sh` (dans `Coder_Common/scripts/`) construit `CODER_PG_CONNECTION_URL` à
+  partir des valeurs `DB_*` injectées par la Fondation, car le pilote
+  Go de Coder attend une URL `postgres://` et ne peut pas analyser la forme
+  par mot-clé libpq. Sur GKE, `DB_HOST=127.0.0.1` (le sidecar Auth Proxy) se
+  résout en `sslmode=disable` ; le mot de passe est encodé en pourcentage
+  RFC-3986 afin que les caractères spéciaux ne cassent pas l'URL.
+  `CODER_ACCESS_URL` par défaut à `GKE_SERVICE_URL` injecté par la
+  Fondation.
+- **Le trafic riche en WebSocket nécessite un routage persistant.** Le
+  terminal web, le proxy d'application d'espace de travail et le
+  `coder ssh`/port-forward de la CLI utilisent tous des connexions
+  WebSocket de longue durée via le plan de contrôle. Maintenez
+  `session_affinity = ClientIP` (la valeur par défaut) afin que la connexion d'un client
+  persiste sur un seul pod ; `max_instance_count` reste à 1 à moins que vous ne
+  déteniez une licence Coder avec haute disponibilité.
+- **Chemins des sondes de santé.** Les sondes de démarrage et de vivacité
+  ciblent toutes deux **HTTP `GET /health`** avec un délai initial de 60
+  secondes ; la sonde de démarrage permet jusqu'à 30 échecs à une période de
+  15 secondes pour absorber la migration de schéma de Coder au premier
+  démarrage. La sonde de disponibilité fournie par Common (utilisée par le
+  câblage `additional_services`/readiness de la Fondation) cible
+  `GET /healthz` séparément.
+- **La télémétrie est désactivée par défaut** (`CODER_TELEMETRY_ENABLE = "false"`), et
+  `CODER_VERBOSE = "false"`.
 - **Plan de contrôle uniquement — les espaces de travail nécessitent un
-  provisionneur et une cible.** Ce module déploie `coder server` ; exécuter de
-  véritables espaces de travail nécessite en outre de configurer un provisionneur
-  et une cible de calcul (par exemple un autre cluster/espace de noms Kubernetes,
-  ou des modèles de VM cloud) via le système de modèles de Coder après la
-  première connexion.
+  provisionneur + une cible.** Ce module déploie `coder server` ;
+  l'exécution d'espaces de travail réels nécessite en outre la
+  configuration d'un provisionneur et d'une cible de calcul (par exemple un
+  autre cluster/espace de noms Kubernetes, ou des modèles de VM cloud) via le
+  système de modèles de Coder après la première connexion.
 - **Vérifier le déploiement :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -267,88 +274,89 @@ disponibilité et des règles d'alerte sont disponibles en option
 ## 4. Variables de configuration {#4-configuration-variables}
 
 Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres propres à Coder ou notables pour
-lui sont listés ; toutes les autres entrées sont héritées d'[App_GKE](App_GKE.md)
-avec leur comportement et leurs valeurs par défaut standard.
+plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
+Coder sont listés ; toutes les autres entrées sont héritées de
+[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut
+standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `coder` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `application_version` | `latest` | Tag de version de Coder ; `latest` correspond à un tag épinglé (`v2.24.1`) via l'ARG de build propre à l'application `CODER_VERSION`, afin de ne jamais se résoudre vers un `ghcr.io/coder/coder:latest` inexistant. |
+| `application_name` | `coder` | Nom de base pour les ressources. Ne pas modifier après le premier déploiement. |
+| `application_version` | `latest` | Tag de version de Coder ; `latest` correspond à un tag épinglé (`v2.24.1`) via l'ARG de build `CODER_VERSION` spécifique à l'application afin qu'il ne se résolve jamais contre un `ghcr.io/coder/coder:latest` inexistant. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `container_image_source` | `custom` | Obligatoire — l'image en amont ne peut pas être déployée telle quelle ; Cloud Build l'encapsule avec le point d'entrée qui assemble le DSN. |
-| `container_port` | `3000` | Port d'écoute `CODER_HTTP_ADDRESS` de Coder. |
+| `container_image_source` | `custom` | Requis — l'image amont ne peut pas être déployée pré-construite ; Cloud Build l'encapsule avec le point d'entrée d'assemblage DSN. |
+| `container_port` | `3000` | Port de liaison `CODER_HTTP_ADDRESS` de Coder. |
 | `container_resources` | `cpu_limit=2000m`, `memory_limit=4Gi` | 2 vCPU / 4 GiB par défaut pour le plan de contrôle. |
-| `min_instance_count` / `max_instance_count` | `1` / `5` | Bornes de réplicas du HPA — le plan de contrôle sans état se met à l'échelle horizontalement sur la base de données partagée. |
-| `enable_cloudsql_volume` | `true` | Side-car Auth Proxy (interface de bouclage) — obligatoire sur GKE ; une garde au moment du plan le rejette lorsque `database_type = "NONE"`. |
-| `enable_image_mirroring` | `true` | Toujours activé pour Coder — l'image de base issue de GHCR est mise en miroir dans Artifact Registry. |
+| `min_instance_count` / `max_instance_count` | `1` / `1` | Limites de réplicas. Plus d'un réplica nécessite le mode haute disponibilité sous licence de Coder. |
+| `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy (loopback) — requis sur GKE ; une garde au moment du plan le rejette lorsque `database_type = "NONE"`. |
+| `enable_image_mirroring` | `true` | Toujours activé pour Coder — l'image de base provenant de GHCR est mise en miroir dans Artifact Registry. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | IP externe pour l'interface et l'API Coder. |
-| `workload_type` | `null` → `Deployment` | Deployment (sans état, `RollingUpdate` standard). |
+| `service_type` | `LoadBalancer` | IP externe pour l'interface utilisateur/API de Coder. |
+| `workload_type` | `null` → `Deployment` | Déploiement (sans état, `RollingUpdate` standard). |
 | `session_affinity` | `ClientIP` | Routage persistant afin que la session WebSocket d'un client atteigne le même pod. |
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `false` | Non requis — tout l'état réside dans PostgreSQL. S'il est activé, `nfs_mount_path` doit être un véritable répertoire, jamais un sous-chemin de `/opt/coder` (le binaire `coder`, un fichier). |
+| `enable_nfs` | `false` | Non requis — tout l'état est dans PostgreSQL. Si activé, `nfs_mount_path` doit être un répertoire réel, jamais un sous-chemin de `/opt/coder` (le binaire `coder`, un fichier). |
 | `nfs_mount_path` | `/home/coder/data` | Utilisé uniquement lorsque `enable_nfs = true`. |
 
 ### Groupe 15 — Redis {#group-15--redis}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Non requis — les sessions et la file d'attente des builds résident dans PostgreSQL, contrairement aux applications qui ont besoin d'un cache/d'une file d'attente externe. |
-| `redis_host` | `""` | Pertinent uniquement si `enable_redis = true` ; une garde au moment du plan exige soit `redis_host`, soit `enable_nfs = true`. |
+| `enable_redis` | `false` | Non requis — les sessions et la file d'attente de build résident dans PostgreSQL, contrairement aux applications qui nécessitent un cache/une file d'attente externe. |
+| `redis_host` | `""` | Pertinent uniquement si `enable_redis = true` ; une garde au moment du plan exige soit `redis_host` soit `enable_nfs = true`. |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `POSTGRES_15` | Coder exige PostgreSQL 13+ ; MySQL est rejeté au moment du plan (`validation.tf`). |
-| `application_database_name` | `coder` | Nom de la base de données. Immuable après le premier déploiement — le renommer recrée la base de données et rend orphelin tout l'état de Coder. |
-| `application_database_user` | `coder` | Utilisateur de la base de données de l'application ; mot de passe généré automatiquement dans Secret Manager. |
+| `database_type` | `POSTGRES_15` | Coder nécessite PostgreSQL 13+ ; MySQL est rejeté au moment du plan (`validation.tf`). |
+| `application_database_name` | `coder` | Nom de la base de données. Immuable après le premier déploiement — le renommage recrée la base de données et orpheline tout l'état de Coder. |
+| `application_database_user` | `coder` | Utilisateur de la base de données de l'application ; mot de passe auto-généré dans Secret Manager. |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Un Ingress Kubernetes est provisionné d'emblée. |
-| `reserve_static_ip` | `true` | IP externe stable d'un redéploiement à l'autre. |
-| `application_domains` | `[]` | Noms d'hôte personnalisés + certificat géré. |
+| `enable_custom_domain` | `true` | Un Ingress Kubernetes est provisionné prêt à l'emploi. |
+| `reserve_static_ip` | `true` | IP externe stable à travers les redéploiements. |
+| `application_domains` | `[]` | Noms d'hôtes personnalisés + certificat géré. |
 
-Toutes les autres entrées suivent le comportement standard d'[App_GKE](App_GKE.md).
-Remarque : `elasticsearch_url`, `elasticsearch_username` et
-`elasticsearch_password_secret` sont déclarées dans `variables.tf` par souci de
-cohérence avec le catalogue, mais **ne sont pas transmises** à l'appel du socle
-dans `main.tf` — Coder n'a aucune intégration Elasticsearch dans ce module ; les
-définir n'a donc aucun effet.
+Toutes les autres entrées suivent le comportement standard de [App_GKE](App_GKE.md).
+Note : `elasticsearch_url`, `elasticsearch_username` et `elasticsearch_password_secret` sont déclarés dans
+`variables.tf` pour la parité du catalogue mais ne sont **pas transmis** à
+l'appel de la Fondation dans `main.tf` — Coder n'a pas
+d'intégration Elasticsearch dans ce module, donc les définir n'a aucun effet.
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
-le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
+Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le
+moyen le plus rapide de localiser et d'explorer les ressources en cours
+d'exécution.
 
 | Sortie | Description |
 |---|---|
-| `service_name` | Nom du Service Kubernetes. |
-| `namespace` | Espace de noms dans lequel s'exécute la charge de travail. |
-| `service_cluster_ip` | ClusterIP interne au cluster. |
-| `stage_service_cluster_ips` | Map des ClusterIP des services propres à chaque étape. |
+| `service_name` | Nom du service Kubernetes. |
+| `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
+| `service_cluster_ip` | ClusterIP intra-cluster. |
+| `stage_service_cluster_ips` | Carte des ClusterIPs pour les services spécifiques à l'étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
-| `service_url` | URL permettant d'accéder à Coder. |
+| `service_url` | URL pour atteindre Coder. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
@@ -356,63 +364,65 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
-| `initialization_jobs` / `db_import_job` | Noms du job de configuration (`db-init`) et du job d'importation (facultatif). |
+| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration (`db-init`) et d'importation (optionnel). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `cicd_configuration` | État et détails du CI/CD (dépôt, déclencheur, registre). |
-| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub du CI/CD. |
-| `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Dépôt et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster et la charge de travail sont prêts. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
+| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
+| `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
+> (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration
-> au moteur du socle [App_GKE](App_GKE.md), qui valide les valeurs *et leurs
-> combinaisons* au moment du plan — un nombre d'instances hors plage, IAP activé
-> sans identifiants OAuth, des `quota_memory_*` fournis sous forme d'entiers
-> bruts. Coder_GKE ajoute en outre ses propres gardes dans `validation.tf`
-> (`database_type` limité à PostgreSQL, la précondition hôte Redis/NFS, le
-> conflit entre le volume Cloud SQL et `database_type = "NONE"`). Une
-> configuration invalide fait échouer le **plan** avec une erreur claire et
-> nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous
-> sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa
+> configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les
+> valeurs *et les combinaisons* au moment du plan — un nombre d'instances
+> hors limites, IAP activé sans identifiants OAuth, `quota_memory_*` donné
+> comme des entiers bruts. Coder_GKE ajoute en outre ses propres gardes dans
+> `validation.tf` (`database_type` PostgreSQL uniquement, la
+> précondition hôte/NFS Redis, le volume Cloud SQL vs le conflit
+> `database_type = "NONE"`). Une configuration invalide fait échouer le **plan** avec
+> une erreur claire et nommée avant la création de toute ressource, de sorte
+> que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au
+> moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` (ou 13/14) | Critique | Tout moteur autre que PostgreSQL est rejeté au moment du plan ; en forcer un en contournant la garde casse toutes les requêtes émises par Coder. |
-| `application_database_name` / `application_database_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit tous les espaces de travail, modèles, utilisateurs et clés de signature auto-générées. |
-| `container_image_source` | `custom` | Critique | Passer à `prebuilt` fait pointer GKE vers l'image brute `ghcr.io/coder/coder`, qui ne sait pas assembler `CODER_PG_CONNECTION_URL` à partir des variables de base de données du socle et ne démarre pas. |
-| `enable_cloudsql_volume` | `true` | Critique | Requis pour la connectivité à la base de données sur GKE ; une garde au moment du plan le bloque également lorsque `database_type = "NONE"` pour éviter un side-car de proxy sans rien à quoi se connecter. |
-| `nfs_mount_path` (si `enable_nfs=true`) | Un véritable répertoire, par ex. `/home/coder/data` | Critique | Un montage par-dessus `/opt/coder` — le binaire `coder` lui-même — masque l'exécutable et le conteneur ne démarre pas. |
-| `session_affinity` | `ClientIP` | Élevé | Sans persistance, une session WebSocket de terminal/IDE en cours peut être routée vers un autre pod en pleine session et être interrompue. |
-| `enable_redis` | `false` | Moyen | Inutile — l'activer sans définir `redis_host` ni `enable_nfs=true` fait échouer la validation au moment du plan ; même correctement configuré, il ajoute une dépendance inutilisée puisque Coder conserve tout son état dans PostgreSQL. |
-| `max_instance_count` | `5` (à ajuster selon la charge) | Moyen | Peut être augmenté sans risque pour un plan de contrôle sans état, mais chaque réplica ouvre son propre pool de connexions à la base de données — surveillez `max_connections` de Cloud SQL avec un nombre élevé de réplicas. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont interprétés comme des octets et bloquent toute planification de pods dans l'espace de noms. |
-| `reserve_static_ip` | `true` | Moyen | Sans elle, l'IP externe peut changer d'un redéploiement à l'autre, ce qui casse le DNS, `CODER_ACCESS_URL` et toute redirection OAuth/OIDC enregistrée. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires de l'historique des espaces de travail et des modèles. |
-| `elasticsearch_url` / `elasticsearch_username` / `elasticsearch_password_secret` | Laisser non définies | Faible | Inertes dans ce module (non transmises à l'appel du socle) — les définir n'a aucun effet et n'active aucune intégration de recherche. |
+| `database_type` | `POSTGRES_15` (ou 13/14) | Critique | Tout moteur non-PostgreSQL est rejeté au moment du plan ; en forcer un contourne la garde et casse chaque requête émise par Coder. |
+| `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit tous les espaces de travail, modèles, utilisateurs et clés de signature auto-générées. |
+| `container_image_source` | `custom` | Critique | Passer à `prebuilt` pointe GKE vers l'image brute `ghcr.io/coder/coder`, qui ne peut pas assembler `CODER_PG_CONNECTION_URL` à partir des variables de base de données de la Fondation et ne démarre pas. |
+| `enable_cloudsql_volume` | `true` | Critique | Requis pour la connectivité de la base de données sur GKE ; une garde au moment du plan le bloque également lorsque `database_type = "NONE"` pour éviter un sidecar proxy sans rien à connecter. |
+| `nfs_mount_path` (si `enable_nfs=true`) | Un répertoire réel, par exemple `/home/coder/data` | Critique | Monter sur `/opt/coder` — le binaire `coder` lui-même — masque l'exécutable et le conteneur ne démarre pas. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, une session de terminal/IDE WebSocket en cours peut être acheminée vers un pod différent en cours de session et être interrompue. |
+| `enable_redis` | `false` | Moyen | Non nécessaire — l'activer sans `redis_host` défini ou `enable_nfs=true` échoue à la validation au moment du plan ; même correctement configuré, cela ajoute une dépendance inutilisée puisque Coder conserve tout l'état dans PostgreSQL. |
+| `max_instance_count` | `1` | Élevé | Coder multi-réplica est une fonctionnalité de haute disponibilité sous licence premium ; les réplicas supplémentaires sans licence ne rejoignent jamais le maillage de relais, de sorte que les connexions d'espace de travail se rompent selon le réplica qui les sert. |
+| `quota_memory_requests` / `_limits` | Unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont traités comme des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `reserve_static_ip` | `true` | Moyen | Sans cela, l'IP externe peut changer lors des redéploiements, ce qui rompt le DNS, `CODER_ACCESS_URL` et toute redirection OAuth/OIDC enregistrée. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité de l'historique des espaces de travail/modèles. |
+| `elasticsearch_url` / `elasticsearch_username` / `elasticsearch_password_secret` | Laisser vide | Faible | Inerte dans ce module (non transmis à l'appel de la Fondation) — les définir n'a aucun effet et n'active pas l'intégration de la recherche. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — IAM et Workload
-Identity, autoscaling, entrée et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
-**[App_GKE](App_GKE.md)**. La configuration applicative propre à Coder partagée
-avec la variante Cloud Run est décrite dans
+Pour le comportement de la fondation référencé tout au long — IAM et Workload
+Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP,
+Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Coder
+partagée avec la variante Cloud Run est décrite dans
 **[Coder_Common](Coder_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Coder sur GKE Autopilot](../labs/Coder_GKE.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Coder sur GKE Autopilot](../labs/Coder_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Coder sur Google Cloud Run](Coder_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Coder Common — Configuration applicative partagée](Coder_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Coder Common — Configuration d'application partagée](Coder_Common.md) — la configuration partagée par les deux cibles de déploiement.

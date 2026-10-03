@@ -1,90 +1,92 @@
 ---
 title: "Firefly III sur Google Cloud Run"
-description: "Référence de configuration pour déployer Firefly III sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Firefly III sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FireflyIII_CloudRun.md @ 3055034 sha256:cf29a74b82d5 -->
+<!-- translated-from: docs/modules/FireflyIII_CloudRun.md @ 15fd4c7 sha256:28aafb3ed364 -->
 
 # Firefly III sur Google Cloud Run {#firefly-iii-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/FireflyIII_CloudRun.png" alt="Firefly III sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Firefly III est un gestionnaire de finances personnelles gratuit, open source, sous
-licence AGPL et auto-hébergé. Il suit les comptes, les transactions, les budgets,
-les factures, les catégories et les transactions récurrentes, et expose une API REST
-complète. Ce module déploie Firefly III sur **Cloud Run v2** en s'appuyant sur le
-socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
-Google Cloud partagée.
+Firefly III est un gestionnaire de finances personnelles auto-hébergé, gratuit,
+open-source et sous licence AGPL. Il suit les comptes, les transactions, les
+budgets, les factures, les catégories et les transactions récurrentes, et expose
+une API REST complète. Ce module déploie Firefly III sur **Cloud Run v2** sur la
+base de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud utilisés par Firefly III et sur la
 manière de les explorer et de les exploiter depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run —
-identité du service, entrée et équilibrage de charge, mise à l'échelle et
+ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
+Run — identité de service, entrée et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
+ici.
 
 ---
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Firefly III s'exécute sous forme de conteneur Laravel/PHP (Apache) sur Cloud Run v2.
-Le déploiement assemble un ensemble ciblé de services Google Cloud :
+Firefly III s'exécute en tant que conteneur Laravel/PHP (Apache) sur Cloud Run
+v2. Le déploiement relie un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Service PHP/Apache, 1 vCPU / 2 GiB par défaut, mise à l'échelle automatique serverless ; mise à l'échelle à zéro prise en charge |
-| Base de données | Cloud SQL for PostgreSQL 15 | Moteur imposé — `DB_CONNECTION = pgsql` ; MySQL n'est pas utilisé |
+| Calcul | Cloud Run v2 | Service PHP/Apache, 1 vCPU / 2 Gio par défaut, autoscaling sans serveur ; prise en charge de la mise à l'échelle à zéro |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Moteur fixe — `DB_CONNECTION = pgsql` ; MySQL n'est pas utilisé |
 | Stockage d'objets | Cloud Storage | Un bucket `fireflyiii-uploads` dédié provisionné automatiquement |
-| Fichiers persistants | Filestore (NFS, facultatif) | Pièces jointes et données d'exécution montées sur `/var/lib/fireflyiii` |
-| Secrets | Secret Manager | `APP_KEY` Laravel et `STATIC_CRON_TOKEN` générés automatiquement ; mot de passe de la base de données |
-| Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
+| Fichiers persistants | Filestore (NFS, facultatif) | Pièces jointes et données d'exécution montées à `/var/lib/fireflyiii` |
+| Secrets | Secret Manager | `APP_KEY` et `STATIC_CRON_TOKEN` Laravel auto-générés ; mot de passe de la base de données |
+| Entrée | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
-- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est imposé par
-  la couche applicative partagée ; Firefly se connecte à l'**IP privée de Cloud SQL
-  en TCP** avec `PGSQL_SSL_MODE = require` (Cloud SQL refuse le TCP non chiffré sur
-  IP privée).
-- **`APP_KEY` est généré automatiquement** et stocké dans Secret Manager. Cette clé
-  Laravel chiffre les champs sensibles au repos et **ne doit jamais faire l'objet
-  d'une rotation après le premier démarrage** — sa rotation rend illisibles les
-  données chiffrées auparavant.
-- **`STATIC_CRON_TOKEN` est généré automatiquement.** Firefly n'effectue aucune
-  planification en arrière-plan par lui-même ; un appelant doit interroger
-  `GET /api/v1/cron/<STATIC_CRON_TOKEN>` pour exécuter les transactions récurrentes,
-  les rappels de factures et les budgets automatiques. Configurez un job Cloud
-  Scheduler pour le faire chaque jour.
-- **La mise à l'échelle à zéro est activée par défaut** (`min_instance_count = 0`).
-  Les démarrages à froid ajoutent 10–30 secondes de latence à la première requête
-  après une période d'inactivité. Définissez `min_instance_count = 1` pour maintenir
-  le service actif.
-- **La première exécution passe par `/register`.** Aucun administrateur n'est créé
-  à l'avance — le premier compte créé devient propriétaire/administrateur. Désactivez
-  ensuite l'inscription ouverte dans **Administration → Settings**.
-- **NFS est activé par défaut** afin de conserver les pièces jointes téléversées et
-  les données d'exécution sur `/var/lib/fireflyiii` d'un démarrage à froid et d'une
-  révision à l'autre ; nécessite l'environnement d'exécution gen2.
-- **Redis est désactivé par défaut.** Firefly III utilise la base de données pour
-  le cache et la file d'attente ; une instance unique n'a besoin d'aucun Redis
-  externe.
+- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
+  couche d'application partagée ; Firefly se connecte via l'**IP privée de Cloud
+  SQL via TCP** avec `PGSQL_SSL_MODE = require` (Cloud SQL rejette le TCP IP privée non chiffré).
+- **`APP_KEY` est générée automatiquement** et stockée dans Secret Manager. Cette
+  clé Laravel chiffre les champs sensibles au repos et **ne doit jamais être
+  renouvelée après le premier démarrage** — la renouveler rend les données
+  précédemment chiffrées illisibles.
+- **`STATIC_CRON_TOKEN` est générée automatiquement.** Firefly ne planifie pas de tâches en
+  arrière-plan par lui-même ; un appelant doit atteindre `GET /api/v1/cron/<STATIC_CRON_TOKEN>` pour
+  exécuter les transactions récurrentes, les rappels de factures et les
+  budgets automatiques. Le module inclut un job `firefly-cron` intégré qui le fait
+  quotidiennement à 03:00 UTC ; tout `cron_jobs` que vous
+  ajoutez s'exécute en même temps.
+- **La mise à l'échelle à zéro est activée par défaut** (`min_instance_count = 0`). Les
+  démarrages à froid ajoutent 10 à 30 secondes de latence à la première requête
+  après l'inactivité. Définissez `min_instance_count = 1` pour maintenir le service actif.
+- **La première exécution est `/register`.** Aucun administrateur n'est
+  pré-initialisé — le premier compte créé devient le propriétaire/administrateur.
+  Désactivez l'enregistrement ouvert par la suite dans
+  **Administration → Settings**.
+- **NFS est activé par défaut** pour persister les pièces jointes téléchargées et
+  les données d'exécution à `/var/lib/fireflyiii` lors des démarrages à froid et des
+  révisions ; nécessite l'environnement d'exécution gen2.
+- **Redis est désactivé par défaut.** Firefly III utilise la base de données
+  pour le cache et la file d'attente ; une seule instance n'a pas besoin de
+  Redis externe.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de
+services et de ressources sont rapportés dans les [Sorties](#5-outputs) du
+déploiement.
 
 ### A. Cloud Run — le service Firefly III {#a-cloud-run--the-firefly-iii-service}
 
-Firefly III s'exécute en tant que service Cloud Run v2 dont la mise à l'échelle
-automatique suit la charge des requêtes, entre le nombre minimal et le nombre
-maximal d'instances. Chaque déploiement crée une révision immuable ; le trafic peut
-être réparti entre les révisions pour des déploiements progressifs sûrs.
+Firefly III s'exécute en tant que service Cloud Run v2 qui s'adapte
+automatiquement en fonction de la charge des requêtes entre le nombre minimal et
+maximal d'instances. Chaque déploiement crée une révision immuable ; le trafic
+peut être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour consulter les révisions,
-  le trafic, les journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le
+  trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -92,20 +94,20 @@ maximal d'instances. Chaque déploiement crée une révision immuable ; le trafi
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la
-concurrence, l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
+l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Firefly III stocke toutes les données de l'application (comptes, transactions,
-budgets, factures, règles, utilisateurs) dans une instance gérée Cloud SQL for
-PostgreSQL 15. Sur Cloud Run, le service se connecte à l'**IP privée de l'instance
-en TCP** avec TLS obligatoire (`PGSQL_SSL_MODE = require`) ; aucune IP publique
-n'est exposée. Lors du premier déploiement, un job d'initialisation crée le rôle
-et la base de données de l'application et accorde les privilèges.
+Firefly III stocke toutes les données d'application (comptes, transactions,
+budgets, factures, règles, utilisateurs) dans une instance gérée de Cloud SQL
+pour PostgreSQL 15. Sur Cloud Run, le service se connecte via l'**IP privée de
+l'instance via TCP** avec TLS requis (`PGSQL_SSL_MODE = require`) ; aucune IP publique n'est
+exposée. Lors du premier déploiement, un job d'initialisation crée le rôle et la
+base de données de l'application et accorde les privilèges.
 
-- **Console :** SQL → sélectionnez l'instance pour consulter les connexions, les
-  sauvegardes, les flags et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les
+  sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -113,17 +115,18 @@ et la base de données de l'application et accorde les privilèges.
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
-pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de
+passe se trouvent dans les [Sorties](#5-outputs). Voir
+[App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et
+la rotation des mots de passe.
 
 ### C. Cloud Storage et NFS {#c-cloud-storage--nfs}
 
-Un bucket **Cloud Storage** dédié aux téléversements est provisionné
-automatiquement. Lorsque NFS est activé (par défaut), le répertoire des pièces
-jointes et des données d'exécution de Firefly III est monté depuis un volume
-Filestore/NFS sur `/var/lib/fireflyiii`, afin que les fichiers téléversés survivent
-aux démarrages à froid et aux nouvelles révisions.
+Un bucket de téléchargement **Cloud Storage** dédié est provisionné
+automatiquement. Lorsque NFS est activé (par défaut), les pièces jointes et le
+répertoire d'exécution de Firefly III sont montés à partir d'un volume
+Filestore/NFS à `/var/lib/fireflyiii` afin que les fichiers téléchargés survivent aux
+démarrages à froid et aux nouvelles révisions.
 
 - **Console :** Cloud Storage → Buckets ; Filestore → Instances.
 - **CLI :**
@@ -132,34 +135,34 @@ aux démarrages à froid et aux nouvelles révisions.
   gcloud storage ls gs://<uploads-bucket>/        # bucket name is in the Outputs
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse, NFS et CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse, NFS et CMEK.
 
 ### D. Secret Manager {#d-secret-manager}
 
-Deux secrets cryptographiques sont générés automatiquement et stockés dans Secret
-Manager : l'`APP_KEY` Laravel (chiffre les champs sensibles au repos) et le
-`STATIC_CRON_TOKEN` (authentifie le point de terminaison cron). Le mot de passe de
-la base de données est géré séparément par le socle.
+Deux secrets cryptographiques sont générés automatiquement et stockés dans
+Secret Manager : la `APP_KEY` Laravel (chiffre les champs sensibles au repos) et
+le `STATIC_CRON_TOKEN` (authentifie le point de terminaison cron). Le mot de passe de la
+base de données est géré séparément par la fondation.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~app-key OR name~cron-token"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
-rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
 ### E. Cron (transactions récurrentes) {#e-cron-recurring-transactions}
 
-Firefly III n'exécute les transactions récurrentes, les rappels de factures et les
-budgets automatiques que lorsqu'un appelant interroge son point de terminaison cron.
-Il n'existe aucun planificateur intégré au processus.
+Firefly III exécute les transactions récurrentes, les rappels de factures et les
+budgets automatiques uniquement lorsqu'un appelant atteint son point de
+terminaison cron. Il n'y a pas de planificateur intégré.
 
-- Configurez un job **Cloud Scheduler** qui appelle
-  `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>` chaque jour (définissez-le via
-  l'entrée `cron_jobs` ou créez-le dans la console).
+- Un job planifié `firefly-cron` intégré (`curlimages/curl`, `0 3 * * *`) appelle
+  `GET <service-url>/api/v1/cron/<STATIC_CRON_TOKEN>` quotidiennement. Il est toujours ajouté, et toutes les
+  entrées `cron_jobs` que vous définissez lui sont ajoutées plutôt que de le
+  remplacer.
 - **CLI :**
   ```bash
   # Read the token, then trigger the cron manually to verify:
@@ -169,27 +172,29 @@ Il n'existe aucun planificateur intégré au processus.
 
 ### F. Réseau et entrée {#f-networking--ingress}
 
-Le service est accessible par défaut à son URL `run.app`. Un équilibreur de charge
-HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
-ajouté ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
+Le service est accessible par son URL `run.app` par défaut. Un équilibreur de
+charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor
+peuvent être superposés ; les paramètres d'entrée et le contrôle de la sortie
+VPC gèrent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
+  charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques de Cloud
-Run et de Cloud SQL sont envoyées à Cloud Monitoring, avec en option des tests de
-disponibilité et des règles d'alerte.
+Les journaux de conteneurs sont envoyés à Cloud Logging ; les métriques Cloud
+Run et Cloud SQL sont envoyées à Cloud Monitoring, avec des vérifications de
+disponibilité et des politiques d'alerte facultatives.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards /
-  Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
+  bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -200,36 +205,35 @@ disponibilité et des règles d'alerte.
 ## 3. Comportement de l'application Firefly III {#3-firefly-iii-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il crée de
-  manière idempotente le rôle et la base de données de l'application et accorde les
-  privilèges sur la base de données et le schéma `public`. Le job peut être
-  réexécuté sans risque.
-- **Schéma créé au démarrage du conteneur.** Il n'existe **aucun job de
-  migration séparé**. L'image `fireflyiii/core` exécute
-  `php artisan migrate --force` et `firefly-iii:upgrade-database` à chaque
-  démarrage ; la mise à niveau d'`application_version` applique donc automatiquement
-  les modifications de schéma une fois que `db-init` a provisionné la base de
-  données.
-- **`APP_KEY` est immuable après le premier démarrage.** Il est généré une seule
-  fois et écrit dans Secret Manager. Sa rotation rend illisibles tous les champs
-  chiffrés auparavant. Ne le modifiez que dans le cadre d'une migration planifiée
-  tenant compte de la perte de données.
-- **La première exécution passe par `/register`.** Aucun identifiant
-  administrateur n'existe dans Secret Manager. Créez le compte propriétaire sur
-  `/register`, puis désactivez les inscriptions suivantes dans
+  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il crée de
+  manière idempotente le rôle et la base de données de l'application et accorde
+  les privilèges sur la base de données et le schéma `public`. Le job peut être
+  réexécuté en toute sécurité.
+- **Schéma créé au démarrage du conteneur.** Il n'y a **pas de job de migration
+  séparé**. L'image `fireflyiii/core` exécute `php artisan migrate --force` et
+  `firefly-iii:upgrade-database` à chaque démarrage, donc la mise à niveau de `application_version`
+  applique automatiquement les modifications de schéma une fois que `db-init` a
+  provisionné la base de données.
+- **`APP_KEY` est immuable après le premier démarrage.** Elle est générée une
+  fois et écrite dans Secret Manager. La renouveler rend tous les champs
+  précédemment chiffrés illisibles. Ne la modifiez que lors d'une migration
+  planifiée tenant compte de la perte de données.
+- **La première exécution est `/register`.** Aucune information d'identification
+  d'administrateur n'existe dans Secret Manager. Créez le compte propriétaire à
+  `/register`, puis désactivez toute autre inscription dans
   **Administration → Settings**.
-- **Le point de terminaison cron pilote les éléments récurrents.** Vérifiez le
+- **Le point de terminaison cron gère les éléments récurrents.** Confirmez le
   jeton et déclenchez-le :
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   curl -s "$SERVICE_URL/api/v1/cron/<STATIC_CRON_TOKEN>"
   ```
-- **Chemin de santé.** La sonde de démarrage est une sonde TCP sur le port 8080
-  (délai initial de 30s, 40 échecs tolérés) ; la sonde de vivacité cible le point de
-  terminaison JSON non authentifié `/status` de Firefly III (HTTP 200, sans
-  connexion, délai initial de 300s). Prévoyez une fenêtre généreuse au premier
-  démarrage pendant l'exécution des migrations.
-- **Inspecter l'exécution des jobs :**
+- **Chemin de santé.** La sonde de démarrage est TCP sur le port 8080 (délai
+  initial de 30 s, 40 échecs autorisés) ; la sonde de vivacité cible le point de
+  terminaison JSON non authentifié `/status` de Firefly III (HTTP 200, pas de
+  connexion, délai initial de 300 s). Prévoyez une fenêtre généreuse pour le
+  premier démarrage pendant l'exécution des migrations.
+- **Inspecter l'exécution du job :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -239,102 +243,102 @@ disponibilité et des règles d'alerte.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme sur la plateforme de déploiement.
-Seuls les paramètres propres à Firefly III ou notables pour lui sont listés ; toutes
-les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur
-comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la
+plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
+Firefly III sont listés ; toutes les autres entrées sont héritées de
+[App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
-| `region` | `us-central1` | Région du service et des ressources régionales. |
+| `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `fireflyiii` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `display_name` | `FireflyIII` | Nom lisible affiché dans la console. |
-| `application_version` | `latest` | Tag de l'image `fireflyiii/core` ; épinglez une version publiée (par exemple `version-6.1.21`) en production. |
+| `display_name` | `FireflyIII` | Nom lisible par l'homme affiché dans la console. |
+| `application_version` | `latest` | Tag d'image `fireflyiii/core` ; épingler à une version (par exemple `version-6.1.21`) en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
+| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `prebuilt` | Déploie directement l'image officielle `fireflyiii/core`. |
 | `cpu_limit` | `1000m` | CPU par instance. |
-| `memory_limit` | `2Gi` | Mémoire par instance ; minimum de 512Mi en gen2. |
-| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; définissez `1` pour éviter les démarrages à froid. |
+| `memory_limit` | `2Gi` | Mémoire par instance ; 512 Mio minimum sur gen2. |
+| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; définir `1` pour éviter les démarrages à froid. |
 | `max_instance_count` | `1` | Nombre maximal d'instances. |
 | `container_port` | `8080` | Firefly III (Apache) écoute sur le port 8080. |
-| `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS/GCS. |
-| `enable_cloudsql_volume` | `false` | Cloud Run atteint Cloud SQL en TCP sur IP privée, pas via le sidecar socket. |
-| `enable_image_mirroring` | `true` | Met en miroir l'image dans Artifact Registry. |
-| `timeout_seconds` | `300` | Durée maximale d'une requête ; augmentez-la pour les imports CSV volumineux. |
+| `execution_environment` | `gen2` | Gen2 requis pour les montages NFS/GCS. |
+| `enable_cloudsql_volume` | `false` | Cloud Run atteint Cloud SQL via TCP IP privée, pas le sidecar de socket. |
+| `enable_image_mirroring` | `true` | Mettre en miroir l'image dans Artifact Registry. |
+| `timeout_seconds` | `300` | Durée maximale de la requête ; augmenter pour les importations CSV volumineuses. |
 
 ### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Accès public via `run.app`. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Achemine uniquement le trafic RFC 1918 via le VPC. |
-| `enable_iap` | `false` | Exige une connexion Google devant Firefly III (recommandé pour des données de finances personnelles). |
-| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder via IAP. |
+| `ingress_settings` | `all` | Accès public `run.app`. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Acheminer uniquement le trafic RFC 1918 via VPC. |
+| `enable_iap` | `false` | Exiger la connexion Google devant Firefly III (recommandé pour les données financières personnelles). |
+| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres supplémentaires non secrets (par exemple `MAIL_*`). Les valeurs principales (`DB_CONNECTION`, `PGSQL_SSL_MODE`, `TRUSTED_PROXIES`, `APP_ENV`, `APP_URL`) sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Association variable d'environnement → nom du secret Secret Manager. `APP_KEY` et `STATIC_CRON_TOKEN` sont injectés automatiquement. |
-| `secret_propagation_delay` | `30` | Nombre de secondes d'attente après la création des secrets avant de continuer. |
-| `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
+| `environment_variables` | `{}` | Paramètres non secrets supplémentaires (par exemple `MAIL_*`). Les valeurs principales (`DB_CONNECTION`, `PGSQL_SSL_MODE`, `TRUSTED_PROXIES`, `APP_ENV`, `APP_URL`) sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. `APP_KEY` et `STATIC_CRON_TOKEN` sont injectés automatiquement. |
+| `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
+| `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmentez-la pour la production ou la conformité. |
-| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaure une sauvegarde lors du déploiement. |
+| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
+| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
+| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
 
-Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
-[App_CloudRun](App_CloudRun.md). Entrées principales : `enable_cicd_trigger`,
+Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
+[App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
-### Groupe 9 — Équilibreur de charge, CDN et rétention des images {#group-9--load-balancer-cdn--image-retention}
+### Groupe 9 — Équilibreur de charge, CDN et rétention d'images {#group-9--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
 | `application_domains` | `[]` | Noms de domaine personnalisés pour l'équilibreur de charge HTTPS. |
-| `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
-| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(définis)_ | Politique de nettoyage d'Artifact Registry. |
+| `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
+| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
 
 ### Groupe 10 — Stockage et système de fichiers {#group-10--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Crée les buckets GCS définis dans `storage_buckets`. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires en plus du bucket de téléversements provisionné automatiquement. |
-| `enable_nfs` | `true` | Conserve les pièces jointes et les données d'exécution sur `/var/lib/fireflyiii`. |
-| `nfs_mount_path` | `/var/lib/fireflyiii` | Chemin de montage dans le conteneur. |
-| `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (nécessite gen2). |
+| `create_cloud_storage` | `true` | Créer des buckets GCS définis dans `storage_buckets`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires au-delà du bucket de téléchargement auto-provisionné. |
+| `enable_nfs` | `true` | Persister les pièces jointes et les données d'exécution à `/var/lib/fireflyiii`. |
+| `nfs_mount_path` | `/var/www/html/storage/upload` | Chemin de montage à l'intérieur du conteneur. |
+| `gcs_volumes` | `[]` | Montages de volume GCS Fuse (nécessite gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -342,47 +346,47 @@ Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixé à PostgreSQL 15. |
-| `db_name` | `fireflyiii` | Nom de la base de données, injecté en tant que `DB_DATABASE`. Immuable après le premier déploiement. |
-| `db_user` | `fireflyiii` | Utilisateur de l'application, injecté en tant que `DB_USERNAME`. Mot de passe généré automatiquement dans Secret Manager. |
-| `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
+| `db_name` | `fireflyiii` | Nom de la base de données, injecté comme `DB_DATABASE`. Immuable après le premier déploiement. |
+| `db_user` | `fireflyiii` | Utilisateur de l'application, injecté comme `DB_USERNAME`. Mot de passe auto-généré dans Secret Manager. |
+| `database_password_length` | `32` | Longueur du mot de passe généré (16-64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
-| `cron_jobs` | `[]` | Définissez un appel quotidien Cloud Scheduler → job Cloud Run vers `/api/v1/cron/<STATIC_CRON_TOKEN>`. |
+| `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
+| `cron_jobs` | `[]` | Jobs planifiés supplémentaires. L'appel quotidien `firefly-cron` à `/api/v1/cron/<STATIC_CRON_TOKEN>` est intégré et toujours ajouté à ceux-ci. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | TCP port 8080, 30s de délai, 40 échecs | Sonde de démarrage. |
-| `liveness_probe` | HTTP `/status`, délai de 300s | Sonde de vivacité (200 sans authentification). |
-| `uptime_check_config` | `{ enabled=false, path="/status" }` | Test de disponibilité Cloud Monitoring. |
-| `alert_policies` | `[]` | Règles d'alerte sur métriques. |
+| `startup_probe` | Port TCP 8080, délai 30s, 40 échecs | Sonde de démarrage. |
+| `liveness_probe` | HTTP `/status`, délai 300s | Sonde de vivacité (200 non authentifié). |
+| `uptime_check_config` | `{ enabled=false, path="/status" }` | Vérification de disponibilité Cloud Monitoring. |
+| `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 21 — Redis {#group-21--redis}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Backend facultatif de cache/sessions ; Firefly III utilise la base de données par défaut. |
+| `enable_redis` | `false` | Backend de cache/session facultatif ; Firefly III utilise la base de données par défaut. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Point de terminaison et authentification Redis. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(définis)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
-| `enable_audit_logging` | `false` | Journaux Cloud Audit Logs détaillés. |
+| `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées après un déploiement réussi — le moyen le plus rapide de localiser et
+Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
@@ -390,7 +394,7 @@ d'explorer les ressources en cours d'exécution.
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
 | `service_location` | Région dans laquelle le service s'exécute. |
-| `stage_services` | URL des services par étape (Cloud Deploy). |
+| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
@@ -399,52 +403,62 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails du CI/CD. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État des journaux d'audit et de CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
+> (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa
+> configuration au moteur de fondation [App_CloudRun](App_CloudRun.md), qui
+> valide les valeurs *et les combinaisons* au moment de la planification — un
+> réplica en lecture sans son primaire, IAP sans identités autorisées, un
+> environnement d'exécution `gen1` avec des montages NFS/GCS, un
+> `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer la
+> **planification** avec une erreur claire et nommée avant la création de
+> toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées
+> en amont plutôt qu'au moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais effectuer de rotation après le premier démarrage | Critique | Sa rotation rend illisibles tous les champs chiffrés auparavant — les données sont de fait perdues. |
-| `db_name` / `db_user` | Définis une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `PGSQL_SSL_MODE` (`require` automatique) | Laisser tel quel | Élevé | Cloud SQL refuse le TCP non chiffré sur IP privée ; `disable` coupe la connexion. |
-| `STATIC_CRON_TOKEN` / job cron | Planifier un appel quotidien | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
-| `enable_nfs` | `true` | Élevé | Le désactiver place les pièces jointes sur un disque éphémère — les fichiers téléversés disparaissent lors d'un démarrage à froid ou d'une nouvelle révision. |
-| `memory_limit` | `2Gi` | Élevé | Une valeur inférieure à 512Mi est refusée en gen2 ; une mémoire insuffisante provoque l'arrêt OOM de PHP pendant les imports. |
-| `enable_iap` | à activer pour des données privées | Élevé | Firefly III contient des données financières ; le laisser accessible publiquement les expose à quiconque dispose de l'URL. |
-| Inscription à la première exécution | Désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à quiconque dispose de l'URL de créer un compte. |
-| `min_instance_count` | `1` pour un usage quotidien | Moyen | La mise à l'échelle à zéro ajoute 10–30 s de latence de démarrage à froid après une période d'inactivité. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention réglementaire. |
-| `enable_cloud_armor` | à activer en production | Moyen | L'interface et l'API sont accessibles publiquement sans protection WAF. |
+| `APP_KEY` (auto-générée) | Ne jamais renouveler après le premier démarrage | Critique | La renouveler rend tous les champs précédemment chiffrés illisibles — les données sont effectivement perdues. |
+| `db_name` / `db_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
+| `PGSQL_SSL_MODE` (auto `require`) | Laisser tel quel | Élevé | Cloud SQL rejette le TCP IP privée non chiffré ; `disable` interrompt la connexion. |
+| `STATIC_CRON_TOKEN` / job cron | Laisser le job `firefly-cron` intégré en place | Élevé | Sans appel cron planifié, les transactions récurrentes, les factures et les budgets automatiques ne se déclenchent jamais. |
+| `enable_nfs` | `true` | Élevé | Le désactiver place les pièces jointes sur un disque éphémère — les fichiers téléchargés disparaissent au démarrage à froid / nouvelle révision. |
+| `memory_limit` | `2Gi` | Élevé | En dessous de 512 Mio est rejeté sur gen2 ; une faible mémoire tue PHP par manque de mémoire lors des importations. |
+| `enable_iap` | activer pour les données privées | Élevé | Firefly III contient des données financières ; le laisser publiquement accessible l'expose à toute personne ayant l'URL. |
+| Enregistrement au premier démarrage | Désactiver après le premier administrateur | Élevé | Laisser l'enregistrement ouvert permet à toute personne ayant l'URL de créer un compte. |
+| `min_instance_count` | `1` pour une utilisation quotidienne | Moyen | La mise à l'échelle à zéro ajoute 10 à 30 s de latence au démarrage à froid après l'inactivité. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
+| `enable_cloud_armor` | activer pour la production | Moyen | L'interface utilisateur et l'API sont publiquement accessibles sans protection WAF. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du
-service, mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
-propre à Firefly III partagée avec la variante GKE est décrite dans
-**[FireflyIII_Common](FireflyIII_Common.md)**.
+Pour le comportement de la fondation référencé tout au long — identité de
+service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
+CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en
+miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration
+d'application spécifique à Firefly III partagée avec la variante GKE est décrite
+dans **[FireflyIII_Common](FireflyIII_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Firefly III sur Cloud Run](../labs/FireflyIII_CloudRun.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
+- [Labo pratique : Firefly III sur Cloud Run](../labs/FireflyIII_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Firefly III sur GKE Autopilot](FireflyIII_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Firefly III Common — Configuration applicative partagée](FireflyIII_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés de [Ghostfolio sur Google Cloud Run](Ghostfolio_CloudRun.md), [Wallos sur Google Cloud Run](Wallos_CloudRun.md), [ActualBudget sur Google Cloud Run](ActualBudget_CloudRun.md) dans la solution **Finance & Wealth Tracking**.
+- [Firefly III Common — Configuration d'application partagée](FireflyIII_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- Déployé avec [Ghostfolio sur Google Cloud Run](Ghostfolio_CloudRun.md), [Wallos sur Google Cloud Run](Wallos_CloudRun.md), [ActualBudget sur Google Cloud Run](ActualBudget_CloudRun.md) dans la solution **Suivi des finances et du patrimoine**.
