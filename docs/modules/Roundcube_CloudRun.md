@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Roundcube on Google Cloud Ru
 
 # Roundcube on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Roundcube_CloudRun.png" alt="Roundcube on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Roundcube is a free, open-source, browser-based IMAP webmail client. It gives
 users a desktop-like mail experience — folders, address book, search and message
 composition — against an IMAP and SMTP mail server that already exists. Roundcube

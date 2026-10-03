@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Open Source POS on Google Cl
 
 # OpenSourcePOS on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenSourcePOS_CloudRun.png" alt="OpenSourcePOS on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 Open Source Point of Sale (OSPOS) is a free, open-source, web-based retail point
 of sale: ring up sales, manage items, customers and suppliers, print receipts,
 and run sales and inventory reports from a browser. This module deploys

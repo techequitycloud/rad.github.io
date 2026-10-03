@@ -3,9 +3,11 @@ title: "SimpleRisk sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de SimpleRisk sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SimpleRisk_CloudRun.md @ 2829548 sha256:38e11e5db75f -->
+<!-- translated-from: docs/modules/SimpleRisk_CloudRun.md @ a4095cd sha256:300a4b9e44bd -->
 
 # SimpleRisk sur Google Cloud Run {#simplerisk-on-google-cloud-run}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SimpleRisk_CloudRun.png" alt="SimpleRisk sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 SimpleRisk est une plateforme gratuite et open-source de gouvernance, de gestion
 des risques et de conformité (GRC). Les équipes de sécurité et de conformité

@@ -5,6 +5,8 @@ description: "Configuration reference for deploying InvenTree on Google Cloud Ru
 
 # InvenTree on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/InvenTree_CloudRun.png" alt="InvenTree on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 InvenTree is a free, open-source inventory management system: it tracks parts
 and components, stock locations and movements, suppliers, bills of materials,
 and purchase and sales orders, and is used by hardware teams, makerspaces and

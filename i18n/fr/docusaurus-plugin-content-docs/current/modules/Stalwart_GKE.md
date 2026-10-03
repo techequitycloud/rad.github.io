@@ -3,9 +3,11 @@ title: "Module Stalwart GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Stalwart sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Stalwart_GKE.md @ 2829548 sha256:c2ef3f232a56 -->
+<!-- translated-from: docs/modules/Stalwart_GKE.md @ a4095cd sha256:e8540c0b889b -->
 
 # Module Stalwart GKE — Guide de configuration {#stalwart-gke-module--configuration-guide}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Stalwart_GKE.png" alt="Stalwart sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Ce guide décrit les variables de configuration disponibles dans le module `Stalwart_GKE`. `Stalwart_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Stalwart_Common`](./Stalwart_Common.md) pour déployer [Stalwart Mail Server](https://stalw.art/) — un serveur de messagerie open-source qui fournit SMTP, IMAP, POP3, JMAP et ManageSieve à partir d'un seul binaire Rust — sur Google Kubernetes Engine (GKE) Autopilot.
 

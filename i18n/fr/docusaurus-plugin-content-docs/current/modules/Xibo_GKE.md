@@ -3,9 +3,11 @@ title: "Module Xibo GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Xibo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Xibo_GKE.md @ 2829548 sha256:db7911d042bd -->
+<!-- translated-from: docs/modules/Xibo_GKE.md @ a4095cd sha256:05c9a06a754b -->
 
 # Module Xibo GKE — Guide de configuration {#xibo-gke-module--configuration-guide}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Xibo_GKE.png" alt="Xibo sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Ce guide décrit toutes les variables de configuration disponibles dans le module `Xibo_GKE`. `Xibo_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Xibo_Common`](./Xibo_Common.md) pour déployer le CMS [Xibo](https://xibosignage.com/) — un affichage numérique open-source qui planifie et distribue des mises en page, des listes de lecture et des médias à des réseaux de lecteurs d'affichage — sur Google Kubernetes Engine (GKE) Autopilot.
 

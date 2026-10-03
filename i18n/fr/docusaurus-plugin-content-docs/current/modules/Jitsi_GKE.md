@@ -3,9 +3,11 @@ title: "Module Jitsi GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Jitsi sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jitsi_GKE.md @ 2829548 sha256:1556892b817d -->
+<!-- translated-from: docs/modules/Jitsi_GKE.md @ a4095cd sha256:e0885507e27c -->
 
 # Module Jitsi GKE — Guide de configuration {#jitsi-gke-module--configuration-guide}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Jitsi_GKE.png" alt="Jitsi sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Ce guide décrit toutes les variables de configuration disponibles dans le module `Jitsi_GKE`. `Jitsi_GKE` est un **module wrapper** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Jitsi_Common`](./Jitsi_Common.md) pour déployer [Jitsi Meet](https://jitsi.org/jitsi-meet/) — une solution de visioconférence open source basée sur un navigateur, sans compte requis pour participer — sur Google Kubernetes Engine (GKE) Autopilot.
 

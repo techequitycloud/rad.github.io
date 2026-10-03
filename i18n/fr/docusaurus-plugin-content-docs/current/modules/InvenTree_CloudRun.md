@@ -3,9 +3,11 @@ title: "InvenTree sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'InvenTree sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvenTree_CloudRun.md @ 2829548 sha256:77f3e750f3c2 -->
+<!-- translated-from: docs/modules/InvenTree_CloudRun.md @ a4095cd sha256:5d0cedd21028 -->
 
 # InvenTree sur Google Cloud Run {#inventree-on-google-cloud-run}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/InvenTree_CloudRun.png" alt="InvenTree sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 InvenTree est un système de gestion d'inventaire gratuit et open source : il
 suit les pièces et composants, les emplacements et mouvements de stock, les

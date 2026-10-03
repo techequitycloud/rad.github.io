@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Stalwart on GKE Autopilot wi
 
 # Stalwart GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Stalwart_GKE.png" alt="Stalwart on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes the configuration variables available in the `Stalwart_GKE` module. `Stalwart_GKE` is a **wrapper module** that combines the generic [`App_GKE`](./App_GKE.md) infrastructure module with the [`Stalwart_Common`](./Stalwart_Common.md) shared application configuration to deploy [Stalwart Mail Server](https://stalw.art/) — an open-source mail server that serves SMTP, IMAP, POP3, JMAP and ManageSieve from a single Rust binary — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Stalwart GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Stalwart** are described in full here.

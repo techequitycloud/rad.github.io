@@ -5,6 +5,8 @@ description: "Configuration reference for deploying Jitsi on GKE Autopilot with 
 
 # Jitsi GKE Module — Configuration Guide
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Jitsi_GKE.png" alt="Jitsi on GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 This guide describes every configuration variable available in the `Jitsi_GKE` module. `Jitsi_GKE` is a **wrapper module** that combines the generic [`App_GKE`](./App_GKE.md) infrastructure module with the [`Jitsi_Common`](./Jitsi_Common.md) shared application configuration to deploy [Jitsi Meet](https://jitsi.org/jitsi-meet/) — open-source, browser-based video conferencing with no account required to join — on Google Kubernetes Engine (GKE) Autopilot.
 
 Most configuration options in `Jitsi GKE` map directly to the same options in `App GKE`. Where a variable is identical in behaviour, this guide references the `App GKE` guide rather than repeating the same documentation. Only the variables and defaults that are **specific to Jitsi** are described in full here.

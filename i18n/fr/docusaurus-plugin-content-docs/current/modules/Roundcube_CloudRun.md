@@ -3,9 +3,11 @@ title: "Roundcube sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Roundcube sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ 2829548 sha256:315772f1fcf5 -->
+<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ a4095cd sha256:c0bf175f2382 -->
 
 # Roundcube sur Google Cloud Run {#roundcube-on-google-cloud-run}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/Roundcube_CloudRun.png" alt="Roundcube sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Roundcube est un client webmail IMAP gratuit, open-source et basé sur un
 navigateur. Il offre aux utilisateurs une expérience de messagerie de type

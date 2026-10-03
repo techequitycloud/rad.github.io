@@ -3,9 +3,11 @@ title: "OpenSourcePOS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Open Source POS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenSourcePOS_CloudRun.md @ 2829548 sha256:d4e584bdfb8d -->
+<!-- translated-from: docs/modules/OpenSourcePOS_CloudRun.md @ a4095cd sha256:ba239a96c31f -->
 
 # OpenSourcePOS sur Google Cloud Run {#opensourcepos-on-google-cloud-run}
+
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/OpenSourcePOS_CloudRun.png" alt="OpenSourcePOS sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Open Source Point of Sale (OSPOS) est un point de vente de détail web gratuit et
 open source : enregistrez les ventes, gérez les articles, les clients et les

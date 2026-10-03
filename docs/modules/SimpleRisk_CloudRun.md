@@ -5,6 +5,8 @@ description: "Configuration reference for deploying SimpleRisk on Google Cloud R
 
 # SimpleRisk on Google Cloud Run
 
+<img src="https://storage.googleapis.com/rad-public-2b65/modules/SimpleRisk_CloudRun.png" alt="SimpleRisk on Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
+
 SimpleRisk is a free, open-source governance, risk and compliance (GRC) platform.
 Security and compliance teams use it to keep a risk register, score risks, plan
 and track mitigations, run management reviews and keep an auditable history for
