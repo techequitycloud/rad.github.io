@@ -73,7 +73,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-1--project--identity).
 
 **Listmonk GKE variables in this group:**
 
@@ -89,7 +89,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-3--application-identity) for descriptions.
 
 **Listmonk-specific defaults:**
 
@@ -106,7 +106,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-co
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 **Listmonk-specific defaults and behaviour:**
 
@@ -122,13 +122,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.
 
 **`container_resources`:** The variable default is `{ cpu_limit = "1000m", memory_limit = "512Mi" }`. This is appropriate for development and small subscriber lists. For production deployments sending campaigns to tens of thousands of subscribers, increase to at least `{ cpu_limit = "2000m", memory_limit = "1Gi" }` to prevent OOM kills during bulk campaign send operations.
 
-The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress), and [App_GKE](./App_GKE.md#d-networking--network-policies).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-20--identity-aware-proxy), [App_GKE](./App_GKE.md#group-19--access--networking), and [App_GKE](./App_GKE.md#group-21--cloud-armor--cdn).
 
 The following networking variables are available in `Listmonk GKE`:
 
@@ -162,7 +162,7 @@ The following networking variables are available in `Listmonk GKE`:
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#3-core-service-configuration).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-5--environment-variables--secrets).
 
 **Listmonk-specific defaults:**
 
@@ -185,13 +185,13 @@ environment_variables = {
 }
 ```
 
-The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) behave as described in [App_GKE](./App_GKE.md#3-core-service-configuration).
+The remaining secrets variables (`secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `enable_auto_password_rotation`, `rotation_propagation_delay_sec`) behave as described in [App_GKE](./App_GKE.md#group-5--environment-variables--secrets).
 
 ---
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-17--backup--maintenance).
 
 **Listmonk-specific defaults:**
 
@@ -213,7 +213,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-da
 
 ## Group 7: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#6-cicd--delivery).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-12--cicd).
 
 The following CI/CD variables are available: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config` (default `{ branch_pattern = "^main$" }`), `enable_cloud_deploy`, `cloud_deploy_stages` (default `[dev, staging, prod]`), `enable_binary_authorization`, `binauthz_evaluation_mode` (default `"ALWAYS_ALLOW"`; options: `ALWAYS_ALLOW`, `REQUIRE_ATTESTATION`, `ALWAYS_DENY`).
 
@@ -221,7 +221,7 @@ The following CI/CD variables are available: `enable_cicd_trigger`, `github_repo
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs), with one important Listmonk-specific behaviour.
+These variables behave as described in [App_GKE](./App_GKE.md#group-11--workload-automation), with one important Listmonk-specific behaviour.
 
 **Listmonk default `db-init` job:**
 
@@ -241,7 +241,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 **CronJobs and Additional Services:**
 
-The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) for full documentation.
+The `cron_jobs` and `additional_services` variables are available and behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-11--workload-automation) for full documentation.
 
 > **Note:** The `cron_jobs` schema in `Listmonk GKE` uses Kubernetes CronJob fields — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend` — rather than Cloud Run-style fields. The `secret_env_vars` field is not available in GKE cron jobs; secrets are managed via `secret_environment_variables` at the module level.
 
@@ -249,7 +249,7 @@ The `cron_jobs` and `additional_services` variables are available and behave ide
 
 ## Group 9: Storage & Filesystem — NFS
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-13--nfs-storage).
 
 **Listmonk-specific defaults:**
 
@@ -265,7 +265,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-st
 
 ## Group 10: Storage & Filesystem — GCS
 
-These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE Group 14](./App_GKE.md#group-14--cloud-storage).
 
 **Listmonk-specific defaults:**
 
@@ -277,13 +277,13 @@ These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE
 
 Additional GCS buckets can be defined in `storage_buckets` — for example, a separate bucket for backup exports or custom template assets.
 
-The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 14](./App_GKE.md#group-14--cloud-storage).
 
 ---
 
 ## Group 11: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-16--database-configuration).
 
 **Listmonk-specific defaults and restrictions:**
 
@@ -315,7 +315,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-da
 
 ## Group 12: Custom SQL Scripts
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-18--custom-sql-scripts).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -328,7 +328,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjo
 
 ## Group 13: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-10--observability).
 
 **Listmonk-specific defaults:**
 
@@ -342,13 +342,13 @@ Listmonk exposes a dedicated `/api/health` HTTP endpoint, but as of Listmonk v6.
 | `startup_probe_config` | `{ enabled = true, type = "TCP", path = "/api/health", initial_delay_seconds = 30, period_seconds = 10, failure_threshold = 30 }` | Kubernetes startup probe. `failure_threshold = 30` gives Listmonk up to 300 seconds (30 × 10 s) to start before Kubernetes restarts the pod — sufficient for even cold-start schema migrations. |
 | `uptime_check_config` | `{ enabled = false, path = "/api/health" }` | Cloud Monitoring uptime check. **Disabled by default** — enable explicitly if you want an alert fired to `support_users` when the endpoint stops responding (note `/api/health` requires a session, so an HTTP uptime check would need to target `/health` instead). |
 
-The `alert_policies` variable is available and behaves as described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+The `alert_policies` variable is available and behaves as described in [App_GKE](./App_GKE.md#group-10--observability).
 
 ---
 
 ## Group 14: Reliability Policies
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-9--reliability).
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -398,7 +398,7 @@ kubectl exec -n NAMESPACE POD_NAME -- \
 
 ## Group 16: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-19--access--networking).
 
 > **Listmonk base URL configuration:** Listmonk must know its public-facing URL for generating unsubscribe links, confirmation emails, and campaign tracking pixels. This is **not** an env var — `app.root_url` is a row in Listmonk's `settings` table, so `Listmonk_Common`'s `entrypoint.sh` sets it automatically on every start from the platform-injected `GKE_SERVICE_URL`, after the `--install` step (using `psql`, since `--install` only seeds it via `INSERT ... ON CONFLICT DO NOTHING`, so the entrypoint's `UPDATE` always wins on later starts). If you attach a custom domain via `application_domains`, verify `app.root_url` under **Settings → General** in the Listmonk UI and update it manually if it still shows the GKE service URL instead of your custom domain.
 
@@ -406,7 +406,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 ## Group 17: GKE Backend Configuration
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-6--gke-backend-config).
 
 Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `service_type`, `enable_multi_cluster_service`, `configure_service_mesh`, `enable_network_segmentation`, `termination_grace_period_seconds` (default `30`), `gke_cluster_selection_mode` (default `"primary"`; options: `explicit`, `round-robin`, `primary`), `network_name` (default `""`; auto-discovered when empty).
 
@@ -416,7 +416,7 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ## Group 18: Stateful Workloads
 
-Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot) (`workload_type = "StatefulSet"`) and the associated StatefulSet variables.
+Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#group-7--statefulset--pvc) (`workload_type = "StatefulSet"`) and the associated StatefulSet variables.
 
 Available variables: `stateful_pvc_enabled` (default `null`), `stateful_pvc_size` (default `"10Gi"`), `stateful_pvc_mount_path` (default `"/data"`), `stateful_pvc_storage_class` (default `"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy`, `stateful_fs_group` (default `0`).
 

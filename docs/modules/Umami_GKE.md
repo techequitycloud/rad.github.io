@@ -74,7 +74,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-1--project--identity).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -85,7 +85,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-3--application-identity) for descriptions.
 
 **Umami-specific defaults:**
 
@@ -101,7 +101,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-co
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 **Umami-specific defaults and behaviour:**
 
@@ -117,13 +117,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.
 
 **`enable_vertical_pod_autoscaling`:** Defaults to `false`. Enable to allow GKE Autopilot to automatically right-size Umami pods based on observed resource usage. Useful for cost optimisation in production.
 
-The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `termination_grace_period_seconds`, `deployment_timeout`) behave as described in [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+The remaining runtime variables (`enable_image_mirroring`, `container_build_config`, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `termination_grace_period_seconds`, `deployment_timeout`) behave as described in [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress), and [App_GKE](./App_GKE.md#d-networking--network-policies).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-20--identity-aware-proxy), [App_GKE](./App_GKE.md#group-19--access--networking), and [App_GKE](./App_GKE.md#group-21--cloud-armor--cdn).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -147,7 +147,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-ad
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#3-core-service-configuration).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-5--environment-variables--secrets).
 
 **Umami-specific behaviour:**
 
@@ -199,7 +199,7 @@ environment_variables = {
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs), with one important Umami-specific behaviour.
+These variables behave as described in [App_GKE](./App_GKE.md#group-11--workload-automation), with one important Umami-specific behaviour.
 
 **Umami default `db-init` job:**
 
@@ -223,7 +223,7 @@ Override `initialization_jobs` with a non-empty list to replace this default wit
 
 ## Group 9: Reliability Policies
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-9--reliability).
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -236,7 +236,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
 
 ## Group 10: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-10--observability).
 
 **Umami health endpoint:** Umami exposes `/api/heartbeat` as its dedicated health endpoint. This endpoint returns HTTP 200 when Umami is running and connected to PostgreSQL. All probe configuration defaults use this path.
 
@@ -263,7 +263,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-co
 
 ## Group 12: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#6-cicd--delivery).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-12--cicd).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -312,7 +312,7 @@ Umami does not require GCS buckets. `storage_buckets` defaults to an empty list.
 
 ## Group 16: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-16--database-configuration).
 
 **Umami-specific defaults and restrictions:**
 
@@ -341,7 +341,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-da
 
 ## Group 19: Custom Domain & Static IP
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-19--access--networking).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -368,7 +368,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#5-traffic--ingress).
 
 ## Group 8: Resource Quota
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#c-resource-quotas).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-8--resource-quota).
 
 | Variable | Default | Description |
 |---|---|---|

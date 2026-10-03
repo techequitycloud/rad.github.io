@@ -34,7 +34,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Database Configuration | **MySQL 8.0 required**; see [Group 18: Database Configuration](#group-18-database-configuration). |
 | Backup Schedule & Retention | Identical to `App_GKE`. |
 | Custom SQL Scripts | Identical to `App_GKE`. |
-| Observability & Health | Invoice Ninja probe tuning; see [Group 19: Observability & Health](#group-19-observability--health). |
+| Observability & Health | Invoice Ninja probe tuning; see [Group 13: Observability & Health](#group-13-observability--health). |
 | Cloud Armor WAF | Identical to `App_GKE`. |
 | Identity-Aware Proxy | Identical to `App_GKE`. |
 | Binary Authorization | Identical to `App_GKE`. |

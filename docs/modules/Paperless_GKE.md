@@ -49,7 +49,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 | Topology Spread Constraints | §7.B Topology Spread Constraints | Identical. |
 | Resource Quotas | §7.C Resource Quotas | Identical. |
 | Auto Password Rotation | §7.D Auto Password Rotation | See [Group 11: Database Configuration](#group-11-database-configuration). |
-| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true` — Redis is **required**, not optional; see [Group 15: Redis (Celery Broker)](#group-15-redis-celery-broker). |
+| Redis Cache | §8.A Redis / Memorystore | `enable_redis` defaults to `true` — Redis is **required**, not optional; see [Group 16: Redis (Celery Broker)](#group-16-redis-celery-broker). |
 | Backup Import | §8.B Backup Import | See [Group 6: Backup & Maintenance](#group-6-backup--maintenance). |
 | Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identical. |
 | Multi-Cluster Services | §8.D Multi-Cluster Services (MCS) | Identical. |
@@ -73,7 +73,7 @@ The following configuration areas are provided by the underlying `App_GKE` modul
 
 ## Group 1: Project & Identity
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-1--project--identity).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -84,7 +84,7 @@ Identical to `App_GKE`. See [App_GKE](./App_GKE.md#2-iam--access-control).
 
 ## Group 2: Application Identity
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot) for descriptions.
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-3--application-identity) for descriptions.
 
 **Paperless-specific defaults:**
 
@@ -99,7 +99,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-co
 
 ## Group 3: Runtime & Scaling
 
-Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+Most variables behave identically to `App_GKE`. See [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 **Paperless-specific defaults and behaviour:**
 
@@ -114,13 +114,13 @@ Most variables behave identically to `App_GKE`. See [App_GKE Group 3](./App_GKE.
 | `enable_cloudsql_volume` | `true` | `true` | Cloud SQL Auth Proxy sidecar is required. Paperless-ngx connects to PostgreSQL via the Auth Proxy Unix socket. |
 | `enable_image_mirroring` | `true` | `true` | Not overridden — App_GKE already mirrors by default. Still important for Paperless-ngx: GHCR-hosted images benefit from the Artifact Registry copy to avoid rate limits and satisfy Binary Authorization requirements. |
 
-The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 3](./App_GKE.md#a-compute-gke-autopilot).
+The remaining runtime variables (`deploy_application`, `container_image`, `container_build_config`, `enable_vertical_pod_autoscaling`, `container_protocol`, `container_resources`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`) behave as described in [App_GKE Group 4](./App_GKE.md#group-4--runtime--scaling).
 
 ---
 
 ## Group 4: Access & Networking
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-advanced-security), [App_GKE](./App_GKE.md#5-traffic--ingress), and [App_GKE](./App_GKE.md#d-networking--network-policies).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-20--identity-aware-proxy), [App_GKE](./App_GKE.md#group-19--access--networking), and [App_GKE](./App_GKE.md#group-21--cloud-armor--cdn).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -144,7 +144,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#4-ad
 
 ## Group 5: Environment Variables & Secrets
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#3-core-service-configuration).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-5--environment-variables--secrets).
 
 **Paperless-specific auto-generated secrets:**
 
@@ -159,13 +159,13 @@ Both secrets are injected into the container at pod start via the Secrets Store 
 
 **Paperless-ngx-specific application settings** (`time_zone`, `ocr_language`, `admin_user`, `admin_email`) are documented in [Group 15: Paperless-ngx Application Settings](#group-15-paperless-ngx-application-settings).
 
-The standard secrets variables (`environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](./App_GKE.md#3-core-service-configuration).
+The standard secrets variables (`environment_variables`, `secret_environment_variables`, `secret_rotation_period`, `secret_propagation_delay`, `manage_storage_kms_iam`) behave as described in [App_GKE](./App_GKE.md#group-5--environment-variables--secrets).
 
 ---
 
 ## Group 6: Backup & Maintenance
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-17--backup--maintenance).
 
 **Paperless-specific defaults:**
 
@@ -189,7 +189,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-da
 
 ## Group 7: CI/CD & GitHub Integration
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#6-cicd--delivery).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-12--cicd).
 
 Available variables: `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`, `enable_binary_authorization`, `binauthz_evaluation_mode`.
 
@@ -197,7 +197,7 @@ Available variables: `enable_cicd_trigger`, `github_repository_url`, `github_tok
 
 ## Group 8: Jobs & Scheduled Tasks
 
-These variables behave as described in [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
+These variables behave as described in [App_GKE](./App_GKE.md#group-11--workload-automation).
 
 **Default `db-init` job:** When `initialization_jobs` is empty (the default), `Paperless Common` supplies a `db-init` Kubernetes Job (image `postgres:15-alpine`, script `scripts/db-init.sh`, `execute_on_apply = true`) that creates the PostgreSQL database and application user. Django schema migrations then run automatically as part of the container entrypoint on first boot. Supplying a non-empty `initialization_jobs` list replaces the default job.
 
@@ -212,7 +212,7 @@ Once added, configure Paperless-ngx to use them by setting `PAPERLESS_TIKA_ENABL
 
 **CronJobs:**
 
-The `cron_jobs` variable is available for tasks such as periodic document re-classification or index rebuilds. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs) for full schema documentation.
+The `cron_jobs` variable is available for tasks such as periodic document re-classification or index rebuilds. See [App_GKE](./App_GKE.md#group-11--workload-automation) for full schema documentation.
 
 > **Note:** Unlike Cloud Run–style jobs, GKE CronJobs use `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, and `suspend` fields. The Cloud Run–style fields (`parallelism`, `paused`, `max_retries`, `task_count`) are not available.
 
@@ -220,7 +220,7 @@ The `cron_jobs` variable is available for tasks such as periodic document re-cla
 
 ## Group 9: Storage & Filesystem — NFS
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-13--nfs-storage).
 
 **Paperless-specific defaults:**
 
@@ -233,7 +233,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#c-st
 
 ## Group 10: Storage & Filesystem — GCS
 
-These variables behave identically to `App_GKE`. See [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+These variables behave identically to `App_GKE`. See [App_GKE Group 14](./App_GKE.md#group-14--cloud-storage).
 
 **Paperless-specific auto-provisioned bucket:**
 
@@ -254,13 +254,13 @@ You do not need to define this bucket in `storage_buckets`. Override `gcs_volume
 
 The default `gcs_volumes` configuration mounts the media bucket with `implicit-dirs`, `stat-cache-ttl=60s`, and `type-cache-ttl=60s`. These settings are appropriate for Paperless-ngx's sequential write pattern (documents are written once and then read). For high-throughput ingestion, consider reducing cache TTLs or using `metadata-cache-ttl=0` to ensure immediate consistency.
 
-The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 9](./App_GKE.md#c-storage-nfs--gcs--gcs-fuse).
+The `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain`, `delete_untagged_images`, and `image_retention_days` variables behave as described in [App_GKE Group 14](./App_GKE.md#group-14--cloud-storage).
 
 ---
 
 ## Group 11: Database Configuration
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-database-cloud-sql).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-16--database-configuration).
 
 **Paperless-specific defaults and restrictions:**
 
@@ -290,7 +290,7 @@ These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#b-da
 
 ## Group 12: Custom SQL Scripts
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#e-initialization-jobs--cronjobs).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-18--custom-sql-scripts).
 
 Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root`.
 
@@ -298,7 +298,7 @@ Available variables: `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `
 
 ## Group 13: Observability & Health
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-10--observability).
 
 **Paperless-specific defaults:**
 
@@ -349,7 +349,7 @@ These are parallel paths, not aliases. Changing `startup_probe` does not affect 
 
 ## Group 14: Reliability Policies
 
-These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#7-reliability--scheduling).
+These variables behave identically to `App_GKE`. See [App_GKE](./App_GKE.md#group-9--reliability).
 
 **Paperless-specific defaults:**
 
@@ -401,7 +401,7 @@ kubectl logs -n NAMESPACE POD_NAME --since=10m | grep -i "migration\|celery\|rea
 
 ## Group 16: Redis (Celery Broker)
 
-These variables configure Paperless-ngx's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](./App_GKE.md#a-redis--memorystore)). Redis is **not optional** for Paperless-ngx — it is the Celery message broker that drives all background document processing, OCR tasks, and the consumption pipeline.
+These variables configure Paperless-ngx's Redis integration. The underlying Redis infrastructure support is provided by `App_GKE` (see [App_GKE](./App_GKE.md#group-15--redis-cache)). Redis is **not optional** for Paperless-ngx — it is the Celery message broker that drives all background document processing, OCR tasks, and the consumption pipeline.
 
 > **Note:** In `Paperless GKE`, the Redis variables are in **group 21**.
 
@@ -441,7 +441,7 @@ kubectl logs -n NAMESPACE POD_NAME | grep -i "celery\|broker\|ready"
 
 ## Group 17: GKE Backend Configuration
 
-Identical to `App_GKE`. See [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See [App_GKE](./App_GKE.md#group-6--gke-backend-config).
 
 **Paperless-specific defaults:**
 
@@ -457,7 +457,7 @@ Available variables: `gke_cluster_name`, `namespace_name`, `workload_type`, `ser
 
 ## Group 18: Stateful Workloads
 
-Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#a-compute-gke-autopilot).
+Identical to `App_GKE`. See the StatefulSet configuration described in [App_GKE](./App_GKE.md#group-7--statefulset--pvc).
 
 Setting `stateful_pvc_enabled = true` automatically selects `workload_type = "StatefulSet"`. When using a StatefulSet for Paperless-ngx, the PVC provides a per-pod persistent volume in addition to the shared GCS FUSE media mount. This can be used to store the Paperless-ngx SQLite consumption database or temporary OCR working files.
 

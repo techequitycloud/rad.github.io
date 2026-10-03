@@ -48,7 +48,7 @@ Umami is a privacy-focused, lightweight, open-source web analytics platform — 
 
 ## 2. IAM & Access Control
 
-`Umami_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun](./App_CloudRun.md#2-iam--access-control).
+`Umami_CloudRun` delegates all IAM provisioning to `App_CloudRun`. The Cloud Run SA, Cloud Build SA, IAP service agent, and password rotation role sets are identical to those in [App_CloudRun](./App_CloudRun.md#group-0--module-metadata--platform-wiring).
 
 **Auto-generated application secret:** `Umami Common` generates `APP_SECRET` at apply time using `random_password` (32 characters, no special characters). It is written to Secret Manager and injected into the Cloud Run container as the `APP_SECRET` environment variable. Plaintext is never stored in Terraform state after initial apply.
 
@@ -56,7 +56,7 @@ Umami is a privacy-focused, lightweight, open-source web analytics platform — 
 
 **30-second secret propagation delay:** `Umami Common` inserts a propagation wait after creating secrets. The `secret_propagation_delay` variable (default 30 seconds) controls how long dependent resources wait after secret creation before proceeding.
 
-For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun](./App_CloudRun.md#2-iam--access-control).
+For the complete role tables and IAP, password rotation, and public access details, see [App_CloudRun](./App_CloudRun.md#group-15--identity-aware-proxy).
 
 ---
 
@@ -217,7 +217,7 @@ When `enable_cloud_armor = true`, a Global HTTPS Load Balancer backed by a Serve
 
 Setting `ingress_settings = 'internal-and-cloud-load-balancing'` forces all Umami traffic through the LB, preventing direct `*.run.app` URL access.
 
-See [App_CloudRun](./App_CloudRun.md#a-https-load-balancer) for full architecture details.
+See [App_CloudRun](./App_CloudRun.md#group-16--cloud-armor--cdn) for full architecture details.
 
 ### B. Cloud CDN
 
@@ -473,7 +473,7 @@ The following behaviours are applied automatically by `Umami CloudRun` regardles
 | **No Redis required** | `enable_redis = false` default | Umami uses only PostgreSQL for all data storage. Redis is not required. |
 | **Scripts directory** | `scripts_dir = abspath("${module.umami_app.path}/scripts")` | Initialization scripts are sourced from `Umami Common`, not from the deployment directory. |
 
-**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun](./App_CloudRun.md#9-inline-infrastructure-provisioning) for the full inline resource inventory and teardown notes.
+**Inline infrastructure** (when no `Services_GCP` stack is present) is identical to `App_CloudRun` §9 — `App_CloudRun` provisions an inline VPC, Cloud NAT, Cloud SQL instance, service accounts, and GCP APIs as required. See [App_CloudRun](./App_CloudRun.md#dependency-on-services-gcp-for-shared-resources) for the full inline resource inventory and teardown notes.
 
 ---
 
