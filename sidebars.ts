@@ -575,6 +575,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Payload_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Xibo',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Xibo_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Xibo_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -680,6 +689,15 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/TechnitiumDNS_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/TechnitiumDNS_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/TechnitiumDNS_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SimpleRisk',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/SimpleRisk_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/SimpleRisk_Common', label: 'Common'},
           ],
         },
       ],
@@ -1384,6 +1402,24 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/Wallos_Common', label: 'Common'},
           ],
         },
+        {
+          type: 'category',
+          label: 'InvenTree',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/InvenTree_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/InvenTree_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Open Source POS',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/OpenSourcePOS_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/OpenSourcePOS_Common', label: 'Common'},
+          ],
+        },
       ],
     },
     {
@@ -1855,6 +1891,33 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'modules/GoToSocial_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'modules/GoToSocial_GKE', label: 'GKE'},
             {type: 'doc', id: 'modules/GoToSocial_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Roundcube',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Roundcube_CloudRun', label: 'Cloud Run'},
+            {type: 'doc', id: 'modules/Roundcube_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Stalwart',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Stalwart_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Stalwart_Common', label: 'Common'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Jitsi',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'modules/Jitsi_GKE', label: 'GKE'},
+            {type: 'doc', id: 'modules/Jitsi_Common', label: 'Common'},
           ],
         },
       ],
@@ -2344,6 +2407,14 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Payload_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'Xibo',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Xibo_GKE', label: 'GKE'},
+          ],
+        },
       ],
     },
     {
@@ -2439,6 +2510,14 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/TechnitiumDNS_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/TechnitiumDNS_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'SimpleRisk',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/SimpleRisk_CloudRun', label: 'Cloud Run'},
           ],
         },
       ],
@@ -3033,6 +3112,22 @@ const sidebars: SidebarsConfig = {
             {type: 'doc', id: 'labs/Wallos_GKE', label: 'GKE'},
           ],
         },
+        {
+          type: 'category',
+          label: 'InvenTree',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/InvenTree_CloudRun', label: 'Cloud Run'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Open Source POS',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/OpenSourcePOS_CloudRun', label: 'Cloud Run'},
+          ],
+        },
       ],
     },
     {
@@ -3451,6 +3546,30 @@ const sidebars: SidebarsConfig = {
           items: [
             {type: 'doc', id: 'labs/GoToSocial_CloudRun', label: 'Cloud Run'},
             {type: 'doc', id: 'labs/GoToSocial_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Roundcube',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Roundcube_CloudRun', label: 'Cloud Run'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Stalwart',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Stalwart_GKE', label: 'GKE'},
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Jitsi',
+          collapsed: true,
+          items: [
+            {type: 'doc', id: 'labs/Jitsi_GKE', label: 'GKE'},
           ],
         },
       ],
