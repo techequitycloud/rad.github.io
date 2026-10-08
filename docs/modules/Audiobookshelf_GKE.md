@@ -13,6 +13,105 @@ This guide focuses on the cloud services Audiobookshelf uses and how to explore 
 
 ---
 
+## What Audiobookshelf costs on RAD, and how that compares
+
+**Audiobookshelf on RAD's GKE Autopilot module costs about US$42 a month in a project you own, with no licence fee for the software itself.** RAD charges a one-off module fee of 75 credits (US$7.50 at the top-up price) in a project you own, and 67.5 credits (10% lower) in a project RAD manages. GKE suits Audiobookshelf that must stay up continuously or scale across pods; for the lowest cost, the [Cloud Run module](Audiobookshelf_CloudRun.md) runs the same Audiobookshelf for about US$19 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
+
+If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that about US$42 a month becomes close to nothing instead. See **Pause it for free**, below.
+
+### What you pay on RAD
+
+You pay for three things:
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
+| Build time | A few credits, metered per minute of build time | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about US$42 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day**, about 2,010 a month (about US$201 at the top-up price, US$161 at the Scale plan's rate) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | US$36.08 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| GKE cluster management fee | US$0 if this is your only Autopilot/zonal cluster on the billing account, otherwise about US$73 (shared across every GKE app in the project) |
+| **Total** | **about US$42** |
+
+### How it compares
+
+- **No name-brand SaaS competitor is a clean match for Audiobookshelf, so the honest comparison is a plain self-managed server.** It is a smaller workload than a standard 2 vCPU VPS, so running it yourself on a cheaper, smaller class than a Hetzner CPX22 or DigitalOcean 2 vCPU/4 GB Droplet (both about $24/month) would do, for noticeably less than that.
+- **RAD is not cheaper than a bare VPS in cash terms, and does not try to be.** What RAD adds for a similar price is a managed database, Secret Manager for credentials, and monitoring that would otherwise be your own job to set up, patch and keep backed up.
+- **The admin's own time is the real cost a VPS does not show.** Security patches, backups and version upgrades on a bare server are work someone has to keep doing; RAD's managed services absorb that.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Audiobookshelf runs in **a project RAD manages for you**, you have an option that goes well beyond
+scaling to zero: **delete the whole project, and restore it within 30 days for close to
+nothing.** This suits occasional use — studying for a certification, a demo, a seasonal
+need — far better than running Audiobookshelf continuously.
+
+- **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google
+  to delete the project outright. Google does not remove it immediately: it keeps the project,
+  recoverable, for 30 days, and because billing is already unlinked nothing is charged while it
+  waits. Unlike deleting one module, this does not tear down the database, any VM or the
+  compute resource one by one — the whole project simply stops, and nothing is billed in the
+  meantime.
+- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, only the project's
+  owner can restore it. RAD asks Google to undelete the project and reattaches its billing
+  account, then asks you to run **Update** on each deployment to confirm everything came back.
+  Because nothing was individually destroyed, that Update finds the same resources already
+  there — it is a check, not a rebuild, and an Update never charges the module fee again. This
+  costs only a handful of credits in total (under US$1), against paying the module fee and a
+  full build again.
+- **What this needs.** You must own the project (not one RAD only manages billing for), you
+  must restore it yourself within the 30 days — after that Google deletes it for good — and
+  restoring is admitted like creating a new project, so your purchased credit balance must
+  still clear the tier's floor (100 credits for the sandbox tier most study and demo use
+  fits). Google says most services are fully working again within 36 hours of a restore.
+- **One real gap: backups do not survive.** Anything Audiobookshelf writes to a backup bucket inside the
+  project is very likely gone as soon as you delete the project, even though the project itself
+  is recoverable for 30 days — that bucket has Cloud Storage's soft-delete explicitly turned
+  off. Anyone who has customised the deployment and wants to keep that work should copy a
+  backup out (to Google Drive, or a bucket outside the project) before deleting. For a default
+  install with nothing irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+This is the fallback for a project you own, or once the 30-day restore window above has
+passed: **delete the deployment, and deploy it again when you next need it.**
+
+- **What a redeploy costs.** The module fee again, plus the builds: roughly
+  80 credits (about US$8) in your own project, or
+  72.5 credits in a RAD-managed one, because RAD rebuilds the resources
+  from scratch. Deleting saves money once Audiobookshelf would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 6 days or more in your own project (US$1.40/day) or 1 days or more in a RAD-managed one (67 credits/day).
+- **The GKE cluster itself is shared infrastructure.** If another application uses the same Autopilot cluster, deleting Audiobookshelf alone saves only its own pod; the cluster management fee only drops once nothing else in the project needs it.
+- **Keep your data first.** Anything Audiobookshelf writes to a backup bucket inside the deployment is
+  deleted with it — copy the latest backup out (to Google Drive, or a bucket you keep) before
+  deleting if you want to keep it.
+- **RAD does not recreate a deleted deployment for you.** You enter the settings again when
+  you redeploy.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  Audiobookshelf in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+  trainer sets. Either the trainer funds every place, or each participant pays for their own.
+  Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs Audiobookshelf for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD's fees and daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanics. Prices change; check each source before relying on a figure.
+
 ## 1. Overview
 
 Audiobookshelf runs as a single Node.js workload on GKE Autopilot. Unusually for this catalogue, it needs **no external database, no Redis, and no application secrets** — the deployment footprint is deliberately small:

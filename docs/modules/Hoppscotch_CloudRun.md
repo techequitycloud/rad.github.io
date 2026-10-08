@@ -22,6 +22,101 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Hoppscotch costs on RAD, and how that compares
+
+**Hoppscotch on RAD's Cloud Run module costs about US$17 a month in your own project, plus a 40-credit (US$4) module fee once per deployment, with no per-user licence.** If you only need it sometimes, see "Pause it for free" below to stop paying without losing your setup. Hoppscotch also ships as a GKE module; GKE costs more here (about US$24/month) because it adds a shared cluster, so Cloud Run is the lower-cost choice unless you're already running an Autopilot cluster for other apps.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 40 credits (US$4.00) | 36 credits (10% lower) |
+| Build time | A few credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$16.78 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **3 credits a day** |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
+database, file server and network are shared by every application in the project, so a second
+application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| Cloud Run, 1x vCPU / 0.5 GiB (scaleToZero) | US$10.78 |
+| Cloud NAT and networking | US$5.00 |
+| Cloud Storage (add-ons, backups) | US$1.00 |
+| **Total** | **about US$16.78** |
+
+### How it compares
+
+- No official hosted SaaS exists for the self-hosted Hoppscotch frontend to compare against — Postman's
+  own cloud plans are a different, closed-source product — so the honest comparison is a bare server.
+- Hoppscotch's frontend is light (1 vCPU, 0.5 GiB), so even a cheaper/smaller VPS tier than the ones
+  below would run it; for reference, a Hetzner CPX22 or DigitalOcean 2 vCPU/4 GB droplet runs about
+  $24/month and a GCP Compute Engine e2-standard-2 about $49/month.
+- What RAD adds over a bare VPS is managed TLS, IAM-scoped access, Secret Manager and monitoring —
+  this module has no database to patch, so the gap is mostly about identity and observability rather
+  than database administration.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Hoppscotch runs in a project RAD manages for you and you expect to come back to it — a break
+between courses, a seasonal lull, or simply not knowing yet whether you'll need it next
+month — this is the better option, and it costs almost nothing.
+
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright: Google's own 30-day recoverable soft delete. Unlike deleting Hoppscotch as a
+single module, this does not tear down the Cloud Run service, networking and storage one by one — the whole project
+simply stops, and nothing is charged while it waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment
+to confirm everything came back. Because nothing was individually destroyed, that Update
+finds the same resources already there — it is a check, not a rebuild, and an Update never
+charges the module fee again. This costs only a handful of credits (under US$1) in build time
+for a typical chain of deployments.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most use fits). Google says most services are
+fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project, even though the project itself is recoverable for 30 days. Hoppscotch keeps little of its own server-side state (collections and environments are mostly in the browser), so for a default install there is little to lose.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once the 30-day window above has passed, the fallback is to delete
+Hoppscotch outright and redeploy it later.
+
+- **What a redeploy costs:** the module fee again, plus the builds — roughly the module fee
+  shown above plus 3–6 credits of build time.
+- **When it's worth it:** deleting saves money only once Hoppscotch would otherwise sit unused
+  for about 8 days or more in your own project (about 14 days or more in a RAD-managed one). Hoppscotch has no database or shared VM, so deleting it removes its whole running cost on its own.
+- **Keep data first.** Nightly backups are written to a bucket inside the deployment, and
+  that bucket is deleted with it — copy the latest backup out (to Google Drive, or a bucket
+  you keep) before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  the app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance
+  the trainer sets. Either the trainer funds every place, or each participant pays for their
+  own. Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs the app for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+  by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD fees and the daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Google Cloud: delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanism. Prices change; check each source before relying on a figure.
+
+---
+
 ## 1. Overview
 
 Hoppscotch runs as a static single-page web app (served by Caddy) in a container on

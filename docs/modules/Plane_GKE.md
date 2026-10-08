@@ -22,6 +22,94 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Plane costs on RAD, and how that compares
+
+**Running Plane in your own Google Cloud project costs about US$149.81/month in infrastructure, plus a one-time module fee of 300 RAD credits** (sized at 2 vCPU / 4 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — plus build time metered in credits; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 116 credits/day — and the module fee is 10% lower, at 270 credits. See "Pause it for free" below for how a RAD-managed Plane deployment can be stopped, at no running cost, until you need it again. (or see the [Cloud Run guide](Plane_CloudRun.md) for the lower-cost option)
+
+### What you pay on RAD
+
+| Item | Own project | RAD-managed project |
+|---|---|---|
+| Module fee | 300 credits (once) | 270 credits (once) |
+| Build time | ~3-6 credits, metered per build minute | same, metered in credits at list price + RAD's margin |
+| Google Cloud running cost | ~$149.81/month, billed to your own billing account at Google's list price | ~116 credits/day, metered hourly at list price + RAD's margin |
+
+**Default running cost in your own project**
+
+| Resource | US$/month (Google list price, us-central1) |
+|---|---|
+| GKE Autopilot pod, 2x vCPU / 4 GiB | 79.35 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | 51.02 |
+| NFS/cache file server (small VM) | 13.43 |
+| Cloud NAT and networking | 5 |
+| Cloud Storage (add-ons, backups) | 1 |
+| GKE cluster management fee\* | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **$149.81** |
+
+\* Not included in the total above — it is shared across every GKE app running in the same project, so it is $0 if this is your only GKE cluster.
+
+### How it compares
+
+- Plane's own creators also sell **Plane Cloud**, whose cheapest paid tier (Pro) is **$8/user/month** ($6/user/month billed annually) — verified on their pricing page 8 October 2026. A 14-person team would pay more per month in Plane Cloud seats alone than this deployment's entire infrastructure bill, with no seat limit; a 2-3 person team pays less on Plane Cloud. Self-hosting trades the per-seat ceiling for one flat infrastructure cost that does not grow with headcount.
+- On a bare VPS you are the one applying OS/database security patches, taking and testing backups, and renewing certificates; RAD's managed Cloud SQL, Secret Manager and monitoring handle all three for you.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline option on a **RAD-managed** project, and it is free while paused. Deleting
+a RAD-managed project first unlinks its billing, then asks Google to delete the project itself —
+Google's own 30-day recoverable soft delete. Unlike deleting a single module, this does not tear
+down the database, any VM, or the compute resource one at a time: the whole project simply
+stops, and because billing is already unlinked, nothing is charged while it waits.
+
+Restoring — within 30 days, and only by the project's owner — asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds the
+same resources already there: it is a check, not a rebuild, and an Update never charges the
+module fee again. The whole restore costs only a handful of credits (under US$1) in build time
+for a typical chain of deployments. What this needs: you must own the project (not merely have
+RAD manage its billing), you must restore it yourself within the 30 days — after that Google
+deletes it for good — and restoring is admitted like creating a new project, so your purchased
+credit balance must still clear the tier's floor (100 credits for the sandbox tier most study and
+demo use fits). Google says most services are fully working again within 36 hours of a restore.
+
+**One real gap:** nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so the backup bucket is very likely gone as
+soon as you delete the project — even though the project itself is recoverable for 30 days. If
+you have customised this deployment and want to keep that work, copy a backup out (to Google
+Drive, or a bucket outside the project) before deleting. For a default install with nothing
+irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+The other lever, for an **own project** (or a RAD-managed one past its 30-day restore window),
+is to delete Plane outright and redeploy it later. A redeploy costs the module fee again
+plus the builds — roughly **303-306 credits** in total for this module.
+
+Deleting only saves money once Plane would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — for this module, that is about 7 days or more of being idle,
+based on its own US$149.81/month running cost above. Most of that running cost is
+usually the database and any shared file/cache VM, and they stop only once nothing else in the
+project uses them, so deleting this app alone saves only its own compute share if something else
+shares the project.
+
+**Keep data first:** nightly backups go to a bucket inside the deployment and are deleted with
+it, so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training:** a trainer runs a session for a class. Each participant gets the
+  app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+  trainer sets. Either the trainer funds every place, or each participant pays for their own.
+  Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies:** a partner runs the app for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by
+  card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Resource Manager: delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanics. [https://plane.so/pricing](https://plane.so/pricing)
+
 ## 1. Overview
 
 Upstream Plane's self-host stack is multi-service (`web` / `space` / `admin`

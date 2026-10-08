@@ -28,6 +28,63 @@ repeating them here.
 
 ---
 
+## What TechnitiumDNS costs on RAD, and how that compares
+
+**TechnitiumDNS on RAD's GKE Autopilot module costs about US$24.04 a month in a Google Cloud project you own, with the module fee charged once in RAD credits.** GKE suits this module if it needs to sit beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](TechnitiumDNS_CloudRun.md) runs the same deployment for about US$16.78 a month instead. If you only need it occasionally — testing zone configuration, a short-lived evaluation — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
+| Build time | About 3-6 credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$24.04 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **55 credits a day**, about 1,650 a month |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the network is shared by every application in the project, so a second application does not add a second set of it.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 0.5x vCPU / 0.5 GiB | US$18.04 |
+| Cloud NAT and networking | US$5.00 |
+| Cloud Storage (add-ons, backups) | US$1.00 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **US$24.04** |
+
+### How it compares
+
+- TechnitiumDNS has no commercial hosted SaaS of its own for this admin console/API surface — it is distributed only as self-hosted, Docker-first open-source software for an administrator to run themselves.
+- A self-managed comparison: Hetzner CPX22 (2 vCPU/4GB) runs about $24/month, a DigitalOcean 2 vCPU/4GB Droplet is the same $24/month, and a GCP Compute Engine e2-standard-2 (2 vCPU/8GB) is about $49/month — all more machine than this module's 0.5 vCPU / 0.5 GiB pod needs; a $5-6/month shared-vCPU micro instance would run it comfortably, plus the admin's own time for patching and TLS that RAD's managed Secret Manager and monitoring cover for you.
+- With no database here, most of RAD's own-project running cost beyond the pod itself is the shared GKE cluster management fee, which is split across every GKE app running in the same project.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If TechnitiumDNS runs in a project RAD manages for you, deleting the whole project unlinks its billing first, then asks Google to delete the project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module, this does not tear down the compute resource one by one: the whole project simply stops, and nothing is charged while it waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches its billing account, then asks you to run Update on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. This costs only a handful of credits (under US$1) in total for a typical 2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must restore it yourself within 30 days — after that Google deletes it for good — and restoring is admitted like creating a new project, so your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you delete the project — even though the project itself is recoverable for 30 days. If you have custom zone configuration you want to keep, copy a backup out (to Google Drive, or a bucket outside the project) before deleting. For a default install with nothing irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once the 30-day restore window has passed, the alternative is to delete TechnitiumDNS outright and redeploy it later. A redeploy costs the module fee again, plus the builds — roughly 45 credits (about US$4.50) in your own project, or 41 credits in a RAD-managed one.
+
+Deleting saves money only once TechnitiumDNS would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$0.80 a day), that works out to about 6 days or more, or about 1 days or more in a RAD-managed one (55 credits a day). There's no database here, so deleting this app frees its entire running cost rather than just a share of it — only the shared cluster fee, if any, keeps running for other apps.
+
+Keep data first: anything TechnitiumDNS writes to a backup bucket inside the deployment is deleted with it, so copy anything you want to keep out before deleting.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training:** a trainer runs a session for a class. Each participant gets the app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the trainer sets. Either the trainer funds every place, or each participant pays for their own. Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies:** a partner runs the app for a client from a ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low, billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanics. No currently-verified commercial hosted SaaS exists for this TechnitiumDNS surface, so no competitor price is named.
+
 ## 1. Overview
 
 TechnitiumDNS runs as a single prebuilt web workload. The deployment wires together a deliberately small

@@ -22,6 +22,110 @@ backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Cal.com costs on RAD, and how that compares
+
+**Cal.com on RAD's Cloud Run module costs about US$84 a month in your own Google Cloud project, with no extra licence fee** — Cal.com is open source. In a project RAD manages for you, the same deployment is metered at **32 credits a day** (about 960 a month, about US$96 at the top-up price). Or see the [GKE guide](CalCom_GKE.md) for always-on capacity across pods. If you only need Cal.com occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days for a few credits, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
+
+### What you pay on RAD
+
+Cal.com is open source, so there is no licence fee. You pay for three things:
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
+| Build time | A few credits per build (roughly 3–6 credits) | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$84 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **32 credits a day**, about 960 a month (about US$96 at the top-up price) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the
+database, file server and network are shared by every application in the project, so a second
+application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| Cloud Run, 1x vCPU / 2 GiB (scaleToZero) | US$13.16 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| NFS/cache file server (small VM) | US$13.43 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| **Total** | **about US$84** |
+
+Cloud SQL and Cloud Run/GKE pod pricing is the same in africa-south1 (Johannesburg); the small VM costs about 10% more there.
+
+- **Scale-to-zero is the default on Cloud Run.** The figure above assumes modest daily use; set `min_instance_count ≥ 1` to keep it always warm (and avoid cold starts), which raises the Cloud Run line but not the rest of the table.
+
+### How it compares, for a team of ten
+
+Cal.com, the project this module deploys, sells its own hosted plans per user:
+
+| Option | Per month (10 users) | Notes |
+|---|---|---|
+| Cal.com Teams | US$120 (US$12/user) | Hosted by Cal.com |
+| Cal.com Organizations | US$280 (US$28/user) | Hosted by Cal.com, adds org-wide admin |
+| **RAD, Cloud Run, your own project** | **About US$84**, plus US$7.50 once per deployment | RAD's automation, in your project |
+| **RAD, Cloud Run, a RAD-managed project** | **About 960 credits (US$96)** | RAD |
+
+- **Cal.com's hosted price grows with every seat; RAD's cost is the infrastructure**, which a growing team only reaches the edge of when it needs more capacity. At ten users RAD's own-project running cost is already below a single month of the Teams plan.
+- **A cheap server is cheap until something breaks.** On RAD the database is Cloud SQL with automated backups, and secrets live in Secret Manager. On your own server, that is a job someone has to do.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Cal.com runs in **a project RAD manages for you**, deleting the whole project — rather than deleting
+just this module — unlinks its billing first, then asks Google to delete the project outright. Google
+keeps it, recoverable, for 30 days, and because billing is already unlinked, nothing is charged while it
+waits. Unlike deleting one module, this does not tear down Cloud SQL, any VM or the compute resource one
+by one: the whole project simply stops.
+
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can ask Google to undelete
+  the project and reattach its billing account, then run **Update** on each deployment to confirm
+  everything came back. Because nothing was individually destroyed, that Update finds the same resources
+  already there, and an Update never charges the module fee again. For a typical 2–3-deployment chain
+  this costs only a handful of credits in total (roughly 5–10 credits, under US$1).
+- **What this needs.** You must own the project (not one RAD only manages billing for), restore it
+  yourself within 30 days — after that Google deletes it for good — and clear the tier's admission floor
+  again (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully
+  working again within 36 hours of a restore.
+- **One real gap: nightly backups do not survive.** Backups are written to a bucket inside the project,
+  and that bucket has Cloud Storage's soft-delete turned off, so it is very likely gone as soon as the
+  project is deleted — even though the project itself is recoverable for 30 days. Copy a backup out (to
+  Google Drive, or a bucket outside the project) before deleting if there is anything in it worth
+  keeping; for a default install with nothing irreplaceable, this does not matter.
+
+Source: [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects).
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once the 30-day restore window above has passed, the way to stop paying is to
+delete the deployment and deploy it again when you need it.
+
+- **What a redeploy costs.** The module fee again, plus the builds: about 79 credits
+  (about US$7.90) at the top-up price, and roughly 15–20 minutes of build time (RAD's
+  own platform average). Deleting saves money only once Cal.com would otherwise sit unused for about
+  **3 days or more** — in your own project that is about US$2.79 a day, and
+  in a RAD-managed one it is 32 credits a day.
+- Most of the running cost here is usually the database and/or the shared file/cache VM or cluster. They stop only when nothing else in the project uses them, so deleting Cal.com while another application shares the project saves only Cal.com's own compute part.
+- **Keep data first.** Nightly backups go to a bucket inside the deployment and are deleted with it, so
+  copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets the app in
+  their own Google Cloud project for 15 minutes to 24 hours, within an allowance the trainer sets. Either
+  the trainer funds every place, or each participant pays for their own. Everything is deleted when the
+  session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs the app for a client from a ring-fenced
+  wallet it funds, and settles with the client directly. If the wallet runs low, billing pauses and the
+  data is kept, so nobody receives an unexpected charge. At the end the partner hands the project over
+  and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by card,
+bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD fees and the daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore window and backup-bucket caveat;
+[Cal.com pricing](https://cal.com/pricing); prices change, check each source before relying on a figure.
+
 ## 1. Overview
 
 Cal.com runs as a Next.js container on Cloud Run v2. The deployment wires together a

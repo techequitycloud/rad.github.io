@@ -21,6 +21,78 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Flowise costs on RAD, and how that compares
+
+**In a Google Cloud project you own, Flowise on RAD's Cloud Run module costs about US$69 a month, plus US$7.50 once per deployment and no per-user licence.** GKE Autopilot is the alternative for workloads that must stay up continuously or run beside other Kubernetes apps; see the [GKE guide](Flowise_GKE.md), about US$93 a month. Flowise is an open-source visual AI workflow builder for assembling LangChain and LlamaIndex pipelines by drag and drop. Figures are as at 8 October 2026; sources are listed at the end of this section.
+
+If this runs in a project RAD manages for you, it can be deleted and restored within 30 days for a few credits instead of sitting there running — so an occasional-use deployment costs a few dollars a month, not US$69. See **Pause it for free**, below.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
+| Build time | A few credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$69 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **26 credits a day**, about 780 a month (about US$78 at the top-up price) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| Cloud Run, 1 vCPU / 1 GiB, scaling to zero | US$12 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51 |
+| Cloud NAT gateway and IP address | US$5 |
+| Cloud Storage for backups | US$1 |
+| **Total** | **about US$69** |
+
+
+### How it compares
+
+Flowise has its own official hosted plan, **Flowise Cloud**: Flowise's own hosted Cloud plan starts at $35/month (Starter: unlimited flows, 10,000 predictions/month, 1 GB storage); a $65/month Pro plan raises those limits — read 8 October 2026.
+
+| Option | Per month | Who runs it |
+|---|---|---|
+| Flowise Cloud, Starter (official hosted plan) | US$35/mo | Flowise |
+| **RAD, Cloud Run, your own project** | **US$69**, plus US$7.50 once | RAD's automation, in your project |
+| **RAD, Cloud Run, a RAD-managed project** | **about 780 credits (US$78)** | RAD |
+| RAD, GKE Autopilot | about US$93; see the [GKE Autopilot guide](Flowise_GKE.md) | RAD |
+
+Flowise Cloud's price was read from its own pricing page on 8 October 2026 and may have changed since — check the source before relying on the figure.
+
+- **Flowise Cloud is the fixed comparison; a self-managed server is the flexible one.** On your own Hetzner or DigitalOcean box (2 vCPU/4GB, about US$24/month) or a GCP Compute Engine e2-standard-2 (2 vCPU/8GB, about US$49/month) you would pay less in cash than either option, but you run the operating system, the database, backups, security patches and upgrades yourself — exactly what RAD's managed Cloud SQL, Secret Manager and monitoring do for you.
+- **A cheap server is cheap until something breaks.** On RAD, backups, point-in-time recovery, password rotation through Secret Manager, and logging and monitoring come from Google Cloud by default. On your own server, or on a fixed-price hosted plan with no infrastructure control, each of those is a job someone still has to do or a limit you cannot change.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Flowise runs in **a project RAD manages for you**, you have an option beyond scaling down: **delete the whole project, and restore it within 30 days for close to nothing.** This suits a deployment you only need occasionally — studying for a certification, a demo, a seasonal need — far better than running it continuously.
+
+- **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the project. Google does not remove it immediately: it keeps it, recoverable, for 30 days, and because billing is already unlinked, nothing is charged while it waits. Unlike deleting one module, this does not tear down Cloud SQL, the VM or Cloud Run one by one — the whole project, and everything in it, simply stops.
+- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the project's owner can restore it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to run **Update** on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. That costs a handful of build-time credits in total (under US$1) for a typical 2–3-deployment chain.
+- **So a month of occasional use can cost a few dollars, not US$69.** Deploy Flowise, use it for a session, delete the project. Restore it next time you want it, confirm with Update, and delete it again when you're done. You pay only for the module fee once, the builds, and whatever hours it was actually live.
+- **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing for), and you restore it yourself within the 30 days — after that, Google deletes it for good. Restoring is admitted like creating a new project: your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
+- **One real gap: nightly backups do not survive.** Backups are written to a bucket inside the project, and that bucket has Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you delete the project — even though the project itself is recoverable for 30 days. If you've customised this deployment and want to keep that work, copy a backup out (to Google Drive, or a bucket outside the project) before deleting. For a default install with nothing irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+Cloud Run already scales to zero between requests, so most of its own compute cost stops on its own when nobody is using it. The option above only applies to a RAD-managed project; **in your own project, or once the 30-day window has passed, the way to stop paying is to delete the deployment and deploy it again when you need it.**
+
+- **What a redeploy costs.** The module fee again plus the builds: about 80 credits (US$8). Deleting saves money if Flowise would otherwise sit unused for about 4 days or more in your own project (about US$2.29 a day), or about 3 days or more in a RAD-managed one (26 credits a day).
+- **Delete everything Flowise uses.** Most of the running cost is usually the database and any shared file/cache VM. They stop only when nothing else in the project uses them, so deleting this app while something else shares the project saves only this app's own compute part.
+- **Keep data first.** Nightly backups go to a bucket inside the deployment and are deleted with it, so copy the latest backup out before deleting if you want to keep it.
+- **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the settings again when you deploy.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets Flowise in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the trainer sets. Either the trainer funds every place, or each participant pays for their own. Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs the app for a client from a ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low, billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD's own fees and daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanism; [Flowise Cloud pricing](https://flowiseai.com/). Prices change; check each source before relying on a figure.
+
 ## 1. Overview
 
 Flowise runs as a Node.js container on Cloud Run v2. The deployment wires together
