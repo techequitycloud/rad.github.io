@@ -21,6 +21,101 @@ repeating them here.
 
 ---
 
+## What Unleash costs on RAD, and how that compares
+
+**Running Unleash on GKE Autopilot in your own Google Cloud project costs about US$104.74/month in Google Cloud charges** (about US$177.74 if this isn't your only Autopilot cluster), on top of a one-off 110-credit RAD module fee (US$11) — higher than the Cloud Run module's fee because this variant also runs a shared NFS volume on GKE. GKE Autopilot suits Unleash that must stay up or scale across pods; for the lowest cost, see the [Cloud Run guide](Unleash_CloudRun.md) instead. In a RAD-managed project the module fee drops to 99 credits (10% lower) — see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below.
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee (one-off) | 110 credits | 99 credits (10% lower) |
+| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Google Cloud running cost | US$104.74/month, billed by Google at list price | ~92 credits/day (about 2760/month, US$276 at the top-up price), metered at list price plus RAD's margin |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
+
+**Default running cost in your own project**
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 0.5 GiB | US$34.29 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| NFS/cache file server (small VM) | US$13.43 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| **Total** | **US$104.74** |
+
+
+*The GKE cluster management fee is excluded from the total above because it is shared across every GKE app in the project — $0 if this is the only one, otherwise roughly $73/month split across however many you run.*
+
+### How it compares
+
+- Unleash's own hosted cloud is priced per seat: Pay-As-You-Go is $75/seat/month with a 5-seat minimum ($375/month floor) — verified on Unleash's pricing page, 8 October 2026. RAD's own-project cost here (~US$105/month, flat) still undercuts that floor.
+- A self-managed VPS comparison, sized to Unleash's 1 vCPU / 0.5 GiB default: a Hetzner CPX11 or DigitalOcean 1 vCPU/2GB Droplet runs about $6-12/month — plus your own time for backups and patching, and no Kubernetes control plane to run.
+- Most of this module's cost above the Cloud Run variant is the GKE pod and the NFS volume; the [Cloud Run module](Unleash_CloudRun.md) needs neither and is the cheaper default for Unleash.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline advantage of a RAD-managed project, and it costs nothing while paused.
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module,
+this does **not** tear down Cloud SQL, any VM, or the compute resource one by one: the whole
+project simply stops, and nothing is charged while it waits, because billing is already
+unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds
+the same resources already there — it is a check, not a rebuild, and an Update never charges
+the module fee again. This costs only a handful of credits (under US$1) in total for a typical
+2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project — even though the project itself is recoverable for 30 days. If you've
+customised Unleash and want to keep that work, copy a backup out (to Google Drive, or a bucket
+outside the project) before deleting. For a default install with nothing irreplaceable in it,
+this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
+deleting removes the resources for good, and bringing Unleash back means redeploying from
+scratch. That costs about 113-116 credits in your own project, or about
+102-105 credits in a RAD-managed one.
+
+Deleting only saves money once Unleash would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — about 3 days or more in your own project
+(about US$3.49 a day), or about 1 days or more in a RAD-managed one
+(92 credits a day).
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
+so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
+app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+trainer sets. Either the trainer funds every place, or each participant pays for their own.
+Everything is deleted when the session ends and unused credits go back to the trainer.
+
+Managed Environments, for consultancies: a partner runs the app for a client from a
+ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Google's project delete/restore documentation](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore claims; [Unleash pricing](https://www.getunleash.io/pricing).
+
 ## 1. Overview
 
 Unleash runs as a Node.js web workload. The deployment wires together a focused set of

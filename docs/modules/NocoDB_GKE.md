@@ -22,6 +22,116 @@ than repeating them here.
 
 ---
 
+## What NocoDB costs on RAD, and how that compares
+
+**NocoDB on RAD's GKE Autopilot module costs about US$93–166 a month, with the module fee charged once in RAD credits.** GKE Autopilot suits NocoDB that must stay up, scale across pods or run beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](NocoDB_CloudRun.md) runs the same NocoDB for about US$69 a month. If you only need it occasionally — a demo, a seasonal project, something you're evaluating — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+
+### What you pay on RAD
+
+RAD deploys **NocoDB**, which is open source, so there is no licence fee per user. You pay for
+three things:
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 110 credits (US$11 at the top-up price) | 99 credits (10% lower) |
+| Build time | About 3-6 credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$93 a month** for the default configuration (table below) — more if this isn't your only Autopilot cluster | Metered hourly in credits; RAD publishes **85 credits a day**, about 2,550 a month (about US$255 at the top-up price, US$204 at the Scale plan's rate) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second set of them.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | US$36.08 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **about US$93** (about US$166 if this isn't your only Autopilot cluster) |
+
+### How it compares
+
+| Option | Price | Who runs it |
+|---|---|---|
+| Airtable, Team plan | $20/user/month, billed annually | Airtable. Per-seat; what NocoDB is built to replace |
+| Airtable, Business plan | $45/user/month, billed annually | Airtable |
+| NocoDB Cloud, Plus | about $12-15/month, unlimited seats | NocoDB Labs' own hosted plan for the same open-source project |
+| NocoDB Cloud, Business | about $24-30/month, unlimited seats | NocoDB Labs |
+| **RAD, Cloud Run, your own project** | **About US$69**, plus US$8 once per deployment | RAD's automation, in your project |
+| **RAD, Cloud Run, a RAD-managed project** | **About 780 credits (US$62–78)** | RAD |
+| RAD, GKE Autopilot | See the [GKE guide](NocoDB_GKE.md) | RAD |
+
+**Airtable charges per seat; RAD's cost is the infrastructure, which does not grow with headcount.** A five-person team on Airtable's Team plan pays $100/month before any automation add-ons; the same team on RAD's own project pays a flat running cost regardless of how many people have logins. NocoDB Cloud's own unlimited-seat pricing is the closer like-for-like, since it is the same open-source project hosted by its maintainer — RAD's own-project figure sits below its Plus plan and its RAD-managed figure sits close to its Business plan, for infrastructure you can also inspect and move off at any time.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If NocoDB runs in **a project RAD manages for you**, you have a second option that goes well
+beyond scaling to zero: **delete the whole project, and restore it within 30 days for close to
+nothing.** This suits NocoDB you only need occasionally — a demo, an evaluation, a seasonal
+project — far better than running it continuously.
+
+- **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google to
+  delete the project. Google does not remove the project immediately: it keeps it, recoverable,
+  for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
+  deleting one module, this does not tear down the database, the cluster or the compute resource
+  one by one — the whole project, and everything in it, simply stops.
+- **Restoring costs a few credits, not a rebuild.** Within 30 days, the project's owner can restore
+  it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to
+  run **Update** on each deployment to confirm everything came back. Because nothing was
+  individually destroyed, that Update finds the same resources already there — it is a check, not a
+  rebuild, and an Update never charges the module fee again. That costs roughly a handful of credits (under US$1) in
+  total for a typical 2-3-deployment chain.
+- **So a month of occasional use can cost a few dollars, not US$93.** Deploy NocoDB, use
+  it for a while, delete the project. Restore it next time you want it, confirm with Update, and
+  delete it again when you're done. You pay only for the module fee once, the builds, and whatever
+  time NocoDB was actually live.
+- **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing
+  for), and you restore it yourself within the 30 days — after that, Google deletes it for good.
+  Restoring is admitted like creating a new project: your purchased credit balance must still clear
+  the tier's floor (100 credits for the sandbox tier most study and demo use fits). Google says most
+  services are fully working again within 36 hours of a restore.
+- **One real gap: nightly backups don't survive.** Backups are written to a bucket inside the
+  project, and that bucket is **not** protected by Cloud Storage's soft-delete, so it is very likely
+  gone as soon as you delete the project — even though the project itself is recoverable for 30
+  days. If you've customised NocoDB and want to keep that work, copy a backup out (to Google Drive,
+  or a bucket outside the project) before you delete. For a default installation with nothing
+  irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+The option above only applies to a RAD-managed project; **in your own project, or once the 30-day
+window has passed, the way to stop paying is to delete the deployment and deploy it again when you
+need it.**
+
+- **What a redeploy costs.** The module fee again plus the builds: about 115
+  credits (US$11.50) in your own project, or 104
+  credits in a RAD-managed one. Deleting saves money once NocoDB would otherwise sit unused for
+  about 4 days or more in your own project (about US$3.10 a
+  day), or about 1 days or more in a RAD-managed one (85 credits a
+  day).
+- **Most of the running cost is usually the database and any shared file/cache VM.** They stop only
+  when nothing else in the project uses them, so deleting NocoDB while something else shares the
+  project saves only this app's own compute part.
+- **Keep your data first.** Nightly backups go to a bucket inside the deployment and are deleted
+  with it, so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  NocoDB in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+  trainer sets. Either the trainer funds every place, or each participant pays for their own.
+  Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs NocoDB for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low, billing
+  pauses and the data is kept, so nobody receives an unexpected charge. At the end the partner hands
+  the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by
+  card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; [Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the 30-day recovery window and what it says about Cloud Storage objects without soft delete; RAD fees and the daily-credit estimates from [radmodules.dev/pricing](https://radmodules.dev/pricing); [NocoDB pricing](https://nocodb.com/pricing); [Airtable pricing](https://airtable.com/pricing). Prices change; check each source before relying on a figure.
+
 ## 1. Overview
 
 NocoDB runs as a Node.js workload. The deployment wires together a focused set of

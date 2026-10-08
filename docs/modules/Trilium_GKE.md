@@ -22,6 +22,99 @@ rather than repeating them here.
 
 ---
 
+## What Trilium costs on RAD, and how that compares
+
+**Running Trilium on GKE Autopilot in your own Google Cloud project costs about US$42.08/month in Google Cloud charges** (about US$115.08 if this isn't your only Autopilot cluster), on top of a one-off 75-credit RAD module fee (US$7.50) charged once at deploy time — higher than the Cloud Run module's fee because this variant runs no shared NFS volume and instead relies on the pod's own storage. GKE Autopilot suits Trilium that must stay up or run beside other Kubernetes workloads; for the lowest cost, see the [Cloud Run guide](Trilium_CloudRun.md) instead. In a RAD-managed project the module fee drops to 67.5 credits (10% lower) — see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below.
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee (one-off) | 75 credits | 67.5 credits (10% lower) |
+| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Google Cloud running cost | US$42.08/month, billed by Google at list price | ~67 credits/day (about 2010/month, US$201 at the top-up price), metered at list price plus RAD's margin |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
+
+**Default running cost in your own project**
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | US$36.08 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| **Total** | **US$42.08** |
+
+
+*The GKE cluster management fee is excluded from the total above because it is shared across every GKE app in the project — $0 if this is the only one, otherwise roughly $73/month split across however many you run.*
+
+### How it compares
+
+- Trilium (the TriliumNext fork) has no official hosted cloud version — it is distributed only as self-hosted software, so there is no vendor SaaS plan to compare against.
+- A self-managed comparison, sized to Trilium's 1 vCPU / 1 GiB default: a Hetzner CPX11 or DigitalOcean 1 vCPU/2GB Droplet runs about $6-12/month, cheaper in cash terms than either RAD option here — plus your own time for backups, OS patching and TLS renewal.
+- Most of this module's cost is the GKE Autopilot pod itself and its share of the cluster management fee; the lighter [Cloud Run variant](Trilium_CloudRun.md) avoids both.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline advantage of a RAD-managed project, and it costs nothing while paused.
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module,
+this does **not** tear down Cloud SQL, any VM, or the compute resource one by one: the whole
+project simply stops, and nothing is charged while it waits, because billing is already
+unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds
+the same resources already there — it is a check, not a rebuild, and an Update never charges
+the module fee again. This costs only a handful of credits (under US$1) in total for a typical
+2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project — even though the project itself is recoverable for 30 days. If you've
+customised Trilium and want to keep that work, copy a backup out (to Google Drive, or a bucket
+outside the project) before deleting. For a default install with nothing irreplaceable in it,
+this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
+deleting removes the resources for good, and bringing Trilium back means redeploying from
+scratch. That costs about 78-81 credits in your own project, or about
+70.5-73.5 credits in a RAD-managed one.
+
+Deleting only saves money once Trilium would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — about 6 days or more in your own project
+(about US$1.40 a day), or about 1 days or more in a RAD-managed one
+(67 credits a day).
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
+so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
+app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+trainer sets. Either the trainer funds every place, or each participant pays for their own.
+Everything is deleted when the session ends and unused credits go back to the trainer.
+
+Managed Environments, for consultancies: a partner runs the app for a client from a
+ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Google's project delete/restore documentation](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore claims.
+
 ## 1. Overview
 
 Trilium runs as a single Node.js/Express pod on GKE Autopilot. The deployment wires

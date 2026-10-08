@@ -11,6 +11,96 @@ This document provides a comprehensive reference for the `modules/Formbricks_Clo
 
 ---
 
+## What Formbricks costs on RAD, and how that compares
+
+**Running Formbricks in your own Google Cloud project costs about US$83.61/month in Google Cloud charges, on top of a one-time 110-credit RAD module fee** (99 credits — 10% lower — in a RAD-managed project). Formbricks is an open-source survey and experience management platform. If you deploy into a RAD-managed project, you can pause the whole thing for free and pick it back up later — see "Pause it for free" below.
+
+*Formbricks is also available on GKE — see the [GKE guide](Formbricks_GKE.md) if you need Kubernetes-based orchestration; this guide covers the lower-cost Cloud Run option.*
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee | **110 credits** (one-time) | **99 credits** (one-time, 10% lower) |
+| Build time | ~3–6 credits (one-time, per build) | ~3–6 credits (one-time, per build) |
+| Google Cloud running cost | ~US$83.61/month, billed to your own Google billing account at list price | ~32 credits/day (~US$3.20/day), metered hourly at list price plus RAD's margin |
+
+**Default running cost in your own project**
+
+| Resource | US$/month (Google list price, us-central1) |
+|---|---|
+| Cloud Run, 1x vCPU / 2 GiB (scaleToZero) | US$13.16 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| NFS/cache file server (small VM) | US$13.43 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| **Total** | **US$83.61** |
+
+### How it compares
+
+- **Formbricks Cloud**'s cheapest paid plan, Pro, is US$74/month (3 workspaces, 2,000 monthly responses, unlimited seats) — verified at [https://formbricks.com/pricing](https://formbricks.com/pricing). That undercuts RAD's ~US$83.61/month Google Cloud bill for the Cloud Run variant on sticker price alone, but it caps usage; RAD's instance is uncapped, self-hosted, and the data never leaves your own project.
+- The honest trade here is cap vs. control, not price: a managed SaaS plan is cheaper at this scale, and RAD's running cost is what real Cloud SQL, compute and networking actually cost at Google's list price with nothing hidden in a bundled seat price.
+- RAD is not claiming to be cheaper than a bare VPS in cash terms — it usually is not. The case for RAD is what's managed for you.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Formbricks is running in a **RAD-managed project**, you can stop paying for it entirely without destroying
+it. Deleting that project first unlinks its billing, then asks Google to delete the project outright —
+Google's own 30-day recoverable soft delete. Unlike deleting the Formbricks module on its own, this does not
+tear down Cloud SQL, any VM or the compute resource one by one: the whole project simply stops, and nothing is
+charged while it waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches
+its billing account, then asks you to run Update on each deployment to confirm everything came back. Because
+nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a
+rebuild, and an Update never charges the module fee again. This costs only a handful of build-time credits in
+total — roughly 5–10 credits, under US$1, for a typical 2–3-deployment chain. The 99-credit module
+fee is not charged again.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must restore it yourself
+within 30 days — after that Google deletes it for good — and restoring is admitted like creating a new
+project, so your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier
+most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has Cloud Storage's
+soft-delete explicitly turned off, so it is very likely gone as soon as you delete the project — even though
+the project itself is recoverable for 30 days. If you have customised Formbricks and want to keep that work,
+copy a backup out (to Google Drive, or a bucket outside the project) before deleting. For a default install
+with nothing irreplaceable in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+If Formbricks is in your own project (or more than 30 days have passed on a RAD-managed one), the way to stop
+paying is to delete the deployment and redeploy later when you need it again.
+
+A redeploy costs the module fee again, plus the builds: roughly **110 + ~3–6 credits** (~US$11.45)
+in your own project, or **99 + ~3–6 credits** on a RAD-managed one.
+
+Deleting only saves money once Formbricks would otherwise sit unused long enough to clear that redeploy cost
+against its own running cost: roughly **about 5 days or more** idle in your own project (against its
+~US$83.61/month Google Cloud bill), or **about 4 days or more** idle in a RAD-managed project
+(against its ~32 credits/day).
+
+Most of Formbricks's running cost is the database and the shared file/cache VM. They stop only when nothing else in the project uses them, so deleting this app while something else shares the project saves only this app's own compute share of the total above.
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it, so copy the
+latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training:** a trainer runs a session for a class. Each participant gets the app in their
+  own Google Cloud project for 15 minutes to 24 hours, within an allowance the trainer sets. Either the trainer
+  funds every place, or each participant pays for their own. Everything is deleted when the session ends and
+  unused credits go back to the trainer.
+- **Managed Environments, for consultancies:** a partner runs the app for a client from a ring-fenced wallet it
+  funds, and settles with the client directly. If the wallet runs low, billing pauses and the data is kept, so
+  nobody receives an unexpected charge. At the end the partner hands the project over and the deployments
+  become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR, by card, bank
+  transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; radmodules.dev/pricing for RAD's own fees and daily-credit estimates; [Google's project delete/restore docs](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanics; [Formbricks Cloud pricing](https://formbricks.com/pricing) for the Formbricks Cloud figures.
+
 ## 1. Module Overview
 
 Formbricks is an open-source survey and experience management platform. It allows teams to build product surveys, NPS surveys, onboarding flows, and in-app feedback widgets from a single platform. Built on Next.js with Prisma ORM, it requires PostgreSQL, optional Redis, and S3-compatible object storage. `Formbricks CloudRun` is a **wrapper module** built on top of `App CloudRun`. It uses `App CloudRun` for all GCP infrastructure provisioning and injects Formbricks-specific application configuration, secrets, database initialisation, and GCS-backed S3-compatible storage via `Formbricks Common`.

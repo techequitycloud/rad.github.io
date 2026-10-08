@@ -27,6 +27,109 @@ rather than repeating them here.
 
 ---
 
+## What Emby costs on RAD, and how that compares
+
+**Emby on RAD's GKE Autopilot module costs about US$42.08 a month.** A self-managed server is cheaper in cash, but then you run the OS, security patches and upgrades yourself. For the lowest cost, the [Cloud Run guide](Emby_CloudRun.md) runs the same Emby for about US$19.14 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
+
+If you only need it occasionally — studying, a demo, a seasonal business — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that US$42.08 becomes a few dollars a month instead. See **Pause it for free**, below.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
+| Build time | A few credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$42.08 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day**, about 2,010 a month (about US$201 at the top-up price) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | US$36.08 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **about US$42.08** |
+
+### How it compares
+
+- Emby does not sell hosting — there is no "Emby Cloud" to compare against — so the honest hosting comparison is a bare VPS: Emby's own default is lighter than the ~US$24/month 2 vCPU class those providers quote, so a smaller, cheaper tier of the same providers is enough.
+- Separately, and on **any** host including RAD: Emby's core playback is free, but **Emby Premiere** — hardware-accelerated transcoding, the full mobile/TV apps, DVR/live TV, offline sync — is a paid add-on at US$4.99 a month, US$54 a year, or US$119 once for a lifetime licence. That cost is the same whether Emby runs on RAD, a VPS, or a spare machine at home.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Emby runs in **a project RAD manages for you**, you have a second option that goes well
+beyond scaling to zero: **delete the whole project, and restore it within 30 days for close to
+nothing.** This suits Emby you only need occasionally — studying, a demo, a seasonal
+business — far better than running it continuously.
+
+- **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google
+  to delete the project. Google does not remove the project immediately: it keeps it, recoverable,
+  for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
+  deleting one module, this does not tear down the GKE pod or its networking one by one — the whole project,
+  and everything in it, simply stops.
+- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the project's owner
+  can restore it. RAD asks Google to undelete the project and reattaches its billing account,
+  then asks you to run **Update** on each deployment to confirm everything came back. Because
+  nothing was individually destroyed, that Update finds the same resources already there — it
+  is a check, not a rebuild, and an Update never charges the module fee again. That costs **a
+  handful of credits (under US$1)** in total for a typical Emby-sized deployment chain, against
+  the 72 credits (US$7.20) a full redeploy costs.
+- **So a month of occasional use can cost a few dollars, not US$42.08.** Deploy Emby, use it
+  for a while, delete the project. Restore it next time you want it, confirm with Update, and
+  delete it again when you're done. You pay only for the module fee once, the builds, and
+  whatever hours Emby was actually live.
+- **What this needs.** You must own the project (not a bring-your-own one RAD only manages
+  billing for), and you restore it yourself within the 30 days — after that, Google deletes it
+  for good. Restoring is admitted like creating a new project: your purchased credit balance
+  must still clear the tier's floor (100 credits for the sandbox tier most study and demo use
+  fits). Google says most services are fully working again within 36 hours of a restore.
+- **One real gap worth checking.** Whatever you have pointed Emby at for your media library —
+  if it lives inside this deployment's own storage rather than an external library — follow the
+  same rule as elsewhere: copy anything irreplaceable out before deleting, since Cloud Storage
+  objects without soft-delete enabled do not reliably survive a project deletion even though the
+  project itself does.
+
+
+### Pay only while you use it, the other way: delete and redeploy
+
+GKE keeps at least one pod running, so it never scales to zero on its own. The option above
+only applies to a RAD-managed project; **in your own project, or once the 30-day window has
+passed, the way to stop paying is to delete the deployment and deploy it again when you need
+it.**
+
+- **What a redeploy costs.** The module fee again plus the builds: about 80 credits
+  (US$7.95), and about an hour, because RAD recreates the project and shared services before Emby. Deleting saves money once Emby would otherwise sit unused
+  for about **6 days or more** in your own project (about US$1.40 a day), or about
+  **1 day or more** in a RAD-managed one (67 credits a day).
+- **Delete everything Emby uses.** Emby's default configuration carries no separate database or VM, so deleting it stops essentially all of its own running cost right away.
+- **Keep your data first.** Check whatever storage you have attached for your media library and Emby's own configuration before deleting — the module itself holds no database that needs a separate export.
+- **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the
+  settings again when you deploy.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  Emby in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+  trainer sets. Either the trainer funds every place, or each participant pays for their own.
+  Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs Emby for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API;
+RAD's own fees and daily-credit estimates from [radmodules.dev/pricing](https://radmodules.dev/pricing);
+[Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
+for the pause/restore mechanics and window. [Emby Premiere pricing](https://emby.media/premiere.html) for the add-on licence figures;
+
+
 ## 1. Overview
 
 Emby runs as a stateful workload. On GKE this is the **recommended home for

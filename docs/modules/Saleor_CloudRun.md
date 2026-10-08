@@ -22,6 +22,87 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Saleor costs on RAD, and how that compares
+
+**Running Saleor in your own GCP project costs about $100.40/month in Google Cloud charges; RAD's module fee is a one-time 175 credits (or 157.5 credits in a RAD-managed project), covering setup and support -- not the ongoing cloud bill, which Google bills you directly in your own project or RAD meters hourly in credits in a RAD-managed one.**
+Or see the GKE guide for the alternative deployment target; either way, if you deploy into a RAD-managed project you can pause the whole thing for free when you are not using it -- see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below.
+
+### What you pay on RAD
+
+| | Your own project | RAD-managed project |
+|---|---|---|
+| Module fee | 175 credits, once | 157.5 credits, once (10% lower) |
+| Build time | metered in credits as the build runs (a few credits, typically) | same |
+| Google Cloud running cost | ~$100.40/month, billed to your own billing account at Google's list price | ~32 credits/day, metered hourly by RAD at list price plus margin |
+
+**Default running cost in your own project**
+
+| Resource | US$/month (Google list price, us-central1) |
+|---|---|
+| Cloud Run, 2x vCPU / 3 GiB (scaleToZero) | $29.95 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | $51.02 |
+| NFS/cache file server (small VM) | $13.43 |
+| Cloud NAT and networking | $5.00 |
+| Cloud Storage (add-ons, backups) | $1.00 |
+| **Total** | **$100.40** |
+
+### How it compares
+
+- Saleor's own official managed offering, Saleor Cloud, starts at **$1,599/month** (Select tier, up to $200,000 GMV; source: https://saleor.io/pricing) -- aimed at production storefronts at real transaction volume, so it is not a like-for-like comparison with a single self-serve deployment, but it is the only verified commercial price for this exact platform.
+- Running it yourself on a bare VPS is still the cheapest cash option -- Hetzner CPX22 (2 vCPU/4GB) runs about **$24/month**, a DigitalOcean 2 vCPU/4GB Droplet is also **$24/month**, and a GCP Compute Engine e2-standard-2 (2 vCPU/8GB) is about **$49/month** -- plus the admin's own time for backups, security patches and upgrades, which RAD's managed Cloud SQL, Secret Manager and monitoring cover for you -- but RAD's price is never meant to beat a VPS, only to replace the admin time a VPS still needs.
+- Saleor is a commerce API that live storefronts depend on, so uptime tends to matter more here than squeezing the running cost down -- but the same pause mechanism below still applies to a staging or demo storefront that is not taking live orders.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+**This is the headline for a RAD-managed project.** Deleting a RAD-managed project first unlinks
+its billing, then asks Google to delete the project outright -- Google's own 30-day recoverable
+soft delete. Unlike deleting one module, this does not tear down Cloud SQL, any VM or the
+compute resource one by one: the whole project simply stops, and nothing is charged while it
+waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the project
+and reattaches its billing account, then asks you to run Update on each deployment to confirm
+everything came back. Because nothing was individually destroyed, that Update finds the same
+resources already there -- it is a check, not a rebuild, and an Update never charges the module
+fee again. This costs only a handful of credits (under US$1) in total for a typical 2-3-deployment
+chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days -- after that Google deletes it for good -- and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+**One real gap:** nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you delete
+the project -- even though the project itself is recoverable for 30 days. If you have customised
+the app and want to keep that work, copy a backup out (to Google Drive, or a bucket outside the
+project) before deleting. For a default install with nothing irreplaceable in it, this does not
+matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project (or once you are past the 30-day restore window above), the alternative is to delete Saleor outright and redeploy it later. A redeploy costs the module fee again, plus the builds -- roughly 175 + 3-6 credits of build time.
+
+Deleting saves money only once Saleor would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost -- against the own-project total above, that works out to about 5 days or more. Most of the running cost here is usually the database and the NFS/cache VM; they stop only when nothing else in the project uses them, so deleting this app while something else shares the project saves only this app's own compute part.
+
+**Keep data first:** nightly backups go to a bucket inside the deployment and are deleted with it, so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training:** a trainer runs a session for a class. Each participant gets the
+  app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+  trainer sets. Either the trainer funds every place, or each participant pays for their own.
+  Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies:** a partner runs the app for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+  by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; radmodules.dev/pricing for RAD's own fees and daily-credit estimates; https://cloud.google.com/resource-manager/docs/delete-restore-projects for the pause/restore mechanics; https://saleor.io/pricing for the named competitor's price.
+
 ## 1. Overview
 
 Saleor runs as a custom-built container (`ghcr.io/saleor/saleor:3.23` wrapped with a

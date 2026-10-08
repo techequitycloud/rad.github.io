@@ -21,6 +21,105 @@ Authorization, VPC Service Controls, backups, and the deployment lifecycle — r
 
 ---
 
+## What Kestra costs on RAD, and how that compares
+
+**Kestra on RAD's GKE module costs about US$136 a month in your own project, plus a 175-credit (US$18) module fee once per deployment.** If you only run pipelines on a schedule rather than continuously, see "Pause it for free" below to stop paying without losing your flow definitions. Kestra also ships as a Cloud Run module; in your own project GKE is the cheaper choice here because Cloud Run's standalone mode needs CPU allocated continuously for its scheduler, but in a RAD-managed project the Cloud Run guide's module is actually the lower daily-credit option (77 credits/day against 110 here) — check both before choosing.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 175 credits (US$17.50) | 157.5 credits (10% lower) |
+| Build time | A few credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$136.37 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **110 credits a day** |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
+database, file server and network are shared by every application in the project, so a second
+application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 2x vCPU / 4 GiB | US$79.35 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| Cloud NAT and networking | US$5.00 |
+| Cloud Storage (add-ons, backups) | US$1.00 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **about US$136.37** |
+
+### How it compares
+
+- Kestra's own commercial offerings — Kestra Cloud and Kestra Enterprise Edition — do not publish a
+  monthly price; both pages ask you to contact sales, so we are not quoting a figure we could not
+  verify.
+- Kestra's footprint (2 vCPU, 4 GiB, standalone-mode server, plus a PostgreSQL database) sits above a
+  Hetzner CPX22 or DigitalOcean 2 vCPU/4 GB droplet (about $24/month) and closer to a GCP Compute
+  Engine e2-standard-2 (about $49/month) — cheaper in cash either way, but you then run the orchestrator,
+  PostgreSQL, backups and upgrades yourself, on a system other pipelines depend on staying up.
+- RAD gives you two ways to run it that cost differently for the same reason: Cloud Run's standalone
+  mode needs CPU continuously allocated to run its own scheduler, so it cannot scale to zero the way
+  other modules do, while GKE Autopilot's pod billing is lower for an always-on workload like this one.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Kestra runs in a project RAD manages for you and you expect to come back to it — a break
+between courses, a seasonal lull, or simply not knowing yet whether you'll need it next
+month — this is the better option, and it costs almost nothing.
+
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright: Google's own 30-day recoverable soft delete. Unlike deleting Kestra as a
+single module, this does not tear down the Cloud Run/GKE service, Cloud SQL database and networking one by one — the whole project
+simply stops, and nothing is charged while it waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment
+to confirm everything came back. Because nothing was individually destroyed, that Update
+finds the same resources already there — it is a check, not a rebuild, and an Update never
+charges the module fee again. This costs only a handful of credits (under US$1) in build time
+for a typical chain of deployments.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most use fits). Google says most services are
+fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project, even though the project itself is recoverable for 30 days. Kestra's own nightly export covers its database (flow definitions, execution history); copy it out first if you want a restorable snapshot beyond the project's own 30 days.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once the 30-day window above has passed, the fallback is to delete
+Kestra outright and redeploy it later.
+
+- **What a redeploy costs:** the module fee again, plus the builds — roughly the module fee
+  shown above plus 3–6 credits of build time.
+- **When it's worth it:** deleting saves money only once Kestra would otherwise sit unused
+  for about 4 days or more in your own project (about 2 days or more in a RAD-managed one). The database is most of the running cost here, so deleting Kestra alone saves the whole bill above unless something else in the project shares it.
+- **Keep data first.** Nightly backups are written to a bucket inside the deployment, and
+  that bucket is deleted with it — copy the latest backup out (to Google Drive, or a bucket
+  you keep) before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  the app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance
+  the trainer sets. Either the trainer funds every place, or each participant pays for their
+  own. Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs the app for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+  by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD fees and the daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Google Cloud: delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanism. Prices change; check each source before relying on a figure.
+
+---
+
 ## 1. Overview
 
 Kestra runs as a Java/JVM container in standalone mode (server, worker, and scheduler in a

@@ -21,6 +21,93 @@ backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Zitadel costs on RAD, and how that compares
+
+**Running Zitadel on Cloud Run in your own Google Cloud project costs about $167.44/month in Google Cloud charges**, on top of a one-off 300-credit RAD module fee charged once at deploy time. Zitadel needs a PostgreSQL database behind it and runs always-on rather than scaling to zero, which together are most of the $167.44 above. In a RAD-managed project the module fee drops to 270 credits (10% lower) and the running cost is metered hourly in credits instead of billed directly by Google — see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below for the one RAD-managed advantage a self-hosted VPS cannot match — or see the [GKE guide](Zitadel_GKE.md) if you'd rather run it on Kubernetes, which is also the lower-cost option for this app.
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee (one-off) | 300 credits | 270 credits (10% lower) |
+| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Google Cloud running cost | $167.44/month, billed by Google at list price | ~77 credits/day, metered at list price plus RAD's margin |
+
+**Default running cost in your own project**
+
+| Resource | US$/month (Google list price, us-central1) |
+|---|---|
+| Cloud Run, 2x vCPU / 4 GiB (alwaysOn) | $110.42 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | $51.02 |
+| Cloud NAT and networking | $5.00 |
+| Cloud Storage (add-ons, backups) | $1.00 |
+| **Total** | **$167.44** |
+
+### How it compares
+
+- ZITADEL, the vendor behind this open-source project, also sells a hosted Cloud version: its [pricing page](https://zitadel.com/pricing) (checked 8 October 2026) lists a Free tier at $0/month for up to 100 daily active users and a Pro tier at $100/month for up to 25,000 daily active users, with Enterprise custom-priced above that.
+- For a small deployment (a handful of internal apps, well under 100 DAU) ZITADEL Cloud's free tier beats RAD's $167.44/month running cost in cash terms; RAD's module becomes the better fit once you want your own dedicated Postgres instance, full infrastructure control, or usage past the free tier's DAU ceiling without a recurring SaaS bill.
+- A bare-VPS alternative also works: a GCP Compute Engine e2-standard-2 (2 vCPU/8GB) at about $49/mo, or a similarly sized Hetzner/DigitalOcean box at about $24/mo, can self-host Zitadel and Postgres together — cheaper than RAD in cash terms, with none of the managed backups, patching or monitoring RAD provides.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline advantage of a RAD-managed project, and it costs nothing while paused.
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module,
+this does **not** tear down Cloud SQL, any VM, or the compute resource one by one: the whole
+project simply stops, and nothing is charged while it waits, because billing is already
+unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds
+the same resources already there — it is a check, not a rebuild, and an Update never charges
+the module fee again. This costs only a handful of credits (under US$1) in total for a typical
+2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project — even though the project itself is recoverable for 30 days. If you've
+customised Zitadel and want to keep that work, copy a backup out (to Google Drive, or a bucket
+outside the project) before deleting. For a default install with nothing irreplaceable in it,
+this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
+deleting removes the resources for good, and bringing Zitadel back means redeploying from
+scratch. That costs about 303-306 credits (the 300-credit module fee plus a build).
+
+Deleting only saves money once Zitadel would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — for Zitadel, that's about 6 days or more.
+Most of this running cost is usually the database — it stops only once nothing else in the project uses it, so deleting this app while something else shares the project saves only its own compute share.
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
+so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
+app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+trainer sets. Either the trainer funds every place, or each participant pays for their own.
+Everything is deleted when the session ends and unused credits go back to the trainer.
+
+Managed Environments, for consultancies: a partner runs the app for a client from a
+ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Google's project delete/restore documentation](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore claims. ZITADEL Cloud prices from [zitadel.com/pricing](https://zitadel.com/pricing), checked 8 October 2026.
+
 ## 1. Overview
 
 Zitadel runs as a single Go container on Cloud Run v2. The deployment wires together a

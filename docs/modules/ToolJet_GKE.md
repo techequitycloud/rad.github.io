@@ -22,6 +22,101 @@ than repeating them here.
 
 ---
 
+## What ToolJet costs on RAD, and how that compares
+
+**Running ToolJet on GKE Autopilot in your own Google Cloud project costs about US$149.81/month in Google Cloud charges** (about US$222.81 if this isn't your only Autopilot cluster), on top of a one-off 300-credit RAD module fee (US$30) charged once at deploy time. GKE Autopilot suits ToolJet that must stay up, scale across pods, or run beside other Kubernetes workloads; for the lowest cost, see the [Cloud Run guide](ToolJet_CloudRun.md) instead. In a RAD-managed project the module fee drops to 270 credits (10% lower) and the running cost is metered hourly in credits — see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below.
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee (one-off) | 300 credits | 270 credits (10% lower) |
+| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Google Cloud running cost | US$149.81/month, billed by Google at list price | ~111 credits/day (about 3330/month, US$333 at the top-up price), metered at list price plus RAD's margin |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
+
+**Default running cost in your own project**
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 2x vCPU / 4 GiB | US$79.35 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| NFS/cache file server (small VM) | US$13.43 |
+| Cloud NAT and networking | US$5 |
+| Cloud Storage (add-ons, backups) | US$1 |
+| **Total** | **US$149.81** |
+
+
+*The GKE cluster management fee is excluded from the total above because it is shared across every GKE app in the project — $0 if this is the only one, otherwise roughly $73/month split across however many you run.*
+
+### How it compares
+
+- ToolJet's own hosted **ToolJet Cloud** charges per **builder** seat: Basic is $23/builder/month (billed annually), Pro is $79/builder/month, and Team — its most popular tier — is $199/builder/month, with Enterprise by quote — verified on ToolJet's pricing page, 8 October 2026. RAD's own-project running cost here is a flat ~US$150/month regardless of headcount.
+- A self-managed comparison, sized above the usual micro-VPS class for ToolJet's 2 vCPU / 4 GiB default: a GCP Compute Engine `e2-standard-4` (4 vCPU/16GB) runs roughly $98/month on its own, before a managed Postgres instance and a Kubernetes control plane — plus your own time for patching and backups, which RAD's managed stack covers for you.
+- RAD never claims to be cheaper than bare infrastructure in cash terms; the case for RAD is what's managed for you, and the ability to pause ToolJet for free (see below).
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline advantage of a RAD-managed project, and it costs nothing while paused.
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module,
+this does **not** tear down Cloud SQL, any VM, or the compute resource one by one: the whole
+project simply stops, and nothing is charged while it waits, because billing is already
+unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds
+the same resources already there — it is a check, not a rebuild, and an Update never charges
+the module fee again. This costs only a handful of credits (under US$1) in total for a typical
+2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project — even though the project itself is recoverable for 30 days. If you've
+customised ToolJet and want to keep that work, copy a backup out (to Google Drive, or a bucket
+outside the project) before deleting. For a default install with nothing irreplaceable in it,
+this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
+deleting removes the resources for good, and bringing ToolJet back means redeploying from
+scratch. That costs about 303-306 credits in your own project, or about
+273-276 credits in a RAD-managed one.
+
+Deleting only saves money once ToolJet would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — about 6 days or more in your own project
+(about US$4.99 a day), or about 3 days or more in a RAD-managed one
+(111 credits a day).
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
+so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
+app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+trainer sets. Either the trainer funds every place, or each participant pays for their own.
+Everything is deleted when the session ends and unused credits go back to the trainer.
+
+Managed Environments, for consultancies: a partner runs the app for a client from a
+ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Google's project delete/restore documentation](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore claims; [ToolJet pricing](https://www.tooljet.com/pricing).
+
 ## 1. Overview
 
 ToolJet runs as a single NestJS + React web workload — the backend API and the

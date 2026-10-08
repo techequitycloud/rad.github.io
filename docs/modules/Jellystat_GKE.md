@@ -23,6 +23,104 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ---
 
+## What Jellystat costs on RAD, and how that compares
+
+**Jellystat on RAD's GKE module costs about US$93 a month in your own project, plus a 40-credit (US$4) module fee once per deployment.** If you only need it while actively tuning your media server, see "Pause it for free" below to stop paying without losing that history. Jellystat also ships as a Cloud Run module, which is the lower-cost option here (about US$68/month) — see the Cloud Run guide unless you already run GKE Autopilot for other apps.
+
+### What you pay on RAD
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 40 credits (US$4.00) | 36 credits (10% lower) |
+| Build time | A few credits per build | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$93.10 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **91 credits a day** |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
+database, file server and network are shared by every application in the project, so a second
+application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | US$36.08 |
+| Cloud SQL for PostgreSQL, 1 vCPU / 3.75 GB, zonal, 10 GB SSD | US$51.02 |
+| Cloud NAT and networking | US$5.00 |
+| Cloud Storage (add-ons, backups) | US$1.00 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **about US$93.10** |
+
+### How it compares
+
+- Jellystat is a companion analytics dashboard for a Jellyfin server you already run, not a product
+  with its own hosted plan, so there is nothing to compare it against directly.
+- Its own footprint is light (1 vCPU, 0.5–1 GiB), so a Hetzner CPX22 or DigitalOcean 2 vCPU/4 GB
+  droplet (about $24/month) is more than enough on its own — most of this module's cost is actually
+  the PostgreSQL database it needs to retain playback history, which a bare VPS would also need you to
+  run and back up yourself.
+- Because Jellystat is usually deployed alongside Jellyfin in the same project, the database here may
+  be the one genuinely new cost of adding it — worth checking whether your Jellyfin deployment already
+  has a database you could point this at instead of provisioning a second one.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Jellystat runs in a project RAD manages for you and you expect to come back to it — a break
+between courses, a seasonal lull, or simply not knowing yet whether you'll need it next
+month — this is the better option, and it costs almost nothing.
+
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright: Google's own 30-day recoverable soft delete. Unlike deleting Jellystat as a
+single module, this does not tear down the Cloud Run/GKE service, Cloud SQL database and networking one by one — the whole project
+simply stops, and nothing is charged while it waits, because billing is already unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment
+to confirm everything came back. Because nothing was individually destroyed, that Update
+finds the same resources already there — it is a check, not a rebuild, and an Update never
+charges the module fee again. This costs only a handful of credits (under US$1) in build time
+for a typical chain of deployments.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most use fits). Google says most services are
+fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project, even though the project itself is recoverable for 30 days. Jellystat's own nightly export of its database is kept in that bucket; for a default install this is the only copy of your viewing-history data worth keeping.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once the 30-day window above has passed, the fallback is to delete
+Jellystat outright and redeploy it later.
+
+- **What a redeploy costs:** the module fee again, plus the builds — roughly the module fee
+  shown above plus 3–6 credits of build time.
+- **When it's worth it:** deleting saves money only once Jellystat would otherwise sit unused
+  for about 2 days or more in your own project (under a day in a RAD-managed one). The PostgreSQL database and the GKE cluster management fee are most of the running cost here, so deleting Jellystat alone saves only its own share if the database or cluster is shared with other apps.
+- **Keep data first.** Nightly backups are written to a bucket inside the deployment, and
+  that bucket is deleted with it — copy the latest backup out (to Google Drive, or a bucket
+  you keep) before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs a session for a class. Each participant gets
+  the app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance
+  the trainer sets. Either the trainer funds every place, or each participant pays for their
+  own. Everything is deleted when the session ends and unused credits go back to the trainer.
+- **Managed Environments, for consultancies.** A partner runs the app for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+  partner hands the project over and the deployments become the client's own.
+- Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+  by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API; RAD fees and the daily-credit estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing); [Google Cloud: delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore mechanism. Prices change; check each source before relying on a figure.
+
+---
+
 ## 1. Overview
 
 Jellystat runs as a single Node.js/Express Deployment (with a bundled React

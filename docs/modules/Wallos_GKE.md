@@ -23,6 +23,95 @@ rather than repeating them here.
 
 ---
 
+## What Wallos costs on RAD, and how that compares
+
+**Running Wallos on GKE Autopilot pods in your own Google Cloud project costs about $42.08/month in Google Cloud charges**, on top of a one-off 40-credit RAD module fee charged once at deploy time. Wallos needs no managed database — everything lives in an embedded SQLite file inside the pod — and this variant needs no shared file-server VM either, which is why it's both cheaper to run and a lower module fee than the Cloud Run variant. In a RAD-managed project the module fee drops to 36 credits (10% lower) and the running cost is metered hourly in credits instead of billed directly by Google — see [Pause it for free](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) below for the one RAD-managed advantage a self-hosted VPS cannot match — or see the [Cloud Run guide](Wallos_CloudRun.md) for the lower-cost option.
+
+### What you pay on RAD
+
+| | Own project | RAD-managed project |
+|---|---|---|
+| Module fee (one-off) | 40 credits | 36 credits (10% lower) |
+| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Google Cloud running cost | $42.08/month, billed by Google at list price | ~67 credits/day, metered at list price plus RAD's margin |
+
+**Default running cost in your own project**
+
+| Resource | US$/month (Google list price, us-central1) |
+|---|---|
+| GKE Autopilot pod, 1x vCPU / 1 GiB | $36.08 |
+| Cloud NAT and networking | $5.00 |
+| Cloud Storage (add-ons, backups) | $1.00 |
+| GKE cluster management fee | shared across every GKE app in the project; $0 if this is your only cluster, else ~73 |
+| **Total** | **$42.08** |
+
+*The GKE cluster management fee is excluded from the total above because it is shared across every GKE app in the project — $0 if this is the only one, otherwise roughly $73/month split across however many you run.*
+
+### How it compares
+
+- Wallos has no official hosted SaaS version of its own — like most self-hosted subscription trackers it only ships as software you run yourself, so the choice is really "manage a tiny VPS yourself" or "let RAD manage the same stack," not RAD-vs-a-subscription.
+- At 1 vCPU / 1 GiB with an embedded SQLite database and no separate Cloud SQL instance, Wallos is light enough that a smaller, cheaper box than the examples below would do — but for a like-for-like comparison: Hetzner CPX22 (2 vCPU/4GB) runs about $24/mo, a DigitalOcean 2 vCPU/4GB Droplet is the same $24/mo, and a GCP Compute Engine e2-standard-2 (2 vCPU/8GB) is about $49/mo.
+- What that price doesn't include: backups, security patches, TLS renewal and the 2am disk-full page — RAD's managed Secret Manager, Cloud Storage backups and monitoring absorb those for you.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+This is the headline advantage of a RAD-managed project, and it costs nothing while paused.
+Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the
+project outright — Google's own 30-day recoverable soft delete. Unlike deleting one module,
+this does **not** tear down Cloud SQL, any VM, or the compute resource one by one: the whole
+project simply stops, and nothing is charged while it waits, because billing is already
+unlinked.
+
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the
+project and reattaches its billing account, then asks you to run Update on each deployment to
+confirm everything came back. Because nothing was individually destroyed, that Update finds
+the same resources already there — it is a check, not a rebuild, and an Update never charges
+the module fee again. This costs only a handful of credits (under US$1) in total for a typical
+2-3-deployment chain.
+
+What this needs: you must own the project (not one RAD only manages billing for), you must
+restore it yourself within 30 days — after that Google deletes it for good — and restoring is
+admitted like creating a new project, so your purchased credit balance must still clear the
+tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most
+services are fully working again within 36 hours of a restore.
+
+One real gap: nightly backups are written to a bucket inside the project, and that bucket has
+Cloud Storage's soft-delete explicitly turned off, so it is very likely gone as soon as you
+delete the project — even though the project itself is recoverable for 30 days. If you've
+customised Wallos and want to keep that work, copy a backup out (to Google Drive, or a bucket
+outside the project) before deleting. For a default install with nothing irreplaceable in it,
+this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
+deleting removes the resources for good, and bringing Wallos back means redeploying from
+scratch. That costs about 43-46 credits (the 40-credit module fee plus a build).
+
+Deleting only saves money once Wallos would otherwise sit unused long enough to clear that
+redeploy cost against its own running cost — for Wallos, that's about 4 days or more.
+Most of this running cost here is the compute itself rather than a shared resource, so deleting it saves close to the full figure above unless something else in the project shares the same cluster or file server.
+
+Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
+so copy the latest backup out before deleting if you want to keep it.
+
+### Lab sessions and Managed Environments
+
+Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
+app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
+trainer sets. Either the trainer funds every place, or each participant pays for their own.
+Everything is deleted when the session ends and unused credits go back to the trainer.
+
+Managed Environments, for consultancies: a partner runs the app for a client from a
+ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+billing pauses and the data is kept, so nobody receives an unexpected charge. At the end the
+partner hands the project over and the deployments become the client's own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud Billing Catalog API list prices; [radmodules.dev/pricing](https://radmodules.dev/pricing) for RAD's own fees and daily-credit estimates; [Google's project delete/restore documentation](https://cloud.google.com/resource-manager/docs/delete-restore-projects) for the pause/restore claims.
+
 ## 1. Overview
 
 Wallos runs as a single PHP/php-fpm web workload. It is deliberately minimal — no
