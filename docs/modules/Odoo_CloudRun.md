@@ -20,6 +20,176 @@ Authorization, VPC Service Controls, backups, and the deployment lifecycle — r
 
 ---
 
+## What Odoo costs on RAD, and how that compares
+
+**For a team of ten, Odoo on RAD's Cloud Run module costs about US$80–100 a month with no
+per-user licence.** The same team pays about £220–410 a month on Odoo Online and about
+£470 on Odoo.sh. A self-managed server is cheaper in cash, but then you run the database,
+backups, security patches and upgrades yourself. Figures are as at 8 October 2026; sources
+are listed at the end of this section.
+
+If you only need it occasionally — studying for a certification, a demo, a seasonal
+business — a RAD-managed project can be deleted and restored within 30 days for a few
+credits, so that US$84 becomes a few dollars a month instead. See **Pause it for free**,
+below.
+
+### What you pay on RAD
+
+RAD deploys **Odoo Community Edition**, which is open source (LGPL), so there is no licence
+fee per user. You pay for three things:
+
+| | In a Google Cloud project you own | In a project RAD manages for you |
+|---|---|---|
+| Module fee, once per deployment | 110 credits (US$11 at the top-up price) | 99 credits (10% lower) |
+| Build time | About 3 credits per build (an Odoo build takes about 27 minutes) | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$84 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **32 credits a day**, about 960 a month (about US$96 at the top-up price, US$77 at the Scale plan's rate) |
+| Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages,
+the database, file server and network are shared by every application in the project, so a
+second application does not add a second database.
+
+**Default running cost in your own project** (us-central1, Google list prices):
+
+| Resource (module default) | Per month |
+|---|---|
+| Cloud SQL for PostgreSQL 17, 1 vCPU, 3.75 GB, zonal, 10 GB SSD | US$51 |
+| NFS file server: an e2-small VM with 20 GB of disk | US$14 |
+| Cloud Run, 1 vCPU and 2 GiB, scaling to zero, busy about 8 hours a day on 22 working days | US$13 (after Cloud Run's free tier) |
+| Cloud NAT gateway and IP address | US$5 |
+| Cloud Storage for add-ons and daily backups | US$1 |
+| **Total** | **about US$84** |
+
+Cloud SQL and Cloud Run cost the same in africa-south1 (Johannesburg); the VM costs about 10%
+more. Two settings change the figure:
+
+- **Scheduled actions need CPU that is always allocated.** Odoo runs its scheduled actions
+  (fetching mail, recurring invoices, reminders) inside the web process. With the default
+  `cpu_always_allocated = false` and `min_instance_count = 0` they run only while someone is
+  using Odoo. Setting `cpu_always_allocated = true` and `min_instance_count = 1` keeps them
+  running, and raises Cloud Run to about US$53, so the total becomes about US$124 a month.
+- **Avoid Filestore for a small deployment.** The module uses a small NFS VM by default.
+  Filestore's smallest instance is 1 TiB, which costs about US$164 a month on its own.
+
+### How it compares, for ten internal users
+
+| Option | Edition | Per month | Who runs it |
+|---|---|---|---|
+| Odoo Online, Standard plan | Enterprise | £220 (10 × £22, billed yearly; £180 in the first year) | Odoo. Custom modules are not allowed |
+| Odoo Online, Custom plan | Enterprise | £410 (10 × £41, billed yearly) | Odoo. Adds Studio, the external API and multi-company |
+| Odoo.sh, 1 worker, 20 GB, 1 staging branch | Enterprise | About £468 (£58 hosting + £410 Custom licence) | Odoo hosts; you manage your code |
+| Enterprise on your own servers | Enterprise | £410 licence, plus the servers | You |
+| Managed Community hosting (Cloudpepper Pro, medium server) | Community | €73 | The provider, on shared hosting |
+| Your own server (Hetzner CPX22 or DigitalOcean 2 vCPU, 4 GB) | Community | €20, or US$24 plus US$7 for daily backups | You: operating system, PostgreSQL, backups, patches, upgrades |
+| **RAD, Cloud Run, your own project** | Community | **About US$84**, plus US$11 once per deployment | RAD's automation, in your project |
+| **RAD, Cloud Run, a RAD-managed project** | Community | **About 960 credits (US$77–96)** | RAD |
+| RAD, GKE Autopilot | Community | See the [GKE guide](Odoo_GKE.md) | RAD |
+
+Odoo's prices were read from odoo.com from the United Kingdom. Odoo sets prices by country,
+and its prices in many African countries are lower, so check odoo.com/pricing from your own
+country. What the table shows:
+
+- **Licences grow with every user; RAD's cost grows with load.** Odoo's plans charge for each
+  user with back-office access. RAD's cost is the infrastructure, which a growing team
+  reaches only when it needs more capacity. At ten users RAD costs less than a quarter of the
+  Odoo Online Custom plan, and the gap widens as the team grows.
+- **Community is not Enterprise.** Enterprise adds full accounting, Studio, the mobile apps,
+  Helpdesk, Field Service, Planning and other apps (see Odoo's edition comparison). If you need
+  those, compare against Odoo Online or Odoo.sh: RAD's module deploys Community.
+- **A cheap server is cheap until something breaks.** On RAD the database is Cloud SQL, with
+  daily backups and seven days of point-in-time recovery, plus a nightly export of the
+  database and files. Passwords are kept in Secret Manager, and logs and monitoring come from
+  Google Cloud. On your own server, each of those is a job someone has to do.
+
+### Pause it for free: delete a RAD-managed project, restore it when you need it
+
+If Odoo runs in **a project RAD manages for you**, you have a second option that goes well
+beyond scaling to zero: **delete the whole project, and restore it within 30 days for close to
+nothing.** This suits Odoo you only need occasionally — studying for a certification, a demo
+environment, a seasonal business — far better than running it continuously.
+
+- **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google
+  to delete the project. Google does not remove the project immediately: it keeps it, recoverable,
+  for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
+  deleting one module, this does not tear down Cloud SQL, the VM or Cloud Run one by one — the
+  whole project, and everything in it, simply stops.
+- **Restoring costs a few credits, not a rebuild.** Within 30 days, the project's owner can
+  restore it. RAD asks Google to undelete the project and reattaches its billing account, then
+  asks you to run **Update** on each deployment to confirm everything came back. Because nothing
+  was individually destroyed, that Update finds the same resources already there — it is a check,
+  not a rebuild, and an Update never charges the module fee again. For Odoo on Cloud Run behind a
+  small Services_GCP and Project_GCP, that is about **7 credits in total (under US$1)**, against
+  the 120 credits a full redeploy costs.
+- **So a month of occasional use can cost a few dollars, not US$84.** Deploy Odoo, use it for an
+  evening, delete the project. Restore it next time you want it, confirm with Update, and delete
+  it again when you're done. You pay only for the module fee once, the builds, and whatever hours
+  Odoo was actually live.
+- **What this needs.** You must own the project (not a bring-your-own one RAD only manages
+  billing for), and you restore it yourself within the 30 days — after that, Google deletes it
+  for good. Restoring is admitted like creating a new project: your purchased credit balance must
+  still clear the tier's floor (100 credits for the sandbox tier most study and demo use fits).
+  Google says most services are fully working again within 36 hours of a restore.
+- **One real gap: the backup bucket does not survive.** Odoo's nightly database and file backups
+  are written to a bucket inside the project, and that bucket is **not** protected by Cloud
+  Storage's soft-delete, so it is very likely gone as soon as you delete the project — even
+  though the project itself is recoverable for 30 days. If you have made changes to Odoo you want
+  to keep, copy a backup out (to Google Drive, or a bucket outside the project) before you delete,
+  the same as the redeploy workflow below. For a default installation with nothing irreplaceable
+  in it, this does not matter.
+
+### Pay only while you use it, the other way: delete and redeploy
+
+Cloud Run already scales to zero between requests. The option above only applies to a
+RAD-managed project; **in your own project, or once the 30-day window has passed, the way to
+stop paying is to delete the deployment and deploy it again when you need it.**
+
+- **What a redeploy costs.** The module fee again plus the builds: about 120 credits (US$12)
+  and about an hour, because RAD recreates the project and shared services before Odoo.
+  Deleting saves money if Odoo would otherwise sit unused for about four days or more, both in
+  your own project (about US$2.80 a day) and in a RAD-managed one (32 credits a day).
+- **Delete everything Odoo uses.** Most of the running cost is the database and file server.
+  They stop only when nothing else in the project uses them, so deleting Odoo while other
+  applications share the project saves only the Cloud Run part.
+- **Keep your data first.** The nightly backups are written to a bucket inside the
+  deployment, and that bucket is deleted with it. Before deleting, copy the latest backup to
+  Google Drive, or to a bucket you keep.
+- **Restore when you redeploy.** Deploy again with `enable_backup_import = true`,
+  `backup_source = "gdrive"`, `backup_file` set to the Drive file ID and `backup_format` to
+  `sql`, `tar` or `zip`. The import reads from Google Drive or from the new deployment's own
+  backup bucket, so a copy kept elsewhere in Cloud Storage has to be uploaded there first.
+  Check your attachments after the import.
+- **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the
+  settings again when you deploy.
+
+### Lab sessions and Managed Environments
+
+- **Lab sessions, for training.** A trainer runs an Odoo session for a class. Each participant
+  gets Odoo in their own Google Cloud project for 15 minutes to 24 hours, within an allowance
+  the trainer sets. Either the trainer funds every place up front, or each participant pays for
+  their own. Everything is deleted when the session ends, and unused credits go back to the
+  trainer. A three-hour session costs roughly 20 credits (US$2) per participant in builds and
+  running cost, plus the module fee unless fees are waived for the session.
+- **Managed Environments, for consultancies.** A partner runs Odoo for a client from a
+  ring-fenced wallet it funds, and settles with the client directly. If the wallet runs low,
+  billing pauses and the data is kept, so nobody receives an unexpected charge. At the end of
+  the engagement the partner hands the project over, and the deployments become the client's
+  own.
+
+Credits can be bought in more than 20 currencies, including XAF, XOF, NGN, GHS, KES and ZAR,
+by card, bank transfer or mobile money.
+
+**Sources (8 October 2026):** Google Cloud list prices from the Cloud Billing Catalog API;
+[Delete and restore projects](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
+for the 30-day recovery window and what it says about Cloud Storage objects without soft delete;
+RAD fees and the 32-credit daily estimate from [radmodules.dev/pricing](https://radmodules.dev/pricing);
+[Odoo pricing](https://www.odoo.com/pricing), [Odoo.sh pricing](https://www.odoo.sh/pricing)
+and [Odoo editions](https://www.odoo.com/page/editions);
+[Cloudpepper](https://cloudpepper.io/pricing), [Hetzner Cloud](https://www.hetzner.com/cloud)
+and [DigitalOcean](https://www.digitalocean.com/pricing/droplets). Prices change; check each
+source before relying on a figure.
+
+---
+
 ## 1. Overview
 
 Odoo runs as a Python/PostgreSQL ERP workload. The deployment wires together a focused set of
@@ -28,18 +198,18 @@ Google Cloud services:
 | Capability | Google Cloud service | Notes |
 |---|---|---|
 | Compute | Cloud Run v2 | Python/Odoo service; gen2 execution environment required for NFS mounts; scales to zero by default |
-| Database | Cloud SQL for PostgreSQL 15 | Required — Odoo does not support MySQL or SQL Server |
-| Shared files | Filestore (NFS) | Filestore, sessions, and extra-addons directories shared across all instances |
+| Database | Cloud SQL for PostgreSQL | Required — Odoo does not support MySQL or SQL Server; PostgreSQL 17 by default, from the shared services |
+| Shared files | NFS file server (Compute Engine VM) | Odoo's filestore, sessions, and extra-addons directories shared across all instances; a small e2-small VM by default, with Filestore available as an option |
 | Object storage | Cloud Storage | A dedicated addons bucket (`odoo-addons`) for custom and community addons |
 | Cache & sessions | Redis (optional) | Disabled by default; required when `max_instance_count > 1` to share session state |
 | Secrets | Secret Manager | Auto-generated master password (`ODOO_MASTER_PASS`) and database password |
-| Ingress | Cloud Load Balancing | External IP with optional custom domain and managed certificate |
+| Ingress | Cloud Run URL | Served on the service's `run.app` address; a global load balancer is added when Cloud Armor or Cloud CDN is enabled |
 
 **Sensible defaults worth knowing up front:**
 
 - **PostgreSQL is mandatory.** The database engine is fixed; selecting MySQL or `NONE` breaks
   startup.
-- **NFS is required.** Without a shared Filestore volume, Odoo's filestore (attachments,
+- **NFS is required.** Without the shared NFS volume, Odoo's filestore (attachments,
   binary fields, compiled assets) is isolated to each instance and lost on restart.
 - **Scale-to-zero is the default.** `min_instance_count = 0`. Cold starts on the Odoo service
   add 30–60 seconds plus schema migration time. Set `min_instance_count = 1` for production or
@@ -83,10 +253,10 @@ to the service are routed through a Cloud Load Balancer.
 See [App_CloudRun](App_CloudRun.md) for revision management, traffic splitting,
 min/max instances, and concurrency settings.
 
-### B. Cloud SQL for PostgreSQL 15
+### B. Cloud SQL for PostgreSQL
 
 Odoo stores all ERP data (contacts, invoices, inventory, orders) in a managed Cloud SQL for
-PostgreSQL 15 instance. Service instances connect privately through the **Cloud SQL Auth
+PostgreSQL instance (PostgreSQL 17 by default, provided by the shared services). Service instances connect privately through the **Cloud SQL Auth
 Proxy** sidecar over a Unix socket, so no public IP is exposed. On first deploy the `db-init`
 job creates the application database and user.
 
@@ -106,18 +276,19 @@ The instance name, database name, user, and the Secret Manager secret holding th
 are all surfaced in the [Outputs](#5-outputs). For the connection model, automated backups,
 and password rotation, see [App_CloudRun](App_CloudRun.md).
 
-### C. Filestore (NFS) and Cloud Storage
+### C. NFS file server and Cloud Storage
 
 Odoo's filestore (binary attachments, images, compiled assets), session data, and extra-addons
-directories are written to a **Filestore (NFS)** share mounted into every service instance so
-all revisions see the same files. A dedicated **Cloud Storage** bucket (`odoo-addons`) is
+directories are written to an **NFS share** served by a small Compute Engine VM and mounted
+into every service instance, so all revisions see the same files. Filestore can replace the VM,
+but its smallest instance is 1 TiB. A dedicated **Cloud Storage** bucket (`odoo-addons`) is
 also provisioned for custom and community addons.
 
-- **Console:** Filestore → Instances for the NFS share; Cloud Storage → Buckets for the
-  addons bucket.
+- **Console:** Compute Engine → VM instances for the NFS server; Cloud Storage → Buckets for
+  the addons bucket.
 - **CLI:**
   ```bash
-  gcloud filestore instances list --project "$PROJECT"
+  gcloud compute instances list --project "$PROJECT"   # the NFS server VM
   gcloud storage buckets list --project "$PROJECT"
   gcloud storage ls gs://<addons-bucket>/        # bucket name is in the Outputs
   # Confirm NFS subdirectories via a Cloud Run Jobs execution:
